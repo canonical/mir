@@ -6,7 +6,12 @@ namespace mir
 namespace graphics
 {
 // framebuffer_backend is the interface compositor uses onto graphics/libgl
-class framebuffer_backend;
+class framebuffer_backend
+{
+public:
+	virtual void render() = 0;
+};
+
 class display;
 }
 
@@ -45,12 +50,30 @@ private:
 }}
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
+
+
+namespace
+{
+class mock_framebuffer_backend : public mg::framebuffer_backend
+{
+public:
+    MOCK_METHOD0(render, void ());
+};
+}
+
+
+
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
 	using namespace testing;
 
+	mock_framebuffer_backend graphics;
 	mc::drawer&& comp = mc::compositor(nullptr);
+
+	EXPECT_CALL(graphics, render()).WillOnce(Return());
+	
         comp.render(nullptr);
 }
 
