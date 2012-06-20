@@ -23,37 +23,17 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef COMPOSITOR_H_
-#define COMPOSITOR_H_
+#include "mir/compositor/compositor.h"
+#include "mir/compositor/buffer_manager.h"
 
-#include "drawer.h"
+namespace mc = mir::compositor;
 
-namespace mir
+
+mc::compositor::compositor(
+	surfaces::scenegraph* scenegraph,
+	buffer_manager* buffermanager)
+:
+	scenegraph(scenegraph),
+	buffermanager(buffermanager)
 {
-namespace surfaces
-{
-// scenegraph is the interface compositor uses onto the surface stack
-class scenegraph;
 }
-
-namespace compositor
-{
-class buffer_manager;
-
-class compositor : public drawer
-{
-public:
-	explicit compositor(
-			surfaces::scenegraph* scenegraph,
-			buffer_manager* buffermanager);
-
-	virtual void render(graphics::display* /*display*/) { /*TODO*/ }
-
-private:
-	surfaces::scenegraph* scenegraph;
-	buffer_manager* buffermanager;
-};
-
-}}
-
-#endif /* COMPOSITOR_H_ */

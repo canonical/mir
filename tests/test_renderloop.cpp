@@ -26,6 +26,7 @@
 #include "mir/graphics/framebuffer_backend.h"
 #include "mir/compositor/drawer.h"
 #include "mir/compositor/compositor.h"
+#include "mir/compositor/buffer_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -49,7 +50,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 	using namespace testing;
 
 	mock_framebuffer_backend graphics;
-	mc::drawer&& comp = mc::compositor(nullptr);
+	mc::drawer&& comp = mc::compositor(nullptr, nullptr);
 
 	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
 	

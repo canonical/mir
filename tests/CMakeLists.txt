@@ -59,6 +59,7 @@ add_executable(test_renderloop test_renderloop.cpp)
 
 target_link_libraries(
   test_renderloop
+  mircompositor
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
