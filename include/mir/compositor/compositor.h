@@ -23,35 +23,32 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
+#ifndef COMPOSITOR_H_
+#define COMPOSITOR_H_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "drawer.h"
 
-namespace mc = mir::compositor;
-namespace mg = mir::graphics;
-
-
-namespace
+namespace mir
 {
-class mock_framebuffer_backend : public mg::framebuffer_backend
+namespace surfaces
+{
+// scenegraph is the interface compositor uses onto the surface stack
+class scenegraph;
+}
+
+namespace compositor
+{
+
+class compositor : public drawer
 {
 public:
-    MOCK_METHOD0(render, void ());
+	explicit compositor(surfaces::scenegraph* scenegraph) : scenegraph(scenegraph) {}
+	virtual void render(graphics::display* /*display*/) { /*TODO*/ }
+
+private:
+	surfaces::scenegraph* scenegraph;
 };
-}
 
+}}
 
-TEST(compositor_renderloop, notify_sync_and_see_paint)
-{
-	using namespace testing;
-
-	mock_framebuffer_backend graphics;
-	mc::drawer&& comp = mc::compositor(nullptr);
-
-	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
-	
-	comp.render(nullptr);
-}
+#endif /* COMPOSITOR_H_ */

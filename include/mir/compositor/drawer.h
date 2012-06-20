@@ -23,35 +23,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
+#ifndef DRAWER_H_
+#define DRAWER_H_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-namespace mc = mir::compositor;
-namespace mg = mir::graphics;
-
-
-namespace
+namespace mir
 {
-class mock_framebuffer_backend : public mg::framebuffer_backend
+namespace graphics { class display; }
+
+namespace compositor
+{
+
+// drawer is the interface by which "graphics/libgl" knows
+// the compositor.
+class drawer
 {
 public:
-    MOCK_METHOD0(render, void ());
+	virtual void render(graphics::display* display) = 0;
+protected:
+	drawer() = default;
+	~drawer() = default;
+	drawer& operator=(drawer const&) = delete;
+	drawer(drawer const&) = delete;
 };
-}
+}}
 
 
-TEST(compositor_renderloop, notify_sync_and_see_paint)
-{
-	using namespace testing;
-
-	mock_framebuffer_backend graphics;
-	mc::drawer&& comp = mc::compositor(nullptr);
-
-	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
-	
-	comp.render(nullptr);
-}
+#endif /* DRAWER_H_ */
