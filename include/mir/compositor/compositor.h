@@ -43,7 +43,7 @@ class compositor : public drawer
 {
 public:
 	explicit compositor(surfaces::scenegraph* scenegraph) : scenegraph(scenegraph) {}
-	virtual void render(graphics::display* display) { /*TODO*/ }
+	virtual void render(graphics::display* /*display*/) { /*TODO*/ }
 
 private:
 	surfaces::scenegraph* scenegraph;
