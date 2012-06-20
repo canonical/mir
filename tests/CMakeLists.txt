@@ -1,4 +1,5 @@
 # Build Google Test and make its headers known
+find_package (GTest)
 if(NOT GTEST_FOUND)
   # Check for google test and build it locally
   set(GTEST_ROOT_DIR
@@ -40,4 +41,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
   )
 
-add_test(test_renderloop test_renderloop)
+gtest_add_tests(test_renderloop "" ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp )

@@ -72,7 +72,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 	mock_framebuffer_backend graphics;
 	mc::drawer&& comp = mc::compositor(nullptr);
 
-	EXPECT_CALL(graphics, render()).WillOnce(Return());
+	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
 	
         comp.render(nullptr);
 }
