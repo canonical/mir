@@ -26,6 +26,8 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_manager.h"
 
+#include <cassert>
+
 namespace mc = mir::compositor;
 
 
@@ -36,6 +38,7 @@ mc::compositor::compositor(
 	scenegraph(scenegraph),
 	buffermanager(buffermanager)
 {
+	assert(buffermanager);
 }
 
 void mc::compositor::render(graphics::display*) {
