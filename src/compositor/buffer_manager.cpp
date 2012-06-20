@@ -23,37 +23,23 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_manager.h"
+#include "mir/graphics/framebuffer_backend.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-
-namespace
+mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
+:
+	framebuffer(framebuffer)
 {
-class mock_framebuffer_backend : public mg::framebuffer_backend
-{
-public:
-    MOCK_METHOD0(render, void ());
-};
+	assert(framebuffer);
 }
 
 
-TEST(compositor_renderloop, notify_sync_and_see_paint)
+void mc::buffer_manager::render()
 {
-	using namespace testing;
-
-	mock_framebuffer_backend graphics;
-	mc::buffer_manager buffer_manager(&graphics);
-	mc::drawer&& comp = mc::compositor(nullptr, &buffer_manager);
-
-	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
-	
-	comp.render(nullptr);
+	framebuffer->render();
 }

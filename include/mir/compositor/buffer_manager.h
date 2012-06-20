@@ -23,37 +23,34 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
-#include "mir/compositor/buffer_manager.h"
+#ifndef BUFFER_MANAGER_H_
+#define BUFFER_MANAGER_H_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-namespace mc = mir::compositor;
-namespace mg = mir::graphics;
-
-
-namespace
+namespace mir
 {
-class mock_framebuffer_backend : public mg::framebuffer_backend
+namespace graphics
+{
+class framebuffer_backend;
+}
+
+namespace compositor
+{
+
+class buffer_manager
 {
 public:
-    MOCK_METHOD0(render, void ());
+
+	explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
+
+	void render();
+
+private:
+	graphics::framebuffer_backend* const framebuffer;
 };
-}
 
 
-TEST(compositor_renderloop, notify_sync_and_see_paint)
-{
-	using namespace testing;
+}}
 
-	mock_framebuffer_backend graphics;
-	mc::buffer_manager buffer_manager(&graphics);
-	mc::drawer&& comp = mc::compositor(nullptr, &buffer_manager);
 
-	EXPECT_CALL(graphics, render()).Times(AtLeast(1));
-	
-	comp.render(nullptr);
-}
+
+#endif /* BUFFER_MANAGER_H_ */
