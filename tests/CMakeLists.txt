@@ -66,3 +66,18 @@ target_link_libraries(
   )
 
 gtest_add_tests(test_renderloop "" ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp )
+
+add_executable(test_input_dispatch test_input_dispatch.cpp)
+
+target_link_libraries(
+  test_input_dispatch
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+  )
+
+gtest_add_tests(
+  test_input_dispatch 
+  "" 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp)
