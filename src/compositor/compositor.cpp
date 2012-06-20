@@ -37,3 +37,7 @@ mc::compositor::compositor(
 	buffermanager(buffermanager)
 {
 }
+
+void mc::compositor::render(graphics::display*) {
+	/*TODO*/
+}

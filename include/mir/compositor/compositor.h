@@ -47,12 +47,13 @@ public:
 			surfaces::scenegraph* scenegraph,
 			buffer_manager* buffermanager);
 
-	virtual void render(graphics::display* /*display*/) { /*TODO*/ }
+	virtual void render(graphics::display* display);
 
 private:
 	surfaces::scenegraph* scenegraph;
 	buffer_manager* buffermanager;
 };
+
 
 }}
 
