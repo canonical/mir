@@ -1,3 +1,60 @@
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace mir
+{
+namespace graphics
+{
+// framebuffer_backend is the interface compositor uses onto graphics/libgl
+class framebuffer_backend;
+class display;
+}
+
+namespace surfaces
+{
+// scenegraph is the interface compositor uses onto the surface stack
+class scenegraph;
+}
+
+namespace compositor
+{
+
+// renderer is the interface by which "graphics/libgl" knows
+// the compositor.
+class drawer
+{
+public:
+	virtual void render(graphics::display* display) = 0;
+protected:
+	drawer() = default;
+	~drawer() = default;
+	drawer& operator=(drawer const&) = delete;
+	drawer(drawer const&) = delete;
+};
+
+class compositor : public drawer
+{
+public:
+	explicit compositor(surfaces::scenegraph* scenegraph) : scenegraph(scenegraph) {}
+	virtual void render(graphics::display* display) { /*TODO*/ }
+
+private:
+	surfaces::scenegraph* scenegraph;
+};
+
+}}
+
+namespace mc = mir::compositor;
+
+TEST(compositor_renderloop, notify_sync_and_see_paint)
+{
+	using namespace testing;
+
+	mc::drawer&& comp = mc::compositor(nullptr);
+        comp.render(nullptr);
+}
+
+
 /*
  * Copyright © 2012 Canonical Ltd.
  *
@@ -20,34 +77,6 @@
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-using ::testing::AtLeast;
-
-namespace {
-
-class Trigger {
- public:
-  virtual ~Trigger() {}
-
-  virtual void Do() = 0;
-};
-
-class MockTrigger : public Trigger {
- public:
-  MOCK_METHOD0(Do, void());
-};
-
-}
-
-TEST(RenderLoop, Trigger) {
-  MockTrigger trigger;
-  EXPECT_CALL(trigger, Do()).Times(AtLeast(1));
-
-  trigger.Do();
-}
 

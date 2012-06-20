@@ -1,6 +1,8 @@
 project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
+set(EXECUTABLE_OUTPUT_PATH bin)
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++0x -O2 -Wall")
 
 enable_testing()
 
