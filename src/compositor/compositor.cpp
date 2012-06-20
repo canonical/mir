@@ -41,6 +41,7 @@ mc::compositor::compositor(
 	assert(buffermanager);
 }
 
-void mc::compositor::render(graphics::display*) {
+void mc::compositor::render(graphics::display*)
+{
 	buffermanager->render();
 }
