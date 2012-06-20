@@ -5,13 +5,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mir
-{
-namespace graphics
-{
-class display;
-}}
-
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
