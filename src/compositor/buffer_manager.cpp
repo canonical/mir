@@ -23,21 +23,19 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_manager.h"
+#include "mir/graphics/framebuffer_backend.h"
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
-
-mc::compositor::compositor(
-	surfaces::scenegraph* scenegraph,
-	buffer_manager* buffermanager)
+mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
 :
-	scenegraph(scenegraph),
-	buffermanager(buffermanager)
+	framebuffer(framebuffer)
 {
 }
 
-void mc::compositor::render(graphics::display*) {
-	buffermanager->render();
+
+void mc::buffer_manager::render() {
+	framebuffer->render();
 }

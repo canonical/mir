@@ -50,8 +50,8 @@ public:
 	virtual void render(graphics::display* display);
 
 private:
-	surfaces::scenegraph* scenegraph;
-	buffer_manager* buffermanager;
+	surfaces::scenegraph* const scenegraph;
+	buffer_manager* const buffermanager;
 };
 
 
