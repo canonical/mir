@@ -23,31 +23,33 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef DRAWER_H_
-#define DRAWER_H_
+#include "mir/compositor/compositor.h"
+#include "mir/compositor/buffer_manager.h"
 
-#include <boost/noncopyable.hpp>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
-namespace mir
+namespace mc = mir::compositor;
+
+namespace
 {
-namespace graphics { class display; }
 
-namespace compositor
-{
-
-// drawer is the interface by which "graphics/libgl" knows
-// the compositor.
-class drawer : boost::noncopyable
+class mock_buffer_renderer : public mc::buffer_renderer
 {
 public:
-	virtual void render(graphics::display* display) = 0;
-protected:
-	drawer() = default;
-	~drawer() = default;
-	drawer& operator=(drawer const&) = delete;
-	drawer(drawer const&) = delete;
+    MOCK_METHOD0(render, void ());
 };
-}}
+}
 
 
-#endif /* DRAWER_H_ */
+TEST(compositor, render)
+{
+	using namespace testing;
+
+	mock_buffer_renderer buffer_renderer;
+	mc::compositor comp(nullptr, &buffer_renderer);
+
+	EXPECT_CALL(buffer_renderer, render()).Times(AtLeast(1));
+
+	comp.render(nullptr);
+}

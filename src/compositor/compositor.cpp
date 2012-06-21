@@ -33,7 +33,7 @@ namespace mc = mir::compositor;
 
 mc::compositor::compositor(
 	surfaces::scenegraph* scenegraph,
-	buffer_manager* buffermanager)
+	buffer_renderer* buffermanager)
 :
 	scenegraph(scenegraph),
 	buffermanager(buffermanager)

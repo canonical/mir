@@ -26,6 +26,8 @@
 #ifndef BUFFER_MANAGER_H_
 #define BUFFER_MANAGER_H_
 
+#include "buffer_renderer.h"
+
 namespace mir
 {
 namespace graphics
@@ -36,21 +38,19 @@ class framebuffer_backend;
 namespace compositor
 {
 
-class buffer_manager
+class buffer_manager : public buffer_renderer
 {
 public:
 
 	explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
 
-	void render();
+	virtual void render();
 
 private:
 	graphics::framebuffer_backend* const framebuffer;
 };
 
-
 }}
-
 
 
 #endif /* BUFFER_MANAGER_H_ */

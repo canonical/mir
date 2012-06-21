@@ -23,31 +23,26 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef DRAWER_H_
-#define DRAWER_H_
+#ifndef FRAMEBUFFER_RENDERER_H_
+#define FRAMEBUFFER_RENDERER_H_
 
 #include <boost/noncopyable.hpp>
 
 namespace mir
 {
-namespace graphics { class display; }
-
 namespace compositor
 {
 
-// drawer is the interface by which "graphics/libgl" knows
-// the compositor.
-class drawer : boost::noncopyable
+class buffer_renderer : boost::noncopyable
 {
 public:
-	virtual void render(graphics::display* display) = 0;
+
+	virtual void render() = 0;
+
 protected:
-	drawer() = default;
-	~drawer() = default;
-	drawer& operator=(drawer const&) = delete;
-	drawer(drawer const&) = delete;
+	~buffer_renderer() = default;
 };
 }}
 
 
-#endif /* DRAWER_H_ */
+#endif /* FRAMEBUFFER_RENDERER_H_ */

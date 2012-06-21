@@ -22,15 +22,5 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-project(Mir)
 
-cmake_minimum_required(VERSION 2.8)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
-
-enable_testing()
-
-include_directories(include/)
-
-add_subdirectory(src/)
-add_subdirectory(tests/)
-add_subdirectory(unit-tests/)
+add_subdirectory(compositor/)
