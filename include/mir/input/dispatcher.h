@@ -39,15 +39,22 @@ class filter;
 
 class dispatcher : public event_handler
 {
- public:
+public:
 
-  dispatcher() = default;
-  
-  void on_event(event * /*e*/) { /* TODO */ }
+    dispatcher() = default;
 
-  void register_filter(filter * /*f*/) { /* TODO */ }
+    void on_event(event * /*e*/)
+    {
+        /* TODO */
+    }
+
+    void register_filter(filter * /*f*/)
+    {
+        /* TODO */
+    }
 };
 
-}}
+}
+}
 
 #endif /* DISPATCHER_H_ */

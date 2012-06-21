@@ -44,12 +44,12 @@ public:
 
 TEST(compositor, render)
 {
-	using namespace testing;
+    using namespace testing;
 
-	mock_buffer_renderer buffer_renderer;
-	mc::compositor comp(nullptr, &buffer_renderer);
+    mock_buffer_renderer buffer_renderer;
+    mc::compositor comp(nullptr, &buffer_renderer);
 
-	EXPECT_CALL(buffer_renderer, render()).Times(AtLeast(1));
+    EXPECT_CALL(buffer_renderer, render()).Times(AtLeast(1));
 
-	comp.render(nullptr);
+    comp.render(nullptr);
 }

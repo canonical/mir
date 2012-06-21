@@ -35,36 +35,37 @@ namespace mi = mir::input;
 namespace
 {
 
-class mock_filter : public mi::filter {
- public:
-  MOCK_METHOD1(accept, bool(mi::event*));
+class mock_filter : public mi::filter
+{
+public:
+    MOCK_METHOD1(accept, bool(mi::event*));
 };
 
 class mock_input_device : public mi::device
 {
 public:
-  mock_input_device(mi::event_handler* h) : mi::device(h)
-  {
-  }
-  
-  void trigger_event()
-  {
-    handler->on_event(nullptr);
-  }
+    mock_input_device(mi::event_handler* h) : mi::device(h)
+    {
+    }
+
+    void trigger_event()
+    {
+        handler->on_event(nullptr);
+    }
 };
 }
 
 TEST(input_dispatch, incoming_input_triggers_filter)
 {
-	using namespace testing;
-        mi::dispatcher dispatcher;
-        
-        mock_filter filter;
-        dispatcher.register_filter(&filter);
-        
-        mock_input_device device(&dispatcher);
-       
-	EXPECT_CALL(filter, accept(_)).Times(AtLeast(1));
-        
-	device.trigger_event();
+    using namespace testing;
+    mi::dispatcher dispatcher;
+
+    mock_filter filter;
+    dispatcher.register_filter(&filter);
+
+    mock_input_device device(&dispatcher);
+
+    EXPECT_CALL(filter, accept(_)).Times(AtLeast(1));
+
+    device.trigger_event();
 }

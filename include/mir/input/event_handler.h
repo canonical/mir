@@ -37,12 +37,13 @@ class event;
 // devices know the input dispatcher
 class event_handler
 {
- public:
-  virtual ~event_handler() {}
+public:
+    virtual ~event_handler() {}
 
-  virtual void on_event(event* e) = 0;
+    virtual void on_event(event* e) = 0;
 };
 
-}}
+}
+}
 
 #endif /* EVENT_HANDLER_H_ */
