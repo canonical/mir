@@ -36,7 +36,7 @@ namespace graphics
 class framebuffer_backend : boost::noncopyable
 {
 public:
-  virtual void render() = 0;
+    virtual void render() = 0;
 };
 }
 }

@@ -43,12 +43,12 @@ namespace compositor
 class drawer : boost::noncopyable
 {
 public:
-  virtual void render(graphics::display* display) = 0;
+    virtual void render(graphics::display* display) = 0;
 protected:
-  drawer() = default;
-  ~drawer() = default;
-  drawer& operator=(drawer const&) = delete;
-  drawer(drawer const&) = delete;
+    drawer() = default;
+    ~drawer() = default;
+    drawer& operator=(drawer const&) = delete;
+    drawer(drawer const&) = delete;
 };
 }
 }

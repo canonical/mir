@@ -43,15 +43,15 @@ class buffer_renderer;
 class compositor : public drawer
 {
 public:
-  explicit compositor(
-    surfaces::scenegraph* scenegraph,
-    buffer_renderer* buffermanager);
+    explicit compositor(
+        surfaces::scenegraph* scenegraph,
+        buffer_renderer* buffermanager);
 
-  virtual void render(graphics::display* display);
+    virtual void render(graphics::display* display);
 
 private:
-  surfaces::scenegraph* const scenegraph;
-  buffer_renderer* const buffermanager;
+    surfaces::scenegraph* const scenegraph;
+    buffer_renderer* const buffermanager;
 };
 
 

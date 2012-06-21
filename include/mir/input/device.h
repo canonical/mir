@@ -39,15 +39,15 @@ class device
 {
 public:
 
-  explicit device (event_handler * handler)
-    : handler(handler)
-  {
-  }
+    explicit device (event_handler * handler)
+        : handler(handler)
+    {
+    }
 
-  virtual ~device() {}
+    virtual ~device() {}
 
 protected:
-  event_handler * handler;
+    event_handler * handler;
 };
 
 }

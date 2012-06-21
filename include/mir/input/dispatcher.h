@@ -41,17 +41,17 @@ class dispatcher : public event_handler
 {
 public:
 
-  dispatcher() = default;
+    dispatcher() = default;
 
-  void on_event(event * /*e*/)
-  {
-    /* TODO */
-  }
+    void on_event(event * /*e*/)
+    {
+        /* TODO */
+    }
 
-  void register_filter(filter * /*f*/)
-  {
-    /* TODO */
-  }
+    void register_filter(filter * /*f*/)
+    {
+        /* TODO */
+    }
 };
 
 }

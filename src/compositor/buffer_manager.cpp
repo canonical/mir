@@ -32,14 +32,14 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
-  :
-  framebuffer(framebuffer)
+    :
+    framebuffer(framebuffer)
 {
-  assert(framebuffer);
+    assert(framebuffer);
 }
 
 
 void mc::buffer_manager::render()
 {
-  framebuffer->render();
+    framebuffer->render();
 }

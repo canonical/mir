@@ -42,12 +42,12 @@ class buffer_manager : public buffer_renderer
 {
 public:
 
-  explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
+    explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
 
-  virtual void render();
+    virtual void render();
 
 private:
-  graphics::framebuffer_backend* const framebuffer;
+    graphics::framebuffer_backend* const framebuffer;
 };
 
 }

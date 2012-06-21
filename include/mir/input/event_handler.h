@@ -38,9 +38,9 @@ class event;
 class event_handler
 {
 public:
-  virtual ~event_handler() {}
+    virtual ~event_handler() {}
 
-  virtual void on_event(event* e) = 0;
+    virtual void on_event(event* e) = 0;
 };
 
 }
