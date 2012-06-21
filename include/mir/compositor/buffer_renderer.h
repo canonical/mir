@@ -37,12 +37,13 @@ class buffer_renderer : boost::noncopyable
 {
 public:
 
-	virtual void render() = 0;
+  virtual void render() = 0;
 
 protected:
-	~buffer_renderer() = default;
+  ~buffer_renderer() = default;
 };
-}}
+}
+}
 
 
 #endif /* FRAMEBUFFER_RENDERER_H_ */

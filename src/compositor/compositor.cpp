@@ -32,16 +32,16 @@ namespace mc = mir::compositor;
 
 
 mc::compositor::compositor(
-	surfaces::scenegraph* scenegraph,
-	buffer_renderer* buffermanager)
-:
-	scenegraph(scenegraph),
-	buffermanager(buffermanager)
+  surfaces::scenegraph* scenegraph,
+  buffer_renderer* buffermanager)
+  :
+  scenegraph(scenegraph),
+  buffermanager(buffermanager)
 {
-	assert(buffermanager);
+  assert(buffermanager);
 }
 
 void mc::compositor::render(graphics::display*)
 {
-	buffermanager->render();
+  buffermanager->render();
 }

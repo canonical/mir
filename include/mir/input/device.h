@@ -37,18 +37,20 @@ class event_handler;
 // into the system via an event handler.
 class device
 {
- public:
+public:
 
   explicit device (event_handler * handler)
-      : handler(handler) {
+    : handler(handler)
+  {
   }
 
   virtual ~device() {}
-  
- protected:
+
+protected:
   event_handler * handler;
 };
 
-}}
+}
+}
 
 #endif /* DEVICE_H_ */

@@ -33,13 +33,15 @@ namespace input
 
 class event;
 
-class filter {
- public:
+class filter
+{
+public:
   virtual ~filter() {}
 
   virtual bool accept(event* e) = 0;
 };
 
-}}
+}
+}
 
 #endif /* FILTER_H_ */
