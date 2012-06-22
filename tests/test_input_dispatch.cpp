@@ -23,8 +23,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/time_source.h"
 #include "mir/input/device.h"
 #include "mir/input/dispatcher.h"
+#include "mir/input/event.h"
 #include "mir/input/filter.h"
 
 #include <gmock/gmock.h>
@@ -43,22 +45,36 @@ public:
 
 class MockInputDevice : public mi::Device
 {
-public:
+ public:
     MockInputDevice(mi::EventHandler* h) : mi::Device(h)
     {
     }
 
     void TriggerEvent()
     {
-        handler->OnEvent(nullptr);
+        handler->OnEvent(&event);
     }
+
+    mi::Event event;
 };
+
+class MockTimeSource : public mir::TimeSource
+{
+ public:
+    MOCK_CONST_METHOD0(Sample, mir::TimeSource::Timestamp());
+};
+    
 }
 
 TEST(input_dispatch, incoming_input_triggers_filter)
 {
     using namespace testing;
-    mi::Dispatcher dispatcher;
+
+    mir::TimeSource::Timestamp ts;
+    DefaultValue<mir::TimeSource::Timestamp>::Set(ts);
+    
+    MockTimeSource time_source;
+    mi::Dispatcher dispatcher(&time_source);
 
     MockFilter filter;
     dispatcher.RegisterShellFilter(&filter);
@@ -70,4 +86,21 @@ TEST(input_dispatch, incoming_input_triggers_filter)
     EXPECT_CALL(filter, Accept(_)).Times(AtLeast(3));
 
     device.TriggerEvent();
+}
+
+TEST(input_dispatch, incoming_input_is_timestamped)
+{
+    using namespace testing;
+
+    mir::TimeSource::Timestamp ts;
+    DefaultValue<mir::TimeSource::Timestamp>::Set(ts);
+    
+    MockTimeSource time_source;
+    mi::Dispatcher dispatcher(&time_source);
+    MockInputDevice device(&dispatcher);
+
+    EXPECT_CALL(time_source, Sample()).Times(AtLeast(1));
+    device.TriggerEvent();
+
+    EXPECT_EQ(device.event.SystemTimestamp(), ts);
 }

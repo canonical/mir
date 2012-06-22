@@ -23,78 +23,39 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DISPATCHER_H_
-#define DISPATCHER_H_
+#ifndef EVENT_H_
+#define EVENT_H_
 
-#include "mir/input/event.h"
-#include "mir/input/event_handler.h"
-#include "mir/input/filter.h"
-
-#include <cassert>
+#include "mir/time_source.h"
 
 namespace mir
 {
-
-class TimeSource;
-
 namespace input
 {
 
-class Device;
-class Event;
-
-class Dispatcher : public EventHandler
-{
- public:
-  
-    explicit Dispatcher(TimeSource* time_source)
-            : time_source(time_source),
-              shell_filter(nullptr),
-              grab_filter(nullptr),
-              application_filter(nullptr) {
-        assert(time_source);
-    }
-  
-    void OnEvent(Event* e)
+class Event {
+  public:
+    Event() = default;
+    ~Event() = default;
+    Event(const Event&) = default;
+    Event& operator=(const Event&) = default;
+    
+    // The system timestamp as assigned to the event
+    // when entering the event processing.
+    const mir::TimeSource::Timestamp SystemTimestamp() const
     {
-        if (!e)
-            return;
-
-        e->SetSystemTimestamp(time_source->Sample());
-        
-        if (shell_filter && shell_filter->Accept(e))
-            return;
-        
-        if (grab_filter && grab_filter->Accept(e))
-            return;
-        
-        if(application_filter)
-            application_filter->Accept(e);
+        return system_timestamp;
     }
     
-    void RegisterShellFilter(Filter* f)
+    void SetSystemTimestamp(mir::TimeSource::Timestamp ts)
     {
-        shell_filter = f;
+        system_timestamp = ts;
     }
     
-    void RegisterGrabFilter(Filter* f)
-    {
-        grab_filter = f;
-    }
-    
-    void RegisterApplicationFilter(Filter* f)
-    {
-        application_filter = f;
-    }
-    
- private:
-    TimeSource* time_source;
-    Filter* shell_filter;
-    Filter* grab_filter;
-    Filter* application_filter;
+  private:
+    mir::TimeSource::Timestamp system_timestamp;
 };
+    
+}}
 
-}
-}
-
-#endif /* DISPATCHER_H_ */
+#endif // EVENT_H_
