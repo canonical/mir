@@ -37,7 +37,7 @@ namespace
 class mock_buffer_renderer : public mc::buffer_renderer
 {
 public:
-    MOCK_METHOD0(render, void ());
+    MOCK_METHOD0(bind_buffer_to_texture, void ());
 };
 }
 
@@ -49,7 +49,7 @@ TEST(compositor, render)
     mock_buffer_renderer buffer_renderer;
     mc::compositor comp(nullptr, &buffer_renderer);
 
-    EXPECT_CALL(buffer_renderer, render()).Times(AtLeast(1));
+    EXPECT_CALL(buffer_renderer, bind_buffer_to_texture()).Times(AtLeast(1));
 
     comp.render(nullptr);
 }

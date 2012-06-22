@@ -44,7 +44,7 @@ public:
 
     explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
 
-    virtual void render();
+    virtual void bind_buffer_to_texture();
 
 private:
     graphics::framebuffer_backend* const framebuffer;

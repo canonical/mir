@@ -43,5 +43,5 @@ mc::compositor::compositor(
 
 void mc::compositor::render(graphics::display*)
 {
-    buffermanager->render();
+    buffermanager->bind_buffer_to_texture();
 }

@@ -37,7 +37,7 @@ class buffer_renderer : boost::noncopyable
 {
 public:
 
-    virtual void render() = 0;
+    virtual void bind_buffer_to_texture() = 0;
 
 protected:
     ~buffer_renderer() = default;
