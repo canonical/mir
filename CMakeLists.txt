@@ -65,6 +65,7 @@ endif (NOT GMOCK_LIBRARY OR NOT GMOCK_MAIN_LIBRARY OR NOT GTEST_FOUND)
 include_directories (${GTEST_INCLUDE_DIRS})
 
 find_package (Threads REQUIRED)
+find_package (Boost REQUIRED)
 
 add_subdirectory(tests/)
 add_subdirectory(unit-tests/)
