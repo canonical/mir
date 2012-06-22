@@ -27,31 +27,57 @@
 #define DISPATCHER_H_
 
 #include "mir/input/event_handler.h"
+#include "mir/input/filter.h"
 
 namespace mir
 {
 namespace input
 {
 
-class device;
-class event;
-class filter;
+class Device;
+class Event;
 
-class dispatcher : public event_handler
+class Dispatcher : public EventHandler
 {
-public:
-
-    dispatcher() = default;
-
-    void on_event(event * /*e*/)
-    {
-        /* TODO */
+ public:
+  
+    Dispatcher()
+            : shell_filter(nullptr),
+              grab_filter(nullptr),
+              application_filter(nullptr) {
     }
-
-    void register_filter(filter * /*f*/)
+  
+    void OnEvent(Event* e)
     {
-        /* TODO */
+        if (shell_filter && shell_filter->Accept(e))
+            return;
+        
+        if (grab_filter && grab_filter->Accept(e))
+            return;
+        
+        if(application_filter)
+            application_filter->Accept(e);
     }
+    
+    void RegisterShellFilter(Filter* f)
+    {
+        shell_filter = f;
+    }
+    
+    void RegisterGrabFilter(Filter* f)
+    {
+        grab_filter = f;
+    }
+    
+    void RegisterApplicationFilter(Filter* f)
+    {
+        application_filter = f;
+    }
+    
+ private:
+    Filter* shell_filter;
+    Filter* grab_filter;
+    Filter* application_filter;
 };
 
 }

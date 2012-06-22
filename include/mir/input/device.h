@@ -31,23 +31,23 @@ namespace mir
 namespace input
 {
 
-class event_handler;
+class EventHandler;
 
 // Abstracts an input device that feeds events
 // into the system via an event handler.
-class device
+class Device
 {
-public:
+ public:
 
-    explicit device (event_handler * handler)
-        : handler(handler)
+    explicit Device (EventHandler * handler)
+            : handler(handler)
     {
     }
 
-    virtual ~device() {}
+    virtual ~Device() {}
 
-protected:
-    event_handler * handler;
+ protected:
+    EventHandler * handler;
 };
 
 }
