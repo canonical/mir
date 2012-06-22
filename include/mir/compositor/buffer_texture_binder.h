@@ -23,8 +23,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef FRAMEBUFFER_RENDERER_H_
-#define FRAMEBUFFER_RENDERER_H_
+#ifndef BUFFER_TEXTURE_BINDER_H_
+#define BUFFER_TEXTURE_BINDER_H_
 
 #include <boost/noncopyable.hpp>
 
@@ -33,17 +33,17 @@ namespace mir
 namespace compositor
 {
 
-class buffer_renderer : boost::noncopyable
+class buffer_texture_binder : boost::noncopyable
 {
 public:
 
     virtual void bind_buffer_to_texture() = 0;
 
 protected:
-    ~buffer_renderer() = default;
+    ~buffer_texture_binder() = default;
 };
 }
 }
 
 
-#endif /* FRAMEBUFFER_RENDERER_H_ */
+#endif /* BUFFER_TEXTURE_BINDER_H_ */

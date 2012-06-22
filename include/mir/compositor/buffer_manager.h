@@ -38,7 +38,7 @@ class framebuffer_backend;
 namespace compositor
 {
 
-class buffer_manager : public buffer_renderer
+class buffer_manager : public buffer_texture_binder
 {
 public:
 

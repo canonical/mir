@@ -34,7 +34,7 @@ namespace mc = mir::compositor;
 namespace
 {
 
-class mock_buffer_renderer : public mc::buffer_renderer
+class mock_buffer_texture_binder : public mc::buffer_texture_binder
 {
 public:
     MOCK_METHOD0(bind_buffer_to_texture, void ());
@@ -46,10 +46,10 @@ TEST(compositor, render)
 {
     using namespace testing;
 
-    mock_buffer_renderer buffer_renderer;
-    mc::compositor comp(nullptr, &buffer_renderer);
+    mock_buffer_texture_binder buffer_texture_binder;
+    mc::compositor comp(nullptr, &buffer_texture_binder);
 
-    EXPECT_CALL(buffer_renderer, bind_buffer_to_texture()).Times(AtLeast(1));
+    EXPECT_CALL(buffer_texture_binder, bind_buffer_to_texture()).Times(AtLeast(1));
 
     comp.render(nullptr);
 }
