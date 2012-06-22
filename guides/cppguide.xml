@@ -2446,6 +2446,7 @@ Thomas Voss
         All compile-time constants, whether they are declared locally,
         globally, or as part of a class, follow a slightly different naming
         convention from other variables. Use CamelCase with a leading k.
+
       </p>
       <CODE_SNIPPET>
         const int kDaysInAWeek = 7;
@@ -2514,22 +2515,22 @@ Thomas Voss
 
   <STYLEPOINT title="Enumerator Names">
     <SUMMARY>
-      Enumerators should be named like
-      <A HREF="#Constant_Names">constants</A>: <code>kEnumName</code>.
+      Enumerators should be named like 
+      <A HREF="#Class_Data_Members">member variables</A>: <code>out_of_memory</code>, enclosed within an enum class.
     </SUMMARY>
     <BODY>
       <p>
         Preferably, the individual enumerators should be named like
-        <A HREF="#Constant_Names">constants</A>.  The enumeration name,
+        <A HREF="#Class_Data_Members">class data members</A>.  The enumeration name,
         <code>UrlTableErrors</code>, is a type, and
         therefore mixed case.
       </p>
       <CODE_SNIPPET>
-        enum UrlTableErrors
+        enum class UrlTableErrors
         {
-          kOk,
-          kOutOfMemory,
-          kMalformedInput,
+          ok,
+          out_of_memory,
+          malformed_input,
         };
       </CODE_SNIPPET>
     </BODY>
