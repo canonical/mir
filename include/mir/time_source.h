@@ -32,21 +32,25 @@
 
 #include <cstdint>
 
-namespace units = boost::units;
-namespace si = units::si;
-
 namespace mir
 {
 
+namespace units = boost::units;
+namespace si = units::si;
+
+typedef units::make_scaled_unit<
+    si::time,
+    units::scale<10, units::static_rational<-6> > >::type TimestampUnit;
+typedef units::quantity<TimestampUnit, uint64_t> Timestamp;
+
 class TimeSource {
  public:
-
-    typedef units::make_scaled_unit<si::time, units::scale<10, units::static_rational<-6> > >::type TimestampUnit;
-    typedef units::quantity<TimestampUnit, uint64_t> Timestamp;
-    
     virtual ~TimeSource() {}
 
     virtual Timestamp Sample() const = 0;
+    
+ protected:    
+    TimeSource() = default;
 };
 
 }

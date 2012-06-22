@@ -61,7 +61,7 @@ class MockInputDevice : public mi::Device
 class MockTimeSource : public mir::TimeSource
 {
  public:
-    MOCK_CONST_METHOD0(Sample, mir::TimeSource::Timestamp());
+    MOCK_CONST_METHOD0(Sample, mir::Timestamp());
 };
     
 }
@@ -70,8 +70,8 @@ TEST(input_dispatch, incoming_input_triggers_filter)
 {
     using namespace testing;
 
-    mir::TimeSource::Timestamp ts;
-    DefaultValue<mir::TimeSource::Timestamp>::Set(ts);
+    mir::Timestamp ts;
+    DefaultValue<mir::Timestamp>::Set(ts);
     
     MockTimeSource time_source;
     mi::Dispatcher dispatcher(&time_source);
@@ -92,8 +92,8 @@ TEST(input_dispatch, incoming_input_is_timestamped)
 {
     using namespace testing;
 
-    mir::TimeSource::Timestamp ts;
-    DefaultValue<mir::TimeSource::Timestamp>::Set(ts);
+    mir::Timestamp ts;
+    DefaultValue<mir::Timestamp>::Set(ts);
     
     MockTimeSource time_source;
     mi::Dispatcher dispatcher(&time_source);
