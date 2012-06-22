@@ -26,7 +26,7 @@
 #ifndef BUFFER_MANAGER_H_
 #define BUFFER_MANAGER_H_
 
-#include "buffer_renderer.h"
+#include "buffer_texture_binder.h"
 
 namespace mir
 {
