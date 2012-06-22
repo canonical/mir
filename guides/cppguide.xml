@@ -301,8 +301,8 @@ Thomas Voss
 
   <STYLEPOINT title="Function Parameter Ordering">
     <SUMMARY>
-      When defining a function, parameter order is: inputs,
-      then outputs.
+      When defining a function, parameter order is: outputs,
+      then inputs.
     </SUMMARY>
     <BODY>
       <p>
@@ -310,10 +310,10 @@ Thomas Voss
         function, output from the function, or both. Input parameters
         are usually values or <code>const</code> references, while output
         and input/output parameters will be non-<code>const</code>
-        pointers. When ordering function parameters, put all input-only
-        parameters before any output parameters.  In particular, do not add
+        pointers. When ordering function parameters, put all output
+        parameters before any input-only parameters.  In particular, do not add
         new parameters to the end of the function just because they are
-        new; place new input-only parameters before the output
+        new; place new output parameters before the input-only
         parameters.
       </p>
       <p>
@@ -328,11 +328,11 @@ Thomas Voss
   <STYLEPOINT title="Names and Order of Includes">
     <SUMMARY>
       Use standard order for readability and to avoid hidden
-      dependencies: C library, C++ library,
-
-      other libraries' <code>.h</code>, your
-      project's
-      <code>.h</code>.
+      dependencies: your
+      project's public
+      <code>.h</code>, your
+      project's private 
+      <code>.h</code>, other libraries' <code>.h</code>, .C library, C++ library,      
     </SUMMARY>
     <BODY>
       <p>
@@ -358,12 +358,17 @@ Thomas Voss
       <ol>
         <li> <code><var>dir2/foo2</var>.h</code> (preferred location
           &#8212; see details below).</li>
-        <li> C system files.</li>
-        <li> C++ system files.</li>
-        <li> Other libraries' <code>.h</code> files.</li>
-        <li>
-             Your project's
-             <code>.h</code> files.</li>
+	  <li>
+	    Your project's public 
+	  <code>.h</code> files.
+	  </li>
+	  <li>
+	    Your project's private  
+	  <code>.h</code> files.
+	  </li>
+	  <li> Other libraries' <code>.h</code> files.</li>
+	  <li> C system files.</li>
+	  <li> C++ system files.</li>
       </ol>
       <p>
         The preferred ordering reduces hidden dependencies.  We want
@@ -393,15 +398,15 @@ Thomas Voss
       <CODE_SNIPPET>
         #include "foo/public/fooserver.h"  // Preferred location.
 
+	#include "base/basictypes.h"
+        #include "base/commandlineflags.h"
+        #include "foo/public/bar.h"
+
         #include &lt;sys/types.h&gt;
         #include &lt;unistd.h&gt;
 
         #include &lt;hash_map&gt;
         #include &lt;vector&gt;
-
-        #include "base/basictypes.h"
-        #include "base/commandlineflags.h"
-        #include "foo/public/bar.h"
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -827,7 +832,7 @@ Thomas Voss
   them extensively. This section lists the main dos and don'ts you
   should follow when writing a class.
 
-  <STYLEPOINT title="Doing Work in Constructors">
+  <!--<STYLEPOINT title="Doing Work in Constructors">
     <SUMMARY>
       In general, constructors should merely set member variables to their
       initial values.  Any complex initialization should go in an explicit
@@ -877,7 +882,7 @@ Thomas Voss
         errors, access potentially uninitialized global variables, etc.
       </DECISION>
     </BODY>
-  </STYLEPOINT>
+  </STYLEPOINT>-->
 
   <STYLEPOINT title="Default Constructors">
     <SUMMARY>
@@ -971,7 +976,7 @@ Thomas Voss
   <STYLEPOINT title="Copy Constructors">
     <SUMMARY>
       Provide a copy constructor and assignment operator only when necessary.
-      Otherwise, disable them with <code>DISALLOW_COPY_AND_ASSIGN</code>.
+      Otherwise, disable them with the help of <code>= delete;</code>.
     </SUMMARY>
     <BODY>
       <DEFINITION>
@@ -1015,40 +1020,8 @@ Thomas Voss
         <p>
           If your class does not need a copy constructor or assignment
           operator, you must explicitly disable them.
-
-
-          To do so, add dummy declarations for the copy constructor and
-          assignment operator in the <code>private:</code> section of your
-          class, but do not provide any corresponding definition (so that
-          any attempt to use them results in a link error).
         </p>
-        <p>
-          For convenience, a <code>DISALLOW_COPY_AND_ASSIGN</code> macro
-          can be used:
-        </p>
-        <CODE_SNIPPET>
-          // A macro to disallow the copy constructor and operator= functions
-          // This should be used in the private: declarations for a class
-          #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-            TypeName(const TypeName&amp;);               \
-            void operator=(const TypeName&amp;)
-        </CODE_SNIPPET>
-        <p>
-          Then, in <code>class Foo</code>:
-        </p>
-        <CODE_SNIPPET>
-          class Foo {
-           public:
-            Foo(int f);
-            ~Foo();
-
-           private:
-            DISALLOW_COPY_AND_ASSIGN(Foo);
-          };
-        </CODE_SNIPPET>
-        <p>
-        </p>
-
+	
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -1258,7 +1231,7 @@ Thomas Voss
 
   <STYLEPOINT title="Operator Overloading">
     <SUMMARY>
-      Do not overload operators except in rare, special circumstances.
+      Overload operators where appropriate.
     </SUMMARY>
     <BODY>
       <DEFINITION>
@@ -1300,31 +1273,9 @@ Thomas Voss
       </CONS>
       <DECISION>
         <p>
-          In general, do not overload operators. The assignment operator
-          (<code>operator=</code>), in particular, is insidious and
-          should be avoided.  You can define functions like
-          <code>Equals()</code> and <code>CopyFrom()</code> if you
-          need them.  Likewise, avoid the dangerous
-          unary <code>operator&amp;</code> at all costs, if there's
-          any possibility the class might be forward-declared.
+          In general, do overload operators where appropriate. 
         </p>
-        <p>
-          However, there may be rare cases where you need to overload
-          an operator to interoperate with templates or "standard" C++
-          classes (such as <code>operator&lt;&lt;(ostream&amp;, const
-          T&amp;)</code> for logging).  These are acceptable if fully
-          justified, but you should try to avoid these whenever
-          possible.  In particular, do not overload <code>operator==</code>
-          or <code>operator&lt;</code> just so that your class can be
-          used as a key in an STL container; instead, you should
-          create equality and comparison functor types when declaring
-          the container.
-        </p>
-        <p>
-          Some of the STL algorithms do require you to overload
-          <code>operator==</code>, and you may do so in these cases,
-          provided you document why.
-        </p>
+        
         <p>
           See also <a HREF="#Copy_Constructors">Copy Constructors</a>
           and <a HREF="#Function_Overloading">Function
@@ -1437,64 +1388,7 @@ Thomas Voss
   </STYLEPOINT>
 </CATEGORY>
 
-<CATEGORY title="Google-Specific Magic">
-
-  <p>
-    There are various tricks and utilities that we use to make C++
-    code more robust, and various ways we use C++ that may differ from
-    what you see elsewhere.
-  </p>
-
-
-
-  <STYLEPOINT title="Smart Pointers">
-
-    <SUMMARY>
-      If you actually need pointer semantics, <code>std::unique_ptr</code>
-      is great.  You should only use <code>std::shared_ptr</code>
-      with a non-const referent when it is truly necessary to share ownership
-      of an object (e.g. inside an STL container). You should never use
-      <code>auto_ptr</code>.
-    </SUMMARY>
-    <BODY>
-      <DEFINITION>
-        "Smart" pointers are objects that act like pointers, but automate
-        management of the underlying memory.
-      </DEFINITION>
-      <PROS>
-        Smart pointers are extremely useful for preventing memory leaks, and
-        are essential for writing exception-safe code. They also formalize
-        and document the ownership of dynamically allocated memory.
-      </PROS>
-      <CONS>
-        We prefer designs in which objects have single, fixed owners. Smart
-        pointers which enable sharing or transfer of ownership can act as a
-        tempting alternative to a careful design of ownership semantics,
-        leading to confusing code and even bugs in which memory is never
-        deleted. The semantics of smart pointers (especially
-        <code>auto_ptr</code>) can be nonobvious and confusing. The
-        exception-safety benefits of smart pointers are not decisive, since
-        we do not allow exceptions.
-      </CONS>
-      <DECISION>
-        <dl>
-          <dt><code>unique_ptr</code></dt>
-          <dd>Straightforward and risk-free. Use wherever appropriate.</dd>
-          <dt><code>auto_ptr</code></dt>
-          <dd>Confusing and bug-prone ownership-transfer semantics. Do not use.
-            </dd>
-          <dt><code>shared_ptr</code></dt>
-          <dd>
-          Safe with const referents (i.e. <code>shared_ptr&lt;const
-          T&gt;</code>). Reference-counted pointers with non-const referents
-          can occasionally be the best design, but try to rewrite with single
-          owners where possible.
-          </dd>
-        </dl>
-      </DECISION>
-    </BODY>
-  </STYLEPOINT>
-
+<CATEGORY>
   <STYLEPOINT title="cpplint">
     <SUMMARY>
       Use
@@ -1518,8 +1412,6 @@ Thomas Voss
       </p>
     </BODY>
   </STYLEPOINT>
-
-
 </CATEGORY>
 
 <CATEGORY title="Other C++ Features">
@@ -1711,170 +1603,6 @@ Thomas Voss
         access to it.  However, most classes should interact with
         other classes solely through their public members.
       </p>
-    </BODY>
-  </STYLEPOINT>
-
-  <STYLEPOINT title="Exceptions">
-    <SUMMARY>
-      We do not use C++ exceptions.
-    </SUMMARY>
-    <BODY>
-      <PROS>
-        <ul>
-          <li>Exceptions allow higher levels of an application to
-          decide how to handle "can't happen" failures in deeply
-          nested functions, without the obscuring and error-prone
-          bookkeeping of error codes.</li>
-
-
-
-          <li>Exceptions are used by most other modern
-          languages.  Using them in C++ would make it more consistent with
-          Python, Java, and the C++ that others are familiar with.</li>
-
-          <li>Some third-party C++ libraries use exceptions, and turning
-          them off internally makes it harder to integrate with those
-          libraries.</li>
-
-          <li>Exceptions are the only way for a constructor to fail.
-          We can simulate this with a factory function or an
-          <code>Init()</code> method, but these require heap
-          allocation or a new "invalid" state, respectively.</li>
-
-          <li>Exceptions are really handy in testing frameworks.</li>
-        </ul>
-      </PROS>
-      <CONS>
-        <ul>
-          <li>When you add a <code>throw</code> statement to an existing
-          function, you must examine all of its transitive callers. Either
-          they must make at least the basic exception safety guarantee, or
-          they must never catch the exception and be happy with the
-          program terminating as a result. For instance, if
-          <code>f()</code> calls <code>g()</code> calls
-          <code>h()</code>, and <code>h</code> throws an exception
-          that <code>f</code> catches, <code>g</code> has to be
-          careful or it may not clean up properly.</li>
-
-          <li>More generally, exceptions make the control flow of
-          programs difficult to evaluate by looking at code: functions
-          may return in places you don't expect. This causes
-          maintainability and debugging difficulties. You can minimize
-          this cost via some rules on how and where exceptions can be
-          used, but at the cost of more that a developer needs to know
-          and understand.</li>
-
-          <li>Exception safety requires both RAII and different coding
-          practices. Lots of supporting machinery is needed to make
-          writing correct exception-safe code easy. Further, to avoid
-          requiring readers to understand the entire call graph,
-          exception-safe code must isolate logic that writes to
-          persistent state into a "commit" phase. This will have both
-          benefits and costs (perhaps where you're forced to obfuscate
-          code to isolate the commit). Allowing exceptions would force
-          us to always pay those costs even when they're not worth
-          it.</li>
-
-          <li>Turning on exceptions adds data to each binary produced,
-          increasing compile time (probably slightly) and possibly
-          increasing address space pressure.
-          </li>
-
-          <li>The availability of exceptions may encourage developers
-          to throw them when they are not appropriate or recover from
-          them when it's not safe to do so. For example, invalid user
-          input should not cause exceptions to be thrown. We would
-          need to make the style guide even longer to document these
-          restrictions!</li>
-        </ul>
-      </CONS>
-      <DECISION>
-        <p>
-          On their face, the benefits of using exceptions outweigh the
-          costs, especially in new projects.  However, for existing code,
-          the introduction of exceptions has implications on all dependent
-          code.  If exceptions can be propagated beyond a new project, it
-          also becomes problematic to integrate the new project into
-          existing exception-free code.  Because most existing C++ code of
-          Unity is not prepared to deal with exceptions, it is
-          comparatively difficult to adopt new code that generates
-          exceptions.
-        </p>
-        <p>
-          Given that Unity's existing code is not exception-tolerant, the
-          costs of using exceptions are somewhat greater than the costs in
-          a new project.  The conversion process would be slow and
-          error-prone.  We don't believe that the available alternatives to
-          exceptions, such as error codes and assertions, introduce a
-          significant burden.
-
-        </p>
-        <p>
-          Our advice against using exceptions is not predicated on
-          philosophical or moral grounds, but practical ones.
-
-          Things would probably be different if we had to do it all over
-          again from scratch.
-        </p>
-      </DECISION>
-    </BODY>
-  </STYLEPOINT>
-
-  <STYLEPOINT title="Run-Time Type Information (RTTI)">
-    <SUMMARY>
-      We do not use Run Time Type Information (RTTI).
-    </SUMMARY>
-    <BODY>
-      <DEFINITION>
-        RTTI allows a programmer to query the C++ class of an
-        object at run time.
-      </DEFINITION>
-      <PROS>
-        <p>
-          It is useful in some unittests. For example, it is useful in
-          tests of factory classes where the test has to verify that a
-          newly created object has the expected dynamic type.
-        </p>
-        <p>
-          In rare circumstances, it is useful even outside of
-          tests.
-        </p>
-      </PROS>
-      <CONS>
-        A query of type during run-time typically means a
-        design problem.  If you need to know the type of an
-        object at runtime, that is often an indication that
-        you should reconsider the design of your class.
-      </CONS>
-      <DECISION>
-        <p>
-          Do not use RTTI, except in unittests.  If you find yourself
-          in need of writing code that behaves differently based on
-          the class of an object, consider one of the alternatives to
-          querying the type.
-        </p>
-        <p>
-          Virtual methods are the preferred way of executing different
-          code paths depending on a specific subclass type.  This puts
-          the work within the object itself.
-        </p>
-        <p>
-          If the work belongs outside the object and instead in some
-          processing code, consider a double-dispatch solution, such
-          as the Visitor design pattern.  This allows a facility
-          outside the object itself to determine the type of class
-          using the built-in type system.
-        </p>
-        <p>
-          If you think you truly cannot use those ideas,
-
-          you may use RTTI.  But think twice
-          about it.  :-)  Then think twice again.
-          Do not hand-implement an RTTI-like workaround. The arguments
-          against RTTI apply just as much to workarounds like class
-          hierarchies with type tags.
-        </p>
-      </DECISION>
     </BODY>
   </STYLEPOINT>
 
@@ -2167,13 +1895,11 @@ Thomas Voss
 
   <STYLEPOINT title="Integer Types">
     <SUMMARY>
-      Of the built-in C++ integer types, the only one used
-
-      is <code>int</code>.  If a program needs a variable of a different
-      size, use
-
-      a precise-width integer type from
-      <code>&lt;stdint.h&gt;</code>, such as <code>int16_t</code>.
+      Use built-in C++ integer types, both signed and unsigned
+      int. Use more specific types like <code>size_t</code> where
+      appropriate. If a program needs a variable of a different size,
+      use a precise-width integer type from
+      <code>&lt;cstdint&gt;</code>, such as <code>int16_t</code>.
     </SUMMARY>
     <BODY>
       <DEFINITION>
@@ -2192,71 +1918,23 @@ Thomas Voss
       <DECISION>
         <p>
 
-          <code>&lt;stdint.h&gt;</code> defines
+          <code>&lt;cstdint&gt;</code> defines
           types like <code>int16_t</code>, <code>uint32_t</code>,
           <code>int64_t</code>, etc.
           You should always use those in preference to
           <code>short</code>, <code>unsigned long long</code> and the
           like, when you need a guarantee on the size of an integer.
-          Of the C integer types, only <code>int</code> should be
-          used.  When appropriate, you are welcome to use standard
+          When appropriate, you are welcome to use standard
           types like <code>size_t</code> and <code>ptrdiff_t</code>.
         </p>
-        <p>
-          We use <code>int</code> very often, for integers we know are not
-          going to be too big, e.g., loop counters. Use plain old
-          <code>int</code> for such things. You should assume that an
-          <code>int</code> is
-
-          at least 32 bits,
-          but don't assume that it has more than 32 bits.
-          If you need a 64-bit integer type, use
-          <code>int64_t</code> or
-          <code>uint64_t</code>.
-        </p>
-        <p>
+	<p>
           For integers we know can be "big",
            use
           <code>int64_t</code>.
 
         </p>
-        <p>
-          You should not use the unsigned integer types such as
-          <code>uint32_t</code>,
-          unless the quantity you are representing is really a bit pattern
-          rather than a number, or unless you need defined
-          twos-complement overflow. In particular, do not use unsigned
-          types to say a number will never be negative.  Instead, use
-
-          assertions for this.
-        </p>
-
+        
       </DECISION>
-
-      <SUBSECTION title="On Unsigned Integers">
-        <p>
-          Some people, including some textbook authors, recommend
-          using unsigned types to represent numbers that are never
-          negative.  This is intended as a form of self-documentation.
-          However, in C, the advantages of such documentation are
-          outweighed by the real bugs it can introduce.  Consider:
-        </p>
-        <CODE_SNIPPET>
-          for (unsigned int i = foo.Length()-1; i &gt;= 0; --i) ...
-        </CODE_SNIPPET>
-        <p>
-          This code will never terminate!  Sometimes gcc will notice
-          this bug and warn you, but often it will not.  Equally bad
-          bugs can occur when comparing signed and unsigned
-          variables.  Basically, C's type-promotion scheme causes
-          unsigned types to behave differently than one might expect.
-        </p>
-        <p>
-          So, document that a variable is non-negative using
-          assertions.
-          Don't use an unsigned type.
-        </p>
-      </SUBSECTION>
     </BODY>
   </STYLEPOINT>
 
@@ -2507,113 +2185,16 @@ Thomas Voss
   </BODY>
   </STYLEPOINT>
 
-  <STYLEPOINT title="Boost">
+  <STYLEPOINT>
   <SUMMARY>
-    Use only approved libraries from the Boost library collection.
-  </SUMMARY>
-  <BODY>
-    <DEFINITION>
-      The <a href="http://www.boost.org/">Boost library collection</a> is
-      a popular collection of peer-reviewed, free, open-source C++ libraries.
-    </DEFINITION>
-    <PROS>
-      Boost code is generally very high-quality, is widely portable, and fills
-      many important gaps in the C++ standard library, such as type traits,
-      better binders, and better smart pointers. It also provides an
-      implementation of the TR1 extension to the standard library.
-    </PROS>
-    <CONS>
-      Some Boost libraries encourage coding practices which can hamper
-      readability, such as metaprogramming and other advanced template
-      techniques, and an excessively "functional" style of programming.
-
-    </CONS>
-    <DECISION>
-
-      <div>
-
-        In order to maintain a high level of readability for all contributors
-        who might read and maintain code, we only allow an approved subset of
-        Boost features.  Currently, the following libraries are permitted:
-        <ul>
-          <li> <a href="http://www.boost.org/libs/utility/call_traits.htm">
-               Call Traits</a> from <code>boost/call_traits.hpp</code>
-               </li>
-          <li> <a href="http://www.boost.org/libs/utility/compressed_pair.htm">
-               Compressed Pair</a> from <code>boost/compressed_pair.hpp</code>
-               </li>
-          <li> <a href="http://www.boost.org/libs/ptr_container/">
-               Pointer Container</a> from <code>boost/ptr_container</code> except
-               serialization and wrappers for containers not in the C++03
-               standard (<code>ptr_circular_buffer.hpp</code> and
-               <code>ptr_unordered*</code>)
-               </li>
-          <li> <a href="http://www.boost.org/libs/array/">
-               Array</a> from <code>boost/array.hpp</code>
-               </li>
-          <li> <a href="http://www.boost.org/libs/graph/">
-               The Boost Graph Library (BGL)</a> from <code>boost/graph</code>,
-               except serialization (<code>adj_list_serialize.hpp</code>) and
-               parallel/distributed algorithms and data structures
-               (<code>boost/graph/parallel/*</code> and
-               <code>boost/graph/distributed/*</code>).
-               </li>
-          <li> <a href="http://www.boost.org/libs/property_map/">
-               Property Map</a> from <code>boost/property_map</code>, except
-               parallel/distributed property maps
-               (<code>boost/property_map/parallel/*</code>).
-               </li>
-          <li> The part of
-               <a href="http://www.boost.org/libs/iterator/">
-               Iterator</a> that deals with defining iterators:
-               <code>boost/iterator/iterator_adaptor.hpp</code>,
-               <code>boost/iterator/iterator_facade.hpp</code>, and
-               <code>boost/function_output_iterator.hpp</code></li>
-        </ul>
-        We are actively considering adding other Boost features to the list, so
-        this rule may be relaxed in the future.
-      </div>
-    </DECISION>
-  </BODY>
-  </STYLEPOINT>
-
-  <STYLEPOINT title="C++11">
-  <SUMMARY>
-    Use only approved libraries and language extensions from C++11.
+    Use C++11 features wherever appropriate.
   </SUMMARY>
   <BODY>
     <DEFINITION>
       C++11 is the current ISO C++ standard.  It contains
       <a href="http://en.wikipedia.org/wiki/C%2B%2B0x">significant
       changes</a> both to the language and libraries from the older standard.
-      No compiler currently implements the entire new specification.
     </DEFINITION>
-    <PROS>
-      C++11 standardizes some common C++ extensions that we use already,
-      allows shorthands for some operations, and has some safety improvements.
-    </PROS>
-    <CONS>
-      Care is needed with some C++11 features that may not be fully implemented.
-    </CONS>
-    <DECISION>
-      <p>
-        The range based <code>for</code> is the preferred way to iterate over containers
-        when simple iteration is needed.
-      </p>
-      <p>
-        The <code>auto</code> keyword is acceptable within reason.
-      </p>
-      <p>
-        Strong enums are preferred where the integer values are not explicitly needed.
-      </p>
-      <p>
-        Lambda functions are acceptable within reason.
-      </p>
-      <p>
-        Use <code>unique_ptr</code> and <code>shared_ptr</code> from
-        <code>&lt;memory&gt;</code>.
-      </p>
-    </DECISION>
   </BODY>
   </STYLEPOINT>
 
@@ -2796,9 +2377,9 @@ Thomas Voss
   <STYLEPOINT title="Variable Names">
     <SUMMARY>
       Variable names are all lowercase, with underscores between
-      words.  Class member variables have trailing underscores.  For
+      words.  Class member variables follow this convention. For
       instance: <code>my_exciting_local_variable</code>,
-      <code>my_exciting_member_variable_</code>.
+      <code>my_exciting_member_variable</code>.
     </SUMMARY>
     <BODY>
       <SUBSECTION title="Common Variable names">
@@ -2818,20 +2399,18 @@ Thomas Voss
         <p>
           Data members (also called instance variables or member
           variables) are lowercase with optional underscores like
-          regular variable names, but always end with a trailing
-          underscore.
+          regular variable names.
         </p>
         <CODE_SNIPPET>
-          string table_name_;  // OK - underscore at end.
-          string tablename_;   // OK.
+          string table_name;  // OK - underscore at end.
+          string tablename;   // OK.
         </CODE_SNIPPET>
       </SUBSECTION>
 
       <SUBSECTION title="Struct Variables">
         <p>
           Data members in structs should be named like regular
-          variables without the trailing underscores that data members
-          in classes have.
+          variables.
         </p>
         <CODE_SNIPPET>
           struct UrlTableProperties
@@ -2859,33 +2438,29 @@ Thomas Voss
 
   <STYLEPOINT title="Constant Names">
     <SUMMARY>
-      Use upper-case with underscores between words:
-      <code>DAYS_IN_A_WEEK</code>.
+      Use CamelCase with a leading k
+      <code>kDaysInAWeek</code>.
     </SUMMARY>
     <BODY>
       <p>
         All compile-time constants, whether they are declared locally,
         globally, or as part of a class, follow a slightly different naming
-        convention from other variables. Use upper-case with underscores.
+        convention from other variables. Use CamelCase with a leading k.
       </p>
       <CODE_SNIPPET>
-        const int DAYS_IN_A_WEEK = 7;
+        const int kDaysInAWeek = 7;
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
 
   <STYLEPOINT title="Function Names">
     <SUMMARY>
-      Regular functions have mixed case; accessors and mutators match
-      the name of the variable: <code>MyExcitingFunction()</code>,
-      <code>MyExcitingMethod()</code>,
-      <code>my_exciting_member_variable()</code>,
-      <code>set_my_exciting_member_variable()</code>.
+      Regular functions, accessors and mutators have mixed case.
     </SUMMARY>
     <BODY>
       <SUBSECTION title="Regular Functions">
         <p>
-          Functions should start with a capital letter and have a
+          Functions and Accessors should start with a capital letter and have a
           capital letter for each new word. No underscores.
         </p>
         <p>
@@ -2903,29 +2478,21 @@ Thomas Voss
 
       <SUBSECTION title="Accessors and Mutators">
         <p>
-          Accessors and mutators (get and set functions) should match
-          the name of the variable they are getting and setting.  This
-          shows an excerpt of a class whose instance variable is
-          <code>num_entries_</code>.
+          Accessors and mutators (get and set functions) should follow
+          the naming conventions for regular functions.
         </p>
         <CODE_SNIPPET>
           class MyClass
           {
            public:
             ...
-            int num_entries() const { return num_entries_; }
-            void set_num_entries(int num_entries) { num_entries_ = num_entries; }
+            int NumEntries() const { return num_entries; }
+            void SetNumEntries(int num_entries) { num_entries = num_entries; }
 
            private:
-            int num_entries_;
+            int num_entries;
           };
         </CODE_SNIPPET>
-        <p>
-          You may also use lowercase letters for other very short
-          inlined functions. For example if a function were so cheap
-          you would not cache the value if you were calling it in a
-          loop, then lowercase naming would be acceptable.
-        </p>
       </SUBSECTION>
     </BODY>
   </STYLEPOINT>
@@ -2947,9 +2514,8 @@ Thomas Voss
 
   <STYLEPOINT title="Enumerator Names">
     <SUMMARY>
-      Enumerators should be named <i>either</i> like
-      <A HREF="#Constant_Names">constants</A> and
-      <A HREF="#Macro_Names">macros</A>: <code>ENUM_NAME</code>.
+      Enumerators should be named like
+      <A HREF="#Constant_Names">constants</A>: <code>kEnumName</code>.
     </SUMMARY>
     <BODY>
       <p>
@@ -2961,9 +2527,9 @@ Thomas Voss
       <CODE_SNIPPET>
         enum UrlTableErrors
         {
-          OK,
-          OUT_OF_MEMORY,
-          MALFORMED_INPUT,
+          kOk,
+          kOutOfMemory,
+          kMalformedInput,
         };
       </CODE_SNIPPET>
     </BODY>
@@ -3253,7 +2819,7 @@ Thomas Voss
            // Keeps track of the total number of entries in the table.
            // Used to ensure we do not go over the limit. -1 means
            // that we don't yet know how many entries the table has.
-           int num_total_entries_;
+           int num_total_entries;
         </CODE_SNIPPET>
       </SUBSECTION>
 
@@ -3265,7 +2831,7 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           // The total number of tests cases that we run through in this regression test.
-          const int NUM_TEST_CASES = 6;
+          const int kNumTestCases = 6;
         </CODE_SNIPPET>
       </SUBSECTION>
     </BODY>
@@ -3495,15 +3061,16 @@ Thomas Voss
 
   <STYLEPOINT title="Line Length">
     <SUMMARY>
-      Each line of text in your code should be at most 80 characters
+      Each line of text in your code should be at most 120 characters
       long.
     </SUMMARY>
     <BODY>
 
       <p>
-        We recognize that this rule is controversial, but so much existing
-        code already adheres to it, and we feel that consistency is
-        important.
+        We recognize that this rule is controversial, with so much
+        existing code already adhering to a maximum line length of 80
+        characters. However, we favor sensible naming of variables and
+        functions over the limit of 80 characters.
       </p>
       <PROS>
           Those who favor
@@ -3514,7 +3081,7 @@ Thomas Voss
           several code windows side-by-side, and thus don't have room to
           widen their windows in any case.  People set up their work
           environment assuming a particular maximum window width, and 80
-          columns has been the traditional standard.  Why change it?
+          columns has been the traditional standard.  Why change it? 
       </PROS>
       <CONS>
           Proponents of change argue that a wider line can make code
@@ -3526,25 +3093,8 @@ Thomas Voss
       </CONS>
       <DECISION>
         <p>
-
-          80 characters is the maximum.
-        </p>
-        <p>
-          Exception: if a comment line contains an example command or
-          a literal URL longer than 80 characters, that line may be
-          longer than 80 characters for ease of cut and paste.
-        </p>
-        <p>
-          Exception: an <code>#include</code> statement with a long
-          path may exceed 80 columns.  Try to avoid situations where this
-          becomes necessary.
-        </p>
-        <p>
-          Exception:  you needn't be concerned about
-          <a href="#The__define_Guard">header guards</a>
-          that exceed the maximum length.
-
-        </p>
+          120 characters is the maximum.
+        </p>        
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -3578,7 +3128,7 @@ Thomas Voss
 
   <STYLEPOINT title="Spaces vs. Tabs">
     <SUMMARY>
-      Use only spaces, and indent 2 spaces at a time.
+      Use only spaces, and indent 4 spaces at a time.
     </SUMMARY>
     <BODY>
       <p>
@@ -4032,7 +3582,7 @@ Thomas Voss
 
   <STYLEPOINT title="Variable and Array Initialization">
     <SUMMARY>
-      Your choice of <code>=</code> or <code>()</code>.
+      Use <code>{}</code>.
     </SUMMARY>
     <BODY>
       <p>
@@ -4040,10 +3590,14 @@ Thomas Voss
         following are all correct:
       </p>
       <CODE_SNIPPET>
-        int x = 3;
-        int x(3);
-        string name("Some Name");
-        string name = "Some Name";
+	//C++11: default initialization using {}
+	int n{5}; //zero initialization: n is initialized to 5
+	int *p{}; //initialized to nullptr
+	double d{}; //initialized to 0.0
+	char s[12]{}; //all 12 chars are initialized to '\0'
+	string s{}; //same as: string s;
+	string name{"Some Name"};
+	char *p=new char [5]{}; // all five chars are initialized to '\0'	
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -4109,11 +3663,12 @@ Thomas Voss
           int some_var() const { return some_var_; }
 
          private:
+	  MyClass(const MyClass&amp;) = delete;
+	  MyClass&amp; operator=(const MyClass&amp;) = delete;
           bool SomeInternalFunction();
 
           int some_var_;
           int some_other_var_;
-          DISALLOW_COPY_AND_ASSIGN(MyClass);
         };
       </CODE_SNIPPET>
       <p>
@@ -4283,7 +3838,7 @@ Thomas Voss
 
   <STYLEPOINT title="Vertical Whitespace">
     <SUMMARY>
-      Minimize use of vertical whitespace.
+      Minimize use of vertical whitespace but apply it to enhance readability.
     </SUMMARY>
     <BODY>
       <p>
