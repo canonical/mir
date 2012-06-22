@@ -832,11 +832,11 @@ Thomas Voss
   them extensively. This section lists the main dos and don'ts you
   should follow when writing a class.
 
-  <!--<STYLEPOINT title="Doing Work in Constructors">
+  <STYLEPOINT title="Constructors">
     <SUMMARY>
-      In general, constructors should merely set member variables to their
-      initial values.  Any complex initialization should go in an explicit
-      <code>Init()</code> method.
+      The purpose of a constructor is to initialise a class so that its 
+      invariants hold.  For value classes it is worth having a cheap default
+      constructor.
     </SUMMARY>
     <BODY>
       <DEFINITION>
@@ -850,64 +850,50 @@ Thomas Voss
       <CONS>
         The problems with doing work in constructors are:
         <ul>
-          <li> There is no easy way for constructors to signal errors,
-               short of using exceptions (which are
-               <a HREF="#Exceptions">forbidden</a>).
-               </li>
-          <li> If the work fails, we now have an object whose
-               initialization code failed, so it may be an
-               indeterminate state.
-               </li>
           <li> If the work calls virtual functions, these calls will
                not get dispatched to the subclass implementations.
                Future modification to your class can quietly introduce
                this problem even if your class is not currently
                subclassed, causing much confusion.
-               </li>
+          </li>
           <li> If someone creates a global variable of this type
                (which is against the rules, but still), the
                constructor code will be called before
                <code>main()</code>, possibly breaking some implicit
-               assumptions in the constructor code.  For instance,
-
-               <a href="http://google-gflags.googlecode.com/">gflags</a>
-               will not yet have been initialized.
-               </li>
+               assumptions in the constructor code.
+          </li>
         </ul>
       </CONS>
       <DECISION>
-        If your object requires non-trivial initialization, consider
-        having an explicit <code>Init()</code> method.  In particular,
-        constructors should not call virtual functions, attempt to raise
-        errors, access potentially uninitialized global variables, etc.
+        Constructors should not make virtual calls to functions, access 
+        potentially uninitialized global variables, etc.
       </DECISION>
     </BODY>
-  </STYLEPOINT>-->
+  </STYLEPOINT>
 
   <STYLEPOINT title="Default Constructors">
     <SUMMARY>
       You must define a default constructor if your class defines
-      member variables and has no other constructors.  Otherwise the
-      compiler will do it for you, badly.
+      member variables of POD types and has no other constructors.
+      Otherwise the compiler will do it for you, badly.
     </SUMMARY>
     <BODY>
       <DEFINITION>
-        The default constructor is called when we <code>new</code> a
+        The default constructor is called when we create a
         class object with no arguments.  It is always called when
         calling <code>new[]</code> (for arrays).
       </DEFINITION>
       <PROS>
-        Initializing structures by default, to hold "impossible"
-        values, makes debugging much easier.
+        Initializing structures by default makes debugging much easier.
       </PROS>
       <CONS>
         Extra work for you, the code writer.
       </CONS>
       <DECISION>
         <p>
-          If your class defines member variables and has no other
+          If your class defines POD member variables and has no other
           constructors you must define a default constructor (one that
-          takes no arguments). It should preferably initialize the
+          takes no arguments). It should initialize the
           object in such a way that its internal state is consistent
           and valid.
         </p>
@@ -919,10 +905,15 @@ Thomas Voss
           sensibly.
         </p>
         <p>
-          If your class inherits from an existing class but you add no
-          new member variables, you are not required to have a default
-          constructor.
-
+          If your class is composed from and/or inherits from an existing
+          class or classes but you add no new member variables, you are
+          not required to have a default constructor.
+        </p>
+        <p>
+          If your class has value semantics then consider making the
+          class invarients such that the default constructor is cheap.
+          For example, initialising member pointers to <code>nullptr</code>
+          and allocating on first use.
         </p>
       </DECISION>
     </BODY>
@@ -950,7 +941,7 @@ Thomas Voss
         Avoids undesirable conversions.
       </PROS>
       <CONS>
-        None.
+        Avoids desirable conversions.
       </CONS>
       <DECISION>
         <p>
@@ -1056,10 +1047,6 @@ Thomas Voss
       <p>
         For consistency with STL, you can use <code>struct</code>
         instead of <code>class</code> for functors and traits.
-      </p>
-      <p>
-        Note that member variables in structs and classes have
-        <a HREF="#Variable_Names">different naming rules</a>.
       </p>
     </BODY>
   </STYLEPOINT>
