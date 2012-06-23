@@ -58,12 +58,8 @@ public:
 TEST(input_dispatch, incoming_input_triggers_filter)
 {
     using namespace testing;
-    mi::Dispatcher dispatcher;
-
     MockFilter filter;
-    dispatcher.RegisterShellFilter(&filter);
-    dispatcher.RegisterGrabFilter(&filter);
-    dispatcher.RegisterApplicationFilter(&filter);
+    mi::Dispatcher dispatcher(&filter, &filter, &filter);
 
     MockInputDevice device(&dispatcher);
 

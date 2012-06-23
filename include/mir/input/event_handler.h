@@ -33,7 +33,7 @@ namespace input
 
 class Event;
 
-// event_handler is the interface by which input
+// EventHandler is the interface by which input
 // devices know the input dispatcher
 class EventHandler
 {
@@ -41,6 +41,10 @@ class EventHandler
     virtual ~EventHandler() {}
 
     virtual void OnEvent(Event* e) = 0;
+protected:
+    EventHandler() = default;
+    EventHandler(const EventHandler&) = delete;
+    EventHandler& operator=(const EventHandler&) = delete;
 };
 
 }
