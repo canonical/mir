@@ -23,34 +23,52 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DEVICE_H_
-#define DEVICE_H_
+#include "mir/input/dispatcher.h"
+#include "mir/input/event_handler.h"
+#include "mir/input/filter.h"
 
-namespace mir
+#include <cassert>
+
+namespace mi = mir::input;
+
+mi::Dispatcher::Dispatcher(mi::Filter* shell_filter,
+                           mi::Filter* grab_filter,
+                           mi::Filter* application_filter)
+        : shell_filter(shell_filter),
+          grab_filter(grab_filter),
+          application_filter(application_filter)
 {
-namespace input
-{
-
-class EventHandler;
-
-// Abstracts an input device that feeds events
-// into the system via an event handler.
-class Device
-{
- public:
-
-    explicit Device (EventHandler * handler)
-            : handler(handler)
-    {
-    }
-
-    virtual ~Device() {}
-
- protected:
-    EventHandler * handler;
-};
-
-}
+    assert(shell_filter);
+    assert(grab_filter);
+    assert(application_filter);
 }
 
-#endif /* DEVICE_H_ */
+// Implemented from EventHandler
+void mi::Dispatcher::OnEvent(mi::Event* e)
+{
+    if (shell_filter->Accept(e))
+        return;
+
+    if (grab_filter->Accept(e))
+        return;
+
+    application_filter->Accept(e);
+}
+
+void mi::Dispatcher::RegisterShellFilter(mi::Filter* f)
+{
+    assert(f);
+    shell_filter = f;
+}
+
+void mi::Dispatcher::RegisterGrabFilter(mi::Filter* f)
+{
+    assert(f);
+    grab_filter = f;
+}
+
+void mi::Dispatcher::RegisterApplicationFilter(mi::Filter* f)
+{
+    assert(f);
+    application_filter = f;
+}

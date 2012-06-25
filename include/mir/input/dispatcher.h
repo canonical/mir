@@ -33,25 +33,33 @@ namespace mir
 namespace input
 {
 
-class device;
-class event;
-class filter;
+class Device;
+class Event;
+class Filter;
 
-class dispatcher : public event_handler
+class Dispatcher : public EventHandler
 {
-public:
+ public:
 
-    dispatcher() = default;
+    Dispatcher(Filter* shell_filter,
+               Filter* grab_filter,
+               Filter* application_filter);
 
-    void on_event(event * /*e*/)
-    {
-        /* TODO */
-    }
+    ~Dispatcher() = default;
 
-    void register_filter(filter * /*f*/)
-    {
-        /* TODO */
-    }
+    // Implemented from EventHandler
+    void OnEvent(Event* e);
+
+    void RegisterShellFilter(Filter* f);
+
+    void RegisterGrabFilter(Filter* f);
+
+    void RegisterApplicationFilter(Filter* f);
+
+ private:
+    Filter* shell_filter;
+    Filter* grab_filter;
+    Filter* application_filter;
 };
 
 }

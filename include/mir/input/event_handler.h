@@ -31,16 +31,20 @@ namespace mir
 namespace input
 {
 
-class event;
+class Event;
 
-// event_handler is the interface by which input
+// EventHandler is the interface by which input
 // devices know the input dispatcher
-class event_handler
+class EventHandler
 {
-public:
-    virtual ~event_handler() {}
+ public:
+    virtual ~EventHandler() {}
 
-    virtual void on_event(event* e) = 0;
+    virtual void OnEvent(Event* e) = 0;
+protected:
+    EventHandler() = default;
+    EventHandler(const EventHandler&) = delete;
+    EventHandler& operator=(const EventHandler&) = delete;
 };
 
 }
