@@ -19,27 +19,10 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_executable(test-end-end test_input_dispatch.cpp test_renderloop.cpp)
-
-target_link_libraries(
-  test-end-end
-  mircompositor
-  mirinput
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
-
-gtest_add_tests(
-  test-end-end 
-  "" 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp)
+ADD_LIBRARY( 
+  mirinput STATIC
   
-gtest_add_tests(
-  test-end-end 
-  "" 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp)
+  dispatcher.cpp
+)

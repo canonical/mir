@@ -31,14 +31,14 @@ namespace mir
 namespace input
 {
 
-class event;
+class Event;
 
-class filter
+class Filter
 {
-public:
-    virtual ~filter() {}
+ public:
+    virtual ~Filter() {}
 
-    virtual bool accept(event* e) = 0;
+    virtual bool Accept(Event* e) = 0;
 };
 
 }
