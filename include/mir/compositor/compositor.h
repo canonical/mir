@@ -38,20 +38,20 @@ class scenegraph;
 
 namespace compositor
 {
-class buffer_renderer;
+class buffer_texture_binder;
 
 class compositor : public drawer
 {
 public:
     explicit compositor(
         surfaces::scenegraph* scenegraph,
-        buffer_renderer* buffermanager);
+        buffer_texture_binder* buffermanager);
 
     virtual void render(graphics::display* display);
 
 private:
     surfaces::scenegraph* const scenegraph;
-    buffer_renderer* const buffermanager;
+    buffer_texture_binder* const buffermanager;
 };
 
 

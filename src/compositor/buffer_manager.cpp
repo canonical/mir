@@ -39,7 +39,7 @@ mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
 }
 
 
-void mc::buffer_manager::render()
+void mc::buffer_manager::bind_buffer_to_texture()
 {
     framebuffer->render();
 }
