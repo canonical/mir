@@ -17,13 +17,11 @@
 add_subdirectory(compositor/)
 add_subdirectory(input)
 
-add_executable(unit-tests "")
+add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
 target_link_libraries(
   unit-tests
 
-  compositor-tests
-  input-tests
   mircompositor
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

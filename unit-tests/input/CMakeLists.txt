@@ -13,4 +13,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authored by: Chase Douglas <chase.douglas@canonical.com>
-add_library(input-tests device.cpp)
+list(APPEND UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
