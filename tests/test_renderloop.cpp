@@ -64,7 +64,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     mc::buffer_manager buffer_manager(&graphics);
     mc::drawer&& comp = mc::compositor(&scenegraph, &buffer_manager);
 
-    EXPECT_CALL(graphics, render()).Times(AtLeast(1));
+    EXPECT_CALL(graphics, render()).Times(1);
 
     EXPECT_CALL(display, view_area())
 			.WillRepeatedly(Return(geom::rectangle()));
@@ -91,7 +91,29 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     EXPECT_CALL(display, view_area())
 			.WillRepeatedly(Return(geom::rectangle()));
 
-    EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(AtLeast(1))
+    EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(1)
+    		.WillRepeatedly(Return(ms::surfaces_to_render()));
+
+    comp.render(&display);
+}
+
+TEST(compositor_renderloop, notify_sync_and_see_display_query)
+{
+    using namespace testing;
+
+    mock_framebuffer_backend graphics;
+    mock_scenegraph scenegraph;
+    mock_display display;
+
+    mc::buffer_manager buffer_manager(&graphics);
+    mc::drawer&& comp = mc::compositor(&scenegraph, &buffer_manager);
+
+    EXPECT_CALL(graphics, render());
+
+    EXPECT_CALL(display, view_area()).Times(1)
+			.WillRepeatedly(Return(geom::rectangle()));
+
+    EXPECT_CALL(scenegraph, get_surfaces_in(_))
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
