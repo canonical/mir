@@ -69,3 +69,4 @@ find_package (Boost REQUIRED)
 
 add_subdirectory(tests/)
 add_subdirectory(unit-tests/)
+#add_subdirectory(integration-tests/)
