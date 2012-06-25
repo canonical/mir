@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GEOMETRY_FRAMEBUFFER_BACKEND_H_
-#define MIR_GEOMETRY_FRAMEBUFFER_BACKEND_H_
+#ifndef MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
+#define MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
 
 namespace mir
 {
@@ -39,4 +39,4 @@ private:
 }
 }
 
-#endif /* MIR_GEOMETRY_FRAMEBUFFER_BACKEND_H_ */
+#endif /* MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_ */
