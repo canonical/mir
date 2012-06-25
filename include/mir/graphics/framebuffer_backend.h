@@ -26,17 +26,22 @@
 #ifndef FRAMEBUFFER_BACKEND_H_
 #define FRAMEBUFFER_BACKEND_H_
 
-#include <boost/noncopyable.hpp>
-
 namespace mir
 {
 namespace graphics
 {
 // framebuffer_backend is the interface compositor uses onto graphics/libgl
-class framebuffer_backend : boost::noncopyable
+class framebuffer_backend
 {
 public:
     virtual void render() = 0;
+
+protected:
+    framebuffer_backend() = default;
+    ~framebuffer_backend() = default;
+private:
+    framebuffer_backend(framebuffer_backend const&) = delete;
+    framebuffer_backend& operator=(framebuffer_backend const&) = delete;
 };
 }
 }

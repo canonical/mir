@@ -26,8 +26,6 @@
 #ifndef DRAWER_H_
 #define DRAWER_H_
 
-#include <boost/noncopyable.hpp>
-
 namespace mir
 {
 namespace graphics
@@ -40,13 +38,14 @@ namespace compositor
 
 // drawer is the interface by which "graphics/libgl" knows
 // the compositor.
-class drawer : boost::noncopyable
+class drawer
 {
 public:
     virtual void render(graphics::display* display) = 0;
 protected:
     drawer() = default;
     ~drawer() = default;
+private:
     drawer& operator=(drawer const&) = delete;
     drawer(drawer const&) = delete;
 };

@@ -26,21 +26,23 @@
 #ifndef BUFFER_TEXTURE_BINDER_H_
 #define BUFFER_TEXTURE_BINDER_H_
 
-#include <boost/noncopyable.hpp>
-
 namespace mir
 {
 namespace compositor
 {
 
-class buffer_texture_binder : boost::noncopyable
+class buffer_texture_binder
 {
 public:
 
     virtual void bind_buffer_to_texture() = 0;
 
 protected:
+    buffer_texture_binder() = default;
     ~buffer_texture_binder() = default;
+private:
+    buffer_texture_binder(buffer_texture_binder const&) = delete;
+    buffer_texture_binder& operator=(buffer_texture_binder const&) = delete;
 };
 }
 }
