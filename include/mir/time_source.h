@@ -23,51 +23,28 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DISPATCHER_H_
-#define DISPATCHER_H_
+#ifndef TIME_SOURCE_H_
+#define TIME_SOURCE_H_
 
-#include "mir/input/event_handler.h"
+#include <boost/chrono.hpp>
+
+#include <cstdint>
 
 namespace mir
 {
 
-class TimeSource;
+typedef boost::chrono::high_resolution_clock::time_point Timestamp;
 
-namespace input
-{
-
-class Device;
-class Event;
-class Filter;
-
-class Dispatcher : public EventHandler
-{
+class TimeSource {
  public:
+    virtual ~TimeSource() {}
 
-    Dispatcher(TimeSource* time_source,
-               Filter* shell_filter,
-               Filter* grab_filter,
-               Filter* application_filter);
-
-    ~Dispatcher() = default;
-
-    // Implemented from EventHandler
-    void OnEvent(Event* e);
-
-    void RegisterShellFilter(Filter* f);
-
-    void RegisterGrabFilter(Filter* f);
-
-    void RegisterApplicationFilter(Filter* f);
-
- private:
-    TimeSource* time_source;
-    Filter* shell_filter;
-    Filter* grab_filter;
-    Filter* application_filter;
+    virtual Timestamp Sample() const = 0;
+    
+ protected:    
+    TimeSource() = default;
 };
 
 }
-}
 
-#endif /* DISPATCHER_H_ */
+#endif // TIME_SOURCE_H_

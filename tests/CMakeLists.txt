@@ -28,6 +28,8 @@ target_link_libraries(
   test-end-end
   mircompositor
   mirinput
+  
+  ${Boost_LIBRARIES}  
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

@@ -23,51 +23,42 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DISPATCHER_H_
-#define DISPATCHER_H_
+#ifndef EVENT_H_
+#define EVENT_H_
 
-#include "mir/input/event_handler.h"
+#include "mir/time_source.h"
 
 namespace mir
 {
-
-class TimeSource;
-
 namespace input
 {
 
-class Device;
-class Event;
-class Filter;
-
-class Dispatcher : public EventHandler
-{
+class Event {
  public:
+    
+    virtual ~Event() {}
+    
+    Event(const Event&) = delete;
+    Event& operator=(const Event&) = delete;
+    
+    // The system timestamp as assigned to the event
+    // when entering the event processing.
+    const mir::Timestamp& SystemTimestamp() const
+    {
+        return system_timestamp;
+    }
+    
+    void SetSystemTimestamp(const mir::Timestamp& ts)
+    {
+        system_timestamp = ts;
+    }
 
-    Dispatcher(TimeSource* time_source,
-               Filter* shell_filter,
-               Filter* grab_filter,
-               Filter* application_filter);
-
-    ~Dispatcher() = default;
-
-    // Implemented from EventHandler
-    void OnEvent(Event* e);
-
-    void RegisterShellFilter(Filter* f);
-
-    void RegisterGrabFilter(Filter* f);
-
-    void RegisterApplicationFilter(Filter* f);
-
+ protected:
+    Event() = default;
  private:
-    TimeSource* time_source;
-    Filter* shell_filter;
-    Filter* grab_filter;
-    Filter* application_filter;
+    mir::Timestamp system_timestamp;
 };
+    
+}}
 
-}
-}
-
-#endif /* DISPATCHER_H_ */
+#endif // EVENT_H_
