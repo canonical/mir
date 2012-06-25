@@ -43,7 +43,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     using namespace testing;
 
     mock_framebuffer_backend graphics;
-    mc::buffer_manager buffer_manager(&graphics);
+    mc::buffer_manager buffer_manager;
     mc::drawer&& comp = mc::compositor(nullptr, &buffer_manager);
 
     EXPECT_CALL(graphics, render()).Times(AtLeast(1));
