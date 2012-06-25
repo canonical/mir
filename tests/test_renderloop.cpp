@@ -73,6 +73,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
@@ -95,6 +96,7 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_display_query)
@@ -117,4 +119,5 @@ TEST(compositor_renderloop, notify_sync_and_see_display_query)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }
