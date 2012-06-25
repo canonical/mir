@@ -35,7 +35,7 @@ namespace input
 
 class Event {
  public:
-    Event() = default;
+    
     virtual ~Event() {}
     
     Event(const Event&) = delete;
@@ -53,6 +53,8 @@ class Event {
         system_timestamp = ts;
     }
 
+ protected:
+    Event() = default;
  private:
     mir::Timestamp system_timestamp;
 };

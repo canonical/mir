@@ -37,15 +37,18 @@ namespace mi = mir::input;
 namespace
 {
 
+class MockEvent : public mi::Event {
+};
+
 class MockFilter : public mi::Filter
 {
-public:
+ public:
     MOCK_METHOD1(Accept, bool(mi::Event*));
 };
 
 class MockInputDevice : public mi::Device
 {
-public:
+ public:
     MockInputDevice(mi::EventHandler* h) : mi::Device(h)
     {
     }
@@ -55,7 +58,7 @@ public:
         handler->OnEvent(&event);
     }
 
-    mi::Event event;
+    MockEvent event;
 };
 
 class MockTimeSource : public mir::TimeSource
