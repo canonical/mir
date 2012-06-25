@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-add_executable(end-to-end-tests test_renderloop.cpp test_input_dispatch.cpp device.cpp)
+add_executable(end-to-end-tests test_renderloop.cpp test_input_dispatch.cpp)
 
 target_link_libraries(
   end-to-end-tests
