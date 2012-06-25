@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef COMPOSITOR_H_
-#define COMPOSITOR_H_
+#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
+#define MIR_COMPOSITOR_COMPOSITOR_H_
 
 #include "drawer.h"
 
@@ -51,4 +51,4 @@ private:
 }
 }
 
-#endif /* COMPOSITOR_H_ */
+#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */

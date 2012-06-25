@@ -1,43 +1,28 @@
 /*
- * Copyright © 2012 Canonical Ltd.
- *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_H_
-
-#include "buffer_texture_binder.h"
+#ifndef MIR_GEOMETRY_RECTANGLE_H_
+#define MIR_GEOMETRY_RECTANGLE_H_
 
 namespace mir
 {
-namespace compositor
+namespace geometry
 {
-
-class buffer_manager : public buffer_texture_binder
-{
-public:
-
-    explicit buffer_manager();
-
-    virtual void bind_buffer_to_texture();
-
-};
-
+class rectangle {/*TODO*/};
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_H_ */
+#endif /* MIR_GEOMETRY_RECTANGLE_H_ */
