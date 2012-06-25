@@ -14,8 +14,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef SCENEGRAPH_H_
-#define SCENEGRAPH_H_
+#ifndef MIR_SURFACES_SCENEGRAPH_H_
+#define MIR_SURFACES_SCENEGRAPH_H_
 
 #include "mir/geometry/forward.h"
 
@@ -42,4 +42,4 @@ private:
 }
 }
 
-#endif /* SCENEGRAPH_H_ */
+#endif /* MIR_SURFACES_SCENEGRAPH_H_ */

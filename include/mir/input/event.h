@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef EVENT_H_
-#define EVENT_H_
+#ifndef MIR_INPUT_EVENT_H_
+#define MIR_INPUT_EVENT_H_
 
 #include "mir/time_source.h"
 
@@ -54,4 +54,4 @@ class Event {
     
 }}
 
-#endif // EVENT_H_
+#endif // MIR_INPUT_EVENT_H_

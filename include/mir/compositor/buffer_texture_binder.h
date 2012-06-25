@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef BUFFER_TEXTURE_BINDER_H_
-#define BUFFER_TEXTURE_BINDER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
+#define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
 
 namespace mir
 {
@@ -41,4 +41,4 @@ private:
 }
 
 
-#endif /* BUFFER_TEXTURE_BINDER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_ */

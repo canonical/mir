@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DEVICE_H_
-#define DEVICE_H_
+#ifndef MIR_INPUT_DEVICE_H_
+#define MIR_INPUT_DEVICE_H_
 
 namespace mir
 {
@@ -46,4 +46,4 @@ class Device
 }
 }
 
-#endif /* DEVICE_H_ */
+#endif /* MIR_INPUT_DEVICE_H_ */
