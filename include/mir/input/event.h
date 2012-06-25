@@ -47,7 +47,7 @@ class Event {
         return system_timestamp;
     }
     
-    void SetSystemTimestamp(mir::Timestamp ts)
+    void SetSystemTimestamp(const mir::Timestamp& ts)
     {
         system_timestamp = ts;
     }

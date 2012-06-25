@@ -21,23 +21,12 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
-add_executable(test_renderloop test_renderloop.cpp)
+
+add_executable(test-end-end test_input_dispatch.cpp test_renderloop.cpp)
 
 target_link_libraries(
-  test_renderloop
+  test-end-end
   mircompositor
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
-
-gtest_add_tests(test_renderloop "" ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp )
-
-add_executable(test_input_dispatch test_input_dispatch.cpp)
-
-target_link_libraries(
-  test_input_dispatch
   mirinput
   
   ${Boost_LIBRARIES}  
@@ -48,6 +37,11 @@ target_link_libraries(
   )
 
 gtest_add_tests(
-  test_input_dispatch 
+  test-end-end 
+  "" 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp)
+  
+gtest_add_tests(
+  test-end-end 
   "" 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp)
