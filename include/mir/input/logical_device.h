@@ -133,7 +133,7 @@ class LogicalDevice {
      *
      * Examples: "Touch Input", "Pen Input"
      */
-    virtual const std::string& Name() = 0;
+    virtual const std::string& Name() const = 0;
 
     /**
      * The number of simultaneous instances
@@ -143,7 +143,7 @@ class LogicalDevice {
      * For example, a ten touch device would have ten simultaneous touch
      * instances.
      */
-    virtual int SimultaneousInstances() = 0;
+    virtual int SimultaneousInstances() const = 0;
 
     /**
      * A bitmask of the buttons supported by the device
@@ -152,21 +152,21 @@ class LogicalDevice {
      *
      * The bit positions are defined by the Linux evdev key code values.
      */
-    virtual const std::vector<bool>& Buttons() = 0;
+    virtual const std::vector<bool>& Buttons() const = 0;
 
     /**
      * The position info
      *
      * @return The position info
      */
-    virtual const mir::input::PositionInfo& PositionInfo() = 0;
+    virtual const mir::input::PositionInfo& PositionInfo() const = 0;
 
     /**
      * The axis info
      *
      * @return The info for the axes of the device
      */
-    virtual const std::map<AxisType, Axis>& Axes() = 0;
+    virtual const std::map<AxisType, Axis>& Axes() const = 0;
 };
 
 } // input

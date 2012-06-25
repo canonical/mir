@@ -14,6 +14,8 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
+add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/recordings/")
+
 add_subdirectory(compositor/)
 add_subdirectory(input)
 

@@ -25,7 +25,7 @@ namespace mi = mir::input;
 TEST(Device, EvemuFile)
 {
     using namespace testing;
-    mi::EvemuDevice device("input_recordings/quanta_touchscreen/device.prop");
+    mi::EvemuDevice device(TEST_RECORDINGS_DIR "quanta_touchscreen/device.prop");
         
     EXPECT_TRUE(device.Name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0) << "Device name is: \""
                                                                                                << device.Name() << "\"";
