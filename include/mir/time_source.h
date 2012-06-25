@@ -26,22 +26,14 @@
 #ifndef TIME_SOURCE_H_
 #define TIME_SOURCE_H_
 
-#include <boost/units/make_scaled_unit.hpp>
-#include <boost/units/systems/si/io.hpp>
-#include <boost/units/systems/si/time.hpp>
+#include <boost/chrono.hpp>
 
 #include <cstdint>
 
 namespace mir
 {
 
-namespace units = boost::units;
-namespace si = units::si;
-
-typedef units::make_scaled_unit<
-    si::time,
-    units::scale<10, units::static_rational<-6> > >::type TimestampUnit;
-typedef units::quantity<TimestampUnit, uint64_t> Timestamp;
+typedef boost::chrono::high_resolution_clock::time_point Timestamp;
 
 class TimeSource {
  public:

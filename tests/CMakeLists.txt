@@ -38,6 +38,7 @@ add_executable(test_input_dispatch test_input_dispatch.cpp)
 
 target_link_libraries(
   test_input_dispatch
+  ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
