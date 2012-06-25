@@ -62,6 +62,6 @@ include_directories (
 
 find_package (Threads REQUIRED)
 
-add_subdirectory(tests/)
+add_subdirectory(end-to-end-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)
