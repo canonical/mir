@@ -35,11 +35,13 @@ mc::compositor::compositor(
     scenegraph(scenegraph),
     buffermanager(buffermanager)
 {
+    assert(scenegraph);
     assert(buffermanager);
 }
 
 void mc::compositor::render(graphics::display* display)
 {
+    assert(display);
 	scenegraph->get_surfaces_in(display->view_area());
     buffermanager->bind_buffer_to_texture();
 }
