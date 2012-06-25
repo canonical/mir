@@ -19,20 +19,14 @@
 #include "mir/compositor/buffer_manager.h"
 #include "mir/graphics/framebuffer_backend.h"
 
-#include <cassert>
-
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
-    :
-    framebuffer(framebuffer)
+mc::buffer_manager::buffer_manager()
 {
-    assert(framebuffer);
 }
-
 
 void mc::buffer_manager::bind_buffer_to_texture()
 {
-    framebuffer->render();
+
 }
