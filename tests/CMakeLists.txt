@@ -38,15 +38,3 @@ gtest_add_tests(
   test-end-end 
   "" 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp)
-
-add_executable(device device.cpp)
-
-target_link_libraries(
-  device
-  ${GTEST_BOTH_LIBRARIES}
-  )
-
-gtest_add_tests(
-  device
-  ""
-  ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)

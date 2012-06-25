@@ -17,3 +17,4 @@
 
 
 add_subdirectory(compositor/)
+add_subdirectory(input)
