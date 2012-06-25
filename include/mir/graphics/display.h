@@ -13,31 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef TIME_SOURCE_H_
-#define TIME_SOURCE_H_
+#ifndef MIR_GRAPHICS_DISPLAY_H_
+#define MIR_GRAPHICS_DISPLAY_H_
 
-#include <boost/chrono.hpp>
-
-#include <cstdint>
+#include "mir/geometry/forward.h"
 
 namespace mir
 {
+namespace graphics
+{
+class display
+{
+public:
+    virtual geometry::rectangle view_area() = 0;
 
-typedef boost::chrono::high_resolution_clock::time_point Timestamp;
-
-class TimeSource {
- public:
-    virtual ~TimeSource() {}
-
-    virtual Timestamp Sample() const = 0;
-    
- protected:    
-    TimeSource() = default;
+protected:
+    display() = default;
+    ~display() = default;
+private:
+    display(display const&) = delete;
+    display& operator=(display const&) = delete;
 };
-
+}
 }
 
-#endif // TIME_SOURCE_H_
+#endif /* MIR_GRAPHICS_DISPLAY_H_ */
