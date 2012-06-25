@@ -30,25 +30,22 @@ add_subdirectory(src/)
 find_package(Boost 1.48 COMPONENTS chrono system REQUIRED)
 
 # Build Google Test and make its headers known
-find_package (GTest)
-if(NOT GTEST_FOUND)
-  # Check for google test and build it locally
-  set(GTEST_ROOT_DIR
-    "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
-    CACHE
-    PATH
-    "Path to Google test srcs"
-    )
+# Check for google test and build it locally
+set(GTEST_ROOT_DIR
+  "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
+  CACHE
+  PATH
+  "Path to Google test srcs"
+  )
   
-  find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
+find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
   
-  if(GTEST_INCLUDE_DIR)
-    add_subdirectory(${GTEST_ROOT_DIR} gtest)
-  endif(GTEST_INCLUDE_DIR)
+if(GTEST_INCLUDE_DIR)
+  add_subdirectory(${GTEST_ROOT_DIR} gtest)
   
   set(GTEST_BOTH_LIBRARIES gtest gtest_main)
   set(GTEST_FOUND TRUE)
-endif(NOT GTEST_FOUND)
+endif(GTEST_INCLUDE_DIR)
 
 # TODO(tvoss): Move to its own FindGoogleMock module
 find_library(GMOCK_LIBRARY gmock)
@@ -67,4 +64,4 @@ find_package (Threads REQUIRED)
 
 add_subdirectory(tests/)
 add_subdirectory(unit-tests/)
-#add_subdirectory(integration-tests/)
+add_subdirectory(integration-tests/)

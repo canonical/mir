@@ -15,38 +15,18 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-add_executable(test-end-end test_input_dispatch.cpp test_renderloop.cpp)
+add_executable(end-to-end-tests test_renderloop.cpp test_input_dispatch.cpp device.cpp)
 
 target_link_libraries(
-  test-end-end
+  end-to-end-tests
+  
   mircompositor
   mirinput
-  
   ${Boost_LIBRARIES}  
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
+)
 
-gtest_add_tests(
-  test-end-end 
-  "" 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_renderloop.cpp)
-  
-gtest_add_tests(
-  test-end-end 
-  "" 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp)
-
-add_executable(device device.cpp)
-
-target_link_libraries(
-  device
-  ${GTEST_BOTH_LIBRARIES}
-  )
-
-gtest_add_tests(
-  device
-  ""
-  ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+add_test(end-to-end-tests ${CMAKE_CURRENT_BINARY_DIR}/end-to-end-tests)

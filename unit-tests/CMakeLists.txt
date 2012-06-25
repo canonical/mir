@@ -14,6 +14,19 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
-
-
 add_subdirectory(compositor/)
+
+add_executable(unit-tests "")
+
+target_link_libraries(
+  unit-tests
+
+  compositor-tests
+  mircompositor
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+)
+
+add_test(unit-tests ${CMAKE_CURRENT_BINARY_DIR}/unit-tests)

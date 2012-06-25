@@ -14,15 +14,4 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
-add_executable(test-compositor test-compositor.cpp)
-
-target_link_libraries(
-  test-compositor
-  mircompositor
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
-
-gtest_add_tests(test-compositor "" ${CMAKE_CURRENT_SOURCE_DIR}/test-compositor.cpp )
+add_library(compositor-tests test-compositor.cpp)
