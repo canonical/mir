@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef BUFFER_MANAGER_H_
-#define BUFFER_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
+#define MIR_COMPOSITOR_BUFFER_MANAGER_H_
 
 #include "buffer_texture_binder.h"
 
@@ -47,4 +47,4 @@ private:
 }
 
 
-#endif /* BUFFER_MANAGER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_H_ */

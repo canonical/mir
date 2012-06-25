@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef EVENT_HANDLER_H_
-#define EVENT_HANDLER_H_
+#ifndef MIR_INPUT_EVENT_HANDLER_H_
+#define MIR_INPUT_EVENT_HANDLER_H_
 
 namespace mir
 {
@@ -43,4 +43,4 @@ protected:
 }
 }
 
-#endif /* EVENT_HANDLER_H_ */
+#endif /* MIR_INPUT_EVENT_HANDLER_H_ */

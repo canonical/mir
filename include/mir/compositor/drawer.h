@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef DRAWER_H_
-#define DRAWER_H_
+#ifndef MIR_COMPOSITOR_DRAWER_H_
+#define MIR_COMPOSITOR_DRAWER_H_
 
 namespace mir
 {
@@ -46,4 +46,4 @@ private:
 }
 
 
-#endif /* DRAWER_H_ */
+#endif /* MIR_COMPOSITOR_DRAWER_H_ */

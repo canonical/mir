@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef DISPATCHER_H_
-#define DISPATCHER_H_
+#ifndef MIR_INPUT_DISPATCHER_H_
+#define MIR_INPUT_DISPATCHER_H_
 
 #include "mir/input/event_handler.h"
 
@@ -63,4 +63,4 @@ class Dispatcher : public EventHandler
 }
 }
 
-#endif /* DISPATCHER_H_ */
+#endif /* MIR_INPUT_DISPATCHER_H_ */

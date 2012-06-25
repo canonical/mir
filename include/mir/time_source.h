@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef TIME_SOURCE_H_
-#define TIME_SOURCE_H_
+#ifndef MIR_TIME_SOURCE_H_
+#define MIR_TIME_SOURCE_H_
 
 #include <boost/chrono.hpp>
 
@@ -40,4 +40,4 @@ class TimeSource {
 
 }
 
-#endif // TIME_SOURCE_H_
+#endif // MIR_TIME_SOURCE_H_
