@@ -33,7 +33,7 @@ namespace mc = mir::compositor;
 
 mc::compositor::compositor(
     surfaces::scenegraph* scenegraph,
-    buffer_renderer* buffermanager)
+    buffer_texture_binder* buffermanager)
     :
     scenegraph(scenegraph),
     buffermanager(buffermanager)
@@ -43,5 +43,5 @@ mc::compositor::compositor(
 
 void mc::compositor::render(graphics::display*)
 {
-    buffermanager->render();
+    buffermanager->bind_buffer_to_texture();
 }

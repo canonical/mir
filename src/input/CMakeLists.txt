@@ -19,9 +19,10 @@
 # NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
 # WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-
-add_subdirectory(compositor/)
-add_subdirectory(input/)
+ADD_LIBRARY( 
+  mirinput STATIC
+  
+  dispatcher.cpp
+)

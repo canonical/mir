@@ -45,7 +45,7 @@ public:
 
 class MockInputDevice : public mi::Device
 {
- public:
+public:
     MockInputDevice(mi::EventHandler* h) : mi::Device(h)
     {
     }
@@ -74,13 +74,12 @@ TEST(input_dispatch, incoming_input_triggers_filter)
     DefaultValue<mir::Timestamp>::Set(ts);
     
     MockTimeSource time_source;
-    mi::Dispatcher dispatcher(&time_source);
-
     MockFilter filter;
-    dispatcher.RegisterShellFilter(&filter);
-    dispatcher.RegisterGrabFilter(&filter);
-    dispatcher.RegisterApplicationFilter(&filter);
-
+    mi::Dispatcher dispatcher(&time_source,
+                              &filter,
+                              &filter,
+                              &filter);
+    
     MockInputDevice device(&dispatcher);
 
     EXPECT_CALL(filter, Accept(_)).Times(AtLeast(3));
@@ -96,7 +95,11 @@ TEST(input_dispatch, incoming_input_is_timestamped)
     DefaultValue<mir::Timestamp>::Set(ts);
     
     MockTimeSource time_source;
-    mi::Dispatcher dispatcher(&time_source);
+    MockFilter filter;
+    mi::Dispatcher dispatcher(&time_source,
+                              &filter,
+                              &filter,
+                              &filter);
     MockInputDevice device(&dispatcher);
 
     EXPECT_CALL(time_source, Sample()).Times(AtLeast(1));
