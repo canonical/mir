@@ -24,6 +24,7 @@
  */
 
 #include "mir/input/dispatcher.h"
+#include "mir/input/event.h"
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
 
@@ -31,13 +32,16 @@
 
 namespace mi = mir::input;
 
-mi::Dispatcher::Dispatcher(mi::Filter* shell_filter,
+mi::Dispatcher::Dispatcher(TimeSource* time_source,
+                           mi::Filter* shell_filter,
                            mi::Filter* grab_filter,
                            mi::Filter* application_filter)
-        : shell_filter(shell_filter),
+        : time_source(time_source),
+          shell_filter(shell_filter),
           grab_filter(grab_filter),
           application_filter(application_filter)
 {
+    assert(time_source);
     assert(shell_filter);
     assert(grab_filter);
     assert(application_filter);
@@ -46,6 +50,11 @@ mi::Dispatcher::Dispatcher(mi::Filter* shell_filter,
 // Implemented from EventHandler
 void mi::Dispatcher::OnEvent(mi::Event* e)
 {
+    if (!e)
+        return;
+
+    e->SetSystemTimestamp(time_source->Sample());
+    
     if (shell_filter->Accept(e))
         return;
 

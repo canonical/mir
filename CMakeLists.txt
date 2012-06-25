@@ -33,6 +33,9 @@ include_directories(include/)
 
 add_subdirectory(src/)
 
+# Check for boost
+find_package(Boost 1.48 COMPONENTS chrono system REQUIRED)
+
 # Build Google Test and make its headers known
 find_package (GTest)
 if(NOT GTEST_FOUND)
@@ -62,10 +65,13 @@ if (NOT GMOCK_LIBRARY OR NOT GMOCK_MAIN_LIBRARY OR NOT GTEST_FOUND)
   message ("Google Mock and Google Test not found - cannot build tests!")
 endif (NOT GMOCK_LIBRARY OR NOT GMOCK_MAIN_LIBRARY OR NOT GTEST_FOUND)
 
-include_directories (${GTEST_INCLUDE_DIRS})
+include_directories (
+  ${Boost_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIRS}
+)
 
 find_package (Threads REQUIRED)
-find_package (Boost REQUIRED)
 
 add_subdirectory(tests/)
 add_subdirectory(unit-tests/)
+#add_subdirectory(integration-tests/)

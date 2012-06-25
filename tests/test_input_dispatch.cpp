@@ -23,8 +23,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/time_source.h"
 #include "mir/input/device.h"
 #include "mir/input/dispatcher.h"
+#include "mir/input/event.h"
 #include "mir/input/filter.h"
 
 #include <gmock/gmock.h>
@@ -35,35 +37,76 @@ namespace mi = mir::input;
 namespace
 {
 
+class MockEvent : public mi::Event {
+};
+
 class MockFilter : public mi::Filter
 {
-public:
+ public:
     MOCK_METHOD1(Accept, bool(mi::Event*));
 };
 
 class MockInputDevice : public mi::Device
 {
-public:
+ public:
     MockInputDevice(mi::EventHandler* h) : mi::Device(h)
     {
     }
 
     void TriggerEvent()
     {
-        handler->OnEvent(nullptr);
+        handler->OnEvent(&event);
     }
+
+    MockEvent event;
 };
+
+class MockTimeSource : public mir::TimeSource
+{
+ public:
+    MOCK_CONST_METHOD0(Sample, mir::Timestamp());
+};
+    
 }
 
 TEST(input_dispatch, incoming_input_triggers_filter)
 {
     using namespace testing;
-    MockFilter filter;
-    mi::Dispatcher dispatcher(&filter, &filter, &filter);
 
+    mir::Timestamp ts;
+    DefaultValue<mir::Timestamp>::Set(ts);
+    
+    MockTimeSource time_source;
+    MockFilter filter;
+    mi::Dispatcher dispatcher(&time_source,
+                              &filter,
+                              &filter,
+                              &filter);
+    
     MockInputDevice device(&dispatcher);
 
     EXPECT_CALL(filter, Accept(_)).Times(AtLeast(3));
 
     device.TriggerEvent();
+}
+
+TEST(input_dispatch, incoming_input_is_timestamped)
+{
+    using namespace testing;
+
+    mir::Timestamp ts;
+    DefaultValue<mir::Timestamp>::Set(ts);
+    
+    MockTimeSource time_source;
+    MockFilter filter;
+    mi::Dispatcher dispatcher(&time_source,
+                              &filter,
+                              &filter,
+                              &filter);
+    MockInputDevice device(&dispatcher);
+
+    EXPECT_CALL(time_source, Sample()).Times(AtLeast(1));
+    device.TriggerEvent();
+
+    EXPECT_EQ(device.event.SystemTimestamp(), ts);
 }
