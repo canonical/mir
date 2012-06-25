@@ -16,30 +16,28 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/compositor.h"
+#ifndef MIR_GRAPHICS_DISPLAY_H_
+#define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/graphics/display.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/compositor/buffer_manager.h"
-#include "mir/surfaces/scenegraph.h"
+#include "mir/geometry/forward.h"
 
-#include <cassert>
-
-namespace mc = mir::compositor;
-
-
-mc::compositor::compositor(
-    surfaces::scenegraph* scenegraph,
-    buffer_texture_binder* buffermanager)
-    :
-    scenegraph(scenegraph),
-    buffermanager(buffermanager)
+namespace mir
 {
-    assert(buffermanager);
+namespace graphics
+{
+class display
+{
+public:
+    virtual geometry::rectangle view_area() = 0;
+
+protected:
+    display() = default;
+    ~display() = default;
+private:
+    display(display const&) = delete;
+    display& operator=(display const&) = delete;
+};
+}
 }
 
-void mc::compositor::render(graphics::display* display)
-{
-	scenegraph->get_surfaces_in(display->view_area());
-    buffermanager->bind_buffer_to_texture();
-}
+#endif /* MIR_GRAPHICS_DISPLAY_H_ */
