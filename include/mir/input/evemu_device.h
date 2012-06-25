@@ -43,7 +43,7 @@ class EvemuDevice : public LogicalDevice {
      *
      * @param[in] path Path to the evemu property file or evdev input node
      */
-    EvemuDevice(const std::string& /*path*/) : simultaneous_instances{}, position_info{kNone, {}} {}
+    EvemuDevice(const std::string& path);
 
     virtual const std::string& Name() { return name; }
     virtual int SimultaneousInstances() { return simultaneous_instances; }

@@ -23,9 +23,12 @@ target_link_libraries(
   unit-tests
 
   mircompositor
+  mirinput
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
+  ${Boost_LIBRARIES}
+  ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
