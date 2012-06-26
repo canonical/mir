@@ -23,6 +23,11 @@
 
 namespace mir
 {
+namespace graphics
+{
+class framebuffer_backend;
+}
+
 namespace compositor
 {
 
@@ -30,10 +35,12 @@ class buffer_manager : public buffer_texture_binder
 {
 public:
 
-    explicit buffer_manager();
+    explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
 
     virtual void bind_buffer_to_texture();
 
+private:
+    graphics::framebuffer_backend* const framebuffer;
 };
 
 }
