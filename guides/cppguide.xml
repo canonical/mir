@@ -1281,8 +1281,8 @@ Thomas Voss
 
       <A HREF="http://code.google.com/p/googletest/">
       Google Test</A>). Typically a variable would be
-      called <code>foo_</code> and the accessor function
-      <code>foo()</code>.  You may also want a mutator function
+      called <code>foo</code> and the accessor function
+      <code>get_foo()</code>.  You may also want a mutator function
       <code>set_foo()</code>.
       Exception: <code>static const</code> data members (typically
       called <code>kFoo</code>) need not be <code>private</code>.
@@ -2240,7 +2240,7 @@ Thomas Voss
         </p>
         <p>
           Function names should typically be imperative (that is they
-          should be commands): e.g., <code>OpenFile()</code>,
+          should be commands): e.g., <code>open_file()</code>,
           <code>set_num_errors()</code>.  There is an exception for
           accessors, which, described more completely in <a HREF="#Function_Names">Function Names</a>, should be named
           the same as the variable they access.
@@ -2443,24 +2443,25 @@ Thomas Voss
 
   <STYLEPOINT title="Function Names">
     <SUMMARY>
-      Regular functions, accessors and mutators have mixed case.
+      Regular functions, accessors, and mutators are all lowercase, with
+      underscores between words.
     </SUMMARY>
     <BODY>
       <SUBSECTION title="Regular Functions">
         <p>
-          Functions and Accessors should start with a capital letter and have a
-          capital letter for each new word. No underscores.
+          Functions and accessors are all lowercase, with underscores between
+          words.
         </p>
         <p>
-          If your function crashes upon an error, you should append OrDie to
+          If your function crashes upon an error, you should append _or_die to
           the function name. This only applies to functions which could be
           used by production code and to errors that are reasonably
           likely to occur during normal operation.
         </p>
         <CODE_SNIPPET>
-          AddTableEntry()
-          DeleteUrl()
-          OpenFileOrDie()
+          add_table_entry()
+          delete_url()
+          open_file_or_die()
         </CODE_SNIPPET>
       </SUBSECTION>
 
@@ -2474,8 +2475,8 @@ Thomas Voss
           {
            public:
             ...
-            int NumEntries() const { return num_entries; }
-            void SetNumEntries(int num_entries) { num_entries = num_entries; }
+            int get_num_entries() const { return num_entries; }
+            void set_num_entries(int value) { num_entries = value; }
 
            private:
             int num_entries;
