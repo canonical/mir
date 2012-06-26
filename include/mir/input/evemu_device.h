@@ -45,11 +45,11 @@ class EvemuDevice : public LogicalDevice {
      */
     EvemuDevice(const std::string& /*path*/) : simultaneous_instances{}, position_info{Mode::none, {}} {}
 
-    virtual const std::string& Name() const { return name; }
-    virtual int SimultaneousInstances() const { return simultaneous_instances; }
-    virtual const std::vector<bool>& Buttons() const { return buttons; }
-    virtual const mir::input::PositionInfo& PositionInfo() const { return position_info; }
-    virtual const std::map<AxisType, Axis>& Axes() const { return axes; }
+    virtual const std::string& get_name() const { return name; }
+    virtual int get_simultaneous_instances() const { return simultaneous_instances; }
+    virtual const std::vector<bool>& get_buttons() const { return buttons; }
+    virtual const mir::input::PositionInfo& get_position_info() const { return position_info; }
+    virtual const std::map<AxisType, Axis>& get_axes() const { return axes; }
 
     EvemuDevice(const EvemuDevice&) = delete;
     EvemuDevice& operator=(const EvemuDevice&) = delete;
