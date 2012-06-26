@@ -33,7 +33,7 @@ TEST(Device, EvemuFile)
     EXPECT_EQ(0, device.Buttons().size());
 
     const mi::PositionInfo& pi = device.PositionInfo();
-    EXPECT_EQ(mi::kAbsolute, pi.mode);
+    EXPECT_EQ(mi::Mode::absolute, pi.mode);
     /* FIXME: Can't test absolute position ranges yet, need mapping to screen coords */
 
     EXPECT_EQ(0, device.Axes().size());

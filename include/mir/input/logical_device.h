@@ -29,10 +29,10 @@ namespace input {
 /**
  * The mode of a position or axis of an input device
  */
-enum Mode {
-    kNone, /**< This position is not supported */
-    kRelative, /**< This position or axis provides relative values */
-    kAbsolute /**< This position or axis provides absolute values */
+enum class Mode {
+    none, /**< This position is not supported */
+    relative, /**< This position or axis provides relative values */
+    absolute /**< This position or axis provides absolute values */
 };
 
 /**
@@ -79,19 +79,19 @@ struct PositionInfo {
 /**
  * The axis types recognized by mir
  */
-enum AxisType {
+enum class AxisType {
     /**
      * Vertical scroll axis
      *
      * The resolution is measured in millimeters per unit.
      */
-    kVerticalScroll,
+    vertical_scroll,
     /**
      * Horizontal scroll axis
      *
      * The resolution is measured in millimeters per unit.
      */
-    kHorizontalScroll
+    horizontal_scroll
 };
 
 /**
