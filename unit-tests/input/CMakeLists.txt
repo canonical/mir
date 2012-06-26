@@ -13,15 +13,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authored by: Chase Douglas <chase.douglas@canonical.com>
-add_executable(device device.cpp)
-
-target_link_libraries(
-  device
-
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
-
-gtest_add_tests(device "" ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+list(APPEND UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
