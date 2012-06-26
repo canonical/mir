@@ -27,14 +27,14 @@ TEST(Device, EvemuFile)
     using namespace testing;
     mi::EvemuDevice device(TEST_RECORDINGS_DIR "quanta_touchscreen/device.prop");
         
-    EXPECT_TRUE(device.Name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0) << "Device name is: \""
-                                                                                               << device.Name() << "\"";
-    EXPECT_EQ(10, device.SimultaneousInstances());
-    EXPECT_EQ(0, device.Buttons().size());
+    EXPECT_TRUE(device.get_name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0)
+        << "Device name is: \"" << device.get_name() << "\"";
+    EXPECT_EQ(10, device.get_simultaneous_instances());
+    EXPECT_EQ(0, device.get_buttons().size());
 
-    const mi::PositionInfo& pi = device.PositionInfo();
+    const mi::PositionInfo& pi = device.get_position_info();
     EXPECT_EQ(mi::Mode::absolute, pi.mode);
     /* FIXME: Can't test absolute position ranges yet, need mapping to screen coords */
 
-    EXPECT_EQ(0, device.Axes().size());
+    EXPECT_EQ(0, device.get_axes().size());
 }
