@@ -36,7 +36,7 @@ struct EvemuDeleter
 
 }
 
-mir::input::EvemuDevice::EvemuDevice(const std::string& path) : simultaneous_instances{1}, position_info{kNone, {}}
+mir::input::EvemuDevice::EvemuDevice(const std::string& path) : simultaneous_instances{1}, position_info{Mode::none, {}}
 {
     using namespace evemu;
 
@@ -87,7 +87,7 @@ mir::input::EvemuDevice::EvemuDevice(const std::string& path) : simultaneous_ins
     }
 
     if (evemu_has_event(evemu.get(), EV_ABS, ABS_MT_POSITION_X) || evemu_has_event(evemu.get(), EV_ABS, ABS_X))
-        position_info.mode = kAbsolute;
+        position_info.mode = Mode::absolute;
     else if (evemu_has_event(evemu.get(), EV_REL, REL_X))
-        position_info.mode = kRelative;
+        position_info.mode = Mode::relative;
 }
