@@ -14,19 +14,17 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_executable(test-integration
-  dummy.cpp
-  dummy.cpp)
+add_executable(integration-tests "")
 
 target_link_libraries(
-  test-integration
+  integration-tests
+
   mirinput
   mircompositor
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-  )
+)
 
-gtest_add_tests(test-integration "" ${CMAKE_CURRENT_SOURCE_DIR}/dummy.cpp )
-gtest_add_tests(test-integration "" ${CMAKE_CURRENT_SOURCE_DIR}/dummy.cpp)
+add_test(integration-tests ${CMAKE_CURRENT_BINARY_DIR}/integration-tests)
