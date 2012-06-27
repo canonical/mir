@@ -776,17 +776,17 @@ Thomas Voss
     </BODY>
   </STYLEPOINT>
 
-  <STYLEPOINT title="Static and Global Variables">
+  <STYLEPOINT title="Variables at Namespace or Class Scope">
     <SUMMARY>
-      Static or global variables of class type are forbidden: they cause
-      hard-to-find bugs due to indeterminate order of construction and
-      destruction.
+      Variables of class and non-constant POD type are forbidden at namespace
+      and class scope: they cause hard-to-find bugs due to race conditions and
+      indeterminate order of construction and destruction.
     </SUMMARY>
     <BODY>
       <p>
         Objects with static storage duration, including global variables,
-        static variables, static class member variables, and function static
-        variables, must be Plain Old Data (POD): only ints, chars, floats, or
+        static variables, static class member variables, must be constant
+        Plain Old Data (POD): only ints, chars, floats, or
         pointers, or arrays/structs of POD.
       </p>
       <p>
