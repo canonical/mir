@@ -29,19 +29,16 @@
 
 namespace mir
 {
-namespace graphics
-{
-class FramebufferBackend;
-}
 
 namespace compositor
 {
+class GraphicBufferAllocator;
 
 class BufferManager : public BufferTextureBinder
 {
  public:
 
-    explicit BufferManager(graphics::FramebufferBackend* framebuffer);
+    explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
     
     virtual std::shared_ptr<Buffer> create_buffer(uint32_t width,
@@ -54,7 +51,7 @@ class BufferManager : public BufferTextureBinder
     virtual void bind_buffer_to_texture();
 
  private:
-    graphics::FramebufferBackend* const framebuffer;
+    GraphicBufferAllocator* const gr_allocator;
 };
 
 }
