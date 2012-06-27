@@ -12,8 +12,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-PROJECT(guides)
-
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cppguide.html
     COMMAND xsltproc -o ${CMAKE_CURRENT_BINARY_DIR}/cppguide.html ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.xsl ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.xml
@@ -26,6 +24,6 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.css
     )
 
-ADD_CUSTOM_TARGET(guides ALL
-  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cppguide.html
-          ${CMAKE_CURRENT_BINARY_DIR}/styleguide.css)
+ADD_CUSTOM_TARGET(guides
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/cppguide.html
+            ${CMAKE_CURRENT_BINARY_DIR}/styleguide.css)
