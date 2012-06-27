@@ -109,5 +109,4 @@ TEST(buffer_manager, create_buffer)
     EXPECT_EQ(height, buffer->height());
     EXPECT_EQ(pixel_format, buffer->pixel_format());
     EXPECT_EQ(stride, buffer->stride());
-    
 }
