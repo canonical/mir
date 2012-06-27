@@ -21,7 +21,7 @@ namespace mir
 {
 namespace geometry
 {
-class rectangle {/*TODO*/};
+class Rectangle {/*TODO*/};
 }
 }
 

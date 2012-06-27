@@ -26,25 +26,25 @@ namespace mir
 namespace surfaces
 {
 // scenegraph is the interface compositor uses onto the surface stack
-class scenegraph;
+class Scenegraph;
 }
 
 namespace compositor
 {
-class buffer_texture_binder;
+class BufferTextureBinder;
 
-class compositor : public drawer
+class Compositor : public drawer
 {
 public:
-    explicit compositor(
-        surfaces::scenegraph* scenegraph,
-        buffer_texture_binder* buffermanager);
+    explicit Compositor(
+        surfaces::Scenegraph* scenegraph,
+        BufferTextureBinder* buffermanager);
 
-    virtual void render(graphics::display* display);
+    virtual void render(graphics::Display* display);
 
 private:
-    surfaces::scenegraph* const scenegraph;
-    buffer_texture_binder* const buffermanager;
+    surfaces::Scenegraph* const scenegraph;
+    BufferTextureBinder* const buffermanager;
 };
 
 

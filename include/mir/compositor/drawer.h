@@ -23,7 +23,7 @@ namespace mir
 {
 namespace graphics
 {
-class display;
+class Display;
 }
 
 namespace compositor
@@ -34,7 +34,7 @@ namespace compositor
 class drawer
 {
 public:
-    virtual void render(graphics::display* display) = 0;
+    virtual void render(graphics::Display* display) = 0;
 protected:
     drawer() = default;
     ~drawer() = default;

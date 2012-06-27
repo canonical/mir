@@ -22,10 +22,10 @@ namespace mir
 namespace geometry
 {
 // Declarations of geometric concepts I think we'll need
-class point;
-class displacement;
-class rectangle;
-class region;
+class Point;
+class Displacement;
+class Rectangle;
+class Region;
 }
 }
 

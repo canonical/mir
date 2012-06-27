@@ -25,17 +25,17 @@ namespace mir
 {
 namespace graphics
 {
-class display
+class Display
 {
 public:
-    virtual geometry::rectangle view_area() = 0;
+    virtual geometry::Rectangle view_area() = 0;
 
 protected:
-    display() = default;
-    ~display() = default;
+    Display() = default;
+    ~Display() = default;
 private:
-    display(display const&) = delete;
-    display& operator=(display const&) = delete;
+    Display(Display const&) = delete;
+    Display& operator=(Display const&) = delete;
 };
 }
 }

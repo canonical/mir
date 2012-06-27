@@ -24,17 +24,17 @@ namespace mir
 namespace graphics
 {
 // framebuffer_backend is the interface compositor uses onto graphics/libgl
-class framebuffer_backend
+class FramebufferBackend
 {
 public:
     virtual void render() = 0;
 
 protected:
-    framebuffer_backend() = default;
-    ~framebuffer_backend() = default;
+    FramebufferBackend() = default;
+    ~FramebufferBackend() = default;
 private:
-    framebuffer_backend(framebuffer_backend const&) = delete;
-    framebuffer_backend& operator=(framebuffer_backend const&) = delete;
+    FramebufferBackend(FramebufferBackend const&) = delete;
+    FramebufferBackend& operator=(FramebufferBackend const&) = delete;
 };
 }
 }
