@@ -14,5 +14,9 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
-list(APPEND UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test-compositor.cpp)
+list(APPEND UNIT_TEST_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test-compositor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_manager.cpp
+)
+
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

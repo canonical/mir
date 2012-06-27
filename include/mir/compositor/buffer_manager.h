@@ -13,13 +13,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *  Alan Griffiths <alan@octopull.co.uk>
+ *  Thomas Voss <thomas.voss@canonical.com>
  */
 
 #ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
 #define MIR_COMPOSITOR_BUFFER_MANAGER_H_
 
+#include "buffer.h"
 #include "buffer_texture_binder.h"
+
+#include <cstdint>
+#include <memory>
 
 namespace mir
 {
@@ -31,15 +37,23 @@ class framebuffer_backend;
 namespace compositor
 {
 
-class buffer_manager : public buffer_texture_binder
+class BufferManager : public buffer_texture_binder
 {
-public:
+ public:
 
-    explicit buffer_manager(graphics::framebuffer_backend* framebuffer);
+    explicit BufferManager(graphics::framebuffer_backend* framebuffer);
+    virtual ~BufferManager() {}
+    
+    virtual std::shared_ptr<Buffer> create_buffer(uint32_t width,
+                                   uint32_t height,
+                                   PixelFormat pf) = 0;
 
+    virtual bool register_buffer(std::shared_ptr<Buffer> buffer) = 0;
+    
+    // From buffer_texture_binder
     virtual void bind_buffer_to_texture();
 
-private:
+ private:
     graphics::framebuffer_backend* const framebuffer;
 };
 

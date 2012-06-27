@@ -40,6 +40,15 @@ public:
     MOCK_METHOD0(render, void ());
 };
 
+struct MockBufferManager : public mc::BufferManager
+{
+ public:
+    explicit MockBufferManager(mg::framebuffer_backend* framebuffer) : mc::BufferManager(framebuffer) {}
+    
+    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
+};
+
 struct mock_scenegraph : ms::scenegraph
 {
 public:
@@ -61,7 +70,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     mock_scenegraph scenegraph;
     mock_display display;
 
-    mc::buffer_manager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&graphics);
     mc::drawer&& comp = mc::compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render()).Times(1);
@@ -83,7 +92,7 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     mock_scenegraph scenegraph;
     mock_display display;
 
-    mc::buffer_manager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&graphics);
     mc::drawer&& comp = mc::compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
@@ -105,7 +114,7 @@ TEST(compositor_renderloop, notify_sync_and_see_display_query)
     mock_scenegraph scenegraph;
     mock_display display;
 
-    mc::buffer_manager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&graphics);
     mc::drawer&& comp = mc::compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
