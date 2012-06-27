@@ -43,13 +43,27 @@ struct MockFramebufferBackend : mg::FramebufferBackend
     MOCK_METHOD0(render, void ());
 };
 
+const uint32_t width{1024};
+const uint32_t height{768};
+const uint32_t stride{width};
+const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
+
 struct MockBuffer : public mc::Buffer
 {
  public:
-    MOCK_CONST_METHOD0(get_width, uint32_t());
-    MOCK_CONST_METHOD0(get_height, uint32_t());
-    MOCK_CONST_METHOD0(get_stride, uint32_t());
-    MOCK_CONST_METHOD0(get_pixel_format, mc::PixelFormat());
+	MockBuffer()
+	{
+	    using namespace testing;
+		ON_CALL(*this, width()).       WillByDefault(Return(::width));
+		ON_CALL(*this, height()).      WillByDefault(Return(::height));
+		ON_CALL(*this, stride()).      WillByDefault(Return(::stride));
+		ON_CALL(*this, pixel_format()).WillByDefault(Return(::pixel_format));
+	}
+
+    MOCK_CONST_METHOD0(width, uint32_t());
+    MOCK_CONST_METHOD0(height, uint32_t());
+    MOCK_CONST_METHOD0(stride, uint32_t());
+    MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
 };
 
 struct MockBufferManager : public mc::BufferManager
@@ -66,31 +80,18 @@ struct MockBufferManager : public mc::BufferManager
 TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
-    using ::testing::_;
-    using ::testing::Return;
     
-    static const uint32_t width{1024};
-    static const uint32_t height{768};
-    static const uint32_t stride{width};
-    static const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
     MockBuffer mock_buffer;
 
-    ON_CALL(mock_buffer, get_width()).
-            WillByDefault(Return(width));
-    ON_CALL(mock_buffer, get_height()).
-            WillByDefault(Return(height));
-    ON_CALL(mock_buffer, get_stride()).
-            WillByDefault(Return(stride));
-    ON_CALL(mock_buffer, get_pixel_format()).
-            WillByDefault(Return(pixel_format));
-    
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
-    DefaultValue< std::shared_ptr<mc::Buffer> >::Set(default_buffer);
     
     MockFramebufferBackend graphics;
     MockBufferManager buffer_manager(&graphics);
+
+    EXPECT_CALL(buffer_manager, create_buffer(Eq(width), Eq(height), Eq(pixel_format))).
+    		Times(1).WillRepeatedly(Return(default_buffer));
 
     std::shared_ptr<mc::Buffer> buffer = buffer_manager.create_buffer(
         width,
@@ -98,9 +99,15 @@ TEST(buffer_manager, create_buffer)
         pixel_format);
 
     EXPECT_TRUE(buffer.get() != nullptr);
-    EXPECT_EQ(width, buffer->get_width());
-    EXPECT_EQ(height, buffer->get_height());
-    EXPECT_EQ(pixel_format, buffer->get_pixel_format());
-    EXPECT_EQ(stride, buffer->get_stride());
+
+    EXPECT_CALL(mock_buffer, width()).       Times(1);
+    EXPECT_CALL(mock_buffer, height()).      Times(1);
+    EXPECT_CALL(mock_buffer, stride()).      Times(1);
+    EXPECT_CALL(mock_buffer, pixel_format()).Times(1);
+
+    EXPECT_EQ(width, buffer->width());
+    EXPECT_EQ(height, buffer->height());
+    EXPECT_EQ(pixel_format, buffer->pixel_format());
+    EXPECT_EQ(stride, buffer->stride());
     
 }

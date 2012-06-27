@@ -26,7 +26,7 @@ namespace mir
 namespace compositor
 {
 
-enum class PixelFormat {
+enum class PixelFormat : uint32_t {
     rgba_8888
 };
 
@@ -34,39 +34,19 @@ class Buffer
 {
  public:
 
-    Buffer() : width(0),
-               height(0),
-               stride(0),
-               pixel_format(PixelFormat::rgba_8888)
-    {
-    }
-    
-    virtual uint32_t get_width() const
-    {
-        return width;
-    }
+    virtual uint32_t width() const = 0;
 
-    virtual uint32_t get_height() const
-    {
-        return height;
-    }
+    virtual uint32_t height() const = 0;
 
-    virtual uint32_t get_stride() const
-    {
-        return stride;
-    }
+    virtual uint32_t stride() const = 0;
 
-    virtual PixelFormat get_pixel_format() const
-    {
-        return pixel_format;
-    }
+    virtual PixelFormat pixel_format() const = 0;
 
-  protected:
-    uint32_t width;
-    uint32_t height;
-    uint32_t stride;
-    PixelFormat pixel_format;
-    
+ protected:
+    Buffer() = default;
+    ~Buffer() = default;
+    Buffer(Buffer const&) = delete;
+    Buffer& operator=(Buffer const&) = delete;
 };
 
 }
