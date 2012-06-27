@@ -37,12 +37,14 @@ void mc::BufferManager::bind_buffer_to_texture()
 
 }
  
-std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(uint32_t width,
+mc::SurfaceToken mc::BufferManager::create_client(uint32_t width,
                                    uint32_t height,
                                    mc::PixelFormat pf)
-{
-    
-    return gr_allocator->alloc_buffer(width, height, pf);
+{   
+    SurfaceToken token; 
+    gr_allocator->alloc_buffer(width, height, pf);
+
+    return token;
 }
 
 bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)

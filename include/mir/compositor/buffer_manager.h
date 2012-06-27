@@ -24,16 +24,36 @@
 #include "buffer.h"
 #include "buffer_texture_binder.h"
 
+#include "mir/geometry/size.h"
+
 #include <cstdint>
 #include <memory>
 
+
 namespace mir
 {
-
 namespace compositor
 {
-class GraphicBufferAllocator;
 
+namespace detail
+{
+enum {NO_TOKEN = 0};
+class TokenWrapper
+{
+public:
+	TokenWrapper() : value(NO_TOKEN) {}
+	TokenWrapper(uint32_t value) : value(value) {}
+
+    inline bool is_valid() const { return (value != NO_TOKEN); }
+
+private:
+	uint32_t value;
+};
+
+} // end namespace detail
+typedef detail::TokenWrapper SurfaceToken;
+
+class GraphicBufferAllocator;
 class BufferManager : public BufferTextureBinder
 {
  public:
@@ -41,7 +61,7 @@ class BufferManager : public BufferTextureBinder
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
  
-    virtual std::shared_ptr<Buffer> create_buffer(uint32_t width,
+    virtual SurfaceToken create_client(uint32_t width,
                                    uint32_t height,
                                    PixelFormat pf);
 
