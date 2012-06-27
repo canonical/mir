@@ -41,10 +41,8 @@ std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(uint32_t width,
                                    uint32_t height,
                                    mc::PixelFormat pf)
 {
-    assert(width);
-    assert(height);
-    assert(pf == mc::PixelFormat::rgba_8888);
-    return nullptr;        
+    
+    return gr_allocator->alloc_buffer(width, height, pf);
 }
 
 bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)
