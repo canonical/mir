@@ -100,6 +100,8 @@ TEST(buffer_manager, create_buffer)
 
     EXPECT_TRUE(buffer.get() != nullptr);
 
+    Mock::VerifyAndClearExpectations(&buffer_manager);
+
     EXPECT_CALL(mock_buffer, width()).       Times(1);
     EXPECT_CALL(mock_buffer, height()).      Times(1);
     EXPECT_CALL(mock_buffer, stride()).      Times(1);
