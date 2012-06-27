@@ -27,6 +27,9 @@ namespace compositor
 class GraphicBufferAllocator
 {
     public:
+        virtual std::shared_ptr<Buffer> alloc_buffer(uint32_t width, uint32_t height, PixelFormat pf) = 0;
+        virtual void free_buffer(std::shared_ptr<Buffer> buffer) = 0;
+        
 };
 
 }

@@ -40,13 +40,13 @@ class BufferManager : public BufferTextureBinder
 
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
-    
+ 
     virtual std::shared_ptr<Buffer> create_buffer(uint32_t width,
                                    uint32_t height,
-                                   PixelFormat pf) = 0;
+                                   PixelFormat pf);
 
-    virtual bool register_buffer(std::shared_ptr<Buffer> buffer) = 0;
-    
+    virtual bool register_buffer(std::shared_ptr<Buffer> buffer);
+
     // From buffer_texture_binder
     virtual void bind_buffer_to_texture();
 
