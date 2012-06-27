@@ -23,6 +23,7 @@ namespace geometry
 {
 // Declarations of geometric concepts I think we'll need
 class Point;
+class Size;
 class Displacement;
 class Rectangle;
 class Region;
