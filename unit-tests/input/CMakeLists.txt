@@ -12,23 +12,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
-add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
-
-add_subdirectory(compositor/)
-add_subdirectory(input)
-
-add_executable(unit-tests ${UNIT_TEST_SOURCES})
-
-target_link_libraries(
-  unit-tests
-
-  mircompositor
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
-)
-
-add_test(unit-tests ${CMAKE_CURRENT_BINARY_DIR}/unit-tests)
+# Authored by: Chase Douglas <chase.douglas@canonical.com>
+list(APPEND UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
