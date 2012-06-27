@@ -51,3 +51,20 @@ TEST(geometry, height)
     EXPECT_EQ(height42, height42);
     EXPECT_NE(height42, height0);
 }
+
+TEST(geometry, size)
+{
+    using namespace geom;
+    Size size2x4(Width(2), Height(4));
+
+    EXPECT_EQ(Width(2), size2x4.width());
+    EXPECT_EQ(Height(4), size2x4.height());
+
+    Size copy = size2x4;
+    EXPECT_EQ(Width(2), copy.width());
+    EXPECT_EQ(Height(4), copy.height());
+
+    Size defaultValue;
+    EXPECT_EQ(Width(0), defaultValue.width());
+    EXPECT_EQ(Height(0), defaultValue.height());
+}

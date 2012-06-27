@@ -18,6 +18,7 @@
 #define MIR_GEOMETRY_SIZE_H_
 
 #include <cstdint>
+#include <iosfwd>
 
 namespace mir
 {
@@ -32,6 +33,7 @@ template<DimensionTag Tag>
 class IntWrapper
 {
 public:
+	IntWrapper() : value(0) {}
 	IntWrapper(uint32_t value) : value(value) {}
 
 	uint32_t as_uint32_t() const { return value; }
@@ -39,6 +41,10 @@ public:
 private:
 	uint32_t value;
 };
+
+template<DimensionTag Tag>
+std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
+{ out << value.as_uint32_t(); return out; }
 
 template<DimensionTag Tag>
 inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
@@ -70,7 +76,21 @@ typedef detail::IntWrapper<detail::height> Height;
 
 class Size
 {
+    public:
+	Size() = default;
+        Size(Width width, Height height);
+
+	Width width() const { return w; }
+        Height height() const { return h; }
+    private:
+        Width w;
+	Height h;
+
 };
+
+inline Size::Size(Width width, Height height) : w(width), h(height) {
+
+}
 
 }
 }
