@@ -18,4 +18,5 @@ ADD_LIBRARY(
   mirinput STATIC
   
   dispatcher.cpp
+  evemu_device.cpp
 )
