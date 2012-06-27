@@ -2425,29 +2425,19 @@ Thomas Voss
 
   <STYLEPOINT title="Constant Names">
     <SUMMARY>
-      Normally, name constants like other variables, using all lowercase,
+      Name constants like other variables, using all lowercase,
       with underscores between words.
       <code>default_width</code>.
-      In some cases, where it can make code clearer, name compile time constants
-      using CamelCase with a leading k.
-      <code>kDaysInAWeek</code>.
     </SUMMARY>
     <BODY>
       <p>
-        In most cases it is distracting that whenever ia variable is "const"
-        the name indicates whether it is a compile time constant.
+        It is distracting that whether a variable is "const" affects
+        the name.
       </p>
       <CODE_SNIPPET>
-        const auto match = map.find(value); // not a compile time constant
-        const int  width{1024};             // compile time constant, but not kWidth
-      </CODE_SNIPPET>
-      <p>
-        Where it is important to flag compile-time constants, whether they are declared locally,
-        globally, or as part of a class, follow a different naming
-        convention from other variables. Use CamelCase with a leading k.
-      </p>
-      <CODE_SNIPPET>
-        const int kDaysInAWeek = 7;
+        const auto match = map.find(value);
+        const int  width{1024};
+        int height{900};
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
