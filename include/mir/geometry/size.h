@@ -17,81 +17,13 @@
 #ifndef MIR_GEOMETRY_SIZE_H_
 #define MIR_GEOMETRY_SIZE_H_
 
-#include <cstdint>
-#include <iosfwd>
+#include "dimensions.h"
 #include <ostream>
 
 namespace mir
 {
 namespace geometry
 {
-
-namespace detail
-{
-enum DimensionTag { width, height, x, y, dx, dy };
-
-template<DimensionTag Tag>
-class IntWrapper
-{
-public:
-    IntWrapper() : value(0) {}
-    IntWrapper(uint32_t value) : value(value) {}
-
-    uint32_t as_uint32_t() const
-    {
-        return value;
-    }
-
-private:
-    uint32_t value;
-};
-
-template<DimensionTag Tag>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
-{
-    out << value.as_uint32_t();
-    return out;
-}
-
-template<DimensionTag Tag>
-inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() == rhs.as_uint32_t();
-}
-
-template<DimensionTag Tag>
-inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() != rhs.as_uint32_t();
-}
-
-template<DimensionTag Tag>
-inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() <= rhs.as_uint32_t();
-}
-
-template<DimensionTag Tag>
-inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() >= rhs.as_uint32_t();
-}
-
-template<DimensionTag Tag>
-inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() < rhs.as_uint32_t();
-}
-
-template<DimensionTag Tag>
-inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{
-    return lhs.as_uint32_t() > rhs.as_uint32_t();
-}
-} // namespace detail
-
-typedef detail::IntWrapper<detail::width> Width;
-typedef detail::IntWrapper<detail::height> Height;
 
 class Size
 {
