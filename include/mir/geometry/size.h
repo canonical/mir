@@ -34,42 +34,60 @@ template<DimensionTag Tag>
 class IntWrapper
 {
 public:
-	IntWrapper() : value(0) {}
-	IntWrapper(uint32_t value) : value(value) {}
+    IntWrapper() : value(0) {}
+    IntWrapper(uint32_t value) : value(value) {}
 
-	uint32_t as_uint32_t() const { return value; }
+    uint32_t as_uint32_t() const
+    {
+        return value;
+    }
 
 private:
-	uint32_t value;
+    uint32_t value;
 };
 
 template<DimensionTag Tag>
 std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
-{ out << value.as_uint32_t(); return out; }
+{
+    out << value.as_uint32_t();
+    return out;
+}
 
 template<DimensionTag Tag>
 inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() == rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() == rhs.as_uint32_t();
+}
 
 template<DimensionTag Tag>
 inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() != rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() != rhs.as_uint32_t();
+}
 
 template<DimensionTag Tag>
 inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() <= rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() <= rhs.as_uint32_t();
+}
 
 template<DimensionTag Tag>
 inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() >= rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() >= rhs.as_uint32_t();
+}
 
 template<DimensionTag Tag>
 inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() < rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() < rhs.as_uint32_t();
+}
 
 template<DimensionTag Tag>
 inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() > rhs.as_uint32_t(); }
+{
+    return lhs.as_uint32_t() > rhs.as_uint32_t();
+}
 } // namespace detail
 
 typedef detail::IntWrapper<detail::width> Width;
@@ -78,25 +96,38 @@ typedef detail::IntWrapper<detail::height> Height;
 class Size
 {
 public:
-	Size() = default;
-	Size(Width width, Height height) : w(width), h(height) {}
+    Size() = default;
+    Size(Width width, Height height) : w(width), h(height) {}
 
-	Width width() const { return w; }
-	Height height() const { return h; }
+    Width width() const
+    {
+        return w;
+    }
+    Height height() const
+    {
+        return h;
+    }
 private:
-	Width w;
-	Height h;
+    Width w;
+    Height h;
 
 };
 
 inline bool operator == (Size const& lhs, Size const& rhs)
-{ return lhs.width() == rhs.width() && lhs.height() == rhs.height(); }
+{
+    return lhs.width() == rhs.width() && lhs.height() == rhs.height();
+}
 
 inline bool operator != (Size const& lhs, Size const& rhs)
-{ return lhs.width() != rhs.width() || lhs.height() != rhs.height(); }
+{
+    return lhs.width() != rhs.width() || lhs.height() != rhs.height();
+}
 
 std::ostream& operator<<(std::ostream& out, Size const& value)
-{ out << '(' << value.width() << ", " << value.height() << ')'; return out; }
+{
+    out << '(' << value.width() << ", " << value.height() << ')';
+    return out;
+}
 
 }
 }

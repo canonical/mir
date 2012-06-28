@@ -26,8 +26,8 @@ namespace geom = mir::geometry;
 
 TEST(geometry, width)
 {
-	geom::Width width0{0};
-	geom::Width width42{42};
+    geom::Width width0 {0};
+    geom::Width width42 {42};
 
     EXPECT_EQ(0, width0.as_uint32_t());
     EXPECT_EQ(42, width42.as_uint32_t());
@@ -40,8 +40,8 @@ TEST(geometry, width)
 
 TEST(geometry, height)
 {
-	geom::Height height0{0};
-	geom::Height height42{42};
+    geom::Height height0 {0};
+    geom::Height height42 {42};
 
     EXPECT_EQ(0, height0.as_uint32_t());
     EXPECT_EQ(42, height42.as_uint32_t());
