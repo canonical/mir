@@ -112,6 +112,8 @@ Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_uint32_t() - rhs.as_uint32_t())
 DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t()); }
 DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t()); }
 
+template<typename Target, typename Source>
+Target dim_cast(Source s) { return Target(s.as_uint32_t()); }
 }
 }
 
