@@ -16,9 +16,10 @@
  * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#include "mir/input/evemu_device.h"
-
+// Include first to avoid compile error
 #include <gtest/gtest.h>
+
+#include "mir/input/evemu_device.h"
 
 namespace mi = mir::input;
 
