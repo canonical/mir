@@ -28,7 +28,7 @@
 
 #include <cstdint>
 #include <memory>
-
+#include <atomic>
 
 namespace mir
 {
@@ -72,6 +72,8 @@ class BufferManager : public BufferTextureBinder
 
  private:
     GraphicBufferAllocator* const gr_allocator;
+
+    std::atomic<int> client_counter;
 };
 
 }

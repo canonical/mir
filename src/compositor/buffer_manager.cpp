@@ -26,7 +26,8 @@ namespace mc = mir::compositor;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
-    gr_allocator(gr_allocator)
+    gr_allocator(gr_allocator),
+    client_counter(1)
 {
     assert(gr_allocator);
 }
@@ -40,8 +41,10 @@ void mc::BufferManager::bind_buffer_to_texture()
 mc::SurfaceToken mc::BufferManager::create_client(uint32_t width,
                                    uint32_t height,
                                    mc::PixelFormat pf)
-{   
-    SurfaceToken token; 
+{ 
+    int new_token = atomic_fetch_add( &client_counter, 1); 
+    SurfaceToken token(new_token);
+
     gr_allocator->alloc_buffer(width, height, pf);
 
     return token;
