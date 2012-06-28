@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <ostream>
 
 namespace mir
 {
@@ -76,21 +77,26 @@ typedef detail::IntWrapper<detail::height> Height;
 
 class Size
 {
-    public:
+public:
 	Size() = default;
-        Size(Width width, Height height);
+	Size(Width width, Height height) : w(width), h(height) {}
 
 	Width width() const { return w; }
-        Height height() const { return h; }
-    private:
-        Width w;
+	Height height() const { return h; }
+private:
+	Width w;
 	Height h;
 
 };
 
-inline Size::Size(Width width, Height height) : w(width), h(height) {
+inline bool operator == (Size const& lhs, Size const& rhs)
+{ return lhs.width() == rhs.width() && lhs.height() == rhs.height(); }
 
-}
+inline bool operator != (Size const& lhs, Size const& rhs)
+{ return lhs.width() != rhs.width() || lhs.height() != rhs.height(); }
+
+std::ostream& operator<<(std::ostream& out, Size const& value)
+{ out << '(' << value.width() << ", " << value.height() << ')'; return out; }
 
 }
 }

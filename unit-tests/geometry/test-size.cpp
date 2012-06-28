@@ -55,16 +55,18 @@ TEST(geometry, height)
 TEST(geometry, size)
 {
     using namespace geom;
-    Size size2x4(Width(2), Height(4));
+    Size const size2x4(Width(2), Height(4));
 
     EXPECT_EQ(Width(2), size2x4.width());
     EXPECT_EQ(Height(4), size2x4.height());
 
-    Size copy = size2x4;
+    Size const copy = size2x4;
     EXPECT_EQ(Width(2), copy.width());
     EXPECT_EQ(Height(4), copy.height());
+    EXPECT_EQ(size2x4, copy);
 
-    Size defaultValue;
+    Size const defaultValue;
     EXPECT_EQ(Width(0), defaultValue.width());
     EXPECT_EQ(Height(0), defaultValue.height());
+    EXPECT_NE(size2x4, defaultValue);
 }
