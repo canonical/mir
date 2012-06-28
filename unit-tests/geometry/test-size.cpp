@@ -52,12 +52,32 @@ TEST(geometry, height)
     EXPECT_NE(height42, height0);
 }
 
+TEST(geometry, delta_arithmetic)
+{
+    using namespace geom;
+	DeltaX dx1{1};
+	DeltaY dy1{1};
+
+	DeltaX x2 = DeltaX(1) + dx1;
+    EXPECT_EQ(DeltaX(2), x2);
+    EXPECT_EQ(DeltaX(1), x2-dx1);
+}
+
 TEST(geometry, coordinates)
 {
-	geom::X x;
-	geom::Y y;
-	geom::DeltaX dx;
-	geom::DeltaY dy;
+    using namespace geom;
+	X x1{1};
+	X x2{2};
+	DeltaX dx1{1};
+
+    EXPECT_EQ(X(2), x1 + dx1);
+    EXPECT_EQ(X(1), x2 - dx1);
+
+	Y y24{24};
+	Y y42{42};
+	DeltaY dx18{18};
+
+    EXPECT_EQ(dx18, y42 - y24);
 }
 
 
