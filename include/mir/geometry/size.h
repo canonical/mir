@@ -25,39 +25,28 @@ namespace mir
 namespace geometry
 {
 
-class Size
+struct Size
 {
-public:
     Size() = default;
-    Size(Width width, Height height) : w(width), h(height) {}
+    Size(Width width, Height height) : width(width), height(height) {}
 
-    Width width() const
-    {
-        return w;
-    }
-    Height height() const
-    {
-        return h;
-    }
-private:
-    Width w;
-    Height h;
-
+    Width width;
+    Height height;
 };
 
 inline bool operator == (Size const& lhs, Size const& rhs)
 {
-    return lhs.width() == rhs.width() && lhs.height() == rhs.height();
+    return lhs.width == rhs.width && lhs.height == rhs.height;
 }
 
 inline bool operator != (Size const& lhs, Size const& rhs)
 {
-    return lhs.width() != rhs.width() || lhs.height() != rhs.height();
+    return lhs.width != rhs.width || lhs.height != rhs.height;
 }
 
 std::ostream& operator<<(std::ostream& out, Size const& value)
 {
-    out << '(' << value.width() << ", " << value.height() << ')';
+    out << '(' << value.width << ", " << value.height << ')';
     return out;
 }
 
