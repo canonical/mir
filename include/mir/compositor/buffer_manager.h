@@ -37,17 +37,17 @@ namespace compositor
 
 namespace detail
 {
-enum {NO_TOKEN = 0};
 class TokenWrapper
 {
 public:
 	TokenWrapper() : value(NO_TOKEN) {}
-	TokenWrapper(uint32_t value) : value(value) {}
+	explicit TokenWrapper(int value) : value(value) {}
 
     inline bool is_valid() const { return (value != NO_TOKEN); }
 
 private:
-	uint32_t value;
+    enum {NO_TOKEN = 0};
+	int value;
 };
 
 } // end namespace detail
