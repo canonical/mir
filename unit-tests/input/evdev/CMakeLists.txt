@@ -12,11 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: 
+#   Chase Douglas <chase.douglas@canonical.com>
+#   Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(evdev/)
+if(MIR_INPUT_ENABLE_EVDEV)
+  list(
+    APPEND UNIT_TEST_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
 
-set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+  set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+endif(MIR_INPUT_ENABLE_EVDEV)

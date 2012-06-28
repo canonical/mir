@@ -16,11 +16,15 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mock_input_device.h"
+
 #include "mir/time_source.h"
 #include "mir/input/device.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/event.h"
 #include "mir/input/filter.h"
+#include "mir/input/logical_device.h"
+#include "mir/input/position_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,34 +34,26 @@ namespace mi = mir::input;
 namespace
 {
 
-class MockEvent : public mi::Event {
-};
-
 class MockFilter : public mi::Filter
 {
  public:
-    MOCK_METHOD1(Accept, bool(mi::Event*));
-};
-
-class MockInputDevice : public mi::Device
-{
- public:
-    MockInputDevice(mi::EventHandler* h) : mi::Device(h)
+    MockFilter()
     {
+        using namespace testing;
+        using ::testing::_;
+        using ::testing::Return;
+        using ::testing::Invoke;
+        
+        ON_CALL(*this, accept(_)).WillByDefault(Return(mi::Filter::Result::continue_processing));
     }
-
-    void TriggerEvent()
-    {
-        handler->OnEvent(&event);
-    }
-
-    MockEvent event;
+    
+    MOCK_METHOD1(accept, mi::Filter::Result(mi::Event*));
 };
 
 class MockTimeSource : public mir::TimeSource
 {
  public:
-    MOCK_CONST_METHOD0(Sample, mir::Timestamp());
+    MOCK_CONST_METHOD0(sample, mir::Timestamp());
 };
     
 }
@@ -65,6 +61,8 @@ class MockTimeSource : public mir::TimeSource
 TEST(input_dispatch, incoming_input_triggers_filter)
 {
     using namespace testing;
+    using ::testing::_;
+    using ::testing::Return;
 
     mir::Timestamp ts;
     DefaultValue<mir::Timestamp>::Set(ts);
@@ -76,11 +74,16 @@ TEST(input_dispatch, incoming_input_triggers_filter)
                               &filter,
                               &filter);
     
-    MockInputDevice device(&dispatcher);
-
-    EXPECT_CALL(filter, Accept(_)).Times(AtLeast(3));
+    mi::MockInputDevice device(&dispatcher);
+    EXPECT_CALL(device, start()).Times(AtLeast(1));
+    dispatcher.register_device(&device);
+    
+    EXPECT_CALL(filter, accept(_)).Times(AtLeast(3));
 
     device.TriggerEvent();
+
+    EXPECT_CALL(device, stop()).Times(AtLeast(1));
+    dispatcher.unregister_device(&device);
 }
 
 TEST(input_dispatch, incoming_input_is_timestamped)
@@ -96,10 +99,16 @@ TEST(input_dispatch, incoming_input_is_timestamped)
                               &filter,
                               &filter,
                               &filter);
-    MockInputDevice device(&dispatcher);
+    mi::MockInputDevice device(&dispatcher);
 
-    EXPECT_CALL(time_source, Sample()).Times(AtLeast(1));
+    EXPECT_CALL(device, start()).Times(AtLeast(1));
+    dispatcher.register_device(&device);
+    
+    EXPECT_CALL(time_source, sample()).Times(AtLeast(1));
     device.TriggerEvent();
 
-    EXPECT_EQ(device.event.SystemTimestamp(), ts);
+    EXPECT_CALL(device, stop()).Times(AtLeast(1));
+    dispatcher.unregister_device(&device);
+
+    EXPECT_EQ(device.event.get_system_timestamp(), ts);
 }

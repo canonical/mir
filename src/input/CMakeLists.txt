@@ -14,9 +14,20 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-ADD_LIBRARY( 
+set(
+  INPUT_SOURCES
+
+  axis.cpp
+  dispatcher.cpp
+  position_info.cpp
+)
+
+add_subdirectory(
+  evdev/
+)
+
+add_library( 
   mirinput STATIC
   
-  dispatcher.cpp
-  evemu_device.cpp
+  ${INPUT_SOURCES}
 )

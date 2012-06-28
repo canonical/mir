@@ -20,6 +20,7 @@
 #include "mir/input/event.h"
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
+#include "mir/input/logical_device.h"
 
 #include <cassert>
 
@@ -41,20 +42,19 @@ mi::Dispatcher::Dispatcher(TimeSource* time_source,
 }
 
 // Implemented from EventHandler
-void mi::Dispatcher::OnEvent(mi::Event* e)
+void mi::Dispatcher::on_event(mi::Event* e)
 {
-    if (!e)
-        return;
+    assert(e);
 
-    e->SetSystemTimestamp(time_source->Sample());
+    e->set_system_timestamp(time_source->sample());
     
-    if (shell_filter->Accept(e))
+    if (shell_filter->accept(e) == mi::Filter::Result::stop_processing)
         return;
 
-    if (grab_filter->Accept(e))
+    if (grab_filter->accept(e) == mi::Filter::Result::stop_processing)
         return;
 
-    application_filter->Accept(e);
+    application_filter->accept(e);
 }
 
 void mi::Dispatcher::RegisterShellFilter(mi::Filter* f)
@@ -73,4 +73,18 @@ void mi::Dispatcher::RegisterApplicationFilter(mi::Filter* f)
 {
     assert(f);
     application_filter = f;
+}
+
+void mi::Dispatcher::register_device(LogicalDevice* device)
+{
+    assert(device);
+    devices.insert(device);
+    device->start();
+}
+
+void mi::Dispatcher::unregister_device(LogicalDevice* device)
+{
+    assert(device);
+    device->stop();
+    devices.erase(device);
 }

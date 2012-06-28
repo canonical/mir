@@ -16,7 +16,6 @@
  * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#include "mir/input/dispatcher.h"
 #include "mir/input/evdev/evemu_device.h"
 
 #include <gtest/gtest.h>
@@ -27,11 +26,9 @@ namespace mie = mir::input::evdev;
 TEST(Device, EvemuFile)
 {
     using namespace testing;
-    mi::Dispatcher dispatcher;
-    
     mie::EvemuDevice device(
         TEST_RECORDINGS_DIR "quanta_touchscreen/device.prop",
-        &dispatcher);
+        nullptr);
         
     EXPECT_TRUE(device.get_name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0)
         << "Device name is: \"" << device.get_name() << "\"";

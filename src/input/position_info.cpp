@@ -13,35 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ *  Chase Douglas <chase.douglas@canonical.com>
+ *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_FILTER_H_
-#define MIR_INPUT_FILTER_H_
+#include "mir/input/position_info.h"
+
+#include <boost/format.hpp>
+
+#include <ostream>
+
+namespace mi = mir::input;
 
 namespace mir
 {
 namespace input
 {
 
-class Event;
-
-class Filter
+std::ostream& operator<<(std::ostream& out, const mi::PositionInfo& pi)
 {
- public:
-
-    enum class Result
-    {
-        continue_processing,
-        stop_processing
-    };
-    
-    virtual ~Filter() {}
-
-    virtual Result accept(Event* e) = 0;
-};
+    out <<
+            (boost::format("") % pi.mode).str();
+    return out;
+}
 
 }
 }
-
-#endif /* MIR_INPUT_FILTER_H_ */

@@ -15,18 +15,22 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-add_executable(end-to-end-tests test_renderloop.cpp test_input_dispatch.cpp)
+add_executable(
+  end-to-end-tests 
+  test_renderloop.cpp 
+  test_input_dispatch.cpp)
 
 target_link_libraries(
   end-to-end-tests
   
   mircompositor
   mirinput
+
   ${Boost_LIBRARIES}  
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
 add_test(end-to-end-tests ${CMAKE_CURRENT_BINARY_DIR}/end-to-end-tests)

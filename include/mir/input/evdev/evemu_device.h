@@ -19,17 +19,18 @@
 #ifndef MIR_INPUT_EVEMU_DEVICE_H_
 #define MIR_INPUT_EVEMU_DEVICE_H_
 
-#include "logical_device.h"
+#include "mir/input/logical_device.h"
+#include "mir/input/position_info.h"
 
-namespace evemu {
+#include <map>
+#include <vector>
 
-#include "evemu.h"
-
-} // namespace evemu
-
-namespace mir {
-namespace input {
-
+namespace mir
+{
+namespace input
+{
+namespace evdev
+{
 /**
  * An Evemu-derived logical device
  *
@@ -43,13 +44,23 @@ class EvemuDevice : public LogicalDevice {
      *
      * @param[in] path Path to the evemu property file or evdev input node
      */
-    EvemuDevice(const std::string& path);
+    EvemuDevice(const std::string& path, EventHandler* event_handler);
 
-    virtual const std::string& get_name() const { return name; }
-    virtual int get_simultaneous_instances() const { return simultaneous_instances; }
-    virtual const std::vector<bool>& get_buttons() const { return buttons; }
-    virtual const mir::input::PositionInfo& get_position_info() const { return position_info; }
-    virtual const std::map<AxisType, Axis>& get_axes() const { return axes; }
+    // From EventProducer
+    virtual EventProducer::State get_state() const;
+    virtual void start();
+    virtual void stop();
+    
+    // From LogicalDevice
+    virtual const std::string& get_name() const;
+    
+    virtual int get_simultaneous_instances() const;
+
+    virtual bool is_button_supported(const Button& button) const;
+
+    virtual const mir::input::PositionInfo& get_position_info() const;
+    
+    virtual const Axis& get_axis_for_type(AxisType axisType) const;
 
     EvemuDevice(const EvemuDevice&) = delete;
     EvemuDevice& operator=(const EvemuDevice&) = delete;
@@ -61,7 +72,8 @@ class EvemuDevice : public LogicalDevice {
     mir::input::PositionInfo position_info;
     std::map<AxisType, Axis> axes;
 };
-
+    
+} // evdev
 } // input
 } // mir
 

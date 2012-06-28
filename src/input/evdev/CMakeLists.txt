@@ -14,9 +14,26 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(evdev/)
+option(
+  MIR_INPUT_ENABLE_EVDEV
+  "Controls if devices for handling evdev events are compiled"
+  ON
+)
 
-set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+if(MIR_INPUT_ENABLE_EVDEV)
+
+  # Check for evemu (which may be named evemu or utouch-evemu)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
+
+  list(
+    APPEND INPUT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/evemu_device.cpp)
+
+  set(
+    INPUT_SOURCES 
+    ${INPUT_SOURCES} 
+    PARENT_SCOPE)
+
+endif(MIR_INPUT_ENABLE_EVDEV)
+  

@@ -16,32 +16,21 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_FILTER_H_
-#define MIR_INPUT_FILTER_H_
+#ifndef MIR_MOCK_INPUT_EVENT_H_
+#define MIR_MOCK_INPUT_EVENT_H_
+
+#include "mir/input/event.h"
 
 namespace mir
 {
 namespace input
 {
 
-class Event;
-
-class Filter
+class MockInputEvent : public Event
 {
- public:
-
-    enum class Result
-    {
-        continue_processing,
-        stop_processing
-    };
-    
-    virtual ~Filter() {}
-
-    virtual Result accept(Event* e) = 0;
 };
 
 }
 }
 
-#endif /* MIR_INPUT_FILTER_H_ */
+#endif // MIR_MOCK_INPUT_EVENT_H_

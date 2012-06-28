@@ -21,6 +21,8 @@
 
 #include "mir/input/event_handler.h"
 
+#include <set>
+
 namespace mir
 {
 
@@ -29,9 +31,9 @@ class TimeSource;
 namespace input
 {
 
-class Device;
 class Event;
 class Filter;
+class LogicalDevice;
 
 class Dispatcher : public EventHandler
 {
@@ -45,7 +47,7 @@ class Dispatcher : public EventHandler
     ~Dispatcher() = default;
 
     // Implemented from EventHandler
-    void OnEvent(Event* e);
+    void on_event(Event* e);
 
     void RegisterShellFilter(Filter* f);
 
@@ -53,11 +55,17 @@ class Dispatcher : public EventHandler
 
     void RegisterApplicationFilter(Filter* f);
 
+    void register_device(LogicalDevice* device);
+
+    void unregister_device(LogicalDevice* device);
  private:
     TimeSource* time_source;
+    
     Filter* shell_filter;
     Filter* grab_filter;
     Filter* application_filter;
+
+    std::set<LogicalDevice*> devices;
 };
 
 }
