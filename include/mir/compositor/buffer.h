@@ -16,39 +16,39 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#ifndef MIR_COMPOSITOR_BUFFER_H_
+#define MIR_COMPOSITOR_BUFFER_H_
 
-#include "drawer.h"
+#include <cstdint>
 
 namespace mir
 {
-namespace surfaces
-{
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-}
-
 namespace compositor
 {
-class BufferTextureBinder;
 
-class Compositor : public Drawer
-{
-public:
-    explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
-        BufferTextureBinder* buffermanager);
-
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
-    BufferTextureBinder* const buffermanager;
+enum class PixelFormat : uint32_t {
+    rgba_8888
 };
 
+class Buffer
+{
+ public:
+
+    virtual uint32_t width() const = 0;
+
+    virtual uint32_t height() const = 0;
+
+    virtual uint32_t stride() const = 0;
+
+    virtual PixelFormat pixel_format() const = 0;
+
+ protected:
+    Buffer() = default;
+    ~Buffer() = default;
+    Buffer(Buffer const&) = delete;
+    Buffer& operator=(Buffer const&) = delete;
+};
 
 }
 }
-
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_COMPOSITOR_BUFFER_H_

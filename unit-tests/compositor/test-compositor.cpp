@@ -33,40 +33,40 @@ namespace mg = mir::graphics;
 namespace
 {
 
-class mock_buffer_texture_binder : public mc::buffer_texture_binder
+class MockBufferTextureBinder : public mc::BufferTextureBinder
 {
 public:
     MOCK_METHOD0(bind_buffer_to_texture, void ());
 };
 
-struct mock_scenegraph : ms::scenegraph
+struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, ms::surfaces_to_render (geom::rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, ms::surfaces_to_render (geom::Rectangle const&));
 };
 
-struct mock_display : mg::display
+struct MockDisplay : mg::Display
 {
 public:
-    MOCK_METHOD0(view_area, geom::rectangle ());
+    MOCK_METHOD0(view_area, geom::Rectangle ());
 };
 }
 
 
-TEST(compositor, render)
+TEST(Compositor, render)
 {
     using namespace testing;
 
-    mock_buffer_texture_binder buffer_texture_binder;
-    mock_scenegraph scenegraph;
-    mock_display display;
+    MockBufferTextureBinder buffer_texture_binder;
+    MockScenegraph scenegraph;
+    MockDisplay display;
 
-    mc::compositor comp(&scenegraph, &buffer_texture_binder);
+    mc::Compositor comp(&scenegraph, &buffer_texture_binder);
 
     EXPECT_CALL(buffer_texture_binder, bind_buffer_to_texture()).Times(AtLeast(1));
 
     EXPECT_CALL(display, view_area())
-			.WillRepeatedly(Return(geom::rectangle()));
+			.WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_))
     		.WillRepeatedly(Return(ms::surfaces_to_render()));

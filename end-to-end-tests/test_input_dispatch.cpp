@@ -79,6 +79,7 @@ TEST(input_dispatch, incoming_input_triggers_filter)
     MockInputDevice device(&dispatcher);
 
     EXPECT_CALL(filter, Accept(_)).Times(AtLeast(3));
+    EXPECT_CALL(time_source, Sample()).Times(AtLeast(0));
 
     device.TriggerEvent();
 }
@@ -98,6 +99,7 @@ TEST(input_dispatch, incoming_input_is_timestamped)
                               &filter);
     MockInputDevice device(&dispatcher);
 
+    EXPECT_CALL(filter, Accept(_)).Times(AtLeast(0));
     EXPECT_CALL(time_source, Sample()).Times(AtLeast(1));
     device.TriggerEvent();
 

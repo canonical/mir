@@ -17,22 +17,36 @@
  */
 
 #include "mir/compositor/buffer_manager.h"
-#include "mir/graphics/framebuffer_backend.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 
 #include <cassert>
 
 namespace mc = mir::compositor;
-namespace mg = mir::graphics;
 
-mc::buffer_manager::buffer_manager(graphics::framebuffer_backend* framebuffer)
+mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
-    framebuffer(framebuffer)
+    gr_allocator(gr_allocator)
 {
-    assert(framebuffer);
+    assert(gr_allocator);
 }
 
 
-void mc::buffer_manager::bind_buffer_to_texture()
+void mc::BufferManager::bind_buffer_to_texture()
 {
-    framebuffer->render();
+
+}
+ 
+std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(uint32_t width,
+                                   uint32_t height,
+                                   mc::PixelFormat pf)
+{
+    
+    return gr_allocator->alloc_buffer(width, height, pf);
+}
+
+bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)
+{
+    assert(buffer);
+    return false;
 }
