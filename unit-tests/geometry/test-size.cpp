@@ -52,6 +52,15 @@ TEST(geometry, height)
     EXPECT_NE(height42, height0);
 }
 
+TEST(geometry, coordinates)
+{
+	geom::X x;
+	geom::Y y;
+	geom::DeltaX dx;
+	geom::DeltaY dy;
+}
+
+
 TEST(geometry, size)
 {
     using namespace geom;

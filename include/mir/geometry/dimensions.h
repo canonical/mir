@@ -91,6 +91,10 @@ inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 
 typedef detail::IntWrapper<detail::width> Width;
 typedef detail::IntWrapper<detail::height> Height;
+typedef detail::IntWrapper<detail::x> X;
+typedef detail::IntWrapper<detail::y> Y;
+typedef detail::IntWrapper<detail::dx> DeltaX;
+typedef detail::IntWrapper<detail::dy> DeltaY;
 }
 }
 
