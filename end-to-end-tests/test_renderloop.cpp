@@ -21,6 +21,7 @@
 #include "mir/compositor/drawer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/scenegraph.h"
 #include "mir/geometry/rectangle.h"
 
@@ -40,10 +41,17 @@ public:
     MOCK_METHOD0(render, void ());
 };
 
+struct mock_allocator : mc::GraphicBufferAllocator
+{
+public:
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
+};
+
 struct MockBufferManager : public mc::BufferManager
 {
  public:
-    explicit MockBufferManager(mg::FramebufferBackend* framebuffer) : mc::BufferManager(framebuffer) {}
+    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
     
     MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
     MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
@@ -60,6 +68,7 @@ struct mock_display : mg::Display
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
 };
+
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
@@ -67,10 +76,11 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     using namespace testing;
 
     mock_framebuffer_backend graphics;
+    mock_allocator gr_allocator;
     mock_scenegraph scenegraph;
     mock_display display;
 
-    MockBufferManager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&gr_allocator);
     mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render()).Times(1);
@@ -82,6 +92,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
@@ -89,10 +100,11 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     using namespace testing;
 
     mock_framebuffer_backend graphics;
+    mock_allocator gr_allocator;
     mock_scenegraph scenegraph;
     mock_display display;
 
-    MockBufferManager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&gr_allocator);
     mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
@@ -104,6 +116,7 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_display_query)
@@ -111,10 +124,11 @@ TEST(compositor_renderloop, notify_sync_and_see_display_query)
     using namespace testing;
 
     mock_framebuffer_backend graphics;
+    mock_allocator gr_allocator;
     mock_scenegraph scenegraph;
     mock_display display;
 
-    MockBufferManager buffer_manager(&graphics);
+    MockBufferManager buffer_manager(&gr_allocator);
     mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
@@ -126,4 +140,5 @@ TEST(compositor_renderloop, notify_sync_and_see_display_query)
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
 
     comp.render(&display);
+    graphics.render();
 }

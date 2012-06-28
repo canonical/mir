@@ -18,13 +18,12 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_manager.h"
-#include "mir/graphics/framebuffer_backend.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace mg = mir::graphics;
 
 namespace
 {
@@ -37,10 +36,11 @@ struct EmptyDeleter
     }    
 };
 
-struct MockFramebufferBackend : mg::FramebufferBackend
+struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
 {
  public:
-    MOCK_METHOD0(render, void ());
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
 const uint32_t width{1024};
@@ -69,7 +69,7 @@ struct MockBuffer : public mc::Buffer
 struct MockBufferManager : public mc::BufferManager
 {
  public:
-    explicit MockBufferManager(mg::FramebufferBackend* framebuffer) : mc::BufferManager(framebuffer) {}
+    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
     
     MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
     MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
@@ -82,15 +82,14 @@ TEST(buffer_manager, create_buffer)
     using namespace testing;
     
     MockBuffer mock_buffer;
-
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
     
-    MockFramebufferBackend graphics;
-    MockBufferManager buffer_manager(&graphics);
+    MockGraphicBufferAllocator graphic_allocator;
+    mc::BufferManager buffer_manager(&graphic_allocator);
 
-    EXPECT_CALL(buffer_manager, create_buffer(Eq(width), Eq(height), Eq(pixel_format))).
+    EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
     		Times(1).WillRepeatedly(Return(default_buffer));
 
     std::shared_ptr<mc::Buffer> buffer = buffer_manager.create_buffer(
@@ -100,15 +99,4 @@ TEST(buffer_manager, create_buffer)
 
     EXPECT_TRUE(buffer.get() != nullptr);
 
-    Mock::VerifyAndClearExpectations(&buffer_manager);
-
-    EXPECT_CALL(mock_buffer, width()).       Times(1);
-    EXPECT_CALL(mock_buffer, height()).      Times(1);
-    EXPECT_CALL(mock_buffer, stride()).      Times(1);
-    EXPECT_CALL(mock_buffer, pixel_format()).Times(1);
-
-    EXPECT_EQ(width, buffer->width());
-    EXPECT_EQ(height, buffer->height());
-    EXPECT_EQ(pixel_format, buffer->pixel_format());
-    EXPECT_EQ(stride, buffer->stride());
 }
