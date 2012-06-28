@@ -81,7 +81,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     MockDisplay display;
 
     MockBufferManager buffer_manager(&gr_allocator);
-    mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
+    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render()).Times(1);
 
@@ -105,7 +105,7 @@ TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
     MockDisplay display;
 
     MockBufferManager buffer_manager(&gr_allocator);
-    mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
+    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
 
@@ -129,7 +129,7 @@ TEST(compositor_renderloop, notify_sync_and_see_display_query)
     MockDisplay display;
 
     MockBufferManager buffer_manager(&gr_allocator);
-    mc::drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
+    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(graphics, render());
 

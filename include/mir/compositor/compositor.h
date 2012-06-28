@@ -33,7 +33,7 @@ namespace compositor
 {
 class BufferTextureBinder;
 
-class Compositor : public drawer
+class Compositor : public Drawer
 {
 public:
     explicit Compositor(
