@@ -24,8 +24,6 @@
 #include "buffer.h"
 #include "buffer_texture_binder.h"
 
-#include "mir/geometry/size.h"
-
 #include <cstdint>
 #include <memory>
 #include <atomic>
@@ -40,14 +38,14 @@ namespace detail
 class TokenWrapper
 {
 public:
-	TokenWrapper() : value(NO_TOKEN) {}
-	explicit TokenWrapper(int value) : value(value) {}
+    TokenWrapper() : value(NO_TOKEN) {}
+    explicit TokenWrapper(int value) : value(value) {}
 
     inline bool is_valid() const { return (value != NO_TOKEN); }
 
 private:
     enum {NO_TOKEN = 0};
-	int value;
+    int value;
 };
 
 } // end namespace detail
