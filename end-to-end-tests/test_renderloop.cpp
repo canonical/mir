@@ -42,18 +42,6 @@ public:
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
-struct MockBufferManager : public mc::BufferManager
-{
- public:
-    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
-    
-    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
-    MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
-
-    MOCK_METHOD1(bind_buffer_to_texture, mg::Texture(ms::surfaces_to_render const&));
-
-};
-
 struct MockScenegraph : ms::Scenegraph
 {
 public:
@@ -77,7 +65,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     MockScenegraph scenegraph;
     MockDisplay display;
 
-    MockBufferManager buffer_manager(&gr_allocator);
+    mc::BufferManager buffer_manager(&gr_allocator);
     mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
     EXPECT_CALL(display, render(_)).Times(1);
@@ -87,9 +75,6 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(AtLeast(1))
     		.WillRepeatedly(Return(ms::surfaces_to_render()));
-
-    EXPECT_CALL(buffer_manager, bind_buffer_to_texture(_)).
-    		Times(AtLeast(1)).WillRepeatedly(Return(mg::Texture()));
 
     comp.render(&display);
 }
