@@ -19,10 +19,12 @@
 #include "mir/compositor/buffer_manager.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/display.h"
 
 #include <cassert>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
@@ -32,9 +34,9 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-void mc::BufferManager::bind_buffer_to_texture()
+mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
 {
-
+	return mg::Texture();
 }
  
 std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(uint32_t width,

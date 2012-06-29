@@ -35,12 +35,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct MockFramebufferBackend : mg::FramebufferBackend
-{
-public:
-    MOCK_METHOD0(render, void ());
-};
-
 struct MockAllocator : mc::GraphicBufferAllocator
 {
 public:
@@ -48,25 +42,17 @@ public:
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
-struct MockBufferManager : public mc::BufferManager
-{
- public:
-    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
-    
-    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
-    MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
-};
-
 struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, ms::surfaces_to_render (geom::Rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender (geom::Rectangle const&));
 };
 
 struct MockDisplay : mg::Display
 {
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
+    MOCK_METHOD1(notify_update, void (mg::Texture const&));
 };
 
 }
@@ -75,70 +61,20 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    MockFramebufferBackend graphics;
     MockAllocator gr_allocator;
     MockScenegraph scenegraph;
     MockDisplay display;
 
-    MockBufferManager buffer_manager(&gr_allocator);
+    mc::BufferManager buffer_manager(&gr_allocator);
     mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
 
-    EXPECT_CALL(graphics, render()).Times(1);
+    EXPECT_CALL(display, notify_update(_)).Times(1);
 
-    EXPECT_CALL(display, view_area())
+    EXPECT_CALL(display, view_area()).Times(AtLeast(1))
 			.WillRepeatedly(Return(geom::Rectangle()));
 
-    EXPECT_CALL(scenegraph, get_surfaces_in(_))
-    		.WillRepeatedly(Return(ms::surfaces_to_render()));
+    EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(AtLeast(1))
+    		.WillRepeatedly(Return(ms::SurfacesToRender()));
 
     comp.render(&display);
-    graphics.render();
-}
-
-TEST(compositor_renderloop, notify_sync_and_see_scenegraph_query)
-{
-    using namespace testing;
-
-    MockFramebufferBackend graphics;
-    MockAllocator gr_allocator;
-    MockScenegraph scenegraph;
-    MockDisplay display;
-
-    MockBufferManager buffer_manager(&gr_allocator);
-    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
-
-    EXPECT_CALL(graphics, render());
-
-    EXPECT_CALL(display, view_area())
-			.WillRepeatedly(Return(geom::Rectangle()));
-
-    EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(1)
-    		.WillRepeatedly(Return(ms::surfaces_to_render()));
-
-    comp.render(&display);
-    graphics.render();
-}
-
-TEST(compositor_renderloop, notify_sync_and_see_display_query)
-{
-    using namespace testing;
-
-    MockFramebufferBackend graphics;
-    MockAllocator gr_allocator;
-    MockScenegraph scenegraph;
-    MockDisplay display;
-
-    MockBufferManager buffer_manager(&gr_allocator);
-    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
-
-    EXPECT_CALL(graphics, render());
-
-    EXPECT_CALL(display, view_area()).Times(1)
-			.WillRepeatedly(Return(geom::Rectangle()));
-
-    EXPECT_CALL(scenegraph, get_surfaces_in(_))
-    		.WillRepeatedly(Return(ms::surfaces_to_render()));
-
-    comp.render(&display);
-    graphics.render();
 }
