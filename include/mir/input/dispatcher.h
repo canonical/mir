@@ -69,8 +69,6 @@ class Dispatcher : public EventHandler
                std::unique_ptr<GrabFilter> grab_filter,
                std::unique_ptr<ApplicationFilter> application_filter);
 
-    ~Dispatcher() = default;
-
     // Implemented from EventHandler
     void on_event(Event* e);
 
