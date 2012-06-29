@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_manager_client.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
@@ -35,24 +36,21 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
+void mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
 {
-	return mg::Texture();
+	return;
 }
  
-mc::SurfaceToken mc::BufferManager::create_client(geometry::Width width,
+mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
                                    geometry::Height height,
                                    mc::PixelFormat pf)
-{ 
-    int new_token = atomic_fetch_add( &client_counter, 1); 
-    SurfaceToken token(new_token);
+{
+    BufferManagerClient *newclient = new BufferManagerClient;
 
-    /* TODO: (kdub) alloc_buffer's return value should be associated with a 
-             client, and put into an array stored in BufferManager for
-             deletion later*/
+    /* todo: (kdub) add the new buffer to the newclient */
     gr_allocator->alloc_buffer(width, height, pf);
 
-    return token;
+    return newclient;
 }
 
 bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)

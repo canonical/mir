@@ -20,7 +20,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/compositor/buffer_manager.h"
 #include "mir/surfaces/scenegraph.h"
 
 #include <cassert>
@@ -29,20 +28,13 @@ namespace mc = mir::compositor;
 
 
 mc::Compositor::Compositor(
-    surfaces::Scenegraph* scenegraph,
-    BufferTextureBinder* buffermanager)
+    surfaces::Scenegraph* scenegraph)
     :
-    scenegraph(scenegraph),
-    buffermanager(buffermanager)
+    scenegraph(scenegraph)
 {
     assert(scenegraph);
-    assert(buffermanager);
 }
 
-void mc::Compositor::render(graphics::Display* display)
+void mc::Compositor::render(graphics::Display*)
 {
-    assert(display);
-	auto all_surfaces = scenegraph->get_surfaces_in(display->view_area());
-	auto texture = buffermanager->bind_buffer_to_texture(all_surfaces);
-	display->notify_update(texture);
 }
