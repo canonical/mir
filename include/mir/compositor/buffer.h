@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
-#include <cstdint>
+#include "mir/geometry/dimensions.h"
 
 namespace mir
 {
@@ -34,11 +34,11 @@ class Buffer
 {
  public:
 
-    virtual uint32_t width() const = 0;
+    virtual geometry::Width width() const = 0;
 
-    virtual uint32_t height() const = 0;
+    virtual geometry::Height height() const = 0;
 
-    virtual uint32_t stride() const = 0;
+    virtual geometry::Stride stride() const = 0;
 
     virtual PixelFormat pixel_format() const = 0;
 

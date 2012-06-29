@@ -38,7 +38,7 @@ namespace
 struct MockAllocator : mc::GraphicBufferAllocator
 {
 public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 

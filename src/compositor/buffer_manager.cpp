@@ -39,9 +39,10 @@ mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender
 	return mg::Texture();
 }
  
-std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(uint32_t width,
-                                   uint32_t height,
-                                   mc::PixelFormat pf)
+std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(
+	geometry::Width width,
+	geometry::Height height,
+	mc::PixelFormat pf)
 {
     
     return gr_allocator->alloc_buffer(width, height, pf);
