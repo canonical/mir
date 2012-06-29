@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_manager_client.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -72,7 +73,7 @@ struct MockBufferManager : public mc::BufferManager
  public:
     explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
     
-    MOCK_METHOD3(create_buffer, mc::SurfaceToken(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD3(create_buffer, mc::BufferManagerClient(uint32_t, uint32_t, mc::PixelFormat));
     MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
 };
 
@@ -92,11 +93,11 @@ TEST(buffer_manager, create_buffer)
     EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
     		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
 
-    mc::SurfaceToken token;
-    token = buffer_manager.create_client(
+    mc::BufferManagerClient *client = nullptr;
+    client = buffer_manager.create_client(
         width,
         height,
         pixel_format);
 
-    EXPECT_TRUE(token.is_valid());
+    EXPECT_TRUE(client != nullptr);
 }
