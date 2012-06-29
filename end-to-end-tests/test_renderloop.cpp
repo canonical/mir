@@ -44,7 +44,7 @@ public:
 struct MockAllocator : mc::GraphicBufferAllocator
 {
 public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
@@ -53,7 +53,7 @@ struct MockBufferManager : public mc::BufferManager
  public:
     explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
     
-    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
     MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
 };
 

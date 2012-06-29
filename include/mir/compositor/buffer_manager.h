@@ -23,6 +23,7 @@
 
 #include "buffer.h"
 #include "buffer_texture_binder.h"
+#include "mir/geometry/dimensions.h"
 
 #include <cstdint>
 #include <memory>
@@ -41,9 +42,10 @@ class BufferManager : public BufferTextureBinder
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
  
-    virtual std::shared_ptr<Buffer> create_buffer(uint32_t width,
-                                   uint32_t height,
-                                   PixelFormat pf);
+    virtual std::shared_ptr<Buffer> create_buffer(
+		geometry::Width width,
+		geometry::Height height,
+		PixelFormat pf);
 
     virtual bool register_buffer(std::shared_ptr<Buffer> buffer);
 
