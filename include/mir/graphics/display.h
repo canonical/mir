@@ -23,12 +23,16 @@
 
 namespace mir
 {
+
 namespace graphics
 {
+class Texture {};
+
 class Display
 {
 public:
     virtual geometry::Rectangle view_area() = 0;
+    virtual void render(Texture const& texture) = 0;
 
 protected:
     Display() = default;

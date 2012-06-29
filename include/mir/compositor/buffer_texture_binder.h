@@ -21,14 +21,26 @@
 
 namespace mir
 {
+
+namespace surfaces
+{
+class surfaces_to_render;
+}
+
+namespace graphics
+{
+class Texture;
+}
+
 namespace compositor
 {
+
 
 class BufferTextureBinder
 {
 public:
 
-    virtual void bind_buffer_to_texture() = 0;
+    virtual graphics::Texture bind_buffer_to_texture(surfaces::surfaces_to_render const& ) = 0;
 
 protected:
     BufferTextureBinder() = default;
