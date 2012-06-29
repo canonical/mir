@@ -24,18 +24,18 @@ namespace mir
 namespace compositor
 {
 
-class buffer_texture_binder
+class BufferTextureBinder
 {
 public:
 
     virtual void bind_buffer_to_texture() = 0;
 
 protected:
-    buffer_texture_binder() = default;
-    ~buffer_texture_binder() = default;
+    BufferTextureBinder() = default;
+    ~BufferTextureBinder() = default;
 private:
-    buffer_texture_binder(buffer_texture_binder const&) = delete;
-    buffer_texture_binder& operator=(buffer_texture_binder const&) = delete;
+    BufferTextureBinder(BufferTextureBinder const&) = delete;
+    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
 };
 }
 }

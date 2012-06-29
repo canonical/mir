@@ -23,7 +23,7 @@ namespace mir
 {
 namespace graphics
 {
-class display;
+class Display;
 }
 
 namespace compositor
@@ -31,16 +31,16 @@ namespace compositor
 
 // drawer is the interface by which "graphics/libgl" knows
 // the compositor.
-class drawer
+class Drawer
 {
 public:
-    virtual void render(graphics::display* display) = 0;
+    virtual void render(graphics::Display* display) = 0;
 protected:
-    drawer() = default;
-    ~drawer() = default;
+    Drawer() = default;
+    ~Drawer() = default;
 private:
-    drawer& operator=(drawer const&) = delete;
-    drawer(drawer const&) = delete;
+    Drawer& operator=(Drawer const&) = delete;
+    Drawer(Drawer const&) = delete;
 };
 }
 }

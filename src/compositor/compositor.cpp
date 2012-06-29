@@ -28,9 +28,9 @@
 namespace mc = mir::compositor;
 
 
-mc::compositor::compositor(
-    surfaces::scenegraph* scenegraph,
-    buffer_texture_binder* buffermanager)
+mc::Compositor::Compositor(
+    surfaces::Scenegraph* scenegraph,
+    BufferTextureBinder* buffermanager)
     :
     scenegraph(scenegraph),
     buffermanager(buffermanager)
@@ -39,7 +39,7 @@ mc::compositor::compositor(
     assert(buffermanager);
 }
 
-void mc::compositor::render(graphics::display* display)
+void mc::Compositor::render(graphics::Display* display)
 {
     assert(display);
 	scenegraph->get_surfaces_in(display->view_area());
