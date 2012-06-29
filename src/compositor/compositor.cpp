@@ -44,5 +44,5 @@ void mc::Compositor::render(graphics::Display* display)
     assert(display);
 	auto all_surfaces = scenegraph->get_surfaces_in(display->view_area());
 	auto texture = buffermanager->bind_buffer_to_texture(all_surfaces);
-	display->render(texture);
+	display->notify_update(texture);
 }

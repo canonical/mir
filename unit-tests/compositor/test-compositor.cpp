@@ -49,7 +49,7 @@ struct MockDisplay : mg::Display
 {
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
-    MOCK_METHOD1(render, void (mg::Texture const&));
+    MOCK_METHOD1(notify_update, void (mg::Texture const&));
 };
 }
 
