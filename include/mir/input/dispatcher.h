@@ -21,8 +21,10 @@
 
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
+
 #include <memory>
 #include <set>
+#include <thread>
 
 namespace mir
 {
@@ -84,6 +86,7 @@ class Dispatcher : public EventHandler
     std::unique_ptr<ApplicationFilter> application_filter;
 
     DeviceCollection devices;
+    std::mutex dispatcher_guard;
 };
 
 }
