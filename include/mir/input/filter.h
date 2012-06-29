@@ -41,6 +41,26 @@ class Filter
     virtual Result accept(Event* e) = 0;
 };
 
+template<typename BaseFilter>
+class AlwaysContinueFilter : public BaseFilter
+{
+ public:
+    Filter::Result accept(Event*)
+    {
+        return Filter::Result::continue_processing;
+    }
+};
+
+template<typename BaseFilter>
+class AlwaysStopFilter : public BaseFilter
+{
+ public:
+    Filter::Result accept(Event*)
+    {
+        return Filter::Result::stop_processing;
+    }
+};
+
 }
 }
 

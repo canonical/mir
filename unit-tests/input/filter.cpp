@@ -13,30 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
-#define MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
+#include "mir/input/filter.h"
 
-namespace mir
-{
-namespace graphics
-{
-// framebuffer_backend is the interface compositor uses onto graphics/libgl
-class FramebufferBackend
-{
-public:
-    virtual void render() = 0;
+#include <gtest/gtest.h>
 
-protected:
-    FramebufferBackend() = default;
-    ~FramebufferBackend() = default;
-private:
-    FramebufferBackend(FramebufferBackend const&) = delete;
-    FramebufferBackend& operator=(FramebufferBackend const&) = delete;
-};
-}
+namespace mi = mir::input;
+
+TEST(filter, always_continue_filter)
+{
+    mi::AlwaysContinueFilter<mi::Filter> acf;
+
+    EXPECT_EQ(mi::Filter::Result::continue_processing, acf.accept(nullptr));
 }
 
-#endif /* MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_ */
+TEST(filter, always_stop_filter)
+{
+    mi::AlwaysStopFilter<mi::Filter> acf;
+
+    EXPECT_EQ(mi::Filter::Result::stop_processing, acf.accept(nullptr));
+}

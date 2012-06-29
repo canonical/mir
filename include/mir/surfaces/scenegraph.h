@@ -24,20 +24,20 @@ namespace mir
 namespace surfaces
 {
 
-class surfaces_to_render {};
+class SurfacesToRender {};
 
 // scenegraph is the interface compositor uses onto the surface stack
-class scenegraph
+class Scenegraph
 {
 public:
-	virtual surfaces_to_render get_surfaces_in(geometry::rectangle const& display_area) = 0;
+	virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
 
 protected:
-	scenegraph() = default;
-	~scenegraph() = default;
+	Scenegraph() = default;
+	~Scenegraph() = default;
 private:
-	scenegraph(scenegraph const&) = delete;
-	scenegraph& operator=(scenegraph const&) = delete;
+	Scenegraph(Scenegraph const&) = delete;
+	Scenegraph& operator=(Scenegraph const&) = delete;
 };
 }
 }

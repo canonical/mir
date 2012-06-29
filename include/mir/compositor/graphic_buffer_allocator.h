@@ -13,42 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
-
-#include "drawer.h"
+#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 namespace mir
 {
-namespace surfaces
-{
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-}
-
 namespace compositor
 {
-class BufferTextureBinder;
 
-class Compositor : public Drawer
+class GraphicBufferAllocator
 {
-public:
-    explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
-        BufferTextureBinder* buffermanager);
-
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
-    BufferTextureBinder* const buffermanager;
+    public:
+        virtual std::shared_ptr<Buffer> alloc_buffer(uint32_t width, uint32_t height, PixelFormat pf) = 0;
+        virtual void free_buffer(std::shared_ptr<Buffer> buffer) = 0;
+        
 };
 
-
 }
 }
-
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_

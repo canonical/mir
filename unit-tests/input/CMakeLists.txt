@@ -16,6 +16,11 @@
 
 add_subdirectory(evemu/)
 
+list(
+  APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/filter.cpp
+)
+
 set(
   UNIT_TEST_SOURCES 
   ${UNIT_TEST_SOURCES} 

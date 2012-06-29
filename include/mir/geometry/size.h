@@ -14,20 +14,43 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GEOMETRY_FORWARD_H_
-#define MIR_GEOMETRY_FORWARD_H_
+#ifndef MIR_GEOMETRY_SIZE_H_
+#define MIR_GEOMETRY_SIZE_H_
+
+#include "dimensions.h"
+#include <ostream>
 
 namespace mir
 {
 namespace geometry
 {
-// Declarations of geometric concepts I think we'll need
-class Point;
-class Size;
-class Displacement;
-class Rectangle;
-class Region;
+
+struct Size
+{
+    Size() = default;
+    Size(Width width, Height height) : width(width), height(height) {}
+
+    Width width;
+    Height height;
+};
+
+inline bool operator == (Size const& lhs, Size const& rhs)
+{
+    return lhs.width == rhs.width && lhs.height == rhs.height;
+}
+
+inline bool operator != (Size const& lhs, Size const& rhs)
+{
+    return lhs.width != rhs.width || lhs.height != rhs.height;
+}
+
+std::ostream& operator<<(std::ostream& out, Size const& value)
+{
+    out << '(' << value.width << ", " << value.height << ')';
+    return out;
+}
+
 }
 }
 
-#endif /* FORWARD_H_ */
+#endif /* MIR_GEOMETRY_SIZE_H_ */
