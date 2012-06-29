@@ -19,113 +19,46 @@
 #ifndef MIR_INPUT_LOGICAL_DEVICE_H_
 #define MIR_INPUT_LOGICAL_DEVICE_H_
 
+#include "mir/input/axis.h"
+#include "mir/input/event_producer.h"
+
 #include <map>
+#include <stdexcept>
 #include <string>
-#include <vector>
 
-namespace mir {
-namespace input {
+namespace mir
+{
+namespace input
+{
 
-/**
- * The mode of a position or axis of an input device
- */
-enum class Mode {
-    none, /**< This position is not supported */
-    relative, /**< This position or axis provides relative values */
-    absolute /**< This position or axis provides absolute values */
+struct PositionInfo; 
+
+/* FIXME: Reenable once under test.
+enum Button
+{
+    button_none = 0
 };
+*/
 
-/**
- * Information on the position values of an input device
- */
-struct PositionInfo {
-    /**
-     * The mode of the position
-     */
-    Mode mode;
-
-    union {
-        struct {
-            struct {
-                /**
-                 * The maximum value of the position
-                 */
-                int max;
-
-                /**
-                 * The length of the position axis in millimeters
-                 *
-                 * A length of zero means the length is unknown.
-                 */
-                float length;
-            } x, y;
-        } relative; /**< Relative mode position information */
-        struct {
-            struct {
-                /**
-                 * The minimum screen coordinate of the surface
-                 */
-                int min;
-
-                /**
-                 * The maximum screen coordinate of the surface
-                 */
-                int max;
-            } x, y;
-        } absolute; /**< Absolute mode position information */
-    };
-};
-
-/**
- * The axis types recognized by mir
- */
-enum class AxisType {
-    /**
-     * Vertical scroll axis
-     *
-     * The resolution is measured in millimeters per unit.
-     */
-    vertical_scroll,
-    /**
-     * Horizontal scroll axis
-     *
-     * The resolution is measured in millimeters per unit.
-     */
-    horizontal_scroll
-};
-
-/**
- * Information on an axis of an input device
- */
-struct Axis {
-    /**
-     * The mode of the axis
-     *
-     * May not be kNone.
-     */
-    Mode mode;
-
-    /**
-     * The minimum value of the axis
-     */
-    int min;
-
-    /**
-     * The maximum value of the axis
-     */
-    int max;
-
-    /**
-     * The resolution of the axis in axis-specific units
-     */
-    float resolution;
+struct NoAxisForTypeException : public std::runtime_error
+{
+    explicit NoAxisForTypeException() : std::runtime_error("Missing axis for type")
+    {
+    }
 };
 
 /**
  * A logical input device
  */
-class LogicalDevice {
+class LogicalDevice : public EventProducer {
  public:
+
+    explicit LogicalDevice(EventHandler* event_handler) : EventProducer(event_handler)
+    {
+    }
+    
+    virtual ~LogicalDevice() {}
+    
     /**
      * The name of the logical device
      *
@@ -146,13 +79,13 @@ class LogicalDevice {
     virtual int get_simultaneous_instances() const = 0;
 
     /**
-     * A bitmask of the buttons supported by the device
+     * Queries if a button is supported by the device.
      *
-     * @return The buttons supported by the device
+     * @return true if the button is supported by the device, false otherwise.
      *
-     * The bit positions are defined by the Linux evdev key code values.
      */
-    virtual const std::vector<bool>& get_buttons() const = 0;
+    // FIXME: Reenable once under test.
+    // virtual bool is_button_supported(const Button& button) const = 0;
 
     /**
      * The position info
@@ -165,8 +98,11 @@ class LogicalDevice {
      * The axis info
      *
      * @return The info for the axes of the device
+     *
+     * @throw Throws NoAxisForTypeException if device does not support
+     * the axis type.
      */
-    virtual const std::map<AxisType, Axis>& get_axes() const = 0;
+    virtual const std::map<AxisType,Axis>& get_axes() const = 0;
 };
 
 } // input

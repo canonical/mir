@@ -13,35 +13,48 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ *  Chase Douglas <chase.douglas@canonical.com>
+ *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_FILTER_H_
-#define MIR_INPUT_FILTER_H_
+#ifndef MIR_INPUT_POSITION_INFO_H_
+#define MIR_INPUT_POSITION_INFO_H_
+
+#include "mir/input/axis.h"
+
+#include <iosfwd>
 
 namespace mir
 {
 namespace input
 {
 
-class Event;
+/**
+ * Information on the position values of an input device
+ */
+struct PositionInfo {
+    /**
+     * The mode of the position
+     */
+    Mode mode;
 
-class Filter
-{
- public:
-
-    enum class Result
+    /* FIXME: Reenable once under test.
+    struct Properties
     {
-        continue_processing,
-        stop_processing
+        int max;
+        boost::optional<int> min;
+        boost::optional<float> length;
     };
-    
-    virtual ~Filter() {}
 
-    virtual Result accept(Event* e) = 0;
+    Properties x;
+    Properties y;
+    */
 };
 
+std::ostream& operator<<(std::ostream& out, const PositionInfo& pi);
+
 }
 }
 
-#endif /* MIR_INPUT_FILTER_H_ */
+#endif // MIR_INPUT_POSITION_INFO_H_

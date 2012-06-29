@@ -29,10 +29,6 @@ add_subdirectory(src/)
 # Check for boost
 find_package(Boost 1.48 COMPONENTS chrono filesystem system REQUIRED)
 
-# Check for evemu (which may be named evemu or utouch-evemu)
-find_package(PkgConfig REQUIRED)
-pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
-
 # Build Google Test and make its headers known
 # Check for google test and build it locally
 set(GTEST_ROOT_DIR

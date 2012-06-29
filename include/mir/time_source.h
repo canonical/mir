@@ -32,7 +32,7 @@ class TimeSource {
  public:
     virtual ~TimeSource() {}
 
-    virtual Timestamp Sample() const = 0;
+    virtual Timestamp sample() const = 0;
     
  protected:    
     TimeSource() = default;

@@ -14,20 +14,26 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-set(
-  INPUT_SOURCES
-
-  axis.cpp
-  dispatcher.cpp
-  position_info.cpp
+option(
+  MIR_INPUT_ENABLE_EVEMU
+  "Controls if devices for handling evdev events are compiled"
+  ON
 )
 
-add_subdirectory(
-  evemu/
-)
+if(MIR_INPUT_ENABLE_EVEMU)
 
-add_library( 
-  mirinput STATIC
+  # Check for evemu (which may be named evemu or utouch-evemu)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
+
+  list(
+    APPEND INPUT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+
+  set(
+    INPUT_SOURCES 
+    ${INPUT_SOURCES} 
+    PARENT_SCOPE)
+
+endif(MIR_INPUT_ENABLE_EVEMU)
   
-  ${INPUT_SOURCES}
-)

@@ -20,19 +20,20 @@
 #include "mir/input/event.h"
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
+#include "mir/input/logical_device.h"
 
 #include <cassert>
 
 namespace mi = mir::input;
 
 mi::Dispatcher::Dispatcher(TimeSource* time_source,
-                           mi::Filter* shell_filter,
-                           mi::Filter* grab_filter,
-                           mi::Filter* application_filter)
+                           std::unique_ptr<mi::ShellFilter> shell,
+                           std::unique_ptr<mi::GrabFilter> grab,
+                           std::unique_ptr<mi::ApplicationFilter> application)
         : time_source(time_source),
-          shell_filter(shell_filter),
-          grab_filter(grab_filter),
-          application_filter(application_filter)
+          shell_filter(std::move(shell)),
+          grab_filter(std::move(grab)),
+          application_filter(std::move(application))
 {
     assert(time_source);
     assert(shell_filter);
@@ -41,36 +42,34 @@ mi::Dispatcher::Dispatcher(TimeSource* time_source,
 }
 
 // Implemented from EventHandler
-void mi::Dispatcher::OnEvent(mi::Event* e)
+void mi::Dispatcher::on_event(mi::Event* e)
 {
-    if (!e)
-        return;
+    assert(e);
 
-    e->SetSystemTimestamp(time_source->Sample());
+    e->set_system_timestamp(time_source->sample());
     
-    if (shell_filter->Accept(e))
+    if (shell_filter->accept(e) == mi::Filter::Result::stop_processing)
         return;
 
-    if (grab_filter->Accept(e))
+    if (grab_filter->accept(e) == mi::Filter::Result::stop_processing)
         return;
 
-    application_filter->Accept(e);
+    application_filter->accept(e);
 }
 
-void mi::Dispatcher::RegisterShellFilter(mi::Filter* f)
+mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> device)
 {
-    assert(f);
-    shell_filter = f;
+    assert(device);
+    auto pair = devices.insert(std::move(device));
+    if (pair.second)
+        (*pair.first)->start();
+
+    return pair.first;
 }
 
-void mi::Dispatcher::RegisterGrabFilter(mi::Filter* f)
-{
-    assert(f);
-    grab_filter = f;
+void mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
+{    
+    (*token)->stop();
+    devices.erase(token);
 }
 
-void mi::Dispatcher::RegisterApplicationFilter(mi::Filter* f)
-{
-    assert(f);
-    application_filter = f;
-}

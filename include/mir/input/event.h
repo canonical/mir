@@ -36,12 +36,12 @@ class Event {
     
     // The system timestamp as assigned to the event
     // when entering the event processing.
-    const mir::Timestamp& SystemTimestamp() const
+    const mir::Timestamp& get_system_timestamp() const
     {
         return system_timestamp;
     }
     
-    void SetSystemTimestamp(const mir::Timestamp& ts)
+    void set_system_timestamp(const mir::Timestamp& ts)
     {
         system_timestamp = ts;
     }
