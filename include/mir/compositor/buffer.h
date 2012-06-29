@@ -38,7 +38,7 @@ class Buffer
 
     virtual geometry::Height height() const = 0;
 
-    virtual uint32_t stride() const = 0;
+    virtual geometry::Stride stride() const = 0;
 
     virtual PixelFormat pixel_format() const = 0;
 

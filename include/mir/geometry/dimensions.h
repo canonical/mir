@@ -27,7 +27,7 @@ namespace geometry
 
 namespace detail
 {
-enum DimensionTag { width, height, x, y, dx, dy };
+enum DimensionTag { width, height, x, y, dx, dy, stride };
 
 template<DimensionTag Tag>
 class IntWrapper
@@ -91,6 +91,8 @@ inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 
 typedef detail::IntWrapper<detail::width> Width;
 typedef detail::IntWrapper<detail::height> Height;
+typedef detail::IntWrapper<detail::stride> Stride;
+
 typedef detail::IntWrapper<detail::x> X;
 typedef detail::IntWrapper<detail::y> Y;
 typedef detail::IntWrapper<detail::dx> DeltaX;

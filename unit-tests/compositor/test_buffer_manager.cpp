@@ -46,7 +46,7 @@ struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
 
 const geom::Width width{1024};
 const geom::Height height{768};
-const uint32_t stride{width.as_uint32_t()};
+const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
 struct MockBuffer : public mc::Buffer
@@ -63,7 +63,7 @@ struct MockBuffer : public mc::Buffer
 
     MOCK_CONST_METHOD0(width, geom::Width());
     MOCK_CONST_METHOD0(height, geom::Height());
-    MOCK_CONST_METHOD0(stride, uint32_t());
+    MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
 };
 
