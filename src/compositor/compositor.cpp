@@ -35,6 +35,11 @@ mc::Compositor::Compositor(
     assert(scenegraph);
 }
 
-void mc::Compositor::render(graphics::Display*)
+void mc::Compositor::render(graphics::Display* display)
 {
+    assert(display);
+
+	scenegraph->get_surfaces_in(display->view_area());
+
+	display->notify_update();
 }
