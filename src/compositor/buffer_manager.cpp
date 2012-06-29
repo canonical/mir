@@ -45,6 +45,9 @@ mc::SurfaceToken mc::BufferManager::create_client(uint32_t width,
     int new_token = atomic_fetch_add( &client_counter, 1); 
     SurfaceToken token(new_token);
 
+    /* TODO: (kdub) alloc_buffer's return value should be associated with a 
+             client, and put into an array stored in BufferManager for
+             deletion later*/
     gr_allocator->alloc_buffer(width, height, pf);
 
     return token;

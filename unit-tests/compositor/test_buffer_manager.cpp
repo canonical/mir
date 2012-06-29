@@ -89,7 +89,7 @@ TEST(buffer_manager, create_buffer)
     mc::BufferManager buffer_manager(&graphic_allocator);
 
     EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
-    		Times(1).WillRepeatedly(Return(default_buffer));
+    		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
 
     mc::SurfaceToken token;
     token = buffer_manager.create_client(

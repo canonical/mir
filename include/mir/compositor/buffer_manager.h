@@ -32,24 +32,18 @@ namespace mir
 {
 namespace compositor
 {
-
-namespace detail
-{
-class TokenWrapper
+class SurfaceToken
 {
 public:
-    TokenWrapper() : value(NO_TOKEN) {}
-    explicit TokenWrapper(int value) : value(value) {}
+    SurfaceToken() : value(no_token) {}
+    explicit SurfaceToken(int value) : value(value) {}
 
-    inline bool is_valid() const { return (value != NO_TOKEN); }
+    inline bool is_valid() const { return (value != no_token); }
 
 private:
-    enum {NO_TOKEN = 0};
+    enum {no_token = 0};
     int value;
 };
-
-} // end namespace detail
-typedef detail::TokenWrapper SurfaceToken;
 
 class GraphicBufferAllocator;
 class BufferManager : public BufferTextureBinder
