@@ -38,6 +38,18 @@ struct PositionInfo {
      * The mode of the position
      */
     Mode mode;
+
+    /* FIXME: Reenable once under test.
+    struct Properties
+    {
+        int max;
+        boost::optional<int> min;
+        boost::optional<float> length;
+    };
+
+    Properties x;
+    Properties y;
+    */
 };
 
 std::ostream& operator<<(std::ostream& out, const PositionInfo& pi);

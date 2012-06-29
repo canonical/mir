@@ -22,6 +22,7 @@
 #include "mir/input/axis.h"
 #include "mir/input/event_producer.h"
 
+#include <map>
 #include <stdexcept>
 #include <string>
 
@@ -32,10 +33,12 @@ namespace input
 
 struct PositionInfo; 
 
+/* FIXME: Reenable once under test.
 enum Button
 {
     button_none = 0
 };
+*/
 
 struct NoAxisForTypeException : public std::runtime_error
 {
@@ -81,7 +84,8 @@ class LogicalDevice : public EventProducer {
      * @return true if the button is supported by the device, false otherwise.
      *
      */
-    virtual bool is_button_supported(const Button& button) const = 0;
+    // FIXME: Reenable once under test.
+    // virtual bool is_button_supported(const Button& button) const = 0;
 
     /**
      * The position info
@@ -91,13 +95,6 @@ class LogicalDevice : public EventProducer {
     virtual const mir::input::PositionInfo& get_position_info() const = 0;
 
     /**
-     * Checks if the device instance has an axis of type axisType.
-     *
-     * @return true if the device instance has an axis of type axisType.
-     */
-    virtual bool has_axis_type(AxisType axisType) const = 0;
-    
-    /**
      * The axis info
      *
      * @return The info for the axes of the device
@@ -105,7 +102,7 @@ class LogicalDevice : public EventProducer {
      * @throw Throws NoAxisForTypeException if device does not support
      * the axis type.
      */
-    virtual const Axis& get_axis_for_type(AxisType axisType) const = 0;
+    virtual const std::map<AxisType,Axis>& get_axes() const = 0;
 };
 
 } // input

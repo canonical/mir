@@ -46,11 +46,14 @@ std::ostream& operator<<(std::ostream& out, const mi::Mode& m)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const mi::Axis& a)
+std::ostream& operator<<(std::ostream& out, const mi::Axis& /*a*/)
 {
-    static std::string print_format("Axis[mode: %1, min: %2, max: %3, resolution: %4]");
+    // FIXME(Reenable once Axis is under test)
+    /*static const std::string print_format("Axis[mode: %1, min: %2, max: %3, resolution: %4]");
     out <<
-            (boost::format(print_format) % a.mode % a.min % a.max %a.resolution).str();
+    (boost::format(print_format) % a.mode % a.min % a.max %a.resolution).str();
+    */
+    
     return out;
 }
 

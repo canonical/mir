@@ -53,12 +53,5 @@ TEST(Device, EvemuFile)
     const mi::PositionInfo& pi = device.get_position_info();
     EXPECT_EQ(mi::Mode::absolute, pi.mode);
     /* FIXME: Can't test absolute position ranges yet, need mapping to screen coords */
-
-    ASSERT_THROW(
-        device.get_axis_for_type(mi::AxisType::vertical_scroll),
-        mi::NoAxisForTypeException);
-
-    ASSERT_THROW(
-        device.get_axis_for_type(mi::AxisType::horizontal_scroll),
-        mi::NoAxisForTypeException);
+    EXPECT_EQ(0, device.get_axes().size());
 }

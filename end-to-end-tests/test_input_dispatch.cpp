@@ -19,7 +19,6 @@
 #include "mock_input_device.h"
 
 #include "mir/time_source.h"
-#include "mir/input/device.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/event.h"
 #include "mir/input/filter.h"
@@ -127,15 +126,14 @@ TEST_F(InputDispatchFixture, incoming_input_is_timestamped)
 
 TEST_F(InputDispatchFixture, device_registration_starts_and_stops_event_producer)
 {
+    using namespace ::testing;
+    
     mi::MockInputDevice* mock_device = new mi::MockInputDevice(&dispatcher);
     std::unique_ptr<mi::LogicalDevice> device(mock_device);
 
     EXPECT_CALL(*mock_device, start()).Times(AtLeast(1));
     mi::Dispatcher::DeviceToken token = dispatcher.register_device(std::move(device));
 
-    EXPECT_EQ(mi::EventProducer::State::running, mock_device->current_state());
-
     EXPECT_CALL(*mock_device, stop()).Times(AtLeast(1));
-    device = dispatcher.unregister_device(token);
-    EXPECT_EQ(mock_device, device.get());
+    dispatcher.unregister_device(token);
 }

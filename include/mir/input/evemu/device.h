@@ -56,13 +56,12 @@ class EvemuDevice : public LogicalDevice {
     
     virtual int get_simultaneous_instances() const;
 
-    virtual bool is_button_supported(const Button& button) const;
+    // FIXME: Reenable once under test.
+    // virtual bool is_button_supported(const Button& button) const;
 
     virtual const mir::input::PositionInfo& get_position_info() const;
 
-    virtual bool has_axis_type(AxisType axisType) const;
-    
-    virtual const Axis& get_axis_for_type(AxisType axisType) const;
+    virtual const std::map<AxisType,Axis>& get_axes() const;
 
     EvemuDevice(const EvemuDevice&) = delete;
     EvemuDevice& operator=(const EvemuDevice&) = delete;

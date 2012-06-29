@@ -74,7 +74,7 @@ class Dispatcher : public EventHandler
 
     DeviceToken register_device(std::unique_ptr<LogicalDevice> device);
 
-    std::unique_ptr<LogicalDevice> unregister_device(DeviceToken token);
+    void unregister_device(DeviceToken token);
 
  private:
     TimeSource* time_source;

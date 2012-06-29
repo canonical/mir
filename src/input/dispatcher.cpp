@@ -67,12 +67,9 @@ mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::
     return pair.first;
 }
 
-std::unique_ptr<mi::LogicalDevice> mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
-{
-    std::unique_ptr<mi::LogicalDevice> device = std::move(*token);
-    device->stop();
+void mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
+{    
+    (*token)->stop();
     devices.erase(token);
-
-    return std::move(device);
 }
 

@@ -139,27 +139,19 @@ int mi::evemu::EvemuDevice::get_simultaneous_instances() const
     return simultaneous_instances;
 }
 
+/* FIXME: Reenable once under test.
 bool mi::evemu::EvemuDevice::is_button_supported(const Button& button) const
 {
     return buttons[button];
 }
+*/
 
 const mi::PositionInfo& mi::evemu::EvemuDevice::get_position_info() const
 {
     return position_info;
 }
 
-bool mi::evemu::EvemuDevice::has_axis_type(AxisType axisType) const
+const std::map<mi::AxisType, mi::Axis>& mi::evemu::EvemuDevice::get_axes() const
 {
-    auto it = axes.find(axisType);
-    return it != axes.end();
-}
-
-const mi::Axis& mi::evemu::EvemuDevice::get_axis_for_type(mi::AxisType axisType) const
-{
-    auto it = axes.find(axisType);
-    if (it == axes.end())
-        throw NoAxisForTypeException();
-        
-    return it->second;
+    return axes;
 }

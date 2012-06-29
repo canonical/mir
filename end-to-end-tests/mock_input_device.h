@@ -49,10 +49,9 @@ class MockInputDevice : public LogicalDevice
         
         ON_CALL(*this, get_name()).WillByDefault(ReturnRef(name));
         ON_CALL(*this, get_simultaneous_instances()).WillByDefault(Return(0));
-        ON_CALL(*this, is_button_supported(_)).WillByDefault(Return(false));
+        // ON_CALL(*this, is_button_supported(_)).WillByDefault(Return(false));
         ON_CALL(*this, get_position_info()).WillByDefault(ReturnRef(pi));
-        ON_CALL(*this, has_axis_type(_)).WillByDefault(Return(false));
-        ON_CALL(*this, get_axis_for_type(_)).WillByDefault(Throw(NoAxisForTypeException()));
+        ON_CALL(*this, get_axes()).WillByDefault(ReturnRef(axes));
 
         ON_CALL(*this, current_state()).WillByDefault(Return(state));
         ON_CALL(*this, start()).WillByDefault(Assign(&state,EventProducer::State::running));
@@ -65,12 +64,12 @@ class MockInputDevice : public LogicalDevice
     MOCK_METHOD0(stop, void());
 
     // From LogicalDevice
+    typedef std::map<AxisType,Axis> AxisMap;
     MOCK_CONST_METHOD0(get_name, const std::string&());
     MOCK_CONST_METHOD0(get_simultaneous_instances, int());
-    MOCK_CONST_METHOD1(is_button_supported, bool(const Button&));
+    // MOCK_CONST_METHOD1(is_button_supported, bool(const Button&));
     MOCK_CONST_METHOD0(get_position_info, const PositionInfo&());
-    MOCK_CONST_METHOD1(has_axis_type,bool(AxisType));
-    MOCK_CONST_METHOD1(get_axis_for_type, const Axis&(AxisType));
+    MOCK_CONST_METHOD0(get_axes, const AxisMap&());
     
     void trigger_event()
     {
@@ -79,6 +78,7 @@ class MockInputDevice : public LogicalDevice
 
     MockInputEvent event;
     EventProducer::State state;
+    std::map<AxisType, Axis> axes;
 };
 
 }
