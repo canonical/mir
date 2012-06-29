@@ -19,14 +19,14 @@
 #ifndef MIR_INPUT_EVENT_PRODUCER_H_
 #define MIR_INPUT_EVENT_PRODUCER_H_
 
+#include "mir/input/event_handler.h"
+
 #include <cassert>
 
 namespace mir
 {
 namespace input
 {
-
-class EventHandler;
 
 class EventProducer
 {
@@ -45,7 +45,7 @@ class EventProducer
     
     virtual ~EventProducer() {}
 
-    virtual State get_state() const = 0;
+    virtual State current_state() const = 0;
 
     // Starts execution of the event producer.
     // Implementations have to be non-blocking.
@@ -59,7 +59,13 @@ class EventProducer
  protected:
     EventProducer(const EventProducer&) = delete;
     EventProducer& operator=(const EventProducer&) = delete;
+
+    void announce_event(Event* e)
+    {
+        event_handler->on_event(e);
+    }
     
+ private:
     EventHandler* event_handler;
 };
 

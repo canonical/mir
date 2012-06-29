@@ -23,7 +23,7 @@ set(
 )
 
 add_subdirectory(
-  evdev/
+  evemu/
 )
 
 add_library( 

@@ -16,19 +16,34 @@
  * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#include "mir/input/evdev/evemu_device.h"
+#include "mir/input/dispatcher.h"
+#include "mir/input/evemu/device.h"
+#include "mir/time_source.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mi = mir::input;
-namespace mie = mir::input::evdev;
+namespace mie = mir::input::evemu;
+
+namespace
+{
+
+struct MockEventHandler : public mi::EventHandler
+{
+    MOCK_METHOD1(on_event, void(mi::Event*));
+};
+
+}
 
 TEST(Device, EvemuFile)
 {
     using namespace testing;
+
+    MockEventHandler event_handler;
     mie::EvemuDevice device(
         TEST_RECORDINGS_DIR "quanta_touchscreen/device.prop",
-        nullptr);
+        &event_handler);
         
     EXPECT_TRUE(device.get_name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0)
         << "Device name is: \"" << device.get_name() << "\"";

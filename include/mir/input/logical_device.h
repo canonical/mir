@@ -91,6 +91,13 @@ class LogicalDevice : public EventProducer {
     virtual const mir::input::PositionInfo& get_position_info() const = 0;
 
     /**
+     * Checks if the device instance has an axis of type axisType.
+     *
+     * @return true if the device instance has an axis of type axisType.
+     */
+    virtual bool has_axis_type(AxisType axisType) const = 0;
+    
+    /**
      * The axis info
      *
      * @return The info for the axes of the device

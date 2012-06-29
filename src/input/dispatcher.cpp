@@ -27,13 +27,13 @@
 namespace mi = mir::input;
 
 mi::Dispatcher::Dispatcher(TimeSource* time_source,
-                           mi::Filter* shell_filter,
-                           mi::Filter* grab_filter,
-                           mi::Filter* application_filter)
+                           std::unique_ptr<mi::ShellFilter> shell,
+                           std::unique_ptr<mi::GrabFilter> grab,
+                           std::unique_ptr<mi::ApplicationFilter> application)
         : time_source(time_source),
-          shell_filter(shell_filter),
-          grab_filter(grab_filter),
-          application_filter(application_filter)
+          shell_filter(std::move(shell)),
+          grab_filter(std::move(grab)),
+          application_filter(std::move(application))
 {
     assert(time_source);
     assert(shell_filter);
@@ -57,34 +57,22 @@ void mi::Dispatcher::on_event(mi::Event* e)
     application_filter->accept(e);
 }
 
-void mi::Dispatcher::RegisterShellFilter(mi::Filter* f)
-{
-    assert(f);
-    shell_filter = f;
-}
-
-void mi::Dispatcher::RegisterGrabFilter(mi::Filter* f)
-{
-    assert(f);
-    grab_filter = f;
-}
-
-void mi::Dispatcher::RegisterApplicationFilter(mi::Filter* f)
-{
-    assert(f);
-    application_filter = f;
-}
-
-void mi::Dispatcher::register_device(LogicalDevice* device)
+mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> device)
 {
     assert(device);
-    devices.insert(device);
-    device->start();
+    auto pair = devices.insert(std::move(device));
+    if (pair.second)
+        (*pair.first)->start();
+
+    return pair.first;
 }
 
-void mi::Dispatcher::unregister_device(LogicalDevice* device)
+std::unique_ptr<mi::LogicalDevice> mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
 {
-    assert(device);
+    std::unique_ptr<mi::LogicalDevice> device = std::move(*token);
     device->stop();
-    devices.erase(device);
+    devices.erase(token);
+
+    return std::move(device);
 }
+

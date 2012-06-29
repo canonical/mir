@@ -14,7 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(evdev/)
+add_subdirectory(evemu/)
 
 set(
   UNIT_TEST_SOURCES 

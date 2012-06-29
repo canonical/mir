@@ -12,14 +12,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: 
-#   Chase Douglas <chase.douglas@canonical.com>
-#   Thomas Voss <thomas.voss@canonical.com>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-if(MIR_INPUT_ENABLE_EVDEV)
+option(
+  MIR_INPUT_ENABLE_EVEMU
+  "Controls if devices for handling evdev events are compiled"
+  ON
+)
+
+if(MIR_INPUT_ENABLE_EVEMU)
+
+  # Check for evemu (which may be named evemu or utouch-evemu)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
+
   list(
-    APPEND UNIT_TEST_SOURCES 
+    APPEND INPUT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
 
-  set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
-endif(MIR_INPUT_ENABLE_EVDEV)
+  set(
+    INPUT_SOURCES 
+    ${INPUT_SOURCES} 
+    PARENT_SCOPE)
+
+endif(MIR_INPUT_ENABLE_EVEMU)
+  

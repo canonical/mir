@@ -29,7 +29,7 @@ namespace mir
 {
 namespace input
 {
-namespace evdev
+namespace evemu
 {
 /**
  * An Evemu-derived logical device
@@ -47,7 +47,7 @@ class EvemuDevice : public LogicalDevice {
     EvemuDevice(const std::string& path, EventHandler* event_handler);
 
     // From EventProducer
-    virtual EventProducer::State get_state() const;
+    virtual EventProducer::State current_state() const;
     virtual void start();
     virtual void stop();
     
@@ -59,6 +59,8 @@ class EvemuDevice : public LogicalDevice {
     virtual bool is_button_supported(const Button& button) const;
 
     virtual const mir::input::PositionInfo& get_position_info() const;
+
+    virtual bool has_axis_type(AxisType axisType) const;
     
     virtual const Axis& get_axis_for_type(AxisType axisType) const;
 
@@ -73,7 +75,7 @@ class EvemuDevice : public LogicalDevice {
     std::map<AxisType, Axis> axes;
 };
     
-} // evdev
+} // evemu
 } // input
 } // mir
 

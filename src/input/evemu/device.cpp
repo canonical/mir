@@ -16,13 +16,21 @@
  * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#include "mir/input/evdev/evemu_device.h"
+#include "mir/input/evemu/device.h"
 
 #include <boost/filesystem.hpp>
 
+namespace mir
+{
+namespace input
+{
 namespace evemu
 {
+
 #include <evemu.h>
+
+}
+}
 }
 
 #include <cstdio>
@@ -33,29 +41,28 @@ namespace evemu
 #include <fcntl.h>
 
 namespace mi = mir::input;
+namespace mie = mir::input::evemu;
 
 namespace {
 
 struct EvemuDeleter
 {
-    void operator() (struct evemu::evemu_device*& device)
+    void operator() (struct mie::evemu_device*& device)
     {
-        evemu::evemu_delete(device);
+        mie::evemu_delete(device);
     }
 };
 
 }
 
-mi::evdev::EvemuDevice::EvemuDevice(
+mi::evemu::EvemuDevice::EvemuDevice(
     const std::string& path,
     EventHandler* event_handler) : LogicalDevice(event_handler),
                                    simultaneous_instances{1},
     buttons(static_cast<size_t>(KEY_MAX), false),
     position_info{Mode::none}    
 {
-    using namespace evemu;
-
-    std::unique_ptr<struct evemu_device, EvemuDeleter> evemu(evemu_new(NULL), EvemuDeleter());
+    std::unique_ptr<struct mie::evemu_device, EvemuDeleter> evemu(mie::evemu_new(NULL), EvemuDeleter());
 
     boost::filesystem::file_status status = boost::filesystem::status(path);
     if (status.type() == boost::filesystem::regular_file)
@@ -64,7 +71,7 @@ mi::evdev::EvemuDevice::EvemuDevice(
         if (!file)
             throw std::runtime_error("Failed to open evemu file");
 
-        if (evemu_read(evemu.get(), file) < 0)
+        if (mie::evemu_read(evemu.get(), file) < 0)
             throw std::runtime_error("Failed to read evemu parameters from file");
     }
     /* FIXME: Need test for evdev device nodes before uncommenting */
@@ -79,12 +86,12 @@ mi::evdev::EvemuDevice::EvemuDevice(
       }*/ else
         throw std::runtime_error("Device path is not a file nor a character device");
 
-    name = evemu_get_name(evemu.get());
+    name = mie::evemu_get_name(evemu.get());
 
-    if (evemu_has_event(evemu.get(), EV_ABS, ABS_MT_SLOT))
+    if (mie::evemu_has_event(evemu.get(), EV_ABS, ABS_MT_SLOT))
     {
         simultaneous_instances =
-                evemu_get_abs_maximum(evemu.get(), ABS_MT_SLOT) - evemu_get_abs_minimum(evemu.get(), ABS_MT_SLOT) + 1;
+                mie::evemu_get_abs_maximum(evemu.get(), ABS_MT_SLOT) - mie::evemu_get_abs_minimum(evemu.get(), ABS_MT_SLOT) + 1;
     }
 
     for (int b = 0; b <= KEY_MAX; ++b)
@@ -97,52 +104,58 @@ mi::evdev::EvemuDevice::EvemuDevice(
                 break;
         }
 
-        if (evemu_has_event(evemu.get(), EV_KEY, b))
+        if (mie::evemu_has_event(evemu.get(), EV_KEY, b))
             buttons[b] = 1;
     }
 
-    if (evemu_has_event(evemu.get(), EV_ABS, ABS_MT_POSITION_X) || evemu_has_event(evemu.get(), EV_ABS, ABS_X))
+    if (mie::evemu_has_event(evemu.get(), EV_ABS, ABS_MT_POSITION_X) || mie::evemu_has_event(evemu.get(), EV_ABS, ABS_X))
         position_info.mode = Mode::absolute;
     else if (evemu_has_event(evemu.get(), EV_REL, REL_X))
         position_info.mode = Mode::relative;
 }
 
-mi::EventProducer::State mi::evdev::EvemuDevice::get_state() const
+mi::EventProducer::State mi::evemu::EvemuDevice::current_state() const
 {
     return mi::EventProducer::State::stopped;
 }
 
-void mi::evdev::EvemuDevice::start()
+void mi::evemu::EvemuDevice::start()
 {
     // TODO
 }
 
-void mi::evdev::EvemuDevice::stop()
+void mi::evemu::EvemuDevice::stop()
 {
     // TODO
 }
 
-const std::string& mi::evdev::EvemuDevice::get_name() const
+const std::string& mi::evemu::EvemuDevice::get_name() const
 {
     return name;
 }
     
-int mi::evdev::EvemuDevice::get_simultaneous_instances() const
+int mi::evemu::EvemuDevice::get_simultaneous_instances() const
 {
     return simultaneous_instances;
 }
 
-bool mi::evdev::EvemuDevice::is_button_supported(const Button& button) const
+bool mi::evemu::EvemuDevice::is_button_supported(const Button& button) const
 {
     return buttons[button];
 }
 
-const mi::PositionInfo& mi::evdev::EvemuDevice::get_position_info() const
+const mi::PositionInfo& mi::evemu::EvemuDevice::get_position_info() const
 {
     return position_info;
 }
 
-const mi::Axis& mi::evdev::EvemuDevice::get_axis_for_type(mi::AxisType axisType) const
+bool mi::evemu::EvemuDevice::has_axis_type(AxisType axisType) const
+{
+    auto it = axes.find(axisType);
+    return it != axes.end();
+}
+
+const mi::Axis& mi::evemu::EvemuDevice::get_axis_for_type(mi::AxisType axisType) const
 {
     auto it = axes.find(axisType);
     if (it == axes.end())
