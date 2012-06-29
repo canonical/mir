@@ -48,7 +48,7 @@ class BufferManager : public BufferTextureBinder
     virtual bool register_buffer(std::shared_ptr<Buffer> buffer);
 
     // From buffer_texture_binder
-    virtual graphics::Texture bind_buffer_to_texture(surfaces::SurfacesRoRender const& surface);
+    virtual graphics::Texture bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
 
  private:
     GraphicBufferAllocator* const gr_allocator;
