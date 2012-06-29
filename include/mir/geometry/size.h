@@ -17,79 +17,37 @@
 #ifndef MIR_GEOMETRY_SIZE_H_
 #define MIR_GEOMETRY_SIZE_H_
 
-#include <cstdint>
-#include <iosfwd>
+#include "dimensions.h"
+#include <ostream>
 
 namespace mir
 {
 namespace geometry
 {
 
-namespace detail
+struct Size
 {
-enum DimensionTag { width, height, x, y, dx, dy };
+    Size() = default;
+    Size(Width width, Height height) : width(width), height(height) {}
 
-template<DimensionTag Tag>
-class IntWrapper
-{
-public:
-	IntWrapper() : value(0) {}
-	IntWrapper(uint32_t value) : value(value) {}
-
-	uint32_t as_uint32_t() const { return value; }
-
-private:
-	uint32_t value;
+    Width width;
+    Height height;
 };
 
-template<DimensionTag Tag>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
-{ out << value.as_uint32_t(); return out; }
-
-template<DimensionTag Tag>
-inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() == rhs.as_uint32_t(); }
-
-template<DimensionTag Tag>
-inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() != rhs.as_uint32_t(); }
-
-template<DimensionTag Tag>
-inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() <= rhs.as_uint32_t(); }
-
-template<DimensionTag Tag>
-inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() >= rhs.as_uint32_t(); }
-
-template<DimensionTag Tag>
-inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() < rhs.as_uint32_t(); }
-
-template<DimensionTag Tag>
-inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
-{ return lhs.as_uint32_t() > rhs.as_uint32_t(); }
-} // namespace detail
-
-typedef detail::IntWrapper<detail::width> Width;
-typedef detail::IntWrapper<detail::height> Height;
-
-class Size
+inline bool operator == (Size const& lhs, Size const& rhs)
 {
-    public:
-	Size() = default;
-        Size(Width width, Height height);
+    return lhs.width == rhs.width && lhs.height == rhs.height;
+}
 
-	Width width() const { return w; }
-        Height height() const { return h; }
-    private:
-        Width w;
-	Height h;
+inline bool operator != (Size const& lhs, Size const& rhs)
+{
+    return lhs.width != rhs.width || lhs.height != rhs.height;
+}
 
-};
-
-inline Size::Size(Width width, Height height) : w(width), h(height) {
-
+std::ostream& operator<<(std::ostream& out, Size const& value)
+{
+    out << '(' << value.width << ", " << value.height << ')';
+    return out;
 }
 
 }

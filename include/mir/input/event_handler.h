@@ -33,7 +33,7 @@ class EventHandler
  public:
     virtual ~EventHandler() {}
 
-    virtual void OnEvent(Event* e) = 0;
+    virtual void on_event(Event* e) = 0;
 protected:
     EventHandler() = default;
     EventHandler(const EventHandler&) = delete;

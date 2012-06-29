@@ -24,6 +24,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -39,13 +40,13 @@ struct EmptyDeleter
 struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
 {
  public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(uint32_t, uint32_t, mc::PixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
-const uint32_t width{1024};
-const uint32_t height{768};
-const uint32_t stride{width};
+const geom::Width width{1024};
+const geom::Height height{768};
+const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
 struct MockBuffer : public mc::Buffer
@@ -60,9 +61,9 @@ struct MockBuffer : public mc::Buffer
 		ON_CALL(*this, pixel_format()).WillByDefault(Return(::pixel_format));
 	}
 
-    MOCK_CONST_METHOD0(width, uint32_t());
-    MOCK_CONST_METHOD0(height, uint32_t());
-    MOCK_CONST_METHOD0(stride, uint32_t());
+    MOCK_CONST_METHOD0(width, geom::Width());
+    MOCK_CONST_METHOD0(height, geom::Height());
+    MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
 };
 

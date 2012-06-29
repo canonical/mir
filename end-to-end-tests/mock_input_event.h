@@ -13,42 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#ifndef MIR_MOCK_INPUT_EVENT_H_
+#define MIR_MOCK_INPUT_EVENT_H_
 
-#include "drawer.h"
+#include "mir/input/event.h"
 
 namespace mir
 {
-namespace surfaces
+namespace input
 {
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-}
 
-namespace compositor
+class MockInputEvent : public Event
 {
-class BufferTextureBinder;
-
-class Compositor : public Drawer
-{
-public:
-    explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
-        BufferTextureBinder* buffermanager);
-
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
-    BufferTextureBinder* const buffermanager;
 };
 
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_MOCK_INPUT_EVENT_H_

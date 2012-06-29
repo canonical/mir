@@ -14,20 +14,9 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+add_subdirectory(evemu/)
+
 set(
-  INPUT_SOURCES
-
-  axis.cpp
-  dispatcher.cpp
-  position_info.cpp
-)
-
-add_subdirectory(
-  evemu/
-)
-
-add_library( 
-  mirinput STATIC
-  
-  ${INPUT_SOURCES}
-)
+  UNIT_TEST_SOURCES 
+  ${UNIT_TEST_SOURCES} 
+  PARENT_SCOPE)

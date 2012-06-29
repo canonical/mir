@@ -12,22 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: 
+#   Chase Douglas <chase.douglas@canonical.com>
+#   Thomas Voss <thomas.voss@canonical.com>
 
-set(
-  INPUT_SOURCES
+if(MIR_INPUT_ENABLE_EVEMU)
+  list(
+    APPEND UNIT_TEST_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
 
-  axis.cpp
-  dispatcher.cpp
-  position_info.cpp
-)
-
-add_subdirectory(
-  evemu/
-)
-
-add_library( 
-  mirinput STATIC
-  
-  ${INPUT_SOURCES}
-)
+  set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+endif(MIR_INPUT_ENABLE_EVEMU)

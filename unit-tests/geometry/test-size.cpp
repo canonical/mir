@@ -26,8 +26,8 @@ namespace geom = mir::geometry;
 
 TEST(geometry, width)
 {
-	geom::Width width0{0};
-	geom::Width width42{42};
+    geom::Width width0 {0};
+    geom::Width width42 {42};
 
     EXPECT_EQ(0, width0.as_uint32_t());
     EXPECT_EQ(42, width42.as_uint32_t());
@@ -40,8 +40,8 @@ TEST(geometry, width)
 
 TEST(geometry, height)
 {
-	geom::Height height0{0};
-	geom::Height height42{42};
+    geom::Height height0 {0};
+    geom::Height height42 {42};
 
     EXPECT_EQ(0, height0.as_uint32_t());
     EXPECT_EQ(42, height42.as_uint32_t());
@@ -52,19 +52,60 @@ TEST(geometry, height)
     EXPECT_NE(height42, height0);
 }
 
+TEST(geometry, delta_arithmetic)
+{
+    using namespace geom;
+	DeltaX dx1{1};
+	DeltaY dy1{1};
+
+	DeltaX x2 = DeltaX(1) + dx1;
+    EXPECT_EQ(DeltaX(2), x2);
+    EXPECT_EQ(DeltaX(1), x2-dx1);
+}
+
+TEST(geometry, coordinates)
+{
+    using namespace geom;
+	X x1{1};
+	X x2{2};
+	DeltaX dx1{1};
+
+    EXPECT_EQ(X(2), x1 + dx1);
+    EXPECT_EQ(X(1), x2 - dx1);
+
+	Y y24{24};
+	Y y42{42};
+	DeltaY dx18{18};
+
+    EXPECT_EQ(dx18, y42 - y24);
+}
+
+TEST(geometry, conversions)
+{
+    using namespace geom;
+	Width w1{1};
+	DeltaX dx1{1};
+
+	EXPECT_EQ(w1, dim_cast<Width>(dx1));
+	EXPECT_EQ(dx1, dim_cast<DeltaX>(w1));
+	EXPECT_NE(dx1, dim_cast<DeltaX>(X()));
+}
+
 TEST(geometry, size)
 {
     using namespace geom;
-    Size size2x4(Width(2), Height(4));
+    Size const size2x4(Width(2), Height(4));
 
-    EXPECT_EQ(Width(2), size2x4.width());
-    EXPECT_EQ(Height(4), size2x4.height());
+    EXPECT_EQ(Width(2), size2x4.width);
+    EXPECT_EQ(Height(4), size2x4.height);
 
-    Size copy = size2x4;
-    EXPECT_EQ(Width(2), copy.width());
-    EXPECT_EQ(Height(4), copy.height());
+    Size const copy = size2x4;
+    EXPECT_EQ(Width(2), copy.width);
+    EXPECT_EQ(Height(4), copy.height);
+    EXPECT_EQ(size2x4, copy);
 
-    Size defaultValue;
-    EXPECT_EQ(Width(0), defaultValue.width());
-    EXPECT_EQ(Height(0), defaultValue.height());
+    Size const defaultValue;
+    EXPECT_EQ(Width(0), defaultValue.width);
+    EXPECT_EQ(Height(0), defaultValue.height);
+    EXPECT_NE(size2x4, defaultValue);
 }

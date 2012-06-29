@@ -12,27 +12,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
-add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(compositor/)
-add_subdirectory(geometry/)
-add_subdirectory(input)
-
-add_executable(unit-tests ${UNIT_TEST_SOURCES})
-
-target_link_libraries(
-  unit-tests
-
-  mircompositor
-  mirinput
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${Boost_LIBRARIES}
-  ${EVEMU_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+option(
+  MIR_INPUT_ENABLE_EVEMU
+  "Controls if devices for handling evdev events are compiled"
+  ON
 )
 
-add_test(unit-tests ${CMAKE_CURRENT_BINARY_DIR}/unit-tests)
+if(MIR_INPUT_ENABLE_EVEMU)
+
+  # Check for evemu (which may be named evemu or utouch-evemu)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
+
+  list(
+    APPEND INPUT_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+
+  set(
+    INPUT_SOURCES 
+    ${INPUT_SOURCES} 
+    PARENT_SCOPE)
+
+endif(MIR_INPUT_ENABLE_EVEMU)
+  

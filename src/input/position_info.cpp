@@ -13,37 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ *  Chase Douglas <chase.douglas@canonical.com>
+ *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_DEVICE_H_
-#define MIR_INPUT_DEVICE_H_
+#include "mir/input/position_info.h"
+
+#include <boost/format.hpp>
+
+#include <ostream>
+
+namespace mi = mir::input;
 
 namespace mir
 {
 namespace input
 {
 
-class EventHandler;
-
-// Abstracts an input device that feeds events
-// into the system via an event handler.
-class Device
+std::ostream& operator<<(std::ostream& out, const mi::PositionInfo& pi)
 {
- public:
-
-    explicit Device (EventHandler * handler)
-            : handler(handler)
-    {
-    }
-
-    virtual ~Device() {}
-
- protected:
-    EventHandler * handler;
-};
+    out <<
+            (boost::format("") % pi.mode).str();
+    return out;
+}
 
 }
 }
-
-#endif /* MIR_INPUT_DEVICE_H_ */

@@ -19,10 +19,12 @@
 #include "mir/compositor/buffer_manager.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/display.h"
 
 #include <cassert>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
@@ -33,13 +35,13 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-void mc::BufferManager::bind_buffer_to_texture()
+mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
 {
-
+	return mg::Texture();
 }
  
-mc::SurfaceToken mc::BufferManager::create_client(uint32_t width,
-                                   uint32_t height,
+mc::SurfaceToken mc::BufferManager::create_client(geometry::Width width,
+                                   geometry::Height height,
                                    mc::PixelFormat pf)
 { 
     int new_token = atomic_fetch_add( &client_counter, 1); 
