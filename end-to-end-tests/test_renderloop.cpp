@@ -45,7 +45,7 @@ public:
 struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, ms::surfaces_to_render (geom::Rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, ms::SurfacesRoRender (geom::Rectangle const&));
 };
 
 struct MockDisplay : mg::Display
@@ -74,7 +74,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 			.WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(AtLeast(1))
-    		.WillRepeatedly(Return(ms::surfaces_to_render()));
+    		.WillRepeatedly(Return(ms::SurfacesRoRender()));
 
     comp.render(&display);
 }

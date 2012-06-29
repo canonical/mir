@@ -24,7 +24,7 @@ namespace mir
 
 namespace surfaces
 {
-class surfaces_to_render;
+class SurfacesRoRender;
 }
 
 namespace graphics
@@ -40,7 +40,7 @@ class BufferTextureBinder
 {
 public:
 
-    virtual graphics::Texture bind_buffer_to_texture(surfaces::surfaces_to_render const& ) = 0;
+    virtual graphics::Texture bind_buffer_to_texture(surfaces::SurfacesRoRender const& ) = 0;
 
 protected:
     BufferTextureBinder() = default;

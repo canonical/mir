@@ -34,7 +34,7 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::surfaces_to_render const& )
+mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesRoRender const& )
 {
 	return mg::Texture();
 }

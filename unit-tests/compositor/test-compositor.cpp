@@ -36,13 +36,13 @@ namespace
 class MockBufferTextureBinder : public mc::BufferTextureBinder
 {
 public:
-    MOCK_METHOD1(bind_buffer_to_texture, mg::Texture(ms::surfaces_to_render const&));
+    MOCK_METHOD1(bind_buffer_to_texture, mg::Texture(ms::SurfacesRoRender const&));
 };
 
 struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, ms::surfaces_to_render (geom::Rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, ms::SurfacesRoRender (geom::Rectangle const&));
 };
 
 struct MockDisplay : mg::Display
@@ -71,7 +71,7 @@ TEST(Compositor, render)
 			.WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_))
-    		.WillRepeatedly(Return(ms::surfaces_to_render()));
+    		.WillRepeatedly(Return(ms::SurfacesRoRender()));
 
     comp.render(&display);
 }
