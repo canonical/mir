@@ -20,6 +20,8 @@
 #ifndef MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
 #define MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
 
+#include "mir/compositor/buffer.h"
+
 namespace mir
 {
 namespace compositor
@@ -29,6 +31,8 @@ class BufferManagerClient
 {
 public:
     BufferManagerClient();
+    void add_buffer(Buffer *buffer);
+    void bind_back_buffer(); 
 };
 
 }

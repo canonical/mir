@@ -24,4 +24,12 @@ mc::BufferManagerClient::BufferManagerClient()
 {
 }
 
+void mc::BufferManagerClient::add_buffer(mc::Buffer *) {
+    
+}
+
+void mc::BufferManagerClient::bind_back_buffer() {
+
+}
+
 
