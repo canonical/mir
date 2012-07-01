@@ -27,9 +27,9 @@
 namespace mi = mir::input;
 
 mi::Dispatcher::Dispatcher(TimeSource* time_source,
-                           std::unique_ptr<mi::ShellFilter> shell,
-                           std::unique_ptr<mi::GrabFilter> grab,
-                           std::unique_ptr<mi::ApplicationFilter> application)
+                           std::unique_ptr<mi::Dispatcher::ShellFilter> shell,
+                           std::unique_ptr<mi::Dispatcher::GrabFilter> grab,
+                           std::unique_ptr<mi::Dispatcher::ApplicationFilter> application)
         : time_source(time_source),
           shell_filter(std::move(shell)),
           grab_filter(std::move(grab)),
