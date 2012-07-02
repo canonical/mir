@@ -71,7 +71,7 @@ TEST(buffer_manager_client, add_rm_buffers)
 
     buffers_removed = bm_client.remove_all_buffers();
 
-    EXPECT_EQ(buffers_removed.size(), 3); 
+    ASSERT_EQ(buffers_removed.size(), 3); 
     for(int i=0; i<3; i++) { 
         EXPECT_EQ(buffers_removed[i], &mock_buffer);
     }
@@ -80,7 +80,7 @@ TEST(buffer_manager_client, add_rm_buffers)
     bm_client.add_buffer(&mock_buffer);
     buffers_removed = bm_client.remove_all_buffers();
 
-    EXPECT_EQ(buffers_removed.size(), 2); 
+    ASSERT_EQ(buffers_removed.size(), 2); 
     for(int i=0; i<2; i++) { 
         EXPECT_EQ(buffers_removed[i], &mock_buffer);
     }
