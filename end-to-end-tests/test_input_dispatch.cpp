@@ -18,11 +18,13 @@
 
 #include "input_dispatch_fixture.h"
 #include "mock_input_device.h"
+#include "mock_input_event.h"
 
 #include "mir/time_source.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/event.h"
 #include "mir/input/filter.h"
+#include "mir/input/grab_filter.h"
 #include "mir/input/logical_device.h"
 #include "mir/input/position_info.h"
 
