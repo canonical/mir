@@ -67,15 +67,6 @@ struct MockBuffer : public mc::Buffer
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
 };
-
-struct MockBufferManager : public mc::BufferManager
-{
- public:
-    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
-    
-    MOCK_METHOD3(create_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
-};
-
 }
 
 TEST(buffer_manager, create_buffer)
