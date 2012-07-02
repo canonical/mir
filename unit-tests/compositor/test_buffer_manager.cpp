@@ -94,6 +94,8 @@ TEST(buffer_manager, create_buffer)
 
     EXPECT_TRUE(client != nullptr);
 
-    //TODO this is a frig to keep valgrind happy
-    delete client;
+    EXPECT_CALL(graphic_allocator, free_buffer(Eq(default_buffer))).
+    		Times(AtLeast(1));
+    buffer_manager.destroy_client(client);
+
 }

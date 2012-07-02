@@ -47,6 +47,8 @@ class BufferManager : public BufferTextureBinder
                                    geometry::Height height,
                                    PixelFormat pf);
 
+    virtual void destroy_client(BufferManagerClient* client);
+
     // From buffer_texture_binder
     virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
 

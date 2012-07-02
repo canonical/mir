@@ -53,3 +53,6 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
     return newclient;
 }
 
+void mc::BufferManager::destroy_client(BufferManagerClient*) {
+
+}
