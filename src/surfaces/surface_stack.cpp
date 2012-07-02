@@ -14,7 +14,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/surfaces/surfacestack.h"
+#include "mir/surfaces/surface_stack.h"
 
 namespace ms = mir::surfaces;
 

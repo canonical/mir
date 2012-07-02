@@ -17,5 +17,5 @@
 ADD_LIBRARY( 
   mirsurfaces STATIC
   
-  surfacestack.cpp
+  surface_stack.cpp
 )

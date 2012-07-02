@@ -24,7 +24,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/scenegraph.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/surfaces/surfacestack.h"
+#include "mir/surfaces/surface_stack.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
