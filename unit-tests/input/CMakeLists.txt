@@ -14,8 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-set(
-  UNIT_TEST_SOURCES
+list(APPEND UNIT_TEST_SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_grab_filter.cpp
 )
 
