@@ -50,19 +50,21 @@ mi::evemu::EvemuDevice::EvemuDevice(
     buttons(static_cast<size_t>(KEY_MAX), false),
     position_info{Mode::none}    
 {
-    std::unique_ptr<evemu_device, EvemuDeleter> evemu(evemu_new(NULL), EvemuDeleter());
+    std::unique_ptr<evemu_device, EvemuDeleter> evemu{evemu_new(NULL), EvemuDeleter()};
 
-    boost::filesystem::file_status status = boost::filesystem::status(path);
+    boost::filesystem::file_status const status{boost::filesystem::status(path)};
     if (status.type() == boost::filesystem::regular_file)
     {
         std::FILE *file = fopen(path.c_str(), "r");
+
         if (!file)
             throw std::runtime_error("Failed to open evemu file");
 
-        if (evemu_read(evemu.get(), file) < 0)
-        	fclose(file),
-            throw std::runtime_error("Failed to read evemu parameters from file");
+        int const evenmu_error{evemu_read(evemu.get(), file)};
         fclose(file);
+
+        if (evenmu_error < 0)
+            throw std::runtime_error("Failed to read evemu parameters from file");
     }
     /* FIXME: Need test for evdev device nodes before uncommenting */
     /*else if (status.type() == boost::filesystem::character_file)
