@@ -23,6 +23,7 @@
 #include "mir/input/filter.h"
 
 #include <memory>
+#include <mutex>
 #include <set>
 #include <thread>
 
