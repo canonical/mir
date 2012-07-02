@@ -24,6 +24,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/scenegraph.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/surfaces/surfacestack.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,13 +36,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-//TODO as we develop the system this should be replaced with the real component
-struct TempStubScenegraph : ms::Scenegraph
-{
-public:
-    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender (geom::Rectangle const&));
-};
-
 struct MockDisplay : mg::Display
 {
 public:
@@ -55,7 +49,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    TempStubScenegraph scenegraph;
+    ms::SurfaceStack scenegraph;
     MockDisplay display;
 
     mc::Drawer&& comp = mc::Compositor(&scenegraph);
@@ -64,9 +58,6 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 
     EXPECT_CALL(display, view_area()).Times(AtLeast(1))
 			.WillRepeatedly(Return(geom::Rectangle()));
-
-    EXPECT_CALL(scenegraph, get_surfaces_in(_)).Times(AtLeast(1))
-    		.WillRepeatedly(Return(ms::SurfacesToRender()));
 
     comp.render(&display);
 }

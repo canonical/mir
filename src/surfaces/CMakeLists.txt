@@ -12,10 +12,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-
-add_subdirectory(compositor/)
-add_subdirectory(input/)
-add_subdirectory(surfaces/)
+ADD_LIBRARY( 
+  mirsurfaces STATIC
+  
+  surfacestack.cpp
+)
