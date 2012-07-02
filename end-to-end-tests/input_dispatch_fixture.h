@@ -83,6 +83,10 @@ class InputDispatchFixture : public ::testing::Test
         ::testing::DefaultValue<mir::Timestamp>::Set(ts);
     }
     
+    ~InputDispatchFixture()
+    {
+        ::testing::DefaultValue<mir::Timestamp>::Clear();
+    }
  protected:
     MockTimeSource time_source;
     MockFilter<ShellFilter>* mock_shell_filter;
