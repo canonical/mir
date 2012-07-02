@@ -47,8 +47,6 @@ class BufferManager : public BufferTextureBinder
 		geometry::Height height,
 		PixelFormat pf);
 
-    virtual bool register_buffer(std::shared_ptr<Buffer> buffer);
-
     // From buffer_texture_binder
     virtual graphics::Texture bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
 

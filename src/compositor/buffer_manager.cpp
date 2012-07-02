@@ -48,8 +48,3 @@ std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(
     return gr_allocator->alloc_buffer(width, height, pf);
 }
 
-bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)
-{
-    assert(buffer);
-    return false;
-}
