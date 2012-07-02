@@ -16,43 +16,33 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_APPLICATION_H_
-#define MIR_APPLICATION_H_
+#include "mir/input/grab_filter.h"
 
-#include "mir/input/event_handler.h"
+#include "mir/application.h"
+#include "mir/application_manager.h"
+#include "mir/input/dispatcher.h"
 
 #include <cassert>
-
-namespace mir
-{
+#include <memory>
+#include <set>
 
 namespace mi = mir::input;
 
-class ApplicationManager;
-
-class Application : public mi::EventHandler
+mi::GrabFilter::GrabFilter(mir::ApplicationManager* application_manager) : application_manager(application_manager)
 {
- public:    
-    virtual ~Application() {}
-    
- protected:
-    explicit Application(ApplicationManager* manager)
-            : application_manager(manager)
-    {
-        assert(application_manager);
-    }
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-    
-    ApplicationManager* get_application_manager()
-    {
-        return application_manager;
-    }
- private:
-    ApplicationManager* application_manager;
-};
-
+    assert(application_manager);
 }
 
-#endif // MIR_APPLICATION_H_
+mi::Filter::Result mi::GrabFilter::accept(Event* e)
+{
+    assert(e);
+        
+    std::shared_ptr<mir::Application> input_grabber = application_manager->get_grabbing_application().lock();
+    
+    if (!input_grabber)
+        return mi::Filter::Result::continue_processing;
+    
+    input_grabber->on_event(e);
+    
+    return mi::Filter::Result::stop_processing;
+}

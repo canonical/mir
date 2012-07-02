@@ -71,13 +71,13 @@ class InputDispatchFixture : public ::testing::Test
 {
  public:
     InputDispatchFixture()
-            : mock_shell_filter(new MockFilter<ShellFilter>()),
-              mock_grab_filter(new MockFilter<GrabFilter>()),
-              mock_app_filter(new MockFilter<ApplicationFilter>()),
+            : mock_shell_filter(new MockFilter<Dispatcher::ShellFilter>()),
+              mock_grab_filter(new MockFilter<Dispatcher::GrabFilter>()),
+              mock_app_filter(new MockFilter<Dispatcher::ApplicationFilter>()),
               dispatcher(&time_source,
-                         std::move(std::unique_ptr<ShellFilter>(mock_shell_filter)),
-                         std::move(std::unique_ptr<GrabFilter>(mock_grab_filter)),
-                         std::move(std::unique_ptr<ApplicationFilter>(mock_app_filter)))
+                         std::move(std::unique_ptr<Dispatcher::ShellFilter>(mock_shell_filter)),
+                         std::move(std::unique_ptr<Dispatcher::GrabFilter>(mock_grab_filter)),
+                         std::move(std::unique_ptr<Dispatcher::ApplicationFilter>(mock_app_filter)))
     {
         mir::Timestamp ts;
         ::testing::DefaultValue<mir::Timestamp>::Set(ts);
@@ -85,9 +85,9 @@ class InputDispatchFixture : public ::testing::Test
     
  protected:
     MockTimeSource time_source;
-    MockFilter<ShellFilter>* mock_shell_filter;
-    MockFilter<GrabFilter>* mock_grab_filter;
-    MockFilter<ApplicationFilter>* mock_app_filter;
+    MockFilter<Dispatcher::ShellFilter>* mock_shell_filter;
+    MockFilter<Dispatcher::GrabFilter>* mock_grab_filter;
+    MockFilter<Dispatcher::ApplicationFilter>* mock_app_filter;
     Dispatcher dispatcher;
 };
 
