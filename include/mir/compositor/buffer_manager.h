@@ -27,14 +27,15 @@
 
 #include <cstdint>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
-
 namespace compositor
 {
-class GraphicBufferAllocator;
 
+class GraphicBufferAllocator;
+class BufferManagerClient;
 class BufferManager : public BufferTextureBinder
 {
  public:
@@ -42,16 +43,17 @@ class BufferManager : public BufferTextureBinder
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
  
-    virtual std::shared_ptr<Buffer> create_buffer(
-		geometry::Width width,
-		geometry::Height height,
-		PixelFormat pf);
+    virtual BufferManagerClient* create_client(geometry::Width width,
+                                   geometry::Height height,
+                                   PixelFormat pf);
 
     // From buffer_texture_binder
-    virtual graphics::Texture bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
+    virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
 
  private:
     GraphicBufferAllocator* const gr_allocator;
+
+    std::atomic<int> client_counter;
 };
 
 }

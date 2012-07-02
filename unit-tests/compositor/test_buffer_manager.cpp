@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_manager_client.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -84,19 +85,18 @@ TEST(buffer_manager, create_buffer)
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
-        EmptyDeleter());
-    
+        EmptyDeleter()); 
     MockGraphicBufferAllocator graphic_allocator;
     mc::BufferManager buffer_manager(&graphic_allocator);
 
     EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
-    		Times(1).WillRepeatedly(Return(default_buffer));
+    		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
 
-    std::shared_ptr<mc::Buffer> buffer = buffer_manager.create_buffer(
+    mc::BufferManagerClient *client = nullptr;
+    client = buffer_manager.create_client(
         width,
         height,
         pixel_format);
 
-    EXPECT_TRUE(buffer.get() != nullptr);
-
+    EXPECT_TRUE(client != nullptr);
 }

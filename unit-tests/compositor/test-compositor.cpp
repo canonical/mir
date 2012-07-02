@@ -17,7 +17,6 @@
  */
 
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/buffer_manager.h"
 #include "mir/surfaces/scenegraph.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
@@ -33,12 +32,6 @@ namespace mg = mir::graphics;
 namespace
 {
 
-class MockBufferTextureBinder : public mc::BufferTextureBinder
-{
-public:
-    MOCK_METHOD1(bind_buffer_to_texture, mg::Texture(ms::SurfacesToRender const&));
-};
-
 struct MockScenegraph : ms::Scenegraph
 {
 public:
@@ -49,7 +42,7 @@ struct MockDisplay : mg::Display
 {
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
-    MOCK_METHOD1(notify_update, void (mg::Texture const&));
+    MOCK_METHOD0(notify_update, void ());
 };
 }
 
@@ -58,20 +51,21 @@ TEST(Compositor, render)
 {
     using namespace testing;
 
-    MockBufferTextureBinder buffer_texture_binder;
     MockScenegraph scenegraph;
     MockDisplay display;
 
-    mc::Compositor comp(&scenegraph, &buffer_texture_binder);
-
-    EXPECT_CALL(buffer_texture_binder, bind_buffer_to_texture(_)).
-    		Times(AtLeast(1)).WillRepeatedly(Return(mg::Texture()));
+    mc::Compositor comp(&scenegraph);
 
     EXPECT_CALL(display, view_area())
+            .Times(1)
 			.WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_))
+            .Times(1)
     		.WillRepeatedly(Return(ms::SurfacesToRender()));
+
+    EXPECT_CALL(display, notify_update()).
+            Times(1);
 
     comp.render(&display);
 }
