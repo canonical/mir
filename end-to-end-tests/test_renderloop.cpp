@@ -35,7 +35,8 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct MockScenegraph : ms::Scenegraph
+//TODO as we develop the system this should be replaced with the real component
+struct TempStubScenegraph : ms::Scenegraph
 {
 public:
     MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender (geom::Rectangle const&));
@@ -54,7 +55,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    MockScenegraph scenegraph;
+    TempStubScenegraph scenegraph;
     MockDisplay display;
 
     mc::Drawer&& comp = mc::Compositor(&scenegraph);
