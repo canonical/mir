@@ -90,4 +90,7 @@ TEST(buffer_manager, create_buffer)
         pixel_format);
 
     EXPECT_TRUE(client != nullptr);
+
+    //TODO this is a frig to keep valgrind happy
+    delete client;
 }

@@ -72,7 +72,9 @@ mi::evemu::EvemuDevice::EvemuDevice(
             throw std::runtime_error("Failed to open evemu file");
 
         if (mie::evemu_read(evemu.get(), file) < 0)
+        	fclose(file),
             throw std::runtime_error("Failed to read evemu parameters from file");
+        fclose(file);
     }
     /* FIXME: Need test for evdev device nodes before uncommenting */
     /*else if (status.type() == boost::filesystem::character_file)
