@@ -14,13 +14,19 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_executable(integration-tests "")
+add_subdirectory(input/)
+
+add_executable(
+  integration-tests 
+  ${INTEGRATION_TESTS_SRCS})
 
 target_link_libraries(
   integration-tests
 
-  mirinput
   mircompositor
+  mirinput
+
+  ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

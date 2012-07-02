@@ -21,8 +21,11 @@
 
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
+
 #include <memory>
+#include <mutex>
 #include <set>
+#include <thread>
 
 namespace mir
 {
@@ -49,18 +52,18 @@ class TaggedFilter : public Filter
     TaggedFilter() = default;
 };
 
-typedef TaggedFilter<detail::FilterType::shell> ShellFilter;
-typedef TaggedFilter<detail::FilterType::grab> GrabFilter;
-typedef TaggedFilter<detail::FilterType::application> ApplicationFilter;
-
 class Event;
 class LogicalDevice;
 
 class Dispatcher : public EventHandler
 {
     typedef std::set< std::unique_ptr<LogicalDevice> > DeviceCollection;
- public:
+ public:    
     typedef DeviceCollection::iterator DeviceToken;
+
+    typedef TaggedFilter<detail::FilterType::shell> ShellFilter;
+    typedef TaggedFilter<detail::FilterType::grab> GrabFilter;
+    typedef TaggedFilter<detail::FilterType::application> ApplicationFilter;
     
     Dispatcher(TimeSource* time_source,
                std::unique_ptr<ShellFilter> shell_filter,
@@ -82,6 +85,7 @@ class Dispatcher : public EventHandler
     std::unique_ptr<ApplicationFilter> application_filter;
 
     DeviceCollection devices;
+    std::mutex dispatcher_guard;
 };
 
 }

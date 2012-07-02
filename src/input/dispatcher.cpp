@@ -27,9 +27,9 @@
 namespace mi = mir::input;
 
 mi::Dispatcher::Dispatcher(TimeSource* time_source,
-                           std::unique_ptr<mi::ShellFilter> shell,
-                           std::unique_ptr<mi::GrabFilter> grab,
-                           std::unique_ptr<mi::ApplicationFilter> application)
+                           std::unique_ptr<mi::Dispatcher::ShellFilter> shell,
+                           std::unique_ptr<mi::Dispatcher::GrabFilter> grab,
+                           std::unique_ptr<mi::Dispatcher::ApplicationFilter> application)
         : time_source(time_source),
           shell_filter(std::move(shell)),
           grab_filter(std::move(grab)),
@@ -46,6 +46,8 @@ void mi::Dispatcher::on_event(mi::Event* e)
 {
     assert(e);
 
+    std::lock_guard<std::mutex> lg(dispatcher_guard);
+    
     e->set_system_timestamp(time_source->sample());
     
     if (shell_filter->accept(e) == mi::Filter::Result::stop_processing)

@@ -53,8 +53,3 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
     return newclient;
 }
 
-bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)
-{
-    assert(buffer);
-    return false;
-}

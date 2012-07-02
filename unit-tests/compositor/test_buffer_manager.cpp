@@ -70,16 +70,6 @@ struct MockBuffer : public mc::Buffer
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(bind_to_texture, void());
 };
-
-struct MockBufferManager : public mc::BufferManager
-{
- public:
-    explicit MockBufferManager(mc::GraphicBufferAllocator* gr_allocator) : mc::BufferManager(gr_allocator) {}
-    
-    MOCK_METHOD3(create_buffer, mc::BufferManagerClient(uint32_t, uint32_t, mc::PixelFormat));
-    MOCK_METHOD1(register_buffer, bool(std::shared_ptr<mc::Buffer>));
-};
-
 }
 
 TEST(buffer_manager, create_buffer)
@@ -103,4 +93,7 @@ TEST(buffer_manager, create_buffer)
         pixel_format);
 
     EXPECT_TRUE(client != nullptr);
+
+    //TODO this is a frig to keep valgrind happy
+    delete client;
 }
