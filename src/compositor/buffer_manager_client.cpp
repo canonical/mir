@@ -21,15 +21,33 @@
 namespace mc = mir::compositor;
 
 mc::BufferManagerClient::BufferManagerClient()
+ :
+compositor_buffer(nullptr)
 {
 }
 
-void mc::BufferManagerClient::add_buffer(mc::Buffer *) {
-    
+void mc::BufferManagerClient::add_buffer(mc::Buffer * buffer) {
+    atomic_store(&compositor_buffer, buffer);
 }
 
 void mc::BufferManagerClient::bind_back_buffer() {
+    if ( compositor_buffer == nullptr)
+        return;
 
+    mc::Buffer *back_buffer = nullptr;
+
+    bool worked = false;
+
+    back_buffer = atomic_load(&compositor_buffer);
+    while (!worked) { 
+        back_buffer->lock();
+        back_buffer->bind_to_texture();
+
+        worked = atomic_compare_exchange_weak(&compositor_buffer, &back_buffer, back_buffer);
+        if (!worked) {
+            //todo: add unbind and unlock methods and do them here 
+        }
+    }
 }
 
 

@@ -67,12 +67,11 @@ TEST(buffer_manager_client, add_buffers_and_bind)
     bm_client.add_buffer(&mock_buffer);
 
     EXPECT_CALL(mock_buffer, bind_to_texture())
-            .Times(1);
+            .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer, lock())
-            .Times(1);
+            .Times(AtLeast(1));
 
     bm_client.bind_back_buffer();
-
 }
 
 

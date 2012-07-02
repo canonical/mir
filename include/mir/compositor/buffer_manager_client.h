@@ -22,6 +22,9 @@
 
 #include "mir/compositor/buffer.h"
 
+#include <vector>
+#include <atomic>
+
 namespace mir
 {
 namespace compositor
@@ -32,7 +35,9 @@ class BufferManagerClient
 public:
     BufferManagerClient();
     void add_buffer(Buffer *buffer);
-    void bind_back_buffer(); 
+    void bind_back_buffer();
+private:
+    std::atomic<Buffer*> compositor_buffer;
 };
 
 }
