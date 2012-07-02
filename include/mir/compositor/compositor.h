@@ -31,20 +31,15 @@ class Scenegraph;
 
 namespace compositor
 {
-class BufferTextureBinder;
-
 class Compositor : public Drawer
 {
 public:
-    explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
-        BufferTextureBinder* buffermanager);
+    explicit Compositor( surfaces::Scenegraph* scenegraph );
 
     virtual void render(graphics::Display* display);
 
 private:
     surfaces::Scenegraph* const scenegraph;
-    BufferTextureBinder* const buffermanager;
 };
 
 

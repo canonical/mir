@@ -13,33 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/compositor.h"
+#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
+#define MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
 
-#include "mir/graphics/display.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/surfaces/scenegraph.h"
-
-#include <cassert>
-
-namespace mc = mir::compositor;
-
-
-mc::Compositor::Compositor(
-    surfaces::Scenegraph* scenegraph)
-    :
-    scenegraph(scenegraph)
+namespace mir
 {
-    assert(scenegraph);
+namespace compositor
+{
+
+class BufferManagerClient
+{
+public:
+    BufferManagerClient();
+};
+
+}
 }
 
-void mc::Compositor::render(graphics::Display* display)
-{
-    assert(display);
-
-	scenegraph->get_surfaces_in(display->view_area());
-
-	display->notify_update();
-}
+#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_ */

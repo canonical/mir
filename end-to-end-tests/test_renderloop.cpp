@@ -52,7 +52,7 @@ struct MockDisplay : mg::Display
 {
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
-    MOCK_METHOD1(notify_update, void (mg::Texture const&));
+    MOCK_METHOD0(notify_update, void());
 };
 
 }
@@ -61,14 +61,12 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    MockAllocator gr_allocator;
     MockScenegraph scenegraph;
     MockDisplay display;
 
-    mc::BufferManager buffer_manager(&gr_allocator);
-    mc::Drawer&& comp = mc::Compositor(&scenegraph, &buffer_manager);
+    mc::Drawer&& comp = mc::Compositor(&scenegraph);
 
-    EXPECT_CALL(display, notify_update(_)).Times(1);
+    EXPECT_CALL(display, notify_update()).Times(1);
 
     EXPECT_CALL(display, view_area()).Times(AtLeast(1))
 			.WillRepeatedly(Return(geom::Rectangle()));

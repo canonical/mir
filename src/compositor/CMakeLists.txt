@@ -20,4 +20,5 @@ ADD_LIBRARY(
   
   compositor.cpp
   buffer_manager.cpp
+  buffer_manager_client.cpp
 )

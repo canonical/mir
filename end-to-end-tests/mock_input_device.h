@@ -73,12 +73,14 @@ class MockInputDevice : public LogicalDevice
     
     void trigger_event()
     {
-        announce_event(&event);
+        MockInputEvent ev;
+        announce_event(&ev);
     }
 
     MockInputEvent event;
     EventProducer::State state;
     std::map<AxisType, Axis> axes;
+
 };
 
 }

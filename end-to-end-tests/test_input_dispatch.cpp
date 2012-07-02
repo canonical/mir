@@ -16,6 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "input_dispatch_fixture.h"
 #include "mock_input_device.h"
 #include "mock_input_event.h"
 
@@ -30,57 +31,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <thread>
+
 namespace mi = mir::input;
 
-namespace
-{
-
-template<typename T>
-class MockFilter : public T
-{
- public:
-    MockFilter()
-    {
-        using namespace testing;
-        using ::testing::_;
-        using ::testing::Return;
-        
-        ON_CALL(*this, accept(_)).WillByDefault(Return(mi::Filter::Result::continue_processing));
-    }
-    
-    MOCK_METHOD1(accept, mi::Filter::Result(mi::Event*));
-};
-
-class MockTimeSource : public mir::TimeSource
-{
- public:
-    MOCK_CONST_METHOD0(sample, mir::Timestamp());
-};
-
-class InputDispatchFixture : public ::testing::Test
-{
- public:
-    InputDispatchFixture()
-            : mock_shell_filter(new MockFilter<mi::Dispatcher::ShellFilter>()),
-              mock_grab_filter(new MockFilter<mi::Dispatcher::GrabFilter>()),
-              mock_app_filter(new MockFilter<mi::Dispatcher::ApplicationFilter>()),
-              dispatcher(&time_source,
-                         std::move(std::unique_ptr<mi::Dispatcher::ShellFilter>(mock_shell_filter)),
-                         std::move(std::unique_ptr<mi::Dispatcher::GrabFilter>(mock_grab_filter)),
-                         std::move(std::unique_ptr<mi::Dispatcher::ApplicationFilter>(mock_app_filter)))
-    {
-        mir::Timestamp ts;
-        ::testing::DefaultValue<mir::Timestamp>::Set(ts);
-    }
- protected:
-    MockTimeSource time_source;
-    MockFilter<mi::Dispatcher::ShellFilter>* mock_shell_filter;
-    MockFilter<mi::Dispatcher::GrabFilter>* mock_grab_filter;
-    MockFilter<mi::Dispatcher::ApplicationFilter>* mock_app_filter;
-    mi::Dispatcher dispatcher;
-};
-
-}
+using mir::input::InputDispatchFixture;
 
 TEST_F(InputDispatchFixture, incoming_input_triggers_filter)
 {
@@ -140,45 +96,3 @@ TEST_F(InputDispatchFixture, device_registration_starts_and_stops_event_producer
     dispatcher.unregister_device(token);
 }
 
-namespace
-{
-
-class MockApplication : public mir::Application
-{
- public:
-    MockApplication(mir::ApplicationManager* manager) : Application(manager)
-    {
-    }
-
-    MOCK_METHOD1(on_event, void(mi::Event*));
-};
-
-struct MockApplicationManager : public mir::ApplicationManager
-{
-    MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mir::Application>());
-};
-
-}
-
-TEST(GrabFilter, grab_filter_accepts_event_stops_event_processing_if_grab_is_active)
-{
-    using namespace ::testing;
-
-    MockApplicationManager appManager;
-    std::weak_ptr<mir::Application> grabbing_application;
-    ON_CALL(appManager, get_grabbing_application()).WillByDefault(Return(grabbing_application));
-    
-    MockApplication* app = new MockApplication(&appManager);
-    std::shared_ptr<mir::Application> app_ptr(app);
-    mi::GrabFilter grab_filter(&appManager);
-
-    EXPECT_CALL(appManager, get_grabbing_application()).Times(AtLeast(1));
-    
-    mi::MockInputEvent e;
-    EXPECT_EQ(mi::Filter::Result::continue_processing, grab_filter.accept(&e));
-    grabbing_application = app_ptr;
-    ON_CALL(appManager, get_grabbing_application()).WillByDefault(Return(grabbing_application));
-    EXPECT_CALL(*app, on_event(_)).Times(AtLeast(1));
-
-    EXPECT_EQ(mi::Filter::Result::stop_processing, grab_filter.accept(&e));
-}

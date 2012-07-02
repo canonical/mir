@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_manager_client.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
@@ -28,28 +29,27 @@ namespace mg = mir::graphics;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
-    gr_allocator(gr_allocator)
+    gr_allocator(gr_allocator),
+    client_counter(1)
 {
     assert(gr_allocator);
 }
 
 
-mg::Texture mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
+void mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
 {
-	return mg::Texture();
+	return;
 }
  
-std::shared_ptr<mc::Buffer> mc::BufferManager::create_buffer(
-	geometry::Width width,
-	geometry::Height height,
-	mc::PixelFormat pf)
+mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
+                                   geometry::Height height,
+                                   mc::PixelFormat pf)
 {
-    
-    return gr_allocator->alloc_buffer(width, height, pf);
+    BufferManagerClient *newclient = new BufferManagerClient;
+
+    /* todo: (kdub) add the new buffer to the newclient */
+    gr_allocator->alloc_buffer(width, height, pf);
+
+    return newclient;
 }
 
-bool mc::BufferManager::register_buffer(std::shared_ptr<mc::Buffer> buffer)
-{
-    assert(buffer);
-    return false;
-}

@@ -46,6 +46,8 @@ void mi::Dispatcher::on_event(mi::Event* e)
 {
     assert(e);
 
+    std::lock_guard<std::mutex> lg(dispatcher_guard);
+    
     e->set_system_timestamp(time_source->sample());
     
     if (shell_filter->accept(e) == mi::Filter::Result::stop_processing)
