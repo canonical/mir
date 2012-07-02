@@ -56,6 +56,36 @@ struct MockBuffer : public mc::Buffer
 
 }
 
+/* testing adding and removing buffers */
+TEST(buffer_manager_client, add_rm_buffers) 
+{
+    using namespace testing;
+
+    mc::BufferManagerClient bm_client;
+    MockBuffer mock_buffer;
+    std::vector<mc::Buffer*> buffers_removed;
+
+    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(&mock_buffer);
+
+    buffers_removed = bm_client.remove_all_buffers();
+
+    EXPECT_EQ(buffers_removed.size(), 3); 
+    for(int i=0; i<3; i++) { 
+        EXPECT_EQ(buffers_removed[i], &mock_buffer);
+    }
+
+    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(&mock_buffer);
+    buffers_removed = bm_client.remove_all_buffers();
+
+    EXPECT_EQ(buffers_removed.size(), 2); 
+    for(int i=0; i<2; i++) { 
+        EXPECT_EQ(buffers_removed[i], &mock_buffer);
+    }
+}
+
 /* this would simulate binding and locking a back buffer for the compositor's use */
 TEST(buffer_manager_client, add_buffers_and_bind)
 {
@@ -74,5 +104,41 @@ TEST(buffer_manager_client, add_buffers_and_bind)
     bm_client.bind_back_buffer();
 }
 
+/* this would simulate locking a buffer for a client's use */
+TEST(buffer_manager_client, add_buffers_and_distribute) {
+    using namespace testing;
+   
+    mc::BufferManagerClient bm_client;
+    MockBuffer mock_buffer;
 
+    bm_client.add_buffer(&mock_buffer);
 
+    EXPECT_CALL(mock_buffer, lock())
+            .Times(AtLeast(1));
+
+    bm_client.dequeue_client_buffer();
+
+}
+
+TEST(buffer_manager_client, add_buffers_bind_and_distribute) {
+    using namespace testing;
+
+    mc::BufferManagerClient bm_client;
+    MockBuffer mock_buffer_cli;
+    MockBuffer mock_buffer_com;
+
+    bm_client.add_buffer(&mock_buffer_cli);
+    bm_client.add_buffer(&mock_buffer_com);
+
+    EXPECT_CALL(mock_buffer_cli, lock())
+            .Times(AtLeast(1));
+
+    EXPECT_CALL(mock_buffer_com, bind_to_texture())
+            .Times(AtLeast(1));
+    EXPECT_CALL(mock_buffer_com, lock())
+            .Times(AtLeast(1));
+
+    bm_client.bind_back_buffer();
+    bm_client.dequeue_client_buffer();
+
+}

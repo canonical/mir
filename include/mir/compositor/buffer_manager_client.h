@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <atomic>
+#include <mutex>
 
 namespace mir
 {
@@ -35,9 +36,17 @@ class BufferManagerClient
 public:
     BufferManagerClient();
     void add_buffer(Buffer *buffer);
+    std::vector<Buffer*> remove_all_buffers();
+
     void bind_back_buffer();
+    void dequeue_client_buffer();
 private:
+    /* note: buffer_list_guard protects the SIZE and CONTENT (values and order) of buffer_list. */
+    std::vector<Buffer*> buffer_list;
+    std::mutex buffer_list_guard;
+
     std::atomic<Buffer*> compositor_buffer;
+    std::atomic<Buffer*> client_buffer;
 };
 
 }
