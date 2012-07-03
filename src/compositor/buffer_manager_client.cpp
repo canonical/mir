@@ -24,6 +24,10 @@ mc::BufferManagerClient::BufferManagerClient()
 {
 }
 
+mc::BufferManagerClient::~BufferManagerClient()
+{
+}
+
 void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer>) {
     
 }

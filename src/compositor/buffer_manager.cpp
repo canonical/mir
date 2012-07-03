@@ -29,7 +29,8 @@ namespace mg = mir::graphics;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
-    gr_allocator(gr_allocator)
+    gr_allocator(gr_allocator),
+    client_list()
 {
     assert(gr_allocator);
 }
@@ -40,6 +41,7 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
                                    mc::PixelFormat pf)
 {
     BufferManagerClient *newclient = new BufferManagerClient;
+    client_list.push_back(newclient);
 
     /* todo: (kdub) add the new buffer to the newclient */
     gr_allocator->alloc_buffer(width, height, pf);
@@ -47,10 +49,21 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
     return newclient;
 }
 
-void mc::BufferManager::destroy_client(BufferManagerClient*) {
-    //newclient->destroy_all();
+void mc::BufferManager::destroy_client(BufferManagerClient* client_find) {
+    bool found = false;
+    for (BufferManagerClient* &c : client_list) {
+        if (c == client_find) {
+            found = true;
+        } 
+    }
+
+    client_list.remove(client_find);
+    if (found) {
+        delete client_find;
+    }
+ 
 }
 
 bool mc::BufferManager::is_empty() {
-    return false;
+    return client_list.empty();
 }

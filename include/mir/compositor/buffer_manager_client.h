@@ -37,6 +37,7 @@ class BufferManagerClient : public BufferTextureBinder
 {
 public:
     BufferManagerClient();
+    ~BufferManagerClient();
     void add_buffer(std::shared_ptr<Buffer> buffer);
     int remove_all_buffers();
 

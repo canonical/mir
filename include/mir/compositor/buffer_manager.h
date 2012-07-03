@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <memory>
 #include <atomic>
+#include <list>
 
 namespace mir
 {
@@ -41,7 +42,8 @@ class BufferManager
 
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
- 
+
+    /* note: this should be a shared_ptr<> return type --kdub */ 
     virtual BufferManagerClient* create_client(geometry::Width width,
                                    geometry::Height height,
                                    PixelFormat pf);
@@ -51,6 +53,8 @@ class BufferManager
 
  private:
     GraphicBufferAllocator* const gr_allocator;
+
+    std::list<BufferManagerClient*> client_list; 
 
 };
 
