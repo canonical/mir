@@ -97,7 +97,7 @@ class MockFilter : public T
         ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
     }
 
-    MOCK_METHOD1(accept, void(Event*));
+    MOCK_CONST_METHOD1(accept, void(Event*));
 
     void forward_accept(Event* event) { T::accept(event); }
 };

@@ -22,7 +22,7 @@
 
 namespace mi = mir::input;
 
-void mi::NullFilter::accept(Event*)
+void mi::NullFilter::accept(Event*) const
 {
 }
 
@@ -33,7 +33,7 @@ mi::ChainingFilter::ChainingFilter(std::shared_ptr<Filter> const& next_link)
 	assert(this->next_link.get());
 }
 
-void mi::ChainingFilter::accept(Event* e)
+void mi::ChainingFilter::accept(Event* e) const
 {
 	assert(e);
 	next_link->accept(e);

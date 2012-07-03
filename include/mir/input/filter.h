@@ -32,7 +32,7 @@ class Filter
 {
 public:
 
-    virtual void accept(Event* e) = 0;
+    virtual void accept(Event* e) const = 0;
 
 protected:
     Filter() = default;
@@ -46,7 +46,7 @@ class NullFilter : public Filter
 {
 public:
 
-    virtual void accept(Event* e);
+    virtual void accept(Event* e) const;
 };
 
 class ChainingFilter : public Filter
@@ -55,7 +55,7 @@ public:
 
 	ChainingFilter(std::shared_ptr<Filter> const& next_link);
     
-    virtual void accept(Event* e);
+    virtual void accept(Event* e) const;
 
 protected:
      ~ChainingFilter() = default;
