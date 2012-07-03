@@ -71,7 +71,7 @@ std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
     std::lock_guard<std::mutex> lg(buffer_list_guard);
     client_buffer->lock();
-    return nullptr;
+    return client_buffer;
 }
 
 
