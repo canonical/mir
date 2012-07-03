@@ -16,8 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/application.h"
-#include "mir/application_manager.h"
 #include "mir/input/event.h"
 #include "mir/input/grab_filter.h"
 
@@ -55,26 +53,11 @@ public:
     }
 };
 
-class MockApplication : public mir::Application
-{
-public:
-    MockApplication(mir::ApplicationManager* manager) : Application(manager)
-    {
-    }
-
-    MOCK_METHOD1(on_event, void(mi::Event*));
-};
-
 class MockEventHandler : public mi::EventHandler
 {
 public:
 
     MOCK_METHOD1(on_event, void(mi::Event*));
-};
-
-struct MockApplicationManager : public mir::ApplicationManager
-{
-    MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mir::Application>());
 };
 
 class DummyEvent : public mi::Event {};
