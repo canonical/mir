@@ -104,12 +104,17 @@ TEST(buffer_bundle, add_buffers_and_bind)
     bm_client.add_buffer(default_buffer);
     bm_client.add_buffer(default_buffer);
 
+    int num_iterations = 5;
     EXPECT_CALL(mock_buffer, bind_to_texture())
-            .Times(AtLeast(1));
+            .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(1));
+            .Times(AtLeast(num_iterations));
 
-    bm_client.bind_back_buffer();
+    int i;
+    for(i=0; i<num_iterations; i++) {
+        bm_client.bind_back_buffer();
+        bm_client.release_back_buffer();
+    }
 }
 
 /* this would simulate locking a buffer for a client's use */
@@ -125,11 +130,18 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     bm_client.add_buffer(default_buffer);
     bm_client.add_buffer(default_buffer);
 
+    int num_iterations = 5;
     EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(1));
+            .Times(AtLeast(num_iterations));
 
-    bm_client.dequeue_client_buffer();
-
+    std::shared_ptr<MockBuffer> sent_buffer;
+    int i;
+    for(i=0; i<num_iterations; i++) {
+        /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
+           data bundle in the future */
+        sent_buffer = bm_client.dequeue_client_buffer();
+        bm_client.queue_client_buffer(sent_buffer);
+    }
 }
 
 TEST(buffer_bundle, add_buffers_bind_and_distribute) {
