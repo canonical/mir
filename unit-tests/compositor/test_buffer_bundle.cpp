@@ -68,24 +68,24 @@ TEST(buffer_bundle, add_rm_buffers)
 {
     using namespace testing;
 
-    mc::BufferBundle bm_client;
+    mc::BufferBundle buffer_bundle;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
     int buffers_removed;
 
-    bm_client.add_buffer(default_buffer);
-    bm_client.add_buffer(default_buffer);
-    bm_client.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
 
-    buffers_removed = bm_client.remove_all_buffers();
+    buffers_removed = buffer_bundle.remove_all_buffers();
 
     EXPECT_EQ(buffers_removed, 3); 
 
-    bm_client.add_buffer(default_buffer);
-    bm_client.add_buffer(default_buffer);
-    buffers_removed = bm_client.remove_all_buffers();
+    buffer_bundle.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
+    buffers_removed = buffer_bundle.remove_all_buffers();
 
     EXPECT_EQ(buffers_removed, 2); 
 }
@@ -95,14 +95,14 @@ TEST(buffer_bundle, add_buffers_and_bind)
 {
     using namespace testing;
    
-    mc::BufferBundle bm_client;
+    mc::BufferBundle buffer_bundle;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
 
-    bm_client.add_buffer(default_buffer);
-    bm_client.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
 
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, bind_to_texture())
@@ -115,8 +115,8 @@ TEST(buffer_bundle, add_buffers_and_bind)
     for(i=0; i<num_iterations; i++) {
         /* if binding doesn't work, this is a case where we may have an exception */
         try {
-            bm_client.bind_back_buffer();
-            bm_client.release_back_buffer();
+            buffer_bundle.bind_back_buffer();
+            buffer_bundle.release_back_buffer();
         } catch (int) {
             exception_thrown = true;
         }
@@ -128,14 +128,14 @@ TEST(buffer_bundle, add_buffers_and_bind)
 TEST(buffer_bundle, add_buffers_and_distribute) {
     using namespace testing;
    
-    mc::BufferBundle bm_client;
+    mc::BufferBundle buffer_bundle;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
 
-    bm_client.add_buffer(default_buffer);
-    bm_client.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
+    buffer_bundle.add_buffer(default_buffer);
 
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, lock())
@@ -147,16 +147,16 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
            data bundle in the future */
         sent_buffer = nullptr;
-        sent_buffer = bm_client.dequeue_client_buffer();
+        sent_buffer = buffer_bundle.dequeue_client_buffer();
         EXPECT_NE(nullptr, sent_buffer);
-        bm_client.queue_client_buffer(sent_buffer);
+        buffer_bundle.queue_client_buffer(sent_buffer);
     }
 }
 
 TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     using namespace testing;
 
-    mc::BufferBundle bm_client;
+    mc::BufferBundle buffer_bundle;
     MockBuffer mock_buffer_cli;
     std::shared_ptr<MockBuffer> default_buffer_cli(
         &mock_buffer_cli,
@@ -166,8 +166,8 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
         &mock_buffer_com,
         EmptyDeleter()); 
 
-    bm_client.add_buffer(default_buffer_com);
-    bm_client.add_buffer(default_buffer_cli);
+    buffer_bundle.add_buffer(default_buffer_com);
+    buffer_bundle.add_buffer(default_buffer_cli);
 
     EXPECT_CALL(mock_buffer_cli, lock())
             .Times(AtLeast(1));
@@ -177,7 +177,7 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     EXPECT_CALL(mock_buffer_com, lock())
             .Times(AtLeast(1));
 
-    bm_client.bind_back_buffer();
-    bm_client.dequeue_client_buffer();
+    buffer_bundle.bind_back_buffer();
+    buffer_bundle.dequeue_client_buffer();
 
 }
