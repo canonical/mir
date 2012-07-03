@@ -43,18 +43,17 @@ class BufferManager
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
 
-    /* note: this should be a shared_ptr<> return type --kdub */ 
-    virtual BufferBundle* create_client(geometry::Width width,
+    virtual std::shared_ptr<BufferBundle> create_client(geometry::Width width,
                                    geometry::Height height,
                                    PixelFormat pf);
 
     virtual bool is_empty();
-    virtual void destroy_client(BufferBundle* client);
+    virtual void destroy_client(std::shared_ptr<BufferBundle> client);
 
  private:
     GraphicBufferAllocator* const gr_allocator;
 
-    std::list<BufferBundle*> client_list; 
+    std::list<std::shared_ptr<BufferBundle>> client_list; 
 
 };
 

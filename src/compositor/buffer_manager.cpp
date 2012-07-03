@@ -36,31 +36,19 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-mc::BufferBundle* mc::BufferManager::create_client(geometry::Width width,
-                                   geometry::Height height,
-                                   mc::PixelFormat pf)
+std::shared_ptr<mc::BufferBundle> mc::BufferManager::create_client(geometry::Width width,
+                               geometry::Height height,
+                               PixelFormat pf)
 {
-    BufferBundle *newclient = new BufferBundle;
-    client_list.push_back(newclient);
 
     /* todo: (kdub) add the new buffer to the newclient */
     gr_allocator->alloc_buffer(width, height, pf);
-
-    return newclient;
+    return nullptr;
 }
 
-void mc::BufferManager::destroy_client(BufferBundle* client_find) {
-    bool found = false;
-    for (BufferBundle* &c : client_list) {
-        if (c == client_find) {
-            found = true;
-        } 
-    }
+void mc::BufferManager::destroy_client(std::shared_ptr<mc::BufferBundle> client_find) {
 
     client_list.remove(client_find);
-    if (found) {
-        delete client_find;
-    }
  
 }
 
