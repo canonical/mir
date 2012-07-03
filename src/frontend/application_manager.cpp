@@ -27,9 +27,9 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationManager::ApplicationManager(ms::SurfaceController* surface_controller) : surface_controller(surface_controller)
+mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* organiser) : surface_organiser(organiser)
 {
-    assert(surface_controller);
+    assert(surface_organiser);
 }
 
 void mf::ApplicationManager::grab_input_for_application(std::weak_ptr<mf::Application> app)
@@ -50,12 +50,12 @@ void mf::ApplicationManager::release_grab()
 std::shared_ptr<ms::Surface> mf::ApplicationManager::create_surface()
 {
     std::shared_ptr<ms::Surface> surface(new ms::Surface());
-    surface_controller->add_surface(surface);
+    surface_organiser->add_surface(surface);
 
     return surface;
 }
 
 void mf::ApplicationManager::destroy_surface(std::shared_ptr<ms::Surface> surface)
 {
-    surface_controller->remove_surface(surface);
+    surface_organiser->remove_surface(surface);
 }

@@ -11,24 +11,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
+
+#include <cassert>
 
 namespace ms = mir::surfaces;
 
-ms::SurfacesToRender ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
+ms::SurfaceController::SurfaceController(ms::SurfaceStack* surface_stack) : surface_stack(surface_stack)
 {
-	return SurfacesToRender();
+    assert(surface_stack);
 }
 
-void ms::SurfaceStack::add_surface(std::weak_ptr<ms::Surface> /*surface*/)
+void ms::SurfaceController::add_surface(std::weak_ptr<ms::Surface> surface)
 {
-    // TODO
+    surface_stack->add_surface(surface);
 }
 
-void ms::SurfaceStack::remove_surface(std::weak_ptr<ms::Surface> /*surface*/)
+void ms::SurfaceController::remove_surface(std::weak_ptr<ms::Surface> surface)
 {
-    // TODO
+    surface_stack->remove_surface(surface);
 }

@@ -17,25 +17,33 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
+#include "mir/surfaces/application_surface_organiser.h"
+
+#include <memory>
+
 namespace mir
 {
 namespace surfaces
 {
 
 class Surface;
+class SurfaceStack;
 
-class SurfaceController
+class SurfaceController : public ApplicationSurfaceOrganiser
 {
  public:
+    explicit SurfaceController(SurfaceStack* surface_stack);
     virtual ~SurfaceController() {}
 
-    virtual void add_surface(std::weak_ptr<Surface> surface) = 0;
-    virtual void remove_surface(std::weak_ptr<Surface> surface) = 0;
-
+    void add_surface(std::weak_ptr<Surface> surface);
+    void remove_surface(std::weak_ptr<Surface> surface);
+    
  protected:
-    SurfaceController() = default;
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
+
+ private:
+    SurfaceStack* surface_stack;
 };
 
 }

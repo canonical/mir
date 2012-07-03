@@ -31,7 +31,7 @@ namespace mir
 namespace surfaces
 {
 
-class SurfaceController;
+class ApplicationSurfaceOrganiser;
 
 }
 
@@ -45,7 +45,7 @@ class ApplicationManager
           public frontend::services::SurfaceFactory
 {
  public:
-    explicit ApplicationManager(ms::SurfaceController* surface_controller);
+    explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser);
     virtual ~ApplicationManager() {}
 
     // From InputGrabController
@@ -63,7 +63,7 @@ class ApplicationManager
 
   private:
     std::weak_ptr<Application> grabbing_application;
-    ms::SurfaceController* surface_controller;
+    ms::ApplicationSurfaceOrganiser* surface_organiser;
 };
 
 }

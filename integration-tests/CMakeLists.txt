@@ -29,6 +29,7 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirinput
+  mirsurfaces
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

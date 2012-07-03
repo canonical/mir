@@ -18,6 +18,7 @@
 
 #include "mir/frontend/application_manager.h"
 #include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_stack.h"
 #include "mir/frontend/services/surface_factory.h"
 
 #include <gmock/gmock.h>
@@ -30,7 +31,7 @@ namespace ms = mir::surfaces;
 namespace
 {
 
-struct MockSurfaceController : public ms::SurfaceController
+struct MockSurfaceStack : public ms::SurfaceStack
 {
     MOCK_METHOD1(add_surface, void(std::weak_ptr<ms::Surface>));
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface>));
@@ -41,12 +42,13 @@ struct MockSurfaceController : public ms::SurfaceController
 TEST(TestApplicationManager, create_surface_adds_surface_to_surface_stack_via_surface_controller)
 {
     using namespace ::testing;
-    
-    MockSurfaceController controller;
+
+    MockSurfaceStack surface_stack;
+    ms::SurfaceController controller(&surface_stack);
     mf::ApplicationManager app_manager(&controller);
 
-    EXPECT_CALL(controller, add_surface(_)).Times(AtLeast(1));
-    EXPECT_CALL(controller, remove_surface(_)).Times(AtLeast(1));
+    EXPECT_CALL(surface_stack, add_surface(_)).Times(AtLeast(1));
+    EXPECT_CALL(surface_stack, remove_surface(_)).Times(AtLeast(1));
                 
     mfs::SurfaceFactory* surface_factory = &app_manager;
     std::shared_ptr<ms::Surface> surface = surface_factory->create_surface();

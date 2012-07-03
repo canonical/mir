@@ -19,15 +19,23 @@
 
 #include "scenegraph.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace surfaces
 {
 
+class Surface;
+
 class SurfaceStack : public Scenegraph
 {
 public:
-    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);    
+    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
+
+    virtual void add_surface(std::weak_ptr<Surface> surface);
+    
+    virtual void remove_surface(std::weak_ptr<Surface> surface);
 };
 
 }
