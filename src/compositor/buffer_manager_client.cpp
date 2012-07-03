@@ -28,12 +28,18 @@ mc::BufferManagerClient::~BufferManagerClient()
 {
 }
 
-void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer>) {
-    
+void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer> buffer) { 
+    std::lock_guard<std::mutex> lg(buffer_list_guard);
+    buffer_list.push_back(buffer);
+     
 }
 
 int mc::BufferManagerClient::remove_all_buffers() {
-    return 0;  
+    std::lock_guard<std::mutex> lg(buffer_list_guard);
+    int size = buffer_list.size();
+
+    buffer_list.clear();
+    return size;
 }
 
 void mc::BufferManagerClient::bind_back_buffer() {
