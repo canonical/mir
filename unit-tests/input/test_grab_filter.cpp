@@ -16,8 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "../../end-to-end-tests/mock_input_event.h"
-
 #include "mir/application.h"
 #include "mir/application_manager.h"
 #include "mir/input/event.h"
