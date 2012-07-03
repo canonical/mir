@@ -24,14 +24,12 @@ mc::BufferManagerClient::BufferManagerClient()
 {
 }
 
-void mc::BufferManagerClient::add_buffer(mc::Buffer *) {
+void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer>) {
     
 }
 
-std::vector<mc::Buffer*> mc::BufferManagerClient::remove_all_buffers() {
-    std::vector<Buffer*> empty;
-    return empty;
-    
+int mc::BufferManagerClient::remove_all_buffers() {
+    return 0;  
 }
 
 void mc::BufferManagerClient::bind_back_buffer() {

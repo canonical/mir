@@ -32,6 +32,13 @@ const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
 namespace {
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* )
+    {
+    }    
+};
 struct MockBuffer : public mc::Buffer
 {
  public:
@@ -63,27 +70,24 @@ TEST(buffer_manager_client, add_rm_buffers)
 
     mc::BufferManagerClient bm_client;
     MockBuffer mock_buffer;
-    std::vector<mc::Buffer*> buffers_removed;
+    std::shared_ptr<MockBuffer> default_buffer(
+        &mock_buffer,
+        EmptyDeleter()); 
+    int buffers_removed;
 
-    bm_client.add_buffer(&mock_buffer);
-    bm_client.add_buffer(&mock_buffer);
-    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(default_buffer);
+    bm_client.add_buffer(default_buffer);
+    bm_client.add_buffer(default_buffer);
 
     buffers_removed = bm_client.remove_all_buffers();
 
-    ASSERT_EQ(buffers_removed.size(), 3); 
-    for(int i=0; i<3; i++) { 
-        EXPECT_EQ(buffers_removed[i], &mock_buffer);
-    }
+    EXPECT_EQ(buffers_removed, 3); 
 
-    bm_client.add_buffer(&mock_buffer);
-    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(default_buffer);
+    bm_client.add_buffer(default_buffer);
     buffers_removed = bm_client.remove_all_buffers();
 
-    ASSERT_EQ(buffers_removed.size(), 2); 
-    for(int i=0; i<2; i++) { 
-        EXPECT_EQ(buffers_removed[i], &mock_buffer);
-    }
+    EXPECT_EQ(buffers_removed, 2); 
 }
 
 /* this would simulate binding and locking a back buffer for the compositor's use */
@@ -93,8 +97,11 @@ TEST(buffer_manager_client, add_buffers_and_bind)
    
     mc::BufferManagerClient bm_client;
     MockBuffer mock_buffer;
+    std::shared_ptr<MockBuffer> default_buffer(
+        &mock_buffer,
+        EmptyDeleter()); 
 
-    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(default_buffer);
 
     EXPECT_CALL(mock_buffer, bind_to_texture())
             .Times(AtLeast(1));
@@ -110,8 +117,11 @@ TEST(buffer_manager_client, add_buffers_and_distribute) {
    
     mc::BufferManagerClient bm_client;
     MockBuffer mock_buffer;
+    std::shared_ptr<MockBuffer> default_buffer(
+        &mock_buffer,
+        EmptyDeleter()); 
 
-    bm_client.add_buffer(&mock_buffer);
+    bm_client.add_buffer(default_buffer);
 
     EXPECT_CALL(mock_buffer, lock())
             .Times(AtLeast(1));
@@ -125,10 +135,16 @@ TEST(buffer_manager_client, add_buffers_bind_and_distribute) {
 
     mc::BufferManagerClient bm_client;
     MockBuffer mock_buffer_cli;
+    std::shared_ptr<MockBuffer> default_buffer_cli(
+        &mock_buffer_cli,
+        EmptyDeleter()); 
     MockBuffer mock_buffer_com;
+    std::shared_ptr<MockBuffer> default_buffer_com(
+        &mock_buffer_com,
+        EmptyDeleter()); 
 
-    bm_client.add_buffer(&mock_buffer_cli);
-    bm_client.add_buffer(&mock_buffer_com);
+    bm_client.add_buffer(default_buffer_cli);
+    bm_client.add_buffer(default_buffer_com);
 
     EXPECT_CALL(mock_buffer_cli, lock())
             .Times(AtLeast(1));
