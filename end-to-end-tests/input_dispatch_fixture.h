@@ -21,6 +21,8 @@
 
 #include "mir/input/dispatcher.h"
 #include "mir/input/grab_filter.h"
+#include "mir/input/shell_filter.h"
+#include "mir/input/application_filter.h"
 #include "mir/input/filter.h"
 #include "mir/time_source.h"
 
@@ -51,32 +53,6 @@ class MockTimeSource : public mir::TimeSource
 
 namespace input
 {
-
-//TODO move to a real implementation
-class ApplicationFilter : public ChainingFilter
-{
- public:
-	//using ChainingFilter::ChainingFilter;
-	ApplicationFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
-
-    void accept(Event* e)
-    {
-        ChainingFilter::accept(e);
-    }
-};
-
-//TODO move to a real implementation
-class ShellFilter : public ChainingFilter
-{
- public:
-	//using ChainingFilter::ChainingFilter;
-	ShellFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
-
-    void accept(Event* e)
-    {
-        ChainingFilter::accept(e);
-    }
-};
 
 template<typename T>
 class MockFilter : public T
