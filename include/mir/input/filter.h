@@ -53,16 +53,16 @@ class ChainingFilter : public Filter
 {
 public:
 
-	ChainingFilter(std::shared_ptr<Filter> const& next_link);
-    
+    ChainingFilter(std::shared_ptr<Filter> const& next_link);
+
     virtual void accept(Event* e) const;
 
 protected:
-     ~ChainingFilter() = default;
-     ChainingFilter() = delete;
+    ~ChainingFilter() = default;
+    ChainingFilter() = delete;
 
 private:
-     std::shared_ptr<Filter> const next_link;
+    std::shared_ptr<Filter> const next_link;
 };
 }
 }

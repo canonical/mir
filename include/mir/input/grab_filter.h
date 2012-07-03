@@ -33,30 +33,30 @@ namespace input
 class Event;
 
 class GrabHandle;
-    
+
 class GrabFilter : public ChainingFilter
 {
- public:
-	//using ChainingFilter::ChainingFilter;
-	GrabFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
+public:
+    //using ChainingFilter::ChainingFilter;
+    GrabFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
 
     void accept(Event* e) const;
 
     GrabHandle push_grab(std::shared_ptr<EventHandler> const& event_handler);
-	void release_grab(GrabHandle const& grab_handle);
+    void release_grab(GrabHandle const& grab_handle);
 
- private:
-	std::list<std::shared_ptr<EventHandler>> grabs;
+private:
+    std::list<std::shared_ptr<EventHandler>> grabs;
 };
 
 class GrabHandle
 {
-	friend class GrabFilter;
+    friend class GrabFilter;
 
-	typedef std::list<std::shared_ptr<EventHandler>>::iterator Handle;
-	GrabHandle(Handle i) : i(i) {}
-	GrabHandle() = default;
-	Handle i;
+    typedef std::list<std::shared_ptr<EventHandler>>::iterator Handle;
+    GrabHandle(Handle i) : i(i) {}
+    GrabHandle() = default;
+    Handle i;
 };
 }
 }

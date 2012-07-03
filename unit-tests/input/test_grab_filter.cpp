@@ -31,7 +31,7 @@ namespace
 template<typename T>
 class MockFilter : public T
 {
- public:
+public:
     MockFilter()
     {
         using namespace testing;
@@ -49,12 +49,15 @@ class MockFilter : public T
 
     MOCK_CONST_METHOD1(accept, void(mi::Event*));
 
-    void forward_accept(mi::Event* event) const { T::accept(event); }
+    void forward_accept(mi::Event* event) const
+    {
+        T::accept(event);
+    }
 };
 
 class MockApplication : public mir::Application
 {
- public:
+public:
     MockApplication(mir::ApplicationManager* manager) : Application(manager)
     {
     }
@@ -64,7 +67,7 @@ class MockApplication : public mir::Application
 
 class MockEventHandler : public mi::EventHandler
 {
- public:
+public:
 
     MOCK_METHOD1(on_event, void(mi::Event*));
 };
@@ -80,23 +83,23 @@ class DummyEvent : public mi::Event {};
 
 TEST(GrabFilter, register_and_deregister_a_grab)
 {
-    mi::GrabFilter grab_filter{std::make_shared<mi::NullFilter>()};
+    mi::GrabFilter grab_filter {std::make_shared<mi::NullFilter>()};
 
-    std::shared_ptr<mi::EventHandler> event_handler{std::make_shared<MockEventHandler>()};
+    std::shared_ptr<mi::EventHandler> event_handler {std::make_shared<MockEventHandler>()};
 
     mi::GrabHandle grab_handle(grab_filter.push_grab(event_handler));
 
-	grab_filter.release_grab(grab_handle);
+    grab_filter.release_grab(grab_handle);
 }
 
 TEST(GrabFilter, events_are_forwarded_to_next_filter)
 {
-	using namespace testing;
-	typedef MockFilter<mi::NullFilter> MockNullFilter;
+    using namespace testing;
+    typedef MockFilter<mi::NullFilter> MockNullFilter;
 
-    std::shared_ptr<MockNullFilter> mock_null_filter{std::make_shared<MockNullFilter>()};
+    std::shared_ptr<MockNullFilter> mock_null_filter {std::make_shared<MockNullFilter>()};
 
-	mi::GrabFilter grab_filter{mock_null_filter};
+    mi::GrabFilter grab_filter {mock_null_filter};
 
     EXPECT_CALL(*mock_null_filter, accept(_)).Times(1);
 
@@ -107,15 +110,15 @@ TEST(GrabFilter, events_are_forwarded_to_next_filter)
 
 TEST(GrabFilter, if_a_grab_is_registered_events_are_grabbed_not_forwarded)
 {
-	using namespace testing;
-	typedef MockFilter<mi::NullFilter> MockNullFilter;
+    using namespace testing;
+    typedef MockFilter<mi::NullFilter> MockNullFilter;
 
-    std::shared_ptr<MockNullFilter> mock_null_filter{std::make_shared<MockNullFilter>()};
+    std::shared_ptr<MockNullFilter> mock_null_filter {std::make_shared<MockNullFilter>()};
 
-	mi::GrabFilter grab_filter{mock_null_filter};
+    mi::GrabFilter grab_filter {mock_null_filter};
 
-    std::shared_ptr<MockEventHandler> mock_event_handler{std::make_shared<MockEventHandler>()};
-    std::shared_ptr<mi::EventHandler> event_handler{mock_event_handler};
+    std::shared_ptr<MockEventHandler> mock_event_handler {std::make_shared<MockEventHandler>()};
+    std::shared_ptr<mi::EventHandler> event_handler {mock_event_handler};
 
     mi::GrabHandle grab_handle(grab_filter.push_grab(event_handler));
 
@@ -126,26 +129,26 @@ TEST(GrabFilter, if_a_grab_is_registered_events_are_grabbed_not_forwarded)
     mi::Event* event = &dummy_event;
     grab_filter.accept(event);
 
-	grab_filter.release_grab(grab_handle);
+    grab_filter.release_grab(grab_handle);
 }
 
 TEST(GrabFilter, after_a_grab_is_released_events_are_forwarded_not_grabbed)
 {
-	using namespace testing;
-	typedef MockFilter<mi::NullFilter> MockNullFilter;
+    using namespace testing;
+    typedef MockFilter<mi::NullFilter> MockNullFilter;
 
-    std::shared_ptr<MockNullFilter> mock_null_filter{std::make_shared<MockNullFilter>()};
+    std::shared_ptr<MockNullFilter> mock_null_filter {std::make_shared<MockNullFilter>()};
 
-	mi::GrabFilter grab_filter{mock_null_filter};
+    mi::GrabFilter grab_filter {mock_null_filter};
 
-    std::shared_ptr<MockEventHandler> mock_event_handler{std::make_shared<MockEventHandler>()};
-    std::shared_ptr<mi::EventHandler> event_handler{mock_event_handler};
+    std::shared_ptr<MockEventHandler> mock_event_handler {std::make_shared<MockEventHandler>()};
+    std::shared_ptr<mi::EventHandler> event_handler {mock_event_handler};
 
     mi::GrabHandle grab_handle(grab_filter.push_grab(event_handler));
 
-	grab_filter.release_grab(grab_handle);
+    grab_filter.release_grab(grab_handle);
 
-	EXPECT_CALL(*mock_null_filter, accept(_)).Times(1);
+    EXPECT_CALL(*mock_null_filter, accept(_)).Times(1);
     EXPECT_CALL(*mock_event_handler, on_event(_)).Times(0);
 
     DummyEvent dummy_event;
