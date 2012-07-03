@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_manager.h"
-#include "mir/compositor/buffer_manager_client.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"

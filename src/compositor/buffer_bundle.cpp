@@ -16,7 +16,7 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include <mir/compositor/buffer_manager_client.h>
+#include <mir/compositor/buffer_bundle.h>
 
 namespace mc = mir::compositor;
 

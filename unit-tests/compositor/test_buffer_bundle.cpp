@@ -18,7 +18,7 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_manager_client.h"
+#include "mir/compositor/buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -64,7 +64,7 @@ struct MockBuffer : public mc::Buffer
 }
 
 /* testing adding and removing buffers */
-TEST(buffer_manager_client, add_rm_buffers) 
+TEST(buffer_bundle, add_rm_buffers) 
 {
     using namespace testing;
 
@@ -91,7 +91,7 @@ TEST(buffer_manager_client, add_rm_buffers)
 }
 
 /* this would simulate binding and locking a back buffer for the compositor's use */
-TEST(buffer_manager_client, add_buffers_and_bind)
+TEST(buffer_bundle, add_buffers_and_bind)
 {
     using namespace testing;
    
@@ -113,7 +113,7 @@ TEST(buffer_manager_client, add_buffers_and_bind)
 }
 
 /* this would simulate locking a buffer for a client's use */
-TEST(buffer_manager_client, add_buffers_and_distribute) {
+TEST(buffer_bundle, add_buffers_and_distribute) {
     using namespace testing;
    
     mc::BufferBundle bm_client;
@@ -132,7 +132,7 @@ TEST(buffer_manager_client, add_buffers_and_distribute) {
 
 }
 
-TEST(buffer_manager_client, add_buffers_bind_and_distribute) {
+TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     using namespace testing;
 
     mc::BufferBundle bm_client;
