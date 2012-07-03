@@ -24,25 +24,20 @@
 
 #include <cassert>
 #include <memory>
-#include <set>
 
 namespace mi = mir::input;
 
-mi::GrabFilter::GrabFilter(mir::ApplicationManager* application_manager) : application_manager(application_manager)
-{
-    assert(application_manager);
-}
-
-mi::Filter::Result mi::GrabFilter::accept(Event* e)
+void mi::GrabFilter::accept(Event* e)
 {
     assert(e);
-        
-    std::shared_ptr<mir::Application> input_grabber = application_manager->get_grabbing_application().lock();
-    
-    if (!input_grabber)
-        return mi::Filter::Result::continue_processing;
-    
-    input_grabber->on_event(e);
-    
-    return mi::Filter::Result::stop_processing;
+    ChainingFilter::accept(e);
+}
+
+mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& )
+{
+	return mi::GrabHandle();
+}
+
+void mi::GrabFilter::release_grab(GrabHandle const& )
+{
 }
