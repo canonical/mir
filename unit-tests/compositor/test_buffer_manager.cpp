@@ -88,7 +88,7 @@ TEST(buffer_manager, create_buffer)
     EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
     		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
 
-    mc::BufferManagerClient *client = nullptr;
+    mc::BufferBundle *client = nullptr;
     client = buffer_manager.create_client(
         width,
         height,

@@ -68,7 +68,7 @@ TEST(buffer_manager_client, add_rm_buffers)
 {
     using namespace testing;
 
-    mc::BufferManagerClient bm_client;
+    mc::BufferBundle bm_client;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
@@ -95,7 +95,7 @@ TEST(buffer_manager_client, add_buffers_and_bind)
 {
     using namespace testing;
    
-    mc::BufferManagerClient bm_client;
+    mc::BufferBundle bm_client;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
@@ -116,7 +116,7 @@ TEST(buffer_manager_client, add_buffers_and_bind)
 TEST(buffer_manager_client, add_buffers_and_distribute) {
     using namespace testing;
    
-    mc::BufferManagerClient bm_client;
+    mc::BufferBundle bm_client;
     MockBuffer mock_buffer;
     std::shared_ptr<MockBuffer> default_buffer(
         &mock_buffer,
@@ -135,7 +135,7 @@ TEST(buffer_manager_client, add_buffers_and_distribute) {
 TEST(buffer_manager_client, add_buffers_bind_and_distribute) {
     using namespace testing;
 
-    mc::BufferManagerClient bm_client;
+    mc::BufferBundle bm_client;
     MockBuffer mock_buffer_cli;
     std::shared_ptr<MockBuffer> default_buffer_cli(
         &mock_buffer_cli,

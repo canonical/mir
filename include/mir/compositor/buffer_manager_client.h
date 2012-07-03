@@ -33,12 +33,13 @@ namespace mir
 namespace compositor
 {
 
-class BufferManagerClient : public BufferTextureBinder
+class BufferBundle : public BufferTextureBinder
 {
 public:
-    BufferManagerClient();
-    ~BufferManagerClient();
+    BufferBundle();
+    ~BufferBundle();
     void add_buffer(std::shared_ptr<Buffer> buffer);
+
     int remove_all_buffers();
 
     void bind_back_buffer();

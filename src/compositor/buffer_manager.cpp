@@ -36,11 +36,11 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 }
 
 
-mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
+mc::BufferBundle* mc::BufferManager::create_client(geometry::Width width,
                                    geometry::Height height,
                                    mc::PixelFormat pf)
 {
-    BufferManagerClient *newclient = new BufferManagerClient;
+    BufferBundle *newclient = new BufferBundle;
     client_list.push_back(newclient);
 
     /* todo: (kdub) add the new buffer to the newclient */
@@ -49,9 +49,9 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
     return newclient;
 }
 
-void mc::BufferManager::destroy_client(BufferManagerClient* client_find) {
+void mc::BufferManager::destroy_client(BufferBundle* client_find) {
     bool found = false;
-    for (BufferManagerClient* &c : client_list) {
+    for (BufferBundle* &c : client_list) {
         if (c == client_find) {
             found = true;
         } 

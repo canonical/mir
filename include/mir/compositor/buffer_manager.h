@@ -35,7 +35,7 @@ namespace compositor
 {
 
 class GraphicBufferAllocator;
-class BufferManagerClient;
+class BufferBundle;
 class BufferManager
 {
  public:
@@ -44,17 +44,17 @@ class BufferManager
     virtual ~BufferManager() {}
 
     /* note: this should be a shared_ptr<> return type --kdub */ 
-    virtual BufferManagerClient* create_client(geometry::Width width,
+    virtual BufferBundle* create_client(geometry::Width width,
                                    geometry::Height height,
                                    PixelFormat pf);
 
     virtual bool is_empty();
-    virtual void destroy_client(BufferManagerClient* client);
+    virtual void destroy_client(BufferBundle* client);
 
  private:
     GraphicBufferAllocator* const gr_allocator;
 
-    std::list<BufferManagerClient*> client_list; 
+    std::list<BufferBundle*> client_list; 
 
 };
 

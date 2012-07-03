@@ -20,24 +20,26 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferManagerClient::BufferManagerClient()
+mc::BufferBundle::BufferBundle()
 {
 }
 
-mc::BufferManagerClient::~BufferManagerClient()
+mc::BufferBundle::~BufferBundle()
 {
 }
 
-void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer> buffer) {
+void mc::BufferBundle::add_buffer(std::shared_ptr<Buffer> buffer)
+{
+
     std::lock_guard<std::mutex> lg(buffer_list_guard);
-
     compositor_buffer = client_buffer;
     client_buffer = buffer;
-    buffer_list.push_back(buffer);
-     
+
+    buffer_list.push_back(buffer);     
 }
 
-int mc::BufferManagerClient::remove_all_buffers() {
+int mc::BufferBundle::remove_all_buffers()
+{
     std::lock_guard<std::mutex> lg(buffer_list_guard);
 
     int size = buffer_list.size();
@@ -46,7 +48,8 @@ int mc::BufferManagerClient::remove_all_buffers() {
     return size;
 }
 
-void mc::BufferManagerClient::bind_back_buffer() {
+void mc::BufferBundle::bind_back_buffer()
+{
     std::lock_guard<std::mutex> lg(buffer_list_guard);
 
     compositor_buffer->lock();
@@ -54,7 +57,7 @@ void mc::BufferManagerClient::bind_back_buffer() {
 
 }
 
-void mc::BufferManagerClient::dequeue_client_buffer() {
+void mc::BufferBundle::dequeue_client_buffer() {
     std::lock_guard<std::mutex> lg(buffer_list_guard);
     client_buffer->lock();
 }
