@@ -39,36 +39,23 @@ class MockApplication : public mf::Application
     MOCK_METHOD1(on_event, void(mi::Event*));
 };
 
-class MockInputGrabController : public mfs::InputGrabController
+class MockEventHandler : public mi::EventHandler
 {
  public:
-    MOCK_METHOD1(grab_input_for_application, void(std::weak_ptr<mf::Application>));
-    MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mf::Application>());
-    MOCK_METHOD0(release_grab, void());
+
+    MOCK_METHOD1(on_event, void(mi::Event*));
 };
 
 }
 
-TEST(GrabFilter, grab_filter_accepts_event_stops_event_processing_if_grab_is_active)
+
+TEST(GrabFilter, register_and_deregister_a_grab)
 {
-    using namespace ::testing;
-
-    std::weak_ptr<mf::Application> grabbing_application;
-    MockInputGrabController grab_controller;
-    ON_CALL(grab_controller, get_grabbing_application()).WillByDefault(Return(grabbing_application));
-        
-    MockApplication* app = new MockApplication();
-    std::shared_ptr<mf::Application> app_ptr(app);
-    mi::GrabFilter grab_filter(&grab_controller);
-
-    EXPECT_CALL(grab_controller, get_grabbing_application()).Times(AtLeast(1));
+    mi::GrabFilter grab_filter{std::make_shared<mi::NullFilter>()};
     
-    mi::MockInputEvent e;
-    EXPECT_EQ(mi::Filter::Result::continue_processing, grab_filter.accept(&e));
-    grabbing_application = app_ptr;
-    ON_CALL(grab_controller, get_grabbing_application()).WillByDefault(Return(grabbing_application));
+    std::shared_ptr<mi::EventHandler> event_handler{std::make_shared<MockEventHandler>()};
     
-    EXPECT_CALL(*app, on_event(_)).Times(AtLeast(1));
+    mi::GrabHandle grab_handle(grab_filter.push_grab(event_handler));
 
-    EXPECT_EQ(mi::Filter::Result::stop_processing, grab_filter.accept(&e));
+    grab_filter.release_grab(grab_handle);
 }
