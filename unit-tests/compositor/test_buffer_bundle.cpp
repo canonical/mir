@@ -111,9 +111,16 @@ TEST(buffer_bundle, add_buffers_and_bind)
             .Times(AtLeast(num_iterations));
 
     int i;
+    bool exception_thrown = false;
     for(i=0; i<num_iterations; i++) {
-        bm_client.bind_back_buffer();
-        bm_client.release_back_buffer();
+        /* if binding doesn't work, this is a case where we may have an exception */
+        try {
+            bm_client.bind_back_buffer();
+            bm_client.release_back_buffer();
+        } catch (int) {
+            exception_thrown = true;
+        }
+        EXPECT_FALSE(exception_thrown);
     }
 }
 
@@ -134,12 +141,14 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     EXPECT_CALL(mock_buffer, lock())
             .Times(AtLeast(num_iterations));
 
-    std::shared_ptr<MockBuffer> sent_buffer;
+    std::shared_ptr<mc::Buffer> sent_buffer;
     int i;
     for(i=0; i<num_iterations; i++) {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
            data bundle in the future */
+        sent_buffer = nullptr;
         sent_buffer = bm_client.dequeue_client_buffer();
+        EXPECT_NE(nullptr, sent_buffer);
         bm_client.queue_client_buffer(sent_buffer);
     }
 }
