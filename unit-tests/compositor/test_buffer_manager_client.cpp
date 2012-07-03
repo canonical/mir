@@ -102,6 +102,7 @@ TEST(buffer_manager_client, add_buffers_and_bind)
         EmptyDeleter()); 
 
     bm_client.add_buffer(default_buffer);
+    bm_client.add_buffer(default_buffer);
 
     EXPECT_CALL(mock_buffer, bind_to_texture())
             .Times(AtLeast(1));
@@ -121,6 +122,7 @@ TEST(buffer_manager_client, add_buffers_and_distribute) {
         &mock_buffer,
         EmptyDeleter()); 
 
+    bm_client.add_buffer(default_buffer);
     bm_client.add_buffer(default_buffer);
 
     EXPECT_CALL(mock_buffer, lock())
@@ -143,8 +145,8 @@ TEST(buffer_manager_client, add_buffers_bind_and_distribute) {
         &mock_buffer_com,
         EmptyDeleter()); 
 
-    bm_client.add_buffer(default_buffer_cli);
     bm_client.add_buffer(default_buffer_com);
+    bm_client.add_buffer(default_buffer_cli);
 
     EXPECT_CALL(mock_buffer_cli, lock())
             .Times(AtLeast(1));

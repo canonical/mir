@@ -47,8 +47,8 @@ private:
     std::vector<std::shared_ptr<Buffer>> buffer_list;
     std::mutex buffer_list_guard;
 
-    std::atomic<std::shared_ptr<Buffer>> compositor_buffer;
-    std::atomic<std::shared_ptr<Buffer>> client_buffer;
+    std::shared_ptr<Buffer> compositor_buffer;
+    std::shared_ptr<Buffer> client_buffer;
 };
 
 }

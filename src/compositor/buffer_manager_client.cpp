@@ -28,26 +28,35 @@ mc::BufferManagerClient::~BufferManagerClient()
 {
 }
 
-void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer> buffer) { 
+void mc::BufferManagerClient::add_buffer(std::shared_ptr<Buffer> buffer) {
     std::lock_guard<std::mutex> lg(buffer_list_guard);
+
+    compositor_buffer = client_buffer;
+    client_buffer = buffer;
     buffer_list.push_back(buffer);
      
 }
 
 int mc::BufferManagerClient::remove_all_buffers() {
     std::lock_guard<std::mutex> lg(buffer_list_guard);
-    int size = buffer_list.size();
 
+    int size = buffer_list.size();
     buffer_list.clear();
+
     return size;
 }
 
 void mc::BufferManagerClient::bind_back_buffer() {
+    std::lock_guard<std::mutex> lg(buffer_list_guard);
+
+    compositor_buffer->lock();
+    compositor_buffer->bind_to_texture();
 
 }
 
 void mc::BufferManagerClient::dequeue_client_buffer() {
-
+    std::lock_guard<std::mutex> lg(buffer_list_guard);
+    client_buffer->lock();
 }
 
 
