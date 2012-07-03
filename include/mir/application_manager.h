@@ -31,8 +31,6 @@ class ApplicationManager
  public:
     virtual ~ApplicationManager() {}
 
-    virtual std::weak_ptr<Application> get_grabbing_application() = 0;
-
  protected:
     ApplicationManager() = default;
 

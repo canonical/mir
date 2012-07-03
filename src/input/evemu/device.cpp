@@ -20,18 +20,7 @@
 
 #include <boost/filesystem.hpp>
 
-namespace mir
-{
-namespace input
-{
-namespace evemu
-{
-
 #include <evemu.h>
-
-}
-}
-}
 
 #include <cstdio>
 #include <stdexcept>
@@ -41,15 +30,14 @@ namespace evemu
 #include <fcntl.h>
 
 namespace mi = mir::input;
-namespace mie = mir::input::evemu;
 
 namespace {
 
 struct EvemuDeleter
 {
-    void operator() (struct mie::evemu_device*& device)
+    void operator() (struct evemu_device*& device)
     {
-        mie::evemu_delete(device);
+        evemu_delete(device);
     }
 };
 
@@ -62,19 +50,21 @@ mi::evemu::EvemuDevice::EvemuDevice(
     buttons(static_cast<size_t>(KEY_MAX), false),
     position_info{Mode::none}    
 {
-    std::unique_ptr<struct mie::evemu_device, EvemuDeleter> evemu(mie::evemu_new(NULL), EvemuDeleter());
+    std::unique_ptr<evemu_device, EvemuDeleter> evemu{evemu_new(NULL), EvemuDeleter()};
 
-    boost::filesystem::file_status status = boost::filesystem::status(path);
+    boost::filesystem::file_status const status{boost::filesystem::status(path)};
     if (status.type() == boost::filesystem::regular_file)
     {
         std::FILE *file = fopen(path.c_str(), "r");
+
         if (!file)
             throw std::runtime_error("Failed to open evemu file");
 
-        if (mie::evemu_read(evemu.get(), file) < 0)
-        	fclose(file),
-            throw std::runtime_error("Failed to read evemu parameters from file");
+        int const evenmu_error{evemu_read(evemu.get(), file)};
         fclose(file);
+
+        if (evenmu_error < 0)
+            throw std::runtime_error("Failed to read evemu parameters from file");
     }
     /* FIXME: Need test for evdev device nodes before uncommenting */
     /*else if (status.type() == boost::filesystem::character_file)
@@ -88,12 +78,12 @@ mi::evemu::EvemuDevice::EvemuDevice(
       }*/ else
         throw std::runtime_error("Device path is not a file nor a character device");
 
-    name = mie::evemu_get_name(evemu.get());
+    name = evemu_get_name(evemu.get());
 
-    if (mie::evemu_has_event(evemu.get(), EV_ABS, ABS_MT_SLOT))
+    if (evemu_has_event(evemu.get(), EV_ABS, ABS_MT_SLOT))
     {
         simultaneous_instances =
-                mie::evemu_get_abs_maximum(evemu.get(), ABS_MT_SLOT) - mie::evemu_get_abs_minimum(evemu.get(), ABS_MT_SLOT) + 1;
+                evemu_get_abs_maximum(evemu.get(), ABS_MT_SLOT) - evemu_get_abs_minimum(evemu.get(), ABS_MT_SLOT) + 1;
     }
 
     for (int b = 0; b <= KEY_MAX; ++b)
@@ -106,11 +96,11 @@ mi::evemu::EvemuDevice::EvemuDevice(
                 break;
         }
 
-        if (mie::evemu_has_event(evemu.get(), EV_KEY, b))
+        if (evemu_has_event(evemu.get(), EV_KEY, b))
             buttons[b] = 1;
     }
 
-    if (mie::evemu_has_event(evemu.get(), EV_ABS, ABS_MT_POSITION_X) || mie::evemu_has_event(evemu.get(), EV_ABS, ABS_X))
+    if (evemu_has_event(evemu.get(), EV_ABS, ABS_MT_POSITION_X) || evemu_has_event(evemu.get(), EV_ABS, ABS_X))
         position_info.mode = Mode::absolute;
     else if (evemu_has_event(evemu.get(), EV_REL, REL_X))
         position_info.mode = Mode::relative;

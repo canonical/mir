@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_FILTER_H_
 #define MIR_INPUT_FILTER_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace input
@@ -28,19 +30,40 @@ class Event;
 
 class Filter
 {
- public:
+public:
 
-    enum class Result
-    {
-        continue_processing,
-        stop_processing
-    };
-    
-    virtual ~Filter() {}
+    virtual void accept(Event* e) = 0;
 
-    virtual Result accept(Event* e) = 0;
+protected:
+    Filter() = default;
+    ~Filter() = default;
+
+    Filter(Filter const&) = delete;
+    Filter& operator=(Filter const&) = delete;
 };
 
+class NullFilter : public Filter
+{
+public:
+
+    virtual void accept(Event* e);
+};
+
+class ChainingFilter : public Filter
+{
+public:
+
+	ChainingFilter(std::shared_ptr<Filter> const& next_link);
+    
+    virtual void accept(Event* e);
+
+protected:
+     ~ChainingFilter() = default;
+     ChainingFilter() = delete;
+
+private:
+     std::shared_ptr<Filter> const next_link;
+};
 }
 }
 

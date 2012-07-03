@@ -16,7 +16,6 @@
  * Authored by: Chase Douglas <chase.douglas@canonical.com>
  */
 
-#include "mir/input/dispatcher.h"
 #include "mir/input/evemu/device.h"
 #include "mir/time_source.h"
 
@@ -45,8 +44,7 @@ TEST(Device, EvemuFile)
         TEST_RECORDINGS_DIR "quanta_touchscreen/device.prop",
         &event_handler);
         
-    EXPECT_TRUE(device.get_name().compare("QUANTA OpticalTouchScreen (Virtual Test Device)") == 0)
-        << "Device name is: \"" << device.get_name() << "\"";
+    EXPECT_EQ("QUANTA OpticalTouchScreen (Virtual Test Device)", device.get_name());
     EXPECT_EQ(10, device.get_simultaneous_instances());
     // EXPECT_EQ(0, device.get_buttons().size());
 

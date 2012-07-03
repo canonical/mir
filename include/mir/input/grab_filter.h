@@ -22,27 +22,31 @@
 #include "mir/input/dispatcher.h"
 
 #include <memory>
-#include <set>
+#include <stack>
 
 namespace mir
 {
-
-class ApplicationManager;
 
 namespace input
 {
 
 class Event;
+
+class GrabHandle {};
     
-class GrabFilter : public Dispatcher::GrabFilter
+class GrabFilter : public ChainingFilter
 {
  public:
-    explicit GrabFilter(mir::ApplicationManager* application_manager);
+	//using ChainingFilter::ChainingFilter;
+	GrabFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
 
-    Filter::Result accept(Event* e);
+    void accept(Event* e);
+
+    GrabHandle push_grab(std::shared_ptr<EventHandler> const& event_handler);
+	void release_grab(GrabHandle const& grab_handle);
 
  private:
-    mir::ApplicationManager* application_manager;
+	std::stack<std::shared_ptr<EventHandler>> grabs;
 };
 
 }
