@@ -40,7 +40,7 @@ class BufferTextureBinder
 {
 public:
 
-    virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const& ) = 0;
+    virtual void bind_back_buffer() = 0;
 
 protected:
     BufferTextureBinder() = default;

@@ -22,7 +22,6 @@
 #define MIR_COMPOSITOR_BUFFER_MANAGER_H_
 
 #include "buffer.h"
-#include "buffer_texture_binder.h"
 #include "mir/geometry/dimensions.h"
 
 #include <cstdint>
@@ -36,7 +35,7 @@ namespace compositor
 
 class GraphicBufferAllocator;
 class BufferManagerClient;
-class BufferManager : public BufferTextureBinder
+class BufferManager
 {
  public:
 
@@ -47,15 +46,12 @@ class BufferManager : public BufferTextureBinder
                                    geometry::Height height,
                                    PixelFormat pf);
 
+    virtual bool is_empty();
     virtual void destroy_client(BufferManagerClient* client);
-
-    // From buffer_texture_binder
-    virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
 
  private:
     GraphicBufferAllocator* const gr_allocator;
 
-    std::atomic<int> client_counter;
 };
 
 }

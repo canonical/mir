@@ -83,6 +83,8 @@ TEST(buffer_manager, create_buffer)
     MockGraphicBufferAllocator graphic_allocator;
     mc::BufferManager buffer_manager(&graphic_allocator);
 
+    /* note: this is somewhat of a weak test, some create_clients will create a varied amount
+             of buffers */
     EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
     		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
 
@@ -91,11 +93,11 @@ TEST(buffer_manager, create_buffer)
         width,
         height,
         pixel_format);
-
     EXPECT_TRUE(client != nullptr);
+    EXPECT_FALSE(buffer_manager.is_empty()); 
 
-    EXPECT_CALL(graphic_allocator, free_buffer(Eq(default_buffer))).
-    		Times(AtLeast(1));
+    /* this will destroy the buffers that are of shared_ptr type, but this is resource allocation is tested in the bufferManagerClient tests */
     buffer_manager.destroy_client(client);
+    EXPECT_TRUE(buffer_manager.is_empty()); 
 
 }

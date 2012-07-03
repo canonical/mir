@@ -20,6 +20,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
 #define MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
 
+#include "buffer_texture_binder.h"
 #include "mir/compositor/buffer.h"
 
 #include <vector>
@@ -32,7 +33,7 @@ namespace mir
 namespace compositor
 {
 
-class BufferManagerClient
+class BufferManagerClient : public BufferTextureBinder
 {
 public:
     BufferManagerClient();

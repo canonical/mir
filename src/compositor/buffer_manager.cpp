@@ -29,18 +29,12 @@ namespace mg = mir::graphics;
 
 mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
     :
-    gr_allocator(gr_allocator),
-    client_counter(1)
+    gr_allocator(gr_allocator)
 {
     assert(gr_allocator);
 }
 
 
-void mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
-{
-	return;
-}
- 
 mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
                                    geometry::Height height,
                                    mc::PixelFormat pf)
@@ -54,5 +48,9 @@ mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
 }
 
 void mc::BufferManager::destroy_client(BufferManagerClient*) {
+    //newclient->destroy_all();
+}
 
+bool mc::BufferManager::is_empty() {
+    return false;
 }
