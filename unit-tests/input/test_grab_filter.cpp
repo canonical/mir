@@ -58,13 +58,10 @@ struct MockApplicationManager : public mir::ApplicationManager
 
 TEST(GrabFilter, register_and_deregister_a_grab)
 {
-	// Why would this need the ApplicationManager?!
     mi::GrabFilter grab_filter{std::make_shared<mi::NullFilter>()};
 
-    // Grabs must have a target object
     std::shared_ptr<mi::EventHandler> event_handler{std::make_shared<MockEventHandler>()};
 
-    // We need a way to deregister grabs - so returns a handle
     mi::GrabHandle grab_handle(grab_filter.push_grab(event_handler));
 
 	grab_filter.release_grab(grab_handle);
