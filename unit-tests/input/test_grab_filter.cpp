@@ -30,6 +30,29 @@ namespace mi = mir::input;
 
 namespace
 {
+template<typename T>
+class MockFilter : public T
+{
+ public:
+    MockFilter()
+    {
+        using namespace testing;
+
+        ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
+    }
+
+    template<typename... Types>
+    MockFilter(Types&&... args) : T(std::forward<Types>(args)...)
+    {
+        using namespace testing;
+
+        ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
+    }
+
+    MOCK_METHOD1(accept, void(mi::Event*));
+
+    void forward_accept(mi::Event* event) { T::accept(event); }
+};
 
 class MockApplication : public mir::Application
 {
@@ -53,6 +76,7 @@ struct MockApplicationManager : public mir::ApplicationManager
     MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mir::Application>());
 };
 
+class DummyEvent : public mi::Event {};
 }
 
 
@@ -66,3 +90,20 @@ TEST(GrabFilter, register_and_deregister_a_grab)
 
 	grab_filter.release_grab(grab_handle);
 }
+
+TEST(GrabFilter, events_are_forwarded_to_next_filter)
+{
+	using namespace testing;
+	typedef MockFilter<mi::NullFilter> MockNullFilter;
+
+    std::shared_ptr<MockNullFilter> mock_null_filter{std::make_shared<MockNullFilter>()};
+
+	mi::GrabFilter grab_filter{mock_null_filter};
+
+    EXPECT_CALL(*mock_null_filter, accept(_)).Times(1);
+
+    DummyEvent dummy_event;
+    mi::Event* event = &dummy_event;
+    grab_filter.accept(event);
+}
+
