@@ -40,10 +40,14 @@ std::shared_ptr<mc::BufferBundle> mc::BufferManager::create_client(geometry::Wid
                                geometry::Height height,
                                PixelFormat pf)
 {
+    BufferBundle* new_client_raw = new mc::BufferBundle; 
+    std::shared_ptr<mc::BufferBundle> newclient(new_client_raw);
+    client_list.push_back(newclient);
 
     /* todo: (kdub) add the new buffer to the newclient */
     gr_allocator->alloc_buffer(width, height, pf);
-    return nullptr;
+
+    return newclient;
 }
 
 void mc::BufferManager::destroy_client(std::shared_ptr<mc::BufferBundle> client_find) {
