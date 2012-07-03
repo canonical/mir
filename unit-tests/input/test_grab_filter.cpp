@@ -18,32 +18,33 @@
 
 #include "../../end-to-end-tests/mock_input_event.h"
 
-#include "mir/application.h"
-#include "mir/application_manager.h"
+#include "mir/frontend/application.h"
+#include "mir/frontend/services/input_grab_controller.h"
 #include "mir/input/event.h"
 #include "mir/input/grab_filter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mf = mir::frontend;
+namespace mfs = mir::frontend::services;
 namespace mi = mir::input;
 
 namespace
 {
 
-class MockApplication : public mir::Application
+class MockApplication : public mf::Application
 {
  public:
-    MockApplication(mir::ApplicationManager* manager) : Application(manager)
-    {
-    }
-
     MOCK_METHOD1(on_event, void(mi::Event*));
 };
 
-struct MockApplicationManager : public mir::ApplicationManager
+class MockInputGrabController : public mfs::InputGrabController
 {
-    MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mir::Application>());
+ public:
+    MOCK_METHOD1(grab_input_for_application, void(std::weak_ptr<mf::Application>));
+    MOCK_METHOD0(get_grabbing_application, std::weak_ptr<mf::Application>());
+    MOCK_METHOD0(release_grab, void());
 };
 
 }
@@ -52,20 +53,21 @@ TEST(GrabFilter, grab_filter_accepts_event_stops_event_processing_if_grab_is_act
 {
     using namespace ::testing;
 
-    MockApplicationManager appManager;
-    std::weak_ptr<mir::Application> grabbing_application;
-    ON_CALL(appManager, get_grabbing_application()).WillByDefault(Return(grabbing_application));
-    
-    MockApplication* app = new MockApplication(&appManager);
-    std::shared_ptr<mir::Application> app_ptr(app);
-    mi::GrabFilter grab_filter(&appManager);
+    std::weak_ptr<mf::Application> grabbing_application;
+    MockInputGrabController grab_controller;
+    ON_CALL(grab_controller, get_grabbing_application()).WillByDefault(Return(grabbing_application));
+        
+    MockApplication* app = new MockApplication();
+    std::shared_ptr<mf::Application> app_ptr(app);
+    mi::GrabFilter grab_filter(&grab_controller);
 
-    EXPECT_CALL(appManager, get_grabbing_application()).Times(AtLeast(1));
+    EXPECT_CALL(grab_controller, get_grabbing_application()).Times(AtLeast(1));
     
     mi::MockInputEvent e;
     EXPECT_EQ(mi::Filter::Result::continue_processing, grab_filter.accept(&e));
     grabbing_application = app_ptr;
-    ON_CALL(appManager, get_grabbing_application()).WillByDefault(Return(grabbing_application));
+    ON_CALL(grab_controller, get_grabbing_application()).WillByDefault(Return(grabbing_application));
+    
     EXPECT_CALL(*app, on_event(_)).Times(AtLeast(1));
 
     EXPECT_EQ(mi::Filter::Result::stop_processing, grab_filter.accept(&e));

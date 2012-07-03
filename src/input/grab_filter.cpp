@@ -18,26 +18,28 @@
 
 #include "mir/input/grab_filter.h"
 
-#include "mir/application.h"
-#include "mir/application_manager.h"
+#include "mir/frontend/application.h"
+#include "mir/frontend/services/input_grab_controller.h"
 #include "mir/input/dispatcher.h"
 
 #include <cassert>
 #include <memory>
 #include <set>
 
+namespace mf = mir::frontend;
+namespace mfs = mir::frontend::services;
 namespace mi = mir::input;
 
-mi::GrabFilter::GrabFilter(mir::ApplicationManager* application_manager) : application_manager(application_manager)
+mi::GrabFilter::GrabFilter(mfs::InputGrabController* controller) : input_grab_controller(controller)
 {
-    assert(application_manager);
+    assert(input_grab_controller);
 }
 
 mi::Filter::Result mi::GrabFilter::accept(Event* e)
 {
     assert(e);
         
-    std::shared_ptr<mir::Application> input_grabber = application_manager->get_grabbing_application().lock();
+    std::shared_ptr<mf::Application> input_grabber = input_grab_controller->get_grabbing_application().lock();
     
     if (!input_grabber)
         return mi::Filter::Result::continue_processing;

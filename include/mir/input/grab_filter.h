@@ -26,9 +26,15 @@
 
 namespace mir
 {
+namespace frontend
+{
+namespace services
+{
 
-class ApplicationManager;
+class InputGrabController;
 
+}
+}
 namespace input
 {
 
@@ -37,12 +43,12 @@ class Event;
 class GrabFilter : public Dispatcher::GrabFilter
 {
  public:
-    explicit GrabFilter(mir::ApplicationManager* application_manager);
+    explicit GrabFilter(mir::frontend::services::InputGrabController* application_manager);
 
     Filter::Result accept(Event* e);
 
  private:
-    mir::ApplicationManager* application_manager;
+    mir::frontend::services::InputGrabController* input_grab_controller;
 };
 
 }

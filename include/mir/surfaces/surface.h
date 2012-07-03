@@ -16,30 +16,19 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_APPLICATION_MANAGER_H_
-#define MIR_APPLICATION_MANAGER_H_
-
-#include <memory>
+#ifndef MIR_SURFACES_SURFACE_H_
+#define MIR_SURFACES_SURFACE_H_
 
 namespace mir
 {
-
-class Application;
-
-class ApplicationManager
+namespace surfaces
 {
- public:
-    virtual ~ApplicationManager() {}
 
-    virtual std::weak_ptr<Application> get_grabbing_application() = 0;
-
- protected:
-    ApplicationManager() = default;
-
-    ApplicationManager(const ApplicationManager&) = delete;
-    ApplicationManager& operator=(const ApplicationManager&) = delete;
+class Surface
+{
 };
-
+    
+}
 }
 
-#endif // MIR_APPLICATION_MANAGER_H_
+#endif // MIR_SURFACES_SURFACE_H_

@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_APPLICATION_H_
-#define MIR_APPLICATION_H_
+#ifndef MIR_FRONTEND_APPLICATION_H_
+#define MIR_FRONTEND_APPLICATION_H_
 
 #include "mir/input/event_handler.h"
 
@@ -25,10 +25,10 @@
 
 namespace mir
 {
+namespace frontend
+{
 
 namespace mi = mir::input;
-
-class ApplicationManager;
 
 class Application : public mi::EventHandler
 {
@@ -36,23 +36,13 @@ class Application : public mi::EventHandler
     virtual ~Application() {}
     
  protected:
-    explicit Application(ApplicationManager* manager)
-            : application_manager(manager)
-    {
-        assert(application_manager);
-    }
+    Application() = default;
 
     Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-    
-    ApplicationManager* get_application_manager()
-    {
-        return application_manager;
-    }
- private:
-    ApplicationManager* application_manager;
+    Application& operator=(const Application&) = delete;    
 };
 
 }
+}
 
-#endif // MIR_APPLICATION_H_
+#endif // MIR_FRONTEND_APPLICATION_H_
