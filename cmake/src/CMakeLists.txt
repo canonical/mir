@@ -1,1 +1,1 @@
-add_subdirectory (compiz)
+add_subdirectory (mir)
