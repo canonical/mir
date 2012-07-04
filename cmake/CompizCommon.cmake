@@ -7,13 +7,8 @@ function (compiz_discover_tests EXECUTABLE)
 			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 			VERBATIM)
 
-    add_custom_target (${EXECUTABLE}_wrapper)
-    add_dependencies (${EXECUTABLE}_wrapper
-		      test_${EXECUTABLE}_wrapper
-		      compiz_discover_gtest_tests)
-
     add_dependencies (${EXECUTABLE}
-		      ${EXECUTABLE}_wrapper)
+              compiz_discover_gtest_tests)
 
     add_custom_command (TARGET ${EXECUTABLE}
 			POST_BUILD
