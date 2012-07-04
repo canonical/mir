@@ -1,5 +1,5 @@
 #include <map>
-#include <vector>
+#include <set>
 #include <string>
 #include <istream>
 #include <ostream>
@@ -20,42 +20,41 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    map<string, vector<string> > testCases;
+    set<string> tests;
     string line;
-    string currentTestCase;
+    string current_test;
 
     while (getline (cin, line))
     {
         /* Is test case */
         if (line.find ("  ") == 0)
-            testCases[currentTestCase].push_back (currentTestCase + line.substr (2));
+        {
+            tests.insert(current_test + "*");
+        }
         else
-            currentTestCase = line;
+            current_test = line;
     }
 
     ofstream testfilecmake;
     char *base = basename (argv[1]);
     string   gtestName (base);
 
-    testfilecmake.open (string (gtestName  + "_test.cmake").c_str (), ios::out | ios::trunc);
+    testfilecmake.open(string(gtestName  + "_test.cmake").c_str(), ios::out | ios::trunc);
 
-    if (testfilecmake.is_open ())
+    if (testfilecmake.is_open())
     {
-    	for (auto it: testCases)
+    	for (auto jt: tests)
         {
-    		for (auto jt: it.second)
-            {
-                if (testfilecmake.good ())
-                {
-                    string addTest ("ADD_TEST (");
-                    string testExec (" \"" + string (argv[1]) + "\"");
-                    string gTestFilter ("\"--gtest_filter=");
-                    string filterBegin ("");
-                    string filterEnd ("\")");
+			if (testfilecmake.good())
+			{
+				static string const add_test("ADD_TEST (");
+				string test_exec(" \"" + string (argv[1]) + "\"");
+				static string const gtest_filter("\"--gtest_filter=");
+				static string const filter_begin ("");
+				static string const filter_end ("\")");
 
-                    testfilecmake << addTest << jt << testExec << gTestFilter << filterBegin << jt << filterEnd << endl;
-                }
-            }
+				testfilecmake << add_test << gtestName << '.' << jt << test_exec << gtest_filter << filter_begin << jt << filter_end << endl;
+			}
         }
 
         testfilecmake.close ();
