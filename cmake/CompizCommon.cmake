@@ -6,9 +6,6 @@ function (compiz_discover_tests EXECUTABLE)
 			COMMAND echo "int main (void) { return 0; }" >> ${CMAKE_CURRENT_BINARY_DIR}/test_${EXECUTABLE}_wrapper.cpp
 			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 			VERBATIM)
-    add_executable (test_${EXECUTABLE}_wrapper
-		    ${CMAKE_CURRENT_BINARY_DIR}/test_${EXECUTABLE}_wrapper.cpp)
-    add_test (Test.${EXECUTABLE}.Wrapper test_${EXECUTABLE}_wrapper)
 
     add_custom_target (${EXECUTABLE}_wrapper)
     add_dependencies (${EXECUTABLE}_wrapper
