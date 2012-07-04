@@ -36,59 +36,57 @@ int main (int argc, char **argv)
     }
 
     ofstream testfilecmake;
-    char *base = basename (argv[1]);
-    string   gtestName (base);
+    char *base = basename(argv[1]);
+    string   test_suite(base);
 
-    testfilecmake.open(string(gtestName  + "_test.cmake").c_str(), ios::out | ios::trunc);
+    testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
 
     if (testfilecmake.is_open())
     {
-    	for (auto jt: tests)
+    	for (auto test: tests)
         {
 			if (testfilecmake.good())
 			{
-				static string const add_test("ADD_TEST (");
-				string test_exec(" \"" + string (argv[1]) + "\"");
-				static string const gtest_filter("\"--gtest_filter=");
-				static string const filter_begin ("");
-				static string const filter_end ("\")");
-
-				testfilecmake << add_test << gtestName << '.' << jt << test_exec << gtest_filter << filter_begin << jt << filter_end << endl;
+				testfilecmake
+					<< "ADD_TEST ("
+					<< test_suite << '.' << test
+					<< " \"" << argv[1] << "\""
+					<< "\"--gtest_filter=" << test << "\")" << endl;
 			}
         }
 
-        testfilecmake.close ();
+        testfilecmake.close();
     }
 
-    ifstream CTestTestfile ("CTestTestfile.cmake", ifstream::in);
-    bool needsInclude = true;
-    line.clear ();
+    ifstream CTestTestfile("CTestTestfile.cmake", ifstream::in);
+    bool need_include = true;
+    line.clear();
 
     string includeLine = string ("INCLUDE (") +
-                         gtestName  +
+                         test_suite  +
                          string ("_test.cmake)");
 
-    if (CTestTestfile.is_open ())
+    if (CTestTestfile.is_open())
     {
-        while (CTestTestfile.good ())
+        while (CTestTestfile.good())
         {
-            getline (CTestTestfile, line);
+            getline(CTestTestfile, line);
 
             if (line == includeLine)
-                needsInclude = false;
+                need_include = false;
         }
 
-        CTestTestfile.close ();
+        CTestTestfile.close();
     }
 
-    if (needsInclude)
+    if (need_include)
     {
         ofstream CTestTestfileW ("CTestTestfile.cmake", ofstream::app | ofstream::out);
 
-        if (CTestTestfileW.is_open ())
+        if (CTestTestfileW.is_open())
         {
             CTestTestfileW << includeLine << endl;
-            CTestTestfileW.close ();
+            CTestTestfileW.close();
         }
     }
 
