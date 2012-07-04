@@ -19,14 +19,12 @@
 #include "mir/input/grab_filter.h"
 
 #include "mir/frontend/application.h"
-#include "mir/frontend/services/input_grab_controller.h"
 #include "mir/input/dispatcher.h"
 
 #include <cassert>
 #include <memory>
 
 namespace mf = mir::frontend;
-namespace mfs = mir::frontend::services;
 namespace mi = mir::input;
 
 void mi::GrabFilter::accept(Event* e)

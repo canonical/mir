@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
 #include "mir/frontend/application.h"
-#include "mir/frontend/services/input_grab_controller.h"
 #include "mir/frontend/services/surface_factory.h"
 
 #include <memory>
@@ -41,9 +40,7 @@ namespace frontend
     
 namespace ms = mir::surfaces;
 
-class ApplicationManager
-        : public frontend::services::InputGrabController,
-          public frontend::services::SurfaceFactory
+class ApplicationManager : public frontend::services::SurfaceFactory
 {
  public:
     explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser);

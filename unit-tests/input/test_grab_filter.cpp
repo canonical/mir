@@ -19,7 +19,6 @@
 #include "../../end-to-end-tests/mock_input_event.h"
 
 #include "mir/frontend/application.h"
-#include "mir/frontend/services/input_grab_controller.h"
 #include "mir/input/event.h"
 #include "mir/input/grab_filter.h"
 
@@ -27,7 +26,6 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace mfs = mir::frontend::services;
 namespace mi = mir::input;
 
 namespace
