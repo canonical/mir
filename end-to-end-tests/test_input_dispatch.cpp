@@ -50,6 +50,7 @@ TEST_F(InputDispatchFixture, incoming_input_triggers_filter)
     EXPECT_CALL(*mock_device, start()).Times(AtLeast(1));
     mi::Dispatcher::DeviceToken token = dispatcher.register_device(std::move(device));
     
+    EXPECT_CALL(*mock_null_filter, accept(_));
     EXPECT_CALL(*mock_shell_filter, accept(_)).Times(AtLeast(1));
     EXPECT_CALL(*mock_grab_filter, accept(_)).Times(AtLeast(1));
     EXPECT_CALL(*mock_app_filter, accept(_)).Times(AtLeast(1));
@@ -75,6 +76,7 @@ TEST_F(InputDispatchFixture, incoming_input_is_timestamped)
     EXPECT_CALL(*mock_device, start()).Times(AtLeast(1));
     mi::Dispatcher::DeviceToken token = dispatcher.register_device(std::move(device));
     
+    EXPECT_CALL(*mock_null_filter, accept(_));
     EXPECT_CALL(*mock_shell_filter, accept(_));
     EXPECT_CALL(*mock_grab_filter, accept(_));
     EXPECT_CALL(*mock_app_filter, accept(_));
