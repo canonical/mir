@@ -25,6 +25,7 @@ namespace surfaces
 {
 
 class Surface;
+class SurfaceCreationParameters;
 
 }
 namespace frontend
@@ -39,8 +40,8 @@ class SurfaceFactory
  public:
     virtual ~SurfaceFactory() {}
     
-    virtual std::shared_ptr<ms::Surface> create_surface() = 0;
-    virtual void destroy_surface(std::shared_ptr<ms::Surface> surface) = 0;
+    virtual std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params) = 0;
+    virtual void destroy_surface(std::weak_ptr<ms::Surface> surface) = 0;
 
  protected:
     SurfaceFactory() = default;

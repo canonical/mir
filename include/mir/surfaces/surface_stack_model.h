@@ -14,10 +14,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
-#define MIR_SURFACES_SURFACE_CONTROLLER_H_
-
-#include "mir/surfaces/application_surface_organiser.h"
+#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
 
 #include <memory>
 
@@ -28,26 +26,23 @@ namespace surfaces
 
 class Surface;
 class SurfaceCreationParameters;
-class SurfaceStackModel;
 
-class SurfaceController : public ApplicationSurfaceOrganiser
+class SurfaceStackModel
 {
  public:
-    explicit SurfaceController(SurfaceStackModel* surface_stack);
-    virtual ~SurfaceController() {}
-
-    std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
-    void destroy_surface(std::weak_ptr<Surface> surface);
+    virtual ~SurfaceStackModel() {}
     
- protected:
-    SurfaceController(const SurfaceController&) = delete;
-    SurfaceController& operator=(const SurfaceController&) = delete;
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    
+    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
 
- private:
-    SurfaceStackModel* surface_stack;
+ protected:
+    SurfaceStackModel() = default;
+    SurfaceStackModel(const SurfaceStackModel&) = delete;
+    SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_CONTROLLER_H_
+#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_

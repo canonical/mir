@@ -18,6 +18,7 @@
 #define MIR_SURFACES_SURFACESTACK_H_
 
 #include "scenegraph.h"
+#include "surface_stack_model.h"
 
 #include <memory>
 
@@ -27,15 +28,17 @@ namespace surfaces
 {
 
 class Surface;
+class SurfaceCreationParameters;
 
-class SurfaceStack : public Scenegraph
+class SurfaceStack : public Scenegraph,
+                     public SurfaceStackModel
 {
 public:
     virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
 
-    virtual void add_surface(std::weak_ptr<Surface> surface);
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
     
-    virtual void remove_surface(std::weak_ptr<Surface> surface);
+    virtual void destroy_surface(std::weak_ptr<Surface> surface);
 };
 
 }

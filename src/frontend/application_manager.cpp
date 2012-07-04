@@ -47,15 +47,12 @@ void mf::ApplicationManager::release_grab()
     grabbing_application.reset();
 }
 
-std::shared_ptr<ms::Surface> mf::ApplicationManager::create_surface()
+std::weak_ptr<ms::Surface> mf::ApplicationManager::create_surface(const ms::SurfaceCreationParameters& params)
 {
-    std::shared_ptr<ms::Surface> surface(new ms::Surface());
-    surface_organiser->add_surface(surface);
-
-    return surface;
+    return surface_organiser->create_surface(params);
 }
 
-void mf::ApplicationManager::destroy_surface(std::shared_ptr<ms::Surface> surface)
+void mf::ApplicationManager::destroy_surface(std::weak_ptr<ms::Surface> surface)
 {
-    surface_organiser->remove_surface(surface);
+    surface_organiser->destroy_surface(surface);
 }

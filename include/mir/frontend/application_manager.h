@@ -32,6 +32,7 @@ namespace surfaces
 {
 
 class ApplicationSurfaceOrganiser;
+class SurfaceCreationParameters;
 
 }
 
@@ -54,8 +55,8 @@ class ApplicationManager
     void release_grab();
 
     // From SurfaceFactory
-    std::shared_ptr<ms::Surface> create_surface();
-    void destroy_surface(std::shared_ptr<ms::Surface> surface);
+    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params);
+    void destroy_surface(std::weak_ptr<ms::Surface> surface);
     
   protected:
     ApplicationManager(const ApplicationManager&) = delete;

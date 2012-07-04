@@ -18,6 +18,7 @@
 
 #include "mir/frontend/application_manager.h"
 #include "mir/surfaces/application_surface_organiser.h"
+#include "mir/surfaces/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,8 +31,8 @@ namespace
 
 struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
-    MOCK_METHOD1(add_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface> surface));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
+    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
 };
 
 }
@@ -44,18 +45,21 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
         ".*");
 }
 
-TEST(ApplicationManager, add_and_remove_surface)
+TEST(ApplicationManager, create_and_destroy_surface)
 {
     using namespace ::testing;
+
+    std::shared_ptr<ms::Surface> dummy_surface(new ms::Surface());
     
     MockApplicationSurfaceOrganiser organizer;
     mf::ApplicationManager app_manager(&organizer);
+    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organizer, create_surface(_));
+    EXPECT_CALL(organizer, destroy_surface(_));
 
-    EXPECT_CALL(organizer, add_surface(_));
-    EXPECT_CALL(organizer, remove_surface(_));
-
-    std::shared_ptr<ms::Surface> surface{app_manager.create_surface()};
-    ASSERT_TRUE(surface.get() != nullptr);
+    ms::SurfaceCreationParameters params;
+    std::weak_ptr<ms::Surface> surface{app_manager.create_surface(params)};
+    ASSERT_TRUE(surface.lock().get() != nullptr);
     
     app_manager.destroy_surface(surface);
 }

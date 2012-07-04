@@ -24,6 +24,10 @@ namespace mir
 namespace surfaces
 {
 
+struct SurfaceCreationParameters
+{
+};
+
 class Surface
 {
 };

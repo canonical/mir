@@ -15,23 +15,23 @@
  */
 
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_stack_model.h"
 
 #include <cassert>
 
 namespace ms = mir::surfaces;
 
-ms::SurfaceController::SurfaceController(ms::SurfaceStack* surface_stack) : surface_stack(surface_stack)
+ms::SurfaceController::SurfaceController(ms::SurfaceStackModel* surface_stack) : surface_stack(surface_stack)
 {
     assert(surface_stack);
 }
 
-void ms::SurfaceController::add_surface(std::weak_ptr<ms::Surface> surface)
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(const ms::SurfaceCreationParameters& params)
 {
-    surface_stack->add_surface(surface);
+    return surface_stack->create_surface(params);
 }
 
-void ms::SurfaceController::remove_surface(std::weak_ptr<ms::Surface> surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> surface)
 {
-    surface_stack->remove_surface(surface);
+    surface_stack->destroy_surface(surface);
 }

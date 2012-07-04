@@ -27,14 +27,15 @@ namespace surfaces
 {
 
 class Surface;
+class SurfaceCreationParameters;
 
 class ApplicationSurfaceOrganiser
 {
  public:
     virtual ~ApplicationSurfaceOrganiser() {}
 
-    virtual void add_surface(std::weak_ptr<Surface> surface) = 0;
-    virtual void remove_surface(std::weak_ptr<Surface> surface) = 0;
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
 
  protected:
     ApplicationSurfaceOrganiser() = default;

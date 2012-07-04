@@ -23,12 +23,12 @@ ms::SurfacesToRender ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const
 	return SurfacesToRender();
 }
 
-void ms::SurfaceStack::add_surface(std::weak_ptr<ms::Surface> /*surface*/)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& /*params*/)
 {
-    // TODO
+    return std::weak_ptr<ms::Surface>();
 }
 
-void ms::SurfaceStack::remove_surface(std::weak_ptr<ms::Surface> /*surface*/)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> /*surface*/)
 {
     // TODO
 }
