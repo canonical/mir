@@ -11,14 +11,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACESTACK_H_
-#define MIR_SURFACES_SURFACESTACK_H_
-
-#include "scenegraph.h"
-#include "surface_stack_model.h"
+#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
 
 #include <memory>
 
@@ -30,18 +27,22 @@ namespace surfaces
 class Surface;
 class SurfaceCreationParameters;
 
-class SurfaceStack : public Scenegraph,
-                     public SurfaceStackModel
+class SurfaceStackModel
 {
-public:
-    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
-
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
+ public:
+    virtual ~SurfaceStackModel() {}
     
-    virtual void destroy_surface(std::weak_ptr<Surface> surface);
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    
+    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
+
+ protected:
+    SurfaceStackModel() = default;
+    SurfaceStackModel(const SurfaceStackModel&) = delete;
+    SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SURFACES_SURFACESTACK_H_ */
+#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_

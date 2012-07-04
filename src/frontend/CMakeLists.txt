@@ -12,11 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-ADD_LIBRARY( 
-  mirsurfaces STATIC
+set(
+  FRONTEND_SOURCES
+
+  application_manager.cpp
+)
+
+add_library( 
+  mirfrontend STATIC
   
-  surface_stack.cpp
-  surface_controller.cpp
+  ${FRONTEND_SOURCES}
 )

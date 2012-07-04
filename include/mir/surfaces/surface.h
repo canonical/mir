@@ -16,39 +16,23 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/input/grab_filter.h"
+#ifndef MIR_SURFACES_SURFACE_H_
+#define MIR_SURFACES_SURFACE_H_
 
-#include "mir/frontend/application.h"
-#include "mir/input/dispatcher.h"
-
-#include <cassert>
-#include <memory>
-
-namespace mf = mir::frontend;
-namespace mi = mir::input;
-
-void mi::GrabFilter::accept(Event* e) const
+namespace mir
 {
-    assert(e);
-    auto const i = grabs.begin();
+namespace surfaces
+{
 
-    if (i != grabs.end())
-    {
-        (*i)->on_event(e);
-    }
-    else
-    {
-        ChainingFilter::accept(e);
-    }
+struct SurfaceCreationParameters
+{
+};
+
+class Surface
+{
+};
+    
+}
 }
 
-mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& handler)
-{
-    auto i = grabs.insert(grabs.begin(), handler);
-    return i;
-}
-
-void mi::GrabFilter::release_grab(GrabHandle const& handle)
-{
-    grabs.erase(handle.i);
-}
+#endif // MIR_SURFACES_SURFACE_H_

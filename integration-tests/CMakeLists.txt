@@ -14,7 +14,10 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(input/)
+add_subdirectory(
+  frontend/
+  input/
+)
 
 add_executable(
   integration-tests 
@@ -24,7 +27,9 @@ target_link_libraries(
   integration-tests
 
   mircompositor
+  mirfrontend
   mirinput
+  mirsurfaces
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

@@ -12,11 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-ADD_LIBRARY( 
-  mirsurfaces STATIC
-  
-  surface_stack.cpp
-  surface_controller.cpp
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_manager.cpp
 )
+
+set(
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE)

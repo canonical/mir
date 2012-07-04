@@ -16,28 +16,34 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_APPLICATION_MANAGER_H_
-#define MIR_APPLICATION_MANAGER_H_
+#ifndef MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
+#define MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
 
 #include <memory>
 
 namespace mir
 {
+namespace surfaces
+{
 
-class Application;
+class Surface;
+class SurfaceCreationParameters;
 
-class ApplicationManager
+class ApplicationSurfaceOrganiser
 {
  public:
-    virtual ~ApplicationManager() {}
+    virtual ~ApplicationSurfaceOrganiser() {}
+
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
 
  protected:
-    ApplicationManager() = default;
-
-    ApplicationManager(const ApplicationManager&) = delete;
-    ApplicationManager& operator=(const ApplicationManager&) = delete;
+    ApplicationSurfaceOrganiser() = default;
+    ApplicationSurfaceOrganiser(const ApplicationSurfaceOrganiser&) = delete;
+    ApplicationSurfaceOrganiser& operator=(const ApplicationSurfaceOrganiser&) = delete;
 };
 
 }
+}
 
-#endif // MIR_APPLICATION_MANAGER_H_
+#endif // MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
