@@ -32,21 +32,6 @@ mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* orga
     assert(surface_organiser);
 }
 
-void mf::ApplicationManager::grab_input_for_application(std::weak_ptr<mf::Application> app)
-{
-    grabbing_application = app;
-}
-
-std::weak_ptr<mf::Application> mf::ApplicationManager::get_grabbing_application()
-{
-    return grabbing_application;
-}
-
-void mf::ApplicationManager::release_grab()
-{
-    grabbing_application.reset();
-}
-
 std::weak_ptr<ms::Surface> mf::ApplicationManager::create_surface(const ms::SurfaceCreationParameters& params)
 {
     return surface_organiser->create_surface(params);

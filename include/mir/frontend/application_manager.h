@@ -19,7 +19,6 @@
 #ifndef MIR_FRONTEND_APPLICATION_MANAGER_H_
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
-#include "mir/frontend/application.h"
 #include "mir/frontend/services/surface_factory.h"
 
 #include <memory>
@@ -46,11 +45,6 @@ class ApplicationManager : public frontend::services::SurfaceFactory
     explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser);
     virtual ~ApplicationManager() {}
 
-    // From InputGrabController
-    void grab_input_for_application(std::weak_ptr<Application> app);
-    std::weak_ptr<Application> get_grabbing_application();
-    void release_grab();
-
     // From SurfaceFactory
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params);
     void destroy_surface(std::weak_ptr<ms::Surface> surface);
@@ -60,7 +54,6 @@ class ApplicationManager : public frontend::services::SurfaceFactory
     ApplicationManager& operator=(const ApplicationManager&) = delete;
 
   private:
-    std::weak_ptr<Application> grabbing_application;
     ms::ApplicationSurfaceOrganiser* surface_organiser;
 };
 
