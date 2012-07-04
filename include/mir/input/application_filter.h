@@ -16,25 +16,28 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+
+#ifndef MIR_INPUT_APPLICATION_FILTER_H_
+#define MIR_INPUT_APPLICATION_FILTER_H_
+
 #include "mir/input/filter.h"
 
-#include <cassert>
-
-namespace mi = mir::input;
-
-void mi::NullFilter::accept(Event*) const
+namespace mir
 {
+
+namespace input
+{
+
+class ApplicationFilter : public ChainingFilter
+{
+public:
+    //using ChainingFilter::ChainingFilter;
+    ApplicationFilter(std::shared_ptr<Filter> const& next_link);
+
+    void accept(Event* e) const;
+};
+
+}
 }
 
-mi::ChainingFilter::ChainingFilter(std::shared_ptr<Filter> const& next_link)
-    :
-    next_link(next_link)
-{
-    assert(this->next_link.get());
-}
-
-void mi::ChainingFilter::accept(Event* e) const
-{
-    assert(e);
-    next_link->accept(e);
-}
+#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */

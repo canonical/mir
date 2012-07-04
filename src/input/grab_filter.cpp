@@ -27,17 +27,28 @@
 
 namespace mi = mir::input;
 
-void mi::GrabFilter::accept(Event* e)
+void mi::GrabFilter::accept(Event* e) const
 {
     assert(e);
-    ChainingFilter::accept(e);
+    auto const i = grabs.begin();
+
+    if (i != grabs.end())
+    {
+        (*i)->on_event(e);
+    }
+    else
+    {
+        ChainingFilter::accept(e);
+    }
 }
 
-mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& )
+mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& handler)
 {
-	return mi::GrabHandle();
+    auto i = grabs.insert(grabs.begin(), handler);
+    return i;
 }
 
-void mi::GrabFilter::release_grab(GrabHandle const& )
+void mi::GrabFilter::release_grab(GrabHandle const& handle)
 {
+    grabs.erase(handle.i);
 }

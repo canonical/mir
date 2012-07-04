@@ -16,25 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/filter.h"
-
-#include <cassert>
+#include "mir/input/shell_filter.h"
 
 namespace mi = mir::input;
 
-void mi::NullFilter::accept(Event*) const
+mi::ShellFilter::ShellFilter(std::shared_ptr<Filter> const& next_link) :
+    ChainingFilter(next_link)
 {
 }
 
-mi::ChainingFilter::ChainingFilter(std::shared_ptr<Filter> const& next_link)
-    :
-    next_link(next_link)
+void mi::ShellFilter::accept(Event* e) const
 {
-    assert(this->next_link.get());
+    ChainingFilter::accept(e);
 }
 
-void mi::ChainingFilter::accept(Event* e) const
-{
-    assert(e);
-    next_link->accept(e);
-}
+
+
+
