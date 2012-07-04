@@ -35,4 +35,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
-add_test(unit-tests ${CMAKE_CURRENT_BINARY_DIR}/unit-tests)
+compiz_discover_tests(unit-tests)
