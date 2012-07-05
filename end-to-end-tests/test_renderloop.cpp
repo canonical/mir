@@ -18,20 +18,13 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
-#include "mir/compositor/buffer_manager.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/surfaces/scenegraph.h"
+#include "mir/display_server.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/surfaces/surface_stack.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 namespace
@@ -43,28 +36,13 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-class DisplayServer
-{
-public:
-    DisplayServer() : comp(&scenegraph) {}
-
-    virtual void render(mg::Display* display)
-    {
-        comp.render(display);
-    }
-private:
-
-    ms::SurfaceStack scenegraph;
-    mc::Compositor comp;
-};
-
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    DisplayServer display_server;
+    mir::DisplayServer display_server;
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);
