@@ -16,6 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mock_buffer.h"
+
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
@@ -63,41 +65,20 @@ const geom::Height height{768};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
-struct MockBuffer : public mc::Buffer
-{
- public:
-	MockBuffer()
-	{
-	    using namespace testing;
-		ON_CALL(*this, width()).       WillByDefault(Return(::width));
-		ON_CALL(*this, height()).      WillByDefault(Return(::height));
-		ON_CALL(*this, stride()).      WillByDefault(Return(::stride));
-		ON_CALL(*this, pixel_format()).WillByDefault(Return(::pixel_format));
-	}
-
-    MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(height, geom::Height());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
-
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(bind_to_texture, void());
-};
 }
 
 TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
     
-    MockBuffer mock_buffer;
-    std::shared_ptr<MockBuffer> default_buffer(
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
     MockGraphicBufferAllocator graphic_allocator;
     MockBufferAllocationStrategy allocation_strategy(&graphic_allocator);
     mc::BufferBundleManager buffer_bundle_manager(
-        &allocation_strategy,
-        &graphic_allocator);
+        &allocation_strategy);
 
     /* note: this is somewhat of a weak test, some create_clients will create a varied amount
              of buffers */
@@ -115,9 +96,5 @@ TEST(buffer_manager, create_buffer)
             pixel_format)};
     
     EXPECT_TRUE(bundle != nullptr);
-    EXPECT_FALSE(buffer_bundle_manager.is_empty()); 
-
-    /* this will destroy the buffers that are of shared_ptr type, but this is resource allocation is tested in the bufferManagerClient tests */
-    buffer_bundle_manager.destroy_buffer_bundle(bundle);
-    EXPECT_TRUE(buffer_bundle_manager.is_empty()); 
+    
 }

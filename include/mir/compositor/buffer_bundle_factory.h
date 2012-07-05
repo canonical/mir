@@ -43,10 +43,7 @@ class BufferBundleFactory
         geometry::Height height,
         PixelFormat pf) = 0;
 
-    virtual void destroy_buffer_bundle(
-        std::shared_ptr<BufferBundle> bundle) = 0;
-    
- protected:
+  protected:
     BufferBundleFactory() = default;
     BufferBundleFactory(const BufferBundleFactory&) = delete;
     BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;

@@ -42,9 +42,6 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
             mg::Height height,
             mc::PixelFormat pf));
 
-    MOCK_METHOD1(
-        destroy_buffer_bundle,
-        void(std::shared_ptr<mc::BufferBundle> bundle));
 };
 
 }
@@ -61,10 +58,7 @@ TEST(
         create_buffer_bundle(_, _, _))
             .Times(AtLeast(1))
             .WillRepeatedly(Return(std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle())));
-    EXPECT_CALL(
-        buffer_bundle_factory,
-        destroy_buffer_bundle(_)).Times(AtLeast(1));
-    
+     
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         ms::a_surface().of_size(mg::Width(1024), mg::Height(768)));

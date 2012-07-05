@@ -31,13 +31,10 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::BufferBundleManager::BufferBundleManager(
-    BufferAllocationStrategy* strategy,
-    GraphicBufferAllocator* gr_allocator)
-        : buffer_allocation_strategy(strategy),
-          gr_allocator(gr_allocator)
+    BufferAllocationStrategy* strategy)
+        : buffer_allocation_strategy(strategy)
 {
     assert(strategy);
-    assert(gr_allocator);
 }
 
 
@@ -48,8 +45,7 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
 {
     BufferBundle* new_bundle_raw = new mc::BufferBundle(); 
     std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
-    bundle_list.push_back(bundle);
-
+    
     buffer_allocation_strategy->allocate_buffers_for_bundle(
         width,
         height,
@@ -57,14 +53,4 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
         new_bundle_raw);
     
     return bundle;
-}
-
-void mc::BufferBundleManager::destroy_buffer_bundle(std::shared_ptr<mc::BufferBundle> bundle) {
-
-    bundle_list.remove(bundle);
- 
-}
-
-bool mc::BufferBundleManager::is_empty() {
-    return bundle_list.empty();
 }

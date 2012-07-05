@@ -13,37 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
-
-#include "drawer.h"
+#ifndef MIR_GRAPHICS_TEXTURE_H_
+#define MIR_GRAPHICS_TEXTURE_H_
 
 namespace mir
 {
-namespace surfaces
+namespace graphics
 {
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-}
 
-namespace compositor
+struct Texture
 {
-class Compositor : public Drawer
-{
-public:
-    explicit Compositor(surfaces::Scenegraph* scenegraph);
-
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
 };
 
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_GRAPHICS_TEXTURE_H_

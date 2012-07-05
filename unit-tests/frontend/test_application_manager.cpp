@@ -34,8 +34,10 @@ namespace
 
 struct MockBufferTextureBinder : mc::BufferTextureBinder
 {
-    MOCK_METHOD0(bind_back_buffer, void());
-    MOCK_METHOD0(release_back_buffer, void());
+    MOCK_METHOD0(lock_back_buffer, void());
+    MOCK_METHOD0(unlock_back_buffer, void());
+
+    MOCK_METHOD0(back_buffer, std::shared_ptr<mc::Buffer>());
 };
 
 struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser

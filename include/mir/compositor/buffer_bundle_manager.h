@@ -43,9 +43,7 @@ class BufferBundleManager : public BufferBundleFactory
 {
  public:
 
-    explicit BufferBundleManager(
-        BufferAllocationStrategy* strategy,
-        GraphicBufferAllocator* gr_allocator);
+    explicit BufferBundleManager(BufferAllocationStrategy* strategy);
     
     virtual ~BufferBundleManager() {}
 
@@ -55,15 +53,8 @@ class BufferBundleManager : public BufferBundleFactory
         geometry::Height height,
         PixelFormat pf);
 
-    virtual void destroy_buffer_bundle(std::shared_ptr<BufferBundle> bundle);
-
-    virtual bool is_empty();
-   
  private:
     BufferAllocationStrategy* buffer_allocation_strategy;
-    GraphicBufferAllocator* const gr_allocator;
-
-    std::list<std::shared_ptr<BufferBundle>> bundle_list; 
 
 };
 

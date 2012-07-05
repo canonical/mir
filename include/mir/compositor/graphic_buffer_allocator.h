@@ -34,7 +34,6 @@ class GraphicBufferAllocator
 			geometry::Height height,
 			PixelFormat pf) = 0;
 
-        virtual void free_buffer(std::shared_ptr<Buffer> buffer) = 0;
 };
 
 }
