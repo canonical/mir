@@ -18,8 +18,7 @@
 add_executable(
   end-to-end-tests 
   
-  test_renderloop.cpp 
-  test_input_dispatch.cpp)
+  test_renderloop.cpp)
 
 target_link_libraries(
   end-to-end-tests
