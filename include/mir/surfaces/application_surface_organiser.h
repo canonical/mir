@@ -16,55 +16,34 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_FILTER_H_
-#define MIR_INPUT_FILTER_H_
+#ifndef MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
+#define MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace input
+namespace surfaces
 {
 
-class Event;
+class Surface;
+class SurfaceCreationParameters;
 
-class Filter
+class ApplicationSurfaceOrganiser
 {
-public:
+ public:
+    virtual ~ApplicationSurfaceOrganiser() {}
 
-    virtual void accept(Event* e) const = 0;
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
 
-protected:
-    Filter() = default;
-    ~Filter() = default;
-
-    Filter(Filter const&) = delete;
-    Filter& operator=(Filter const&) = delete;
+ protected:
+    ApplicationSurfaceOrganiser() = default;
+    ApplicationSurfaceOrganiser(const ApplicationSurfaceOrganiser&) = delete;
+    ApplicationSurfaceOrganiser& operator=(const ApplicationSurfaceOrganiser&) = delete;
 };
 
-class NullFilter : public Filter
-{
-public:
-
-    virtual void accept(Event* e) const;
-};
-
-class ChainingFilter : public Filter
-{
-public:
-
-    ChainingFilter(std::shared_ptr<Filter> const& next_link);
-
-    virtual void accept(Event* e) const;
-
-protected:
-    ~ChainingFilter() = default;
-    ChainingFilter() = delete;
-
-private:
-    std::shared_ptr<Filter> const next_link;
-};
 }
 }
 
-#endif /* MIR_INPUT_FILTER_H_ */
+#endif // MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_

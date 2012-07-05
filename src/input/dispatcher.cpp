@@ -26,19 +26,12 @@
 
 namespace mi = mir::input;
 
-mi::Dispatcher::Dispatcher(TimeSource* time_source,
-                           std::unique_ptr<mi::Dispatcher::ShellFilter> shell,
-                           std::unique_ptr<mi::Dispatcher::GrabFilter> grab,
-                           std::unique_ptr<mi::Dispatcher::ApplicationFilter> application)
+mi::Dispatcher::Dispatcher(TimeSource* time_source, std::shared_ptr<Filter> const& filter_chain)
         : time_source(time_source),
-          shell_filter(std::move(shell)),
-          grab_filter(std::move(grab)),
-          application_filter(std::move(application))
+          filter_chain(filter_chain)
 {
     assert(time_source);
-    assert(shell_filter);
-    assert(grab_filter);
-    assert(application_filter);
+    assert(filter_chain);
 }
 
 // Implemented from EventHandler
@@ -50,13 +43,7 @@ void mi::Dispatcher::on_event(mi::Event* e)
     
     e->set_system_timestamp(time_source->sample());
     
-    if (shell_filter->accept(e) == mi::Filter::Result::stop_processing)
-        return;
-
-    if (grab_filter->accept(e) == mi::Filter::Result::stop_processing)
-        return;
-
-    application_filter->accept(e);
+    filter_chain->accept(e);
 }
 
 mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> device)

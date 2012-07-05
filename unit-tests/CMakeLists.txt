@@ -17,8 +17,10 @@
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
 
 add_subdirectory(compositor/)
+add_subdirectory(frontend/)
 add_subdirectory(geometry/)
-add_subdirectory(input)
+add_subdirectory(input/)
+add_subdirectory(surfaces/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
@@ -26,7 +28,10 @@ target_link_libraries(
   unit-tests
 
   mircompositor
+  mirfrontend
   mirinput
+  mirsurfaces
+
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

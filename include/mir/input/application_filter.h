@@ -16,41 +16,28 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
-#define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
+
+#ifndef MIR_INPUT_APPLICATION_FILTER_H_
+#define MIR_INPUT_APPLICATION_FILTER_H_
+
+#include "mir/input/filter.h"
 
 namespace mir
 {
 
-namespace surfaces
-{
-class SurfacesToRender;
-}
-
-namespace graphics
-{
-class Texture;
-}
-
-namespace compositor
+namespace input
 {
 
-
-class BufferTextureBinder
+class ApplicationFilter : public ChainingFilter
 {
- public:
-    virtual ~BufferTextureBinder() {}
-    
-    virtual void bind_back_buffer() = 0;
-    virtual void release_back_buffer() = 0;
-    
-protected:
-    BufferTextureBinder() = default;
-    BufferTextureBinder(BufferTextureBinder const&) = delete;
-    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+public:
+    //using ChainingFilter::ChainingFilter;
+    ApplicationFilter(std::shared_ptr<Filter> const& next_link);
+
+    void accept(Event* e) const;
 };
+
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_ */
+#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */

@@ -23,10 +23,10 @@
 #include "buffer_texture_binder.h"
 #include "buffer.h"
 
-#include <vector>
 #include <atomic>
 #include <mutex>
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -35,20 +35,21 @@ namespace compositor
 
 class BufferBundle : public BufferTextureBinder
 {
-public:
+ public:
     BufferBundle();
     ~BufferBundle();
 
     void add_buffer(std::shared_ptr<Buffer> buffer);
     int remove_all_buffers();
 
+    // From BufferTextureBinder
     void bind_back_buffer();
     void release_back_buffer();
 
     std::shared_ptr<Buffer> dequeue_client_buffer();
     void queue_client_buffer(std::shared_ptr<Buffer> buffer);
 
-private:
+ private:
     std::vector<std::shared_ptr<Buffer>> buffer_list;
     std::mutex buffer_list_guard;
 

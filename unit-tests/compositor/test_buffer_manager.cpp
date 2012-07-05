@@ -17,7 +17,8 @@
  */
 
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
@@ -36,6 +37,18 @@ struct EmptyDeleter
     void operator()(T* )
     {
     }    
+};
+
+struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
+{
+    MockBufferAllocationStrategy(mc::GraphicBufferAllocator* allocator)
+            : mc::BufferAllocationStrategy(allocator)
+    {
+    }
+
+    MOCK_METHOD4(
+        allocate_buffers_for_bundle,
+        void(geom::Width, geom::Height, mc::PixelFormat, mc::BufferBundle* bundle));
 };
 
 struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
@@ -81,23 +94,30 @@ TEST(buffer_manager, create_buffer)
         &mock_buffer,
         EmptyDeleter()); 
     MockGraphicBufferAllocator graphic_allocator;
-    mc::BufferManager buffer_manager(&graphic_allocator);
+    MockBufferAllocationStrategy allocation_strategy(&graphic_allocator);
+    mc::BufferBundleManager buffer_bundle_manager(
+        &allocation_strategy,
+        &graphic_allocator);
 
     /* note: this is somewhat of a weak test, some create_clients will create a varied amount
              of buffers */
-    EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
-    		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
+    EXPECT_CALL(
+        graphic_allocator,
+        alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
+            .Times(0);
 
-    std::shared_ptr<mc::BufferBundle> client = nullptr;
-    client = buffer_manager.create_client(
-        width,
-        height,
-        pixel_format);
-    EXPECT_TRUE(client != nullptr);
-    EXPECT_FALSE(buffer_manager.is_empty()); 
+    EXPECT_CALL(allocation_strategy, allocate_buffers_for_bundle(Eq(width), Eq(height), Eq(pixel_format), _)).Times(AtLeast(1));
+    
+    std::shared_ptr<mc::BufferBundle> bundle{
+        buffer_bundle_manager.create_buffer_bundle(
+            width,
+            height,
+            pixel_format)};
+    
+    EXPECT_TRUE(bundle != nullptr);
+    EXPECT_FALSE(buffer_bundle_manager.is_empty()); 
 
     /* this will destroy the buffers that are of shared_ptr type, but this is resource allocation is tested in the bufferManagerClient tests */
-    buffer_manager.destroy_client(client);
-    EXPECT_TRUE(buffer_manager.is_empty()); 
-
+    buffer_bundle_manager.destroy_buffer_bundle(bundle);
+    EXPECT_TRUE(buffer_bundle_manager.is_empty()); 
 }

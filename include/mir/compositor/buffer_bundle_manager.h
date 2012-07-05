@@ -18,10 +18,11 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
+#define MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
 
-#include "buffer.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/geometry/dimensions.h"
 
 #include <cstdint>
@@ -34,26 +35,35 @@ namespace mir
 namespace compositor
 {
 
-class GraphicBufferAllocator;
+class BufferAllocationStrategy;
 class BufferBundle;
-class BufferManager
+class GraphicBufferAllocator;
+
+class BufferBundleManager : public BufferBundleFactory
 {
  public:
 
-    explicit BufferManager(GraphicBufferAllocator* gr_allocator);
-    virtual ~BufferManager() {}
+    explicit BufferBundleManager(
+        BufferAllocationStrategy* strategy,
+        GraphicBufferAllocator* gr_allocator);
+    
+    virtual ~BufferBundleManager() {}
 
-    virtual std::shared_ptr<BufferBundle> create_client(geometry::Width width,
-                                   geometry::Height height,
-                                   PixelFormat pf);
+    // From BufferBundleFactory
+    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+        geometry::Width width,
+        geometry::Height height,
+        PixelFormat pf);
+
+    virtual void destroy_buffer_bundle(std::shared_ptr<BufferBundle> bundle);
 
     virtual bool is_empty();
-    virtual void destroy_client(std::shared_ptr<BufferBundle> client);
-
+   
  private:
+    BufferAllocationStrategy* buffer_allocation_strategy;
     GraphicBufferAllocator* const gr_allocator;
 
-    std::list<std::shared_ptr<BufferBundle>> client_list; 
+    std::list<std::shared_ptr<BufferBundle>> bundle_list; 
 
 };
 
@@ -61,4 +71,4 @@ class BufferManager
 }
 
 
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_ */

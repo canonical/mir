@@ -12,13 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-ADD_LIBRARY( 
-  mircompositor STATIC
+set(
+  FRONTEND_SOURCES
+
+  application_manager.cpp
+)
+
+add_library( 
+  mirfrontend STATIC
   
-  compositor.cpp
-  buffer_bundle_manager.cpp
-  buffer_bundle.cpp
+  ${FRONTEND_SOURCES}
 )

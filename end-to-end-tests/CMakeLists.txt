@@ -17,6 +17,7 @@
 
 add_executable(
   end-to-end-tests 
+  
   test_renderloop.cpp 
   test_input_dispatch.cpp)
 
@@ -24,6 +25,7 @@ target_link_libraries(
   end-to-end-tests
   
   mircompositor
+  mirfrontend
   mirinput
   mirsurfaces
 

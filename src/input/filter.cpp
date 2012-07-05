@@ -13,42 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/grab_filter.h"
-
-#include "mir/frontend/application.h"
-#include "mir/input/dispatcher.h"
+#include "mir/input/filter.h"
 
 #include <cassert>
-#include <memory>
 
-namespace mf = mir::frontend;
 namespace mi = mir::input;
 
-void mi::GrabFilter::accept(Event* e) const
+void mi::NullFilter::accept(Event*) const
+{
+}
+
+mi::ChainingFilter::ChainingFilter(std::shared_ptr<Filter> const& next_link)
+    :
+    next_link(next_link)
+{
+    assert(this->next_link.get());
+}
+
+void mi::ChainingFilter::accept(Event* e) const
 {
     assert(e);
-    auto const i = grabs.begin();
-
-    if (i != grabs.end())
-    {
-        (*i)->on_event(e);
-    }
-    else
-    {
-        ChainingFilter::accept(e);
-    }
-}
-
-mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& handler)
-{
-    auto i = grabs.insert(grabs.begin(), handler);
-    return i;
-}
-
-void mi::GrabFilter::release_grab(GrabHandle const& handle)
-{
-    grabs.erase(handle.i);
+    next_link->accept(e);
 }

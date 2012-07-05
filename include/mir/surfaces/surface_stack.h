@@ -18,17 +18,46 @@
 #define MIR_SURFACES_SURFACESTACK_H_
 
 #include "scenegraph.h"
+#include "surface_stack_model.h"
+
+#include <memory>
 
 namespace mir
 {
+namespace compositor
+{
+
+class BufferBundleFactory;
+
+}
 namespace surfaces
 {
 
-class SurfaceStack : public Scenegraph
+namespace mc = mir::compositor;
+
+class Surface;
+class SurfaceCreationParameters;
+
+class SurfaceStack : public Scenegraph,
+                     public SurfaceStackModel
 {
-public:
-	virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
+ public:
+    explicit SurfaceStack(mc::BufferBundleFactory* bb_factory);
+    
+    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
+
+    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
+    
+    virtual void destroy_surface(std::weak_ptr<Surface> surface);
+
+ protected:
+    SurfaceStack(const SurfaceStack&) = delete;
+    SurfaceStack& operator=(const SurfaceStack&) = delete;
+
+ private:
+    mc::BufferBundleFactory* buffer_bundle_factory;
 };
+
 }
 }
 

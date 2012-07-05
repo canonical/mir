@@ -50,6 +50,9 @@ TEST_F(InputDispatchFixture, filters_are_always_invoked_in_order_and_events_are_
         return result;
     };
     
+    EXPECT_CALL(*mock_null_filter, accept(Truly(is_weakly_ordered)))
+            .Times(AnyNumber())
+            .RetiresOnSaturation();
     EXPECT_CALL(*mock_shell_filter, accept(Truly(is_weakly_ordered)))
             .Times(AnyNumber())
             .RetiresOnSaturation();

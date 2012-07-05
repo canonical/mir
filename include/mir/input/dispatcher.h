@@ -35,23 +35,6 @@ class TimeSource;
 namespace input
 {
 
-namespace detail
-{
-    enum class FilterType
-    {
-        shell,
-        grab,
-        application
-    };
-}
-
-template<detail::FilterType> 
-class TaggedFilter : public Filter
-{
- protected:
-    TaggedFilter() = default;
-};
-
 class Event;
 class LogicalDevice;
 
@@ -61,15 +44,7 @@ class Dispatcher : public EventHandler
  public:    
     typedef DeviceCollection::iterator DeviceToken;
 
-    typedef TaggedFilter<detail::FilterType::shell> ShellFilter;
-    typedef TaggedFilter<detail::FilterType::grab> GrabFilter;
-    typedef TaggedFilter<detail::FilterType::application> ApplicationFilter;
-    
-    Dispatcher(TimeSource* time_source,
-               std::unique_ptr<ShellFilter> shell_filter,
-               std::unique_ptr<GrabFilter> grab_filter,
-               std::unique_ptr<ApplicationFilter> application_filter);
-
+    Dispatcher(TimeSource* time_source, std::shared_ptr<Filter> const& filter_chain);
     // Implemented from EventHandler
     void on_event(Event* e);
 
@@ -80,9 +55,7 @@ class Dispatcher : public EventHandler
  private:
     TimeSource* time_source;
     
-    std::unique_ptr<ShellFilter> shell_filter;
-    std::unique_ptr<GrabFilter> grab_filter;
-    std::unique_ptr<ApplicationFilter> application_filter;
+    std::shared_ptr<Filter> filter_chain;
 
     DeviceCollection devices;
     std::mutex dispatcher_guard;

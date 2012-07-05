@@ -110,17 +110,12 @@ TEST(buffer_bundle, add_buffers_and_bind)
     EXPECT_CALL(mock_buffer, lock())
             .Times(AtLeast(num_iterations));
 
-    int i;
-    bool exception_thrown = false;
-    for(i=0; i<num_iterations; i++) {
+    for(int i=0; i<num_iterations; i++) {
         /* if binding doesn't work, this is a case where we may have an exception */
-        try {
-            buffer_bundle.bind_back_buffer();
-            buffer_bundle.release_back_buffer();
-        } catch (int) {
-            exception_thrown = true;
-        }
-        EXPECT_FALSE(exception_thrown);
+        ASSERT_NO_THROW({
+                buffer_bundle.bind_back_buffer();
+                buffer_bundle.release_back_buffer();
+            });
     }
 }
 

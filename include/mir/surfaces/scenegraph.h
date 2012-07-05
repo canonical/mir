@@ -31,7 +31,7 @@ class Scenegraph
 {
 public:
 	virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
-
+        
 protected:
 	Scenegraph() = default;
 	~Scenegraph() = default;
