@@ -15,7 +15,7 @@
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 add_subdirectory(
-  #frontend/
+  frontend/
   input/
 )
 
