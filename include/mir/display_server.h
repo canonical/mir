@@ -36,6 +36,7 @@ public:
     }
 private:
 
+    //TODO remove implementation details from public view
     surfaces::SurfaceStack scenegraph;
     compositor::Compositor comp;
 };

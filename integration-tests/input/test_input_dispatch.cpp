@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "../../end-to-end-tests/input_dispatch_fixture.h"
-#include "../../end-to-end-tests/mock_input_device.h"
+#include "input_dispatch_fixture.h"
+#include "mock_input_device.h"
 
 #include "mir/time_source.h"
 #include "mir/input/dispatcher.h"
