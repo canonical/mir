@@ -38,4 +38,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
-add_test(integration-tests ${CMAKE_CURRENT_BINARY_DIR}/integration-tests)
+mir_discover_tests(integration-tests)
