@@ -43,21 +43,34 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
+class DisplayServer
+{
+public:
+    DisplayServer() : comp(&scenegraph) {}
+
+    virtual void render(mg::Display* display)
+    {
+        comp.render(display);
+    }
+private:
+
+    ms::SurfaceStack scenegraph;
+    mc::Compositor comp;
+};
+
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    ms::SurfaceStack scenegraph;
+    DisplayServer display_server;
+
     MockDisplay display;
-
-    mc::Drawer&& comp = mc::Compositor(&scenegraph);
-
     EXPECT_CALL(display, notify_update()).Times(1);
 
     EXPECT_CALL(display, view_area()).Times(AtLeast(1))
-			.WillRepeatedly(Return(geom::Rectangle()));
+            .WillRepeatedly(Return(geom::Rectangle()));
 
-    comp.render(&display);
+    display_server.render(&display);
 }
