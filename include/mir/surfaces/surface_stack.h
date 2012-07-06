@@ -48,12 +48,10 @@ class SurfaceStack : public Scenegraph,
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
 
- protected:
+ private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
-
- private:
-    compositor::BufferBundleFactory* buffer_bundle_factory;
+    compositor::BufferBundleFactory* const buffer_bundle_factory;
 };
 
 }
