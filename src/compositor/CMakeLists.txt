@@ -24,8 +24,6 @@ set(
   buffer_swapper_double.cpp
 )
 
-add_subdirectory(android/)
-
 ADD_LIBRARY( 
   mircompositor STATIC
   

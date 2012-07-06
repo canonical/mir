@@ -37,11 +37,24 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    std::shared_ptr<mc::Buffer> alloc_buffer(
+        geom::Width /*width*/,
+        geom::Height /*height*/,
+        mc::PixelFormat /*pf*/)
+    {
+        return std::shared_ptr<mc::Buffer>();
+    }
+};
+
+
 class DisplayServerFixture : public ::testing::Test
 {
 public:
     DisplayServerFixture()
-            : allocation_strategy(mc::GraphicBufferAllocatorFactory::create()),
+            : allocation_strategy(std::make_shared<StubGraphicBufferAllocator>()),
               display_server(&allocation_strategy)
     {
     }
