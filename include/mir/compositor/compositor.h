@@ -34,7 +34,7 @@ namespace compositor
 class Compositor : public Drawer
 {
 public:
-    explicit Compositor( surfaces::Scenegraph* scenegraph );
+    explicit Compositor(surfaces::Scenegraph* scenegraph);
 
     virtual void render(graphics::Display* display);
 

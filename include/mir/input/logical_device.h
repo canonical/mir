@@ -102,7 +102,7 @@ class LogicalDevice : public EventProducer {
      * @throw Throws NoAxisForTypeException if device does not support
      * the axis type.
      */
-    virtual const std::map<AxisType,Axis>& get_axes() const = 0;
+    virtual const std::map<AxisType, Axis>& get_axes() const = 0;
 };
 
 } // input

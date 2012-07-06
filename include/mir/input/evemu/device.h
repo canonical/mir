@@ -61,7 +61,7 @@ class EvemuDevice : public LogicalDevice {
 
     virtual const mir::input::PositionInfo& get_position_info() const;
 
-    virtual const std::map<AxisType,Axis>& get_axes() const;
+    virtual const std::map<AxisType, Axis>& get_axes() const;
 
     EvemuDevice(const EvemuDevice&) = delete;
     EvemuDevice& operator=(const EvemuDevice&) = delete;

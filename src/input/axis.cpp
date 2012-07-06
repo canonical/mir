@@ -34,7 +34,7 @@ namespace input
 
 std::ostream& operator<<(std::ostream& out, const mi::Mode& m)
 {
-    switch(m)
+    switch (m)
     {
         case mi::Mode::none: out << "none";
             break;
