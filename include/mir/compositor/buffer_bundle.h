@@ -33,7 +33,7 @@ namespace mir
 {
 namespace compositor
 {
-
+class BufferSwapper;
 class BufferBundle : public BufferTextureBinder,
                      public BufferQueue
 {
@@ -43,6 +43,8 @@ class BufferBundle : public BufferTextureBinder,
 
     void add_buffer(std::shared_ptr<Buffer> buffer);
     int remove_all_buffers();
+
+    void set_swap_pattern( BufferSwapper *pattern);
 
     std::shared_ptr<Buffer> dequeue_client_buffer();
     void queue_client_buffer(std::shared_ptr<Buffer> buffer);
