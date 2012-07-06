@@ -22,9 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_ALLOCATION_STRATEGY_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/geometry/dimensions.h"
 
-#include <cassert>
 #include <memory>
 
 namespace mir
@@ -38,23 +36,21 @@ class BufferBundle;
 class BufferAllocationStrategy
 {
  public:
-    virtual ~BufferAllocationStrategy() {}
 
     virtual void allocate_buffers_for_bundle(
         geometry::Width width,
         geometry::Height height,
         PixelFormat pf,
         BufferBundle* bundle) = 0;
-    
+
  protected:
-    BufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> allocator) : gr_allocator(allocator)
-    {
-        assert(allocator);
-    }
+    ~BufferAllocationStrategy() {}
+    BufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> const& allocator);
+
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
 
-    std::shared_ptr<GraphicBufferAllocator> graphic_buffer_allocator()
+    std::shared_ptr<GraphicBufferAllocator> const& graphic_buffer_allocator() const
     {
         return gr_allocator;
     }

@@ -37,11 +37,11 @@ public:
     static_assert(
         count >= 2,
         "Buffer bundles with less than 2 buffers are not allowed");
-    
+
     static const unsigned int buffer_count = count;
 
     FixedCountBufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> gr_alloc) : BufferAllocationStrategy(gr_alloc)
-    {        
+    {
     }
 
     void allocate_buffers_for_bundle(
@@ -50,8 +50,6 @@ public:
         PixelFormat pf,
         BufferBundle* bundle)
     {
-        assert(bundle);
-
         for(unsigned int i = 0; i < buffer_count; i++)
         {
             bundle->add_buffer(
