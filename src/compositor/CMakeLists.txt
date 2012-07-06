@@ -21,4 +21,5 @@ ADD_LIBRARY(
   compositor.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
+  buffer_swapper_double.cpp
 )
