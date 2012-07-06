@@ -19,58 +19,27 @@
 #ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
 #define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
 
-#include "mir/compositor/buffer.h"
-#include "mir/graphics/texture.h"
-
-#include <cassert>
 #include <memory>
 
 namespace mir
 {
-
-namespace surfaces
-{
-class SurfacesToRender;
-}
+namespace graphics { class Texture; }
 
 namespace compositor
 {
+class Buffer;
 
 class BufferTextureBinder
 {
  public:
-        
-    virtual ~BufferTextureBinder() {}
-    
-    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer()
-    {
-        Deleter deleter(this);
-        back_buffer()->lock();
-        return std::shared_ptr<graphics::Texture>(
-            back_buffer()->bind_to_texture(),
-            deleter);
-    }
-    
-protected:
 
-    struct Deleter
-    {
-        explicit Deleter(BufferTextureBinder* binder) : binder(binder)
-        {
-            assert(binder);
-            binder->lock_back_buffer();
-        }
+    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
-        void operator()(graphics::Texture* texture) const
-        {
-            delete texture;
-            binder->unlock_back_buffer();            
-        }
-        
-        BufferTextureBinder* binder;
-    };
-    
+ protected:
     BufferTextureBinder() = default;
+    ~BufferTextureBinder() {}
+
+ private:
     BufferTextureBinder(BufferTextureBinder const&) = delete;
     BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
 
