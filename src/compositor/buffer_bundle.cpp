@@ -72,12 +72,18 @@ void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
     std::lock_guard<mc::Buffer> lg_compositor_buffer(*compositor_buffer);
     std::lock_guard<mc::Buffer> lg_client_buffer(*client_buffer);
 
+    buffer->unlock();
+
     std::swap(compositor_buffer, client_buffer);
     std::swap(compositor_buffer, buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
+    // TODO: This is a very dumb strategy for locking
+    std::lock_guard<mc::Buffer> lg_compositor_buffer(*compositor_buffer);
+    std::lock_guard<mc::Buffer> lg_client_buffer(*client_buffer);
+
     client_buffer->lock();
     return client_buffer;
 }
