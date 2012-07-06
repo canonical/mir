@@ -31,12 +31,6 @@ ms::Surface::Surface(const ms::SurfaceCreationParameters& /*params*/,
     assert(buffer_texture_binder);
 }
 
-ms::SurfaceCreationParameters::SurfaceCreationParameters(
-    geometry::Width w,
-    geometry::Height h) : width{w},
-    height{h}
-    {
-    }
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_width(geometry::Width new_width)
 {
@@ -58,12 +52,21 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(geometry::
     return *this;
 }
 
-bool ms::SurfaceCreationParameters::operator==(const ms::SurfaceCreationParameters& rhs) const
+bool ms::operator==(
+    const SurfaceCreationParameters& lhs,
+    const ms::SurfaceCreationParameters& rhs)
 {
-    return width == rhs.width && height == rhs.height;
+    return lhs.width == rhs.width && lhs.height == rhs.height;
+}
+
+bool ms::operator!=(
+    const SurfaceCreationParameters& lhs,
+    const ms::SurfaceCreationParameters& rhs)
+{
+    return lhs.width != rhs.width || lhs.height != rhs.height;
 }
 
 ms::SurfaceCreationParameters ms::a_surface()
 {
-    return SurfaceCreationParameters{};
+    return SurfaceCreationParameters();
 }

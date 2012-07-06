@@ -36,21 +36,19 @@ namespace surfaces
 
 struct SurfaceCreationParameters
 {
-    SurfaceCreationParameters(
-        geometry::Width w = geometry::Width(0),
-        geometry::Height h = geometry::Height(0));
-
     SurfaceCreationParameters& of_width(geometry::Width new_width);
 
     SurfaceCreationParameters& of_height(geometry::Height new_height);
 
     SurfaceCreationParameters& of_size(geometry::Width new_width, geometry::Height new_height);
 
-    bool operator==(const SurfaceCreationParameters& rhs) const;
-    
     geometry::Width width;
-    geometry::Height height;    
+    geometry::Height height;
 };
+
+bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
+bool operator!=(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
+
 
 SurfaceCreationParameters a_surface();
 
