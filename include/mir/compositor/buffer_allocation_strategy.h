@@ -25,6 +25,7 @@
 #include "mir/geometry/dimensions.h"
 
 #include <cassert>
+#include <memory>
 
 namespace mir
 {
@@ -46,20 +47,20 @@ class BufferAllocationStrategy
         BufferBundle* bundle) = 0;
     
  protected:
-    BufferAllocationStrategy(GraphicBufferAllocator* allocator) : gr_allocator(allocator)
+    BufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> allocator) : gr_allocator(allocator)
     {
         assert(allocator);
     }
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
 
-    GraphicBufferAllocator* graphic_buffer_allocator()
+    std::shared_ptr<GraphicBufferAllocator> graphic_buffer_allocator()
     {
         return gr_allocator;
     }
     
  private:
-    GraphicBufferAllocator* gr_allocator;
+    std::shared_ptr<GraphicBufferAllocator> gr_allocator;
 };
 
 }

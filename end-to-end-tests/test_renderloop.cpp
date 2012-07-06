@@ -16,15 +16,13 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/framebuffer_backend.h"
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/compositor.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/surfaces/scenegraph.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/surfaces/surface_stack.h"
+#include "mir/display_server.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -48,22 +46,39 @@ struct MockScenegraph : public ms::Scenegraph
     MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender(const geom::Rectangle&));
 };
 
+struct MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+    MOCK_METHOD3(
+        alloc_buffer,
+        std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
+};
+
+class DisplayServerFixture : public ::testing::Test
+{
+public:
+    DisplayServerFixture() : allocation_strategy(&gr_allocator),
+                             buffer_bundle_manager(&allocation_strategy),
+                             display_server(&buffer_bundle_manager)
+    {
+    }
+    
+    MockGraphicBufferAllocator gr_allocator;
+    mc::DoubleBufferAllocationStrategy allocation_strategy;
+    mc::BufferBundleManager buffer_bundle_manager;
+    mir::DisplayServer display_server;
+};
+
 }
 
-TEST(compositor_renderloop, notify_sync_and_see_paint)
+TEST_F(DisplayServerFixture, notify_sync_and_see_paint)
 {
     using namespace testing;
-
-    MockScenegraph scenegraph;
-    MockDisplay display;
-
-    mc::Drawer&& comp = mc::Compositor(&scenegraph);
-
-    EXPECT_CALL(display, notify_update()).Times(1);    
-    EXPECT_CALL(display, view_area()).Times(AtLeast(1))
-			.WillRepeatedly(Return(geom::Rectangle()));
-
-    EXPECT_CALL(scenegraph, get_surfaces_in(_)).WillRepeatedly(Return(ms::SurfacesToRender()));
     
-    comp.render(&display);
+    MockDisplay display;
+    EXPECT_CALL(display, notify_update()).Times(1);
+
+    EXPECT_CALL(display, view_area()).Times(AtLeast(1))
+            .WillRepeatedly(Return(geom::Rectangle()));
+
+    display_server.render(&display);
 }

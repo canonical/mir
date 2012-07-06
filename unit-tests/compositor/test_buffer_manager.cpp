@@ -17,6 +17,7 @@
  */
 
 #include "mock_buffer.h"
+#include "mock_graphic_buffer_allocator.h"
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -43,7 +44,7 @@ struct EmptyDeleter
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
-    MockBufferAllocationStrategy(mc::GraphicBufferAllocator* allocator)
+    MockBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator> allocator)
             : mc::BufferAllocationStrategy(allocator)
     {
     }
@@ -51,13 +52,6 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MOCK_METHOD4(
         allocate_buffers_for_bundle,
         void(geom::Width, geom::Height, mc::PixelFormat, mc::BufferBundle* bundle));
-};
-
-struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
-{
- public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
-    MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
 };
 
 const geom::Width width{1024};
@@ -75,8 +69,10 @@ TEST(buffer_manager, create_buffer)
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
-    MockGraphicBufferAllocator graphic_allocator;
-    MockBufferAllocationStrategy allocation_strategy(&graphic_allocator);
+    mc::MockGraphicBufferAllocator graphic_allocator;
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
+    MockBufferAllocationStrategy allocation_strategy(allocator);
+
     mc::BufferBundleManager buffer_bundle_manager(
         &allocation_strategy);
 

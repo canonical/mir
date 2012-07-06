@@ -18,8 +18,7 @@
 add_executable(
   end-to-end-tests 
   
-  test_renderloop.cpp 
-  test_input_dispatch.cpp)
+  test_renderloop.cpp)
 
 target_link_libraries(
   end-to-end-tests
@@ -36,4 +35,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-add_test(end-to-end-tests ${CMAKE_CURRENT_BINARY_DIR}/end-to-end-tests)
+mir_discover_tests(end-to-end-tests)

@@ -19,6 +19,7 @@ project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
+include (cmake/MirCommon.cmake)
 
 enable_testing()
 
@@ -66,3 +67,4 @@ add_subdirectory(end-to-end-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)
 add_subdirectory(guides/)
+add_subdirectory(cmake/)

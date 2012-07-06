@@ -31,8 +31,13 @@ TEST(buffer_swapper_double, simple_swaps)
 {
     using namespace testing;
 
-    std::shared_ptr<mc::Buffer> buf_a;
-    std::shared_ptr<mc::Buffer> buf_b;
+    geom::Width w{1024};
+    geom::Height h{768};
+    geom::Stride s{1024};
+    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
+    
+    std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
+    std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_tmp_a;
     std::shared_ptr<mc::Buffer> buf_tmp_b;
 
@@ -62,8 +67,13 @@ TEST(buffer_swapper_double, simple_swaps)
 
 TEST(buffer_swapper_double, simple_grabs)
 {
-    std::shared_ptr<mc::Buffer> buf_a;
-    std::shared_ptr<mc::Buffer> buf_b;
+    geom::Width w{1024};
+    geom::Height h{768};
+    geom::Stride s{1024};
+    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
+    
+    std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
+    std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_tmp_a;
     std::shared_ptr<mc::Buffer> buf_tmp_b;
     std::shared_ptr<mc::Buffer> buf_tmp_c;
@@ -97,8 +107,13 @@ TEST(buffer_swapper, init_test)
 {
     using namespace testing;
 
-    std::shared_ptr<mc::Buffer> buf_a;
-    std::shared_ptr<mc::Buffer> buf_b;
+    geom::Width w{1024};
+    geom::Height h{768};
+    geom::Stride s{1024};
+    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
+    
+    std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
+    std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_tmp;
 
     /* BufferSwapperDouble implements the BufferSwapper interface */

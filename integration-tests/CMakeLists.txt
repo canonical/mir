@@ -14,10 +14,8 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(
-  frontend/
-  input/
-)
+add_subdirectory(frontend/)
+add_subdirectory(input/)
 
 add_executable(
   integration-tests 
@@ -38,4 +36,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
-add_test(integration-tests ${CMAKE_CURRENT_BINARY_DIR}/integration-tests)
+mir_discover_tests(integration-tests)

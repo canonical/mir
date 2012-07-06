@@ -21,6 +21,8 @@
 
 #include "mir/geometry/dimensions.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace compositor
@@ -28,12 +30,18 @@ namespace compositor
 
 class GraphicBufferAllocator
 {
-    public:
-        virtual std::shared_ptr<Buffer> alloc_buffer(
-			geometry::Width width,
-			geometry::Height height,
-			PixelFormat pf) = 0;
+public:
+    virtual ~GraphicBufferAllocator() {}
+    
+    virtual std::shared_ptr<Buffer> alloc_buffer(
+        geometry::Width width,
+        geometry::Height height,
+        PixelFormat pf) = 0;
 
+protected:
+    GraphicBufferAllocator() = default;
+    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
+    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
 };
 
 }
