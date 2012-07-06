@@ -28,15 +28,11 @@ namespace mir
 {
 namespace compositor
 {
-
 class BufferBundleFactory;
-
 }
+
 namespace surfaces
 {
-
-namespace mc = mir::compositor;
-
 class Surface;
 class SurfaceCreationParameters;
 
@@ -44,8 +40,8 @@ class SurfaceStack : public Scenegraph,
                      public SurfaceStackModel
 {
  public:
-    explicit SurfaceStack(mc::BufferBundleFactory* bb_factory);
-    
+    explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
+
     virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
 
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
@@ -57,7 +53,7 @@ class SurfaceStack : public Scenegraph,
     SurfaceStack& operator=(const SurfaceStack&) = delete;
 
  private:
-    mc::BufferBundleFactory* buffer_bundle_factory;
+    compositor::BufferBundleFactory* buffer_bundle_factory;
 };
 
 }

@@ -28,6 +28,7 @@
 #include <memory>
 
 namespace ms = mir::surfaces;
+namespace mc = mir::compositor;
 
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
