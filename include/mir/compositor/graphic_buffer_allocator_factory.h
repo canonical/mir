@@ -13,36 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_H_
-#define MIR_FRONTEND_APPLICATION_H_
+#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_FACTORY_H_
+#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_FACTORY_H_
 
-#include "mir/input/event_handler.h"
-
-#include <cassert>
+#include <memory>
 
 namespace mir
 {
-namespace frontend
+namespace compositor
 {
 
-namespace mi = mir::input;
+class GraphicBufferAllocator;
 
-class Application : public mi::EventHandler
+struct GraphicBufferAllocatorFactory
 {
- public:
-    virtual ~Application() {}
-
- protected:
-    Application() = default;
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
+    static std::shared_ptr<GraphicBufferAllocator> create();
 };
 
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_H_
+#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_FACTORY_H_

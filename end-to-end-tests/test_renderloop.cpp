@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/graphic_buffer_allocator_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/framebuffer_backend.h"
@@ -41,30 +42,16 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-struct MockScenegraph : public ms::Scenegraph
-{
-    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender(const geom::Rectangle&));
-};
-
-struct MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
-    MOCK_METHOD3(
-        alloc_buffer,
-        std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
-};
-
 class DisplayServerFixture : public ::testing::Test
 {
 public:
-    DisplayServerFixture() : allocation_strategy(&gr_allocator),
-                             buffer_bundle_manager(&allocation_strategy),
-                             display_server(&buffer_bundle_manager)
+    DisplayServerFixture()
+            : allocation_strategy(mc::GraphicBufferAllocatorFactory::create()),
+              display_server(&allocation_strategy)
     {
     }
     
-    MockGraphicBufferAllocator gr_allocator;
     mc::DoubleBufferAllocationStrategy allocation_strategy;
-    mc::BufferBundleManager buffer_bundle_manager;
     mir::DisplayServer display_server;
 };
 

@@ -1,4 +1,6 @@
 /*
+ * Copyright © 2012 Canonical Ltd.
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
@@ -32,14 +34,14 @@ namespace frontend
 {
 namespace services
 {
-    
+
 namespace ms = mir::surfaces;
 
 class SurfaceFactory
 {
  public:
     virtual ~SurfaceFactory() {}
-    
+
     virtual std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params) = 0;
     virtual void destroy_surface(std::weak_ptr<ms::Surface> surface) = 0;
 

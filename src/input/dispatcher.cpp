@@ -40,9 +40,9 @@ void mi::Dispatcher::on_event(mi::Event* e)
     assert(e);
 
     std::lock_guard<std::mutex> lg(dispatcher_guard);
-    
+
     e->set_system_timestamp(time_source->sample());
-    
+
     filter_chain->accept(e);
 }
 
@@ -57,7 +57,7 @@ mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::
 }
 
 void mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
-{    
+{
     (*token)->stop();
     devices.erase(token);
 }

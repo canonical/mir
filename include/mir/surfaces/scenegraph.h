@@ -1,4 +1,6 @@
 /*
+ * Copyright © 2012 Canonical Ltd.
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
@@ -30,14 +32,14 @@ class SurfacesToRender {};
 class Scenegraph
 {
 public:
-	virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
-        
+    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
+
 protected:
-	Scenegraph() = default;
-	~Scenegraph() = default;
+    Scenegraph() = default;
+    ~Scenegraph() = default;
 private:
-	Scenegraph(Scenegraph const&) = delete;
-	Scenegraph& operator=(Scenegraph const&) = delete;
+    Scenegraph(Scenegraph const&) = delete;
+    Scenegraph& operator=(Scenegraph const&) = delete;
 };
 }
 }

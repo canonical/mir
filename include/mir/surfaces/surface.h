@@ -64,7 +64,7 @@ class Surface
  private:
     std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
 };
-    
+
 }
 }
 
