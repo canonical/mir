@@ -13,36 +13,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_H_
-#define MIR_FRONTEND_APPLICATION_H_
+#include "mir/compositor/android/graphic_buffer_allocator.h"
+#include "mir/compositor/graphic_buffer_allocator_factory.h"
 
-#include "mir/input/event_handler.h"
+namespace mc = mir::compositor;
 
-#include <cassert>
-
-namespace mir
+std::shared_ptr<mc::GraphicBufferAllocator> mc::GraphicBufferAllocatorFactory::create()
 {
-namespace frontend
-{
-
-namespace mi = mir::input;
-
-class Application : public mi::EventHandler
-{
- public:
-    virtual ~Application() {}
-
- protected:
-    Application() = default;
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-};
-
+    return std::shared_ptr<mc::GraphicBufferAllocator>(new mc::android::GraphicBufferAllocator());
 }
-}
-
-#endif // MIR_FRONTEND_APPLICATION_H_

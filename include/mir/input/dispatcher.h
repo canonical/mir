@@ -41,7 +41,7 @@ class LogicalDevice;
 class Dispatcher : public EventHandler
 {
     typedef std::set< std::unique_ptr<LogicalDevice> > DeviceCollection;
- public:    
+ public:
     typedef DeviceCollection::iterator DeviceToken;
 
     Dispatcher(TimeSource* time_source, std::shared_ptr<Filter> const& filter_chain);
@@ -54,7 +54,7 @@ class Dispatcher : public EventHandler
 
  private:
     TimeSource* time_source;
-    
+
     std::shared_ptr<Filter> filter_chain;
 
     DeviceCollection devices;

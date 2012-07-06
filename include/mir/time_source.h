@@ -33,8 +33,8 @@ class TimeSource {
     virtual ~TimeSource() {}
 
     virtual Timestamp sample() const = 0;
-    
- protected:    
+
+ protected:
     TimeSource() = default;
 };
 

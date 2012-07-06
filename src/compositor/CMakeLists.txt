@@ -15,11 +15,19 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-ADD_LIBRARY( 
-  mircompositor STATIC
+set(
+  MIR_COMPOSITOR_SRCS
   
   compositor.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_double.cpp
+)
+
+add_subdirectory(android/)
+
+ADD_LIBRARY( 
+  mircompositor STATIC
+  
+  ${MIR_COMPOSITOR_SRCS}
 )

@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/graphic_buffer_allocator_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/framebuffer_backend.h"
@@ -41,28 +42,16 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-struct StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
-        std::shared_ptr<mc::Buffer> alloc_buffer(geom::Width, geom::Height, mc::PixelFormat)
-        {
-            return std::shared_ptr<mc::Buffer>();
-        }
-};
-
 class DisplayServerFixture : public ::testing::Test
 {
 public:
-    DisplayServerFixture() :
-        gr_allocator(std::make_shared<StubGraphicBufferAllocator>()),
-        allocation_strategy(gr_allocator),
-        buffer_bundle_manager(&allocation_strategy),
-        display_server(&buffer_bundle_manager)
+    DisplayServerFixture()
+            : allocation_strategy(mc::GraphicBufferAllocatorFactory::create()),
+              display_server(&allocation_strategy)
     {
     }
 
-    std::shared_ptr<StubGraphicBufferAllocator> gr_allocator;
     mc::DoubleBufferAllocationStrategy allocation_strategy;
-    mc::BufferBundleManager buffer_bundle_manager;
     mir::DisplayServer display_server;
 };
 
@@ -71,7 +60,7 @@ public:
 TEST_F(DisplayServerFixture, notify_sync_and_see_paint)
 {
     using namespace testing;
-    
+
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);
 

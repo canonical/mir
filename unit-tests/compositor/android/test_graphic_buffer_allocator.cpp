@@ -13,36 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by:
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_H_
-#define MIR_FRONTEND_APPLICATION_H_
+#include "mir/compositor/android/graphic_buffer_allocator.h"
 
-#include "mir/input/event_handler.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
-#include <cassert>
+namespace mc = mir::compositor;
+namespace mca = mir::compositor::android;
+namespace geom = mir::geometry;
 
-namespace mir
+TEST(android_graphics_buffer_allocator, returns_non_empty_buffer)
 {
-namespace frontend
-{
+    geom::Width w{1024};
+    geom::Height h{768};
+    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
+    
+    mir::compositor::android::GraphicBufferAllocator allocator;
+    auto buffer = allocator.alloc_buffer(w, h, pf);
 
-namespace mi = mir::input;
-
-class Application : public mi::EventHandler
-{
- public:
-    virtual ~Application() {}
-
- protected:
-    Application() = default;
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-};
-
+    EXPECT_TRUE(buffer.get());
 }
-}
-
-#endif // MIR_FRONTEND_APPLICATION_H_

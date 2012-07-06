@@ -37,8 +37,9 @@ class DisplayServer
 public:
     // TODO: Come up with a better way to resolve dependency on
     // the BufferAllocationStrategy.
-    DisplayServer(compositor::BufferBundleFactory* factory)
-            : surface_stack(factory),
+    DisplayServer(compositor::BufferAllocationStrategy* strategy)
+            : buffer_bundle_manager(strategy),
+              surface_stack(&buffer_bundle_manager),
               compositor(&surface_stack)              
     {}
 
@@ -49,10 +50,10 @@ public:
 
 private:
     //TODO remove implementation details from public view
+    compositor::BufferBundleManager buffer_bundle_manager;
     surfaces::SurfaceStack surface_stack;
     compositor::Compositor compositor;
 };
 }
-
 
 #endif /* MIR_DISPLAY_SERVER_H_ */

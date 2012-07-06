@@ -1,4 +1,6 @@
 /*
+ * Copyright © 2012 Canonical Ltd.
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
@@ -38,7 +40,7 @@ class SurfaceController : public ApplicationSurfaceOrganiser
 
     std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
     void destroy_surface(std::weak_ptr<Surface> surface);
-    
+
  protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
