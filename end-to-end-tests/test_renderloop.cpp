@@ -16,13 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/graphic_buffer_allocator_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/framebuffer_backend.h"
 #include "mir/display_server.h"
 
 #include <gmock/gmock.h>
@@ -30,7 +26,6 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 namespace

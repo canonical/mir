@@ -22,6 +22,9 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 
 namespace mir
 {
