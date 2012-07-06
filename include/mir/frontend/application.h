@@ -32,14 +32,14 @@ namespace mi = mir::input;
 
 class Application : public mi::EventHandler
 {
- public:    
+ public:
     virtual ~Application() {}
-    
+
  protected:
     Application() = default;
 
     Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;    
+    Application& operator=(const Application&) = delete;
 };
 
 }

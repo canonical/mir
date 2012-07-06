@@ -48,7 +48,7 @@ mi::evemu::EvemuDevice::EvemuDevice(
     EventHandler* event_handler) : LogicalDevice(event_handler),
                                    simultaneous_instances{1},
     buttons(static_cast<size_t>(KEY_MAX), false),
-    position_info{Mode::none}    
+    position_info{Mode::none}
 {
     std::unique_ptr<evemu_device, EvemuDeleter> evemu{evemu_new(NULL), EvemuDeleter()};
 
@@ -125,7 +125,7 @@ const std::string& mi::evemu::EvemuDevice::get_name() const
 {
     return name;
 }
-    
+
 int mi::evemu::EvemuDevice::get_simultaneous_instances() const
 {
     return simultaneous_instances;

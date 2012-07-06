@@ -36,7 +36,7 @@ class SurfaceCreationParameters;
 
 namespace frontend
 {
-    
+
 namespace ms = mir::surfaces;
 
 class ApplicationManager : public frontend::services::SurfaceFactory
@@ -48,7 +48,7 @@ class ApplicationManager : public frontend::services::SurfaceFactory
     // From SurfaceFactory
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params);
     void destroy_surface(std::weak_ptr<ms::Surface> surface);
-    
+
   protected:
     ApplicationManager(const ApplicationManager&) = delete;
     ApplicationManager& operator=(const ApplicationManager&) = delete;

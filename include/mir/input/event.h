@@ -28,19 +28,19 @@ namespace input
 
 class Event {
  public:
-    
+
     virtual ~Event() {}
-    
+
     Event(const Event&) = delete;
     Event& operator=(const Event&) = delete;
-    
+
     // The system timestamp as assigned to the event
     // when entering the event processing.
     const mir::Timestamp& get_system_timestamp() const
     {
         return system_timestamp;
     }
-    
+
     void set_system_timestamp(const mir::Timestamp& ts)
     {
         system_timestamp = ts;
@@ -51,7 +51,7 @@ class Event {
  private:
     mir::Timestamp system_timestamp;
 };
-    
+
 }}
 
 #endif // MIR_INPUT_EVENT_H_

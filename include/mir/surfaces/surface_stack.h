@@ -37,7 +37,7 @@ public:
     virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
 
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
-    
+
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
 };
 

@@ -53,7 +53,7 @@ std::ostream& operator<<(std::ostream& out, const mi::Axis& /*a*/)
     out <<
     (boost::format(print_format) % a.mode % a.min % a.max %a.resolution).str();
     */
-    
+
     return out;
 }
 

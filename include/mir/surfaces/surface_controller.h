@@ -38,7 +38,7 @@ class SurfaceController : public ApplicationSurfaceOrganiser
 
     std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
     void destroy_surface(std::weak_ptr<Surface> surface);
-    
+
  protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;

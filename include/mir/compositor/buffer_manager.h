@@ -42,7 +42,7 @@ class BufferManager : public BufferTextureBinder
 
     explicit BufferManager(GraphicBufferAllocator* gr_allocator);
     virtual ~BufferManager() {}
- 
+
     virtual BufferManagerClient* create_client(geometry::Width width,
                                    geometry::Height height,
                                    PixelFormat pf);
