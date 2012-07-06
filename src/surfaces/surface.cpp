@@ -1,4 +1,6 @@
 /*
+ * Copyright © 2012 Canonical Ltd.
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
@@ -22,10 +24,11 @@
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
-namespace geometry = mir::geometry;
 
-ms::Surface::Surface(const ms::SurfaceCreationParameters& /*params*/,
-                     std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder) : buffer_texture_binder(buffer_texture_binder)
+ms::Surface::Surface(
+    const ms::SurfaceCreationParameters& /*params*/,
+    std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder) :
+    buffer_texture_binder(buffer_texture_binder)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_texture_binder);
@@ -44,11 +47,13 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_height(geometry
     return *this;
 }
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(geometry::Width new_width, geometry::Height new_height)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
+        geometry::Width new_width,
+        geometry::Height new_height)
 {
     width = new_width;
     height = new_height;
-        
+
     return *this;
 }
 

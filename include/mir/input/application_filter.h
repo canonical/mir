@@ -32,7 +32,7 @@ class ApplicationFilter : public ChainingFilter
 {
 public:
     //using ChainingFilter::ChainingFilter;
-    ApplicationFilter(std::shared_ptr<Filter> const& next_link);
+    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
 
     void accept(Event* e) const;
 };

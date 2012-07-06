@@ -40,7 +40,9 @@ public:
 
     static const unsigned int buffer_count = count;
 
-    FixedCountBufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> gr_alloc) : BufferAllocationStrategy(gr_alloc)
+    explicit FixedCountBufferAllocationStrategy(
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
+        BufferAllocationStrategy(gr_alloc)
     {
     }
 
@@ -50,7 +52,7 @@ public:
         PixelFormat pf,
         BufferBundle* bundle)
     {
-        for(unsigned int i = 0; i < buffer_count; i++)
+        for (unsigned int i = 0; i < buffer_count; i++)
         {
             bundle->add_buffer(
                 graphic_buffer_allocator()->alloc_buffer(

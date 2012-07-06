@@ -39,9 +39,9 @@ enum class PixelFormat : uint32_t {
 class Buffer
 {
  public:
-        
+
     virtual ~Buffer() {}
-    
+
     virtual geometry::Width width() const = 0;
 
     virtual geometry::Height height() const = 0;
@@ -53,7 +53,7 @@ class Buffer
     virtual void lock() = 0;
 
     virtual void unlock() = 0;
-    
+
     virtual graphics::Texture* bind_to_texture() = 0;
 
  protected:

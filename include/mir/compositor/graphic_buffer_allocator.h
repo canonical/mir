@@ -28,17 +28,17 @@ namespace mir
 {
 namespace compositor
 {
-    
+
 class GraphicBufferAllocator
 {
 public:
     virtual ~GraphicBufferAllocator() {}
-    
+
     virtual std::shared_ptr<Buffer> alloc_buffer(
         geometry::Width width,
         geometry::Height height,
         PixelFormat pf) = 0;
-    
+
 protected:
     GraphicBufferAllocator() = default;
     GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;

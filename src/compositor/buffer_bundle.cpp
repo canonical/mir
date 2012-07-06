@@ -16,8 +16,9 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include <mir/compositor/buffer_bundle.h>
+#include "mir/compositor/buffer_bundle.h"
 
+#include <algorithm>
 #include <mutex>
 
 namespace mc = mir::compositor;
@@ -42,7 +43,7 @@ void mc::BufferBundle::add_buffer(std::shared_ptr<Buffer> buffer)
     compositor_buffer = client_buffer;
     client_buffer = buffer;
 
-    buffer_list.push_back(buffer);     
+    buffer_list.push_back(buffer);
 }
 
 int mc::BufferBundle::remove_all_buffers()

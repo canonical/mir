@@ -39,7 +39,7 @@ class BufferBundleManager : public BufferBundleFactory
  public:
 
     explicit BufferBundleManager(BufferAllocationStrategy* strategy);
-    
+
     virtual ~BufferBundleManager() {}
 
     // From BufferBundleFactory

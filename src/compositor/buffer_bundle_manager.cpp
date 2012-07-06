@@ -43,14 +43,14 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     geometry::Height height,
     PixelFormat pf)
 {
-    BufferBundle* new_bundle_raw = new mc::BufferBundle(); 
+    BufferBundle* new_bundle_raw = new mc::BufferBundle();
     std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
-    
+
     buffer_allocation_strategy->allocate_buffers_for_bundle(
         width,
         height,
         pf,
         new_bundle_raw);
-    
+
     return bundle;
 }
