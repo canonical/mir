@@ -31,7 +31,7 @@ namespace mir
 namespace input
 {
 
-struct PositionInfo; 
+struct PositionInfo;
 
 /* FIXME: Reenable once under test.
 enum Button
@@ -56,9 +56,9 @@ class LogicalDevice : public EventProducer {
     explicit LogicalDevice(EventHandler* event_handler) : EventProducer(event_handler)
     {
     }
-    
+
     virtual ~LogicalDevice() {}
-    
+
     /**
      * The name of the logical device
      *
@@ -102,7 +102,7 @@ class LogicalDevice : public EventProducer {
      * @throw Throws NoAxisForTypeException if device does not support
      * the axis type.
      */
-    virtual const std::map<AxisType,Axis>& get_axes() const = 0;
+    virtual const std::map<AxisType, Axis>& get_axes() const = 0;
 };
 
 } // input

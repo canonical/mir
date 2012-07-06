@@ -37,12 +37,12 @@ class EventProducer
         running,
         stopped
     };
-    
+
     explicit EventProducer(EventHandler* handler) : event_handler(handler)
     {
         assert(handler);
     }
-    
+
     virtual ~EventProducer() {}
 
     virtual State current_state() const = 0;
@@ -55,7 +55,7 @@ class EventProducer
     // Implementations have to block until no
     // more event will be propagated to the event_handler.
     virtual void stop() = 0;
-    
+
  protected:
     EventProducer(const EventProducer&) = delete;
     EventProducer& operator=(const EventProducer&) = delete;
@@ -64,7 +64,7 @@ class EventProducer
     {
         event_handler->on_event(e);
     }
-    
+
  private:
     EventHandler* event_handler;
 };

@@ -31,7 +31,7 @@ struct SurfaceCreationParameters
 class Surface
 {
 };
-    
+
 }
 }
 

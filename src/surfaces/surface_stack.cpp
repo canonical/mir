@@ -1,4 +1,6 @@
 /*
+ * Copyright © 2012 Canonical Ltd.
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
@@ -20,7 +22,7 @@ namespace ms = mir::surfaces;
 
 ms::SurfacesToRender ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
-	return SurfacesToRender();
+    return SurfacesToRender();
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& /*params*/)
