@@ -41,11 +41,6 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-struct MockScenegraph : public ms::Scenegraph
-{
-    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender(const geom::Rectangle&));
-};
-
 struct MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
     MOCK_METHOD3(
@@ -56,13 +51,15 @@ struct MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 class DisplayServerFixture : public ::testing::Test
 {
 public:
-    DisplayServerFixture() : allocation_strategy(&gr_allocator),
-                             buffer_bundle_manager(&allocation_strategy),
-                             display_server(&buffer_bundle_manager)
+    DisplayServerFixture() :
+        gr_allocator(std::make_shared<MockGraphicBufferAllocator>()),
+        allocation_strategy(gr_allocator),
+        buffer_bundle_manager(&allocation_strategy),
+        display_server(&buffer_bundle_manager)
     {
     }
-    
-    MockGraphicBufferAllocator gr_allocator;
+
+    std::shared_ptr<MockGraphicBufferAllocator> gr_allocator;
     mc::DoubleBufferAllocationStrategy allocation_strategy;
     mc::BufferBundleManager buffer_bundle_manager;
     mir::DisplayServer display_server;
