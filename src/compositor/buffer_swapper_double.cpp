@@ -13,31 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#include <mir/compositor/buffer_swapper_double.h>
 
+namespace mc = mir::compositor;
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
-
-#include "mir/input/filter.h"
-
-namespace mir
+mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> , std::shared_ptr<Buffer> )
 {
-
-namespace input
-{
-
-class ApplicationFilter : public ChainingFilter
-{
-public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
-
-    void accept(Event* e) const;
-};
-
-}
 }
 
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
+void mc::BufferSwapperDouble::dequeue_free_buffer(std::shared_ptr<Buffer>& )
+{
+}
+
+void mc::BufferSwapperDouble::queue_finished_buffer(std::shared_ptr<Buffer>& )
+{
+}
+
+void mc::BufferSwapperDouble::grab_last_posted(std::shared_ptr<Buffer>& )
+{
+}
+
+void mc::BufferSwapperDouble::ungrab(std::shared_ptr<Buffer>&  )
+{
+}

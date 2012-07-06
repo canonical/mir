@@ -13,38 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_
+#define MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_
 
-#include "mir/compositor/buffer.h"
-#include "mir/geometry/dimensions.h"
+#include "buffer_swapper.h"
 
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
 namespace compositor
 {
 
-class GraphicBufferAllocator
-{
+class Buffer;
+
+class BufferSwapperDouble : public BufferSwapper {
 public:
-    virtual ~GraphicBufferAllocator() {}
+    BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
 
-    virtual std::shared_ptr<Buffer> alloc_buffer(
-        geometry::Width width,
-        geometry::Height height,
-        PixelFormat pf) = 0;
-
-protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer);
+    void queue_finished_buffer(std::shared_ptr<Buffer>& buffer);
+    void grab_last_posted(std::shared_ptr<Buffer>& buffer);
+    void ungrab(std::shared_ptr<Buffer>& buffer );
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */

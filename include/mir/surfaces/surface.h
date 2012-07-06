@@ -19,17 +19,47 @@
 #ifndef MIR_SURFACES_SURFACE_H_
 #define MIR_SURFACES_SURFACE_H_
 
+#include "mir/geometry/dimensions.h"
+
+#include <memory>
+
 namespace mir
 {
+namespace compositor
+{
+
+class BufferTextureBinder;
+
+}
 namespace surfaces
 {
 
 struct SurfaceCreationParameters
 {
+    SurfaceCreationParameters& of_width(geometry::Width new_width);
+
+    SurfaceCreationParameters& of_height(geometry::Height new_height);
+
+    SurfaceCreationParameters& of_size(geometry::Width new_width, geometry::Height new_height);
+
+    geometry::Width width;
+    geometry::Height height;
 };
+
+bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
+bool operator!=(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
+
+
+SurfaceCreationParameters a_surface();
 
 class Surface
 {
+ public:
+    Surface(const SurfaceCreationParameters& /*params*/,
+            std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
+
+ private:
+    std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
 };
 
 }

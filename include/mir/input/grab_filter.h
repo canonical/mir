@@ -38,7 +38,7 @@ class GrabFilter : public ChainingFilter
 {
 public:
     //using ChainingFilter::ChainingFilter;
-    GrabFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
+    explicit GrabFilter(std::shared_ptr<Filter> const& next_link) : ChainingFilter(next_link) {}
 
     void accept(Event* e) const;
 

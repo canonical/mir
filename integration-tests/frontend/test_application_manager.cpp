@@ -16,6 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_manager.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
@@ -25,6 +26,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mfs = mir::frontend::services;
 namespace ms = mir::surfaces;
@@ -32,8 +34,10 @@ namespace ms = mir::surfaces;
 namespace
 {
 
-struct MockSurfaceStack : public ms::SurfaceStack
+struct MockSurfaceStack : public ms::SurfaceStackModel
 {
+    MockSurfaceStack() {}
+    
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
 };
@@ -44,7 +48,10 @@ TEST(TestApplicationManager, create_surface_dispatches_to_surface_stack)
 {
     using namespace ::testing;
     
-    std::shared_ptr<ms::Surface> dummy_surface(new ms::Surface());
+    std::shared_ptr<ms::Surface> dummy_surface(
+        new ms::Surface(
+            ms::a_surface(),
+            std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle())));
     
     MockSurfaceStack surface_stack;
     ms::SurfaceController controller(&surface_stack);
@@ -54,9 +61,8 @@ TEST(TestApplicationManager, create_surface_dispatches_to_surface_stack)
     EXPECT_CALL(surface_stack, create_surface(_)).Times(AtLeast(1));
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(AtLeast(1));
 
-    ms::SurfaceCreationParameters params;
     mfs::SurfaceFactory* surface_factory = &app_manager;
-    std::weak_ptr<ms::Surface> surface = surface_factory->create_surface(params);
+    std::weak_ptr<ms::Surface> surface = surface_factory->create_surface(ms::a_surface());
 
     EXPECT_EQ(surface.lock(), dummy_surface);
 

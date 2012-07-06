@@ -16,9 +16,13 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mock_buffer.h"
+#include "mock_graphic_buffer_allocator.h"
+
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_manager.h"
-#include "mir/compositor/buffer_manager_client.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -38,11 +42,16 @@ struct EmptyDeleter
     }    
 };
 
-struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
+struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
- public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
-    MOCK_METHOD1(free_buffer, void(std::shared_ptr<mc::Buffer>));
+    MockBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator> allocator)
+            : mc::BufferAllocationStrategy(allocator)
+    {
+    }
+
+    MOCK_METHOD4(
+        allocate_buffers_for_bundle,
+        void(geom::Width, geom::Height, mc::PixelFormat, mc::BufferBundle* bundle));
 };
 
 const geom::Width width{1024};
@@ -50,47 +59,38 @@ const geom::Height height{768};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
-struct MockBuffer : public mc::Buffer
-{
- public:
-	MockBuffer()
-	{
-	    using namespace testing;
-		ON_CALL(*this, width()).       WillByDefault(Return(::width));
-		ON_CALL(*this, height()).      WillByDefault(Return(::height));
-		ON_CALL(*this, stride()).      WillByDefault(Return(::stride));
-		ON_CALL(*this, pixel_format()).WillByDefault(Return(::pixel_format));
-	}
-
-    MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(height, geom::Height());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
-};
 }
 
 TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
     
-    MockBuffer mock_buffer;
-    std::shared_ptr<MockBuffer> default_buffer(
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
-    MockGraphicBufferAllocator graphic_allocator;
-    mc::BufferManager buffer_manager(&graphic_allocator);
+    mc::MockGraphicBufferAllocator graphic_allocator;
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
+    MockBufferAllocationStrategy allocation_strategy(allocator);
 
-    EXPECT_CALL(graphic_allocator, alloc_buffer(Eq(width), Eq(height), Eq(pixel_format))).
-    		Times(AtLeast(1)).WillRepeatedly(Return(default_buffer));
+    mc::BufferBundleManager buffer_bundle_manager(
+        &allocation_strategy);
 
-    mc::BufferManagerClient *client = nullptr;
-    client = buffer_manager.create_client(
-        width,
-        height,
-        pixel_format);
+    /* note: this is somewhat of a weak test, some create_clients will create a varied amount
+             of buffers */
+    EXPECT_CALL(
+        graphic_allocator,
+        alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
+            .Times(0);
 
-    EXPECT_TRUE(client != nullptr);
-
-    //TODO this is a frig to keep valgrind happy
-    delete client;
+    EXPECT_CALL(allocation_strategy, allocate_buffers_for_bundle(Eq(width), Eq(height), Eq(pixel_format), _)).Times(AtLeast(1));
+    
+    std::shared_ptr<mc::BufferBundle> bundle{
+        buffer_bundle_manager.create_buffer_bundle(
+            width,
+            height,
+            pixel_format)};
+    
+    EXPECT_TRUE(bundle != nullptr);
+    
 }

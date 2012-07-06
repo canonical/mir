@@ -19,35 +19,34 @@
 #ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
 #define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
 
+#include <memory>
+
 namespace mir
 {
-
-namespace surfaces
-{
-class SurfacesToRender;
-}
-
-namespace graphics
-{
-class Texture;
-}
+namespace graphics { class Texture; }
 
 namespace compositor
 {
-
+class Buffer;
 
 class BufferTextureBinder
 {
-public:
+ public:
 
-    virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const&) = 0;
+    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
-protected:
+ protected:
     BufferTextureBinder() = default;
-    ~BufferTextureBinder() = default;
-private:
+    ~BufferTextureBinder() {}
+
+ private:
     BufferTextureBinder(BufferTextureBinder const&) = delete;
     BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+
+    virtual void lock_back_buffer() = 0;
+    virtual void unlock_back_buffer() = 0;
+
+    virtual std::shared_ptr<Buffer> back_buffer() = 0;
 };
 }
 }

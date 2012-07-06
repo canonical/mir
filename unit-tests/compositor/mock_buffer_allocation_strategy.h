@@ -13,31 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#ifndef MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
+#define MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
+#include "mir/compositor/graphic_buffer_allocator.h"
 
-#include "mir/input/filter.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mir
 {
-
-namespace input
+namespace compositor
 {
 
-class ApplicationFilter : public ChainingFilter
+struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
 {
-public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
-
-    void accept(Event* e) const;
+ public:
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
+    MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
 };
 
 }
 }
 
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
+#endif // MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_

@@ -23,6 +23,12 @@
 
 namespace mir
 {
+
+namespace graphics
+{
+class Texture;
+}
+
 namespace compositor
 {
 
@@ -34,6 +40,8 @@ class Buffer
 {
  public:
 
+    virtual ~Buffer() {}
+
     virtual geometry::Width width() const = 0;
 
     virtual geometry::Height height() const = 0;
@@ -42,9 +50,14 @@ class Buffer
 
     virtual PixelFormat pixel_format() const = 0;
 
+    virtual void lock() = 0;
+
+    virtual void unlock() = 0;
+
+    virtual graphics::Texture* bind_to_texture() = 0;
+
  protected:
     Buffer() = default;
-    ~Buffer() = default;
     Buffer(Buffer const&) = delete;
     Buffer& operator=(Buffer const&) = delete;
 };

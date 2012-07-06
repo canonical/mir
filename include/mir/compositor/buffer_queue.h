@@ -16,12 +16,26 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include <mir/compositor/buffer_manager_client.h>
 
-namespace mc = mir::compositor;
+#ifndef MIR_COMPOSITOR_BUFFER_QUEUE_H_
+#define MIR_COMPOSITOR_BUFFER_QUEUE_H_
 
-mc::BufferManagerClient::BufferManagerClient()
+#include "buffer.h"
+#include <memory>
+
+namespace mir
 {
+namespace compositor
+{
+
+class BufferQueue {
+public:
+    virtual std::shared_ptr<Buffer> dequeue_client_buffer() = 0;
+    virtual void queue_client_buffer(std::shared_ptr<Buffer> buffer) = 0;
+
+};
+
+}
 }
 
-
+#endif /* MIR_COMPOSITOR_BUFFER_QUEUE_H_ */

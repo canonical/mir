@@ -18,46 +18,38 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
+#define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 
-#include "buffer.h"
-#include "buffer_texture_binder.h"
+#include "mir/compositor/buffer.h"
 #include "mir/geometry/dimensions.h"
 
-#include <cstdint>
 #include <memory>
-#include <atomic>
 
 namespace mir
 {
 namespace compositor
 {
 
-class GraphicBufferAllocator;
-class BufferManagerClient;
-class BufferManager : public BufferTextureBinder
+class BufferBundle;
+
+class BufferBundleFactory
 {
  public:
+    virtual ~BufferBundleFactory() {}
 
-    explicit BufferManager(GraphicBufferAllocator* gr_allocator);
-    virtual ~BufferManager() {}
+    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+        geometry::Width width,
+        geometry::Height height,
+        PixelFormat pf) = 0;
 
-    virtual BufferManagerClient* create_client(geometry::Width width,
-                                   geometry::Height height,
-                                   PixelFormat pf);
-
-    // From buffer_texture_binder
-    virtual void bind_buffer_to_texture(surfaces::SurfacesToRender const& surface);
-
- private:
-    GraphicBufferAllocator* const gr_allocator;
-
-    std::atomic<int> client_counter;
+  protected:
+    BufferBundleFactory() = default;
+    BufferBundleFactory(const BufferBundleFactory&) = delete;
+    BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;
 };
 
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_H_ */
+#endif // MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_

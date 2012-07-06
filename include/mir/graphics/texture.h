@@ -14,24 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
- * Kevin DuBois <kevin.dubois@canonical.com>
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
+#ifndef MIR_GRAPHICS_TEXTURE_H_
+#define MIR_GRAPHICS_TEXTURE_H_
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
-class BufferManagerClient
+struct Texture
 {
-public:
-    BufferManagerClient();
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_ */
+#endif // MIR_GRAPHICS_TEXTURE_H_

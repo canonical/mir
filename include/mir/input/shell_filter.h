@@ -30,7 +30,7 @@ class ShellFilter : public ChainingFilter
 {
 public:
     //using ChainingFilter::ChainingFilter;
-    ShellFilter(std::shared_ptr<Filter> const& next_link);
+    explicit ShellFilter(std::shared_ptr<Filter> const& next_link);
 
     void accept(Event* e) const;
 };

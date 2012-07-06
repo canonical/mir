@@ -13,31 +13,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_H_
+#define MIR_COMPOSITOR_BUFFER_SWAPPER_H_
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
+#include "buffer.h"
 
-#include "mir/input/filter.h"
+#include <atomic>
+#include <memory>
 
 namespace mir
 {
-
-namespace input
+namespace compositor
 {
+class Buffer;
 
-class ApplicationFilter : public ChainingFilter
-{
+class BufferSwapper {
 public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
-
-    void accept(Event* e) const;
+    virtual void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer) = 0;
+    virtual void queue_finished_buffer(std::shared_ptr<Buffer>& buffer) = 0;
+    virtual void grab_last_posted(std::shared_ptr<Buffer>& buffer) = 0;
+    virtual void ungrab(std::shared_ptr<Buffer>& buffer ) = 0;
 };
 
 }
 }
 
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */

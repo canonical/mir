@@ -15,10 +15,19 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
+set(
+  MIR_COMPOSITOR_SRCS
+  
+  compositor.cpp
+  buffer_bundle_manager.cpp
+  buffer_bundle.cpp
+  buffer_swapper_double.cpp
+  buffer_texture_binder.cpp
+  buffer_allocation_strategy.cpp
+)
+
 ADD_LIBRARY( 
   mircompositor STATIC
   
-  compositor.cpp
-  buffer_manager.cpp
-  buffer_manager_client.cpp
+  ${MIR_COMPOSITOR_SRCS}
 )

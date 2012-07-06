@@ -13,11 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Alan Griffiths <alan@octopull.co.uk>
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_manager.h"
-#include "mir/compositor/buffer_manager_client.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
@@ -27,29 +30,27 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
-    :
-    gr_allocator(gr_allocator),
-    client_counter(1)
+mc::BufferBundleManager::BufferBundleManager(
+    BufferAllocationStrategy* strategy)
+        : buffer_allocation_strategy(strategy)
 {
-    assert(gr_allocator);
+    assert(strategy);
 }
 
 
-void mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
+std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
+    geometry::Width width,
+    geometry::Height height,
+    PixelFormat pf)
 {
-    return;
+    BufferBundle* new_bundle_raw = new mc::BufferBundle();
+    std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
+
+    buffer_allocation_strategy->allocate_buffers_for_bundle(
+        width,
+        height,
+        pf,
+        new_bundle_raw);
+
+    return bundle;
 }
-
-mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,
-                                   geometry::Height height,
-                                   mc::PixelFormat pf)
-{
-    BufferManagerClient *newclient = new BufferManagerClient;
-
-    /* todo: (kdub) add the new buffer to the newclient */
-    gr_allocator->alloc_buffer(width, height, pf);
-
-    return newclient;
-}
-

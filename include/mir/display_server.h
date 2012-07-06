@@ -22,25 +22,41 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 
 namespace mir
 {
+namespace compositor
+{
+
+class BufferBundleFactory;
+
+}
+
 class DisplayServer
 {
 public:
-    DisplayServer() : comp(&scenegraph) {}
+    // TODO: Come up with a better way to resolve dependency on
+    // the BufferAllocationStrategy.
+    DisplayServer(compositor::BufferAllocationStrategy* strategy)
+            : buffer_bundle_manager(strategy),
+              surface_stack(&buffer_bundle_manager),
+              compositor(&surface_stack)              
+    {}
 
     virtual void render(graphics::Display* display)
     {
-        comp.render(display);
+        compositor.render(display);
     }
-private:
 
+private:
     //TODO remove implementation details from public view
-    surfaces::SurfaceStack scenegraph;
-    compositor::Compositor comp;
+    compositor::BufferBundleManager buffer_bundle_manager;
+    surfaces::SurfaceStack surface_stack;
+    compositor::Compositor compositor;
 };
 }
-
 
 #endif /* MIR_DISPLAY_SERVER_H_ */

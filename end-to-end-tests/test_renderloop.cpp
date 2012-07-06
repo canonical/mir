@@ -16,14 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/framebuffer_backend.h"
-#include "mir/display_server.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display.h"
+#include "mir/display_server.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -36,13 +36,27 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    std::shared_ptr<mc::Buffer> alloc_buffer(
+        geom::Width /*width*/,
+        geom::Height /*height*/,
+        mc::PixelFormat /*pf*/)
+    {
+        return std::shared_ptr<mc::Buffer>();
+    }
+};
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    mir::DisplayServer display_server;
+    mc::DoubleBufferAllocationStrategy allocation_strategy(
+            std::make_shared<StubGraphicBufferAllocator>());
+
+    mir::DisplayServer display_server(&allocation_strategy);
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);

@@ -13,31 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *  Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/compositor/buffer_allocation_strategy.h"
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
+#include <cassert>
+#include <memory>
 
-#include "mir/input/filter.h"
+namespace mc = mir::compositor;
 
-namespace mir
+mc::BufferAllocationStrategy::BufferAllocationStrategy(
+    std::shared_ptr<GraphicBufferAllocator> const& allocator) :
+    gr_allocator(allocator)
 {
-
-namespace input
-{
-
-class ApplicationFilter : public ChainingFilter
-{
-public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
-
-    void accept(Event* e) const;
-};
-
+    assert(allocator);
 }
-}
-
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
