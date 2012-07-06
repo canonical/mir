@@ -41,25 +41,26 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-struct MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+struct StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
-    MOCK_METHOD3(
-        alloc_buffer,
-        std::shared_ptr<mc::Buffer>(geom::Width, geom::Height, mc::PixelFormat));
+        std::shared_ptr<mc::Buffer> alloc_buffer(geom::Width, geom::Height, mc::PixelFormat)
+        {
+            return std::shared_ptr<mc::Buffer>();
+        }
 };
 
 class DisplayServerFixture : public ::testing::Test
 {
 public:
     DisplayServerFixture() :
-        gr_allocator(std::make_shared<MockGraphicBufferAllocator>()),
+        gr_allocator(std::make_shared<StubGraphicBufferAllocator>()),
         allocation_strategy(gr_allocator),
         buffer_bundle_manager(&allocation_strategy),
         display_server(&buffer_bundle_manager)
     {
     }
 
-    std::shared_ptr<MockGraphicBufferAllocator> gr_allocator;
+    std::shared_ptr<StubGraphicBufferAllocator> gr_allocator;
     mc::DoubleBufferAllocationStrategy allocation_strategy;
     mc::BufferBundleManager buffer_bundle_manager;
     mir::DisplayServer display_server;
