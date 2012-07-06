@@ -32,14 +32,14 @@ class SurfacesToRender {};
 class Scenegraph
 {
 public:
-	virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
+    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
 
 protected:
-	Scenegraph() = default;
-	~Scenegraph() = default;
+    Scenegraph() = default;
+    ~Scenegraph() = default;
 private:
-	Scenegraph(Scenegraph const&) = delete;
-	Scenegraph& operator=(Scenegraph const&) = delete;
+    Scenegraph(Scenegraph const&) = delete;
+    Scenegraph& operator=(Scenegraph const&) = delete;
 };
 }
 }

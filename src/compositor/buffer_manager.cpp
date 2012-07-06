@@ -38,7 +38,7 @@ mc::BufferManager::BufferManager(GraphicBufferAllocator* gr_allocator)
 
 void mc::BufferManager::bind_buffer_to_texture(surfaces::SurfacesToRender const& )
 {
-	return;
+    return;
 }
 
 mc::BufferManagerClient* mc::BufferManager::create_client(geometry::Width width,

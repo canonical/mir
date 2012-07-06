@@ -22,7 +22,7 @@ namespace ms = mir::surfaces;
 
 ms::SurfacesToRender ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
-	return SurfacesToRender();
+    return SurfacesToRender();
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& /*params*/)

@@ -30,9 +30,9 @@ class GraphicBufferAllocator
 {
     public:
         virtual std::shared_ptr<Buffer> alloc_buffer(
-			geometry::Width width,
-			geometry::Height height,
-			PixelFormat pf) = 0;
+            geometry::Width width,
+            geometry::Height height,
+            PixelFormat pf) = 0;
 
         virtual void free_buffer(std::shared_ptr<Buffer> buffer) = 0;
 };
