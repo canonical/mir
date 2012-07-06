@@ -25,11 +25,6 @@
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/geometry/dimensions.h"
 
-#include <cstdint>
-#include <memory>
-#include <atomic>
-#include <list>
-
 namespace mir
 {
 namespace compositor
