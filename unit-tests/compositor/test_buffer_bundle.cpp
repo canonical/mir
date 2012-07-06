@@ -72,6 +72,7 @@ TEST(buffer_bundle, add_rm_buffers)
 }
 
 /* this would simulate binding and locking a back buffer for the compositor's use */
+/* tests the BufferBundle's implementation of the BufferTextureBinder interface */
 TEST(buffer_bundle, add_buffers_and_bind)
 {
     using namespace testing;
@@ -93,15 +94,19 @@ TEST(buffer_bundle, add_buffers_and_bind)
     EXPECT_CALL(mock_buffer, unlock())
             .Times(AtLeast(num_iterations));
 
+    mc::BufferTextureBinder *binder;
+    binder = &buffer_bundle;
+
     for(int i=0; i<num_iterations; i++) {
         /* if binding doesn't work, this is a case where we may have an exception */
         ASSERT_NO_THROW({
-                buffer_bundle.lock_and_bind_back_buffer();
+                binder->lock_and_bind_back_buffer();
             });
     }
 }
 
 /* this would simulate locking a buffer for a client's use */
+/* tests the BufferBundle's implemantation of the BufferQueue interface */
 TEST(buffer_bundle, add_buffers_and_distribute) {
     using namespace testing;
    
@@ -114,6 +119,8 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     buffer_bundle.add_buffer(default_buffer);
     buffer_bundle.add_buffer(default_buffer);
 
+    mc::BufferQueue * queue;
+    queue = &buffer_bundle;
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, lock())
             .Times(AtLeast(num_iterations));
@@ -121,14 +128,13 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
             .Times(AtLeast(num_iterations));
 
     std::shared_ptr<mc::Buffer> sent_buffer;
-    int i;
-    for(i=0; i<num_iterations; i++) {
+    for(int i=0; i<num_iterations; i++) {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
            data bundle in the future */
         sent_buffer = nullptr;
-        sent_buffer = buffer_bundle.dequeue_client_buffer();
+        sent_buffer = queue->dequeue_client_buffer();
         EXPECT_NE(nullptr, sent_buffer);
-        buffer_bundle.queue_client_buffer(sent_buffer);
+        queue->queue_client_buffer(sent_buffer);
     }
 }
 

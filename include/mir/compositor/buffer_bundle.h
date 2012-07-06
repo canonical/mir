@@ -17,10 +17,11 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_
+#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
+#define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
 #include "buffer_texture_binder.h"
+#include "buffer_queue.h"
 #include "buffer.h"
 
 #include <atomic>
@@ -33,7 +34,8 @@ namespace mir
 namespace compositor
 {
 
-class BufferBundle : public BufferTextureBinder
+class BufferBundle : public BufferTextureBinder,
+                     public BufferQueue
 {
  public:
     BufferBundle();
@@ -67,4 +69,4 @@ class BufferBundle : public BufferTextureBinder
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_CLIENT_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_H_ */
