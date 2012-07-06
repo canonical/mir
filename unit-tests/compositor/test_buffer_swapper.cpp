@@ -27,6 +27,7 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+#if MIR_TODO
 TEST(buffer_swapper_double, simple_swaps)
 {
     using namespace testing;
@@ -101,6 +102,7 @@ TEST(buffer_swapper_double, simple_grabs)
     swapper->ungrab(buf_tmp_b);
 
 }
+#endif
 
 /* this tests the start-up behavior of the swap algorithm */
 TEST(buffer_swapper, init_test)

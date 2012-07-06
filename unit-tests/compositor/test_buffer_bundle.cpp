@@ -79,6 +79,7 @@ TEST(buffer_bundle, add_rm_buffers)
     EXPECT_EQ(buffers_removed, 2); 
 }
 
+#if MIR_TODO
 /* this would simulate binding and locking a back buffer for the compositor's use */
 /* tests the BufferBundle's implementation of the BufferTextureBinder interface */
 TEST(buffer_bundle, add_buffers_and_bind)
@@ -157,6 +158,7 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
         queue->queue_client_buffer(sent_buffer);
     }
 }
+#endif
 
 TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     using namespace testing;
