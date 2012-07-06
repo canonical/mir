@@ -21,7 +21,6 @@
 
 #include "mir/geometry/dimensions.h"
 
-#include <cassert>
 #include <memory>
 
 namespace mir

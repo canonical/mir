@@ -18,6 +18,8 @@
 
 #include "mir/surfaces/surface.h"
 
+#include <cassert>
+
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geometry = mir::geometry;
