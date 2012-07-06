@@ -48,26 +48,16 @@ public:
         return std::shared_ptr<mc::Buffer>();
     }
 };
-
-
-class DisplayServerFixture : public ::testing::Test
-{
-public:
-    DisplayServerFixture()
-            : allocation_strategy(std::make_shared<StubGraphicBufferAllocator>()),
-              display_server(&allocation_strategy)
-    {
-    }
-
-    mc::DoubleBufferAllocationStrategy allocation_strategy;
-    mir::DisplayServer display_server;
-};
-
 }
 
-TEST_F(DisplayServerFixture, notify_sync_and_see_paint)
+TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
+
+    mc::DoubleBufferAllocationStrategy allocation_strategy(
+            std::make_shared<StubGraphicBufferAllocator>());
+
+    mir::DisplayServer display_server(&allocation_strategy);
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);
