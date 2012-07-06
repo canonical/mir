@@ -19,7 +19,10 @@ set(
 
   axis.cpp
   dispatcher.cpp
+  filter.cpp
   grab_filter.cpp
+  shell_filter.cpp
+  application_filter.cpp
   position_info.cpp
 )
 

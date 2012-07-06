@@ -16,34 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#include "mir/input/shell_filter.h"
 
-#include "drawer.h"
+namespace mi = mir::input;
 
-namespace mir
+mi::ShellFilter::ShellFilter(std::shared_ptr<Filter> const& next_link) :
+    ChainingFilter(next_link)
 {
-namespace surfaces
-{
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
 }
 
-namespace compositor
+void mi::ShellFilter::accept(Event* e) const
 {
-class Compositor : public Drawer
-{
-public:
-    explicit Compositor(surfaces::Scenegraph* scenegraph);
-
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
-};
-
-
-}
+    ChainingFilter::accept(e);
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+
+
+

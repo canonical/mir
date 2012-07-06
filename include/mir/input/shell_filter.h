@@ -13,33 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_APPLICATION_MANAGER_H_
-#define MIR_APPLICATION_MANAGER_H_
 
-#include <memory>
+#ifndef MIR_INPUT_SHELL_FILTER_H_
+#define MIR_INPUT_SHELL_FILTER_H_
+
+#include "mir/input/filter.h"
 
 namespace mir
 {
-
-class Application;
-
-class ApplicationManager
+namespace input
 {
- public:
-    virtual ~ApplicationManager() {}
+class ShellFilter : public ChainingFilter
+{
+public:
+    //using ChainingFilter::ChainingFilter;
+    ShellFilter(std::shared_ptr<Filter> const& next_link);
 
-    virtual std::weak_ptr<Application> get_grabbing_application() = 0;
-
- protected:
-    ApplicationManager() = default;
-
-    ApplicationManager(const ApplicationManager&) = delete;
-    ApplicationManager& operator=(const ApplicationManager&) = delete;
+    void accept(Event* e) const;
 };
-
+}
 }
 
-#endif // MIR_APPLICATION_MANAGER_H_
+
+#endif /* MIR_INPUT_SHELL_FILTER_H_ */

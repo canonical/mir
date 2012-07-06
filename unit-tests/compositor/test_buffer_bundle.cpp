@@ -13,8 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+
+#include "mock_buffer.h"
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"
@@ -26,39 +28,18 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+namespace {
 const geom::Width width{1024};
 const geom::Height height{768};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
-namespace {
 struct EmptyDeleter
 {
     template<typename T>
     void operator()(T* )
     {
     }    
-};
-struct MockBuffer : public mc::Buffer
-{
- public:
-	MockBuffer()
-	{
-	    using namespace testing;
-		ON_CALL(*this, width()).       WillByDefault(Return(::width));
-		ON_CALL(*this, height()).      WillByDefault(Return(::height));
-		ON_CALL(*this, stride()).      WillByDefault(Return(::stride));
-		ON_CALL(*this, pixel_format()).WillByDefault(Return(::pixel_format));
-	}
-
-    MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(height, geom::Height());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, mc::PixelFormat());
-
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(bind_to_texture, void());
-
 };
 
 }
@@ -69,8 +50,8 @@ TEST(buffer_bundle, add_rm_buffers)
     using namespace testing;
 
     mc::BufferBundle buffer_bundle;
-    MockBuffer mock_buffer;
-    std::shared_ptr<MockBuffer> default_buffer(
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
     int buffers_removed;
@@ -96,8 +77,8 @@ TEST(buffer_bundle, add_buffers_and_bind)
     using namespace testing;
    
     mc::BufferBundle buffer_bundle;
-    MockBuffer mock_buffer;
-    std::shared_ptr<MockBuffer> default_buffer(
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
 
@@ -109,18 +90,14 @@ TEST(buffer_bundle, add_buffers_and_bind)
             .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, lock())
             .Times(AtLeast(num_iterations));
+    EXPECT_CALL(mock_buffer, unlock())
+            .Times(AtLeast(num_iterations));
 
-    int i;
-    bool exception_thrown = false;
-    for(i=0; i<num_iterations; i++) {
+    for(int i=0; i<num_iterations; i++) {
         /* if binding doesn't work, this is a case where we may have an exception */
-        try {
-            buffer_bundle.bind_back_buffer();
-            buffer_bundle.release_back_buffer();
-        } catch (int) {
-            exception_thrown = true;
-        }
-        EXPECT_FALSE(exception_thrown);
+        ASSERT_NO_THROW({
+                buffer_bundle.lock_and_bind_back_buffer();
+            });
     }
 }
 
@@ -129,8 +106,8 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     using namespace testing;
    
     mc::BufferBundle buffer_bundle;
-    MockBuffer mock_buffer;
-    std::shared_ptr<MockBuffer> default_buffer(
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
 
@@ -139,6 +116,8 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
 
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, lock())
+            .Times(AtLeast(num_iterations));
+    EXPECT_CALL(mock_buffer, unlock())
             .Times(AtLeast(num_iterations));
 
     std::shared_ptr<mc::Buffer> sent_buffer;
@@ -157,12 +136,13 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     using namespace testing;
 
     mc::BufferBundle buffer_bundle;
-    MockBuffer mock_buffer_cli;
-    std::shared_ptr<MockBuffer> default_buffer_cli(
+    mc::MockBuffer mock_buffer_cli{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer_cli(
         &mock_buffer_cli,
-        EmptyDeleter()); 
-    MockBuffer mock_buffer_com;
-    std::shared_ptr<MockBuffer> default_buffer_com(
+        EmptyDeleter());
+    
+    mc::MockBuffer mock_buffer_com{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer_com(
         &mock_buffer_com,
         EmptyDeleter()); 
 
@@ -171,13 +151,16 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
 
     EXPECT_CALL(mock_buffer_cli, lock())
             .Times(AtLeast(1));
-
+    EXPECT_CALL(mock_buffer_cli, unlock())
+            .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_com, bind_to_texture())
             .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_com, lock())
             .Times(AtLeast(1));
+    EXPECT_CALL(mock_buffer_com, unlock())
+            .Times(AtLeast(1));
 
-    buffer_bundle.bind_back_buffer();
+    buffer_bundle.lock_and_bind_back_buffer();
     buffer_bundle.dequeue_client_buffer();
 
 }

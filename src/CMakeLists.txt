@@ -19,3 +19,4 @@
 add_subdirectory(compositor/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
+add_subdirectory(frontend/)

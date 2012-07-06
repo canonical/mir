@@ -20,7 +20,7 @@
 #include "mir/graphics/framebuffer_backend.h"
 #include "mir/compositor/drawer.h"
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/buffer_manager.h"
+#include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/scenegraph.h"
 #include "mir/geometry/rectangle.h"
@@ -43,21 +43,27 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
+struct MockScenegraph : public ms::Scenegraph
+{
+    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender(const geom::Rectangle&));
+};
+
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    ms::SurfaceStack scenegraph;
+    MockScenegraph scenegraph;
     MockDisplay display;
 
     mc::Drawer&& comp = mc::Compositor(&scenegraph);
 
-    EXPECT_CALL(display, notify_update()).Times(1);
-
+    EXPECT_CALL(display, notify_update()).Times(1);    
     EXPECT_CALL(display, view_area()).Times(AtLeast(1))
 			.WillRepeatedly(Return(geom::Rectangle()));
 
+    EXPECT_CALL(scenegraph, get_surfaces_in(_)).WillRepeatedly(Return(ms::SurfacesToRender()));
+    
     comp.render(&display);
 }

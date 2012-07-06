@@ -13,37 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#ifndef MIR_FRONTEND_APPLICATION_H_
+#define MIR_FRONTEND_APPLICATION_H_
 
-#include "drawer.h"
+#include "mir/input/event_handler.h"
+
+#include <cassert>
 
 namespace mir
 {
-namespace surfaces
+namespace frontend
 {
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-}
 
-namespace compositor
+namespace mi = mir::input;
+
+class Application : public mi::EventHandler
 {
-class Compositor : public Drawer
-{
-public:
-    explicit Compositor(surfaces::Scenegraph* scenegraph);
+ public:    
+    virtual ~Application() {}
+    
+ protected:
+    Application() = default;
 
-    virtual void render(graphics::Display* display);
-
-private:
-    surfaces::Scenegraph* const scenegraph;
+    Application(const Application&) = delete;
+    Application& operator=(const Application&) = delete;    
 };
 
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_FRONTEND_APPLICATION_H_

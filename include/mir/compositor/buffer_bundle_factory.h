@@ -18,47 +18,38 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
+#define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 
-#include "buffer.h"
+#include "mir/compositor/buffer.h"
 #include "mir/geometry/dimensions.h"
 
-#include <cstdint>
 #include <memory>
-#include <atomic>
-#include <list>
 
 namespace mir
 {
 namespace compositor
 {
 
-class GraphicBufferAllocator;
 class BufferBundle;
-class BufferManager
+
+class BufferBundleFactory
 {
  public:
+    virtual ~BufferBundleFactory() {}
 
-    explicit BufferManager(GraphicBufferAllocator* gr_allocator);
-    virtual ~BufferManager() {}
+    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+        geometry::Width width,
+        geometry::Height height,
+        PixelFormat pf) = 0;
 
-    virtual std::shared_ptr<BufferBundle> create_client(geometry::Width width,
-                                   geometry::Height height,
-                                   PixelFormat pf);
-
-    virtual bool is_empty();
-    virtual void destroy_client(std::shared_ptr<BufferBundle> client);
-
- private:
-    GraphicBufferAllocator* const gr_allocator;
-
-    std::list<std::shared_ptr<BufferBundle>> client_list; 
-
+  protected:
+    BufferBundleFactory() = default;
+    BufferBundleFactory(const BufferBundleFactory&) = delete;
+    BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;
 };
 
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_BUFFER_MANAGER_H_ */
+#endif // MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_

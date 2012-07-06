@@ -16,43 +16,28 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_APPLICATION_H_
-#define MIR_APPLICATION_H_
+#include "mir/frontend/application_manager.h"
 
-#include "mir/input/event_handler.h"
+#include "mir/surfaces/surface.h"
+#include "mir/surfaces/surface_controller.h"
 
+#include <memory>
 #include <cassert>
 
-namespace mir
+namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
+
+mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* organiser) : surface_organiser(organiser)
 {
-
-namespace mi = mir::input;
-
-class ApplicationManager;
-
-class Application : public mi::EventHandler
-{
- public:    
-    virtual ~Application() {}
-    
- protected:
-    explicit Application(ApplicationManager* manager)
-            : application_manager(manager)
-    {
-        assert(application_manager);
-    }
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-    
-    ApplicationManager* get_application_manager()
-    {
-        return application_manager;
-    }
- private:
-    ApplicationManager* application_manager;
-};
-
+    assert(surface_organiser);
 }
 
-#endif // MIR_APPLICATION_H_
+std::weak_ptr<ms::Surface> mf::ApplicationManager::create_surface(const ms::SurfaceCreationParameters& params)
+{
+    return surface_organiser->create_surface(params);
+}
+
+void mf::ApplicationManager::destroy_surface(std::weak_ptr<ms::Surface> surface)
+{
+    surface_organiser->destroy_surface(surface);
+}

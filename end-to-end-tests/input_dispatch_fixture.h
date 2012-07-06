@@ -20,6 +20,9 @@
 #define MIR_INPUT_DISPATCH_FIXTURE_H
 
 #include "mir/input/dispatcher.h"
+#include "mir/input/grab_filter.h"
+#include "mir/input/shell_filter.h"
+#include "mir/input/application_filter.h"
 #include "mir/input/filter.h"
 #include "mir/time_source.h"
 
@@ -58,26 +61,32 @@ class MockFilter : public T
     MockFilter()
     {
         using namespace testing;
-        using ::testing::_;
-        using ::testing::Return;
         
-        ON_CALL(*this, accept(_)).WillByDefault(Return(Filter::Result::continue_processing));
+        ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
     }
     
-    MOCK_METHOD1(accept, Filter::Result(Event*));
+    template<typename... Types>
+    MockFilter(Types&&... args) : T(std::forward<Types>(args)...)
+    {
+        using namespace testing;
+
+        ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
+    }
+
+    MOCK_CONST_METHOD1(accept, void(Event*));
+
+    void forward_accept(Event* event) { T::accept(event); }
 };
 
 class InputDispatchFixture : public ::testing::Test
 {
  public:
     InputDispatchFixture()
-            : mock_shell_filter(new MockFilter<Dispatcher::ShellFilter>()),
-              mock_grab_filter(new MockFilter<Dispatcher::GrabFilter>()),
-              mock_app_filter(new MockFilter<Dispatcher::ApplicationFilter>()),
-              dispatcher(&time_source,
-                         std::move(std::unique_ptr<Dispatcher::ShellFilter>(mock_shell_filter)),
-                         std::move(std::unique_ptr<Dispatcher::GrabFilter>(mock_grab_filter)),
-                         std::move(std::unique_ptr<Dispatcher::ApplicationFilter>(mock_app_filter)))
+		: mock_null_filter(new MockFilter<NullFilter>()),
+		  mock_app_filter(new MockFilter<ApplicationFilter>(mock_null_filter)),
+		  mock_shell_filter(new MockFilter<ShellFilter>(mock_app_filter)),
+		  mock_grab_filter(new MockFilter<GrabFilter>(mock_shell_filter)),
+		  dispatcher(&time_source, mock_grab_filter)
     {
         mir::Timestamp ts;
         ::testing::DefaultValue<mir::Timestamp>::Set(ts);
@@ -89,9 +98,11 @@ class InputDispatchFixture : public ::testing::Test
     }
  protected:
     MockTimeSource time_source;
-    MockFilter<Dispatcher::ShellFilter>* mock_shell_filter;
-    MockFilter<Dispatcher::GrabFilter>* mock_grab_filter;
-    MockFilter<Dispatcher::ApplicationFilter>* mock_app_filter;
+
+    std::shared_ptr<MockFilter<NullFilter>> mock_null_filter;
+    std::shared_ptr<MockFilter<ApplicationFilter>> mock_app_filter;
+    std::shared_ptr<MockFilter<ShellFilter>> mock_shell_filter;
+    std::shared_ptr<MockFilter<GrabFilter>> mock_grab_filter;
     Dispatcher dispatcher;
 };
 
