@@ -19,22 +19,80 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> , std::shared_ptr<Buffer> )
+#include <memory>
+#include <atomic>
+
+
+
+mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> a, std::shared_ptr<Buffer> b )
 {
+    atomic_store(&on_deck, a.get());
+    atomic_store(&last_posted, b.get());
+
+    mc::Buffer *tmp = nullptr;
+    atomic_store(&dequeued, tmp);
+    atomic_store(&grabbed, tmp);
+
+    atomic_store(&new_last_posted, false);
+
 }
 
-void mc::BufferSwapperDouble::dequeue_free_buffer(std::shared_ptr<Buffer>& )
+void mc::BufferSwapperDouble::atomic_swap(std::atomic<mc::Buffer*>& a, std::atomic<mc::Buffer*>& b)
 {
+    mc::Buffer *tmp, *tmp2;
+    do {
+        tmp = atomic_load(&a);
+        do {
+            tmp2 = atomic_load(&b);
+        } while (!std::atomic_compare_exchange_weak(&a, &tmp, tmp2));
+    } while (!std::atomic_compare_exchange_weak(&b, &tmp2, tmp ));
 }
 
-void mc::BufferSwapperDouble::queue_finished_buffer(std::shared_ptr<Buffer>& )
+void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
 {
+    atomic_swap(dequeued, on_deck);
+
+    if (dequeued == nullptr) {
+        /* if the dequeued is null, this means that we have no buffers available to
+            give to the client. we must wait */
+        std::unique_lock<std::mutex> lock(cv_mutex);
+        no_dq_available.wait(lock);
+
+        atomic_swap(dequeued, on_deck);
+    }
+
+    /* the algorithm ensures that once the dequeued Buffer* is filled, it is essentially
+        'locked' until queue_finished_buffer is called with this handle */
+    out_buffer = atomic_load(&dequeued);     
 }
 
-void mc::BufferSwapperDouble::grab_last_posted(std::shared_ptr<Buffer>& )
+void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* )
 {
+
+    atomic_swap(on_deck, dequeued);
+    atomic_swap(last_posted, on_deck);
+
+    no_dq_available.notify_one();
+    atomic_store(&new_last_posted, true);
 }
 
-void mc::BufferSwapperDouble::ungrab(std::shared_ptr<Buffer>&  )
+void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
 {
+    atomic_store(&new_last_posted, false);
+    atomic_swap(grabbed, last_posted);
+
+    out_buffer = atomic_load(&grabbed);
+}
+
+void mc::BufferSwapperDouble::ungrab(mc::Buffer*  )
+{
+    if (atomic_load(&new_last_posted))
+    {
+        atomic_swap(on_deck, grabbed);
+        no_dq_available.notify_one();
+        atomic_store(&new_last_posted, false);
+    }
+    else {
+        atomic_swap( last_posted, grabbed);
+    }
 }

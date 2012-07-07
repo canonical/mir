@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <atomic>
+#include <condition_variable>
 
 namespace mir
 {
@@ -36,10 +37,23 @@ class BufferSwapperDouble : public BufferSwapper {
 public:
     BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
 
-    void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer);
-    void queue_finished_buffer(std::shared_ptr<Buffer>& buffer);
-    void grab_last_posted(std::shared_ptr<Buffer>& buffer);
-    void ungrab(std::shared_ptr<Buffer>& buffer );
+    void dequeue_free_buffer(Buffer*& buffer);
+    void queue_finished_buffer(Buffer* buffer);
+    void grab_last_posted(Buffer*& buffer);
+    void ungrab(Buffer* buffer );
+
+private:
+    void atomic_swap(std::atomic<Buffer*>& a, std::atomic<Buffer*>& b);
+
+    std::condition_variable_any no_dq_available;
+    std::mutex cv_mutex;
+
+    std::atomic<Buffer*> grabbed;
+    std::atomic<Buffer*> dequeued;
+    std::atomic<Buffer*> on_deck;
+    std::atomic<Buffer*> last_posted;
+    std::atomic<bool> new_last_posted;
+
 };
 
 }

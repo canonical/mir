@@ -33,10 +33,10 @@ class Buffer;
 
 class BufferSwapper {
 public:
-    virtual void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer) = 0;
-    virtual void queue_finished_buffer(std::shared_ptr<Buffer>& buffer) = 0;
-    virtual void grab_last_posted(std::shared_ptr<Buffer>& buffer) = 0;
-    virtual void ungrab(std::shared_ptr<Buffer>& buffer ) = 0;
+    virtual void dequeue_free_buffer(Buffer*& buffer) = 0;
+    virtual void queue_finished_buffer(Buffer* buffer) = 0;
+    virtual void grab_last_posted(Buffer*& buffer) = 0;
+    virtual void ungrab(Buffer* buffer ) = 0;
 };
 
 }

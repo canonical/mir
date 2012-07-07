@@ -38,8 +38,8 @@ TEST(buffer_swapper_double, simple_swaps)
     
     std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_tmp_a;
-    std::shared_ptr<mc::Buffer> buf_tmp_b;
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
 
     /* BufferSwapperDouble implements the BufferSwapper interface */
     mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
@@ -49,18 +49,18 @@ TEST(buffer_swapper_double, simple_swaps)
     /* normal, one in, one out, pattern */
     /* first buffer is requested and returned */
     swapper->dequeue_free_buffer(buf_tmp_a);
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a.get()) || (buf_tmp_a == buf_b.get())); /* we should get valid buffer we supplied in constructor */
     swapper->queue_finished_buffer(buf_tmp_a);
     
     /* second buffer is requested and returned */
     swapper->dequeue_free_buffer(buf_tmp_b);
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a.get()) || (buf_tmp_a == buf_b.get())); /* we should get valid buffer we supplied in constructor */
     EXPECT_NE(buf_tmp_a, buf_tmp_b); /* we should have gotten a different buffer back this time */
     swapper->queue_finished_buffer(buf_tmp_b);
 
     /* third buffer is requested and returned */
     swapper->dequeue_free_buffer(buf_tmp_a);
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a.get()) || (buf_tmp_a == buf_b.get())); /* we should get valid buffer we supplied in constructor */
     EXPECT_NE(buf_tmp_a, buf_tmp_b); /* we should have gotten a different buffer back this time */
     swapper->queue_finished_buffer(buf_tmp_a);
 } 
@@ -74,9 +74,9 @@ TEST(buffer_swapper_double, simple_grabs)
     
     std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_tmp_a;
-    std::shared_ptr<mc::Buffer> buf_tmp_b;
-    std::shared_ptr<mc::Buffer> buf_tmp_c;
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp_c;
 
     /* BufferSwapperDouble implements the BufferSwapper interface */
     mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
@@ -84,7 +84,7 @@ TEST(buffer_swapper_double, simple_grabs)
 
     /* first buffer is requested and returned (this gives us a valid last posted buffer ) */
     swapper->dequeue_free_buffer(buf_tmp_a);
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a.get()) || (buf_tmp_a == buf_b.get())); /* we should get valid buffer we supplied in constructor */
     swapper->queue_finished_buffer(buf_tmp_a);
 
     swapper->grab_last_posted(buf_tmp_b);
@@ -92,7 +92,7 @@ TEST(buffer_swapper_double, simple_grabs)
     swapper->ungrab(buf_tmp_b);
 
     swapper->dequeue_free_buffer(buf_tmp_c);
-    EXPECT_TRUE((buf_tmp_c == buf_a) || (buf_tmp_c == buf_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a.get()) || (buf_tmp_a == buf_b.get())); /* we should get valid buffer we supplied in constructor */
     EXPECT_NE(buf_tmp_c, buf_tmp_a); /* we should have gotten a different buffer back this time */
     swapper->queue_finished_buffer(buf_tmp_a);
 
@@ -114,7 +114,7 @@ TEST(buffer_swapper, init_test)
     
     std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
     std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_tmp;
+    mc::Buffer* buf_tmp;
 
     /* BufferSwapperDouble implements the BufferSwapper interface */
     mc::BufferSwapperDouble swapper_double(buf_a, buf_b);

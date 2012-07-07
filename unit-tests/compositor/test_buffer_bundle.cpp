@@ -45,10 +45,10 @@ struct EmptyDeleter
 
 struct MockSwapper : public mc::BufferSwapper
 {
-    MOCK_METHOD1(dequeue_free_buffer, void(std::shared_ptr<mc::Buffer>&));
-    MOCK_METHOD1(queue_finished_buffer, void(std::shared_ptr<mc::Buffer>&));
-    MOCK_METHOD1(grab_last_posted, void(std::shared_ptr<mc::Buffer>&));
-    MOCK_METHOD1(ungrab, void(std::shared_ptr<mc::Buffer>&));
+    MOCK_METHOD1(dequeue_free_buffer, void(mc::Buffer*&));
+    MOCK_METHOD1(queue_finished_buffer, void(mc::Buffer*));
+    MOCK_METHOD1(grab_last_posted, void(mc::Buffer*&));
+    MOCK_METHOD1(ungrab, void(mc::Buffer*));
 };
 
 }
@@ -103,9 +103,9 @@ TEST(buffer_bundle, add_buffers_and_bind)
             .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, unlock())
             .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_swapper, grab_last_posted(Eq(default_buffer)))
+    EXPECT_CALL(mock_swapper, grab_last_posted(Eq(default_buffer.get())))
             .Times(num_iterations);
-    EXPECT_CALL(mock_swapper, ungrab(Eq(default_buffer)))
+    EXPECT_CALL(mock_swapper, ungrab(Eq(default_buffer.get())))
             .Times(num_iterations);
 
     mc::BufferTextureBinder *binder;
@@ -142,9 +142,9 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
             .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, unlock())
             .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_swapper, dequeue_free_buffer(Eq(default_buffer)))
+    EXPECT_CALL(mock_swapper, dequeue_free_buffer(Eq(default_buffer.get())))
             .Times(num_iterations);
-    EXPECT_CALL(mock_swapper, queue_finished_buffer(Eq(default_buffer)))
+    EXPECT_CALL(mock_swapper, queue_finished_buffer(Eq(default_buffer.get())))
             .Times(num_iterations);
 
     std::shared_ptr<mc::Buffer> sent_buffer;
