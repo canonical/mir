@@ -22,8 +22,6 @@ namespace mc = mir::compositor;
 #include <memory>
 #include <atomic>
 
-
-
 mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> a, std::shared_ptr<Buffer> b )
 {
     atomic_store(&on_deck, a.get());
