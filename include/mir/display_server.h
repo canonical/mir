@@ -46,6 +46,11 @@ public:
               compositor(&surface_stack)              
     {}
 
+    virtual void run()
+    {
+        
+    }
+    
     virtual void render(graphics::Display* display)
     {
         compositor.render(display);
