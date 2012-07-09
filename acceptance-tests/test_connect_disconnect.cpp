@@ -16,6 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "process.h"
+
 #include "mir/display_server.h"
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
@@ -25,6 +27,7 @@
 
 #include <functional>
 
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -65,151 +68,6 @@ struct ApplicationStateObserver : public StateObserver<mf::Application::State>
         on_state_transition,
         void(mf::Application::State, mf::Application::State));
 };
-
-static const pid_t client_pid = 0;
-
-struct Process
-{
-    enum class TerminationReason
-    {
-        unknown,
-        child_terminated_normally,
-        child_terminated_by_signal,
-        child_terminated_with_core_dump,
-        child_stopped_by_signal,
-        child_resumed_by_signal
-    };
-
-    enum class ExitCode : int
-    {
-        success = EXIT_SUCCESS,
-        failure = EXIT_FAILURE
-    };
-    
-    struct Result
-    {
-        Result() : reason(TerminationReason::unknown),
-                   exit_code(ExitCode::failure)
-        {
-        }
-        
-        bool is_successful() const
-        {
-            return reason == TerminationReason::child_terminated_normally &&
-                    exit_code == ExitCode::success;
-                
-        }
-        
-        TerminationReason reason;
-        ExitCode exit_code;
-    };
-    
-    Process(pid_t pid) : pid(pid)
-    {
-        assert(pid > 0 );
-    }
-
-    Result wait()
-    {
-        int status;
-        waitpid(pid, &status, WUNTRACED | WCONTINUED);
-
-        Result result;
-        if (WIFEXITED(status))
-        {
-            result.reason = TerminationReason::child_terminated_normally;
-
-            switch (WEXITSTATUS(status))
-            {
-                case EXIT_SUCCESS:
-                    result.exit_code = ExitCode::success;
-                    break;
-                case EXIT_FAILURE:
-                    result.exit_code = ExitCode::failure;
-                    break;
-            }
-        } else if (WIFSIGNALED(status))
-        {
-            result.reason = TerminationReason::child_terminated_by_signal;            
-        }
-        
-        return result;
-    }
-    
-    pid_t pid;
-};
-
-
-
-std::ostream& operator<<(std::ostream& out, Process::TerminationReason reason)
-{
-    switch (reason)
-    {
-        case Process::TerminationReason::unknown:
-            out << "unknown";
-            break;
-        case Process::TerminationReason::child_terminated_normally:
-            out << "child_terminated_normally";
-            break;
-        case Process::TerminationReason::child_terminated_by_signal:
-            out << "child_terminated_by_signal";
-            break;
-        case Process::TerminationReason::child_terminated_with_core_dump:
-            out << "child_terminated_with_core_dump";
-            break;
-        case Process::TerminationReason::child_stopped_by_signal:
-            out << "child_stopped_by_signal";
-            break;
-        case Process::TerminationReason::child_resumed_by_signal:
-            out << "child_resumed_by_signal";
-            break;
-    }
-
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, Process::ExitCode code)
-{
-    switch (code)
-    {
-        case Process::ExitCode::success:
-            out << "success";
-            break;            
-        case Process::ExitCode::failure:
-            out << "failure";
-            break;
-        default:
-            out << "unknown ExitCode";
-    }
-
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Process::Result& result)
-{
-    out << "Process::Result(" << result.reason << ", " << result.exit_code << ")";
-    return out;
-}
-
-template<typename Callable>
-Process fork_and_run_in_a_different_process(Callable&& f)
-{
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        throw std::runtime_error("Problem forking process");
-    }
-
-    if (pid == client_pid)
-    {
-        f();
-        exit(::testing::Test::HasFailure() ? static_cast<int>(Process::ExitCode::failure) : static_cast<int>(Process::ExitCode::success));
-    } 
-    
-    return Process(pid);
-}
-
 }
 
 TEST(client_server_communication, client_connects_and_disconnects)
@@ -221,16 +79,17 @@ TEST(client_server_communication, client_connects_and_disconnects)
         display_server.run();
     };
 
-    // Set expectations here.
-    
-    
+    // Set expectations here.    
+    std::shared_ptr<mir::posix::Process> server =
+            mir::posix::fork_and_run_in_a_different_process(
+                server_bind_and_connect);
 
     std::shared_ptr<mf::Communicator> communicator(
         new StubCommunicator());
     
     mir::frontend::Application application(communicator);
 
-    auto client_connect_and_disconnects = [&]() -> void
+    auto client_connects_and_disconnects = [&]() -> void
     {
         SCOPED_TRACE("Client");
         ApplicationStateObserver state_observer;
@@ -253,12 +112,13 @@ TEST(client_server_communication, client_connects_and_disconnects)
                 mf::Application::State::connected,
                 mf::Application::State::disconnected));
     };
-        
-    EXPECT_TRUE(
-        fork_and_run_in_a_different_process(
-            client_connect_and_disconnects).wait().is_successful());
 
-    EXPECT_TRUE(
-        fork_and_run_in_a_different_process(server_bind_and_connect).wait().is_successful());
+    std::shared_ptr<mir::posix::Process> client =
+            mir::posix::fork_and_run_in_a_different_process(
+                client_connects_and_disconnects);
+    
+    EXPECT_TRUE(client->wait_for_termination().is_successful());
 
+    server->terminate();
+    EXPECT_TRUE(server->wait_for_termination().is_successful());
 }
