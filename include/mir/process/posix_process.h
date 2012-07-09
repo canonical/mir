@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_POSIX_PROCESS_H_
-#define MIR_POSIX_PROCESS_H_
+#ifndef MIR_PROCESS_POSIX_PROCESS_H_
+#define MIR_PROCESS_POSIX_PROCESS_H_
 
 #include <gtest/gtest.h>
 
@@ -30,6 +30,8 @@
 #include <sys/wait.h>
 
 namespace mir
+{
+namespace process
 {
 namespace posix
 {
@@ -277,5 +279,6 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
 
 }
 }
+}
 
-#endif // MIR_POSIX_PROCESS_H_
+#endif // MIR_PROCESS_POSIX_PROCESS_H_

@@ -16,11 +16,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "process.h"
-
 #include "mir/display_server.h"
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
+#include "mir/process/posix_process.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,6 +31,7 @@
 #include <sys/wait.h>
 
 namespace mf = mir::frontend;
+namespace mpx = mir::process::posix;
 
 namespace {
 
@@ -80,8 +80,8 @@ TEST(client_server_communication, client_connects_and_disconnects)
     };
 
     // Set expectations here.    
-    std::shared_ptr<mir::posix::Process> server =
-            mir::posix::fork_and_run_in_a_different_process(
+    std::shared_ptr<mpx::Process> server =
+            mpx::fork_and_run_in_a_different_process(
                 server_bind_and_connect);
 
     std::shared_ptr<mf::Communicator> communicator(
@@ -113,10 +113,10 @@ TEST(client_server_communication, client_connects_and_disconnects)
                 mf::Application::State::disconnected));
     };
 
-    std::shared_ptr<mir::posix::Process> client =
-            mir::posix::fork_and_run_in_a_different_process(
+    std::shared_ptr<mpx::Process> client =
+            mpx::fork_and_run_in_a_different_process(
                 client_connects_and_disconnects);
-    
+
     EXPECT_TRUE(client->wait_for_termination().is_successful());
 
     server->terminate();
