@@ -49,6 +49,10 @@ private:
 
     Buffer* buf_a;
     Buffer* buf_b;
+    Buffer* nullptr0;
+    Buffer* nullptr1;
+
+
     std::atomic<Buffer**> grabbed;
     std::atomic<Buffer**> dequeued;
     std::atomic<Buffer**> on_deck;
