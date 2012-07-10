@@ -65,6 +65,7 @@ TEST(buffer_swapper_double, simple_swaps)
     swapper->queue_finished_buffer(buf_tmp_a);
 } 
 
+#ifdef MIR_TODO
 TEST(buffer_swapper_double, simple_grabs)
 {
     geom::Width w{1024};
@@ -103,7 +104,7 @@ TEST(buffer_swapper_double, simple_grabs)
 }
 
 /* this tests the start-up behavior of the swap algorithm */
-TEST(buffer_swapper, init_test)
+TEST(buffer_swapper_double, init_test)
 {
     using namespace testing;
 
@@ -126,3 +127,4 @@ TEST(buffer_swapper, init_test)
     EXPECT_EQ(buf_tmp, nullptr); /* no one has posted yet, so we should be returning nothing (or error) */
 
 }
+#endif
