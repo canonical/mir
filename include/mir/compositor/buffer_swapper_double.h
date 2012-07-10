@@ -22,8 +22,8 @@
 
 #include "buffer_swapper.h"
 
-#include <memory>
 #include <atomic>
+#include <condition_variable>
 
 namespace mir
 {
@@ -34,12 +34,24 @@ class Buffer;
 
 class BufferSwapperDouble : public BufferSwapper {
 public:
-    BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
+    BufferSwapperDouble(Buffer* buffer_a, Buffer* buffer_b);
 
-    void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer);
-    void queue_finished_buffer(std::shared_ptr<Buffer>& buffer);
-    void grab_last_posted(std::shared_ptr<Buffer>& buffer);
-    void ungrab(std::shared_ptr<Buffer>& buffer );
+    void dequeue_free_buffer(Buffer*& buffer);
+    void queue_finished_buffer(Buffer* buffer);
+    void grab_last_posted(Buffer*& buffer);
+    void ungrab(Buffer* buffer );
+
+private:
+    void toggle_to_grabbed();
+    void toggle_to_ungrabbed();
+
+    Buffer* buf_a;
+    Buffer* buf_b;
+    Buffer* invalid0;
+    Buffer* invalid1;
+
+    std::atomic<Buffer**> grabbed;
+    std::atomic<Buffer**> dequeued;
 };
 
 }
