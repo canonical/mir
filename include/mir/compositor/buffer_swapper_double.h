@@ -47,8 +47,8 @@ private:
 
     Buffer* buf_a;
     Buffer* buf_b;
-    Buffer* nullptr0;
-    Buffer* nullptr1;
+    Buffer* invalid0;
+    Buffer* invalid1;
 
     std::atomic<Buffer**> grabbed;
     std::atomic<Buffer**> dequeued;
