@@ -42,25 +42,14 @@ void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer )
         if (dq_assume == &nullptr0)
         {            
             next_state = &buf_a;
-        } else if (dq_assume == &buf_a)
-        {
-            next_state = &nullptr1; 
         } else if (dq_assume == &nullptr1)
         {
             next_state = &buf_b; 
-        } else if (dq_assume == &buf_b)
-        {
-            next_state = &nullptr0; 
         }
-
-    } while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
-    
+    } while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state )); 
 
     out_buffer = *dequeued.load();
 }
-
-
-#include <iostream>
 
 void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer*)
 {
@@ -74,123 +63,91 @@ void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer*)
 
         if (dq_assume == &buf_a)
         {
-            
             next_state = &nullptr1; 
         }
 
         else
         if (dq_assume == &buf_b)
         {
-            
             next_state = &nullptr0; 
         }
 
     } while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
 
 
+    /* toggle grabbed pattern */
     do {
         grabbed_assume = grabbed.load();
 
         if (grabbed_assume == &nullptr0)
         {
-            std::cout << "switch from pattern A to pattern B\n";
             next_state = &nullptr1; 
         }
         else
         if (grabbed_assume == &buf_a)
         {
-            std::cout << "switch from pattern A to pattern B\n"; 
             next_state = &buf_b; 
         }
 
         else
         if (grabbed_assume == &nullptr1)
         {
-            
-            std::cout << "switch from pattern B to pattern A\n"; 
             next_state = &nullptr0; 
         }
         else
         if (grabbed_assume == &buf_b)
         { 
-            std::cout << "switch from pattern B to pattern A\n"; 
             next_state = &buf_a; 
         }
     } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 
+}
+
+void mc::BufferSwapperDouble::toggle_to_grabbed() {
+    Buffer **grabbed_assume;
+    Buffer **next_state;
+
+    do {
+        grabbed_assume = grabbed.load();
+        if (grabbed_assume == &nullptr0) /* pattern A */
+        { 
+            next_state = &buf_a; 
+        }
+        else 
+        if (grabbed_assume == &nullptr1) /* pattern B */
+        {
+            next_state = &buf_b; 
+        }
+    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+}
+
+void mc::BufferSwapperDouble::toggle_to_ungrabbed() {
+    Buffer **grabbed_assume;
+    Buffer **next_state;
+    /* must transition grabbed and last_posted */
+    do {
+        grabbed_assume = grabbed.load();
+        if (grabbed_assume == &buf_a) /* pattern A */
+        {
+            
+            next_state = &nullptr0; 
+        }
+        else
+        if (grabbed_assume == &buf_b) /* pattern B */
+        {
+            
+            next_state = &nullptr1; 
+        }
+    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
 
 void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
 {
-    Buffer **grabbed_assume;
-    Buffer **next_state;
-
-    /* must transition grabbed and last_posted */
-    do {
-        grabbed_assume = grabbed.load();
-
-    /* pattern A */
-        if (grabbed_assume == &nullptr0)
-        { 
-            next_state = &buf_a; 
-        }
-        else
-        if (grabbed_assume == &buf_a)
-        {
-            
-            next_state = &nullptr0; 
-        }
-    /* pattern b */
-        else
-        if (grabbed_assume == &nullptr1)
-        {
-            
-            next_state = &buf_b; 
-        }
-        else
-        if (grabbed_assume == &buf_b)
-        {
-            
-            next_state = &nullptr1; 
-        }
-    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
-
+    toggle_to_grabbed();
     out_buffer = *grabbed.load();
-
-
 }
 
 void mc::BufferSwapperDouble::ungrab(mc::Buffer*)
 {
-    Buffer **grabbed_assume;
-    Buffer **next_state;
-    do {
-        grabbed_assume = grabbed.load();
-
-    /* pattern A */
-        if (grabbed_assume == &nullptr0)
-        { 
-            next_state = &buf_a; 
-        }
-        else
-        if (grabbed_assume == &buf_a)
-        {
-            
-            next_state = &nullptr0; 
-        }
-    /* pattern b */
-        else
-        if (grabbed_assume == &nullptr1)
-        {
-            
-            next_state = &buf_b; 
-        }
-        else
-        if (grabbed_assume == &buf_b)
-        {
-            
-            next_state = &nullptr1; 
-        }
-    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
-
+    toggle_to_ungrabbed();
 }

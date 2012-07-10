@@ -42,16 +42,13 @@ public:
     void ungrab(Buffer* buffer );
 
 private:
-    void lockless_swap(std::atomic<Buffer*>& a,
-                       std::atomic<Buffer*>& b);
-    std::condition_variable_any no_dq_available;
-    std::mutex cv_mutex;
+    void toggle_to_grabbed();
+    void toggle_to_ungrabbed();
 
     Buffer* buf_a;
     Buffer* buf_b;
     Buffer* nullptr0;
     Buffer* nullptr1;
-
 
     std::atomic<Buffer**> grabbed;
     std::atomic<Buffer**> dequeued;
