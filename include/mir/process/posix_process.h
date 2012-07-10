@@ -19,11 +19,11 @@
 #ifndef MIR_PROCESS_POSIX_PROCESS_H_
 #define MIR_PROCESS_POSIX_PROCESS_H_
 
+#include "posix_signal.h"
+
 #include <memory>
 #include <iosfwd>
 #include <stdexcept>
-
-#include <signal.h>
 
 namespace mir
 {
@@ -82,30 +82,6 @@ public:
         failure = EXIT_FAILURE
     };
 
-    enum class Signal : int
-    {
-        unknown = _NSIG+1,
-        hangup = SIGHUP,
-        interrupt = SIGINT,
-        quit = SIGQUIT,
-        illegal_instruction = SIGILL,
-        trace_trap = SIGTRAP,
-        abort = SIGABRT,
-        iot_trap = SIGIOT,
-        bus_error = SIGBUS,
-        floating_point_exception = SIGFPE,
-        kill = SIGKILL,
-        user1 = SIGUSR1,
-        user2 = SIGUSR2,
-        segmentation_violation = SIGSEGV,
-        broken_pipe = SIGPIPE,
-        alarm_clock = SIGALRM,
-        terminate = SIGTERM,
-        child_status_changed = SIGCHLD,
-        cont = SIGCONT,
-        stop = SIGSTOP
-    };
-
     // Aggregated results of running a process to completion
     struct Result
     {
@@ -153,8 +129,9 @@ private:
 // Stream print helper
 std::ostream& operator<<(std::ostream& out, const Process::Result& result);
 
-// Fork a process to run the supplied main function, calling
+// Fork a child process to run the supplied main function, calling
 // the exit function when done.
+// Returns the parent process.
 template<typename Callable>
 std::shared_ptr<Process> fork_and_run_in_a_different_process(
     Callable&& main_fn, int (exit_fn)())

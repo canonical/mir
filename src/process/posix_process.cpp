@@ -30,7 +30,7 @@ namespace mpx = mir::process::posix;
 mpx::Process::Result::Result()
     : reason(TerminationReason::unknown)
     , exit_code(ExitCode::failure)
-    , signal(Signal::unknown)
+    , signal(mpx::Signal::unknown)
 {
 }
 
@@ -54,11 +54,12 @@ mpx::Process::~Process()
 
 mpx::Process::Result mpx::Process::wait_for_termination()
 {
+    Result result;
     int status;
+
     // ToDo handle errors here
     ::waitpid(pid, &status, WUNTRACED | WCONTINUED);
 
-    Result result;
     if (WIFEXITED(status))
     {
         result.reason = TerminationReason::child_terminated_normally;
@@ -80,7 +81,7 @@ mpx::Process::Result mpx::Process::wait_for_termination()
     return result;
 }
 
-void mpx::Process::send_signal(Signal s)
+void mpx::Process::send_signal(mpx::Signal s)
 {
     int result = ::kill(pid, static_cast<int>(s));
 
@@ -100,22 +101,22 @@ void mpx::Process::send_signal(Signal s)
 
 void mpx::Process::kill()
 {
-    send_signal(Signal::kill);
+    send_signal(mpx::Signal::kill);
 }
 
 void mpx::Process::terminate()
 {
-    send_signal(Signal::terminate);
+    send_signal(mpx::Signal::terminate);
 }
 
 void mpx::Process::stop()
 {
-    send_signal(Signal::stop);
+    send_signal(mpx::Signal::stop);
 }
 
 void mpx::Process::cont()
 {
-    send_signal(Signal::cont);
+    send_signal(mpx::Signal::cont);
 }
 
 std::ostream& operator<<(std::ostream& out, mpx::Process::TerminationReason reason)
