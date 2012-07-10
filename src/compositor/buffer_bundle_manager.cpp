@@ -31,7 +31,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::BufferBundleManager::BufferBundleManager(
-    BufferAllocationStrategy* strategy)
+    const std::shared_ptr<BufferAllocationStrategy>& strategy)
         : buffer_allocation_strategy(strategy)
 {
     assert(strategy);

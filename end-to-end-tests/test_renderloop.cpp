@@ -66,13 +66,14 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    mc::DoubleBufferAllocationStrategy allocation_strategy(
-            std::make_shared<StubGraphicBufferAllocator>());
-
+    std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(
+        new mc::DoubleBufferAllocationStrategy(
+            std::make_shared<StubGraphicBufferAllocator>()));
+    
     std::shared_ptr<ms::SurfaceRenderer> surface_renderer(new StubSurfaceRenderer());
     
     mir::DisplayServer display_server(
-        &allocation_strategy,
+        allocation_strategy,
         surface_renderer);
 
     MockDisplay display;

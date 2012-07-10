@@ -51,7 +51,7 @@ public:
     // TODO: Come up with a better way to resolve dependency on
     // the BufferAllocationStrategy.
     DisplayServer(
-        compositor::BufferAllocationStrategy* strategy,
+        const std::shared_ptr<compositor::BufferAllocationStrategy>& strategy,
         const std::shared_ptr<surfaces::SurfaceRenderer>& renderer);
 
     ~DisplayServer();

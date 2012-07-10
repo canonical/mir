@@ -34,7 +34,7 @@ namespace mg = mir::graphics;
 struct mir::DisplayServer::Private
 {
     Private(
-        mc::BufferAllocationStrategy* strategy,
+        const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
         const std::shared_ptr<ms::SurfaceRenderer>& renderer)
             : buffer_bundle_manager(strategy),
               surface_stack(&buffer_bundle_manager),
@@ -48,7 +48,7 @@ struct mir::DisplayServer::Private
 };
 
 mir::DisplayServer::DisplayServer(
-    mc::BufferAllocationStrategy* strategy,
+    const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
     const std::shared_ptr<ms::SurfaceRenderer>& renderer) : p(new mir::DisplayServer::Private(strategy, renderer))
 {
 }
