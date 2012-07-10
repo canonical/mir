@@ -22,7 +22,6 @@
 
 #include "buffer_swapper.h"
 
-#include <memory>
 #include <atomic>
 #include <condition_variable>
 
@@ -35,7 +34,7 @@ class Buffer;
 
 class BufferSwapperDouble : public BufferSwapper {
 public:
-    BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
+    BufferSwapperDouble(Buffer* buffer_a, Buffer* buffer_b);
 
     void dequeue_free_buffer(Buffer*& buffer);
     void queue_finished_buffer(Buffer* buffer);

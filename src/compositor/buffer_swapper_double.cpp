@@ -19,13 +19,11 @@
 
 namespace mc = mir::compositor;
 
-#include <memory>
-#include <atomic>
 
-mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> a, std::shared_ptr<Buffer> b )
+mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
 {
-    atomic_store(&on_deck, a.get());
-    atomic_store(&last_posted, b.get());
+    atomic_store(&on_deck, a);
+    atomic_store(&last_posted, b);
 
     mc::Buffer *tmp = nullptr;
     atomic_store(&dequeued, tmp);
