@@ -55,8 +55,6 @@ private:
 
     std::atomic<Buffer**> grabbed;
     std::atomic<Buffer**> dequeued;
-    std::atomic<Buffer**> on_deck;
-    std::atomic<Buffer**> last_posted;
 };
 
 }
