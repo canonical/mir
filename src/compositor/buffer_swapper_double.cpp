@@ -37,8 +37,6 @@ void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer )
     out_buffer = *dequeued.load();
 }
 
-
-
 void mc::BufferSwapperDouble::queue_finished_buffer()
 {
     /* transition dequeued */

@@ -33,8 +33,18 @@ class Buffer;
 
 class BufferSwapper {
 public:
+    /* callers of dequeue_free_buffer are returned a pointer to the
+      currently usable buffer. This call may potentially wait for a 
+      buffer to become available */
     virtual void dequeue_free_buffer(Buffer*& buffer) = 0;
+
+    /* once a client is done with the finished buffer, it must queue
+       it. This modifies the buffer the compositor posts to the screen */
     virtual void queue_finished_buffer() = 0;
+
+    /* caller of grab_last_posted buffer should get no-wait access to the 
+        last posted buffer. However, the client will potentially stall 
+        until control of the buffer is returned via ungrab() */
     virtual void grab_last_posted(Buffer*& buffer) = 0;
     virtual void ungrab() = 0;
 };
