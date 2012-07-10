@@ -21,6 +21,7 @@
 #define MIR_DISPLAY_SERVER_H_
 
 #include "mir/compositor/compositor.h"
+#include "mir/surfaces/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
@@ -40,10 +41,12 @@ class DisplayServer
 public:
     // TODO: Come up with a better way to resolve dependency on
     // the BufferAllocationStrategy.
-    DisplayServer(compositor::BufferAllocationStrategy* strategy)
+    DisplayServer(
+        compositor::BufferAllocationStrategy* strategy,
+        surfaces::SurfaceRenderer* renderer)
             : buffer_bundle_manager(strategy),
               surface_stack(&buffer_bundle_manager),
-              compositor(&surface_stack)              
+              compositor(&surface_stack, renderer)              
     {}
 
     virtual void render(graphics::Display* display)

@@ -50,6 +50,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assertion)
 {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     EXPECT_EXIT(
         mir::frontend::ApplicationManager app(nullptr),
         ::testing::KilledBySignal(SIGABRT),

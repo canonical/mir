@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
-#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#ifndef MIR_SURFACES_SURFACE_RENDERER_H_
+#define MIR_SURFACES_SURFACE_RENDERER_H_
 
 #include <memory>
 
@@ -27,26 +27,21 @@ namespace surfaces
 {
 
 class Surface;
-class SurfaceCreationParameters;
 
-class SurfaceStackModel
+class SurfaceRenderer
 {
- public:
-    virtual ~SurfaceStackModel() {}
+public:
+    virtual ~SurfaceRenderer() {}
 
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
-
-    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
-
-    virtual std::size_t surface_count() const = 0;
+    virtual void render(std::shared_ptr<Surface> surface) = 0;
     
- protected:
-    SurfaceStackModel() = default;
-    SurfaceStackModel(const SurfaceStackModel&) = delete;
-    SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;
+protected:
+    SurfaceRenderer() = default;
+    SurfaceRenderer(const SurfaceRenderer&) = delete;
+    SurfaceRenderer& operator=(const SurfaceRenderer&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#endif // MIR_SURFACES_SURFACE_RENDERER_H_

@@ -22,26 +22,88 @@
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_texture_binder.h"
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
 #include <cassert>
 #include <memory>
+#include <set>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
+
+namespace
+{
+
+template<typename Lockable>
+struct LockGuardDeleter
+{
+    LockGuardDeleter(Lockable& lockable) : lockable(lockable)
+    {
+        lockable.lock();
+    }
+    
+    template<typename T>
+    void operator()(T* t)
+    {
+        lockable.unlock();
+        delete t;
+    }
+
+    Lockable& lockable;
+};
+
+struct SurfaceStackView : public ms::Scenegraph::View
+{
+public:
+    void apply(ms::SurfaceRenderer* renderer)
+    {
+        if (renderer == nullptr)
+            return;
+
+        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
+        {
+            renderer->render(*it);
+        }
+    }
+
+    std::set<std::shared_ptr<ms::Surface>> surfaces;
+};
+}
 
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
 }
 
-ms::SurfacesToRender ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
+void ms::SurfaceStack::lock()
 {
-    return SurfacesToRender();
+    guard.lock();
+}
+
+void ms::SurfaceStack::unlock()
+{
+    guard.unlock();
+}
+
+bool ms::SurfaceStack::try_lock()
+{
+    return guard.try_lock();
+}
+
+std::shared_ptr<ms::Scenegraph::View> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
+{
+    // TODO: Ensure locking with the help of a customer deleter here.
+    LockGuardDeleter<std::mutex> lgd(guard);
+    SurfaceStackView* view = new SurfaceStackView();
+    view->surfaces = surfaces;
+    return std::shared_ptr<ms::Scenegraph::View>(view, lgd);
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)
 {
+    std::lock_guard<std::mutex> lg(guard);
+    
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params,
@@ -49,9 +111,16 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
                 params.width,
                 params.height,
                 mc::PixelFormat::rgba_8888))));
+
+    surfaces.insert(surface);
     return surface;
 }
 
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> /*surface*/)
 {
+}
+
+std::size_t ms::SurfaceStack::surface_count() const
+{
+    return surfaces.size();
 }

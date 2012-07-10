@@ -25,21 +25,26 @@
 #include <cassert>
 
 namespace mc = mir::compositor;
-
+namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
-    surfaces::Scenegraph* scenegraph)
-    :
-    scenegraph(scenegraph)
+    ms::Scenegraph* scenegraph,
+    ms::SurfaceRenderer* renderer)
+        : scenegraph(scenegraph),
+          renderer(renderer)
 {
     assert(scenegraph);
+    assert(renderer);
 }
 
 void mc::Compositor::render(graphics::Display* display)
 {
     assert(display);
 
-    scenegraph->get_surfaces_in(display->view_area());
-
+    auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
+    assert(surfaces_in_view_area);
+    
+    surfaces_in_view_area->apply(renderer);
+    
     display->notify_update();
 }

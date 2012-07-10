@@ -25,6 +25,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 namespace
@@ -47,6 +48,15 @@ public:
         return std::shared_ptr<mc::Buffer>();
     }
 };
+
+class StubSurfaceRenderer : public ms::SurfaceRenderer
+{
+public:
+    void render(std::shared_ptr<ms::Surface> /*surface*/)
+    {
+    }
+};
+
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
@@ -56,7 +66,11 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     mc::DoubleBufferAllocationStrategy allocation_strategy(
             std::make_shared<StubGraphicBufferAllocator>());
 
-    mir::DisplayServer display_server(&allocation_strategy);
+    StubSurfaceRenderer surface_renderer;
+    
+    mir::DisplayServer display_server(
+        &allocation_strategy,
+        &surface_renderer);
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);
@@ -66,3 +80,4 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 
     display_server.render(&display);
 }
+

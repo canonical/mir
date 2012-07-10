@@ -18,6 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/scenegraph.h"
+#include "mir/surfaces/surface_renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -32,10 +33,15 @@ namespace mg = mir::graphics;
 namespace
 {
 
+struct MockSurfaceRenderer : public ms::SurfaceRenderer
+{
+    MOCK_METHOD1(render, void(std::shared_ptr<ms::Surface>));
+};
+
 struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, ms::SurfacesToRender (geom::Rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::Scenegraph::View> (geom::Rectangle const&));
 };
 
 struct MockDisplay : mg::Display
@@ -44,6 +50,20 @@ public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
     MOCK_METHOD0(notify_update, void ());
 };
+
+struct MockView : public ms::Scenegraph::View
+{
+    MOCK_METHOD1(apply, void(ms::SurfaceRenderer*));
+};
+
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T*) const
+    {
+    }
+};
+
 }
 
 
@@ -51,21 +71,29 @@ TEST(Compositor, render)
 {
     using namespace testing;
 
+    MockSurfaceRenderer renderer;
     MockScenegraph scenegraph;
     MockDisplay display;
+    MockView view;
+    
+    mc::Compositor comp(&scenegraph, &renderer);
 
-    mc::Compositor comp(&scenegraph);
-
+    EXPECT_CALL(view, apply(_)).Times(1);
+    
+    EXPECT_CALL(renderer, render(_)).Times(0);
+    
     EXPECT_CALL(display, view_area())
             .Times(1)
-			.WillRepeatedly(Return(geom::Rectangle()));
+            .WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(scenegraph, get_surfaces_in(_))
             .Times(1)
-    		.WillRepeatedly(Return(ms::SurfacesToRender()));
-
-    EXPECT_CALL(display, notify_update()).
-            Times(1);
-
+            .WillRepeatedly(
+                Return(
+                    std::shared_ptr<MockView>(&view, EmptyDeleter())));
+    
+    EXPECT_CALL(display, notify_update())
+            .Times(1);
+    
     comp.render(&display);
 }
