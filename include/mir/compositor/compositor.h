@@ -21,6 +21,8 @@
 
 #include "mir/compositor/drawer.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace surfaces
@@ -37,13 +39,13 @@ class Compositor : public Drawer
 public:
     explicit Compositor(
         surfaces::Scenegraph* scenegraph,
-        surfaces::SurfaceRenderer* renderer);
+        const std::shared_ptr<surfaces::SurfaceRenderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
     surfaces::Scenegraph* const scenegraph;
-    surfaces::SurfaceRenderer* renderer;
+    std::shared_ptr<surfaces::SurfaceRenderer> renderer;
 };
 
 

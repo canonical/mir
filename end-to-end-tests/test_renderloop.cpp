@@ -16,8 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
+#include "mir/surfaces/surface_renderer.h"
 #include "mir/display_server.h"
 
 #include <gmock/gmock.h>
@@ -52,7 +55,7 @@ public:
 class StubSurfaceRenderer : public ms::SurfaceRenderer
 {
 public:
-    void render(std::shared_ptr<ms::Surface> /*surface*/)
+    void render(const std::shared_ptr<ms::Surface>& /*surface*/)
     {
     }
 };
@@ -66,11 +69,11 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     mc::DoubleBufferAllocationStrategy allocation_strategy(
             std::make_shared<StubGraphicBufferAllocator>());
 
-    StubSurfaceRenderer surface_renderer;
+    std::shared_ptr<ms::SurfaceRenderer> surface_renderer(new StubSurfaceRenderer());
     
     mir::DisplayServer display_server(
         &allocation_strategy,
-        &surface_renderer);
+        surface_renderer);
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);

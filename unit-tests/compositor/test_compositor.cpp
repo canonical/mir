@@ -35,7 +35,7 @@ namespace
 
 struct MockSurfaceRenderer : public ms::SurfaceRenderer
 {
-    MOCK_METHOD1(render, void(std::shared_ptr<ms::Surface>));
+    MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
 };
 
 struct MockScenegraph : ms::Scenegraph
@@ -71,16 +71,19 @@ TEST(Compositor, render)
 {
     using namespace testing;
 
-    MockSurfaceRenderer renderer;
+    MockSurfaceRenderer mock_renderer;
+    std::shared_ptr<ms::SurfaceRenderer> renderer(
+        &mock_renderer,
+        EmptyDeleter());
     MockScenegraph scenegraph;
     MockDisplay display;
     MockView view;
     
-    mc::Compositor comp(&scenegraph, &renderer);
+    mc::Compositor comp(&scenegraph, renderer);
 
     EXPECT_CALL(view, apply(_)).Times(1);
     
-    EXPECT_CALL(renderer, render(_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_)).Times(0);
     
     EXPECT_CALL(display, view_area())
             .Times(1)

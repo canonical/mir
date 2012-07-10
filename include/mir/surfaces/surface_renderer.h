@@ -33,7 +33,7 @@ class SurfaceRenderer
 public:
     virtual ~SurfaceRenderer() {}
 
-    virtual void render(std::shared_ptr<Surface> surface) = 0;
+    virtual void render(const std::shared_ptr<Surface>& surface) = 0;
     
 protected:
     SurfaceRenderer() = default;

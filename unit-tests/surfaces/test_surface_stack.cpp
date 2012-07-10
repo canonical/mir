@@ -48,7 +48,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 
 struct MockSurfaceRenderer : public ms::SurfaceRenderer
 {
-    MOCK_METHOD1(render, void(std::shared_ptr<ms::Surface>));
+    MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
 };
 
 }

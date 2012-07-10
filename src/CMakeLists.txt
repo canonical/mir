@@ -15,8 +15,19 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-
 add_subdirectory(compositor/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
 add_subdirectory(frontend/)
+
+set(
+  SRCS
+  display_server.cpp
+)
+
+add_library(
+  mir STATIC
+
+  ${SRCS}
+)
+

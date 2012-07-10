@@ -29,7 +29,7 @@ namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
     ms::Scenegraph* scenegraph,
-    ms::SurfaceRenderer* renderer)
+    const std::shared_ptr<ms::SurfaceRenderer>& renderer)
         : scenegraph(scenegraph),
           renderer(renderer)
 {
@@ -44,7 +44,7 @@ void mc::Compositor::render(graphics::Display* display)
     auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
     assert(surfaces_in_view_area);
     
-    surfaces_in_view_area->apply(renderer);
+    surfaces_in_view_area->apply(renderer.get());
     
     display->notify_update();
 }
