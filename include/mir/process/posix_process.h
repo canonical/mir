@@ -21,13 +21,11 @@
 
 #include <gtest/gtest.h>
 
-#include <functional>
 #include <memory>
+#include <iosfwd>
 #include <stdexcept>
 
 #include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 namespace mir
 {
@@ -66,6 +64,7 @@ struct ProcessForkError : public std::runtime_error
     }
 };
 
+// Posix process control class.
 class Process
 {
 public:
@@ -122,16 +121,17 @@ public:
         Signal signal;
     };
 
-    // 
+    // Construct a process with the supplied pid
     Process(pid_t pid);
-    
-    // The destructor terminates the process. 
+
+    // Destroy the process cleanly, by sending it the termination signal
+    // and waiting for the pid.
     ~Process();
 
     // Wait for the process to terminate, and return the results.
     Result wait_for_termination();
 
-    // Attempt to kill the process by sending the supplied signal. 
+    // Attempt to kill the process by sending the supplied signal.
     // A failure will result in an exception being thrown.
     void send_signal(Signal s);
 
@@ -168,8 +168,8 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
     if (pid == client_pid)
     {
         f();
-        exit(::testing::Test::HasFailure() 
-             ? static_cast<int>(Process::ExitCode::failure) 
+        exit(::testing::Test::HasFailure()
+             ? static_cast<int>(Process::ExitCode::failure)
              : static_cast<int>(Process::ExitCode::success));
     }
 

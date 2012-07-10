@@ -19,9 +19,6 @@
 
 #include "mir/process/posix_process.h"
 
-#include <functional>
-#include <memory>
-
 namespace mpx = mir::process::posix;
 
 mpx::Process::Result::Result()
@@ -163,25 +160,4 @@ std::ostream& operator<<(std::ostream& out, const mpx::Process::Result& result)
 {
     out << "Process::Result(" << result.reason << ", " << result.exit_code << ")";
     return out;
-}
-
-template<typename Callable>
-std::shared_ptr<mpx::Process> fork_and_run_in_a_different_process(Callable&& f)
-{
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        throw mpx::ProcessForkError();
-    }
-
-    if (pid == mpx::client_pid)
-    {
-        f();
-        exit(::testing::Test::HasFailure()
-             ? static_cast<int>(mpx::Process::ExitCode::failure)
-             : static_cast<int>(mpx::Process::ExitCode::success));
-    }
-
-    return std::shared_ptr<mpx::Process>(new mpx::Process(pid));
 }
