@@ -47,13 +47,12 @@ private:
     std::condition_variable_any no_dq_available;
     std::mutex cv_mutex;
 
-    std::mutex state_mutex;
-    std::atomic<Buffer*> grabbed;
-    std::atomic<Buffer*> dequeued;
-    std::atomic<Buffer*> on_deck;
-    std::atomic<Buffer*> last_posted;
-    std::atomic<bool> new_last_posted;
-
+    Buffer* buf_a;
+    Buffer* buf_b;
+    std::atomic<Buffer**> grabbed;
+    std::atomic<Buffer**> dequeued;
+    std::atomic<Buffer**> on_deck;
+    std::atomic<Buffer**> last_posted;
 };
 
 }
