@@ -37,13 +37,16 @@ public:
     BufferSwapperDouble(Buffer* buffer_a, Buffer* buffer_b);
 
     void dequeue_free_buffer(Buffer*& buffer);
-    void queue_finished_buffer(Buffer* buffer);
+    void queue_finished_buffer();
     void grab_last_posted(Buffer*& buffer);
-    void ungrab(Buffer* buffer );
+    void ungrab();
 
 private:
-    void toggle_to_grabbed();
-    void toggle_to_ungrabbed();
+    void compositor_to_grabbed();
+    void compositor_to_ungrabbed();
+    void compositor_change_toggle_pattern();
+    void client_to_dequeued();
+    void client_to_queued();
 
     Buffer* buf_a;
     Buffer* buf_b;

@@ -35,7 +35,7 @@ void server_work() {
     for (i=0; i<NUM_ITERATIONS; i++) {
         swapper->dequeue_free_buffer(buf_tmp_a);
         EXPECT_NE(nullptr, buf_tmp_a);
-        swapper->queue_finished_buffer(buf_tmp_a);
+        swapper->queue_finished_buffer();
     }
 
 }
@@ -46,7 +46,7 @@ void client_work() {
     for (i=0; i<NUM_ITERATIONS; i++) {
         swapper->grab_last_posted(buf_tmp_b);
         EXPECT_NE(nullptr, buf_tmp_b);
-        swapper->ungrab(buf_tmp_b);
+        swapper->ungrab();
     }
 
 }

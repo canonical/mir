@@ -46,9 +46,9 @@ struct EmptyDeleter
 struct MockSwapper : public mc::BufferSwapper
 {
     MOCK_METHOD1(dequeue_free_buffer, void(mc::Buffer*&));
-    MOCK_METHOD1(queue_finished_buffer, void(mc::Buffer*));
+    MOCK_METHOD0(queue_finished_buffer, void());
     MOCK_METHOD1(grab_last_posted, void(mc::Buffer*&));
-    MOCK_METHOD1(ungrab, void(mc::Buffer*));
+    MOCK_METHOD0(ungrab, void());
 };
 
 }

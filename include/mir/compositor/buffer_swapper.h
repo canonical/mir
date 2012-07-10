@@ -34,9 +34,9 @@ class Buffer;
 class BufferSwapper {
 public:
     virtual void dequeue_free_buffer(Buffer*& buffer) = 0;
-    virtual void queue_finished_buffer(Buffer* buffer) = 0;
+    virtual void queue_finished_buffer() = 0;
     virtual void grab_last_posted(Buffer*& buffer) = 0;
-    virtual void ungrab(Buffer* buffer ) = 0;
+    virtual void ungrab() = 0;
 };
 
 }

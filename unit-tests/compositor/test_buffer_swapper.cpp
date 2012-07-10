@@ -46,7 +46,7 @@ TEST(buffer_swap_double, simple_swaps0)
 
     swapper->dequeue_free_buffer(buf_tmp);
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
-    swapper->queue_finished_buffer(buf_tmp);
+    swapper->queue_finished_buffer();
    
     delete buf_a; 
     delete buf_b; 
@@ -67,9 +67,9 @@ TEST(buffer_swap_double, simple_swaps1)
     mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
-    swapper->queue_finished_buffer(buf_tmp_a);
+    swapper->queue_finished_buffer();
     swapper->dequeue_free_buffer(buf_tmp_b);
-    swapper->queue_finished_buffer(buf_tmp_b);
+    swapper->queue_finished_buffer();
 
     EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
     EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b));
@@ -93,7 +93,7 @@ TEST(buffer_swap_double, simple_grabs0)
     mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
-    swapper->queue_finished_buffer(buf_tmp_a);
+    swapper->queue_finished_buffer();
 
     swapper->grab_last_posted(buf_tmp_b);
     EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
@@ -115,10 +115,10 @@ TEST(buffer_swap_double, simple_grabs1)
     mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
-    swapper->queue_finished_buffer(buf_tmp_a);
+    swapper->queue_finished_buffer();
 
     swapper->grab_last_posted(buf_tmp_b);
-    swapper->ungrab(buf_tmp_b);
+    swapper->ungrab();
 
     EXPECT_EQ(buf_tmp_a, buf_tmp_b); /* whatever buf_tmp_a was, this was the last posted buffer */
 
@@ -141,10 +141,10 @@ TEST(buffer_swap_double, simple_grabs2)
     mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
-    swapper->queue_finished_buffer(buf_tmp_a);
+    swapper->queue_finished_buffer();
 
     swapper->grab_last_posted(buf_tmp_b);
-    swapper->ungrab(buf_tmp_b);
+    swapper->ungrab();
 
     swapper->grab_last_posted(buf_tmp_a);
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
