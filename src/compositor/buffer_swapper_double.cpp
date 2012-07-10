@@ -33,11 +33,12 @@ mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
 
 }
 
-void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*&)
+void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
 {
+    out_buffer = on_deck.load();
 }
 
-void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* )
+void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer*)
 {
 }
 
@@ -45,6 +46,6 @@ void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*&)
 {
 }
 
-void mc::BufferSwapperDouble::ungrab(mc::Buffer*  )
+void mc::BufferSwapperDouble::ungrab(mc::Buffer*)
 {
 }
