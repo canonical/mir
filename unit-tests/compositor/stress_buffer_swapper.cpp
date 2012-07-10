@@ -25,7 +25,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 /* todo: pass to worker threads */
-#define NUM_ITERATIONS 10000
+#define NUM_ITERATIONS 100000
 static mc::BufferSwapper *swapper;
 
 void server_work() {
@@ -34,6 +34,7 @@ void server_work() {
     int i;
     for (i=0; i<NUM_ITERATIONS; i++) {
         swapper->dequeue_free_buffer(buf_tmp_a);
+        EXPECT_NE(nullptr, buf_tmp_a);
         swapper->queue_finished_buffer(buf_tmp_a);
     }
 
@@ -44,6 +45,7 @@ void client_work() {
     int i;
     for (i=0; i<NUM_ITERATIONS; i++) {
         swapper->grab_last_posted(buf_tmp_b);
+        EXPECT_NE(nullptr, buf_tmp_b);
         swapper->ungrab(buf_tmp_b);
     }
 
@@ -91,6 +93,7 @@ TEST(buffer_swapper_double_stress, simple_swaps)
 
     mc::MockBuffer* buf_a = new mc::MockBuffer(w, h, s, pf);
     mc::MockBuffer* buf_b = new mc::MockBuffer(w, h, s, pf);
+
     mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
     swapper = &swapper_double;
 
