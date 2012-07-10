@@ -50,15 +50,6 @@ void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
 {
     atomic_swap(dequeued, on_deck);
 
-    if (dequeued == nullptr) {
-        /* if the dequeued is null, this means that we have no buffers available to
-            give to the client. we must wait */
-        std::unique_lock<std::mutex> lock(cv_mutex);
-        no_dq_available.wait(lock);
-
-        atomic_swap(dequeued, on_deck);
-    }
-
     /* the algorithm ensures that once the dequeued Buffer* is filled, it is essentially
         'locked' until queue_finished_buffer is called with this handle */
     out_buffer = atomic_load(&dequeued);     
@@ -66,31 +57,14 @@ void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
 
 void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* )
 {
-
     atomic_swap(on_deck, dequeued);
     atomic_swap(last_posted, on_deck);
-
-    no_dq_available.notify_one();
-    atomic_store(&new_last_posted, true);
 }
 
-void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
+void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*&)
 {
-    atomic_store(&new_last_posted, false);
-    atomic_swap(grabbed, last_posted);
-
-    out_buffer = atomic_load(&grabbed);
 }
 
 void mc::BufferSwapperDouble::ungrab(mc::Buffer*  )
 {
-    if (atomic_load(&new_last_posted))
-    {
-        atomic_swap(on_deck, grabbed);
-        no_dq_available.notify_one();
-        atomic_store(&new_last_posted, false);
-    }
-    else {
-        atomic_swap( last_posted, grabbed);
-    }
 }
