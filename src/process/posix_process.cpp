@@ -37,7 +37,7 @@ bool mpx::Process::Result::is_successful() const
         exit_code == ExitCode::success;
 }
 
-mpx::Process::Process(pid_t pid) 
+mpx::Process::Process(pid_t pid)
   : pid(pid)
 {
     assert(pid > 0);
@@ -178,8 +178,8 @@ std::shared_ptr<mpx::Process> fork_and_run_in_a_different_process(Callable&& f)
     if (pid == mpx::client_pid)
     {
         f();
-        exit(::testing::Test::HasFailure() 
-             ? static_cast<int>(mpx::Process::ExitCode::failure) 
+        exit(::testing::Test::HasFailure()
+             ? static_cast<int>(mpx::Process::ExitCode::failure)
              : static_cast<int>(mpx::Process::ExitCode::success));
     }
 

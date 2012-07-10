@@ -51,7 +51,7 @@ class StateObserver
 {
  public:
     typedef State StateType;
-    
+
     virtual ~StateObserver() {}
 
     virtual void on_state_transition(State old_state, State new_state) = 0;
@@ -63,7 +63,7 @@ class StateObserver
 };
 
 struct ApplicationStateObserver : public StateObserver<mf::Application::State>
-{ 
+{
     MOCK_METHOD2(
         on_state_transition,
         void(mf::Application::State, mf::Application::State));
@@ -79,14 +79,14 @@ TEST(client_server_communication, client_connects_and_disconnects)
         display_server.run();
     };
 
-    // Set expectations here.    
+    // Set expectations here.
     std::shared_ptr<mpx::Process> server =
             mpx::fork_and_run_in_a_different_process(
                 server_bind_and_connect);
 
     std::shared_ptr<mf::Communicator> communicator(
         new StubCommunicator());
-    
+
     mir::frontend::Application application(communicator);
 
     auto client_connects_and_disconnects = [&]() -> void
@@ -98,7 +98,7 @@ TEST(client_server_communication, client_connects_and_disconnects)
                 &ApplicationStateObserver::on_state_transition,
                 &state_observer,
                 _1,
-                _2));                
+                _2));
         EXPECT_NO_THROW(application.connect());
         EXPECT_CALL(
             state_observer,
