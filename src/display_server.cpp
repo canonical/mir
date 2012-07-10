@@ -55,7 +55,6 @@ mir::DisplayServer::DisplayServer(
 
 mir::DisplayServer::~DisplayServer()
 {
-    delete p;
 }
 
 void mir::DisplayServer::render(mg::Display* display)

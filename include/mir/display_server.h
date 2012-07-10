@@ -59,7 +59,7 @@ public:
     void render(graphics::Display* display);
 private:
     struct Private;
-    Private* p;
+    std::unique_ptr<Private> p;
 
     DisplayServer() = delete;
     DisplayServer(const DisplayServer&) = delete;
