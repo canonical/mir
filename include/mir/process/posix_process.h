@@ -19,8 +19,6 @@
 #ifndef MIR_PROCESS_POSIX_PROCESS_H_
 #define MIR_PROCESS_POSIX_PROCESS_H_
 
-#include <gtest/gtest.h>
-
 #include <memory>
 #include <iosfwd>
 #include <stdexcept>
@@ -155,8 +153,11 @@ private:
 // Stream print helper
 std::ostream& operator<<(std::ostream& out, const Process::Result& result);
 
+// Fork a process to run the supplied main function, calling
+// the exit function when done.
 template<typename Callable>
-std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
+std::shared_ptr<Process> fork_and_run_in_a_different_process(
+    Callable&& main_fn, int (exit_fn)())
 {
     pid_t pid = fork();
 
@@ -167,10 +168,8 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
 
     if (pid == client_pid)
     {
-        f();
-        exit(::testing::Test::HasFailure()
-             ? static_cast<int>(Process::ExitCode::failure)
-             : static_cast<int>(Process::ExitCode::success));
+        main_fn();
+        exit(exit_fn());
     }
 
     return std::shared_ptr<Process>(new Process(pid));

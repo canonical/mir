@@ -19,12 +19,18 @@
 
 #include "mir/process/posix_process.h"
 
+#include <cassert>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include <ostream>
+
 namespace mpx = mir::process::posix;
 
 mpx::Process::Result::Result()
-  : reason(TerminationReason::unknown),
-    exit_code(ExitCode::failure),
-    signal(Signal::unknown)
+    : reason(TerminationReason::unknown)
+    , exit_code(ExitCode::failure)
+    , signal(Signal::unknown)
 {
 }
 
@@ -35,7 +41,7 @@ bool mpx::Process::Result::is_successful() const
 }
 
 mpx::Process::Process(pid_t pid)
-  : pid(pid)
+    : pid(pid)
 {
     assert(pid > 0);
 }
@@ -50,7 +56,7 @@ mpx::Process::Result mpx::Process::wait_for_termination()
 {
     int status;
     // ToDo handle errors here
-    waitpid(pid, &status, WUNTRACED | WCONTINUED);
+    ::waitpid(pid, &status, WUNTRACED | WCONTINUED);
 
     Result result;
     if (WIFEXITED(status))

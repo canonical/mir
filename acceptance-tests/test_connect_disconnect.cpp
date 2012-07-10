@@ -70,6 +70,11 @@ struct ApplicationStateObserver : public StateObserver<mf::Application::State>
 };
 }
 
+int test_exit()
+{
+    return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 TEST(client_server_communication, client_connects_and_disconnects)
 {
     auto server_bind_and_connect = []() -> void
@@ -82,7 +87,7 @@ TEST(client_server_communication, client_connects_and_disconnects)
     // Set expectations here.
     std::shared_ptr<mpx::Process> server =
             mpx::fork_and_run_in_a_different_process(
-                server_bind_and_connect);
+                server_bind_and_connect, test_exit);
 
     std::shared_ptr<mf::Communicator> communicator(
         new StubCommunicator());
@@ -115,7 +120,7 @@ TEST(client_server_communication, client_connects_and_disconnects)
 
     std::shared_ptr<mpx::Process> client =
             mpx::fork_and_run_in_a_different_process(
-                client_connects_and_disconnects);
+                client_connects_and_disconnects, test_exit);
 
     EXPECT_TRUE(client->wait_for_termination().is_successful());
 
