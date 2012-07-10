@@ -32,7 +32,7 @@ geom::Height h{768};
 geom::Stride s{1024};
 mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
 
-TEST(buffer_swapper_double, simple_swaps0)
+TEST(buffer_swap_double, simple_swaps0)
 {
     using namespace testing;
     
@@ -53,7 +53,7 @@ TEST(buffer_swapper_double, simple_swaps0)
 }
 
  
-TEST(buffer_swapper_double, simple_swaps1)
+TEST(buffer_swap_double, simple_swaps1)
 {
     using namespace testing;
     
@@ -79,7 +79,7 @@ TEST(buffer_swapper_double, simple_swaps1)
     delete buf_b; 
 }
 
-TEST(buffer_swapper_double, simple_grabs0)
+TEST(buffer_swap_double, simple_grabs0)
 {
     using namespace testing;
 
@@ -101,7 +101,7 @@ TEST(buffer_swapper_double, simple_grabs0)
     delete buf_b; 
 }
 
-TEST(buffer_swapper_double, simple_grabs1)
+TEST(buffer_swap_double, simple_grabs1)
 { 
     using namespace testing;
 
@@ -127,7 +127,7 @@ TEST(buffer_swapper_double, simple_grabs1)
 
 }
 
-TEST(buffer_swapper_double, simple_grabs2)
+TEST(buffer_swap_double, simple_grabs2)
 { 
     using namespace testing;
 
@@ -154,7 +154,7 @@ TEST(buffer_swapper_double, simple_grabs2)
 }
 
 /* this tests the start-up behavior of the swap algorithm */
-TEST(buffer_swapper_double, init_test)
+TEST(buffer_swap_double, init_test)
 {
     using namespace testing;
 

@@ -19,7 +19,6 @@
 
 namespace mc = mir::compositor;
 
-
 mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
 {
     atomic_store(&on_deck, a);
@@ -28,22 +27,45 @@ mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
     mc::Buffer *tmp = nullptr;
     atomic_store(&dequeued, tmp);
     atomic_store(&grabbed, tmp);
-
     atomic_store(&new_last_posted, false);
 
 }
 
+
+
+#include <iostream>
+void mc::BufferSwapperDouble::lockless_swap(std::atomic<mc::Buffer*>& a,
+std::atomic<mc::Buffer*>& b)
+{
+    std::unique_lock<std::mutex> lk(state_mutex);
+    Buffer* tmp;
+    tmp = a.load();
+    a.store(b.load());
+    b.store(tmp);
+    
+}
+
 void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
 {
-    out_buffer = on_deck.load();
+    lockless_swap(on_deck, dequeued);
+
+    out_buffer = dequeued.load();
+    /* this should be atomic */
+
 }
 
 void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer*)
 {
+    lockless_swap(on_deck, last_posted);
+    lockless_swap(last_posted, dequeued);
+
 }
 
-void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*&)
+void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
 {
+    lockless_swap(grabbed, last_posted);
+    
+    out_buffer = grabbed.load();
 }
 
 void mc::BufferSwapperDouble::ungrab(mc::Buffer*)
