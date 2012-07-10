@@ -21,7 +21,6 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/compositor/buffer_swapper.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,14 +40,6 @@ struct EmptyDeleter
     void operator()(T* )
     {
     }    
-};
-
-struct MockSwapper : public mc::BufferSwapper
-{
-    MOCK_METHOD1(dequeue_free_buffer, void(mc::Buffer*&));
-    MOCK_METHOD0(queue_finished_buffer, void());
-    MOCK_METHOD1(grab_last_posted, void(mc::Buffer*&));
-    MOCK_METHOD0(ungrab, void());
 };
 
 }
@@ -90,11 +81,9 @@ TEST(buffer_bundle, add_buffers_and_bind)
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
-    MockSwapper mock_swapper; 
 
     buffer_bundle.add_buffer(default_buffer);
     buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.set_swap_pattern(&mock_swapper);
 
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, bind_to_texture())
@@ -103,12 +92,6 @@ TEST(buffer_bundle, add_buffers_and_bind)
             .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, unlock())
             .Times(AtLeast(num_iterations));
-#ifdef MIR_TODO
-    EXPECT_CALL(mock_swapper, grab_last_posted(Eq(default_buffer.get())))
-            .Times(num_iterations);
-    EXPECT_CALL(mock_swapper, ungrab(Eq(default_buffer.get())))
-            .Times(num_iterations);
-#endif
     mc::BufferTextureBinder *binder;
     binder = &buffer_bundle;
 
@@ -130,25 +113,13 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter()); 
-    MockSwapper mock_swapper; 
 
     buffer_bundle.add_buffer(default_buffer);
     buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.set_swap_pattern(&mock_swapper);
 
     mc::BufferQueue * queue;
     queue = &buffer_bundle;
     int num_iterations = 5;
-    EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, unlock())
-            .Times(AtLeast(num_iterations));
-#ifdef MIR_TODO
-    EXPECT_CALL(mock_swapper, dequeue_free_buffer(Eq(default_buffer.get())))
-            .Times(num_iterations);
-    EXPECT_CALL(mock_swapper, queue_finished_buffer(Eq(default_buffer.get())))
-            .Times(num_iterations);
-#endif
     std::shared_ptr<mc::Buffer> sent_buffer;
     for(int i=0; i<num_iterations; i++) {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
@@ -173,11 +144,9 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     std::shared_ptr<mc::MockBuffer> default_buffer_com(
         &mock_buffer_com,
         EmptyDeleter());
-    MockSwapper mock_swapper;
 
     buffer_bundle.add_buffer(default_buffer_com);
     buffer_bundle.add_buffer(default_buffer_cli);
-    buffer_bundle.set_swap_pattern(&mock_swapper);
 
     EXPECT_CALL(mock_buffer_cli, lock())
             .Times(AtLeast(1));

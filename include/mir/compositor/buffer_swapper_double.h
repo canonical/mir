@@ -23,7 +23,6 @@
 #include "buffer_swapper.h"
 
 #include <atomic>
-#include <condition_variable>
 
 namespace mir
 {
