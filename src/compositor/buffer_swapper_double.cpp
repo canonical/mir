@@ -59,10 +59,16 @@ void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer*)
     lockless_swap(on_deck, last_posted);
     lockless_swap(last_posted, dequeued);
 
+    new_last_posted.store(true);
 }
 
 void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
 {
+    if (!new_last_posted.load()) {
+        out_buffer = nullptr;
+        return;
+    }
+
     lockless_swap(grabbed, last_posted);
     
     out_buffer = grabbed.load();
@@ -70,4 +76,5 @@ void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
 
 void mc::BufferSwapperDouble::ungrab(mc::Buffer*)
 {
+    lockless_swap(grabbed, last_posted);
 }
