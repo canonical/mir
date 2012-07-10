@@ -26,6 +26,7 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirinput
+  mirprocess
   mirsurfaces
 
   ${Boost_LIBRARIES}  

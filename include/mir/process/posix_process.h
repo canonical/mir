@@ -59,9 +59,16 @@ struct ProcessDoesNotExistException : public std::runtime_error
     }
 };
 
+struct ProcessForkError : public std::runtime_error
+{
+    ProcessForkError() : std::runtime_error("Failed to fork process")
+    {
+    }
+};
+
 class Process
 {
- public:
+public:
     enum class TerminationReason
     {
         unknown,
@@ -101,162 +108,52 @@ class Process
         cont = SIGCONT,
         stop = SIGSTOP
     };
-    
+
+    // Aggregated results of running a process to completion
     struct Result
     {
-        Result() : reason(TerminationReason::unknown),
-                   exit_code(ExitCode::failure),
-                   signal(Signal::unknown)
-        {
-        }
-        
-        bool is_successful() const
-        {
-            return reason == TerminationReason::child_terminated_normally &&
-                    exit_code == ExitCode::success;
-                
-        }
-        
+        Result();
+
+        // Did the process terminate without error?
+        bool is_successful() const;
+
         TerminationReason reason;
         ExitCode exit_code;
         Signal signal;
     };
+
+    // 
+    Process(pid_t pid);
     
-    Process(pid_t pid) : pid(pid)
-    {
-        assert(pid > 0);
-    }
+    // The destructor terminates the process. 
+    ~Process();
 
-    ~Process()
-    {
-        terminate();
-        wait_for_termination();
-    }
+    // Wait for the process to terminate, and return the results.
+    Result wait_for_termination();
 
-    Result wait_for_termination()
-    {
-        int status;
-        // ToDo handle errors here
-        waitpid(pid, &status, WUNTRACED | WCONTINUED);
+    // Attempt to kill the process by sending the supplied signal. 
+    // A failure will result in an exception being thrown.
+    void send_signal(Signal s);
 
-        Result result;
-        if (WIFEXITED(status))
-        {
-            result.reason = TerminationReason::child_terminated_normally;
+    // Kill, terminate or stop the process by signalling it.
+    void kill();
+    void terminate();
+    void stop();
 
-            switch (WEXITSTATUS(status))
-            {
-                case EXIT_SUCCESS:
-                    result.exit_code = ExitCode::success;
-                    break;
-                case EXIT_FAILURE:
-                    result.exit_code = ExitCode::failure;
-                    break;
-            }
-        } else if (WIFSIGNALED(status))
-        {
-            result.reason = TerminationReason::child_terminated_by_signal;            
-        }
-        
-        return result;
-    }
+    // Continue the process.
+    void cont();
 
-    void send_signal(Signal s)
-    {
-        int result = ::kill(pid, static_cast<int>(s));
-
-        switch (result)
-        {
-            case EINVAL:
-                throw InvalidSignalException();
-                break;
-            case EPERM:
-                throw ProcessPermissionException();
-                break;
-            case ESRCH:
-                throw ProcessDoesNotExistException();
-                break;
-        }        
-    }
-
-    void kill()
-    {
-        send_signal(Signal::kill);
-    }
-
-    void terminate()
-    {
-        send_signal(Signal::terminate);
-    }
-
-    void stop()
-    {
-        send_signal(Signal::stop);
-    }
-
-    void cont()
-    {
-        send_signal(Signal::cont);
-    }
-
- protected:
+protected:
     Process() = delete;
     Process(const Process&) = delete;
     Process& operator=(const Process&) = delete;
-    
- private:
+
+private:
     pid_t pid;
 };
 
-std::ostream& operator<<(std::ostream& out, Process::TerminationReason reason)
-{
-    switch (reason)
-    {
-        case Process::TerminationReason::unknown:
-            out << "unknown";
-            break;
-        case Process::TerminationReason::child_terminated_normally:
-            out << "child_terminated_normally";
-            break;
-        case Process::TerminationReason::child_terminated_by_signal:
-            out << "child_terminated_by_signal";
-            break;
-        case Process::TerminationReason::child_terminated_with_core_dump:
-            out << "child_terminated_with_core_dump";
-            break;
-        case Process::TerminationReason::child_stopped_by_signal:
-            out << "child_stopped_by_signal";
-            break;
-        case Process::TerminationReason::child_resumed_by_signal:
-            out << "child_resumed_by_signal";
-            break;
-    }
-
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, Process::ExitCode code)
-{
-    switch (code)
-    {
-        case Process::ExitCode::success:
-            out << "success";
-            break;            
-        case Process::ExitCode::failure:
-            out << "failure";
-            break;
-        default:
-            out << "unknown ExitCode";
-    }
-
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Process::Result& result)
-{
-    out << "Process::Result(" << result.reason << ", " << result.exit_code << ")";
-    return out;
-}
+// Stream print helper
+std::ostream& operator<<(std::ostream& out, const Process::Result& result);
 
 template<typename Callable>
 std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
@@ -265,15 +162,17 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& f)
 
     if (pid < 0)
     {
-        throw std::runtime_error("Problem forking process");
+        throw ProcessForkError();
     }
 
     if (pid == client_pid)
     {
         f();
-        exit(::testing::Test::HasFailure() ? static_cast<int>(Process::ExitCode::failure) : static_cast<int>(Process::ExitCode::success));
-    } 
-    
+        exit(::testing::Test::HasFailure() 
+             ? static_cast<int>(Process::ExitCode::failure) 
+             : static_cast<int>(Process::ExitCode::success));
+    }
+
     return std::shared_ptr<Process>(new Process(pid));
 }
 

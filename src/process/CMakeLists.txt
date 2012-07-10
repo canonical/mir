@@ -12,12 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+set(
+  PROCESS_SOURCES
 
-add_subdirectory(compositor/)
-add_subdirectory(input/)
-add_subdirectory(surfaces/)
-add_subdirectory(frontend/)
-add_subdirectory(process/)
+  posix_process.cpp
+)
+
+add_library( 
+  mirprocess STATIC
+  
+  ${PROCESS_SOURCES}
+)
