@@ -21,8 +21,6 @@
 
 #include "mir/input/event_handler.h"
 
-#include <cassert>
-
 namespace mir
 {
 namespace frontend
