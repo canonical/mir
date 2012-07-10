@@ -35,30 +35,12 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> a, std::sha
 
 }
 
-void mc::BufferSwapperDouble::atomic_swap(std::atomic<mc::Buffer*>& a, std::atomic<mc::Buffer*>& b)
+void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*&)
 {
-    mc::Buffer *tmp, *tmp2;
-    do {
-        tmp = atomic_load(&a);
-        do {
-            tmp2 = atomic_load(&b);
-        } while (!std::atomic_compare_exchange_weak(&a, &tmp, tmp2));
-    } while (!std::atomic_compare_exchange_weak(&b, &tmp2, tmp ));
-}
-
-void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer)
-{
-    atomic_swap(dequeued, on_deck);
-
-    /* the algorithm ensures that once the dequeued Buffer* is filled, it is essentially
-        'locked' until queue_finished_buffer is called with this handle */
-    out_buffer = atomic_load(&dequeued);     
 }
 
 void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* )
 {
-    atomic_swap(on_deck, dequeued);
-    atomic_swap(last_posted, on_deck);
 }
 
 void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*&)

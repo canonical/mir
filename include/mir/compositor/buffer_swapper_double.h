@@ -43,7 +43,6 @@ public:
     void ungrab(Buffer* buffer );
 
 private:
-    void atomic_swap(std::atomic<Buffer*>& a, std::atomic<Buffer*>& b);
 
     std::condition_variable_any no_dq_available;
     std::mutex cv_mutex;
