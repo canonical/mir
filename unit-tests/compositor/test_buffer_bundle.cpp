@@ -124,6 +124,11 @@ TEST(buffer_bundle, add_buffers_and_distribute)
     mc::BufferQueue * queue;
     queue = &buffer_bundle;
     int num_iterations = 5;
+    EXPECT_CALL(mock_buffer, lock())
+            .Times(AtLeast(num_iterations));
+    EXPECT_CALL(mock_buffer, unlock())
+            .Times(AtLeast(num_iterations));
+
     std::shared_ptr<mc::Buffer> sent_buffer;
     for(int i=0; i<num_iterations; i++)
     {
