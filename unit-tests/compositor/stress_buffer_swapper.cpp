@@ -97,18 +97,18 @@ TEST(buffer_swapper_double_stress, simple_swaps)
     geom::Stride s {1024};
     mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
-    mc::MockBuffer* buf_a = new mc::MockBuffer(w, h, s, pf);
-    mc::MockBuffer* buf_b = new mc::MockBuffer(w, h, s, pf);
+    std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
+    std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
 
-    mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
-    swapper = &swapper_double;
+    auto myswapper = std::make_shared<mc::BufferSwapperDouble>(
+            std::move(buffer_a),
+            std::move(buffer_b));
+
+    swapper = myswapper.get();
 
     std::thread t1(client_thread, client_work, &exec_lock0);
     std::thread t2(client_thread, server_work, &exec_lock1);
 
     t1.join();
     t2.join();
-
-    delete buf_a;
-    delete buf_b;
 }

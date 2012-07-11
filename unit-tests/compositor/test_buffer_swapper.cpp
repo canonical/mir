@@ -34,89 +34,93 @@ geom::Height h {768};
 geom::Stride s {1024};
 mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
-struct Buffers
+struct BufferFixture
 {
-    mc::MockBuffer buf_a;
-    mc::MockBuffer buf_b;
-
-    mc::Buffer* const a;
-    mc::Buffer* const b;
-
-    Buffers() :
-        buf_a(w, h, s, pf),
-        buf_b(w, h, s, pf),
-        a(&buf_a),
-        b(&buf_b)
+    BufferFixture()
     {
+        std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
+
+        buf_a = buffer_a.get();
+        buf_b = buffer_b.get();
+
+        swapper = std::make_shared<mc::BufferSwapperDouble>(
+                std::move(buffer_a),
+                std::move(buffer_b));
     }
+
+    mc::Buffer* buf_a;
+    mc::Buffer* buf_b;
+
+    std::shared_ptr<mc::BufferSwapper> swapper;
 };
+
 }
 
 TEST(buffer_swap_double, simple_swaps0)
 {
-    Buffers buf;
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
 
     mc::Buffer* buf_tmp;
 
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf.a, buf.b);
-    mc::BufferSwapper * swapper = &swapper_double;
-
     swapper->dequeue_free_buffer(buf_tmp);
-    EXPECT_TRUE((buf_tmp == buf.a) || (buf_tmp == buf.b));
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
+
     swapper->queue_finished_buffer();
 }
 
 
 TEST(buffer_swap_double, simple_swaps1)
 {
-    Buffers buf;
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
 
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
-
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf.a, buf.b);
-    mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
     swapper->queue_finished_buffer();
     swapper->dequeue_free_buffer(buf_tmp_b);
     swapper->queue_finished_buffer();
 
-    EXPECT_TRUE((buf_tmp_a == buf.a) || (buf_tmp_a == buf.b));
-    EXPECT_TRUE((buf_tmp_b == buf.a) || (buf_tmp_b == buf.b));
+    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
+    EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b));
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 }
 
 TEST(buffer_swap_double, simple_grabs0)
 {
-    Buffers buf;
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
 
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
-
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf.a, buf.b);
-    mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
     swapper->queue_finished_buffer();
 
     swapper->grab_last_posted(buf_tmp_b);
-    EXPECT_TRUE((buf_tmp_a == buf.a) || (buf_tmp_a == buf.b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
 }
 
 TEST(buffer_swap_double, simple_grabs1)
 {
-    Buffers buf;
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
 
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
-
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf.a, buf.b);
-    mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
     swapper->queue_finished_buffer();
@@ -129,14 +133,12 @@ TEST(buffer_swap_double, simple_grabs1)
 
 TEST(buffer_swap_double, simple_grabs2)
 {
-    Buffers buf;
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
 
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
-
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf.a, buf.b);
-    mc::BufferSwapper * swapper = &swapper_double;
 
     swapper->dequeue_free_buffer(buf_tmp_a);
     swapper->queue_finished_buffer();

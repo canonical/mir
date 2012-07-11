@@ -19,10 +19,12 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
+mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b)
     :
-    buf_a(a),
-    buf_b(b),
+    buffer_a(std::move(buffer_a)),
+    buffer_b(std::move(buffer_b)),
+    buf_a(this->buffer_a.get()),
+    buf_b(this->buffer_b.get()),
     invalid0(nullptr),
     invalid1(nullptr)
 {

@@ -31,10 +31,6 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
-void mc::BufferBundle::set_swap_pattern(mc::BufferSwapper *)
-{
-}
-
 void mc::BufferBundle::add_buffer(std::shared_ptr<Buffer> buffer)
 {
 
