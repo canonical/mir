@@ -47,14 +47,14 @@ class Application : public mi::EventHandler
 
     typedef boost::signals2::signal<
         void(State old_state, State new_state)
-        > StateTransitionSignal; 
-    
+        > StateTransitionSignal;
+
     Application(std::shared_ptr<Communicator> communicator)
             : communicator(communicator)
     {
         assert(communicator);
     }
-    
+
     virtual ~Application() {}
 
     // From mi::EventHandler
@@ -62,7 +62,7 @@ class Application : public mi::EventHandler
     {
         assert(e);
     }
-    
+
     StateTransitionSignal& state_transition_signal()
     {
         return state_transition;
@@ -75,7 +75,7 @@ class Application : public mi::EventHandler
     void disconnect()
     {
     }
-    
+
  protected:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
