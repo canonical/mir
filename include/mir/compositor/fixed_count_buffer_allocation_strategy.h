@@ -21,6 +21,8 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/dimensions.h"
 
@@ -29,42 +31,36 @@ namespace mir
 namespace compositor
 {
 
-template<unsigned int count>
-class FixedCountBufferAllocationStrategy : public BufferAllocationStrategy
+class DoubleBufferAllocationStrategy : public BufferAllocationStrategy
 {
 public:
 
-    static_assert(
-        count >= 2,
-        "Buffer bundles with less than 2 buffers are not allowed");
-
-    static const unsigned int buffer_count = count;
-
-    explicit FixedCountBufferAllocationStrategy(
+    explicit DoubleBufferAllocationStrategy(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
         BufferAllocationStrategy(gr_alloc)
     {
     }
 
-    void allocate_buffers_for_bundle(
+    std::unique_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pf,
-        BufferBundle* bundle)
+        PixelFormat pf)
     {
-        for (unsigned int i = 0; i < buffer_count; i++)
-        {
-            bundle->add_buffer(
-                graphic_buffer_allocator()->alloc_buffer(
-                    width,
-                    height,
-                    pf));
-        }
+        auto buffer_a = graphic_buffer_allocator()->alloc_buffer(
+                width,
+                height,
+                pf);
+
+        auto buffer_b = graphic_buffer_allocator()->alloc_buffer(
+                width,
+                height,
+                pf);
+
+        return std::move(std::unique_ptr<BufferSwapper>(new BufferSwapperDouble(
+                std::move(buffer_a),
+                std::move(buffer_b))));
     }
 };
-
-typedef FixedCountBufferAllocationStrategy<2> DoubleBufferAllocationStrategy;
-typedef FixedCountBufferAllocationStrategy<3> TripleBufferAllocationStrategy;
 
 }
 }

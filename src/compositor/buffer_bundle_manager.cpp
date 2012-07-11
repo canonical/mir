@@ -21,11 +21,13 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 
 #include <cassert>
+#include <memory>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -43,14 +45,13 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     geometry::Height height,
     PixelFormat pf)
 {
-    BufferBundle* new_bundle_raw = new mc::BufferBundle();
-    std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
+    auto swapper(buffer_allocation_strategy->create_swapper(
+            width,
+            height,
+            pf));
 
-    buffer_allocation_strategy->allocate_buffers_for_bundle(
-        width,
-        height,
-        pf,
-        new_bundle_raw);
+    BufferBundle* new_bundle_raw = new mc::BufferBundle(std::move(swapper));
+    std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
 
     return bundle;
 }

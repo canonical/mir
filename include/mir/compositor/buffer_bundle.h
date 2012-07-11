@@ -38,7 +38,7 @@ class BufferBundle : public BufferTextureBinder,
                      public BufferQueue
 {
  public:
-    BufferBundle();
+    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
     ~BufferBundle();
 
     void add_buffer(std::shared_ptr<Buffer> buffer);
@@ -58,6 +58,8 @@ class BufferBundle : public BufferTextureBinder,
     std::shared_ptr<Buffer> back_buffer();
 
   private:
+    std::unique_ptr<BufferSwapper> swapper;
+
     std::vector<std::shared_ptr<Buffer>> buffer_list;
     std::mutex buffer_list_guard;
     std::mutex back_buffer_guard;

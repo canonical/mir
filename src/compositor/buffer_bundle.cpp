@@ -17,13 +17,16 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 #include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_swapper.h"
 
 #include <algorithm>
 #include <mutex>
 
 namespace mc = mir::compositor;
 
-mc::BufferBundle::BufferBundle()
+mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
+ :
+    swapper(std::move(swapper))
 {
 }
 

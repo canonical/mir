@@ -32,7 +32,7 @@ namespace compositor
 struct MockGraphicBufferAllocator : GraphicBufferAllocator
 {
  public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
 };
 
