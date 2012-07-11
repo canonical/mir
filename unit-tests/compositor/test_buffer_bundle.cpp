@@ -28,31 +28,32 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace {
-const geom::Width width{1024};
-const geom::Height height{768};
-const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
-const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
+namespace
+{
+const geom::Width width {1024};
+const geom::Height height {768};
+const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
+const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
 struct EmptyDeleter
 {
     template<typename T>
     void operator()(T* )
     {
-    }    
+    }
 };
 
 }
 /* testing adding and removing buffers */
-TEST(buffer_bundle, add_rm_buffers) 
+TEST(buffer_bundle, add_rm_buffers)
 {
     using namespace testing;
 
     mc::BufferBundle buffer_bundle;
-    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
-        EmptyDeleter()); 
+        EmptyDeleter());
     int buffers_removed;
 
     buffer_bundle.add_buffer(default_buffer);
@@ -61,13 +62,13 @@ TEST(buffer_bundle, add_rm_buffers)
 
     buffers_removed = buffer_bundle.remove_all_buffers();
 
-    EXPECT_EQ(buffers_removed, 3); 
+    EXPECT_EQ(buffers_removed, 3);
 
     buffer_bundle.add_buffer(default_buffer);
     buffer_bundle.add_buffer(default_buffer);
     buffers_removed = buffer_bundle.remove_all_buffers();
 
-    EXPECT_EQ(buffers_removed, 2); 
+    EXPECT_EQ(buffers_removed, 2);
 }
 
 /* this would simulate binding and locking a back buffer for the compositor's use */
@@ -75,9 +76,9 @@ TEST(buffer_bundle, add_rm_buffers)
 TEST(buffer_bundle, add_buffers_and_bind)
 {
     using namespace testing;
-   
+
     mc::BufferBundle buffer_bundle;
-    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
@@ -87,32 +88,35 @@ TEST(buffer_bundle, add_buffers_and_bind)
 
     int num_iterations = 5;
     EXPECT_CALL(mock_buffer, bind_to_texture())
-            .Times(AtLeast(num_iterations));
+    .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(num_iterations));
+    .Times(AtLeast(num_iterations));
     EXPECT_CALL(mock_buffer, unlock())
-            .Times(AtLeast(num_iterations));
+    .Times(AtLeast(num_iterations));
     mc::BufferTextureBinder *binder;
     binder = &buffer_bundle;
 
-    for(int i=0; i<num_iterations; i++) {
+    for(int i=0; i<num_iterations; i++)
+    {
         /* if binding doesn't work, this is a case where we may have an exception */
-        ASSERT_NO_THROW({
-                binder->lock_and_bind_back_buffer();
-            });
+        ASSERT_NO_THROW(
+        {
+            binder->lock_and_bind_back_buffer();
+        });
     }
 }
 
 /* this would simulate locking a buffer for a client's use */
 /* tests the BufferBundle's implemantation of the BufferQueue interface */
-TEST(buffer_bundle, add_buffers_and_distribute) {
+TEST(buffer_bundle, add_buffers_and_distribute)
+{
     using namespace testing;
-   
+
     mc::BufferBundle buffer_bundle;
-    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
-        EmptyDeleter()); 
+        EmptyDeleter());
 
     buffer_bundle.add_buffer(default_buffer);
     buffer_bundle.add_buffer(default_buffer);
@@ -121,7 +125,8 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     queue = &buffer_bundle;
     int num_iterations = 5;
     std::shared_ptr<mc::Buffer> sent_buffer;
-    for(int i=0; i<num_iterations; i++) {
+    for(int i=0; i<num_iterations; i++)
+    {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
            data bundle in the future */
         sent_buffer = nullptr;
@@ -131,16 +136,17 @@ TEST(buffer_bundle, add_buffers_and_distribute) {
     }
 }
 
-TEST(buffer_bundle, add_buffers_bind_and_distribute) {
+TEST(buffer_bundle, add_buffers_bind_and_distribute)
+{
     using namespace testing;
 
     mc::BufferBundle buffer_bundle;
-    mc::MockBuffer mock_buffer_cli{width, height, stride, pixel_format};
+    mc::MockBuffer mock_buffer_cli {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer_cli(
         &mock_buffer_cli,
         EmptyDeleter());
-    
-    mc::MockBuffer mock_buffer_com{width, height, stride, pixel_format};
+
+    mc::MockBuffer mock_buffer_com {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer_com(
         &mock_buffer_com,
         EmptyDeleter());
@@ -149,15 +155,15 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute) {
     buffer_bundle.add_buffer(default_buffer_cli);
 
     EXPECT_CALL(mock_buffer_cli, lock())
-            .Times(AtLeast(1));
+    .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_cli, unlock())
-            .Times(AtLeast(1));
+    .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_com, bind_to_texture())
-            .Times(AtLeast(1));
+    .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_com, lock())
-            .Times(AtLeast(1));
+    .Times(AtLeast(1));
     EXPECT_CALL(mock_buffer_com, unlock())
-            .Times(AtLeast(1));
+    .Times(AtLeast(1));
 
     buffer_bundle.lock_and_bind_back_buffer();
     buffer_bundle.dequeue_client_buffer();

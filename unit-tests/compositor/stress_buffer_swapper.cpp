@@ -28,22 +28,26 @@ namespace geom = mir::geometry;
 #define NUM_ITERATIONS 100000
 static mc::BufferSwapper *swapper;
 
-void server_work() {
+void server_work()
+{
 
     mc::Buffer* buf_tmp_a;
     int i;
-    for (i=0; i<NUM_ITERATIONS; i++) {
+    for (i=0; i<NUM_ITERATIONS; i++)
+    {
         swapper->dequeue_free_buffer(buf_tmp_a);
         EXPECT_NE(nullptr, buf_tmp_a);
         swapper->queue_finished_buffer();
     }
 
 }
-void client_work() {
+void client_work()
+{
 
     mc::Buffer* buf_tmp_b;
     int i;
-    for (i=0; i<NUM_ITERATIONS; i++) {
+    for (i=0; i<NUM_ITERATIONS; i++)
+    {
         swapper->grab_last_posted(buf_tmp_b);
         EXPECT_NE(nullptr, buf_tmp_b);
         swapper->ungrab();
@@ -60,12 +64,13 @@ void timeout_detection(std::function<void()> function, std::condition_variable *
 
     function();
 
-    /* notify that we are done working */ 
+    /* notify that we are done working */
     cv1->notify_one();
     return;
 }
 
-void client_thread(std::function<void()> function, std::mutex *exec_lock) {
+void client_thread(std::function<void()> function, std::mutex *exec_lock)
+{
     std::condition_variable cv1;
 
     std::unique_lock<std::mutex> lk2(*exec_lock);
@@ -73,7 +78,8 @@ void client_thread(std::function<void()> function, std::mutex *exec_lock) {
 
     /* set timeout as absolute time from this point */
     auto timeout_time = std::chrono::system_clock::now() + std::chrono::milliseconds(2000);
-    if (std::cv_status::timeout == cv1.wait_until(lk2, timeout_time )) { 
+    if (std::cv_status::timeout == cv1.wait_until(lk2, timeout_time ))
+    {
         FAIL();
     }
 
@@ -86,10 +92,10 @@ TEST(buffer_swapper_double_stress, simple_swaps)
 {
     using namespace testing;
 
-    geom::Width w{1024};
-    geom::Height h{768};
-    geom::Stride s{1024};
-    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
+    geom::Width w {1024};
+    geom::Height h {768};
+    geom::Stride s {1024};
+    mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
     mc::MockBuffer* buf_a = new mc::MockBuffer(w, h, s, pf);
     mc::MockBuffer* buf_b = new mc::MockBuffer(w, h, s, pf);

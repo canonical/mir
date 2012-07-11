@@ -31,7 +31,8 @@ namespace compositor
 
 class Buffer;
 
-class BufferSwapperDouble : public BufferSwapper {
+class BufferSwapperDouble : public BufferSwapper
+{
 public:
     BufferSwapperDouble(Buffer* buffer_a, Buffer* buffer_b);
 

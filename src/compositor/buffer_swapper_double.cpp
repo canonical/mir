@@ -20,12 +20,12 @@
 namespace mc = mir::compositor;
 
 mc::BufferSwapperDouble::BufferSwapperDouble(mc::Buffer* a, mc::Buffer* b )
- :
-buf_a(a),
-buf_b(b),
-invalid0(nullptr),
-invalid1(nullptr)
-{ 
+    :
+    buf_a(a),
+    buf_b(b),
+    invalid0(nullptr),
+    invalid1(nullptr)
+{
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
 
@@ -59,100 +59,115 @@ void mc::BufferSwapperDouble::ungrab()
 
 
 /* class helper functions, mostly compare_and_exchange based state computation */
-void mc::BufferSwapperDouble::client_to_dequeued() {
+void mc::BufferSwapperDouble::client_to_dequeued()
+{
     Buffer **dq_assume;
     Buffer **next_state;
 
-    do {
+    do
+    {
         dq_assume = dequeued.load();
 
         if (dq_assume == &invalid0)
-        {            
+        {
             next_state = &buf_a;
-        } 
+        }
         else if (dq_assume == &invalid1)
         {
-            next_state = &buf_b; 
+            next_state = &buf_b;
         }
 
-    } while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state )); 
+    }
+    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
 }
 
-void mc::BufferSwapperDouble::client_to_queued() {
+void mc::BufferSwapperDouble::client_to_queued()
+{
     Buffer **dq_assume;
     Buffer **next_state;
-    do {
+    do
+    {
         dq_assume = dequeued.load();
 
         if (dq_assume == &buf_a)
         {
-            next_state = &invalid1; 
+            next_state = &invalid1;
         }
         else if (dq_assume == &buf_b)
         {
-            next_state = &invalid0; 
+            next_state = &invalid0;
         }
 
-    } while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
+    }
+    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
 }
 
-void mc::BufferSwapperDouble::compositor_change_toggle_pattern() {
+void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
+{
     Buffer **grabbed_assume;
     Buffer **next_state;
 
-    do {
+    do
+    {
         grabbed_assume = grabbed.load();
 
         if (grabbed_assume == &invalid0)
         {
-            next_state = &invalid1; 
+            next_state = &invalid1;
         }
         else if (grabbed_assume == &buf_a)
         {
-            next_state = &buf_b; 
+            next_state = &buf_b;
         }
 
         else if (grabbed_assume == &invalid1)
         {
-            next_state = &invalid0; 
+            next_state = &invalid0;
         }
         else if (grabbed_assume == &buf_b)
-        { 
-            next_state = &buf_a; 
+        {
+            next_state = &buf_a;
         }
-    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    }
+    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
 
-void mc::BufferSwapperDouble::compositor_to_grabbed() {
+void mc::BufferSwapperDouble::compositor_to_grabbed()
+{
     Buffer **next_state;
     Buffer **grabbed_assume;
 
-    do {
+    do
+    {
         grabbed_assume = grabbed.load();
         if (grabbed_assume == &invalid0) /* pattern A */
-        { 
-            next_state = &buf_a; 
+        {
+            next_state = &buf_a;
         }
         else if (grabbed_assume == &invalid1) /* pattern B */
         {
-            next_state = &buf_b; 
+            next_state = &buf_b;
         }
-    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    }
+    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
 
-void mc::BufferSwapperDouble::compositor_to_ungrabbed() {
+void mc::BufferSwapperDouble::compositor_to_ungrabbed()
+{
     Buffer **grabbed_assume;
     Buffer **next_state;
-    do {
+    do
+    {
         grabbed_assume = grabbed.load();
         if (grabbed_assume == &buf_a) /* pattern A */
         {
-            next_state = &invalid0; 
+            next_state = &invalid0;
         }
         else if (grabbed_assume == &buf_b) /* pattern B */
         {
-            next_state = &invalid1; 
+            next_state = &invalid1;
         }
-    } while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    }
+    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
 
