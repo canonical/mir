@@ -21,19 +21,39 @@
 #include "mir/frontend/communicator.h"
 #include "mir/process/posix_process.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <functional>
-
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
+namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mpx = mir::process::posix;
+namespace geom = mir::geometry;
 
 namespace {
+
+class StubBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    virtual std::shared_ptr<mc::Buffer> alloc_buffer(
+        geom::Width, geom::Height, mc::PixelFormat)
+    { 
+        return nullptr;
+    }
+};
+
+class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
+{
+public:
+    StubBufferAllocationStrategy()
+        : mc::BufferAllocationStrategy(
+            std::shared_ptr<mc::GraphicBufferAllocator>(new StubBufferAllocator()))
+    {
+    }
+
+    virtual void allocate_buffers_for_bundle(
+        geom::Width, geom::Height, mc::PixelFormat, mc::BufferBundle *)
+    {
+    }
+};
 
 struct StubCommunicator : public mf::Communicator
 {
@@ -46,28 +66,6 @@ struct StubCommunicator : public mf::Communicator
     }
 };
 
-template<typename State>
-class StateObserver
-{
- public:
-    typedef State StateType;
-
-    virtual ~StateObserver() {}
-
-    virtual void on_state_transition(State old_state, State new_state) = 0;
-
- protected:
-    StateObserver() = default;
-    StateObserver(const StateObserver&) = delete;
-    StateObserver& operator=(const StateObserver&) = delete;
-};
-
-struct ApplicationStateObserver : public StateObserver<mf::Application::State>
-{
-    MOCK_METHOD2(
-        on_state_transition,
-        void(mf::Application::State, mf::Application::State));
-};
 }
 
 int test_exit()
@@ -80,42 +78,24 @@ TEST(client_server_communication, client_connects_and_disconnects)
     auto server_bind_and_connect = []() -> void
     {
         SCOPED_TRACE("Server");
-        mir::DisplayServer display_server(nullptr);
+        StubBufferAllocationStrategy strategy;
+        mir::DisplayServer display_server(&strategy);
         display_server.run();
     };
 
-    // Set expectations here.
     std::shared_ptr<mpx::Process> server =
             mpx::fork_and_run_in_a_different_process(
                 server_bind_and_connect, test_exit);
 
-    std::shared_ptr<mf::Communicator> communicator(
-        new StubCommunicator());
+    std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
 
     mir::frontend::Application application(communicator);
 
     auto client_connects_and_disconnects = [&]() -> void
     {
         SCOPED_TRACE("Client");
-        ApplicationStateObserver state_observer;
-        application.state_transition_signal().connect(
-            boost::bind(
-                &ApplicationStateObserver::on_state_transition,
-                &state_observer,
-                _1,
-                _2));
         EXPECT_NO_THROW(application.connect());
-        EXPECT_CALL(
-            state_observer,
-            on_state_transition(
-                mf::Application::State::disconnected,
-                mf::Application::State::connected));
         EXPECT_NO_THROW(application.disconnect());
-        EXPECT_CALL(
-            state_observer,
-            on_state_transition(
-                mf::Application::State::connected,
-                mf::Application::State::disconnected));
     };
 
     std::shared_ptr<mpx::Process> client =
