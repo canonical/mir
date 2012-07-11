@@ -28,28 +28,33 @@ namespace mir
 namespace surfaces
 {
 
+class Surface;
 class SurfaceRenderer;
+
+class SurfaceCollection
+{
+public:
+    typedef std::function<void(const std::shared_ptr<Surface>&)> Functor;
+
+    virtual ~SurfaceCollection() {}
+
+    virtual void invoke_for_each_surface(Functor f) = 0;
+
+  protected:    
+    SurfaceCollection() = default;
+    SurfaceCollection(const SurfaceCollection&) = delete;
+    SurfaceCollection& operator=(const SurfaceCollection&) = delete;
+
+};
 
 // scenegraph is the interface compositor uses onto the surface stack
 class Scenegraph
 {
 public:
-    class View
-    {
-    public:
-        virtual ~View() {}
-
-        virtual void apply(SurfaceRenderer* renderer) = 0;
-        
-    protected:
-        View() = default;
-        View(const View&) = delete;
-        View& operator=(const View&) = delete;
-    };
-
+    
     virtual ~Scenegraph() {}
     
-    virtual std::shared_ptr<View> get_surfaces_in(geometry::Rectangle const& display_area) = 0;
+    virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area) = 0;
 
 protected:
     Scenegraph() = default;

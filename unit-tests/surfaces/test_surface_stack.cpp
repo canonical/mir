@@ -37,6 +37,18 @@ namespace
 
 struct MockBufferBundleFactory : public mc::BufferBundleFactory
 {
+    MockBufferBundleFactory()
+    {
+        using namespace ::testing;
+        ON_CALL(
+            *this,
+            create_buffer_bundle(_, _, _))
+                .WillByDefault(
+                    Return(
+                        std::shared_ptr<mc::BufferBundle>(
+                            new mc::BufferBundle())));
+    }
+    
     MOCK_METHOD3(
         create_buffer_bundle,
         std::shared_ptr<mc::BufferBundle>(
@@ -45,6 +57,8 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
             mc::PixelFormat pf));
 
 };
+
+
 
 struct MockSurfaceRenderer : public ms::SurfaceRenderer
 {
@@ -63,8 +77,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_, _, _))
-            .Times(AtLeast(1))
-            .WillRepeatedly(Return(std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle())));
+            .Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
@@ -102,13 +115,12 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _, _))
-            .WillRepeatedly(Return(std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle())));
+        create_buffer_bundle(_, _, _)).Times(0);
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
-        std::shared_ptr<ms::Scenegraph::View> surfaces_in_view = stack.get_surfaces_in(mg::Rectangle());
+        std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(mg::Rectangle());
         EXPECT_FALSE(stack.try_lock());
     }
     EXPECT_TRUE(stack.try_lock());
@@ -145,6 +157,9 @@ TEST(
 
     auto view = stack.get_surfaces_in(mg::Rectangle());
 
-    view->apply(&renderer);
+    view->invoke_for_each_surface(
+        std::bind(&ms::SurfaceRenderer::render,
+                  &renderer,
+                  std::placeholders::_1));
 }
 

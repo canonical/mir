@@ -51,7 +51,7 @@ class SurfaceStack : public Scenegraph,
     bool try_lock();
     
     // From Scenegraph
-    virtual std::shared_ptr<Scenegraph::View> get_surfaces_in(geometry::Rectangle const& display_area);
+    virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);
     
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);

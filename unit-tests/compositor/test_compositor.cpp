@@ -41,7 +41,7 @@ struct MockSurfaceRenderer : public ms::SurfaceRenderer
 struct MockScenegraph : ms::Scenegraph
 {
 public:
-    MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::Scenegraph::View> (geom::Rectangle const&));
+    MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::SurfaceCollection> (geom::Rectangle const&));
 };
 
 struct MockDisplay : mg::Display
@@ -51,9 +51,9 @@ public:
     MOCK_METHOD0(notify_update, void ());
 };
 
-struct MockView : public ms::Scenegraph::View
+struct MockSurfaceCollection : public ms::SurfaceCollection
 {
-    MOCK_METHOD1(apply, void(ms::SurfaceRenderer*));
+    MOCK_METHOD1(invoke_for_each_surface, void(ms::SurfaceCollection::Functor));
 };
 
 struct EmptyDeleter
@@ -77,11 +77,11 @@ TEST(Compositor, render)
         EmptyDeleter());
     MockScenegraph scenegraph;
     MockDisplay display;
-    MockView view;
+    MockSurfaceCollection view;
     
     mc::Compositor comp(&scenegraph, renderer);
 
-    EXPECT_CALL(view, apply(_)).Times(1);
+    EXPECT_CALL(view, invoke_for_each_surface(_)).Times(1);
     
     EXPECT_CALL(mock_renderer, render(_)).Times(0);
     
@@ -93,7 +93,7 @@ TEST(Compositor, render)
             .Times(1)
             .WillRepeatedly(
                 Return(
-                    std::shared_ptr<MockView>(&view, EmptyDeleter())));
+                    std::shared_ptr<MockSurfaceCollection>(&view, EmptyDeleter())));
     
     EXPECT_CALL(display, notify_update())
             .Times(1);

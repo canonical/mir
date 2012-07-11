@@ -25,7 +25,9 @@
 #include "mir/surfaces/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
+#include <algorithm>
 #include <cassert>
+#include <functional>
 #include <memory>
 #include <set>
 
@@ -53,18 +55,12 @@ struct LockGuardDeleter
     Lockable& lockable;
 };
 
-struct SurfaceStackView : public ms::Scenegraph::View
+struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
 {
 public:
-    void apply(ms::SurfaceRenderer* renderer)
+    void invoke_for_each_surface(ms::SurfaceCollection::Functor f)
     {
-        if (renderer == nullptr)
-            return;
-
-        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            renderer->render(*it);
-        }
+        std::for_each(surfaces.begin(), surfaces.end(), f);
     }
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;
@@ -91,13 +87,13 @@ bool ms::SurfaceStack::try_lock()
     return guard.try_lock();
 }
 
-std::shared_ptr<ms::Scenegraph::View> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
+std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
     // TODO: Ensure locking with the help of a customer deleter here.
     LockGuardDeleter<std::mutex> lgd(guard);
-    SurfaceStackView* view = new SurfaceStackView();
+    SurfaceStackSurfaceCollection* view = new SurfaceStackSurfaceCollection();
     view->surfaces = surfaces;
-    return std::shared_ptr<ms::Scenegraph::View>(view, lgd);
+    return std::shared_ptr<ms::SurfaceCollection>(view, lgd);
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)
