@@ -19,8 +19,8 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/surfaces/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/graphics/surface_renderer.h"
 #include "mir/surfaces/surface.h"
 
 #include <gmock/gmock.h>
@@ -29,8 +29,9 @@
 #include <memory>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
-namespace mg = mir::geometry;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -52,15 +53,15 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
     MOCK_METHOD3(
         create_buffer_bundle,
         std::shared_ptr<mc::BufferBundle>(
-            mg::Width width,
-            mg::Height height,
+            geom::Width width,
+            geom::Height height,
             mc::PixelFormat pf));
 
 };
 
 
 
-struct MockSurfaceRenderer : public ms::SurfaceRenderer
+struct MockSurfaceRenderer : public mg::SurfaceRenderer
 {
     MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
 };
@@ -81,7 +82,7 @@ TEST(
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        ms::a_surface().of_size(mg::Width(1024), mg::Height(768)));
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
 
     EXPECT_EQ(1, stack.surface_count());
     
@@ -120,7 +121,7 @@ TEST(
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
-        std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(mg::Rectangle());
+        std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(geom::Rectangle());
         EXPECT_FALSE(stack.try_lock());
     }
     EXPECT_TRUE(stack.try_lock());
@@ -142,11 +143,11 @@ TEST(
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     auto surface1 = stack.create_surface(
-        ms::a_surface().of_size(mg::Width(1024), mg::Height(768)));
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
     auto surface2 = stack.create_surface(
-        ms::a_surface().of_size(mg::Width(1024), mg::Height(768)));
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
     auto surface3 = stack.create_surface(
-        ms::a_surface().of_size(mg::Width(1024), mg::Height(768)));
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
 
     EXPECT_EQ(3, stack.surface_count());
 
@@ -155,10 +156,10 @@ TEST(
     EXPECT_CALL(renderer, render(surface2.lock())).Times(Exactly(1));
     EXPECT_CALL(renderer, render(surface3.lock())).Times(Exactly(1));
 
-    auto view = stack.get_surfaces_in(mg::Rectangle());
+    auto view = stack.get_surfaces_in(geom::Rectangle());
 
     view->invoke_for_each_surface(
-        std::bind(&ms::SurfaceRenderer::render,
+        std::bind(&mg::SurfaceRenderer::render,
                   &renderer,
                   std::placeholders::_1));
 }

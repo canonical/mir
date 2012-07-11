@@ -25,11 +25,18 @@
 
 namespace mir
 {
+namespace graphics
+{
+
+class SurfaceRenderer;
+
+}
 namespace surfaces
 {
+
 // scenegraph is the interface compositor uses onto the surface stack
 class Scenegraph;
-class SurfaceRenderer;
+
 }
 
 namespace compositor
@@ -39,13 +46,13 @@ class Compositor : public Drawer
 public:
     explicit Compositor(
         surfaces::Scenegraph* scenegraph,
-        const std::shared_ptr<surfaces::SurfaceRenderer>& renderer);
+        const std::shared_ptr<graphics::SurfaceRenderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
     surfaces::Scenegraph* const scenegraph;
-    std::shared_ptr<surfaces::SurfaceRenderer> renderer;
+    std::shared_ptr<graphics::SurfaceRenderer> renderer;
 };
 
 

@@ -21,8 +21,8 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_texture_binder.h"
+#include "mir/graphics/surface_renderer.h"
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
 #include <algorithm>
@@ -33,6 +33,7 @@
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 namespace
 {

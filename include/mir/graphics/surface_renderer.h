@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_RENDERER_H_
-#define MIR_SURFACES_SURFACE_RENDERER_H_
+#ifndef MIR_GRAPHICS_SURFACE_RENDERER_H_
+#define MIR_GRAPHICS_SURFACE_RENDERER_H_
 
 #include <memory>
 
@@ -28,12 +28,16 @@ namespace surfaces
 
 class Surface;
 
+}
+namespace graphics
+{
+    
 class SurfaceRenderer
 {
 public:
     virtual ~SurfaceRenderer() {}
 
-    virtual void render(const std::shared_ptr<Surface>& surface) = 0;
+    virtual void render(const std::shared_ptr<surfaces::Surface>& surface) = 0;
     
 protected:
     SurfaceRenderer() = default;
@@ -44,4 +48,4 @@ protected:
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_RENDERER_H_
+#endif // MIR_GRAPHICS_SURFACE_RENDERER_H_

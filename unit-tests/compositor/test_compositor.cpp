@@ -18,7 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/scenegraph.h"
-#include "mir/surfaces/surface_renderer.h"
+#include "mir/graphics/surface_renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -33,7 +33,7 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct MockSurfaceRenderer : public ms::SurfaceRenderer
+struct MockSurfaceRenderer : public mg::SurfaceRenderer
 {
     MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
 };
@@ -72,7 +72,7 @@ TEST(Compositor, render)
     using namespace testing;
 
     MockSurfaceRenderer mock_renderer;
-    std::shared_ptr<ms::SurfaceRenderer> renderer(
+    std::shared_ptr<mg::SurfaceRenderer> renderer(
         &mock_renderer,
         EmptyDeleter());
     MockScenegraph scenegraph;

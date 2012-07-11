@@ -18,20 +18,21 @@
 
 #include "mir/compositor/compositor.h"
 
-#include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/surface_renderer.h"
 #include "mir/surfaces/scenegraph.h"
-#include "mir/surfaces/surface_renderer.h"
 
 #include <cassert>
 #include <functional>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
     ms::Scenegraph* scenegraph,
-    const std::shared_ptr<ms::SurfaceRenderer>& renderer)
+    const std::shared_ptr<mg::SurfaceRenderer>& renderer)
         : scenegraph(scenegraph),
           renderer(renderer)
 {
@@ -47,7 +48,7 @@ void mc::Compositor::render(graphics::Display* display)
     assert(surfaces_in_view_area);
     
     surfaces_in_view_area->invoke_for_each_surface(
-        std::bind(&ms::SurfaceRenderer::render,
+        std::bind(&mg::SurfaceRenderer::render,
                   renderer,
                   std::placeholders::_1));
     
