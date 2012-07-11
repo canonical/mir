@@ -18,7 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/scenegraph.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -33,9 +33,9 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct MockSurfaceRenderer : public mg::SurfaceRenderer
+struct MockSurfaceRenderer : public mg::Renderer
 {
-    MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
+    MOCK_METHOD1(render, void(const std::shared_ptr<mg::Renderable>&));
 };
 
 struct MockScenegraph : ms::Scenegraph
@@ -53,7 +53,7 @@ public:
 
 struct MockSurfaceCollection : public ms::SurfaceCollection
 {
-    MOCK_METHOD1(invoke_for_each_surface, void(ms::SurfaceCollection::Functor));
+    MOCK_METHOD1(invoke_for_each_surface, void(ms::SurfaceEnumerator&));
 };
 
 struct EmptyDeleter
@@ -72,7 +72,7 @@ TEST(Compositor, render)
     using namespace testing;
 
     MockSurfaceRenderer mock_renderer;
-    std::shared_ptr<mg::SurfaceRenderer> renderer(
+    std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         EmptyDeleter());
     MockScenegraph scenegraph;

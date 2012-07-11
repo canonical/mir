@@ -28,7 +28,7 @@ namespace mir
 namespace graphics
 {
 
-class SurfaceRenderer;
+class Renderer;
 
 }
 namespace surfaces
@@ -46,13 +46,13 @@ class Compositor : public Drawer
 public:
     explicit Compositor(
         surfaces::Scenegraph* scenegraph,
-        const std::shared_ptr<graphics::SurfaceRenderer>& renderer);
+        const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
     surfaces::Scenegraph* const scenegraph;
-    std::shared_ptr<graphics::SurfaceRenderer> renderer;
+    std::shared_ptr<graphics::Renderer> renderer;
 };
 
 

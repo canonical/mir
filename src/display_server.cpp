@@ -22,7 +22,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
 namespace mc = mir::compositor;
@@ -33,7 +33,7 @@ struct mir::DisplayServer::Private
 {
     Private(
         const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
-        const std::shared_ptr<mg::SurfaceRenderer>& renderer)
+        const std::shared_ptr<mg::Renderer>& renderer)
             : buffer_bundle_manager(strategy),
               surface_stack(&buffer_bundle_manager),
               compositor(&surface_stack, renderer)
@@ -47,7 +47,7 @@ struct mir::DisplayServer::Private
 
 mir::DisplayServer::DisplayServer(
     const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
-    const std::shared_ptr<mg::SurfaceRenderer>& renderer) : p(new mir::DisplayServer::Private(strategy, renderer))
+    const std::shared_ptr<mg::Renderer>& renderer) : p(new mir::DisplayServer::Private(strategy, renderer))
 {
 }
 

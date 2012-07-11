@@ -20,8 +20,10 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/scenegraph.h"
+#include "mir/surfaces/surface.h"
 
 #include <cassert>
 #include <functional>
@@ -30,9 +32,30 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
+namespace
+{
+
+struct RenderingSurfaceEnumerator : public ms::SurfaceEnumerator
+{
+    RenderingSurfaceEnumerator(const std::shared_ptr<mg::Renderer>& renderer)
+            : renderer(renderer)
+    {
+        assert(renderer);
+    }
+    
+    void operator()(const std::shared_ptr<ms::Surface>& surface)
+    {
+        renderer->render(std::dynamic_pointer_cast<mg::Renderable>(surface));
+    }
+
+    std::shared_ptr<mg::Renderer> renderer;
+};
+
+}
+
 mc::Compositor::Compositor(
     ms::Scenegraph* scenegraph,
-    const std::shared_ptr<mg::SurfaceRenderer>& renderer)
+    const std::shared_ptr<mg::Renderer>& renderer)
         : scenegraph(scenegraph),
           renderer(renderer)
 {
@@ -46,11 +69,11 @@ void mc::Compositor::render(graphics::Display* display)
 
     auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
     assert(surfaces_in_view_area);
+
+    RenderingSurfaceEnumerator enumerator(renderer);
     
     surfaces_in_view_area->invoke_for_each_surface(
-        std::bind(&mg::SurfaceRenderer::render,
-                  renderer,
-                  std::placeholders::_1));
+        enumerator);
     
     display->notify_update();
 }

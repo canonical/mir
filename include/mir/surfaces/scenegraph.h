@@ -29,16 +29,26 @@ namespace surfaces
 {
 
 class Surface;
-class SurfaceRenderer;
+
+class SurfaceEnumerator
+{
+public:
+    virtual ~SurfaceEnumerator() {}
+
+    virtual void operator()(const std::shared_ptr<Surface>& surface) = 0;
+
+protected:
+    SurfaceEnumerator() = default;
+    SurfaceEnumerator(const SurfaceEnumerator&) = delete;
+    SurfaceEnumerator& operator=(const SurfaceEnumerator&) = delete;
+};
 
 class SurfaceCollection
 {
 public:
-    typedef std::function<void(const std::shared_ptr<Surface>&)> Functor;
-
     virtual ~SurfaceCollection() {}
 
-    virtual void invoke_for_each_surface(Functor f) = 0;
+    virtual void invoke_for_each_surface(SurfaceEnumerator& enumerator) = 0;
 
   protected:    
     SurfaceCollection() = default;

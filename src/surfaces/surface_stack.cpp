@@ -21,7 +21,7 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_texture_binder.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -59,9 +59,9 @@ struct LockGuardDeleter
 struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
 {
 public:
-    void invoke_for_each_surface(ms::SurfaceCollection::Functor f)
+    void invoke_for_each_surface(ms::SurfaceEnumerator& f)
     {
-        std::for_each(surfaces.begin(), surfaces.end(), f);
+        std::for_each(surfaces.begin(), surfaces.end(), std::ref(f));
     }
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;

@@ -16,36 +16,32 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_SURFACE_RENDERER_H_
-#define MIR_GRAPHICS_SURFACE_RENDERER_H_
+#ifndef MIR_GRAPHICS_RENDERER_H_
+#define MIR_GRAPHICS_RENDERER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace surfaces
-{
-
-class Surface;
-
-}
 namespace graphics
 {
-    
-class SurfaceRenderer
+
+class Renderable;
+
+class Renderer
 {
 public:
-    virtual ~SurfaceRenderer() {}
+    virtual ~Renderer() {}
 
-    virtual void render(const std::shared_ptr<surfaces::Surface>& surface) = 0;
+    virtual void render(const std::shared_ptr<Renderable>& renderable) = 0;
     
 protected:
-    SurfaceRenderer() = default;
-    SurfaceRenderer(const SurfaceRenderer&) = delete;
-    SurfaceRenderer& operator=(const SurfaceRenderer&) = delete;
+    Renderer() = default;
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 };
 
 }
 }
 
-#endif // MIR_GRAPHICS_SURFACE_RENDERER_H_
+#endif // MIR_GRAPHICS_RENDERER_H_

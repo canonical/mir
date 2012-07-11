@@ -20,7 +20,7 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
 #include <gmock/gmock.h>
@@ -28,7 +28,6 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 namespace
@@ -52,10 +51,10 @@ public:
     }
 };
 
-class StubSurfaceRenderer : public mg::SurfaceRenderer
+class StubSurfaceRenderer : public mg::Renderer
 {
 public:
-    void render(const std::shared_ptr<ms::Surface>& /*surface*/)
+    void render(const std::shared_ptr<mg::Renderable>& /*surface*/)
     {
     }
 };

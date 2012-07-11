@@ -20,7 +20,7 @@
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/graphics/surface_renderer.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 
 #include <gmock/gmock.h>
@@ -61,9 +61,16 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 
 
 
-struct MockSurfaceRenderer : public mg::SurfaceRenderer
+struct MockSurfaceRenderer : public mg::Renderer,
+                             public ms::SurfaceEnumerator
 {
-    MOCK_METHOD1(render, void(const std::shared_ptr<ms::Surface>&));
+    MOCK_METHOD1(render, void(const std::shared_ptr<mg::Renderable>&));
+    
+    void operator()(const std::shared_ptr<ms::Surface>& s)
+    {
+        render(std::dynamic_pointer_cast<mg::Renderable>(s));
+    }
+    
 };
 
 }
@@ -148,15 +155,15 @@ TEST(
         ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
 
     MockSurfaceRenderer renderer;
-    EXPECT_CALL(renderer, render(surface1.lock())).Times(Exactly(1));
-    EXPECT_CALL(renderer, render(surface2.lock())).Times(Exactly(1));
-    EXPECT_CALL(renderer, render(surface3.lock())).Times(Exactly(1));
+    EXPECT_CALL(renderer,
+                render(std::dynamic_pointer_cast<mg::Renderable>(surface1.lock()))).Times(Exactly(1));
+    EXPECT_CALL(renderer,
+                render(std::dynamic_pointer_cast<mg::Renderable>(surface2.lock()))).Times(Exactly(1));
+    EXPECT_CALL(renderer,
+                render(std::dynamic_pointer_cast<mg::Renderable>(surface3.lock()))).Times(Exactly(1));
 
     auto view = stack.get_surfaces_in(geom::Rectangle());
 
-    view->invoke_for_each_surface(
-        std::bind(&mg::SurfaceRenderer::render,
-                  &renderer,
-                  std::placeholders::_1));
+    view->invoke_for_each_surface(renderer);
 }
 

@@ -36,7 +36,7 @@ namespace graphics
 {
 
 class Display;
-class SurfaceRenderer;
+class Renderer;
 
 }
 
@@ -47,7 +47,7 @@ public:
     // the BufferAllocationStrategy.
     DisplayServer(
         const std::shared_ptr<compositor::BufferAllocationStrategy>& strategy,
-        const std::shared_ptr<graphics::SurfaceRenderer>& renderer);
+        const std::shared_ptr<graphics::Renderer>& renderer);
 
     ~DisplayServer();
 
