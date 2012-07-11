@@ -117,7 +117,3 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> /*surface*/)
 {
 }
 
-std::size_t ms::SurfaceStack::surface_count() const
-{
-    return surfaces.size();
-}

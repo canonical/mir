@@ -58,7 +58,6 @@ class SurfaceStack : public Scenegraph,
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
 
-    virtual std::size_t surface_count() const;
  private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;

@@ -84,8 +84,6 @@ TEST(
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
 
-    EXPECT_EQ(1, stack.surface_count());
-    
     stack.destroy_surface(surface);
 }
 
@@ -148,8 +146,6 @@ TEST(
         ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
     auto surface3 = stack.create_surface(
         ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
-
-    EXPECT_EQ(3, stack.surface_count());
 
     MockSurfaceRenderer renderer;
     EXPECT_CALL(renderer, render(surface1.lock())).Times(Exactly(1));

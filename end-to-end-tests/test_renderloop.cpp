@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/surface_renderer.h"
@@ -69,12 +69,10 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(
         new mc::DoubleBufferAllocationStrategy(
             std::make_shared<StubGraphicBufferAllocator>()));
-    
-    std::shared_ptr<mg::SurfaceRenderer> surface_renderer(new StubSurfaceRenderer());
-    
+
     mir::DisplayServer display_server(
         allocation_strategy,
-        surface_renderer);
+        std::make_shared<StubSurfaceRenderer>());
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);

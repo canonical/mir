@@ -21,9 +21,7 @@
 #include "mir/display_server.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/surface_renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
