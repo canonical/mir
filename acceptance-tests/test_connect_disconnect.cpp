@@ -74,20 +74,38 @@ mp::Process::ExitCode test_exit()
         mp::Process::ExitCode::success;
 }
 
-TEST(client_server_communication, client_connects_and_disconnects)
+class DisplayServerTest : public ::testing::Test 
 {
-    auto server_bind_and_connect = []() -> void
+public:
+    std::shared_ptr<mp::Process> server_process()
     {
-        SCOPED_TRACE("Server");
-        StubBufferAllocationStrategy strategy;
-        mir::DisplayServer display_server(&strategy);
-        display_server.run();
-    };
+        return server;
+    }
+protected:
+    virtual void SetUp() 
+    {
+        auto server_bind_and_connect = []() -> void
+        {
+            SCOPED_TRACE("Server");
+            StubBufferAllocationStrategy strategy;
+            mir::DisplayServer display_server(&strategy);
+            display_server.run();
+        };
+        server = mp::fork_and_run_in_a_different_process(
+            server_bind_and_connect, test_exit);
+    }
 
-    std::shared_ptr<mp::Process> server =
-            mp::fork_and_run_in_a_different_process(
-                server_bind_and_connect, test_exit);
+    virtual void TearDown()
+    {
+        server->terminate();
+        EXPECT_TRUE(server->wait_for_termination().is_successful());
+    }
+private:
+    std::shared_ptr<mp::Process> server;
+};
 
+TEST_F(DisplayServerTest, client_connects_and_disconnects)
+{
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
 
     mir::frontend::Application application(communicator);
@@ -104,7 +122,4 @@ TEST(client_server_communication, client_connects_and_disconnects)
                 client_connects_and_disconnects, test_exit);
 
     EXPECT_TRUE(client->wait_for_termination().is_successful());
-
-    server->terminate();
-    EXPECT_TRUE(server->wait_for_termination().is_successful());
 }
