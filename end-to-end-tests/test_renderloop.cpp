@@ -54,7 +54,7 @@ public:
 class StubSurfaceRenderer : public mg::Renderer
 {
 public:
-    void render(const std::shared_ptr<mg::Renderable>& /*surface*/)
+    void render(mg::Renderable& /*surface*/)
     {
     }
 };
