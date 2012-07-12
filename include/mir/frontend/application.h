@@ -37,7 +37,7 @@ class Communicator;
 
 class Application : public mi::EventHandler
 {
- public:
+public:
 
     enum class State
     {
@@ -50,7 +50,7 @@ class Application : public mi::EventHandler
         > StateTransitionSignal;
 
     Application(std::shared_ptr<Communicator> communicator)
-            : communicator(communicator)
+        : communicator(communicator)
     {
         assert(communicator);
     }
@@ -76,12 +76,12 @@ class Application : public mi::EventHandler
     {
     }
 
- protected:
+protected:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
- private:
-    // ToDo: Hide away implementation details.
+private:
+    // TODO: Hide away implementation details.
     std::shared_ptr<Communicator> communicator;
     StateTransitionSignal state_transition;
 };

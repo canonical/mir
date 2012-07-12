@@ -57,7 +57,7 @@ mpx::Process::Result mpx::Process::wait_for_termination()
     Result result;
     int status;
 
-    // ToDo handle errors here
+    // TODO handle errors here
     ::waitpid(pid, &status, WUNTRACED | WCONTINUED);
 
     if (WIFEXITED(status))
