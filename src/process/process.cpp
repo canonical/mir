@@ -66,8 +66,15 @@ mp::Process::~Process()
 {
     if (!terminated)
     {
-        terminate();
-        wait_for_termination();
+        try
+        {
+            terminate();
+            wait_for_termination();
+        }
+        catch (std::exception const &)
+        {
+            // Ignore a failure to signal the process.
+        }
     }
 }
 
