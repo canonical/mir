@@ -19,13 +19,13 @@
 #include "mir/display_server.h"
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
-#include "mir/process/posix_process.h"
+#include "mir/process/process.h"
 
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace mpx = mir::process::posix;
+namespace mp = mir::process;
 namespace geom = mir::geometry;
 
 namespace {
@@ -83,8 +83,8 @@ TEST(client_server_communication, client_connects_and_disconnects)
         display_server.run();
     };
 
-    std::shared_ptr<mpx::Process> server =
-            mpx::fork_and_run_in_a_different_process(
+    std::shared_ptr<mp::Process> server =
+            mp::fork_and_run_in_a_different_process(
                 server_bind_and_connect, test_exit);
 
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
@@ -98,8 +98,8 @@ TEST(client_server_communication, client_connects_and_disconnects)
         EXPECT_NO_THROW(application.disconnect());
     };
 
-    std::shared_ptr<mpx::Process> client =
-            mpx::fork_and_run_in_a_different_process(
+    std::shared_ptr<mp::Process> client =
+            mp::fork_and_run_in_a_different_process(
                 client_connects_and_disconnects, test_exit);
 
     EXPECT_TRUE(client->wait_for_termination().is_successful());

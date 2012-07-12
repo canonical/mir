@@ -17,7 +17,7 @@
 set(
   PROCESS_SOURCES
 
-  posix_process.cpp
+  process.cpp
 )
 
 add_library( 

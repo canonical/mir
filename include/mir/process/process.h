@@ -14,51 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_PROCESS_POSIX_PROCESS_H_
-#define MIR_PROCESS_POSIX_PROCESS_H_
+#ifndef MIR_PROCESS_PROCESS_H_
+#define MIR_PROCESS_PROCESS_H_
 
-#include "posix_signal.h"
-
-#include <memory>
+#include <cstdlib>
 #include <iosfwd>
+#include <memory>
 #include <stdexcept>
 
 namespace mir
 {
 namespace process
 {
-namespace posix
-{
-
-struct InvalidSignalException : public std::runtime_error
-{
-    InvalidSignalException() : std::runtime_error("Unknown signal")
-    {
-    }
-};
-
-struct ProcessPermissionException : public std::runtime_error
-{
-    ProcessPermissionException() : std::runtime_error("Missing permissions to alter process")
-    {
-    }
-};
-
-struct ProcessDoesNotExistException : public std::runtime_error
-{
-    ProcessDoesNotExistException() : std::runtime_error("No such process or process group")
-    {
-    }
-};
-
-struct ProcessForkError : public std::runtime_error
-{
-    ProcessForkError() : std::runtime_error("Failed to fork process")
-    {
-    }
-};
 
 // Posix process control class.
 class Process
@@ -90,29 +60,23 @@ public:
 
         TerminationReason reason;
         ExitCode exit_code;
-        Signal signal;
+        int signal;
     };
 
     // Construct a process with the supplied pid
     Process(pid_t pid);
 
-    // Destroy the process cleanly, by sending it the termination signal
-    // and waiting for the pid.
+    // Destroy the process cleanly, by terminating it and waiting for
+    // the pid.
     ~Process();
 
     // Wait for the process to terminate, and return the results.
     Result wait_for_termination();
 
-    // Attempt to kill the process by sending the supplied signal.
-    // A failure will result in an exception being thrown.
-    void send_signal(Signal s);
-
-    // Kill, terminate or stop the process by signalling it.
+    // Kill, terminate, stop or continue the process.
     void kill();
     void terminate();
     void stop();
-
-    // Continue the process.
     void cont();
 
 protected:
@@ -122,6 +86,7 @@ protected:
 
 private:
     pid_t pid;
+    bool terminated;
 };
 
 // Stream print helper
@@ -138,7 +103,7 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
 
     if (pid < 0)
     {
-        throw ProcessForkError();
+        throw std::runtime_error("Failed to fork process");
     }
 
     if (pid == 0)
@@ -152,6 +117,5 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
 
 }
 }
-}
 
-#endif // MIR_PROCESS_POSIX_PROCESS_H_
+#endif // MIR_PROCESS_PROCESS_H_
