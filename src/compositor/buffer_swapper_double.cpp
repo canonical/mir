@@ -15,7 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include <mir/compositor/buffer_swapper_double.h>
+
+#include "mir/compositor/buffer_swapper_double.h"
 
 namespace mc = mir::compositor;
 
@@ -59,8 +60,9 @@ void mc::BufferSwapperDouble::ungrab()
     compositor_to_ungrabbed();
 }
 
-
-/* class helper functions, mostly compare_and_exchange based state computation */
+/* class helper functions, mostly compare_and_exchange based state computation. 
+   we need to compute next state of the atomics based solely on the current state, 
+   consts in the class and variables local to the function. */
 void mc::BufferSwapperDouble::client_to_dequeued()
 {
     Buffer **dq_assume;

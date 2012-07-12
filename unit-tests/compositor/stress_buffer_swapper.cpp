@@ -32,8 +32,7 @@ void server_work()
 {
 
     mc::Buffer* buf_tmp;
-    int i;
-    for (i=0; i<NUM_ITERATIONS; i++)
+    for (int i=0; i<NUM_ITERATIONS; i++)
     {
         buf_tmp = swapper->dequeue_free_buffer();
         EXPECT_NE(nullptr, buf_tmp);
@@ -45,8 +44,7 @@ void client_work()
 {
 
     mc::Buffer* buf_tmp;
-    int i;
-    for (i=0; i<NUM_ITERATIONS; i++)
+    for (int i=0; i<NUM_ITERATIONS; i++)
     {
         buf_tmp = swapper->grab_last_posted();
         EXPECT_NE(nullptr, buf_tmp);
