@@ -44,8 +44,7 @@ class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
 public:
     StubBufferAllocationStrategy()
-        : mc::BufferAllocationStrategy(
-            std::shared_ptr<mc::GraphicBufferAllocator>(new StubBufferAllocator()))
+        : mc::BufferAllocationStrategy(std::make_shared<StubBufferAllocator>())
     {
     }
 
@@ -68,9 +67,11 @@ struct StubCommunicator : public mf::Communicator
 
 }
 
-int test_exit()
+mp::Process::ExitCode test_exit()
 {
-    return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
+    return ::testing::Test::HasFailure() ?
+        mp::Process::ExitCode::failure : 
+        mp::Process::ExitCode::success;
 }
 
 TEST(client_server_communication, client_connects_and_disconnects)

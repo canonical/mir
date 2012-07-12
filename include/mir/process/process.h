@@ -21,6 +21,7 @@
 #define MIR_PROCESS_PROCESS_H_
 
 #include <cstdlib>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <stdexcept>
@@ -97,7 +98,7 @@ std::ostream& operator<<(std::ostream& out, const Process::Result& result);
 // Returns the parent process.
 template<typename Callable>
 std::shared_ptr<Process> fork_and_run_in_a_different_process(
-    Callable&& main_fn, int (exit_fn)())
+    Callable&& main_fn, std::function<Process::ExitCode()> exit_fn)
 {
     pid_t pid = fork();
 
@@ -109,7 +110,7 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
     if (pid == 0)
     {
         main_fn();
-        exit(exit_fn());
+        exit(static_cast<int>(exit_fn()));
     }
 
     return std::shared_ptr<Process>(new Process(pid));
