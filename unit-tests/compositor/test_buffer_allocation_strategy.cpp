@@ -16,13 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mock_buffer.h"
-#include "mock_graphic_buffer_allocator.h"
-
 #include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir_test/gmock_fixes.h"
+#include "mock_buffer.h"
+#include "mock_graphic_buffer_allocator.h"
+
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
