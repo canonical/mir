@@ -25,6 +25,8 @@
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/geometry/dimensions.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace compositor
@@ -38,7 +40,8 @@ class BufferBundleManager : public BufferBundleFactory
 {
  public:
 
-    explicit BufferBundleManager(BufferAllocationStrategy* strategy);
+    explicit BufferBundleManager(
+        const std::shared_ptr<BufferAllocationStrategy>& strategy);
 
     virtual ~BufferBundleManager() {}
 
@@ -49,7 +52,7 @@ class BufferBundleManager : public BufferBundleFactory
         PixelFormat pf);
 
  private:
-    BufferAllocationStrategy* buffer_allocation_strategy;
+    std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;
 
 };
 

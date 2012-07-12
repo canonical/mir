@@ -42,6 +42,7 @@ struct MockSurfaceStack : public ms::SurfaceStackModel
     
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
+    MOCK_CONST_METHOD0(surface_count, std::size_t());
 };
 
 }

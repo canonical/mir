@@ -7,40 +7,36 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_H_
-#define MIR_FRONTEND_APPLICATION_H_
-
-#include "mir/input/event_handler.h"
+#ifndef MIR_GRAPHICS_RENDERABLE_H_
+#define MIR_GRAPHICS_RENDERABLE_H_
 
 namespace mir
 {
-namespace frontend
+namespace graphics
 {
 
-namespace mi = mir::input;
-
-class Application : public mi::EventHandler
+// The interface by which a Renderer talks to, e.g., a surface.
+class Renderable
 {
- public:
-    virtual ~Application() {}
+public:
+    virtual ~Renderable() {}
 
- protected:
-    Application() = default;
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
+protected:
+    Renderable() = default;
+    Renderable(const Renderable&) = delete;
+    Renderable& operator=(const Renderable&) = delete;
 };
 
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_H_
+#endif // MIR_GRAPHICS_RENDERABLE_H_

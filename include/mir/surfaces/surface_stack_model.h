@@ -38,7 +38,7 @@ class SurfaceStackModel
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
 
- protected:
+protected:
     SurfaceStackModel() = default;
     SurfaceStackModel(const SurfaceStackModel&) = delete;
     SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;

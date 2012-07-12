@@ -16,8 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
 #include <gmock/gmock.h>
@@ -47,16 +50,28 @@ public:
         return std::unique_ptr<mc::Buffer>();
     }
 };
+
+class StubSurfaceRenderer : public mg::Renderer
+{
+public:
+    void render(mg::Renderable& /*surface*/)
+    {
+    }
+};
+
 }
 
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
 
-    mc::DoubleBufferAllocationStrategy allocation_strategy(
-            std::make_shared<StubGraphicBufferAllocator>());
+    std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(
+        new mc::DoubleBufferAllocationStrategy(
+            std::make_shared<StubGraphicBufferAllocator>()));
 
-    mir::DisplayServer display_server(&allocation_strategy);
+    mir::DisplayServer display_server(
+        allocation_strategy,
+        std::make_shared<StubSurfaceRenderer>());
 
     MockDisplay display;
     EXPECT_CALL(display, notify_update()).Times(1);
@@ -66,3 +81,4 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
 
     display_server.render(&display);
 }
+

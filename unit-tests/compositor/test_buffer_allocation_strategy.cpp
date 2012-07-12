@@ -17,6 +17,8 @@
  */
 
 #include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/triple_buffer_allocation_strategy.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -45,6 +47,5 @@ TEST(
 {
     EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");
 }
-
 
 

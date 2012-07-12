@@ -22,7 +22,8 @@ add_executable(
 
 target_link_libraries(
   end-to-end-tests
-  
+
+  mir
   mircompositor
   mirfrontend
   mirinput

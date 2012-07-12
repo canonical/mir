@@ -21,22 +21,54 @@
 
 #include "mir/geometry/forward.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace surfaces
 {
 
-class SurfacesToRender {};
+class Surface;
+
+class SurfaceEnumerator
+{
+public:
+    virtual ~SurfaceEnumerator() {}
+
+    virtual void operator()(Surface& surface) = 0;
+
+protected:
+    SurfaceEnumerator() = default;
+    SurfaceEnumerator(const SurfaceEnumerator&) = delete;
+    SurfaceEnumerator& operator=(const SurfaceEnumerator&) = delete;
+};
+
+class SurfaceCollection
+{
+public:
+    virtual ~SurfaceCollection() {}
+
+    virtual void invoke_for_each_surface(SurfaceEnumerator& enumerator) = 0;
+
+  protected:    
+    SurfaceCollection() = default;
+    SurfaceCollection(const SurfaceCollection&) = delete;
+    SurfaceCollection& operator=(const SurfaceCollection&) = delete;
+
+};
 
 // scenegraph is the interface compositor uses onto the surface stack
 class Scenegraph
 {
 public:
-    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area) = 0;
+    
+    virtual ~Scenegraph() {}
+    
+    virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area) = 0;
 
 protected:
     Scenegraph() = default;
-    ~Scenegraph() = default;
+    
 private:
     Scenegraph(Scenegraph const&) = delete;
     Scenegraph& operator=(Scenegraph const&) = delete;

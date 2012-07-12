@@ -23,6 +23,8 @@
 #include "surface_stack_model.h"
 
 #include <memory>
+#include <mutex>
+#include <set>
 
 namespace mir
 {
@@ -41,9 +43,17 @@ class SurfaceStack : public Scenegraph,
 {
  public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
+    virtual ~SurfaceStack() {}
 
-    virtual SurfacesToRender get_surfaces_in(geometry::Rectangle const& display_area);
-
+    // Make this a model of Lockable.
+    void lock();
+    void unlock();
+    bool try_lock();
+    
+    // From Scenegraph
+    virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);
+    
+    // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
@@ -51,7 +61,9 @@ class SurfaceStack : public Scenegraph,
  private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
+    std::mutex guard;
     compositor::BufferBundleFactory* const buffer_bundle_factory;
+    std::set<std::shared_ptr<Surface>> surfaces;
 };
 
 }

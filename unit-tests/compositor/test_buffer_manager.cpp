@@ -76,7 +76,7 @@ TEST(buffer_manager, create_buffer)
     MockBufferAllocationStrategy allocation_strategy(allocator);
 
     mc::BufferBundleManager buffer_bundle_manager(
-        &allocation_strategy);
+            std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, EmptyDeleter()));
 
     /* note: this is somewhat of a weak test, some create_clients will create a varied amount
              of buffers */

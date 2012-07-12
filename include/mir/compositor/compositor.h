@@ -19,14 +19,24 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
-#include "drawer.h"
+#include "mir/compositor/drawer.h"
+
+#include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+
+class Renderer;
+
+}
 namespace surfaces
 {
+
 // scenegraph is the interface compositor uses onto the surface stack
 class Scenegraph;
+
 }
 
 namespace compositor
@@ -34,12 +44,15 @@ namespace compositor
 class Compositor : public Drawer
 {
 public:
-    explicit Compositor(surfaces::Scenegraph* scenegraph);
+    explicit Compositor(
+        surfaces::Scenegraph* scenegraph,
+        const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
     surfaces::Scenegraph* const scenegraph;
+    std::shared_ptr<graphics::Renderer> renderer;
 };
 
 

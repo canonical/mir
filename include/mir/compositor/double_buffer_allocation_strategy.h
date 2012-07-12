@@ -16,31 +16,17 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_H_
-#define MIR_FRONTEND_APPLICATION_H_
+#ifndef MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
+#define MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
 
-#include "mir/input/event_handler.h"
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 
 namespace mir
 {
-namespace frontend
+namespace compositor
 {
-
-namespace mi = mir::input;
-
-class Application : public mi::EventHandler
-{
- public:
-    virtual ~Application() {}
-
- protected:
-    Application() = default;
-
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
-};
 
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_H_
+#endif // MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_

@@ -20,6 +20,9 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/surfaces/surface_stack.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 
 #include <gmock/gmock.h>
@@ -29,13 +32,44 @@
 #include <memory>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 namespace
 {
+
+class NullBufferSwapper : public mc::BufferSwapper
+{
+public:
+    virtual void dequeue_free_buffer(mc::Buffer*& ) {}
+
+    /* once a client is done with the finished buffer, it must queue
+       it. This modifies the buffer the compositor posts to the screen */
+    virtual void queue_finished_buffer() {}
+
+    /* caller of grab_last_posted buffer should get no-wait access to the
+        last posted buffer. However, the client will potentially stall
+        until control of the buffer is returned via ungrab() */
+    virtual void grab_last_posted(mc::Buffer*& ) {}
+    virtual void ungrab() {}
+};
+
 struct MockBufferBundleFactory : public mc::BufferBundleFactory
 {
+    MockBufferBundleFactory()
+    {
+        using namespace ::testing;
+        ON_CALL(
+            *this,
+            create_buffer_bundle(_, _, _))
+                .WillByDefault(
+                    Return(
+                        std::shared_ptr<mc::BufferBundle>(
+                                new mc::BufferBundle(
+                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
+    }
+
     MOCK_METHOD3(
         create_buffer_bundle,
         std::shared_ptr<mc::BufferBundle>(
@@ -45,10 +79,22 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 
 };
 
+
+
+struct MockSurfaceRenderer : public mg::Renderer,
+                             public ms::SurfaceEnumerator
+{
+    MOCK_METHOD1(render, void(mg::Renderable&));
+    void operator()(ms::Surface& s)
+    {
+        render(s);
+    }
+};
+
 }
 
 TEST(
-    TestSurfaceStack,
+    SurfaceStack,
     surface_creation_destruction_creates_and_destroys_buffer_bundle)
 {
     using namespace ::testing;
@@ -60,8 +106,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_, _, _))
-            .Times(AtLeast(1))
-            .WillRepeatedly(Return(std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle(std::move(swapper_handle)))));
+            .Times(AtLeast(1));
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
@@ -69,3 +114,76 @@ TEST(
 
     stack.destroy_surface(surface);
 }
+
+TEST(
+    SurfaceStack,
+    lock_and_unlock_variants)
+{
+    using namespace ::testing;
+
+    MockBufferBundleFactory buffer_bundle_factory;
+    EXPECT_CALL(
+        buffer_bundle_factory,
+        create_buffer_bundle(_, _, _)).Times(0);
+     
+    ms::SurfaceStack stack(&buffer_bundle_factory);
+    stack.lock();
+    EXPECT_FALSE(stack.try_lock());
+    stack.unlock();
+    EXPECT_TRUE(stack.try_lock());
+}
+
+TEST(
+    SurfaceStack,
+    scenegraph_query_locks_the_stack)
+{
+    using namespace ::testing;
+
+    MockBufferBundleFactory buffer_bundle_factory;
+    EXPECT_CALL(
+        buffer_bundle_factory,
+        create_buffer_bundle(_, _, _)).Times(0);
+     
+    ms::SurfaceStack stack(&buffer_bundle_factory);
+
+    {
+        std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(geom::Rectangle());
+        EXPECT_FALSE(stack.try_lock());
+    }
+    EXPECT_TRUE(stack.try_lock());
+ 
+}
+
+TEST(
+    SurfaceStack,
+    view_applies_renderer_to_all_surfaces_in_view)
+{
+    using namespace ::testing;
+
+    MockBufferBundleFactory buffer_bundle_factory;
+    EXPECT_CALL(
+        buffer_bundle_factory,
+        create_buffer_bundle(_, _, _)).Times(AtLeast(1));
+     
+    ms::SurfaceStack stack(&buffer_bundle_factory);
+
+    auto surface1 = stack.create_surface(
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+    auto surface2 = stack.create_surface(
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+    auto surface3 = stack.create_surface(
+        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+
+    MockSurfaceRenderer renderer;
+    EXPECT_CALL(renderer,
+                render(Ref(*surface1.lock()))).Times(Exactly(1));
+    EXPECT_CALL(renderer,
+                render(Ref(*surface2.lock()))).Times(Exactly(1));
+    EXPECT_CALL(renderer,
+                render(Ref(*surface3.lock()))).Times(Exactly(1));
+    
+    auto view = stack.get_surfaces_in(geom::Rectangle());
+
+    view->invoke_for_each_surface(renderer);
+}
+
