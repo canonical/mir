@@ -24,9 +24,8 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
+void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
 {
-
     mc::Buffer* buf_tmp;
 
     const int num_iterations = 10000; 
@@ -37,9 +36,9 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
         EXPECT_NE(nullptr, buf_tmp);
         swapper->queue_finished_buffer();
     }
-
 }
-void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
+
+void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
 {
     const int num_iterations = 10000; 
 
