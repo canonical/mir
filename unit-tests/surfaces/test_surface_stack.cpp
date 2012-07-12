@@ -42,7 +42,9 @@ namespace
 class NullBufferSwapper : public mc::BufferSwapper
 {
 public:
-    virtual void dequeue_free_buffer(mc::Buffer*& ) {}
+    /* normally, it is a guarantee that dequeue_free_buffer or grab_last_posted
+       never returns a nullptr. this nullbuffer swapper class does though */
+    virtual mc::Buffer* dequeue_free_buffer() { return nullptr; }
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
@@ -51,7 +53,7 @@ public:
     /* caller of grab_last_posted buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via ungrab() */
-    virtual void grab_last_posted(mc::Buffer*& ) {}
+    virtual mc::Buffer* grab_last_posted() { return nullptr;}
     virtual void ungrab() {}
 };
 

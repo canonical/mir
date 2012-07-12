@@ -37,9 +37,9 @@ class BufferSwapperDouble : public BufferSwapper
 public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    void dequeue_free_buffer(Buffer*& buffer);
+    Buffer* dequeue_free_buffer();
     void queue_finished_buffer();
-    void grab_last_posted(Buffer*& buffer);
+    Buffer* grab_last_posted();
     void ungrab();
 
 private:

@@ -67,7 +67,7 @@ TEST(buffer_swap_double, simple_swaps0)
 
     mc::Buffer* buf_tmp;
 
-    swapper->dequeue_free_buffer(buf_tmp);
+    buf_tmp = swapper->dequeue_free_buffer();
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
 
     swapper->queue_finished_buffer();
@@ -85,9 +85,9 @@ TEST(buffer_swap_double, simple_swaps1)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
-    swapper->dequeue_free_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
-    swapper->dequeue_free_buffer(buf_tmp_b);
+    buf_tmp_b = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
 
     EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
@@ -103,14 +103,13 @@ TEST(buffer_swap_double, simple_grabs0)
     mc::Buffer* const buf_b = fix.buf_b;
     mc::BufferSwapper * swapper = fix.swapper.get();
 
-    mc::Buffer* buf_tmp_a;
-    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp;
 
-    swapper->dequeue_free_buffer(buf_tmp_a);
+    swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
 
-    swapper->grab_last_posted(buf_tmp_b);
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b)); /* we should get valid buffer we supplied in constructor */
+    buf_tmp = swapper->grab_last_posted();
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
 }
 
 TEST(buffer_swap_double, simple_grabs1)
@@ -122,10 +121,10 @@ TEST(buffer_swap_double, simple_grabs1)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
-    swapper->dequeue_free_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
 
-    swapper->grab_last_posted(buf_tmp_b);
+    buf_tmp_b = swapper->grab_last_posted();
     swapper->ungrab();
 
     EXPECT_EQ(buf_tmp_a, buf_tmp_b); /* whatever buf_tmp_a was, this was the last posted buffer */
@@ -140,12 +139,12 @@ TEST(buffer_swap_double, simple_grabs2)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
-    swapper->dequeue_free_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
 
-    swapper->grab_last_posted(buf_tmp_b);
+    buf_tmp_b = swapper->grab_last_posted();
     swapper->ungrab();
 
-    swapper->grab_last_posted(buf_tmp_a);
+    buf_tmp_a = swapper->grab_last_posted();
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }

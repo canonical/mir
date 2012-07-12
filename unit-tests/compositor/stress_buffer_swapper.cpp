@@ -31,12 +31,12 @@ static mc::BufferSwapper *swapper;
 void server_work()
 {
 
-    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp;
     int i;
     for (i=0; i<NUM_ITERATIONS; i++)
     {
-        swapper->dequeue_free_buffer(buf_tmp_a);
-        EXPECT_NE(nullptr, buf_tmp_a);
+        buf_tmp = swapper->dequeue_free_buffer();
+        EXPECT_NE(nullptr, buf_tmp);
         swapper->queue_finished_buffer();
     }
 
@@ -44,12 +44,12 @@ void server_work()
 void client_work()
 {
 
-    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp;
     int i;
     for (i=0; i<NUM_ITERATIONS; i++)
     {
-        swapper->grab_last_posted(buf_tmp_b);
-        EXPECT_NE(nullptr, buf_tmp_b);
+        buf_tmp = swapper->grab_last_posted();
+        EXPECT_NE(nullptr, buf_tmp);
         swapper->ungrab();
     }
 

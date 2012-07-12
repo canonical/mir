@@ -33,10 +33,10 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 
 }
 
-void mc::BufferSwapperDouble::dequeue_free_buffer(Buffer*& out_buffer )
+mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
     client_to_dequeued();
-    out_buffer = *dequeued.load();
+    return *dequeued.load(); 
 }
 
 void mc::BufferSwapperDouble::queue_finished_buffer()
@@ -48,10 +48,10 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
     compositor_change_toggle_pattern();
 }
 
-void mc::BufferSwapperDouble::grab_last_posted(mc::Buffer*& out_buffer)
+mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
     compositor_to_grabbed();
-    out_buffer = *grabbed.load();
+    return *grabbed.load();
 }
 
 void mc::BufferSwapperDouble::ungrab()
