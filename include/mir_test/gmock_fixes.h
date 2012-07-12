@@ -35,6 +35,7 @@
 #ifndef MIR_TEST_GMOCK_FIXES_H_
 #define MIR_TEST_GMOCK_FIXES_H_
 
+#include <memory>
 #include <gmock/gmock.h>
 
 namespace testing
