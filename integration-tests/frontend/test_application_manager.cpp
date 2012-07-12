@@ -16,15 +16,17 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_manager.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/frontend/services/surface_factory.h"
+#include "mir/compositor/buffer_swapper.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir_test/gmock_fixes.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -47,30 +49,17 @@ struct MockSurfaceStack : public ms::SurfaceStackModel
 TEST(TestApplicationManager, create_surface_dispatches_to_surface_stack)
 {
     using namespace ::testing;
-#if 0    
-    /* since the Bundle needs BufferSwapper, which needs Buffer, we cannot do an integration test until
-       we have a concrete Buffer type */
-    std::unique_ptr<mc::BufferSwapper> swapper_handle(std::move(new mc::BufferSwapperDouble));
 
-    std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            ms::a_surface(),
-            std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle(std::move(swapper_handle)))));
- 
     MockSurfaceStack surface_stack;
     ms::SurfaceController controller(&surface_stack);
     mf::ApplicationManager app_manager(&controller);
 
-    ON_CALL(surface_stack, create_surface(_)).WillByDefault(Return(dummy_surface));
+    ON_CALL(surface_stack, create_surface(_)).WillByDefault(Return(std::weak_ptr<ms::Surface>()));
     EXPECT_CALL(surface_stack, create_surface(_)).Times(AtLeast(1));
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(AtLeast(1));
 
     mfs::SurfaceFactory* surface_factory = &app_manager;
     std::weak_ptr<ms::Surface> surface = surface_factory->create_surface(ms::a_surface());
 
-    EXPECT_EQ(surface.lock(), dummy_surface);
-
     surface_factory->destroy_surface(surface);
-
-#endif
 }
