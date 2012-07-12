@@ -16,34 +16,34 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-//#include "mock_buffer.h"
-//#include "mock_graphic_buffer_allocator.h"
-//
-//#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
-//
-//#include <gmock/gmock.h>
-//#include <gtest/gtest.h>
-//
-//namespace mc = mir::compositor;
-//namespace geom = mir::geometry;
-//
-//namespace
-//{
-//struct EmptyDeleter
-//{
-//    template<typename T>
-//    void operator()(T* ) const
-//    {
-//    }
-//};
-//}
-//
-//TEST(
-//    fixed_count_buffer_allocation_strategy_death_test,
-//    if_dependency_on_allocator_is_missing_an_assertion_is_triggered)
-//{
-//    EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");
-//}
+#include "mock_buffer.h"
+#include "mock_graphic_buffer_allocator.h"
+
+#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
+
+namespace
+{
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* ) const
+    {
+    }
+};
+}
+
+TEST(
+    fixed_count_buffer_allocation_strategy_death_test,
+    if_dependency_on_allocator_is_missing_an_assertion_is_triggered)
+{
+    EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");
+}
 
 
 
