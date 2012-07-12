@@ -16,7 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 
 #include <gmock/gmock.h>
