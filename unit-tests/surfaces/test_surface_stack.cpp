@@ -64,13 +64,11 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 struct MockSurfaceRenderer : public mg::Renderer,
                              public ms::SurfaceEnumerator
 {
-    MOCK_METHOD1(render, void(const std::shared_ptr<mg::Renderable>&));
-    
-    void operator()(const std::shared_ptr<ms::Surface>& s)
+    MOCK_METHOD1(render, void(mg::Renderable&));
+    void operator()(ms::Surface& s)
     {
-        render(std::dynamic_pointer_cast<mg::Renderable>(s));
+        render(s);
     }
-    
 };
 
 }
@@ -156,12 +154,12 @@ TEST(
 
     MockSurfaceRenderer renderer;
     EXPECT_CALL(renderer,
-                render(std::dynamic_pointer_cast<mg::Renderable>(surface1.lock()))).Times(Exactly(1));
+                render(Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
-                render(std::dynamic_pointer_cast<mg::Renderable>(surface2.lock()))).Times(Exactly(1));
+                render(Ref(*surface2.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
-                render(std::dynamic_pointer_cast<mg::Renderable>(surface3.lock()))).Times(Exactly(1));
-
+                render(Ref(*surface3.lock()))).Times(Exactly(1));
+    
     auto view = stack.get_surfaces_in(geom::Rectangle());
 
     view->invoke_for_each_surface(renderer);

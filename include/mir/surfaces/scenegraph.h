@@ -35,7 +35,7 @@ class SurfaceEnumerator
 public:
     virtual ~SurfaceEnumerator() {}
 
-    virtual void operator()(const std::shared_ptr<Surface>& surface) = 0;
+    virtual void operator()(Surface& surface) = 0;
 
 protected:
     SurfaceEnumerator() = default;

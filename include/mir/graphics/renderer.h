@@ -33,7 +33,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual void render(const std::shared_ptr<Renderable>& renderable) = 0;
+    virtual void render(Renderable& renderable) = 0;
     
 protected:
     Renderer() = default;

@@ -61,7 +61,10 @@ struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
 public:
     void invoke_for_each_surface(ms::SurfaceEnumerator& f)
     {
-        std::for_each(surfaces.begin(), surfaces.end(), std::ref(f));
+        for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
+        {
+            f(**it);
+        }        
     }
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;
@@ -90,7 +93,6 @@ bool ms::SurfaceStack::try_lock()
 
 std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
-    // TODO: Ensure locking with the help of a customer deleter here.
     LockGuardDeleter<std::mutex> lgd(guard);
     SurfaceStackSurfaceCollection* view = new SurfaceStackSurfaceCollection();
     view->surfaces = surfaces;

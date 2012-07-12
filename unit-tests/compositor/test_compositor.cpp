@@ -18,6 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/surfaces/scenegraph.h"
+#include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
@@ -35,7 +36,7 @@ namespace
 
 struct MockSurfaceRenderer : public mg::Renderer
 {
-    MOCK_METHOD1(render, void(const std::shared_ptr<mg::Renderable>&));
+    MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
 struct MockScenegraph : ms::Scenegraph
