@@ -20,6 +20,7 @@
 #include "mock_graphic_buffer_allocator.h"
 
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle.h"
@@ -27,6 +28,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir_test/gmock_fixes.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -39,7 +41,7 @@ struct EmptyDeleter
     template<typename T>
     void operator()(T* )
     {
-    }    
+    }
 };
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
@@ -48,11 +50,10 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
             : mc::BufferAllocationStrategy(allocator)
     {
     }
-/*
+
     MOCK_METHOD3(
         create_swapper,
         std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
-*/
 };
 
 const geom::Width width{1024};
@@ -62,36 +63,48 @@ const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
 
 }
 
-//TEST(buffer_manager, create_buffer)
-//{
-//    using namespace testing;
-//
-//    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
-//    std::shared_ptr<mc::MockBuffer> default_buffer(
-//        &mock_buffer,
-//        EmptyDeleter());
-//    mc::MockGraphicBufferAllocator graphic_allocator;
-//    std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
-//    MockBufferAllocationStrategy allocation_strategy(allocator);
-//
-//    mc::BufferBundleManager buffer_bundle_manager(
-//        &allocation_strategy);
-//
-//    /* note: this is somewhat of a weak test, some create_clients will create a varied amount
-//             of buffers */
-//    EXPECT_CALL(
-//        graphic_allocator,
-//        alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
-//            .Times(0);
-//
-//    EXPECT_CALL(allocation_strategy, create_swapper(Eq(width), Eq(height), Eq(pixel_format))).Times(AtLeast(1));
-//
-//    std::shared_ptr<mc::BufferBundle> bundle{
-//        buffer_bundle_manager.create_buffer_bundle(
-//            width,
-//            height,
-//            pixel_format)};
-//
-//    EXPECT_TRUE(bundle != nullptr);
-//
-//}
+TEST(buffer_manager, create_buffer)
+{
+    using namespace testing;
+
+    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> default_buffer(
+        &mock_buffer,
+        EmptyDeleter());
+    mc::MockGraphicBufferAllocator graphic_allocator;
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
+    MockBufferAllocationStrategy allocation_strategy(allocator);
+
+    mc::BufferBundleManager buffer_bundle_manager(
+        &allocation_strategy);
+
+    /* note: this is somewhat of a weak test, some create_clients will create a varied amount
+             of buffers */
+    EXPECT_CALL(
+        graphic_allocator,
+        alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
+            .Times(0);
+
+    EXPECT_CALL(allocation_strategy, create_swapper(Eq(width), Eq(height), Eq(pixel_format))).Times(AtLeast(1));
+
+    std::shared_ptr<mc::BufferBundle> bundle{
+        buffer_bundle_manager.create_buffer_bundle(
+            width,
+            height,
+            pixel_format)};
+
+    EXPECT_TRUE(bundle != nullptr);
+}
+
+TEST(GMock, return_by_move)
+{
+    struct Interface
+    {
+        virtual std::unique_ptr<int> function() const = 0;
+    };
+
+    struct MockImplementation : Interface
+    {
+        MOCK_CONST_METHOD0(function, std::unique_ptr<int>());
+    };
+}
