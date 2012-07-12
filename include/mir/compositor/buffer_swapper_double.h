@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_ */
