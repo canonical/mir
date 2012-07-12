@@ -32,8 +32,6 @@ namespace process
 namespace posix
 {
 
-static const pid_t client_pid = 0;
-
 struct InvalidSignalException : public std::runtime_error
 {
     InvalidSignalException() : std::runtime_error("Unknown signal")
@@ -143,7 +141,7 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
         throw ProcessForkError();
     }
 
-    if (pid == client_pid)
+    if (pid == 0)
     {
         main_fn();
         exit(exit_fn());
