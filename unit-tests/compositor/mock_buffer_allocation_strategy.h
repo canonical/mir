@@ -29,10 +29,23 @@ namespace mir
 namespace compositor
 {
 
+void test() {}
+
 struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
 {
  public:
-    MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
+    MockGraphicBufferAllocator() 
+    {
+        using namespace testing;
+
+        std::unique_ptr<Buffer> testbuffer(nullptr);
+
+        ON_CALL(*this, alloc_buffer(_,_,_))
+                .WillByDefault(ReturnRef(testbuffer));
+
+    }
+
+    MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer>& (geometry::Width, geometry::Height, PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
 };
 

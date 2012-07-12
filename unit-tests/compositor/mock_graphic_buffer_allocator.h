@@ -20,6 +20,9 @@
 #define MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer.h"
+
+#include "mock_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,11 +31,24 @@ namespace mir
 {
 namespace compositor
 {
+const geometry::Width width {1024};
+const geometry::Height height {768};
+const geometry::Stride stride {geom::dim_cast<geom::Stride>(width)};
+const PixelFormat pixel_format {PixelFormat::rgba_8888};
 
 struct MockGraphicBufferAllocator : GraphicBufferAllocator
 {
+    MockGraphicBufferAllocator()
+	{
+	    using namespace testing;
+        std::unique_ptr<Buffer> testbuffer(nullptr);
+
+        ON_CALL(*this, alloc_buffer(_,_,_))
+                .WillByDefault(ReturnRef(testbuffer));
+    }
+
  public:
-    MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
+    MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer>& (geometry::Width, geometry::Height, PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
 };
 

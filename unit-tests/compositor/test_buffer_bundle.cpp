@@ -21,6 +21,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_swapper_double.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -49,7 +50,9 @@ TEST(buffer_bundle, add_rm_buffers)
 {
     using namespace testing;
 
-    mc::BufferBundle buffer_bundle;
+    std::unique_ptr<mc::BufferSwapper> swapper_handle(nullptr);
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
+
     mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
@@ -77,7 +80,8 @@ TEST(buffer_bundle, add_buffers_and_bind)
 {
     using namespace testing;
 
-    mc::BufferBundle buffer_bundle;
+    std::unique_ptr<mc::BufferSwapper> swapper_handle;
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
@@ -112,7 +116,8 @@ TEST(buffer_bundle, add_buffers_and_distribute)
 {
     using namespace testing;
 
-    mc::BufferBundle buffer_bundle;
+    std::unique_ptr<mc::BufferSwapper> swapper_handle;
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
@@ -145,7 +150,8 @@ TEST(buffer_bundle, add_buffers_bind_and_distribute)
 {
     using namespace testing;
 
-    mc::BufferBundle buffer_bundle;
+    std::unique_ptr<mc::BufferSwapper> swapper_handle;
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     mc::MockBuffer mock_buffer_cli {width, height, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer_cli(
         &mock_buffer_cli,

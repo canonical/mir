@@ -48,10 +48,11 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
             : mc::BufferAllocationStrategy(allocator)
     {
     }
-
+/*
     MOCK_METHOD3(
         create_swapper,
         std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
+*/
 };
 
 const geom::Width width{1024};

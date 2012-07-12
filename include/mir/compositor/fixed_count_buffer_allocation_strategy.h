@@ -46,15 +46,16 @@ public:
         geometry::Height height,
         PixelFormat pf)
     {
-        auto buffer_a = graphic_buffer_allocator()->alloc_buffer(
+        /* we move twice, could probably do with one move */
+        auto buffer_a = std::move(graphic_buffer_allocator()->alloc_buffer(
                 width,
                 height,
-                pf);
+                pf));
 
-        auto buffer_b = graphic_buffer_allocator()->alloc_buffer(
+        auto buffer_b = std::move(graphic_buffer_allocator()->alloc_buffer(
                 width,
                 height,
-                pf);
+                pf));
 
         return std::move(std::unique_ptr<BufferSwapper>(new BufferSwapperDouble(
                 std::move(buffer_a),

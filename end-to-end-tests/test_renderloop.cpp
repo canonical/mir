@@ -39,12 +39,12 @@ public:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(
+    std::unique_ptr<mc::Buffer>&& alloc_buffer(
         geom::Width /*width*/,
         geom::Height /*height*/,
         mc::PixelFormat /*pf*/)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::move(std::unique_ptr<mc::Buffer>());
     }
 };
 }
