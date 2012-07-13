@@ -21,47 +21,67 @@
 #include <mir/compositor/buffer_swapper_double.h>
 #include <thread>
 
+#include <iostream>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
-{
-    mc::Buffer* buf_tmp;
-
-    const int num_iterations = 10000; 
-
-    for (int i=0; i< num_iterations; i++)
+template <typename T>
+class Synchronizer {
+public:
+    Synchronizer() : kill(false) {}
+    void set_kill() 
     {
-        buf_tmp = swapper->dequeue_free_buffer();
-        EXPECT_NE(nullptr, buf_tmp);
-        swapper->queue_finished_buffer();
-    }
-}
-
-void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
-{
-    const int num_iterations = 10000; 
-
-    mc::Buffer* buf_tmp;
-    for (int i=0; i< num_iterations; i++)
-    {
-        buf_tmp = swapper->grab_last_posted();
-        EXPECT_NE(nullptr, buf_tmp);
-        swapper->ungrab();
+        std::unique_lock<std::mutex> lk(sync_lock);
+        kill = true;
+        sync_cv.notify_all();
     }
 
-}
+    void set_data(T* in_data)
+    {
+        std::unique_lock<std::mutex> lk(sync_lock);
+        data = in_data; 
+        sync_cv.notify_all();
+    }
 
-void timeout_detection(std::function<void(std::shared_ptr<mc::BufferSwapper>)> function,
-                       std::condition_variable *cv1, std::mutex* exec_lock,
-                       std::shared_ptr<mc::BufferSwapper> swapper )
+    T* get_data()
+    {
+        std::unique_lock<std::mutex> lk(sync_lock);
+        
+        return data; 
+    }
+
+    bool sync()
+    {
+        std::unique_lock<std::mutex> lk(sync_lock);
+        sync_cv.wait(lk);
+        return kill;
+    }
+
+private:
+    /* for signaling between threads */
+    std::condition_variable sync_cv;
+
+    /* for protecting data */
+    std::mutex sync_lock;
+    bool kill;
+    T* data;
+};
+
+
+
+template <typename S, typename T>
+void timeout_detection(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> function,
+                       std::condition_variable *cv1, std::mutex* exec_lock, 
+                       std::shared_ptr<S> swapper,
+                       Synchronizer<T>* synchronizer)
 {
     std::unique_lock<std::mutex> lk2(*exec_lock);
     /* once we acquire lock, we know that the parent thread's timer is running, so we can release it.
         if its not released, then a deadlock situation would prevent the wait_until() from ever waking */
     lk2.unlock();
 
-    function(swapper);
+    function(swapper, synchronizer);
 
     /* notify that we are done working */
     cv1->notify_one();
@@ -70,14 +90,16 @@ void timeout_detection(std::function<void(std::shared_ptr<mc::BufferSwapper>)> f
 
 
 /* todo: std::function<> argument is not very generic... */
-void client_thread(std::function<void(std::shared_ptr<mc::BufferSwapper>)> function,
-                   std::mutex *exec_lock, std::shared_ptr<mc::BufferSwapper> swapper,
+template <typename S, typename T>
+void client_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> function,
+                   std::shared_ptr<S> swapper , Synchronizer<T>* synchronizer,
                    std::chrono::milliseconds timeout)
 {
     std::condition_variable cv1;
+    std::mutex exec_lock;
 
-    std::unique_lock<std::mutex> lk2(*exec_lock);
-    std::thread(timeout_detection, function, &cv1, exec_lock, swapper).detach();
+    std::unique_lock<std::mutex> lk2(exec_lock);
+    std::thread(timeout_detection<S,T>, function, &cv1, &exec_lock, swapper, synchronizer).detach();
 
     /* set timeout as absolute time from this point */
     auto timeout_time = std::chrono::system_clock::now() + timeout;
@@ -91,14 +113,57 @@ void client_thread(std::function<void(std::shared_ptr<mc::BufferSwapper>)> funct
         FAIL();
     }
 
+    synchronizer->set_kill();
     return;
 }
 
-TEST(buffer_swapper_double_stress, simple_swaps)
+void server_work(std::shared_ptr<mc::BufferSwapper> swapper,
+                 Synchronizer<mc::Buffer*>*  )
 {
-    std::mutex exec_lock0;
-    std::mutex exec_lock1;
-    std::chrono::milliseconds timeout(400);
+    std::mutex cv_mutex;
+    std::unique_lock<std::mutex> lk(cv_mutex);
+
+    mc::Buffer* buf_tmp_a, *buf_tmp_b;
+
+    const int num_iterations = 10000;
+
+    for (int i=0; i< num_iterations; i++)
+    {
+        buf_tmp_a = swapper->dequeue_free_buffer();
+        EXPECT_NE(nullptr, buf_tmp_a);
+        swapper->queue_finished_buffer();
+
+        buf_tmp_b = swapper->dequeue_free_buffer();
+        EXPECT_NE(nullptr, buf_tmp_b);
+        swapper->queue_finished_buffer();
+
+        EXPECT_NE(buf_tmp_a, buf_tmp_b);
+    }
+
+}
+
+void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
+                 Synchronizer<mc::Buffer*>*  )
+{
+    std::mutex cv_mutex;
+    std::unique_lock<std::mutex> lk(cv_mutex);
+
+
+    mc::Buffer* buf_tmp;
+
+    const int num_iterations = 10000;
+    for (int i=0; i< num_iterations; i++)
+    {
+        buf_tmp = swapper->grab_last_posted();
+        EXPECT_NE(nullptr, buf_tmp);
+        swapper->ungrab();
+    }
+
+}
+
+TEST(buffer_swapper_double_stress, simple_swaps0)
+{
+    std::chrono::milliseconds timeout(5000);
 
     geom::Width w {1024};
     geom::Height h {768};
@@ -112,8 +177,35 @@ TEST(buffer_swapper_double_stress, simple_swaps)
             std::move(buffer_a),
             std::move(buffer_b));
 
-    std::thread t1(client_thread, client_work, &exec_lock0, swapper, timeout);
-    std::thread t2(client_thread, server_work, &exec_lock1, swapper, timeout);
+    /* use these condition variables to poke and control the two threads */
+    Synchronizer<mc::Buffer*> synchronizer;
+    std::thread t1(client_thread<mc::BufferSwapper, mc::Buffer*>,
+                   client_work, swapper, &synchronizer, timeout);
+    std::thread t2(client_thread<mc::BufferSwapper, mc::Buffer*>,
+                   server_work, swapper, &synchronizer, timeout);
+    /* wait for sync to notify us that the thread has started. */
+
+
+    /* wait for a wake up. if the thread has been killed by the timeout, then
+       we know to abort. because we set a timeout on the thread that we are testing,
+       we will be woken up with a kill signal regardless of success or failure */
+    std::mutex tmp;
+    std::unique_lock<std::mutex> lk(tmp);
+
+
+    /* start multithreaded test expectations */
+    while (! synchronizer.sync() )
+    {
+        /* system is in stable state here */ 
+        /* check expectations */
+
+
+        /* stimulate the system to run */ 
+        /* allow threads to come into stable state */
+    }
+
     t1.join();
     t2.join();
 }
+
+
