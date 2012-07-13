@@ -45,18 +45,10 @@ class BufferAllocationStrategy
 
  protected:
     ~BufferAllocationStrategy() {}
-    BufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> const& allocator);
+    BufferAllocationStrategy() {}
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
-
-    std::shared_ptr<GraphicBufferAllocator> const& graphic_buffer_allocator() const
-    {
-        return gr_allocator;
-    }
-    
- private:
-    std::shared_ptr<GraphicBufferAllocator> gr_allocator;
 };
 
 }

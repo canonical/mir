@@ -22,13 +22,16 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 
+#include <cassert>
+
 namespace mc = mir::compositor;
 
 
 mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
-    BufferAllocationStrategy(gr_alloc)
+    gr_allocator(gr_alloc)
 {
+    assert(gr_alloc);
 }
 
 std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
@@ -38,6 +41,6 @@ std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_sw
 {
     return std::unique_ptr<BufferSwapper>(
         new BufferSwapperDouble(
-            graphic_buffer_allocator()->alloc_buffer(width, height, pf),
-            graphic_buffer_allocator()->alloc_buffer(width, height, pf)));
+            gr_allocator->alloc_buffer(width, height, pf),
+            gr_allocator->alloc_buffer(width, height, pf)));
 }

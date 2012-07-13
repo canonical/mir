@@ -46,11 +46,6 @@ struct EmptyDeleter
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
-    MockBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator> allocator)
-            : mc::BufferAllocationStrategy(allocator)
-    {
-    }
-
     MOCK_METHOD3(
         create_swapper,
         std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
@@ -71,19 +66,11 @@ TEST(buffer_manager, create_buffer)
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
-    mc::MockGraphicBufferAllocator graphic_allocator;
-    std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
-    MockBufferAllocationStrategy allocation_strategy(allocator);
+    MockBufferAllocationStrategy allocation_strategy;
 
     mc::BufferBundleManager buffer_bundle_manager(
             std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, EmptyDeleter()));
 
-    /* note: this is somewhat of a weak test, some create_clients will create a varied amount
-             of buffers */
-    EXPECT_CALL(
-        graphic_allocator,
-        alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
-            .Times(0);
 
     EXPECT_CALL(allocation_strategy, create_swapper(Eq(width), Eq(height), Eq(pixel_format))).Times(AtLeast(1));
 

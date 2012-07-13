@@ -40,6 +40,9 @@ public:
         geometry::Width width,
         geometry::Height height,
         PixelFormat pf);
+
+private:
+   std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
 };
 }
 }

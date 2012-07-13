@@ -40,7 +40,7 @@ struct EmptyDeleter
 }
 
 TEST(
-    fixed_count_buffer_allocation_strategy_death_test,
+    double_buffer_allocation_strategy_death_test,
     if_dependency_on_allocator_is_missing_an_assertion_is_triggered)
 {
     EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");
