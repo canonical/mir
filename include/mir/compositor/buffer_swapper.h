@@ -20,8 +20,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_H_
 #define MIR_COMPOSITOR_BUFFER_SWAPPER_H_
 
-#include "buffer.h"
-
 namespace mir
 {
 namespace compositor

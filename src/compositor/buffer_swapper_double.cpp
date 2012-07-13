@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer.h"
 
 namespace mc = mir::compositor;
 
