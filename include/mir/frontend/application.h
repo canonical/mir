@@ -23,7 +23,6 @@
 
 #include <boost/signals2.hpp>
 
-#include <cassert>
 #include <memory>
 
 namespace mir
@@ -49,32 +48,18 @@ public:
         void(State old_state, State new_state)
         > StateTransitionSignal;
 
-    Application(std::shared_ptr<Communicator> communicator)
-        : communicator(communicator)
-    {
-        assert(communicator);
-    }
+    Application(std::shared_ptr<Communicator> communicator);
 
-    virtual ~Application() {}
+    virtual ~Application();
 
     // From mi::EventHandler
-    void on_event(mi::Event* e)
-    {
-        assert(e);
-    }
+    void on_event(mi::Event* e);
 
-    StateTransitionSignal& state_transition_signal()
-    {
-        return state_transition;
-    }
+    StateTransitionSignal& state_transition_signal();
 
-    void connect()
-    {
-    }
+    void connect();
 
-    void disconnect()
-    {
-    }
+    void disconnect();
 
 protected:
     Application(const Application&) = delete;
