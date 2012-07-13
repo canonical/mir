@@ -16,35 +16,27 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
-#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
-
-#include <memory>
+#ifndef MIR_GRAPHICS_RENDERABLE_H_
+#define MIR_GRAPHICS_RENDERABLE_H_
 
 namespace mir
 {
-namespace surfaces
+namespace graphics
 {
 
-class Surface;
-class SurfaceCreationParameters;
-
-class SurfaceStackModel
+// The interface by which a Renderer talks to, e.g., a surface.
+class Renderable
 {
- public:
-    virtual ~SurfaceStackModel() {}
-
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
-
-    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
+public:
+    virtual ~Renderable() {}
 
 protected:
-    SurfaceStackModel() = default;
-    SurfaceStackModel(const SurfaceStackModel&) = delete;
-    SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;
+    Renderable() = default;
+    Renderable(const Renderable&) = delete;
+    Renderable& operator=(const Renderable&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#endif // MIR_GRAPHICS_RENDERABLE_H_

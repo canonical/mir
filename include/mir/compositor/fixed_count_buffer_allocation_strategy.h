@@ -63,9 +63,6 @@ public:
     }
 };
 
-typedef FixedCountBufferAllocationStrategy<2> DoubleBufferAllocationStrategy;
-typedef FixedCountBufferAllocationStrategy<3> TripleBufferAllocationStrategy;
-
 }
 }
 

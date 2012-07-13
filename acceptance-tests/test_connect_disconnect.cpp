@@ -17,8 +17,12 @@
  */
 
 #include "mir/display_server.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/graphics/renderer.h"
 #include "mir/process/process.h"
 
 #include <gtest/gtest.h>
@@ -27,15 +31,24 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mp = mir::process;
 namespace geom = mir::geometry;
+namespace gfx = mir::graphics;
 
-namespace {
+namespace 
+{    
+class StubRenderer : public gfx::Renderer
+{
+public:
+    virtual void render(gfx::Renderable&)
+    {
+    }
+};
 
 class StubBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
     virtual std::shared_ptr<mc::Buffer> alloc_buffer(
         geom::Width, geom::Height, mc::PixelFormat)
-    { 
+    {
         return nullptr;
     }
 };
@@ -87,9 +100,9 @@ protected:
         auto server_bind_and_connect = []() -> void
         {
             SCOPED_TRACE("Server");
-            StubBufferAllocationStrategy strategy;
-            mir::DisplayServer display_server(&strategy);
-            display_server.run();
+            auto  strategy = std::make_shared<StubBufferAllocationStrategy>();
+            auto renderer = std::make_shared<StubRenderer>();
+            mir::DisplayServer display_server(strategy, renderer);
         };
         server = mp::fork_and_run_in_a_different_process(
             server_bind_and_connect, test_exit);

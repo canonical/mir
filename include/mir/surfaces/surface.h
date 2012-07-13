@@ -20,6 +20,7 @@
 #define MIR_SURFACES_SURFACE_H_
 
 #include "mir/geometry/dimensions.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 
@@ -52,7 +53,7 @@ bool operator!=(const SurfaceCreationParameters& lhs, const SurfaceCreationParam
 
 SurfaceCreationParameters a_surface();
 
-class Surface
+class Surface : public graphics::Renderable
 {
  public:
     Surface(const SurfaceCreationParameters& /*params*/,

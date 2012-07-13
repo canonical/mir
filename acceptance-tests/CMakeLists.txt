@@ -23,6 +23,7 @@ add_executable(
 target_link_libraries(
   acceptance-tests
   
+  mir
   mircompositor
   mirfrontend
   mirinput

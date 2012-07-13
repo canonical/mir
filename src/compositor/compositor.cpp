@@ -18,28 +18,54 @@
 
 #include "mir/compositor/compositor.h"
 
-#include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/renderer.h"
 #include "mir/surfaces/scenegraph.h"
+#include "mir/surfaces/surface.h"
 
 #include <cassert>
+#include <functional>
 
 namespace mc = mir::compositor;
-
+namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
-    surfaces::Scenegraph* scenegraph)
-    :
-    scenegraph(scenegraph)
+    ms::Scenegraph* scenegraph,
+    const std::shared_ptr<mg::Renderer>& renderer)
+        : scenegraph(scenegraph),
+          renderer(renderer)
 {
     assert(scenegraph);
+    assert(renderer);
 }
 
 void mc::Compositor::render(graphics::Display* display)
 {
     assert(display);
 
-    scenegraph->get_surfaces_in(display->view_area());
+    auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
+    assert(surfaces_in_view_area);
 
+    struct RenderingSurfaceEnumerator : public ms::SurfaceEnumerator
+    {
+        RenderingSurfaceEnumerator(mg::Renderer& renderer)
+                : renderer(renderer)
+        {
+        }
+        
+        void operator()(ms::Surface& surface)
+        {
+            renderer.render(surface);
+        }
+        
+        mg::Renderer& renderer;
+    } enumerator(*renderer);
+    
+    surfaces_in_view_area->invoke_for_each_surface(
+        enumerator);
+    
     display->notify_update();
 }

@@ -16,35 +16,32 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
-#define MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#ifndef MIR_GRAPHICS_RENDERER_H_
+#define MIR_GRAPHICS_RENDERER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace surfaces
+namespace graphics
 {
 
-class Surface;
-class SurfaceCreationParameters;
+class Renderable;
 
-class SurfaceStackModel
+class Renderer
 {
- public:
-    virtual ~SurfaceStackModel() {}
+public:
+    virtual ~Renderer() {}
 
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
-
-    virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
-
+    virtual void render(Renderable& renderable) = 0;
+    
 protected:
-    SurfaceStackModel() = default;
-    SurfaceStackModel(const SurfaceStackModel&) = delete;
-    SurfaceStackModel& operator=(const SurfaceStackModel&) = delete;
+    Renderer() = default;
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_STACK_MODEL_H_
+#endif // MIR_GRAPHICS_RENDERER_H_

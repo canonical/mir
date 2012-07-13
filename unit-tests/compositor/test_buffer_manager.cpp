@@ -71,10 +71,10 @@ TEST(buffer_manager, create_buffer)
         EmptyDeleter()); 
     mc::MockGraphicBufferAllocator graphic_allocator;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator(&graphic_allocator, EmptyDeleter());
-    MockBufferAllocationStrategy allocation_strategy(allocator);
-
+    MockBufferAllocationStrategy strategy(allocator);
+    std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(&strategy, EmptyDeleter());
     mc::BufferBundleManager buffer_bundle_manager(
-        &allocation_strategy);
+        allocation_strategy);
 
     /* note: this is somewhat of a weak test, some create_clients will create a varied amount
              of buffers */
@@ -83,7 +83,7 @@ TEST(buffer_manager, create_buffer)
         alloc_buffer(Eq(width), Eq(height), Eq(pixel_format)))
             .Times(0);
 
-    EXPECT_CALL(allocation_strategy, allocate_buffers_for_bundle(Eq(width), Eq(height), Eq(pixel_format), _)).Times(AtLeast(1));
+    EXPECT_CALL(strategy, allocate_buffers_for_bundle(Eq(width), Eq(height), Eq(pixel_format), _)).Times(AtLeast(1));
     
     std::shared_ptr<mc::BufferBundle> bundle{
         buffer_bundle_manager.create_buffer_bundle(

@@ -13,25 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Alan Griffiths <alan@octopull.co.uk>
+ *   Thomas Voss <thomas.voss@canonical.com>
  */
-
 
 #ifndef MIR_DISPLAY_SERVER_H_
 #define MIR_DISPLAY_SERVER_H_
 
-#include "mir/compositor/compositor.h"
-#include "mir/surfaces/surface_stack.h"
-#include "mir/compositor/fixed_count_buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include <memory>
 
 namespace mir
 {
 namespace compositor
 {
 
+class BufferAllocationStrategy;
 class BufferBundleFactory;
+
+}
+namespace graphics
+{
+
+class Display;
+class Renderer;
 
 }
 
@@ -40,28 +45,23 @@ class DisplayServer
 public:
     // TODO: Come up with a better way to resolve dependency on
     // the BufferAllocationStrategy.
-    DisplayServer(compositor::BufferAllocationStrategy* strategy)
-            : buffer_bundle_manager(strategy),
-              surface_stack(&buffer_bundle_manager),
-              compositor(&surface_stack)              
-    {}
+    DisplayServer(
+        const std::shared_ptr<compositor::BufferAllocationStrategy>& strategy,
+        const std::shared_ptr<graphics::Renderer>& renderer);
 
-    virtual void run()
-    {
-        
-    }
-    
-    virtual void render(graphics::Display* display)
-    {
-        compositor.render(display);
-    }
+    ~DisplayServer();
 
+    void render(graphics::Display* display);
 private:
-    //TODO remove implementation details from public view
-    compositor::BufferBundleManager buffer_bundle_manager;
-    surfaces::SurfaceStack surface_stack;
-    compositor::Compositor compositor;
+    struct Private;
+    std::unique_ptr<Private> p;
+
+    DisplayServer() = delete;
+    DisplayServer(const DisplayServer&) = delete;
+    DisplayServer& operator=(const DisplayServer&) = delete;
+    
 };
+
 }
 
 #endif /* MIR_DISPLAY_SERVER_H_ */
