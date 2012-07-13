@@ -49,10 +49,15 @@ mp::Process::Result::Result()
 {
 }
 
-bool mp::Process::Result::is_successful() const
+bool mp::Process::Result::succeeded() const
 {
     return reason == TerminationReason::child_terminated_normally &&
         exit_code == ExitCode::success;
+}
+
+bool mp::Process::Result::signalled() const
+{
+    return reason == TerminationReason::child_terminated_by_signal;
 }
 
 mp::Process::Process(pid_t pid)

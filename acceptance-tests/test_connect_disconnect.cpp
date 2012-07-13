@@ -58,5 +58,5 @@ TEST(DisplayServerTest, client_connects_and_disconnects)
             mp::fork_and_run_in_a_different_process(
                 client_connects_and_disconnects, test_exit);
 
-    EXPECT_TRUE(client->wait_for_termination().is_successful());
+    EXPECT_TRUE(client->wait_for_termination().succeeded());
 }

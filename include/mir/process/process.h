@@ -56,8 +56,11 @@ public:
     {
         Result();
 
-        // Did the process terminate without error?
-        bool is_successful() const;
+        // Did the process exit without error?
+        bool succeeded() const;
+
+        // Was the process terminated by a signal?
+        bool signalled() const;
 
         TerminationReason reason;
         ExitCode exit_code;

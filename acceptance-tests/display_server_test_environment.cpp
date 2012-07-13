@@ -97,7 +97,11 @@ void DisplayServerTestEnvironment::SetUp()
 void DisplayServerTestEnvironment::TearDown()
 {
     server_process->terminate();
-    EXPECT_TRUE(server_process->wait_for_termination().is_successful());
+    mp::Process::Result const result = server_process->wait_for_termination();
+
+    // Note: the process may have exited before we terminate it,
+    // since the display server doesn't properly run yet.
+    EXPECT_TRUE(result.succeeded() || result.signalled());
 }
 
 int main(int argc, char **argv)
