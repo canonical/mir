@@ -95,16 +95,3 @@ TEST(buffer_manager, create_buffer)
 
     EXPECT_TRUE(bundle != nullptr);
 }
-
-TEST(GMock, return_by_move)
-{
-    struct Interface
-    {
-        virtual std::unique_ptr<int> function() const = 0;
-    };
-
-    struct MockImplementation : Interface
-    {
-        MOCK_CONST_METHOD0(function, std::unique_ptr<int>());
-    };
-}
