@@ -49,16 +49,15 @@ private:
     void client_to_dequeued();
     void client_to_queued();
 
-    std::unique_ptr<Buffer>  buffer_a;
-    std::unique_ptr<Buffer>  buffer_b;
+    typedef std::unique_ptr<Buffer> BufferPtr;
+    BufferPtr buffer_a;
+    BufferPtr buffer_b;
 
-    Buffer* buf_a;
-    Buffer* buf_b;
-    Buffer* invalid0;
-    Buffer* invalid1;
+    BufferPtr invalid0;
+    BufferPtr invalid1;
 
-    std::atomic<Buffer**> grabbed;
-    std::atomic<Buffer**> dequeued;
+    std::atomic<BufferPtr*> grabbed;
+    std::atomic<BufferPtr*> dequeued;
 };
 
 }

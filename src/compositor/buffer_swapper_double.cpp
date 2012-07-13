@@ -24,8 +24,6 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     :
     buffer_a(std::move(buffer_a)),
     buffer_b(std::move(buffer_b)),
-    buf_a(this->buffer_a.get()),
-    buf_b(this->buffer_b.get()),
     invalid0(nullptr),
     invalid1(nullptr)
 {
@@ -37,7 +35,7 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
     client_to_dequeued();
-    return *dequeued.load(); 
+    return dequeued.load()->get();
 }
 
 void mc::BufferSwapperDouble::queue_finished_buffer()
@@ -52,7 +50,7 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
     compositor_to_grabbed();
-    return *grabbed.load();
+    return grabbed.load()->get();
 }
 
 void mc::BufferSwapperDouble::ungrab()
@@ -65,8 +63,8 @@ void mc::BufferSwapperDouble::ungrab()
    consts in the class and variables local to the function. */
 void mc::BufferSwapperDouble::client_to_dequeued()
 {
-    Buffer **dq_assume;
-    Buffer **next_state;
+    BufferPtr* dq_assume;
+    BufferPtr* next_state;
 
     do
     {
@@ -75,11 +73,11 @@ void mc::BufferSwapperDouble::client_to_dequeued()
 
         if (dq_assume == &invalid0)
         {
-            next_state = &buf_a;
+            next_state = &buffer_a;
         }
         else if (dq_assume == &invalid1)
         {
-            next_state = &buf_b;
+            next_state = &buffer_b;
         }
 
     }
@@ -88,18 +86,19 @@ void mc::BufferSwapperDouble::client_to_dequeued()
 
 void mc::BufferSwapperDouble::client_to_queued()
 {
-    Buffer **dq_assume;
-    Buffer **next_state;
+    BufferPtr* dq_assume;
+    BufferPtr* next_state;
+
     do
     {
         dq_assume = dequeued.load();
         next_state = dq_assume;
 
-        if (dq_assume == &buf_a)
+        if (dq_assume == &buffer_a)
         {
             next_state = &invalid1;
         }
-        else if (dq_assume == &buf_b)
+        else if (dq_assume == &buffer_b)
         {
             next_state = &invalid0;
         }
@@ -110,8 +109,8 @@ void mc::BufferSwapperDouble::client_to_queued()
 
 void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
 {
-    Buffer **grabbed_assume;
-    Buffer **next_state;
+    BufferPtr* grabbed_assume;
+    BufferPtr* next_state;
 
     do
     {
@@ -122,18 +121,18 @@ void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
         {
             next_state = &invalid1;
         }
-        else if (grabbed_assume == &buf_a)
+        else if (grabbed_assume == &buffer_a)
         {
-            next_state = &buf_b;
+            next_state = &buffer_b;
         }
 
         else if (grabbed_assume == &invalid1)
         {
             next_state = &invalid0;
         }
-        else if (grabbed_assume == &buf_b)
+        else if (grabbed_assume == &buffer_b)
         {
-            next_state = &buf_a;
+            next_state = &buffer_a;
         }
     }
     while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
@@ -141,8 +140,8 @@ void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
 
 void mc::BufferSwapperDouble::compositor_to_grabbed()
 {
-    Buffer **next_state;
-    Buffer **grabbed_assume;
+    BufferPtr* grabbed_assume;
+    BufferPtr* next_state;
 
     do
     {
@@ -151,11 +150,11 @@ void mc::BufferSwapperDouble::compositor_to_grabbed()
 
         if (grabbed_assume == &invalid0) /* pattern A */
         {
-            next_state = &buf_a;
+            next_state = &buffer_a;
         }
         else if (grabbed_assume == &invalid1) /* pattern B */
         {
-            next_state = &buf_b;
+            next_state = &buffer_b;
         }
     }
     while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
@@ -163,18 +162,18 @@ void mc::BufferSwapperDouble::compositor_to_grabbed()
 
 void mc::BufferSwapperDouble::compositor_to_ungrabbed()
 {
-    Buffer **grabbed_assume;
-    Buffer **next_state;
+    BufferPtr* grabbed_assume;
+    BufferPtr* next_state;
     do
     {
         grabbed_assume = grabbed.load();
         next_state = grabbed_assume;
 
-        if (grabbed_assume == &buf_a) /* pattern A */
+        if (grabbed_assume == &buffer_a) /* pattern A */
         {
             next_state = &invalid0;
         }
-        else if (grabbed_assume == &buf_b) /* pattern B */
+        else if (grabbed_assume == &buffer_b) /* pattern B */
         {
             next_state = &invalid1;
         }

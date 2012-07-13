@@ -22,9 +22,6 @@
 
 #include "buffer.h"
 
-#include <atomic>
-#include <memory>
-
 namespace mir
 {
 namespace compositor
