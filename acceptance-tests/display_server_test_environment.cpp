@@ -75,33 +75,34 @@ mp::Process::ExitCode test_exit()
         mp::Process::ExitCode::success;
 }
 
-std::shared_ptr<mp::Process> DisplayServerTestEnvironment::display_server_process()
+std::shared_ptr<mir::DisplayServer> DisplayServerTestEnvironment::display_server()
 {
     return server;
 }
 
 void DisplayServerTestEnvironment::SetUp() 
 {
-    auto server_bind_and_connect = []() -> void
+    auto run_display_server = [&]() -> void
     {
         SCOPED_TRACE("Server");
-        auto  strategy = std::make_shared<StubBufferAllocationStrategy>();
+        auto strategy = std::make_shared<StubBufferAllocationStrategy>();
         auto renderer = std::make_shared<StubRenderer>();
-        mir::DisplayServer display_server(strategy, renderer);
+        server = std::make_shared<mir::DisplayServer>(strategy, renderer);
+        // TODO. Run the display server!
     };
-    server = mp::fork_and_run_in_a_different_process(
-        server_bind_and_connect, test_exit);
+    server_process = mp::fork_and_run_in_a_different_process(
+        run_display_server, test_exit);
 }
 
 void DisplayServerTestEnvironment::TearDown()
 {
-    server->terminate();
-    EXPECT_TRUE(server->wait_for_termination().is_successful());
+    server_process->terminate();
+    EXPECT_TRUE(server_process->wait_for_termination().is_successful());
 }
 
 int main(int argc, char **argv)
 {
-    ::testing::AddGlobalTestEnvironment(new DisplayServerTestEnvironment);
     ::testing::InitGoogleTest(&argc, argv);
+    ::testing::AddGlobalTestEnvironment(new DisplayServerTestEnvironment);
     return RUN_ALL_TESTS();
 }

@@ -24,19 +24,25 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+namespace mir
+{
+class DisplayServer;
+}
+
 // The test environment sets up and tears down a display server for use
 // in display server tests.
 class DisplayServerTestEnvironment : public ::testing::Environment
 {
 public:
-    std::shared_ptr<mir::process::Process> display_server_process();
-
+    std::shared_ptr<mir::DisplayServer> display_server();
+    
 protected:
     virtual void SetUp();
     virtual void TearDown();
 
 private:
-    std::shared_ptr<mir::process::Process> server;
+    std::shared_ptr<mir::DisplayServer> server;
+    std::shared_ptr<mir::process::Process> server_process;
 };
 
 // Helper function which converts a gtest result into a Process exit status.
