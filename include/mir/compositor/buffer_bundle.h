@@ -41,9 +41,6 @@ public:
     explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
     ~BufferBundle();
 
-    void add_buffer(std::shared_ptr<Buffer> buffer);
-    int remove_all_buffers();
-
     std::shared_ptr<Buffer> dequeue_client_buffer();
     void queue_client_buffer(std::shared_ptr<Buffer> buffer);
 
@@ -59,10 +56,6 @@ protected:
 
 private:
     std::unique_ptr<BufferSwapper> swapper;
-
-    std::vector<std::shared_ptr<Buffer>> buffer_list;
-    std::mutex buffer_list_guard;
-    std::mutex back_buffer_guard;
 
     std::shared_ptr<Buffer> compositor_buffer;
     std::shared_ptr<Buffer> client_buffer;

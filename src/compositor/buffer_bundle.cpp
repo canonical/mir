@@ -34,27 +34,6 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
-void mc::BufferBundle::add_buffer(std::shared_ptr<Buffer> buffer)
-{
-
-    std::lock_guard<std::mutex> lg(buffer_list_guard);
-    std::lock_guard<std::mutex> lg_back_buffer(back_buffer_guard);
-    compositor_buffer = client_buffer;
-    client_buffer = buffer;
-
-    buffer_list.push_back(buffer);
-}
-
-int mc::BufferBundle::remove_all_buffers()
-{
-    std::lock_guard<std::mutex> lg(buffer_list_guard);
-
-    int size = buffer_list.size();
-    buffer_list.clear();
-
-    return size;
-}
-
 void mc::BufferBundle::lock_back_buffer()
 {
     compositor_buffer->lock();
