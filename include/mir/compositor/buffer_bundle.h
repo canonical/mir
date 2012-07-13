@@ -57,8 +57,8 @@ protected:
 private:
     std::unique_ptr<BufferSwapper> swapper;
 
-    std::shared_ptr<Buffer> compositor_buffer;
-    std::shared_ptr<Buffer> client_buffer;
+    Buffer* compositor_buffer;
+    Buffer* client_buffer;
 };
 
 }
