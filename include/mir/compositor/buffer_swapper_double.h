@@ -32,17 +32,35 @@ namespace compositor
 
 class Buffer;
 
-class BufferSwapperDouble : public BufferSwapper {
+class BufferSwapperDouble : public BufferSwapper
+{
 public:
-    BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
+    BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer);
-    void queue_finished_buffer(std::shared_ptr<Buffer>& buffer);
-    void grab_last_posted(std::shared_ptr<Buffer>& buffer);
-    void ungrab(std::shared_ptr<Buffer>& buffer );
+    Buffer* dequeue_free_buffer();
+    void queue_finished_buffer();
+    Buffer* grab_last_posted();
+    void ungrab();
+
+private:
+    void compositor_to_grabbed();
+    void compositor_to_ungrabbed();
+    void compositor_change_toggle_pattern();
+    void client_to_dequeued();
+    void client_to_queued();
+
+    typedef std::unique_ptr<Buffer> BufferPtr;
+    BufferPtr buffer_a;
+    BufferPtr buffer_b;
+
+    BufferPtr invalid0;
+    BufferPtr invalid1;
+
+    std::atomic<BufferPtr*> grabbed;
+    std::atomic<BufferPtr*> dequeued;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_ */
