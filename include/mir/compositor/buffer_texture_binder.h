@@ -23,7 +23,10 @@
 
 namespace mir
 {
-namespace graphics { class Texture; }
+namespace graphics
+{
+class Texture;
+}
 
 namespace compositor
 {
@@ -31,15 +34,15 @@ class Buffer;
 
 class BufferTextureBinder
 {
- public:
+public:
 
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
- protected:
+protected:
     BufferTextureBinder() = default;
     ~BufferTextureBinder() {}
 
- private:
+private:
     BufferTextureBinder(BufferTextureBinder const&) = delete;
     BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
 

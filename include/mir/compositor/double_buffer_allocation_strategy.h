@@ -42,7 +42,7 @@ public:
         PixelFormat pf);
 
 private:
-   std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
+    std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
 };
 }
 }

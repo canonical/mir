@@ -33,10 +33,10 @@ class BufferSwapper
 public:
     /* callers of dequeue_free_buffer are returned a pointer to the
       currently usable buffer. This call may potentially wait for a
-      buffer to become available */ 
-    /* note: (kdub) we could probably come up with a richer type for the 
-                    BufferSwapper interface than a Buffer* as the return 
-                    for dequeue_free_buffer and grab_last_posted */ 
+      buffer to become available */
+    /* note: (kdub) we could probably come up with a richer type for the
+                    BufferSwapper interface than a Buffer* as the return
+                    for dequeue_free_buffer and grab_last_posted */
     // TODO (alan_g) Agree with kdub - the returned object should likely
     //               be responsible for "finish", not the client code?
     virtual Buffer* dequeue_free_buffer() = 0;

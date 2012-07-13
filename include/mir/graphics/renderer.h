@@ -34,7 +34,7 @@ public:
     virtual ~Renderer() {}
 
     virtual void render(Renderable& renderable) = 0;
-    
+
 protected:
     Renderer() = default;
     Renderer(const Renderer&) = delete;
