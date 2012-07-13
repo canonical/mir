@@ -47,7 +47,7 @@ public:
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via ungrab() */
     virtual Buffer* grab_last_posted() = 0;
-    //TODO virtual Buffer* grab_last_posted() = 0;
+
     virtual void ungrab() = 0;
 };
 
