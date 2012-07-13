@@ -18,6 +18,7 @@ add_executable(
   acceptance-tests
   
   test_connect_disconnect.cpp
+  display_server_test_environment.cpp
 )
 
 target_link_libraries(
