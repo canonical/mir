@@ -19,11 +19,7 @@
 #ifndef MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
 #define MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
 
-#include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_swapper_double.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/dimensions.h"
 
 namespace mir
@@ -31,37 +27,20 @@ namespace mir
 namespace compositor
 {
 
+class GraphicBufferAllocator;
+
 class DoubleBufferAllocationStrategy : public BufferAllocationStrategy
 {
 public:
 
     explicit DoubleBufferAllocationStrategy(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
-        BufferAllocationStrategy(gr_alloc)
-    {
-    }
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
 
     std::unique_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pf)
-    {
-        auto buffer_a = graphic_buffer_allocator()->alloc_buffer(
-                width,
-                height,
-                pf);
-
-        auto buffer_b = graphic_buffer_allocator()->alloc_buffer(
-                width,
-                height,
-                pf);
-
-        return std::unique_ptr<BufferSwapper>(new BufferSwapperDouble(
-                std::move(buffer_a),
-                std::move(buffer_b)));
-    }
+        PixelFormat pf);
 };
-
 }
 }
 

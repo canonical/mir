@@ -24,6 +24,7 @@ set(
   buffer_swapper_double.cpp
   buffer_texture_binder.cpp
   buffer_allocation_strategy.cpp
+  double_buffer_allocation_strategy.cpp
 )
 
 ADD_LIBRARY( 
