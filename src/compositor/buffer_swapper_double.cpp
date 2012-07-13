@@ -71,6 +71,7 @@ void mc::BufferSwapperDouble::client_to_dequeued()
     do
     {
         dq_assume = dequeued.load();
+        next_state = dq_assume;
 
         if (dq_assume == &invalid0)
         {
@@ -92,6 +93,7 @@ void mc::BufferSwapperDouble::client_to_queued()
     do
     {
         dq_assume = dequeued.load();
+        next_state = dq_assume;
 
         if (dq_assume == &buf_a)
         {
@@ -114,6 +116,7 @@ void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
     do
     {
         grabbed_assume = grabbed.load();
+        next_state = grabbed_assume;
 
         if (grabbed_assume == &invalid0)
         {
@@ -144,6 +147,8 @@ void mc::BufferSwapperDouble::compositor_to_grabbed()
     do
     {
         grabbed_assume = grabbed.load();
+        next_state = grabbed_assume;
+
         if (grabbed_assume == &invalid0) /* pattern A */
         {
             next_state = &buf_a;
@@ -163,6 +168,8 @@ void mc::BufferSwapperDouble::compositor_to_ungrabbed()
     do
     {
         grabbed_assume = grabbed.load();
+        next_state = grabbed_assume;
+
         if (grabbed_assume == &buf_a) /* pattern A */
         {
             next_state = &invalid0;
