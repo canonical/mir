@@ -17,6 +17,7 @@
 set(
   FRONTEND_SOURCES
 
+  application.cpp
   application_manager.cpp
 )
 
