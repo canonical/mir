@@ -27,7 +27,7 @@ namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
-const int num_iterations = 1000;
+const int num_iterations = 100000;
 
 void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,

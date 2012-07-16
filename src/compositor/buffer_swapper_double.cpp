@@ -27,21 +27,19 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     buffer_b(std::move(buffer_b)),
     invalid0(nullptr),
     invalid1(nullptr),
-    test(0)
+    wait_sync(false)
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
-
 }
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-
-//    std::unique_ptr<std::mutex> lk(test_mut); 
-    while(test == 0) {
-
+    while(wait_sync == false) {
+        std::unique_lock<std::mutex> lk(test_mut);
+        cv.wait(lk); 
     }
-    test = 0;
+    wait_sync = false;
 
     client_to_dequeued();
     return dequeued.load()->get();
@@ -66,8 +64,10 @@ void mc::BufferSwapperDouble::ungrab()
 {
     compositor_to_ungrabbed();
 
-    test=1;
-
+    wait_sync = true;
+    while (wait_sync == true) {
+        cv.notify_all();
+    }
 }
 
 /* class helper functions, mostly compare_and_exchange based state computation. 
