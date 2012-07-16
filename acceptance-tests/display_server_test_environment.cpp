@@ -57,7 +57,7 @@ public:
 
 int test_exit()
 {
-    return ::testing::Test::HasFailure() ? mp::exit_failure : mp::exit_success;
+    return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 void DisplayServerTestEnvironment::SetUp() 

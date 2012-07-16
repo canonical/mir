@@ -44,7 +44,7 @@ void signal_process(pid_t pid, int signum)
 
 mp::Result::Result()
     : reason(TerminationReason::unknown)
-    , exit_code(mp::exit_failure)
+    , exit_code(EXIT_FAILURE)
     , signal(_NSIG+1)
 {
 }
@@ -52,7 +52,7 @@ mp::Result::Result()
 bool mp::Result::succeeded() const
 {
     return reason == TerminationReason::child_terminated_normally &&
-        exit_code == mp::exit_success;
+        exit_code == EXIT_SUCCESS;
 }
 
 bool mp::Result::signalled() const
@@ -156,7 +156,7 @@ std::ostream& print_reason(std::ostream & out, mp::TerminationReason reason)
 
 std::ostream& print_exit_code(std::ostream& out, int exit_code)
 {
-    if (exit_code == mp::exit_success)
+    if (exit_code == EXIT_SUCCESS)
     {
         out << "success";
     }

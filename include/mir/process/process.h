@@ -31,9 +31,6 @@ namespace mir
 namespace process
 {
 
-static const int exit_success = EXIT_SUCCESS;
-static const int exit_failure = EXIT_FAILURE;
-
 enum class TerminationReason
 {
     unknown,
