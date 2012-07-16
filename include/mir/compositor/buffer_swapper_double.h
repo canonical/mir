@@ -60,7 +60,7 @@ private:
     std::atomic<BufferPtr*> grabbed;
     std::atomic<BufferPtr*> dequeued;
 
-    std::mutex test_mut;
+    std::mutex cv_mutex;
     std::condition_variable cv;
     std::atomic<bool> wait_sync;
 };

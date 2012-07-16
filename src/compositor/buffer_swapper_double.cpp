@@ -35,8 +35,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-    while(wait_sync == false) {
-        std::unique_lock<std::mutex> lk(test_mut);
+    while(!wait_sync) {
+        std::unique_lock<std::mutex> lk(cv_mutex);
         cv.wait(lk); 
     }
     wait_sync = false;
@@ -65,7 +65,7 @@ void mc::BufferSwapperDouble::ungrab()
     compositor_to_ungrabbed();
 
     wait_sync = true;
-    while (wait_sync == true) {
+    while (wait_sync) {
         cv.notify_all();
     }
 }
