@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <atomic>
+#include <thread>
 
 namespace mir
 {
@@ -58,6 +59,10 @@ private:
 
     std::atomic<BufferPtr*> grabbed;
     std::atomic<BufferPtr*> dequeued;
+
+
+    std::mutex test_mut;
+    int test;
 };
 
 }

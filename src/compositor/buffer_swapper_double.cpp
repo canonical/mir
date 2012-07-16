@@ -26,7 +26,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     buffer_a(std::move(buffer_a)),
     buffer_b(std::move(buffer_b)),
     invalid0(nullptr),
-    invalid1(nullptr)
+    invalid1(nullptr),
+    test(0)
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
@@ -35,6 +36,13 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
+
+//    std::unique_ptr<std::mutex> lk(test_mut); 
+    while(test == 0) {
+
+    }
+    test = 0;
+
     client_to_dequeued();
     return dequeued.load()->get();
 }
@@ -57,6 +65,9 @@ mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 void mc::BufferSwapperDouble::ungrab()
 {
     compositor_to_ungrabbed();
+
+    test=1;
+
 }
 
 /* class helper functions, mostly compare_and_exchange based state computation. 

@@ -37,9 +37,10 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
     for (int i=0; i< num_iterations; i++)
     {
         buf = swapper->dequeue_free_buffer();
-        synchronizer->set_thread_data(buf, tid);
+
         swapper->queue_finished_buffer();
 
+        synchronizer->set_thread_data(buf, tid);
         synchronizer->child_sync();
     }
 }
@@ -93,6 +94,7 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
         ASSERT_NE(dequeued, grabbed);
+
         synchronizer.control_activate(); 
     }
 
