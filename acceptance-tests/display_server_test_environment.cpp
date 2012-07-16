@@ -68,16 +68,9 @@ public:
 
 }
 
-mp::Process::ExitCode test_exit()
+int test_exit()
 {
-    return ::testing::Test::HasFailure() ?
-        mp::Process::ExitCode::failure : 
-        mp::Process::ExitCode::success;
-}
-
-std::shared_ptr<mir::DisplayServer> DisplayServerTestEnvironment::display_server()
-{
-    return server;
+    return ::testing::Test::HasFailure() ? mp::exit_failure : mp::exit_success;
 }
 
 void DisplayServerTestEnvironment::SetUp() 
@@ -87,7 +80,7 @@ void DisplayServerTestEnvironment::SetUp()
         SCOPED_TRACE("Server");
         auto strategy = std::make_shared<StubBufferAllocationStrategy>();
         auto renderer = std::make_shared<StubRenderer>();
-        server = std::make_shared<mir::DisplayServer>(strategy, renderer);
+        server = std::unique_ptr<mir::DisplayServer>(new mir::DisplayServer(strategy, renderer));
         // TODO. Run the display server!
     };
     server_process = mp::fork_and_run_in_a_different_process(
@@ -97,7 +90,7 @@ void DisplayServerTestEnvironment::SetUp()
 void DisplayServerTestEnvironment::TearDown()
 {
     server_process->terminate();
-    mp::Process::Result const result = server_process->wait_for_termination();
+    mp::Result const result = server_process->wait_for_termination();
 
     // Note: the process may have exited before we terminate it,
     // since the display server doesn't properly run yet.

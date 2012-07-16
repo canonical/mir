@@ -42,20 +42,20 @@ void signal_process(pid_t pid, int signum)
 }
 }
 
-mp::Process::Result::Result()
+mp::Result::Result()
     : reason(TerminationReason::unknown)
-    , exit_code(ExitCode::failure)
+    , exit_code(mp::exit_failure)
     , signal(_NSIG+1)
 {
 }
 
-bool mp::Process::Result::succeeded() const
+bool mp::Result::succeeded() const
 {
     return reason == TerminationReason::child_terminated_normally &&
-        exit_code == ExitCode::success;
+        exit_code == mp::exit_success;
 }
 
-bool mp::Process::Result::signalled() const
+bool mp::Result::signalled() const
 {
     return reason == TerminationReason::child_terminated_by_signal;
 }
@@ -83,10 +83,11 @@ mp::Process::~Process()
     }
 }
 
-mp::Process::Result mp::Process::wait_for_termination()
+mp::Result mp::Process::wait_for_termination()
 {
     Result result;
     int status;
+
     terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
     
     if (terminated)
@@ -94,16 +95,7 @@ mp::Process::Result mp::Process::wait_for_termination()
         if (WIFEXITED(status))
         {
             result.reason = TerminationReason::child_terminated_normally;
-
-            switch (WEXITSTATUS(status))
-            {
-            case EXIT_SUCCESS:
-                result.exit_code = ExitCode::success;
-                break;
-            case EXIT_FAILURE:
-                result.exit_code = ExitCode::failure;
-                break;
-            }
+            result.exit_code = WEXITSTATUS(status);
         }
         else if (WIFSIGNALED(status))
         {
@@ -134,26 +126,27 @@ void mp::Process::cont()
     signal_process(pid, SIGCONT);
 }
 
-std::ostream& operator<<(std::ostream& out, mp::Process::TerminationReason reason)
+
+std::ostream& print_reason(std::ostream & out, mp::TerminationReason reason)
 {
     switch (reason)
     {
-    case mp::Process::TerminationReason::unknown:
+    case mp::TerminationReason::unknown:
         out << "unknown";
         break;
-    case mp::Process::TerminationReason::child_terminated_normally:
+    case mp::TerminationReason::child_terminated_normally:
         out << "child_terminated_normally";
         break;
-    case mp::Process::TerminationReason::child_terminated_by_signal:
+    case mp::TerminationReason::child_terminated_by_signal:
         out << "child_terminated_by_signal";
         break;
-    case mp::Process::TerminationReason::child_terminated_with_core_dump:
+    case mp::TerminationReason::child_terminated_with_core_dump:
         out << "child_terminated_with_core_dump";
         break;
-    case mp::Process::TerminationReason::child_stopped_by_signal:
+    case mp::TerminationReason::child_stopped_by_signal:
         out << "child_stopped_by_signal";
         break;
-    case mp::Process::TerminationReason::child_resumed_by_signal:
+    case mp::TerminationReason::child_resumed_by_signal:
         out << "child_resumed_by_signal";
         break;
     }
@@ -161,25 +154,24 @@ std::ostream& operator<<(std::ostream& out, mp::Process::TerminationReason reaso
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, mp::Process::ExitCode code)
+std::ostream& print_exit_code(std::ostream& out, int exit_code)
 {
-    switch (code)
+    if (exit_code == mp::exit_success)
     {
-    case mp::Process::ExitCode::success:
         out << "success";
-        break;
-    case mp::Process::ExitCode::failure:
-        out << "failure";
-        break;
-    default:
-        out << "unknown ExitCode";
     }
-
+    else
+    {
+        out << "failure(" << exit_code << ')';
+    }
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const mp::Process::Result& result)
+std::ostream& operator<<(std::ostream& out, const mp::Result& result)
 {
-    out << "Process::Result(" << result.reason << ", " << result.exit_code << ")";
+    out << "process::Result(";
+    print_reason(out, result.reason);
+    out << ", ";
+    print_exit_code(out, result.exit_code) << ')';
     return out;
 }

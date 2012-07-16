@@ -33,19 +33,16 @@ class DisplayServer;
 // in display server tests.
 class DisplayServerTestEnvironment : public ::testing::Environment
 {
-public:
-    std::shared_ptr<mir::DisplayServer> display_server();
-    
 protected:
     virtual void SetUp();
     virtual void TearDown();
 
 private:
-    std::shared_ptr<mir::DisplayServer> server;
+    std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
 };
 
 // Helper function which converts a gtest result into a Process exit status.
-mir::process::Process::ExitCode test_exit();
+int test_exit();
 
 #endif // MIR_DISPLAY_SERVER_TEST_ENVIRONMENT
