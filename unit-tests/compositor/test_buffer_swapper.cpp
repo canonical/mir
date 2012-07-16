@@ -19,7 +19,7 @@
 
 #include "mock_buffer.h"
 
-#include <mir/compositor/buffer_swapper_double.h>
+#include "mir/compositor/buffer_swapper_double.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -27,28 +27,172 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-
-/* this tests the start-up behavior of the swap algorithm */
-TEST(buffer_swapper, init_test)
+namespace
 {
-    using namespace testing;
+geom::Width w {1024};
+geom::Height h {768};
+geom::Stride s {1024};
+mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
-    geom::Width w{1024};
-    geom::Height h{768};
-    geom::Stride s{1024};
-    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
-    
-    std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_tmp;
+struct BufferFixture
+{
+    BufferFixture()
+    {
+        std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
 
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
+        buf_a = buffer_a.get();
+        buf_b = buffer_b.get();
 
-    mc::BufferSwapper * swapper = &swapper_double;
+        swapper = std::make_shared<mc::BufferSwapperDouble>(
+                std::move(buffer_a),
+                std::move(buffer_b));
+    }
 
-    swapper->grab_last_posted(buf_tmp);
-    /* note: kdub, the grab_last_posted has something of undefined behavior if nothing has ever been posted */
-    EXPECT_EQ(buf_tmp, nullptr); /* no one has posted yet, so we should be returning nothing (or error) */
+    mc::Buffer* buf_a;
+    mc::Buffer* buf_b;
 
+    std::shared_ptr<mc::BufferSwapper> swapper;
+};
+
+}
+
+TEST(buffer_swap_double, simple_swaps0)
+{
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp;
+
+    buf_tmp = swapper->dequeue_free_buffer();
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
+
+    swapper->queue_finished_buffer();
+}
+
+
+TEST(buffer_swap_double, simple_swaps1)
+{
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    buf_tmp_a = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+    buf_tmp_b = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
+    EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b));
+    EXPECT_NE(buf_tmp_a, buf_tmp_b);
+}
+
+/* tests that grab returns valid buffer */
+TEST(buffer_swap_double, simple_grabs0)
+{
+    BufferFixture fix;
+
+    mc::Buffer* const buf_a = fix.buf_a;
+    mc::Buffer* const buf_b = fix.buf_b;
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp;
+
+    swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp = swapper->grab_last_posted();
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
+}
+
+/* note: tests expectation that we have the last posted buffer */
+TEST(buffer_swap_double, simple_grabs1)
+{
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    buf_tmp_a = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp_b = swapper->grab_last_posted();
+    swapper->ungrab();
+
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+}
+
+
+/* note: tests expectation that two grabs in a row should return same thing */
+TEST(buffer_swap_double, simple_grabs2)
+{
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp_b = swapper->grab_last_posted();
+    swapper->ungrab();
+
+    buf_tmp_a = swapper->grab_last_posted();
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+}
+
+TEST(buffer_swap_double, simple_grabs3)
+{
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    buf_tmp_a = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+   
+    swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp_b = swapper->grab_last_posted();
+    EXPECT_NE(buf_tmp_a, buf_tmp_b);
+
+}
+
+TEST(buffer_swap_double, simple_grabs4)
+{
+    BufferFixture fix;
+
+    mc::BufferSwapper * swapper = fix.swapper.get();
+
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp_c;
+
+    swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp_c = swapper->grab_last_posted();
+    swapper->ungrab();
+   
+    buf_tmp_b = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer();
+
+    buf_tmp_a = swapper->grab_last_posted();
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+    EXPECT_NE(buf_tmp_a, buf_tmp_c);
 }

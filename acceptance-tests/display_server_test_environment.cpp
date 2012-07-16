@@ -20,6 +20,7 @@
 
 #include "mir/display_server.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
@@ -42,27 +43,13 @@ public:
     }
 };
 
-class StubBufferAllocator : public mc::GraphicBufferAllocator
-{
-public:
-    virtual std::shared_ptr<mc::Buffer> alloc_buffer(
-        geom::Width, geom::Height, mc::PixelFormat)
-    {
-        return nullptr;
-    }
-};
-
 class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
 public:
-    StubBufferAllocationStrategy()
-        : mc::BufferAllocationStrategy(std::make_shared<StubBufferAllocator>())
+    virtual std::unique_ptr<mc::BufferSwapper> create_swapper(
+        geom::Width, geom::Height, mc::PixelFormat)
     {
-    }
-
-    virtual void allocate_buffers_for_bundle(
-        geom::Width, geom::Height, mc::PixelFormat, mc::BufferBundle *)
-    {
+        return nullptr;
     }
 };
 

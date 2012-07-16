@@ -32,13 +32,14 @@ class Texture;
 namespace compositor
 {
 
-enum class PixelFormat : uint32_t {
+enum class PixelFormat : uint32_t
+{
     rgba_8888
 };
 
 class Buffer
 {
- public:
+public:
 
     virtual ~Buffer() {}
 
@@ -56,7 +57,7 @@ class Buffer
 
     virtual graphics::Texture* bind_to_texture() = 0;
 
- protected:
+protected:
     Buffer() = default;
     Buffer(Buffer const&) = delete;
     Buffer& operator=(Buffer const&) = delete;

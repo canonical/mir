@@ -38,7 +38,7 @@ class GraphicBufferAllocator;
 
 class BufferBundleManager : public BufferBundleFactory
 {
- public:
+public:
 
     explicit BufferBundleManager(
         const std::shared_ptr<BufferAllocationStrategy>& strategy);
@@ -51,7 +51,7 @@ class BufferBundleManager : public BufferBundleFactory
         geometry::Height height,
         PixelFormat pf);
 
- private:
+private:
     std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;
 
 };

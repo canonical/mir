@@ -35,7 +35,7 @@ class BufferBundle;
 
 class BufferBundleFactory
 {
- public:
+public:
     virtual ~BufferBundleFactory() {}
 
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
@@ -43,7 +43,7 @@ class BufferBundleFactory
         geometry::Height height,
         PixelFormat pf) = 0;
 
-  protected:
+protected:
     BufferBundleFactory() = default;
     BufferBundleFactory(const BufferBundleFactory&) = delete;
     BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;
