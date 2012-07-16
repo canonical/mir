@@ -34,7 +34,10 @@ class Synchronizer {
            threads_waiting(0),
            threads_awake(0), 
            wait_ack(false),
-           activate_ack(false) {};
+           activate_ack(false)
+        {
+            data = new T[num_t];
+        };
 
         void child_sync() 
         {
@@ -89,6 +92,21 @@ class Synchronizer {
             cv.notify_all();
         };
 
+        /* todo: thread id as index is very brittle system */
+        void set_thread_data(T dat, int tid) {
+            if ((tid < 0) || (tid > num_threads))
+                return;
+            data[tid] = dat;
+
+        };
+
+        T get_thread_data(int tid) 
+        {
+            if ((tid < 0) || (tid > num_threads))
+                return nullptr;
+            return data[tid];
+        };
+
     private:
         const int num_threads;
 
@@ -106,9 +124,9 @@ class Synchronizer {
 
 
 template <typename S, typename T>
-void test_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> function,
+void test_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*, int)> function,
                        std::condition_variable *cv1, std::mutex* exec_lock, 
-                       std::shared_ptr<S> test_object,
+                       std::shared_ptr<S> test_object, int tid ,
                        Synchronizer<T>* synchronizer)
 {
     std::unique_lock<std::mutex> lk(*exec_lock);
@@ -116,7 +134,7 @@ void test_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> funct
         if its not released, then a deadlock situation would prevent the wait_until() from ever waking */
     lk.unlock();
 
-    function(test_object, synchronizer);
+    function(test_object, synchronizer, tid);
 
     /* notify that we are done working */
     cv1->notify_one();
@@ -124,15 +142,15 @@ void test_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> funct
 }
 
 template <typename S, typename T>
-void manager_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> function,
-                   std::shared_ptr<S> test_object , Synchronizer<T>* synchronizer,
+void manager_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*, int)> function,
+                   std::shared_ptr<S> test_object , int tid, Synchronizer<T>* synchronizer,
                    std::chrono::milliseconds timeout)
 {
     std::condition_variable cv1;
     std::mutex exec_lock;
 
     std::unique_lock<std::mutex> lk(exec_lock);
-    std::thread(test_thread<S,T>, function, &cv1, &exec_lock, test_object, synchronizer).detach();
+    std::thread(test_thread<S,T>, function, &cv1, &exec_lock, test_object, tid, synchronizer).detach();
 
     /* set timeout as absolute time from this point */
     auto timeout_time = std::chrono::system_clock::now() + timeout;

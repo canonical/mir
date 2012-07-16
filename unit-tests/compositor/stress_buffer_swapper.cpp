@@ -28,21 +28,34 @@ namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
 const int num_iterations = 1000;
-void server_work(std::shared_ptr<mc::BufferSwapper> ,
-                 mt::Synchronizer<mc::Buffer*>* synchronizer )
+
+void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
+                 mt::Synchronizer<mc::Buffer*>* synchronizer,
+                 int tid )
 {
+    mc::Buffer* buf;
     for (int i=0; i< num_iterations; i++)
     {
+        buf = swapper->dequeue_free_buffer();
+        synchronizer->set_thread_data(buf, tid);
+        swapper->queue_finished_buffer();
+
         synchronizer->child_sync();
     }
 }
 
-void client_work(std::shared_ptr<mc::BufferSwapper>,
-                 mt::Synchronizer<mc::Buffer*>* synchronizer )
+void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
+                 mt::Synchronizer<mc::Buffer*>* synchronizer,
+                int tid )
 {
 
+    mc::Buffer* buf;
     for (int i=0; i< num_iterations; i++)
     {
+        buf = swapper->grab_last_posted();
+        swapper->ungrab();
+
+        synchronizer->set_thread_data(buf, tid);
         synchronizer->child_sync();
     }
 
@@ -68,13 +81,18 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
     mt::Synchronizer<mc::Buffer*> synchronizer(2);
 
     std::thread t1(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   client_work, swapper, &synchronizer, timeout);
+                   client_work, swapper, 0, &synchronizer, timeout);
     std::thread t2(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   server_work, swapper, &synchronizer, timeout);
+                   server_work, swapper, 1, &synchronizer, timeout);
 
+    mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
     {
         synchronizer.control_wait();
+
+        dequeued = synchronizer.get_thread_data(0); 
+        grabbed  = synchronizer.get_thread_data(1); 
+        ASSERT_NE(dequeued, grabbed);
         synchronizer.control_activate(); 
     }
 
