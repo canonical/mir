@@ -68,7 +68,7 @@ void DisplayServerTestEnvironment::SetUp()
         auto strategy = std::make_shared<StubBufferAllocationStrategy>();
         auto renderer = std::make_shared<StubRenderer>();
         server = std::unique_ptr<mir::DisplayServer>(new mir::DisplayServer(strategy, renderer));
-        // TODO. Run the display server!
+        server->start();
     };
     server_process = mp::fork_and_run_in_a_different_process(
         run_display_server, test_exit);

@@ -55,6 +55,13 @@ mir::DisplayServer::~DisplayServer()
 {
 }
 
+void mir::DisplayServer::start()
+{
+    for (;;)
+    {
+    }
+}
+
 void mir::DisplayServer::render(mg::Display* display)
 {
     p->compositor.render(display);
