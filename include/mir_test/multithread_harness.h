@@ -28,44 +28,80 @@ namespace testing
 
 template <typename T>
 class Synchronizer {
-public:
-    Synchronizer() : kill(false) {}
-    void set_kill() 
-    {
-        std::unique_lock<std::mutex> lk(sync_lock);
-        kill = true;
-        sync_cv.notify_all();
-    }
+    public:
+        Synchronizer (int num_t)
+         : num_threads(num_t),
+           threads_waiting(0),
+           threads_awake(0), 
+           wait_ack(false),
+           activate_ack(false) {};
 
-    void set_data(T* in_data)
-    {
-        std::unique_lock<std::mutex> lk(sync_lock);
-        data = in_data; 
-        sync_cv.notify_all();
-    }
+        void child_sync() 
+        {
+            std::unique_lock<std::mutex> lk(sync_mutex);
+            threads_waiting++;
+            if (threads_waiting == num_threads) {
+                cv.notify_all();
+            }
 
-    T* get_data()
-    {
-        std::unique_lock<std::mutex> lk(sync_lock);
-        
-        return data; 
-    }
+            while (!wait_ack) {
+                cv.wait(lk);
+            }
 
-    bool sync()
-    {
-        std::unique_lock<std::mutex> lk(sync_lock);
-        sync_cv.wait(lk);
-        return kill;
-    }
+            threads_awake++;
+            if(threads_awake == num_threads) 
+            {
+                cv.notify_all();
+            }
 
-private:
-    /* for signaling between threads */
-    std::condition_variable sync_cv;
+            while (!activate_ack) {
+                cv.wait(lk);
+            }
+        };
 
-    /* for protecting data */
-    std::mutex sync_lock;
-    bool kill;
-    T* data;
+        void control_wait()
+        { 
+            std::unique_lock<std::mutex> lk(sync_mutex);
+            while(threads_waiting != num_threads) { 
+                cv.wait(lk);
+            }
+
+            threads_awake = 0;
+            wait_ack = true;
+            activate_ack = false;
+            cv.notify_all();
+        };
+
+
+        void control_activate() 
+        {
+            std::unique_lock<std::mutex> lk(sync_mutex);
+            for(int i=0; i<num_threads; i++) {
+            /* note, change from orig */
+            while(threads_awake<num_threads) { 
+                cv.wait(lk);
+            }
+            }
+
+            wait_ack = false;
+            activate_ack = true;
+            threads_waiting = 0;
+            cv.notify_all();
+        };
+
+    private:
+        const int num_threads;
+
+        std::condition_variable cv;
+
+        std::mutex sync_mutex;
+        int threads_waiting;
+        int threads_awake;
+        bool wait_ack;
+        bool activate_ack;
+
+        /* data in the Synchronizer */
+        T* data;
 };
 
 
@@ -110,7 +146,6 @@ void manager_thread(std::function<void(std::shared_ptr<S>, Synchronizer<T>*)> fu
         FAIL();
     }
 
-    synchronizer->set_kill();
     return;
 }
 }

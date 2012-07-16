@@ -22,52 +22,28 @@
 #include "mir_test/multithread_harness.h"
 
 #include <thread>
-#include <iostream>
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
-void server_work(std::shared_ptr<mc::BufferSwapper> swapper,
-                 mt::Synchronizer<mc::Buffer*>*  )
+const int num_iterations = 1000;
+void server_work(std::shared_ptr<mc::BufferSwapper> ,
+                 mt::Synchronizer<mc::Buffer*>* synchronizer )
 {
-    std::mutex cv_mutex;
-    std::unique_lock<std::mutex> lk(cv_mutex);
-
-    mc::Buffer* buf_tmp_a, *buf_tmp_b;
-
-    const int num_iterations = 10000;
-
     for (int i=0; i< num_iterations; i++)
     {
-        buf_tmp_a = swapper->dequeue_free_buffer();
-        EXPECT_NE(nullptr, buf_tmp_a);
-        swapper->queue_finished_buffer();
-
-        buf_tmp_b = swapper->dequeue_free_buffer();
-        EXPECT_NE(nullptr, buf_tmp_b);
-        swapper->queue_finished_buffer();
-
-        EXPECT_NE(buf_tmp_a, buf_tmp_b);
+        synchronizer->child_sync();
     }
-
 }
 
-void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
-                 mt::Synchronizer<mc::Buffer*>*  )
+void client_work(std::shared_ptr<mc::BufferSwapper>,
+                 mt::Synchronizer<mc::Buffer*>* synchronizer )
 {
-    std::mutex cv_mutex;
-    std::unique_lock<std::mutex> lk(cv_mutex);
 
-
-    mc::Buffer* buf_tmp;
-
-    const int num_iterations = 10000;
     for (int i=0; i< num_iterations; i++)
     {
-        buf_tmp = swapper->grab_last_posted();
-        EXPECT_NE(nullptr, buf_tmp);
-        swapper->ungrab();
+        synchronizer->child_sync();
     }
 
 }
@@ -89,30 +65,17 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
             std::move(buffer_b));
 
     /* use these condition variables to poke and control the two threads */
-    mt::Synchronizer<mc::Buffer*> synchronizer;
+    mt::Synchronizer<mc::Buffer*> synchronizer(2);
+
     std::thread t1(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
                    client_work, swapper, &synchronizer, timeout);
     std::thread t2(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
                    server_work, swapper, &synchronizer, timeout);
-    /* wait for sync to notify us that the thread has started. */
 
-
-    /* wait for a wake up. if the thread has been killed by the timeout, then
-       we know to abort. because we set a timeout on the thread that we are testing,
-       we will be woken up with a kill signal regardless of success or failure */
-    std::mutex tmp;
-    std::unique_lock<std::mutex> lk(tmp);
-
-
-    /* start multithreaded test expectations */
-    while (! synchronizer.sync() )
+    for(int i=0; i< num_iterations; i++)
     {
-        /* system is in stable state here */ 
-        /* check expectations */
-
-
-        /* stimulate the system to run */ 
-        /* allow threads to come into stable state */
+        synchronizer.control_wait();
+        synchronizer.control_activate(); 
     }
 
     t1.join();
