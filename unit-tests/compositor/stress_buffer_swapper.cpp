@@ -88,7 +88,6 @@ void server_work_lockstep0(std::shared_ptr<mc::BufferSwapper> swapper,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                 int tid )
 {
-
     mc::Buffer* buf;
     for(;;)
     {
@@ -103,6 +102,8 @@ void server_work_lockstep0(std::shared_ptr<mc::BufferSwapper> swapper,
 
 }
 
+/* test that the compositor and the client are never in ownership of the same
+   buffer */ 
 TEST(buffer_swapper_double_stress, simple_swaps0)
 {
     const int num_iterations = 1000;
@@ -126,6 +127,36 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
     fix.synchronizer->control_wait();
     fix.synchronizer->set_kill();
     fix.synchronizer->control_activate();
+
+}
+
+/* test that we never get an invalid buffer */ 
+TEST(buffer_swapper_double_stress, ensure_valid)
+{
+    const int num_iterations = 1000;
+    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(server_work_lockstep0, client_work_lockstep0);
+    mc::Buffer* dequeued, *grabbed;
+    for(int i=0; i< num_iterations; i++)
+    {
+        fix.synchronizer->control_wait();
+
+        dequeued = fix.synchronizer->get_thread_data(0); 
+        grabbed  = fix.synchronizer->get_thread_data(1); 
+
+        EXPECT_NE(dequeued, nullptr);
+        EXPECT_NE(grabbed, nullptr);
+
+        fix.synchronizer->control_activate(); 
+        fix.synchronizer->control_wait();
+        fix.synchronizer->control_activate();
+    }
+
+    fix.synchronizer->control_wait();
+    fix.synchronizer->set_kill();
+    fix.synchronizer->control_activate();
+
+
+
 
 }
 
@@ -162,7 +193,7 @@ void server_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper,
     }
 }
 
-TEST(buffer_swapper_double_timing, stress_swaps)
+TEST(buffer_swapper_double_timing, timing0)
 {
     ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(server_work_timing0, client_work_timing0);
     mc::Buffer* dequeued, *grabbed;
@@ -188,3 +219,12 @@ TEST(buffer_swapper_double_timing, stress_swaps)
     fix.synchronizer->control_activate(); 
 
 }
+
+
+
+
+
+
+
+
+
