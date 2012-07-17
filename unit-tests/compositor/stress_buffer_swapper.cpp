@@ -27,7 +27,45 @@ namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
-const int num_iterations = 1000;
+template <typename S, typename T>
+struct ThreadFixture {
+    public:
+        ThreadFixture(std::function<void(std::shared_ptr<S>, mt::Synchronizer<T>*, int)> a,
+                      std::function<void(std::shared_ptr<S>, mt::Synchronizer<T>*, int)> b) 
+        {
+            std::chrono::milliseconds timeout(5000);
+            geom::Width w {1024};
+            geom::Height h {768};
+            geom::Stride s {1024};
+            mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
+
+            std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
+            std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
+
+            swapper = std::make_shared<mc::BufferSwapperDouble>(
+                    std::move(buffer_a),
+                    std::move(buffer_b));
+
+            synchronizer = new mt::Synchronizer<mc::Buffer*>(2);
+
+            t1 = std::thread(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
+                           a, swapper, 0, synchronizer, timeout);
+            t2 = std::thread(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
+                           b, swapper, 1, synchronizer, timeout);
+    
+        };
+
+        ~ThreadFixture()
+        {
+            t1.join();
+            t2.join();
+        }
+
+        std::thread t1, t2;
+        std::shared_ptr<mc::BufferSwapper> swapper;
+        mt::Synchronizer<mc::Buffer*> *synchronizer;
+};
+
 
 void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
@@ -67,50 +105,34 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
 
 TEST(buffer_swapper_double_stress, simple_swaps0)
 {
-    std::chrono::milliseconds timeout(5000);
-
-    geom::Width w {1024};
-    geom::Height h {768};
-    geom::Stride s {1024};
-    mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
-
-    std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
-    std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
-
-    auto swapper = std::make_shared<mc::BufferSwapperDouble>(
-            std::move(buffer_a),
-            std::move(buffer_b));
-
-    /* use these condition variables to poke and control the two threads */
-    mt::Synchronizer<mc::Buffer*> synchronizer(2);
-
-    std::thread t1(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   client_work, swapper, 0, &synchronizer, timeout);
-    std::thread t2(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   server_work, swapper, 1, &synchronizer, timeout);
+    const int num_iterations = 1000;
+    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(client_work, server_work);
 
     mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
     {
-        synchronizer.control_wait();
+        fix.synchronizer->control_wait();
 
-        dequeued = synchronizer.get_thread_data(0); 
-        grabbed  = synchronizer.get_thread_data(1); 
+        dequeued = fix.synchronizer->get_thread_data(0); 
+        grabbed  = fix.synchronizer->get_thread_data(1); 
         EXPECT_NE(dequeued, grabbed);
 
-        synchronizer.control_activate();
+        fix.synchronizer->control_activate();
  
-        synchronizer.control_wait();
-        synchronizer.control_activate();
+        fix.synchronizer->control_wait();
+        fix.synchronizer->control_activate();
     }
 
-    synchronizer.control_wait();
-    synchronizer.set_kill();
-    synchronizer.control_activate();
+    fix.synchronizer->control_wait();
+    fix.synchronizer->set_kill();
+    fix.synchronizer->control_activate();
 
-    t1.join();
-    t2.join();
 }
+
+
+
+
+
 
 
 
@@ -179,50 +201,27 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
 
 TEST(buffer_swapper_double_timing, stress_swaps)
 {
-    std::chrono::milliseconds timeout(5000);
-
-    geom::Width w {1024};
-    geom::Height h {768};
-    geom::Stride s {1024};
-    mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
-    const int num_it = 300;
+    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(client_work0, server_work0);
     mc::Buffer* dequeued, *grabbed;
-
-    std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
-    std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
-
-    auto swapper = std::make_shared<mc::BufferSwapperDouble>(
-            std::move(buffer_a),
-            std::move(buffer_b));
-
-    mt::Synchronizer<mc::Buffer*> synchronizer(2);
-
-    std::thread t1(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   client_work0, swapper, 0, &synchronizer, timeout);
-    std::thread t2(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
-                   server_work0, swapper, 1, &synchronizer, timeout);
-
-
+    const int num_it = 300;
     for(int i=0; i< num_it; i++)
     {
-        synchronizer.enforce_child_pause(1);
-        synchronizer.enforce_child_pause(0);
-        synchronizer.control_wait();
+        fix.synchronizer->enforce_child_pause(1);
+        fix.synchronizer->enforce_child_pause(0);
+        fix.synchronizer->control_wait();
 
-        dequeued = synchronizer.get_thread_data(0); 
-        grabbed  = synchronizer.get_thread_data(1); 
+        dequeued = fix.synchronizer->get_thread_data(0); 
+        grabbed  = fix.synchronizer->get_thread_data(1); 
         EXPECT_EQ(dequeued, grabbed);
 
-        synchronizer.control_activate(); 
+        fix.synchronizer->control_activate(); 
     }
 
     /* kill all threads */
-    synchronizer.enforce_child_pause(1);
-    synchronizer.enforce_child_pause(0);
-    synchronizer.control_wait();
-    synchronizer.set_kill();
-    synchronizer.control_activate(); 
+    fix.synchronizer->enforce_child_pause(1);
+    fix.synchronizer->enforce_child_pause(0);
+    fix.synchronizer->control_wait();
+    fix.synchronizer->set_kill();
+    fix.synchronizer->control_activate(); 
 
-    t1.join();
-    t2.join();
 }
