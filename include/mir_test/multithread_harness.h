@@ -34,9 +34,15 @@ class Synchronizer {
            threads_waiting(0),
            threads_awake(0), 
            wait_ack(false),
-           activate_ack(false)
+           activate_ack(false),
+           kill(false)
         {
             data = new T[num_t];
+            for(int i=0; i<num_t; i++)
+            {
+                pause_requests.push_back(false);
+            }
+
         };
 
         void child_sync() 
@@ -62,18 +68,6 @@ class Synchronizer {
             }
         };
 
-        void control_wait()
-        { 
-            std::unique_lock<std::mutex> lk(sync_mutex);
-            while(threads_waiting != num_threads) { 
-                cv.wait(lk);
-            }
-
-            threads_awake = 0;
-            wait_ack = true;
-            activate_ack = false;
-            cv.notify_all();
-        };
 
 
         void control_activate() 
@@ -92,6 +86,62 @@ class Synchronizer {
             cv.notify_all();
         };
 
+
+        bool child_check_pause(int tid)
+        {
+            std::unique_lock<std::mutex> lk(sync_mutex);
+
+            if (pause_requests[tid] ) 
+            {
+                pause_requests[tid] = false;
+                cv.notify_all();
+
+                threads_waiting++;
+                while (!wait_ack) {
+                    cv.wait(lk);
+                }
+
+                threads_awake++;
+                cv.notify_all();
+
+                while (!activate_ack) {
+                    cv.wait(lk);
+                }
+            }
+
+            return kill;
+        };
+
+        void control_wait()
+        { 
+            std::unique_lock<std::mutex> lk(sync_mutex);
+            while(threads_waiting != num_threads) { 
+                cv.wait(lk);
+            }
+
+            threads_awake = 0;
+            wait_ack = true;
+            activate_ack = false;
+            cv.notify_all();
+        };
+
+        void enforce_child_pause(int tid) 
+        {
+            std::unique_lock<std::mutex> lk(sync_mutex);
+
+            pause_requests[tid] = true;
+
+            while(pause_requests[tid]) {
+                cv.wait(lk);
+            }
+
+        };
+
+        void set_kill() {
+            std::unique_lock<std::mutex> lk(sync_mutex);
+            kill = true;
+        
+        }
         /* todo: thread id as index is very brittle system */
         void set_thread_data(T dat, int tid) {
             if ((tid < 0) || (tid > num_threads))
@@ -118,6 +168,8 @@ class Synchronizer {
         bool wait_ack;
         bool activate_ack;
 
+        std::vector<bool> pause_requests;
+        bool kill;
         /* data in the Synchronizer */
         T* data;
 };

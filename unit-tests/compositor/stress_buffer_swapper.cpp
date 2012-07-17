@@ -89,6 +89,7 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
     mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
     {
+    std::cout << "sync control" << i << std::endl;
         synchronizer.control_wait();
 
         dequeued = synchronizer.get_thread_data(0); 
@@ -138,23 +139,22 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
 
 
 
-
 const int num_it2 = 30;
 void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
 {
     mc::Buffer* buf;
-    for (int i=0; i< num_it2; i++)
+    for(;;)
     {
         for (int j=0; j< 100; j++)
         {
             buf = swapper->dequeue_free_buffer();
             swapper->queue_finished_buffer();
         }
-        
+
         synchronizer->set_thread_data(buf, tid);
-        synchronizer->child_sync();
+        if(synchronizer->child_check_pause(tid)) break;
     }
 }
 
@@ -164,18 +164,21 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
 {
 
     mc::Buffer* buf;
-    for (int i=0; i< num_it2; i++)
+    for (;;)
     {
         for (int j=0; j< 100; j++)
         {
             buf = swapper->grab_last_posted();
             swapper->ungrab();
         }
-
+       
         synchronizer->set_thread_data(buf, tid);
-        synchronizer->child_sync();
+        if(synchronizer->child_check_pause(tid)) break;
+            
+
     }
 
+    std::cout << "DONE with primary\n";
 }
 
 TEST(buffer_swapper_double_timing, stress_swaps)
@@ -203,16 +206,27 @@ TEST(buffer_swapper_double_timing, stress_swaps)
                    server_work0, swapper, 1, &synchronizer, timeout);
 
     mc::Buffer* dequeued, *grabbed;
-    for(int i=0; i< num_it2; i++)
+    for(int i=0; i< num_it2 - 1; i++)
     {
+        synchronizer.enforce_child_pause(1);
+        synchronizer.enforce_child_pause(0);
         synchronizer.control_wait();
+
+        std::cout << "DONE WAITING\t\t\t" << i << "\n";
 
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
-        ASSERT_EQ(dequeued, grabbed);
+        ASSERT_NE(dequeued, grabbed);
 
         synchronizer.control_activate(); 
     }
+
+    /* kill all threads */
+    synchronizer.enforce_child_pause(1);
+    synchronizer.enforce_child_pause(0);
+    synchronizer.control_wait();
+    synchronizer.set_kill();
+    synchronizer.control_activate(); 
 
     t1.join();
     t2.join();

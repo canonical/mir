@@ -21,27 +21,38 @@
 
 namespace mc = mir::compositor;
 
+#define US 0
+#define SE 1
+#define WC 2
+#define UW 3
+
 mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b)
     :
     buffer_a(std::move(buffer_a)),
     buffer_b(std::move(buffer_b)),
     invalid0(nullptr),
     invalid1(nullptr),
-    wait_sync(false)
+    wait_sync(true),
+    flag(ATOMIC_FLAG_INIT),
+    wait_state(US)
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
 }
 
+#include <iostream>
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-    while(!wait_sync) {
-        std::unique_lock<std::mutex> lk(cv_mutex);
-        cv.wait(lk); 
-    }
-    wait_sync = false;
-
     client_to_dequeued();
+
+    std::unique_lock<std::mutex> lk(cv_mutex);
+    while (wait_sync) {
+        std::cout << "wait...\n"; 
+        cv.wait(lk);
+    }
+    wait_sync = true;
+    lk.unlock();
+
     return dequeued.load()->get();
 }
 
@@ -52,11 +63,15 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
 
     /* toggle grabbed pattern */
     compositor_change_toggle_pattern();
+
+   
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
+    /* transition to S */     
     compositor_to_grabbed();
+
     return grabbed.load()->get();
 }
 
@@ -64,10 +79,10 @@ void mc::BufferSwapperDouble::ungrab()
 {
     compositor_to_ungrabbed();
 
-    wait_sync = true;
-    while (wait_sync) {
-        cv.notify_all();
-    }
+
+    std::unique_lock<std::mutex> lk(cv_mutex);
+    wait_sync = false;
+    cv.notify_one();
 }
 
 /* class helper functions, mostly compare_and_exchange based state computation. 
