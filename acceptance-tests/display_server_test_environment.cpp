@@ -31,14 +31,14 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mp = mir::process;
 namespace geom = mir::geometry;
-namespace gfx = mir::graphics;
+namespace mg = mir::graphics;
 
 namespace
 {
-class StubRenderer : public gfx::Renderer
+class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(gfx::Renderable&)
+    virtual void render(mg::Renderable&)
     {
     }
 };
@@ -79,14 +79,8 @@ void DisplayServerTestEnvironment::TearDown()
     server_process->terminate();
     mp::Result const result = server_process->wait_for_termination();
 
-    // Note: the process may have exited before we terminate it,
-    // since the display server doesn't properly run yet.
-    EXPECT_TRUE(result.succeeded() || result.signalled());
+    EXPECT_TRUE(result.signalled());
 }
 
-int main(int argc, char **argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new DisplayServerTestEnvironment);
-    return RUN_ALL_TESTS();
-}
+DisplayServerTestEnvironment::DisplayServerTestEnvironment() {}
+DisplayServerTestEnvironment::~DisplayServerTestEnvironment() {}

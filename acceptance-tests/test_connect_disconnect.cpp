@@ -42,7 +42,7 @@ struct StubCommunicator : public mf::Communicator
 };
 }
 
-TEST(DisplayServerTest, client_connects_and_disconnects)
+TEST_F(DisplayServerTestEnvironment, client_connects_and_disconnects)
 {
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);

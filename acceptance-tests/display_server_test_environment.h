@@ -29,13 +29,15 @@ namespace mir
 class DisplayServer;
 }
 
-// The test environment sets up and tears down a display server for use
+// The test fixture sets up and tears down a display server for use
 // in display server tests.
-class DisplayServerTestEnvironment : public ::testing::Environment
+class DisplayServerTestEnvironment : public testing::Test
 {
-protected:
-    virtual void SetUp();
-    virtual void TearDown();
+public:
+    DisplayServerTestEnvironment();
+    ~DisplayServerTestEnvironment();
+    void SetUp();
+    void TearDown();
 
 private:
     std::unique_ptr<mir::DisplayServer> server;
