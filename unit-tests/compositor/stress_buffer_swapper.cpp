@@ -36,11 +36,12 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
     mc::Buffer* buf;
     for (int i=0; i< num_iterations; i++)
     {
+
         buf = swapper->dequeue_free_buffer();
+        synchronizer->set_thread_data(buf, tid);
+        synchronizer->child_sync();
 
         swapper->queue_finished_buffer();
-
-        synchronizer->set_thread_data(buf, tid);
         synchronizer->child_sync();
     }
 }
@@ -54,10 +55,12 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
     for (int i=0; i< num_iterations; i++)
     {
         buf = swapper->grab_last_posted();
-        swapper->ungrab();
-
         synchronizer->set_thread_data(buf, tid);
         synchronizer->child_sync();
+
+        swapper->ungrab();
+        synchronizer->child_sync();
+
     }
 
 }
@@ -89,14 +92,17 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
     mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
     {
-    std::cout << "sync control" << i << std::endl;
+        std::cout << "sync control" << i << std::endl;
         synchronizer.control_wait();
 
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
-        ASSERT_NE(dequeued, grabbed);
+        EXPECT_NE(dequeued, grabbed);
 
-        synchronizer.control_activate(); 
+        synchronizer.control_activate();
+ 
+        synchronizer.control_wait();
+        synchronizer.control_activate();
     }
 
     t1.join();
@@ -139,7 +145,7 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
 
 
 
-const int num_it2 = 30;
+const int num_it2 = 300;
 void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
