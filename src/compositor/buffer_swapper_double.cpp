@@ -27,24 +27,22 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     buffer_b(std::move(buffer_b)),
     invalid0(nullptr),
     invalid1(nullptr),
-    wait_sync(false),
-    flag(ATOMIC_FLAG_INIT),
-    wait_state(0)
+    wait_flag(ATOMIC_FLAG_INIT)
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
 }
 
-#include <iostream>
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-
     client_to_dequeued();
-    std::unique_lock<std::mutex> lk(cv_mutex);
-    while (wait_sync) {
+    while(wait_flag.test_and_set())
+    {
+        wait_flag.clear();
+
+        std::unique_lock<std::mutex> lk(cv_mutex);
         cv.wait(lk);
     }
-    wait_sync = true;
 
     return dequeued.load()->get();
 }
@@ -71,8 +69,7 @@ void mc::BufferSwapperDouble::ungrab()
 {
     compositor_to_ungrabbed();
 
-    std::unique_lock<std::mutex> lk(cv_mutex);
-    wait_sync = false;
+    wait_flag.clear();
     cv.notify_all();
 }
 

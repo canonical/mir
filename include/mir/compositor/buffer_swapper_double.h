@@ -62,11 +62,8 @@ private:
 
     std::mutex cv_mutex;
     std::condition_variable cv;
-    std::atomic<bool> wait_sync;
 
-
-    std::atomic_flag flag;
-    std::atomic<int> wait_state;
+    std::atomic_flag wait_flag;
 
 };
 

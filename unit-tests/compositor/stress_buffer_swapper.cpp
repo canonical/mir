@@ -92,7 +92,6 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
     mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
     {
-        std::cout << "sync control" << i << std::endl;
         synchronizer.control_wait();
 
         dequeued = synchronizer.get_thread_data(0); 
@@ -142,11 +141,6 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
 
 
 
-
-
-std::mutex mut;
-bool baddie = false;
-const int num_it2 = 300;
 void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
@@ -177,8 +171,6 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
         synchronizer->set_thread_data(buf, tid);
         if(synchronizer->child_check_pause(tid)) break;
     }
-
-    std::cout << "DONE with primary\n";
 }
 
 TEST(buffer_swapper_double_timing, stress_swaps)
@@ -189,6 +181,8 @@ TEST(buffer_swapper_double_timing, stress_swaps)
     geom::Height h {768};
     geom::Stride s {1024};
     mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
+    const int num_it = 300;
+    mc::Buffer* dequeued, *grabbed;
 
     std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
     std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
@@ -204,14 +198,12 @@ TEST(buffer_swapper_double_timing, stress_swaps)
     std::thread t2(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
                    server_work0, swapper, 1, &synchronizer, timeout);
 
-    mc::Buffer* dequeued, *grabbed;
-    for(int i=0; i< num_it2; i++)
+
+    for(int i=0; i< num_it; i++)
     {
         synchronizer.enforce_child_pause(1);
         synchronizer.enforce_child_pause(0);
         synchronizer.control_wait();
-
-        std::cout << "DONE WAITING\t\t\t" << i << "\n";
 
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
