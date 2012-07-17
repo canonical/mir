@@ -44,14 +44,16 @@ class DisplayServerTestEnvironment : public testing::Test
 public:
     DisplayServerTestEnvironment();
     ~DisplayServerTestEnvironment();
+    void startServer(std::function<void()>&& functor);
     void SetUp();
     void TearDown();
+    mir::DisplayServer* displayServer() const;
 
 private:
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
     virtual std::shared_ptr<mir::graphics::Renderer> makeRenderer();
-    std::shared_ptr<mir::compositor::BufferAllocationStrategy> makeBufferAllocationStrategy();
+    virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> makeBufferAllocationStrategy();
 };
 
 // Helper function which converts a gtest result into a Process exit status.

@@ -19,6 +19,7 @@ add_executable(
   
   test_connect_disconnect.cpp
   display_server_test_environment.cpp
+  test_renderloop.cpp
 )
 
 target_link_libraries(

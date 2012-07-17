@@ -27,6 +27,8 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/renderer.h"
 
+#include <gmock/gmock.h>
+
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mp = mir::process;
@@ -72,27 +74,41 @@ std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
     return renderer;
 }
 
-void DisplayServerTestEnvironment::SetUp() 
+void DisplayServerTestEnvironment::startServer(std::function<void()>&& functor)
 {
     auto run_display_server = [&]() -> void
     {
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
-            new mir::DisplayServer(
-                makeBufferAllocationStrategy(),
-                makeRenderer()));
+                new mir::DisplayServer(
+                        makeBufferAllocationStrategy(),
+                        makeRenderer()));
+        functor();
         server->start();
     };
-    server_process = mp::fork_and_run_in_a_different_process(
-        run_display_server, test_exit);
+    server_process = mp::fork_and_run_in_a_different_process(run_display_server,
+            test_exit);
+}
+
+void DisplayServerTestEnvironment::SetUp() 
+{
+    startServer([]() -> void {} );
 }
 
 void DisplayServerTestEnvironment::TearDown()
 {
+    using namespace testing;
+    ASSERT_THAT(server_process.get(), Ne(nullptr));
+
     server_process->terminate();
     mp::Result const result = server_process->wait_for_termination();
 
     EXPECT_TRUE(result.signalled());
+}
+
+mir::DisplayServer* DisplayServerTestEnvironment::displayServer() const
+{
+    return server.get();
 }
 
 DisplayServerTestEnvironment::DisplayServerTestEnvironment() {}
