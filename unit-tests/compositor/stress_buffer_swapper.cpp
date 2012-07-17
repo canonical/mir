@@ -144,7 +144,8 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
 
 
 
-
+std::mutex mut;
+bool baddie = false;
 const int num_it2 = 300;
 void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
@@ -153,12 +154,8 @@ void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
     mc::Buffer* buf;
     for(;;)
     {
-        for (int j=0; j< 100; j++)
-        {
-            buf = swapper->dequeue_free_buffer();
-            swapper->queue_finished_buffer();
-        }
-
+        buf = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer();
         synchronizer->set_thread_data(buf, tid);
         if(synchronizer->child_check_pause(tid)) break;
     }
@@ -168,7 +165,6 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                 int tid )
 {
-
     mc::Buffer* buf;
     for (;;)
     {
@@ -177,11 +173,9 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
             buf = swapper->grab_last_posted();
             swapper->ungrab();
         }
-       
+
         synchronizer->set_thread_data(buf, tid);
         if(synchronizer->child_check_pause(tid)) break;
-            
-
     }
 
     std::cout << "DONE with primary\n";
@@ -203,7 +197,6 @@ TEST(buffer_swapper_double_timing, stress_swaps)
             std::move(buffer_a),
             std::move(buffer_b));
 
-    /* use these condition variables to poke and control the two threads */
     mt::Synchronizer<mc::Buffer*> synchronizer(2);
 
     std::thread t1(mt::manager_thread<mc::BufferSwapper, mc::Buffer*>,
@@ -212,7 +205,7 @@ TEST(buffer_swapper_double_timing, stress_swaps)
                    server_work0, swapper, 1, &synchronizer, timeout);
 
     mc::Buffer* dequeued, *grabbed;
-    for(int i=0; i< num_it2 - 1; i++)
+    for(int i=0; i< num_it2; i++)
     {
         synchronizer.enforce_child_pause(1);
         synchronizer.enforce_child_pause(0);
@@ -222,7 +215,7 @@ TEST(buffer_swapper_double_timing, stress_swaps)
 
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
-        ASSERT_EQ(dequeued, grabbed);
+        EXPECT_EQ(dequeued, grabbed);
 
         synchronizer.control_activate(); 
     }

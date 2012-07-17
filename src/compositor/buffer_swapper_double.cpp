@@ -38,11 +38,10 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 #include <iostream>
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-    client_to_dequeued();
 
+    client_to_dequeued();
     std::unique_lock<std::mutex> lk(cv_mutex);
     while (wait_sync) {
-        std::cout << "wait...\n"; 
         cv.wait(lk);
     }
     wait_sync = true;
@@ -52,7 +51,6 @@ mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 
 void mc::BufferSwapperDouble::queue_finished_buffer()
 {
-    std::cout << "Q\n";
     /* transition dequeued */
     client_to_queued();
 
@@ -63,8 +61,6 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
-    std::cout << "G\n";
-
     /* transition to S */     
     compositor_to_grabbed();
 
@@ -73,13 +69,11 @@ mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 
 void mc::BufferSwapperDouble::ungrab()
 {
-    std::cout << "UG\n";
-
     compositor_to_ungrabbed();
 
     std::unique_lock<std::mutex> lk(cv_mutex);
     wait_sync = false;
-    cv.notify_one();
+    cv.notify_all();
 }
 
 /* class helper functions, mostly compare_and_exchange based state computation. 
@@ -130,7 +124,7 @@ void mc::BufferSwapperDouble::client_to_queued()
     }
     while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
 }
-
+std::mutex test;
 void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
 {
     BufferPtr* grabbed_assume;
