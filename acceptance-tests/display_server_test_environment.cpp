@@ -95,10 +95,23 @@ void DisplayServerTestEnvironment::SetUp()
     startServer([]() -> void {} );
 }
 
+namespace
+{
+::testing::AssertionResult IsStarted(
+    std::shared_ptr<mir::process::Process> const& server_process)
+{
+  if (server_process.get() != nullptr)
+    return ::testing::AssertionSuccess() << "server started";
+  else
+    return ::testing::AssertionFailure() << "server NOT started";
+}
+}
+
 void DisplayServerTestEnvironment::TearDown()
 {
     using namespace testing;
-    ASSERT_THAT(server_process.get(), Ne(nullptr));
+
+    ASSERT_TRUE(IsStarted(server_process));
 
     server_process->terminate();
     mp::Result const result = server_process->wait_for_termination();
