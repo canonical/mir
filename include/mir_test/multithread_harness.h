@@ -45,7 +45,7 @@ class Synchronizer {
 
         };
 
-        void child_sync() 
+        bool child_sync() 
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             threads_waiting++;
@@ -66,6 +66,8 @@ class Synchronizer {
             while (!activate_ack) {
                 cv.wait(lk);
             }
+    
+            return kill;
         };
 
 

@@ -27,22 +27,22 @@ namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
-const int num_iterations = 100;
+const int num_iterations = 1000;
 
 void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
 {
     mc::Buffer* buf;
-    for (int i=0; i< num_iterations; i++)
+    for(;;)
     {
 
         buf = swapper->dequeue_free_buffer();
         synchronizer->set_thread_data(buf, tid);
-        synchronizer->child_sync();
+        if (synchronizer->child_sync()) return;
 
         swapper->queue_finished_buffer();
-        synchronizer->child_sync();
+        if (synchronizer->child_sync()) return;
     }
 }
 
@@ -52,14 +52,14 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
 {
 
     mc::Buffer* buf;
-    for (int i=0; i< num_iterations; i++)
+    for(;;)
     {
         buf = swapper->grab_last_posted();
         synchronizer->set_thread_data(buf, tid);
-        synchronizer->child_sync();
+        if (synchronizer->child_sync()) return;
 
         swapper->ungrab();
-        synchronizer->child_sync();
+        if (synchronizer->child_sync()) return;
 
     }
 
@@ -103,6 +103,10 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
         synchronizer.control_wait();
         synchronizer.control_activate();
     }
+
+    synchronizer.control_wait();
+    synchronizer.set_kill();
+    synchronizer.control_activate();
 
     t1.join();
     t2.join();
