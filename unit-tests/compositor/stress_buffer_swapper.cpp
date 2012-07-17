@@ -193,6 +193,8 @@ void server_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper,
     }
 }
 
+/* here we ensure that there is a DQ/Q, and wait for a grab before checking. since we 
+   queued buffer A, we should grab buffer A on next grabs */
 TEST(buffer_swapper_double_timing, timing0)
 {
     ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(server_work_timing0, client_work_timing0);

@@ -16,7 +16,7 @@
 #              Alan Griffiths <alan@octopull.co.uk>
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
 
-set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
+set(UNIT_TEST_SOURCES test_gmock_fixes.cpp test_synchronizer.cpp)
 
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
