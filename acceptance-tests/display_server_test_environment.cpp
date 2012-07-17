@@ -29,6 +29,8 @@
 
 #include <gmock/gmock.h>
 
+#include <future>
+
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mp = mir::process;
@@ -74,7 +76,7 @@ std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
     return renderer;
 }
 
-void DisplayServerTestEnvironment::startServer(std::function<void()>&& functor)
+void DisplayServerTestEnvironment::runInDisplayServerProcess(std::function<void()>&& functor)
 {
     auto run_display_server = [&]() -> void
     {
@@ -83,8 +85,14 @@ void DisplayServerTestEnvironment::startServer(std::function<void()>&& functor)
                 new mir::DisplayServer(
                         makeBufferAllocationStrategy(),
                         makeRenderer()));
+
+        struct Launcher
+        {
+            std::future<void> receiver;
+            ~Launcher() { receiver.wait(); }
+        } launcher;
+        launcher.receiver = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
         functor();
-        server->start();
     };
     server_process = mp::fork_and_run_in_a_different_process(run_display_server,
             test_exit);
@@ -92,7 +100,7 @@ void DisplayServerTestEnvironment::startServer(std::function<void()>&& functor)
 
 void DisplayServerTestEnvironment::SetUp() 
 {
-    startServer([]() -> void {} );
+    runInDisplayServerProcess([]() -> void {} );
 }
 
 namespace

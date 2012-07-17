@@ -88,7 +88,7 @@ TEST_F(MyDisplayServerTestEnvironment, notify_sync_and_see_paint)
 
     MockDisplay display;
 
-    startServer([&]() -> void
+    runInDisplayServerProcess([&]() -> void
     {
         EXPECT_CALL(display, notify_update()).Times(1);
 
