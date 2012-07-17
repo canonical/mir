@@ -87,6 +87,10 @@ TEST(buffer_swap_double, simple_swaps1)
 
     buf_tmp_a = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
+
+    swapper->grab_last_posted();
+    swapper->ungrab();
+    
     buf_tmp_b = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
 
@@ -164,6 +168,9 @@ TEST(buffer_swap_double, simple_grabs3)
 
     buf_tmp_a = swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();
+
+    swapper->grab_last_posted();
+    swapper->ungrab();
    
     swapper->dequeue_free_buffer();
     swapper->queue_finished_buffer();

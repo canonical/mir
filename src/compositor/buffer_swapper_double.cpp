@@ -32,7 +32,7 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     buffer_b(std::move(buffer_b)),
     invalid0(nullptr),
     invalid1(nullptr),
-    wait_sync(true),
+    wait_sync(false),
     flag(ATOMIC_FLAG_INIT),
     wait_state(US)
 {

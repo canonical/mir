@@ -216,7 +216,7 @@ TEST(buffer_swapper_double_timing, stress_swaps)
 
         dequeued = synchronizer.get_thread_data(0); 
         grabbed  = synchronizer.get_thread_data(1); 
-        ASSERT_NE(dequeued, grabbed);
+        ASSERT_EQ(dequeued, grabbed);
 
         synchronizer.control_activate(); 
     }
