@@ -38,8 +38,6 @@ mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
     client_to_dequeued();
     while(wait_flag.test_and_set())
     {
-        wait_flag.clear();
-
         std::unique_lock<std::mutex> lk(cv_mutex);
         cv.wait(lk);
     }

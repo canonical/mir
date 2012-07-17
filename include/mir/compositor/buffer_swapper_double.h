@@ -64,7 +64,6 @@ private:
     std::condition_variable cv;
 
     std::atomic_flag wait_flag;
-
 };
 
 }
