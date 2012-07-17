@@ -60,14 +60,27 @@ int test_exit()
     return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestEnvironment::makeBufferAllocationStrategy()
+{
+    return std::make_shared<StubBufferAllocationStrategy>();
+}
+
+std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
+{
+    std::shared_ptr < mg::Renderer > renderer =
+            std::make_shared<StubRenderer>();
+    return renderer;
+}
+
 void DisplayServerTestEnvironment::SetUp() 
 {
     auto run_display_server = [&]() -> void
     {
         SCOPED_TRACE("Server");
-        auto strategy = std::make_shared<StubBufferAllocationStrategy>();
-        auto renderer = std::make_shared<StubRenderer>();
-        server = std::unique_ptr<mir::DisplayServer>(new mir::DisplayServer(strategy, renderer));
+        server = std::unique_ptr<mir::DisplayServer>(
+            new mir::DisplayServer(
+                makeBufferAllocationStrategy(),
+                makeRenderer()));
         server->start();
     };
     server_process = mp::fork_and_run_in_a_different_process(

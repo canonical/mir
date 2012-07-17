@@ -27,6 +27,14 @@
 namespace mir
 {
 class DisplayServer;
+namespace compositor
+{
+class BufferAllocationStrategy;
+}
+namespace graphics
+{
+class Renderer;
+}
 }
 
 // The test fixture sets up and tears down a display server for use
@@ -42,6 +50,8 @@ public:
 private:
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
+    virtual std::shared_ptr<mir::graphics::Renderer> makeRenderer();
+    std::shared_ptr<mir::compositor::BufferAllocationStrategy> makeBufferAllocationStrategy();
 };
 
 // Helper function which converts a gtest result into a Process exit status.
