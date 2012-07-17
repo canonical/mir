@@ -67,7 +67,7 @@ struct ThreadFixture {
 };
 
 
-void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
+void client_work_lockstep0(std::shared_ptr<mc::BufferSwapper> swapper,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
 {
@@ -84,7 +84,7 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper ,
     }
 }
 
-void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
+void server_work_lockstep0(std::shared_ptr<mc::BufferSwapper> swapper,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                 int tid )
 {
@@ -106,7 +106,7 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper,
 TEST(buffer_swapper_double_stress, simple_swaps0)
 {
     const int num_iterations = 1000;
-    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(client_work, server_work);
+    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(server_work_lockstep0, client_work_lockstep0);
 
     mc::Buffer* dequeued, *grabbed;
     for(int i=0; i< num_iterations; i++)
@@ -130,44 +130,7 @@ TEST(buffer_swapper_double_stress, simple_swaps0)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
+void client_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper ,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                  int tid )
 {
@@ -181,7 +144,7 @@ void server_work0(std::shared_ptr<mc::BufferSwapper> swapper ,
     }
 }
 
-void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
+void server_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper,
                  mt::Synchronizer<mc::Buffer*>* synchronizer,
                 int tid )
 {
@@ -201,7 +164,7 @@ void client_work0(std::shared_ptr<mc::BufferSwapper> swapper,
 
 TEST(buffer_swapper_double_timing, stress_swaps)
 {
-    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(client_work0, server_work0);
+    ThreadFixture<mc::BufferSwapper, mc::Buffer*> fix(server_work_timing0, client_work_timing0);
     mc::Buffer* dequeued, *grabbed;
     const int num_it = 300;
     for(int i=0; i< num_it; i++)
