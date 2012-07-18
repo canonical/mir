@@ -52,8 +52,8 @@ public:
 private:
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
-    virtual std::shared_ptr<mir::graphics::Renderer> makeRenderer();
-    virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> makeBufferAllocationStrategy();
+    virtual std::shared_ptr<mir::graphics::Renderer> make_renderer();
+    virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
 
 // Helper function which converts a gtest result into a Process exit status.

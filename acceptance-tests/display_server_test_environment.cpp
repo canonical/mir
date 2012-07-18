@@ -64,12 +64,12 @@ int test_exit()
     return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestEnvironment::makeBufferAllocationStrategy()
+std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestEnvironment::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
 
-std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
+std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::make_renderer()
 {
     std::shared_ptr < mg::Renderer > renderer =
             std::make_shared<StubRenderer>();
@@ -83,8 +83,8 @@ void DisplayServerTestEnvironment::in_server_process(std::function<void()>&& fun
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
-                        makeBufferAllocationStrategy(),
-                        makeRenderer()));
+                        make_buffer_allocation_strategy(),
+                        make_renderer()));
 
         struct Launcher
         {
