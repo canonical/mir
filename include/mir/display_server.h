@@ -52,6 +52,8 @@ public:
     ~DisplayServer();
 
     void start();
+    void stop();
+
     void render(graphics::Display* display);
 private:
     struct Private;

@@ -25,6 +25,8 @@
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
+#include <atomic>
+
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
@@ -36,13 +38,15 @@ struct mir::DisplayServer::Private
         const std::shared_ptr<mg::Renderer>& renderer)
             : buffer_bundle_manager(strategy),
               surface_stack(&buffer_bundle_manager),
-              compositor(&surface_stack, renderer)
+              compositor(&surface_stack, renderer),
+              exit(false)
     {
     }
     
     compositor::BufferBundleManager buffer_bundle_manager;
     surfaces::SurfaceStack surface_stack;
     compositor::Compositor compositor;
+    std::atomic<bool> exit;
 };
 
 mir::DisplayServer::DisplayServer(
@@ -57,9 +61,12 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::start()
 {
-    for (;;)
-    {
-    }
+    while (!p->exit.load(std::memory_order_seq_cst));
+}
+
+void mir::DisplayServer::stop()
+{
+    p->exit.store(true, std::memory_order_seq_cst);
 }
 
 void mir::DisplayServer::render(mg::Display* display)

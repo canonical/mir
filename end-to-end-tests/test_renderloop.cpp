@@ -23,6 +23,9 @@
 #include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
+#include <chrono>
+#include <future>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -80,5 +83,24 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
             .WillRepeatedly(Return(geom::Rectangle()));
 
     display_server.render(&display);
+}
+
+TEST(display_server, start_stop)
+{
+    using namespace testing;
+
+    std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(
+        new mc::DoubleBufferAllocationStrategy(
+            std::make_shared<StubGraphicBufferAllocator>()));
+
+    mir::DisplayServer display_server(
+        allocation_strategy,
+        std::make_shared<StubSurfaceRenderer>());
+
+    auto runner = std::async(std::launch::async, &mir::DisplayServer::start, &display_server);
+
+    display_server.stop();
+
+    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(10)));
 }
 
