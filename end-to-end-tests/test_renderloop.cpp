@@ -101,6 +101,7 @@ TEST(display_server, start_stop)
 
     display_server.stop();
 
-    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(10)));
+    // 200ms chosen as that is longer than the whole test under valgrind
+    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(200)));
 }
 
