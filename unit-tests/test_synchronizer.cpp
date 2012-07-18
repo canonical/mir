@@ -21,35 +21,57 @@
 #include <vector>
 #include <thread>
 
+
+#include <iostream>
 namespace mt = mir::testing;
 
-
-void test_func (mt::Synchronizer<int>* synchronizer) {
-    synchronizer->child_sync();
+void test_func (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
+    *data = 1;
+    synchronizer->child_wait();
+    *data = 2;
+    synchronizer->child_wait();
 }
 
-TEST(Synchronizer, megathreaded) {
-    const int num_threads = 1000;
+TEST(Synchronizer, thread_stop_start) {
+    int data = 0;
+    mt::SynchronizedThread<int,int> t1(test_func, nullptr, &data);
 
-    mt::Synchronizer<int> synchronizer(num_threads);
+    t1.stabilize();
+    EXPECT_EQ(data, 1);
+    t1.activate();
 
-    std::vector<std::thread> t;
-    for(int i=0; i<num_threads; i++)    
+    t1.stabilize();
+    EXPECT_EQ(data, 2);
+    t1.activate();
+}
+
+void test_func_pause (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
+    for(;;)
     {
-        t.push_back(std::thread(test_func, &synchronizer));
-    } 
-
-    synchronizer.control_wait();
-    synchronizer.control_activate();
-
-
-    for(int i=0; i<num_threads; i++)
-    {
-        t[i].join();
+        *data = *data+1;
+        if (synchronizer->child_check()) break;
     } 
 }
 
-void test_func_id (mt::Synchronizer<int>* synchronizer, int tid) {
+TEST(Synchronizer, thread_pause_req) {
+    int data = 0;
+    mt::SynchronizedThread<int, int> t1(test_func_pause, nullptr, &data);
+
+    t1.stabilize();
+    EXPECT_EQ(data, 1);
+    t1.activate();
+
+    t1.stabilize();
+    EXPECT_EQ(data, 2);
+    t1.activate();
+
+    t1.stabilize();
+    t1.kill_thread();
+    t1.activate();
+    
+}
+#if 0
+void test_func_id (mt::Synchronizer* synchronizer, int tid) {
     if (tid == 500) {
         while (true) 
         {
@@ -63,7 +85,7 @@ void test_func_id (mt::Synchronizer<int>* synchronizer, int tid) {
 TEST(Synchronizer, one_checker_thread) {
     const int num_threads = 1000;
 
-    mt::Synchronizer<int> synchronizer(num_threads);
+    mt::Synchronizer synchronizer(num_threads);
 
     std::vector<std::thread> t;
     for(int i=0; i<num_threads; i++)    
@@ -82,3 +104,4 @@ TEST(Synchronizer, one_checker_thread) {
         t[i].join();
     }
 }
+#endif
