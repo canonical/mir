@@ -34,7 +34,10 @@ void test_func (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<
 
 TEST(Synchronizer, thread_stop_start) {
     int data = 0;
-    mt::SynchronizedThread<int,int> t1(test_func, nullptr, &data);
+
+    auto thread_start_time = std::chrono::system_clock::now();
+    auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
+    mt::SynchronizedThread<int,int> t1(abs_timeout, test_func, nullptr, &data);
 
     t1.stabilize();
     EXPECT_EQ(data, 1);
@@ -55,7 +58,9 @@ void test_func_pause (mt::SynchronizedThread<int, int>* synchronizer, std::share
 
 TEST(Synchronizer, thread_pause_req) {
     int data = 0;
-    mt::SynchronizedThread<int, int> t1(test_func_pause, nullptr, &data);
+    auto thread_start_time = std::chrono::system_clock::now();
+    auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
+    mt::SynchronizedThread<int, int> t1(abs_timeout, test_func_pause, nullptr, &data);
 
     t1.stabilize();
     EXPECT_EQ(data, 1);

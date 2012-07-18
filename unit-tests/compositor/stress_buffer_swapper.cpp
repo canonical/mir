@@ -52,8 +52,10 @@ struct ThreadFixture {
                     std::move(buffer_a),
                     std::move(buffer_b));
 
-            t1 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (a, swapper, &buffer1 );
-            t2 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (b, swapper, &buffer2 );
+            auto thread_start_time = std::chrono::system_clock::now();
+            auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
+            t1 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (abs_timeout, a, swapper, &buffer1 );
+            t2 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (abs_timeout, b, swapper, &buffer2 );
         };
 
         ~ThreadFixture()

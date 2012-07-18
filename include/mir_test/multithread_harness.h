@@ -19,6 +19,7 @@
 #define MIR_TEST_MULTITHREAD_HARNESS_H_
 
 #include <thread>
+#include <chrono>
 #include <gtest/gtest.h>
 
 namespace mir
@@ -29,9 +30,12 @@ namespace testing
 template< typename S, typename T>
 class SynchronizedThread {
     public:
-        SynchronizedThread (std::function<void(SynchronizedThread*, std::shared_ptr<S>, T* )> function, std::shared_ptr<S> test_object, T* data)
-         : paused(false),
-           activate_ack(false),
+        SynchronizedThread (std::chrono::time_point<std::chrono::system_clock> timeout,
+                            std::function<void(SynchronizedThread*, std::shared_ptr<S>, T* )> function,
+                            std::shared_ptr<S> test_object,
+                            T* data )
+         : abs_timeout(timeout),
+           paused(false),
            pause_request(false),
            kill(false)
         {
@@ -51,9 +55,10 @@ class SynchronizedThread {
             pause_request = true;
             if (!paused) 
             {
-                if (std::cv_status::timeout == cv.wait_for(lk, std::chrono::milliseconds(250)))
+                if (std::cv_status::timeout == cv.wait_until(lk, abs_timeout))
                 {
-                    std::cout << "TIMEOUT HERE\n";
+                    FAIL();
+                    return;
                 }
             }
             pause_request = false;
@@ -99,94 +104,16 @@ class SynchronizedThread {
             kill = true;
         };
     private:
+
+        std::chrono::time_point<std::chrono::system_clock> abs_timeout;
+
         std::thread *thread;
         std::condition_variable cv;
 
         std::mutex sync_mutex;
         bool paused;
-        bool activate_ack;
         bool pause_request;
-
         bool kill;
-#if 0
-        bool child_sync() 
-        {
-            std::unique_lock<std::mutex> lk(sync_mutex);
-            threads_waiting++;
-            if (threads_waiting == num_threads) {
-                cv.notify_all();
-            }
-
-            while (!wait_ack) {
-                cv.wait(lk);
-            }
-
-            threads_awake++;
-            if(threads_awake == num_threads) 
-            {
-                cv.notify_all();
-            }
-
-            while (!activate_ack) {
-                cv.wait(lk);
-            }
-    
-            return kill;
-        };
-
-        bool child_check_pause(int tid)
-        {
-            std::unique_lock<std::mutex> lk(sync_mutex);
-
-            if (pause_requests[tid] ) 
-            {
-                pause_requests[tid] = false;
-                cv.notify_all();
-
-                threads_waiting++;
-                while (!wait_ack) {
-                    cv.wait(lk);
-                }
-
-                threads_awake++;
-                cv.notify_all();
-
-                while (!activate_ack) {
-                    cv.wait(lk);
-                }
-            }
-
-            return kill;
-        };
-
-        void enforce_child_pause() 
-        {
-            std::unique_lock<std::mutex> lk(sync_mutex);
-
-            pause_requests[tid] = true;
-
-            while(pause_requests[tid]) {
-                cv.wait(lk);
-            }
-
-        };
-
-        void set_kill() {
-            std::unique_lock<std::mutex> lk(sync_mutex);
-            kill = true;
-        
-        }
-
-    private:
-        std::condition_variable cv;
-
-        std::mutex sync_mutex;
-        bool wait_ack;
-        bool activate_ack;
-        bool pause_request;
-
-        bool kill;
-#endif
 };
 
 #if 0 
