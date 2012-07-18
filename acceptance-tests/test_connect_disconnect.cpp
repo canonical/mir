@@ -47,6 +47,10 @@ TEST_F(DisplayServerTestEnvironment, client_connects_and_disconnects)
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);
 
+    inServerProcess([]() -> void {
+        // TODO expect effect of connection
+    });
+
     auto client_connects_and_disconnects = [&]() -> void
     {
         SCOPED_TRACE("Client");

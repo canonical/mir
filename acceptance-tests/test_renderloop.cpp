@@ -41,54 +41,15 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
-public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width /*width*/,
-        geom::Height /*height*/,
-        mc::PixelFormat /*pf*/)
-    {
-        return std::unique_ptr<mc::Buffer>();
-    }
-};
-
-class StubSurfaceRenderer : public mg::Renderer
-{
-public:
-    void render(mg::Renderable& /*surface*/)
-    {
-    }
-};
-
-class MyDisplayServerTestEnvironment : public DisplayServerTestEnvironment
-{
-public:
-
-private:
-    void SetUp() {  /* The default starts the server, we want to defer this */ }
-
-    virtual std::shared_ptr<mg::Renderer> makeRenderer()
-    {
-        return std::make_shared<StubSurfaceRenderer>();
-    }
-
-    virtual std::shared_ptr<mc::BufferAllocationStrategy> makeBufferAllocationStrategy()
-    {
-        return std::shared_ptr<mc::BufferAllocationStrategy>(
-                    new mc::DoubleBufferAllocationStrategy(
-                        std::make_shared<StubGraphicBufferAllocator>()));
-    }
-};
 }
 
-TEST_F(MyDisplayServerTestEnvironment, notify_sync_and_see_paint)
+TEST_F(DisplayServerTestEnvironment, notify_sync_and_see_paint)
 {
     using namespace testing;
 
     MockDisplay display;
 
-    runInDisplayServerProcess([&]() -> void
+    inServerProcess([&]() -> void
     {
         EXPECT_CALL(display, notify_update()).Times(1);
 

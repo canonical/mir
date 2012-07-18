@@ -76,7 +76,7 @@ std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
     return renderer;
 }
 
-void DisplayServerTestEnvironment::runInDisplayServerProcess(std::function<void()>&& functor)
+void DisplayServerTestEnvironment::inServerProcess(std::function<void()>&& functor)
 {
     auto run_display_server = [&]() -> void
     {
@@ -100,7 +100,6 @@ void DisplayServerTestEnvironment::runInDisplayServerProcess(std::function<void(
 
 void DisplayServerTestEnvironment::SetUp() 
 {
-    runInDisplayServerProcess([]() -> void {} );
 }
 
 namespace
