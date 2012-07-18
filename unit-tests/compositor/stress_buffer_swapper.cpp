@@ -58,13 +58,14 @@ struct ThreadFixture {
 
         ~ThreadFixture()
         {
+            t2->stabilize();
+            t2->kill_thread();
+            t2->activate();
+
             t1->stabilize();
             t1->kill_thread();
             t1->activate();
 
-            t2->stabilize();
-            t2->kill_thread();
-            t2->activate();
 
             delete t1;
             delete t2;
@@ -148,62 +149,30 @@ TEST(buffer_swapper_double_stress, ensure_valid)
 
 }
 
-
-#if 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void client_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper ,
-                 mt::Synchronizer* synchronizer,
-                 int tid )
+void client_work_timing0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
 {
-    //mc::Buffer* buf;
     for(;;)
     {
-//        buf = swapper->dequeue_free_buffer();
-        swapper->dequeue_free_buffer();
+        *buf = swapper->dequeue_free_buffer();
         swapper->queue_finished_buffer();
-//        synchronizer->set_thread_data(buf, tid);
-        if(synchronizer->child_check_pause(tid)) break;
+        if(synchronizer->child_check()) break;
     }
 }
 
-void server_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper,
-                 mt::Synchronizer* synchronizer,
-                int tid )
+void server_work_timing0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
 {
-    //mc::Buffer* buf;
     for (;;)
     {
         for (int j=0; j< 100; j++)
         {
-            //buf = swapper->grab_last_posted();
-            swapper->grab_last_posted();
+            *buf = swapper->grab_last_posted();
             swapper->ungrab();
         }
-
-//        synchronizer->set_thread_data(buf, tid);
-        if(synchronizer->child_check_pause(tid)) break;
+        if(synchronizer->child_check()) break;
     }
 }
 
@@ -211,37 +180,16 @@ void server_work_timing0(std::shared_ptr<mc::BufferSwapper> swapper,
    queued buffer A, we should grab buffer A on next grabs */
 TEST(buffer_swapper_double_timing, timing0)
 {
-    ThreadFixture<mc::BufferSwapper> fix(server_work_timing0, client_work_timing0);
- //   mc::Buffer* dequeued, *grabbed;
+    ThreadFixture fix(server_work_timing0, client_work_timing0);
     const int num_it = 300;
     for(int i=0; i< num_it; i++)
     {
-        fix.synchronizer->enforce_child_pause(1);
-        fix.synchronizer->enforce_child_pause(0);
-        fix.synchronizer->control_wait();
+        fix.t2->stabilize();
+        fix.t1->stabilize();
 
-/*
-        dequeued = fix.synchronizer->get_thread_data(0); 
-        grabbed  = fix.synchronizer->get_thread_data(1); 
-        EXPECT_EQ(dequeued, grabbed);
-*/
-        fix.synchronizer->control_activate(); 
+        EXPECT_EQ(fix.buffer1, fix.buffer2); 
+
+        fix.t2->activate();
+        fix.t1->activate();
     }
-
-    /* kill all threads */
-    fix.synchronizer->enforce_child_pause(1);
-    fix.synchronizer->enforce_child_pause(0);
-    fix.synchronizer->control_wait();
-    fix.synchronizer->set_kill();
-    fix.synchronizer->control_activate(); 
-
 }
-
-
-
-
-
-
-
-
-#endif
