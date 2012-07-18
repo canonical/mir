@@ -61,7 +61,13 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::start()
 {
-    while (!p->exit.load(std::memory_order_seq_cst));
+    while (!p->exit.load(std::memory_order_seq_cst))
+        do_stuff();
+}
+
+void mir::DisplayServer::do_stuff()
+{
+    //TODO
 }
 
 void mir::DisplayServer::stop()
