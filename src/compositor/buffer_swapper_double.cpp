@@ -51,15 +51,12 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
     client_to_queued();
 
     /* toggle grabbed pattern */
-    compositor_change_toggle_pattern();
- 
+    compositor_change_toggle_pattern(); 
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
-    /* transition to S */     
     compositor_to_grabbed();
-
     return grabbed.load()->get();
 }
 
@@ -119,7 +116,7 @@ void mc::BufferSwapperDouble::client_to_queued()
     }
     while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
 }
-std::mutex test;
+
 void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
 {
     BufferPtr* grabbed_assume;

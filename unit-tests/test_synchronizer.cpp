@@ -21,8 +21,6 @@
 #include <vector>
 #include <thread>
 
-
-#include <iostream>
 namespace mt = mir::testing;
 
 void test_func (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
@@ -75,38 +73,3 @@ TEST(Synchronizer, thread_pause_req) {
     t1.activate();
     
 }
-#if 0
-void test_func_id (mt::Synchronizer* synchronizer, int tid) {
-    if (tid == 500) {
-        while (true) 
-        {
-            if (synchronizer->child_check_pause(tid)) break;
-        }
-    } else {
-        synchronizer->child_sync();
-    }
-}
-
-TEST(Synchronizer, one_checker_thread) {
-    const int num_threads = 1000;
-
-    mt::Synchronizer synchronizer(num_threads);
-
-    std::vector<std::thread> t;
-    for(int i=0; i<num_threads; i++)    
-    {
-        t.push_back(std::thread(test_func_id, &synchronizer, i));
-    } 
-
-    synchronizer.enforce_child_pause(500);
-    synchronizer.control_wait();
-
-    synchronizer.set_kill();
-    synchronizer.control_activate();
-
-    for(int i=0; i<num_threads; i++)
-    {
-        t[i].join();
-    }
-}
-#endif

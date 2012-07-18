@@ -39,7 +39,6 @@ struct ThreadFixture {
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
         {
-//            std::chrono::milliseconds timeout(5000);
             geom::Width w {1024};
             geom::Height h {768};
             geom::Stride s {1024};
@@ -48,14 +47,16 @@ struct ThreadFixture {
             std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
             std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
 
-            swapper = std::make_shared<mc::BufferSwapperDouble>(
+            auto swapper = std::make_shared<mc::BufferSwapperDouble>(
                     std::move(buffer_a),
                     std::move(buffer_b));
 
             auto thread_start_time = std::chrono::system_clock::now();
             auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
-            t1 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (abs_timeout, a, swapper, &buffer1 );
-            t2 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> (abs_timeout, b, swapper, &buffer2 );
+            t1 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
+                                                (abs_timeout, a, swapper, &buffer1 );
+            t2 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
+                                                (abs_timeout, b, swapper, &buffer2 );
         };
 
         ~ThreadFixture()
@@ -68,12 +69,10 @@ struct ThreadFixture {
             t1->kill_thread();
             t1->activate();
 
-
             delete t1;
             delete t2;
         }
 
-        std::shared_ptr<mc::BufferSwapper> swapper;
         mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> *t1;
         mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> *t2;
         mc::Buffer *buffer1;
@@ -87,7 +86,6 @@ void client_work_lockstep0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer
 {
     for(;;)
     {
-
         *buf = swapper->dequeue_free_buffer();
         if (synchronizer->child_wait()) return;
 
