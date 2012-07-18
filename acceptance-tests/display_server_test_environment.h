@@ -44,10 +44,10 @@ class DisplayServerTestEnvironment : public testing::Test
 public:
     DisplayServerTestEnvironment();
     ~DisplayServerTestEnvironment();
-    void inServerProcess(std::function<void()>&& functor);
     void SetUp();
     void TearDown();
-    mir::DisplayServer* displayServer() const;
+    mir::DisplayServer* display_server() const;
+    void in_server_process(std::function<void()>&& functor);
 
 private:
     std::unique_ptr<mir::DisplayServer> server;

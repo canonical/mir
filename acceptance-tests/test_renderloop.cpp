@@ -49,14 +49,14 @@ TEST_F(DisplayServerTestEnvironment, notify_sync_and_see_paint)
 
     MockDisplay display;
 
-    inServerProcess([&]() -> void
+    in_server_process([&]() -> void
     {
         EXPECT_CALL(display, notify_update()).Times(1);
 
         EXPECT_CALL(display, view_area()).Times(AtLeast(1))
                 .WillRepeatedly(Return(geom::Rectangle()));
 
-        displayServer()->render(&display);
+        display_server()->render(&display);
     });
 }
 

@@ -76,7 +76,7 @@ std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::makeRenderer()
     return renderer;
 }
 
-void DisplayServerTestEnvironment::inServerProcess(std::function<void()>&& functor)
+void DisplayServerTestEnvironment::in_server_process(std::function<void()>&& functor)
 {
     auto run_display_server = [&]() -> void
     {
@@ -126,7 +126,7 @@ void DisplayServerTestEnvironment::TearDown()
     EXPECT_TRUE(result.signalled());
 }
 
-mir::DisplayServer* DisplayServerTestEnvironment::displayServer() const
+mir::DisplayServer* DisplayServerTestEnvironment::display_server() const
 {
     return server.get();
 }
