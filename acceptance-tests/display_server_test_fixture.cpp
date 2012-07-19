@@ -57,6 +57,14 @@ public:
     }
 };
 
+::testing::AssertionResult WasStarted(
+    std::shared_ptr<mir::process::Process> const& server_process)
+{
+  if (server_process)
+    return ::testing::AssertionSuccess() << "server started";
+  else
+    return ::testing::AssertionFailure() << "server NOT started";
+}
 }
 
 int test_exit()
@@ -87,6 +95,8 @@ void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor
 
     if (pid == 0)
     {
+        is_test_process = false;
+
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
@@ -112,20 +122,40 @@ void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor
     }
 }
 
-void DisplayServerTestFixture::SetUp() 
+void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
 {
+    if (!is_test_process)
+    {
+        clients.clear();
+        return; // We're not in the test process, so just return gracefully
+    }
+
+    // We're in the test process, so make sure we started a service
+    ASSERT_TRUE(WasStarted(server_process));
+
+    pid_t pid = fork();
+
+    if (pid < 0)
+    {
+        throw std::runtime_error("Failed to fork process");
+    }
+
+    if (pid == 0)
+    {
+        is_test_process = false;
+        SCOPED_TRACE("Client");
+        functor();
+        exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+    }
+    else
+    {
+        clients.push_back(std::shared_ptr<mp::Process>(new mp::Process(pid)));
+    }
+
 }
 
-namespace
+void DisplayServerTestFixture::SetUp() 
 {
-::testing::AssertionResult WasStarted(
-    std::shared_ptr<mir::process::Process> const& server_process)
-{
-  if (server_process.get() != nullptr)
-    return ::testing::AssertionSuccess() << "server started";
-  else
-    return ::testing::AssertionFailure() << "server NOT started";
-}
 }
 
 void DisplayServerTestFixture::TearDown()
@@ -137,8 +167,14 @@ void DisplayServerTestFixture::TearDown()
         // We're in the server process, so just close down gracefully
         server->stop();
     }
-    else
+
+    if (is_test_process)
     {
+        for(auto& client : clients)
+        {
+            EXPECT_TRUE(client->wait_for_termination().succeeded());
+        }
+
         // We're in the test process, so make sure we started a service
         ASSERT_TRUE(WasStarted(server_process));
         mp::Result const result = server_process->wait_for_termination();
@@ -151,5 +187,5 @@ mir::DisplayServer* DisplayServerTestFixture::display_server() const
     return server.get();
 }
 
-DisplayServerTestFixture::DisplayServerTestFixture() {}
+DisplayServerTestFixture::DisplayServerTestFixture() : is_test_process(true) {}
 DisplayServerTestFixture::~DisplayServerTestFixture() {}

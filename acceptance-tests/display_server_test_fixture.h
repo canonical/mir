@@ -22,7 +22,9 @@
 #include "mir/process/process.h"
 
 #include <gtest/gtest.h>
+
 #include <memory>
+#include <list>
 
 namespace mir
 {
@@ -44,14 +46,20 @@ class DisplayServerTestFixture : public testing::Test
 public:
     DisplayServerTestFixture();
     ~DisplayServerTestFixture();
-    void SetUp();
-    void TearDown();
+
     mir::DisplayServer* display_server() const;
     void in_server_process(std::function<void()>&& functor);
+    void launch_client_process(std::function<void()>&& functor);
 
 private:
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
+    std::list<std::shared_ptr<mir::process::Process>> clients;
+
+    bool is_test_process;
+
+    virtual void SetUp();
+    virtual void TearDown();
     virtual std::shared_ptr<mir::graphics::Renderer> make_renderer();
     virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };

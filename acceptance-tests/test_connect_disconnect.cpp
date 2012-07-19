@@ -51,16 +51,9 @@ TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
         // TODO expect effect of connection and wait for it
     });
 
-    auto client_connects_and_disconnects = [&]() -> void
+    launch_client_process([&]() -> void
     {
-        SCOPED_TRACE("Client");
         EXPECT_NO_THROW(application.connect());
         EXPECT_NO_THROW(application.disconnect());
-    };
-
-    std::shared_ptr<mp::Process> client =
-            mp::fork_and_run_in_a_different_process(
-                client_connects_and_disconnects, test_exit);
-
-    EXPECT_TRUE(client->wait_for_termination().succeeded());
+    });
 }
