@@ -64,7 +64,5 @@ private:
     virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
 
-// Helper function which converts a gtest result into a Process exit status.
-int test_exit();
 
 #endif // MIR_DISPLAY_SERVER_TEST_ENVIRONMENT

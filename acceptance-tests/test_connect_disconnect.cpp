@@ -21,7 +21,6 @@
 
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
-#include "mir/process/process.h"
 
 #include <gtest/gtest.h>
 

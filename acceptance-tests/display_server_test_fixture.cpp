@@ -67,11 +67,6 @@ public:
 }
 }
 
-int test_exit()
-{
-    return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
-}
-
 std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestFixture::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
@@ -160,8 +155,6 @@ void DisplayServerTestFixture::SetUp()
 
 void DisplayServerTestFixture::TearDown()
 {
-    using namespace testing;
-
     if (server)
     {
         // We're in the server process, so just close down gracefully
@@ -170,6 +163,8 @@ void DisplayServerTestFixture::TearDown()
 
     if (is_test_process)
     {
+        using namespace testing;
+
         for(auto& client : clients)
         {
             EXPECT_TRUE(client->wait_for_termination().succeeded());
@@ -187,5 +182,9 @@ mir::DisplayServer* DisplayServerTestFixture::display_server() const
     return server.get();
 }
 
-DisplayServerTestFixture::DisplayServerTestFixture() : is_test_process(true) {}
+DisplayServerTestFixture::DisplayServerTestFixture() :
+    is_test_process(true)
+{
+}
+
 DisplayServerTestFixture::~DisplayServerTestFixture() {}
