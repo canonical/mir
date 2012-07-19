@@ -59,17 +59,3 @@ TEST_F(DisplayServerTestEnvironment, notify_sync_and_see_paint)
         display_server()->render(&display);
     });
 }
-
-TEST_F(DisplayServerTestEnvironment, failing_server_side_test)
-{
-    in_server_process([&]() -> void
-    {
-        using namespace testing;
-        FAIL() << "Proving a test can fail";
-    });
-}
-
-TEST_F(DisplayServerTestEnvironment, failing_without_server)
-{
-}
-
