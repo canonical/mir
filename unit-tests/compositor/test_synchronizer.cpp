@@ -23,7 +23,7 @@
 
 namespace mt = mir::testing;
 
-void test_func (mt::SynchronizedSpawnedThread* synchronizer, int* data) {
+void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
     *data = 1;
     synchronizer->child_enter_wait();
     *data = 2;
@@ -36,7 +36,7 @@ TEST(Synchronizer, thread_stop_start) {
     auto thread_start_time = std::chrono::system_clock::now();
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
-    mt::SynchronizedThread synchronizer(abs_timeout);
+    mt::Synchronizer synchronizer(abs_timeout);
     mt::ScopedThread scoped_thread(std::thread(test_func, &synchronizer, &data));
 
     synchronizer.ensure_child_is_waiting();
@@ -48,7 +48,7 @@ TEST(Synchronizer, thread_stop_start) {
     synchronizer.activate_waiting_child();
 }
 
-void test_func_pause (mt::SynchronizedSpawnedThread* synchronizer, int* data) {
+void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
     for(;;)
     {
         *data = *data+1;
@@ -61,7 +61,7 @@ TEST(Synchronizer, thread_pause_req) {
     auto thread_start_time = std::chrono::system_clock::now();
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
-    mt::SynchronizedThread synchronizer(abs_timeout);
+    mt::Synchronizer synchronizer(abs_timeout);
     mt::ScopedThread scoped_thread(std::thread(test_func_pause, &synchronizer, &data));
 
     synchronizer.ensure_child_is_waiting();

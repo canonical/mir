@@ -29,7 +29,7 @@ namespace testing
 
 /* interface for main/controller thread to 
    synchronize system */
-class SynchronizedThreadController
+class SynchronizerController
 {
 public:
         virtual void ensure_child_is_waiting() = 0;
@@ -38,7 +38,7 @@ public:
 };
 
 /* interface for spawned threads to interact with main thread */
-class SynchronizedSpawnedThread
+class SynchronizerSpawned
 {
 public:
     virtual bool child_enter_wait() = 0;
@@ -54,11 +54,11 @@ private:
     std::thread thread;
 };
 
-class SynchronizedThread : public SynchronizedThreadController,
-                           public SynchronizedSpawnedThread
+class Synchronizer : public SynchronizerController,
+                     public SynchronizerSpawned
 {
     public:
-        SynchronizedThread (const std::chrono::time_point<std::chrono::system_clock> timeout)
+        Synchronizer (const std::chrono::time_point<std::chrono::system_clock> timeout)
          : abs_timeout(timeout),
            paused(false),
            pause_request(false),
@@ -66,7 +66,7 @@ class SynchronizedThread : public SynchronizedThreadController,
         {
         };
 
-        ~SynchronizedThread ()
+        ~Synchronizer ()
         {
         };
 

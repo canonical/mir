@@ -32,10 +32,10 @@ namespace geom = mir::geometry;
 struct ThreadFixture {
     public:
         ThreadFixture(
-            std::function<void( mt::SynchronizedSpawnedThread*,
+            std::function<void( mt::SynchronizerSpawned*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> a, 
-            std::function<void( mt::SynchronizedSpawnedThread*,
+            std::function<void( mt::SynchronizerSpawned*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
         {
@@ -53,8 +53,8 @@ struct ThreadFixture {
 
             auto thread_start_time = std::chrono::system_clock::now();
             auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
-            auto sync1 = new mt::SynchronizedThread(abs_timeout);
-            auto sync2 = new mt::SynchronizedThread(abs_timeout);
+            auto sync1 = new mt::Synchronizer(abs_timeout);
+            auto sync2 = new mt::Synchronizer(abs_timeout);
 
             thread1 = new mt::ScopedThread(std::thread(a, sync1, swapper, &buffer1));
             thread2 = new mt::ScopedThread(std::thread(b, sync2, swapper, &buffer2));
@@ -81,13 +81,13 @@ struct ThreadFixture {
 
         mt::ScopedThread* thread1;
         mt::ScopedThread* thread2;
-        mt::SynchronizedThreadController *controller1;
-        mt::SynchronizedThreadController *controller2;
+        mt::SynchronizerController *controller1;
+        mt::SynchronizerController *controller2;
         mc::Buffer *buffer1;
         mc::Buffer *buffer2; 
 };
 
-void client_request_loop( mt::SynchronizedSpawnedThread* synchronizer,
+void client_request_loop( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -101,7 +101,7 @@ void client_request_loop( mt::SynchronizedSpawnedThread* synchronizer,
     }
 }
 
-void compositor_grab_loop( mt::SynchronizedSpawnedThread* synchronizer,
+void compositor_grab_loop( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -156,7 +156,7 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
 }
 
-void client_work_timing0( mt::SynchronizedSpawnedThread* synchronizer,
+void client_work_timing0( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -168,7 +168,7 @@ void client_work_timing0( mt::SynchronizedSpawnedThread* synchronizer,
     }
 }
 
-void server_work_timing0( mt::SynchronizedSpawnedThread* synchronizer,
+void server_work_timing0( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
