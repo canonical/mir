@@ -23,7 +23,7 @@
 
 namespace mt = mir::testing;
 
-void test_func (mt::SynchronizedThreadChild* synchronizer, std::shared_ptr<int>, int* data) {
+void test_func (mt::SynchronizedSpawnedThread* synchronizer, int* data) {
     *data = 1;
     synchronizer->child_enter_wait();
     *data = 2;
@@ -35,18 +35,20 @@ TEST(Synchronizer, thread_stop_start) {
 
     auto thread_start_time = std::chrono::system_clock::now();
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
-    mt::SynchronizedThread<int,int> t1(abs_timeout, test_func, nullptr, &data);
 
-    t1.ensure_child_is_waiting();
+    mt::SynchronizedThread synchronizer(abs_timeout);
+    mt::ScopedThread scoped_thread(std::thread(test_func, &synchronizer, &data));
+
+    synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 1);
-    t1.activate_waiting_child();
+    synchronizer.activate_waiting_child();
 
-    t1.ensure_child_is_waiting();
+    synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 2);
-    t1.activate_waiting_child();
+    synchronizer.activate_waiting_child();
 }
 
-void test_func_pause (mt::SynchronizedThreadChild* synchronizer, std::shared_ptr<int>, int* data) {
+void test_func_pause (mt::SynchronizedSpawnedThread* synchronizer, int* data) {
     for(;;)
     {
         *data = *data+1;
@@ -58,18 +60,19 @@ TEST(Synchronizer, thread_pause_req) {
     int data = 0;
     auto thread_start_time = std::chrono::system_clock::now();
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
-    mt::SynchronizedThread<int, int> t1(abs_timeout, test_func_pause, nullptr, &data);
 
-    t1.ensure_child_is_waiting();
+    mt::SynchronizedThread synchronizer(abs_timeout);
+    mt::ScopedThread scoped_thread(std::thread(test_func_pause, &synchronizer, &data));
+
+    synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 1);
-    t1.activate_waiting_child();
+    synchronizer.activate_waiting_child();
 
-    t1.ensure_child_is_waiting();
+    synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 2);
-    t1.activate_waiting_child();
+    synchronizer.activate_waiting_child();
 
-    t1.ensure_child_is_waiting();
-    t1.kill_thread();
-    t1.activate_waiting_child();
-    
+    synchronizer.ensure_child_is_waiting();
+    synchronizer.kill_thread();
+    synchronizer.activate_waiting_child(); 
 }

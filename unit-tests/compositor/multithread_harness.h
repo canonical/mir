@@ -27,6 +27,8 @@ namespace mir
 namespace testing
 {
 
+/* interface for main/controller thread to 
+   synchronize system */
 class SynchronizedThreadController
 {
 public:
@@ -35,34 +37,37 @@ public:
         virtual void kill_thread() = 0;
 };
 
-class SynchronizedThreadChild
+/* interface for spawned threads to interact with main thread */
+class SynchronizedSpawnedThread
 {
 public:
     virtual bool child_enter_wait() = 0;
     virtual bool child_check() = 0;
 };
 
-template< typename S, typename T>
+class ScopedThread
+{
+public:
+    ScopedThread(std::thread&& thread) :thread (std::move(thread)) {}
+    ~ScopedThread() { thread.join(); }
+private:
+    std::thread thread;
+};
+
 class SynchronizedThread : public SynchronizedThreadController,
-                           public SynchronizedThreadChild
+                           public SynchronizedSpawnedThread
 {
     public:
-        SynchronizedThread (const std::chrono::time_point<std::chrono::system_clock> timeout,
-                            std::function<void(SynchronizedThreadChild*, std::shared_ptr<S>, T* )> function,
-                            std::shared_ptr<S> test_object,
-                            T* data )
+        SynchronizedThread (const std::chrono::time_point<std::chrono::system_clock> timeout)
          : abs_timeout(timeout),
            paused(false),
            pause_request(false),
            kill(false)
         {
-            thread = new std::thread(function, this, test_object, data); 
         };
 
         ~SynchronizedThread ()
         {
-            thread->join();
-            delete thread;
         };
 
         void ensure_child_is_waiting() 
@@ -123,7 +128,6 @@ class SynchronizedThread : public SynchronizedThreadController,
 
         std::chrono::time_point<std::chrono::system_clock> abs_timeout;
 
-        std::thread *thread;
         std::condition_variable cv;
 
         std::mutex sync_mutex;

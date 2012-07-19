@@ -32,10 +32,10 @@ namespace geom = mir::geometry;
 struct ThreadFixture {
     public:
         ThreadFixture(
-            std::function<void( mt::SynchronizedThreadChild*,
+            std::function<void( mt::SynchronizedSpawnedThread*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> a, 
-            std::function<void( mt::SynchronizedThreadChild*,
+            std::function<void( mt::SynchronizedSpawnedThread*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
         {
@@ -53,34 +53,41 @@ struct ThreadFixture {
 
             auto thread_start_time = std::chrono::system_clock::now();
             auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
-            t1 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
-                                                (abs_timeout, a, swapper, &buffer1 );
-            t2 = new mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
-                                                (abs_timeout, b, swapper, &buffer2 );
+            auto sync1 = new mt::SynchronizedThread(abs_timeout);
+            auto sync2 = new mt::SynchronizedThread(abs_timeout);
+
+            thread1 = new mt::ScopedThread(std::thread(a, sync1, swapper, &buffer1));
+            thread2 = new mt::ScopedThread(std::thread(b, sync2, swapper, &buffer2));
+
+            controller1 = sync1;
+            controller2 = sync2;
         };
 
         ~ThreadFixture()
         {
-            t2->ensure_child_is_waiting();
-            t2->kill_thread();
-            t2->activate_waiting_child();
+            controller2->ensure_child_is_waiting();
+            controller2->kill_thread();
+            controller2->activate_waiting_child();
 
-            t1->ensure_child_is_waiting();
-            t1->kill_thread();
-            t1->activate_waiting_child();
+            controller1->ensure_child_is_waiting();
+            controller1->kill_thread();
+            controller1->activate_waiting_child();
 
-            delete t1;
-            delete t2;
+            delete controller1;
+            delete controller2;
+            delete thread1;
+            delete thread2;
         }
 
-        mt::SynchronizedThreadController *t1;
-        mt::SynchronizedThreadController *t2;
+        mt::ScopedThread* thread1;
+        mt::ScopedThread* thread2;
+        mt::SynchronizedThreadController *controller1;
+        mt::SynchronizedThreadController *controller2;
         mc::Buffer *buffer1;
-        mc::Buffer *buffer2;        
+        mc::Buffer *buffer2; 
 };
 
-
-void client_request_loop( mt::SynchronizedThreadChild* synchronizer,
+void client_request_loop( mt::SynchronizedSpawnedThread* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -94,7 +101,7 @@ void client_request_loop( mt::SynchronizedThreadChild* synchronizer,
     }
 }
 
-void compositor_grab_loop( mt::SynchronizedThreadChild* synchronizer,
+void compositor_grab_loop( mt::SynchronizedSpawnedThread* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -117,13 +124,13 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
     ThreadFixture fix(compositor_grab_loop, client_request_loop);
     for(int i=0; i< num_iterations; i++)
     {
-        fix.t1->ensure_child_is_waiting();
-        fix.t2->ensure_child_is_waiting();
+        fix.controller1->ensure_child_is_waiting();
+        fix.controller2->ensure_child_is_waiting();
 
         EXPECT_NE(fix.buffer1, fix.buffer2);
 
-        fix.t1->activate_waiting_child();
-        fix.t2->activate_waiting_child();
+        fix.controller1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
     }
 
 }
@@ -136,20 +143,20 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
     for(int i=0; i< num_iterations; i++)
     {
-        fix.t1->ensure_child_is_waiting();
-        fix.t2->ensure_child_is_waiting();
+        fix.controller1->ensure_child_is_waiting();
+        fix.controller2->ensure_child_is_waiting();
 
         EXPECT_NE(fix.buffer1, nullptr);
         EXPECT_NE(fix.buffer2, nullptr);
 
-        fix.t1->activate_waiting_child();
-        fix.t2->activate_waiting_child();
+        fix.controller1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
 
     }
 
 }
 
-void client_work_timing0( mt::SynchronizedThreadChild* synchronizer,
+void client_work_timing0( mt::SynchronizedSpawnedThread* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -161,7 +168,7 @@ void client_work_timing0( mt::SynchronizedThreadChild* synchronizer,
     }
 }
 
-void server_work_timing0( mt::SynchronizedThreadChild* synchronizer,
+void server_work_timing0( mt::SynchronizedSpawnedThread* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -181,12 +188,12 @@ TEST(buffer_swapper_double_timing, ensure_compositor_gets_last_posted)
     const int num_it = 300;
     for(int i=0; i< num_it; i++)
     {
-        fix.t2->ensure_child_is_waiting();
-        fix.t1->ensure_child_is_waiting();
+        fix.controller2->ensure_child_is_waiting();
+        fix.controller1->ensure_child_is_waiting();
 
         EXPECT_EQ(fix.buffer1, fix.buffer2); 
 
-        fix.t2->activate_waiting_child();
-        fix.t1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
+        fix.controller1->activate_waiting_child();
     }
 }
