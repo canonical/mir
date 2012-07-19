@@ -36,35 +36,25 @@ mc::BufferBundle::~BufferBundle()
 
 void mc::BufferBundle::lock_back_buffer()
 {
-    compositor_buffer = swapper->grab_last_posted();
+    auto compositor_buffer = swapper->grab_last_posted();
     compositor_buffer->lock();
 }
 
 void mc::BufferBundle::unlock_back_buffer()
 {
-    compositor_buffer->unlock();
-    swapper->ungrab();
+
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferBundle::back_buffer()
-{
-    struct NullDeleter { void operator()(void*) const {} };
-    return std::shared_ptr<mc::Buffer>(compositor_buffer, NullDeleter());
-}
-
-void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer>)
-{
-    client_buffer->unlock();
-    swapper->queue_finished_buffer();
-}
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
-    client_buffer = swapper->dequeue_free_buffer();
+    auto client_buffer = swapper->dequeue_free_buffer();
     client_buffer->lock();
 
     struct NullDeleter { void operator()(void*) const {} };
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }
 
-
+void mc::BufferBundle::queue_client_buffer()
+{
+}

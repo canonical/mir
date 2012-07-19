@@ -49,7 +49,6 @@ private:
     virtual void lock_back_buffer() = 0;
     virtual void unlock_back_buffer() = 0;
 
-    virtual std::shared_ptr<Buffer> back_buffer() = 0;
 };
 }
 }
