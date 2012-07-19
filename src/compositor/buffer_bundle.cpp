@@ -19,9 +19,6 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
 
-#include <algorithm>
-#include <mutex>
-
 namespace mc = mir::compositor;
 
 mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
@@ -34,17 +31,16 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
-void mc::BufferBundle::lock_back_buffer()
+std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
-    auto compositor_buffer = swapper->grab_last_posted();
-    compositor_buffer->lock();
+
+    return std::shared_ptr<mir::graphics::Texture>(nullptr);
 }
 
 void mc::BufferBundle::unlock_back_buffer()
 {
 
 }
-
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {

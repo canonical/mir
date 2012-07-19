@@ -28,16 +28,15 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
 
 namespace
 {
 
 struct MockBufferTextureBinder : mc::BufferTextureBinder
 {
-    MOCK_METHOD0(lock_back_buffer, void());
-    MOCK_METHOD0(unlock_back_buffer, void());
-
-    MOCK_METHOD0(back_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD0 (lock_and_bind_back_buffer, std::shared_ptr<mg::Texture>(void));
+    MOCK_METHOD0 (unlock_back_buffer, void(void));
 };
 
 struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
