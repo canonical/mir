@@ -29,12 +29,14 @@ mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
 
 mc::BufferBundle::~BufferBundle()
 {
+    swapper.release();
 }
 
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
     auto compositor_buffer = swapper->grab_last_posted();
     compositor_buffer->bind_to_texture();
+
     return std::shared_ptr<mir::graphics::Texture>(nullptr);
 }
 

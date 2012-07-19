@@ -49,6 +49,16 @@ struct EmptyDeleter
 struct MockSwapper : public mc::BufferSwapper
 {
     public:
+        MockSwapper(std::shared_ptr<mc::Buffer> buffer)
+        {
+            using namespace testing;
+
+            /* note: (kdub) we should change grab_last_posted's return type to be a shared or unique_ptr */
+            ON_CALL(*this, grab_last_posted())
+                    .WillByDefault(Return(buffer.get()));
+            ON_CALL(*this, dequeue_free_buffer())
+                    .WillByDefault(Return(buffer.get()));
+        };
         MOCK_METHOD0(dequeue_free_buffer,   mc::Buffer*(void));
         MOCK_METHOD0(queue_finished_buffer, void(void));
         MOCK_METHOD0(grab_last_posted,   mc::Buffer*(void));
@@ -57,21 +67,21 @@ struct MockSwapper : public mc::BufferSwapper
 
 TEST(buffer_bundle, get_buffer_for_compositor)
 {
-    using namespace testing;
 
-    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
-    MockSwapper *mock_swapper = new MockSwapper();
-    std::unique_ptr<mc::BufferSwapper> swapper_handle(mock_swapper);
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+    /* note, it doesn't look like google mock detects leaks very well after a move */
+    testing::Mock::AllowLeak(mock_swapper.get()); 
+
 
     EXPECT_CALL(*mock_swapper, grab_last_posted())
-        .Times(1)
-        .WillRepeatedly(Return(&mock_buffer));
+            .Times(1);
 
-    /* expectations on the mock buffer */
-    EXPECT_CALL(mock_buffer, bind_to_texture())
+    EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
+
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     /* if binding doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
@@ -83,21 +93,18 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 
 TEST(buffer_bundle, get_buffer_for_client)
 {
-    using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
-    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
-
-    MockSwapper *mock_swapper = new MockSwapper();
-    std::unique_ptr<mc::BufferSwapper> swapper_handle(mock_swapper);
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+    /* note, it doesn't look like google mock detects leaks very well after a move */
+    testing::Mock::AllowLeak(mock_swapper.get()); 
 
     EXPECT_CALL(*mock_swapper, dequeue_free_buffer())
-        .Times(1)
-        .WillRepeatedly(Return(&mock_buffer));
-
-    /* expectations on the mock buffer */
-    EXPECT_CALL(mock_buffer, lock())
         .Times(1);
+    EXPECT_CALL(*mock_buffer, lock())
+        .Times(1);
+
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     /* if binding doesn't work, this is a case where we may have an exception */
     std::shared_ptr<mc::Buffer> sent_buffer;
@@ -108,6 +115,4 @@ TEST(buffer_bundle, get_buffer_for_client)
         sent_buffer = buffer_bundle.dequeue_client_buffer();
         EXPECT_NE(nullptr, sent_buffer);
     });
-
 }
-
