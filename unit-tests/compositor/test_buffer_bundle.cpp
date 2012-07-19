@@ -36,15 +36,6 @@ const geom::Height height {768};
 const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
-
-}
 
 struct MockSwapper : public mc::BufferSwapper
 {
@@ -64,6 +55,7 @@ struct MockSwapper : public mc::BufferSwapper
         MOCK_METHOD0(grab_last_posted,   mc::Buffer*(void));
         MOCK_METHOD0(ungrab,   void(void));
 };
+}
 
 TEST(buffer_bundle, get_buffer_for_compositor)
 {
@@ -72,7 +64,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
     /* note, it doesn't look like google mock detects leaks very well after a move */
-    testing::Mock::AllowLeak(mock_swapper.get()); 
+    //testing::Mock::AllowLeak(mock_swapper.get()); 
 
 
     EXPECT_CALL(*mock_swapper, grab_last_posted())
@@ -97,7 +89,7 @@ TEST(buffer_bundle, get_buffer_for_client)
 
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
     /* note, it doesn't look like google mock detects leaks very well after a move */
-    testing::Mock::AllowLeak(mock_swapper.get()); 
+    //testing::Mock::AllowLeak(mock_swapper.get()); 
 
     EXPECT_CALL(*mock_swapper, dequeue_free_buffer())
         .Times(1);

@@ -29,7 +29,6 @@ mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
 
 mc::BufferBundle::~BufferBundle()
 {
-    swapper.release();
 }
 
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
