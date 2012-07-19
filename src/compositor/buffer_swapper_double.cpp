@@ -35,6 +35,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
+    std::mutex cv_mutex;
+
     client_to_dequeued();
     while(wait_flag.test_and_set())
     {

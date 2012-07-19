@@ -29,7 +29,7 @@ namespace testing
 template< typename S, typename T>
 class SynchronizedThread {
     public:
-        SynchronizedThread (std::chrono::time_point<std::chrono::system_clock> timeout,
+        SynchronizedThread (const std::chrono::time_point<std::chrono::system_clock> timeout,
                             std::function<void(SynchronizedThread<S,T>*, std::shared_ptr<S>, T* )> function,
                             std::shared_ptr<S> test_object,
                             T* data )
@@ -47,8 +47,7 @@ class SynchronizedThread {
             delete thread;
         };
 
-        /* called from main thread, must time out */
-        void stabilize() 
+        void ensure_child_is_waiting() 
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             pause_request = true;
@@ -63,20 +62,20 @@ class SynchronizedThread {
             pause_request = false;
         };
     
-        void activate() 
+        void activate_waiting_child() 
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             paused = false;
             cv.notify_all();
         };
 
-        bool child_wait()
+        bool child_enter_wait()
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             paused = true;
             cv.notify_all();
             while (paused) {
-                cv.wait_for(lk, std::chrono::milliseconds(250));
+                cv.wait(lk);
             }
 
             return kill;
@@ -90,7 +89,7 @@ class SynchronizedThread {
                 paused = true;
                 cv.notify_all();
                 while (paused) {
-                    cv.wait_for(lk, std::chrono::milliseconds(250));
+                    cv.wait(lk);
                 }
             }
     

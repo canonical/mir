@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/multithread_harness.h"
+#include "multithread_harness.h"
 
 #include <vector>
 #include <thread>
@@ -25,9 +25,9 @@ namespace mt = mir::testing;
 
 void test_func (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
     *data = 1;
-    synchronizer->child_wait();
+    synchronizer->child_enter_wait();
     *data = 2;
-    synchronizer->child_wait();
+    synchronizer->child_enter_wait();
 }
 
 TEST(Synchronizer, thread_stop_start) {
@@ -37,13 +37,13 @@ TEST(Synchronizer, thread_stop_start) {
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
     mt::SynchronizedThread<int,int> t1(abs_timeout, test_func, nullptr, &data);
 
-    t1.stabilize();
+    t1.ensure_child_is_waiting();
     EXPECT_EQ(data, 1);
-    t1.activate();
+    t1.activate_waiting_child();
 
-    t1.stabilize();
+    t1.ensure_child_is_waiting();
     EXPECT_EQ(data, 2);
-    t1.activate();
+    t1.activate_waiting_child();
 }
 
 void test_func_pause (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
@@ -60,16 +60,16 @@ TEST(Synchronizer, thread_pause_req) {
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
     mt::SynchronizedThread<int, int> t1(abs_timeout, test_func_pause, nullptr, &data);
 
-    t1.stabilize();
+    t1.ensure_child_is_waiting();
     EXPECT_EQ(data, 1);
-    t1.activate();
+    t1.activate_waiting_child();
 
-    t1.stabilize();
+    t1.ensure_child_is_waiting();
     EXPECT_EQ(data, 2);
-    t1.activate();
+    t1.activate_waiting_child();
 
-    t1.stabilize();
+    t1.ensure_child_is_waiting();
     t1.kill_thread();
-    t1.activate();
+    t1.activate_waiting_child();
     
 }

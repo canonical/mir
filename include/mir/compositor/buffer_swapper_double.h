@@ -50,7 +50,7 @@ private:
     void client_to_dequeued();
     void client_to_queued();
 
-    typedef std::unique_ptr<Buffer> BufferPtr;
+    typedef const std::unique_ptr<Buffer> BufferPtr;
     BufferPtr buffer_a;
     BufferPtr buffer_b;
 
@@ -60,9 +60,7 @@ private:
     std::atomic<BufferPtr*> grabbed;
     std::atomic<BufferPtr*> dequeued;
 
-    std::mutex cv_mutex;
     std::condition_variable cv;
-
     std::atomic_flag wait_flag;
 };
 
