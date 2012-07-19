@@ -23,7 +23,7 @@
 
 namespace mt = mir::testing;
 
-void test_func (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
+void test_func (mt::SynchronizedThreadChild* synchronizer, std::shared_ptr<int>, int* data) {
     *data = 1;
     synchronizer->child_enter_wait();
     *data = 2;
@@ -46,7 +46,7 @@ TEST(Synchronizer, thread_stop_start) {
     t1.activate_waiting_child();
 }
 
-void test_func_pause (mt::SynchronizedThread<int, int>* synchronizer, std::shared_ptr<int>, int* data) {
+void test_func_pause (mt::SynchronizedThreadChild* synchronizer, std::shared_ptr<int>, int* data) {
     for(;;)
     {
         *data = *data+1;

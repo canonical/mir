@@ -32,10 +32,10 @@ namespace geom = mir::geometry;
 struct ThreadFixture {
     public:
         ThreadFixture(
-            std::function<void( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>*,
+            std::function<void( mt::SynchronizedThreadChild*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> a, 
-            std::function<void( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>*,
+            std::function<void( mt::SynchronizedThreadChild*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
         {
@@ -73,14 +73,14 @@ struct ThreadFixture {
             delete t2;
         }
 
-        mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> *t1;
-        mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*> *t2;
+        mt::SynchronizedThreadController *t1;
+        mt::SynchronizedThreadController *t2;
         mc::Buffer *buffer1;
         mc::Buffer *buffer2;        
 };
 
 
-void client_request_loop( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+void client_request_loop( mt::SynchronizedThreadChild* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -94,7 +94,7 @@ void client_request_loop( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
     }
 }
 
-void compositor_grab_loop( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+void compositor_grab_loop( mt::SynchronizedThreadChild* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -149,7 +149,7 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
 }
 
-void client_work_timing0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+void client_work_timing0( mt::SynchronizedThreadChild* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -161,7 +161,7 @@ void client_work_timing0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>
     }
 }
 
-void server_work_timing0( mt::SynchronizedThread<mc::BufferSwapper, mc::Buffer*>* synchronizer,
+void server_work_timing0( mt::SynchronizedThreadChild* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {

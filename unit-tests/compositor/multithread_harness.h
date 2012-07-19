@@ -26,11 +26,29 @@ namespace mir
 {
 namespace testing
 {
+
+class SynchronizedThreadController
+{
+public:
+        virtual void ensure_child_is_waiting() = 0;
+        virtual void activate_waiting_child() = 0;
+        virtual void kill_thread() = 0;
+};
+
+class SynchronizedThreadChild
+{
+public:
+    virtual bool child_enter_wait() = 0;
+    virtual bool child_check() = 0;
+};
+
 template< typename S, typename T>
-class SynchronizedThread {
+class SynchronizedThread : public SynchronizedThreadController,
+                           public SynchronizedThreadChild
+{
     public:
         SynchronizedThread (const std::chrono::time_point<std::chrono::system_clock> timeout,
-                            std::function<void(SynchronizedThread<S,T>*, std::shared_ptr<S>, T* )> function,
+                            std::function<void(SynchronizedThreadChild*, std::shared_ptr<S>, T* )> function,
                             std::shared_ptr<S> test_object,
                             T* data )
          : abs_timeout(timeout),
