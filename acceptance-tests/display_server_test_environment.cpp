@@ -78,24 +78,38 @@ std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::make_renderer()
 
 void DisplayServerTestEnvironment::in_server_process(std::function<void()>&& functor)
 {
-    auto run_display_server = [&]() -> void
+    pid_t pid = fork();
+
+    if (pid < 0)
     {
+        throw std::runtime_error("Failed to fork process");
+    }
+
+    if (pid == 0)
+    {
+        // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
                         make_buffer_allocation_strategy(),
                         make_renderer()));
 
-        struct Launcher
+        struct ScopedFuture
         {
-            std::future<void> receiver;
-            ~Launcher() { receiver.wait(); }
-        } launcher;
-        launcher.receiver = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
+            std::future<void> future;
+            ~ScopedFuture() { future.wait(); }
+        } scoped;
+
+        scoped.future = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
+
         functor();
-    };
-    server_process = mp::fork_and_run_in_a_different_process(run_display_server,
-            test_exit);
+
+        display_server()->stop();
+    }
+    else
+    {
+        server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
+    }
 }
 
 void DisplayServerTestEnvironment::SetUp() 
@@ -118,12 +132,18 @@ void DisplayServerTestEnvironment::TearDown()
 {
     using namespace testing;
 
-    ASSERT_TRUE(WasStarted(server_process));
-
-    server_process->terminate();
-    mp::Result const result = server_process->wait_for_termination();
-
-    EXPECT_TRUE(result.signalled());
+    if (server)
+    {
+        // We're in the server process, so just close down gracefully
+        server->stop();
+    }
+    else
+    {
+        // We're in the test process, so make sure we started a service
+        ASSERT_TRUE(WasStarted(server_process));
+        mp::Result const result = server_process->wait_for_termination();
+        EXPECT_TRUE(result.succeeded());
+    }
 }
 
 mir::DisplayServer* DisplayServerTestEnvironment::display_server() const

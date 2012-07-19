@@ -48,7 +48,7 @@ TEST_F(DisplayServerTestEnvironment, client_connects_and_disconnects)
     mf::Application application(communicator);
 
     in_server_process([]() -> void {
-        // TODO expect effect of connection
+        // TODO expect effect of connection and wait for it
     });
 
     auto client_connects_and_disconnects = [&]() -> void

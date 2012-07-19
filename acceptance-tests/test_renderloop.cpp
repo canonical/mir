@@ -60,3 +60,14 @@ TEST_F(DisplayServerTestEnvironment, notify_sync_and_see_paint)
     });
 }
 
+TEST_F(DisplayServerTestEnvironment, failing_server_side_test)
+{
+    MockDisplay display;
+
+    in_server_process([&]() -> void
+    {
+        using namespace testing;
+        FAIL() << "Proving a test can fail";
+    });
+}
+
