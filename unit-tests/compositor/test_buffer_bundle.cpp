@@ -46,115 +46,68 @@ struct EmptyDeleter
 
 }
 
-#ifdef MIR_TODO
-/* this would simulate binding and locking a back buffer for the compositor's use */
-/* tests the BufferBundle's implementation of the BufferTextureBinder interface */
-TEST(buffer_bundle, add_buffers_and_bind)
+struct MockSwapper : public mc::BufferSwapper
+{
+    public:
+        MOCK_METHOD0(dequeue_free_buffer,   mc::Buffer*(void));
+        MOCK_METHOD0(queue_finished_buffer, void(void));
+        MOCK_METHOD0(grab_last_posted,   mc::Buffer*(void));
+        MOCK_METHOD0(ungrab,   void(void));
+};
+
+TEST(buffer_bundle, get_buffer_for_compositor)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
-        &mock_buffer,
-        EmptyDeleter());
 
-    buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.add_buffer(default_buffer);
+    MockSwapper *mock_swapper = new MockSwapper();
+    std::unique_ptr<mc::BufferSwapper> swapper_handle(mock_swapper);
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
 
-    int num_iterations = 5;
+    EXPECT_CALL(*mock_swapper, grab_last_posted())
+        .Times(1)
+        .WillRepeatedly(Return(&mock_buffer));
+
+    /* expectations on the mock buffer */
     EXPECT_CALL(mock_buffer, bind_to_texture())
-    .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, lock())
-    .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, unlock())
-    .Times(AtLeast(num_iterations));
-    mc::BufferTextureBinder *binder;
-    binder = &buffer_bundle;
+        .Times(1);
 
-    for(int i=0; i<num_iterations; i++)
+    /* if binding doesn't work, this is a case where we may have an exception */
+    ASSERT_NO_THROW(
     {
-        /* if binding doesn't work, this is a case where we may have an exception */
-        ASSERT_NO_THROW(
-        {
-            binder->lock_and_bind_back_buffer();
-        });
-    }
-}
-#endif
+        buffer_bundle.lock_back_buffer();
+    });
 
-#ifdef MIR_TODO
-/* this would simulate locking a buffer for a client's use */
-/* tests the BufferBundle's implemantation of the BufferQueue interface */
-TEST(buffer_bundle, add_buffers_and_distribute)
+}
+
+TEST(buffer_bundle, get_buffer_for_client)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
-        &mock_buffer,
-        EmptyDeleter());
 
-    buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.add_buffer(default_buffer);
+    MockSwapper *mock_swapper = new MockSwapper();
+    std::unique_ptr<mc::BufferSwapper> swapper_handle(mock_swapper);
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
 
-    mc::BufferQueue * queue;
-    queue = &buffer_bundle;
-    int num_iterations = 5;
+    EXPECT_CALL(*mock_swapper, dequeue_free_buffer())
+        .Times(1)
+        .WillRepeatedly(Return(&mock_buffer));
+
+    /* expectations on the mock buffer */
     EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, unlock())
-            .Times(AtLeast(num_iterations));
+        .Times(1);
 
+    /* if binding doesn't work, this is a case where we may have an exception */
     std::shared_ptr<mc::Buffer> sent_buffer;
-    for(int i=0; i<num_iterations; i++)
+    ASSERT_NO_THROW(
     {
         /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
            data bundle in the future */
-        sent_buffer = nullptr;
-        sent_buffer = queue->dequeue_client_buffer();
+        sent_buffer = buffer_bundle.dequeue_client_buffer();
         EXPECT_NE(nullptr, sent_buffer);
-        queue->queue_client_buffer(sent_buffer);
-    }
-}
-#endif
-
-#ifdef MIR_TODO
-TEST(buffer_bundle, add_buffers_bind_and_distribute)
-{
-    using namespace testing;
-
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
-    mc::MockBuffer mock_buffer_cli {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer_cli(
-        &mock_buffer_cli,
-        EmptyDeleter());
-
-    mc::MockBuffer mock_buffer_com {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer_com(
-        &mock_buffer_com,
-        EmptyDeleter());
-
-    buffer_bundle.add_buffer(default_buffer_com);
-    buffer_bundle.add_buffer(default_buffer_cli);
-
-    EXPECT_CALL(mock_buffer_cli, lock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_cli, unlock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, bind_to_texture())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, lock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, unlock())
-    .Times(AtLeast(1));
-
-    buffer_bundle.lock_and_bind_back_buffer();
-    buffer_bundle.dequeue_client_buffer();
+    });
 
 }
-#endif
+

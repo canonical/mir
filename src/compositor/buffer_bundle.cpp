@@ -20,7 +20,6 @@
 #include "mir/compositor/buffer_swapper.h"
 
 #include <algorithm>
-#include <cassert>
 #include <mutex>
 
 namespace mc = mir::compositor;
@@ -53,10 +52,8 @@ std::shared_ptr<mc::Buffer> mc::BufferBundle::back_buffer()
     return std::shared_ptr<mc::Buffer>(compositor_buffer, NullDeleter());
 }
 
-void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
+void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer>)
 {
-    assert(client_buffer == buffer.get());
-
     client_buffer->unlock();
     swapper->queue_finished_buffer();
 }
@@ -65,6 +62,7 @@ std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
     client_buffer = swapper->dequeue_free_buffer();
     client_buffer->lock();
+
     struct NullDeleter { void operator()(void*) const {} };
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }

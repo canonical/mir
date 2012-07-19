@@ -44,13 +44,13 @@ public:
     std::shared_ptr<Buffer> dequeue_client_buffer();
     void queue_client_buffer(std::shared_ptr<Buffer> buffer);
 
+    // From BufferTextureBinder
+    void lock_back_buffer();
+    void unlock_back_buffer();
 protected:
     BufferBundle(const BufferBundle&) = delete;
     BufferBundle& operator=(const BufferBundle&) = delete;
 
-    // From BufferTextureBinder
-    void lock_back_buffer();
-    void unlock_back_buffer();
 
     std::shared_ptr<Buffer> back_buffer();
 
