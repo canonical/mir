@@ -17,7 +17,7 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "display_server_test_environment.h"
+#include "display_server_test_fixture.h"
 
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
@@ -42,7 +42,7 @@ struct StubCommunicator : public mf::Communicator
 };
 }
 
-TEST_F(DisplayServerTestEnvironment, client_connects_and_disconnects)
+TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
 {
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);

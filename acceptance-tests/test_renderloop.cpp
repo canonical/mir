@@ -23,7 +23,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
-#include "display_server_test_environment.h"
+#include "display_server_test_fixture.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -43,7 +43,7 @@ public:
 
 }
 
-TEST_F(DisplayServerTestEnvironment, notify_sync_and_see_paint)
+TEST_F(DisplayServerTestFixture, notify_sync_and_see_paint)
 {
     using namespace testing;
 

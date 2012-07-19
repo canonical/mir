@@ -39,11 +39,11 @@ class Renderer;
 
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
-class DisplayServerTestEnvironment : public testing::Test
+class DisplayServerTestFixture : public testing::Test
 {
 public:
-    DisplayServerTestEnvironment();
-    ~DisplayServerTestEnvironment();
+    DisplayServerTestFixture();
+    ~DisplayServerTestFixture();
     void SetUp();
     void TearDown();
     mir::DisplayServer* display_server() const;

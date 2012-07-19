@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "display_server_test_environment.h"
+#include "display_server_test_fixture.h"
 
 #include "mir/display_server.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -64,19 +64,19 @@ int test_exit()
     return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestEnvironment::make_buffer_allocation_strategy()
+std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestFixture::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
 
-std::shared_ptr<mg::Renderer> DisplayServerTestEnvironment::make_renderer()
+std::shared_ptr<mg::Renderer> DisplayServerTestFixture::make_renderer()
 {
     std::shared_ptr < mg::Renderer > renderer =
             std::make_shared<StubRenderer>();
     return renderer;
 }
 
-void DisplayServerTestEnvironment::in_server_process(std::function<void()>&& functor)
+void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor)
 {
     pid_t pid = fork();
 
@@ -112,7 +112,7 @@ void DisplayServerTestEnvironment::in_server_process(std::function<void()>&& fun
     }
 }
 
-void DisplayServerTestEnvironment::SetUp() 
+void DisplayServerTestFixture::SetUp() 
 {
 }
 
@@ -128,7 +128,7 @@ namespace
 }
 }
 
-void DisplayServerTestEnvironment::TearDown()
+void DisplayServerTestFixture::TearDown()
 {
     using namespace testing;
 
@@ -146,10 +146,10 @@ void DisplayServerTestEnvironment::TearDown()
     }
 }
 
-mir::DisplayServer* DisplayServerTestEnvironment::display_server() const
+mir::DisplayServer* DisplayServerTestFixture::display_server() const
 {
     return server.get();
 }
 
-DisplayServerTestEnvironment::DisplayServerTestEnvironment() {}
-DisplayServerTestEnvironment::~DisplayServerTestEnvironment() {}
+DisplayServerTestFixture::DisplayServerTestFixture() {}
+DisplayServerTestFixture::~DisplayServerTestFixture() {}
