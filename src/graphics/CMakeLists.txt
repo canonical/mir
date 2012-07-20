@@ -14,4 +14,9 @@
 #
 # Authored by: Thomas Guest <thomas.guest@canonical.com>
 
-add_subdirectory(platform/llvm/)
+# By default, build for LLVM
+IF(NOT DEFINED MIR_PLATFORM)
+  set(MIR_PLATFORM llvm)
+ENDIF()
+
+add_subdirectory(platform/${MIR_PLATFORM}/)
