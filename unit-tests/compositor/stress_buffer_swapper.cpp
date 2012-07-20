@@ -34,7 +34,7 @@ struct ThreadFixture {
         ThreadFixture(
             std::function<void( mt::SynchronizerSpawned*,
                             std::shared_ptr<mc::BufferSwapper>,
-                            mc::Buffer** )> a, 
+                            mc::Buffer** )> a,
             std::function<void( mt::SynchronizerSpawned*,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
@@ -84,7 +84,7 @@ struct ThreadFixture {
         mt::SynchronizerController *controller1;
         mt::SynchronizerController *controller2;
         mc::Buffer *buffer1;
-        mc::Buffer *buffer2; 
+        mc::Buffer *buffer2;
 };
 
 void client_request_loop( mt::SynchronizerSpawned* synchronizer,
@@ -117,7 +117,7 @@ void compositor_grab_loop( mt::SynchronizerSpawned* synchronizer,
 
 }
 /* test that the compositor and the client are never in ownership of the same
-   buffer */ 
+   buffer */
 TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
 {
     const int num_iterations = 1000;
@@ -135,7 +135,7 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
 
 }
 
-/* test that we never get an invalid buffer */ 
+/* test that we never get an invalid buffer */
 TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 {
     const int num_iterations = 1000;
@@ -180,7 +180,7 @@ void server_work_timing0( mt::SynchronizerSpawned* synchronizer,
     }
 }
 
-/* here we ensure that there is a DQ/Q, and wait for a grab before checking. since we 
+/* here we ensure that there is a DQ/Q, and wait for a grab before checking. since we
    queued buffer A, we should grab buffer A on next grabs */
 TEST(buffer_swapper_double_timing, ensure_compositor_gets_last_posted)
 {
@@ -191,7 +191,7 @@ TEST(buffer_swapper_double_timing, ensure_compositor_gets_last_posted)
         fix.controller2->ensure_child_is_waiting();
         fix.controller1->ensure_child_is_waiting();
 
-        EXPECT_EQ(fix.buffer1, fix.buffer2); 
+        EXPECT_EQ(fix.buffer1, fix.buffer2);
 
         fix.controller2->activate_waiting_child();
         fix.controller1->activate_waiting_child();

@@ -53,7 +53,7 @@ void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
     {
         *data = *data+1;
         if (synchronizer->child_check()) break;
-    } 
+    }
 }
 
 TEST(Synchronizer, thread_pause_req) {
@@ -74,5 +74,5 @@ TEST(Synchronizer, thread_pause_req) {
 
     synchronizer.ensure_child_is_waiting();
     synchronizer.kill_thread();
-    synchronizer.activate_waiting_child(); 
+    synchronizer.activate_waiting_child();
 }

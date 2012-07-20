@@ -27,7 +27,7 @@ namespace mir
 namespace testing
 {
 
-/* interface for main/controller thread to 
+/* interface for main/controller thread to
    synchronize system */
 class SynchronizerController
 {
@@ -70,7 +70,7 @@ class Synchronizer : public SynchronizerController,
         {
         };
 
-        void ensure_child_is_waiting() 
+        void ensure_child_is_waiting()
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             pause_request = true;
@@ -84,8 +84,8 @@ class Synchronizer : public SynchronizerController,
             }
             pause_request = false;
         };
-    
-        void activate_waiting_child() 
+
+        void activate_waiting_child()
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             paused = false;
@@ -115,10 +115,10 @@ class Synchronizer : public SynchronizerController,
                     cv.wait(lk);
                 }
             }
-    
+
             return kill;
         };
-        
+
         void kill_thread()
         {
             std::unique_lock<std::mutex> lk(sync_mutex);

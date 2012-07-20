@@ -36,7 +36,7 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
     client_to_dequeued();
-        
+
     std::unique_lock<std::mutex> lk(cv_mutex);
     while(need_to_wait)
     {
@@ -54,7 +54,7 @@ void mc::BufferSwapperDouble::queue_finished_buffer()
     client_to_queued();
 
     /* toggle grabbed pattern */
-    compositor_change_toggle_pattern(); 
+    compositor_change_toggle_pattern();
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
@@ -72,8 +72,8 @@ void mc::BufferSwapperDouble::ungrab()
     cv.notify_all();
 }
 
-/* class helper functions, mostly compare_and_exchange based state computation. 
-   we need to compute next state of the atomics based solely on the current state, 
+/* class helper functions, mostly compare_and_exchange based state computation.
+   we need to compute next state of the atomics based solely on the current state,
    consts in the class and variables local to the function. */
 void mc::BufferSwapperDouble::client_to_dequeued()
 {
