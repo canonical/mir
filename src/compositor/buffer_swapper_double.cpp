@@ -23,14 +23,14 @@ namespace mc = mir::compositor;
 
 mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, std::unique_ptr<Buffer> && buf_b)
     :
-    grabbed_buffer(nullptr),
     buffer_a(std::move(buf_a)),
     buffer_b(std::move(buf_b)),
     consumed(true)
 {
     client_queue.push(buffer_a.get());
-    client_queue.push(buffer_b.get());
+    grabbed_buffer = buffer_b.get(); 
 }
+
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
@@ -45,7 +45,6 @@ mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
     client_queue.pop();
     return dequeued_buffer;
 }
-
 void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
@@ -59,6 +58,7 @@ void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
     if(grabbed_buffer != nullptr)
     {
         client_queue.push(grabbed_buffer);
+        available_cv.notify_one();
     }
 
     grabbed_buffer = queued_buffer;

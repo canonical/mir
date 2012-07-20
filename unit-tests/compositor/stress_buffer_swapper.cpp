@@ -147,14 +147,62 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
         if (i > 1)
         {
-            EXPECT_NE(fix.buffer1, nullptr);
+            ASSERT_NE(fix.buffer1, nullptr);
+            ASSERT_NE(fix.buffer2, nullptr);
         }
-        EXPECT_NE(fix.buffer2, nullptr);
 
         fix.controller1->activate_waiting_child();
         fix.controller2->activate_waiting_child();
 
     }
-
 }
 
+void client_will_wait( mt::SynchronizerSpawned* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
+{
+    *buf = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer(*buf);
+
+    synchronizer->child_enter_wait();
+
+    *buf = swapper->dequeue_free_buffer();
+
+    synchronizer->child_enter_wait();
+}
+
+void compositor_grab( mt::SynchronizerSpawned* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
+{
+    synchronizer->child_enter_wait();
+
+    *buf = swapper->grab_last_posted();
+    swapper->ungrab(*buf);
+
+    synchronizer->child_enter_wait();
+    synchronizer->child_enter_wait();
+}
+
+/* test a wait situation */
+TEST(buffer_swapper_double_stress, test_wait)
+{
+    ThreadFixture fix(compositor_grab, client_will_wait);
+
+    mc::Buffer* first_dequeued;
+
+    fix.controller1->ensure_child_is_waiting();
+    fix.controller2->ensure_child_is_waiting();
+
+    first_dequeued = fix.buffer2;
+
+    fix.controller2->activate_waiting_child();
+
+    /* activate grab */
+    fix.controller1->activate_waiting_child();
+    fix.controller1->ensure_child_is_waiting();
+    fix.controller1->activate_waiting_child();
+
+    EXPECT_EQ(first_dequeued, fix.buffer1);
+
+}
