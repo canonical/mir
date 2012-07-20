@@ -46,13 +46,12 @@ struct ThreadFixture {
 
             std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
             std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
-
             auto swapper = std::make_shared<mc::BufferSwapperDouble>(
                     std::move(buffer_a),
                     std::move(buffer_b));
 
             auto thread_start_time = std::chrono::system_clock::now();
-            auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
+            auto abs_timeout = thread_start_time + std::chrono::milliseconds(100000);
             auto sync1 = new mt::Synchronizer(abs_timeout);
             auto sync2 = new mt::Synchronizer(abs_timeout);
 
@@ -163,6 +162,7 @@ void client_work_timing0( mt::SynchronizerSpawned* synchronizer,
     for(;;)
     {
         *buf = swapper->dequeue_free_buffer();
+        
         swapper->queue_finished_buffer();
         if(synchronizer->child_check()) break;
     }
@@ -175,6 +175,7 @@ void server_work_timing0( mt::SynchronizerSpawned* synchronizer,
     for (;;)
     {
         *buf = swapper->grab_last_posted();
+
         if(synchronizer->child_check()) break;
         swapper->ungrab();
     }
@@ -185,13 +186,19 @@ void server_work_timing0( mt::SynchronizerSpawned* synchronizer,
 TEST(buffer_swapper_double_timing, ensure_compositor_gets_last_posted)
 {
     ThreadFixture fix(server_work_timing0, client_work_timing0);
-    const int num_it = 300;
+    const int num_it = 10000;
     for(int i=0; i< num_it; i++)
     {
+
         fix.controller2->ensure_child_is_waiting();
         fix.controller1->ensure_child_is_waiting();
 
-        EXPECT_EQ(fix.buffer1, fix.buffer2);
+        //in order to check the equality of the buffers,
+        //we have to make sure that a grab() happens after
+        //the last dequeue in the test
+        fix.controller1->activate_waiting_child();
+        fix.controller1->ensure_child_is_waiting();
+        ASSERT_EQ(fix.buffer1, fix.buffer2);
 
         fix.controller2->activate_waiting_child();
         fix.controller1->activate_waiting_child();
