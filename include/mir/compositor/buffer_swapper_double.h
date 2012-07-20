@@ -41,7 +41,7 @@ public:
     Buffer* dequeue_free_buffer();
     void queue_finished_buffer(Buffer* queued_buffer);
     Buffer* grab_last_posted();
-    void ungrab();
+    void ungrab(Buffer* ungrabbed_buffer);
 
 private:
 
@@ -55,6 +55,8 @@ private:
     typedef const std::unique_ptr<Buffer> BufferPtr;
     BufferPtr  buffer_a;
     BufferPtr  buffer_b;
+
+    bool consumed;
 };
 
 }

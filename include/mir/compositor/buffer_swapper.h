@@ -50,7 +50,7 @@ public:
     //               for "ungrab", not the client code?
     virtual Buffer* grab_last_posted() = 0;
 
-    virtual void ungrab() = 0;
+    virtual void ungrab(Buffer* ungrabbed_buffer) = 0;
 };
 
 }

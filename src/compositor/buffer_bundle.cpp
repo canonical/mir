@@ -44,7 +44,7 @@ void mc::BufferBundle::lock_back_buffer()
 void mc::BufferBundle::unlock_back_buffer()
 {
     compositor_buffer->unlock();
-    swapper->ungrab();
+//    swapper->ungrab();
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::back_buffer()
