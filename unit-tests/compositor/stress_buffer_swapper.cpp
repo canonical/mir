@@ -206,3 +206,108 @@ TEST(buffer_swapper_double_stress, test_wait)
     EXPECT_EQ(first_dequeued, fix.buffer1);
 
 }
+
+
+
+
+
+
+
+
+
+
+void client_request_loop_with_wait( mt::SynchronizerSpawned* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
+{
+    bool wait_request = false;
+    for(;;)
+    {
+        wait_request = synchronizer->child_check_wait_request();
+
+        *buf = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer(*buf);
+
+        if (wait_request)
+            if (synchronizer->child_enter_wait()) return;
+    }
+}
+
+
+void compositor_grab_loop_with_wait( mt::SynchronizerSpawned* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
+{
+    bool wait_request = false;
+    for(;;)
+    {
+        wait_request = synchronizer->child_check_wait_request();
+
+        *buf = swapper->grab_last_posted();
+
+        swapper->ungrab(*buf);
+
+        if (wait_request)
+            if (synchronizer->child_enter_wait()) return;
+
+    }
+
+}
+
+TEST(buffer_swapper_double_stress, test_last_posted)
+{
+    const int num_iterations = 1000;
+    ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_with_wait);
+    for(int i=0; i<  num_iterations; i++)
+    {
+        fix.controller2->ensure_child_is_waiting();
+        fix.controller1->ensure_child_is_waiting();
+
+        EXPECT_EQ(fix.buffer1, fix.buffer2);
+
+        fix.controller1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
+
+    }
+
+}
+
+void client_request_loop_stress_wait( mt::SynchronizerSpawned* synchronizer,
+                            std::shared_ptr<mc::BufferSwapper> swapper,
+                            mc::Buffer** buf )
+{
+    bool wait_request = false;
+    for(;;)
+    {
+        wait_request = synchronizer->child_check_wait_request();
+
+        *buf = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer(*buf);
+
+        /* two dequeues in quick succession like this will wait very often
+           hence the 'stress' */
+        *buf = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer(*buf);
+
+        if (wait_request)
+            if (synchronizer->child_enter_wait()) return;
+    }
+}
+
+TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
+{
+    const int num_iterations = 1000;
+    ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_stress_wait);
+    for(int i=0; i<  num_iterations; i++)
+    {
+        fix.controller2->ensure_child_is_waiting();
+        fix.controller1->ensure_child_is_waiting();
+
+        EXPECT_EQ(fix.buffer1, fix.buffer2);
+
+        fix.controller1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
+
+    }
+
+}
