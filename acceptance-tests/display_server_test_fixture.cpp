@@ -79,7 +79,23 @@ std::shared_ptr<mg::Renderer> DisplayServerTestFixture::make_renderer()
     return renderer;
 }
 
-void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor)
+namespace
+{
+mir::DisplayServer* signal_display_server;
+
+extern "C"
+{
+void (*signal_prev_fn)(int);
+
+void signal_terminate (int param)
+{
+    if (SIGTERM == param) signal_display_server->stop();
+    else signal_prev_fn(param);
+}
+}
+}
+
+void DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
 {
     pid_t pid = fork();
 
@@ -99,6 +115,9 @@ void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor
                         make_buffer_allocation_strategy(),
                         make_renderer()));
 
+        signal_display_server = server.get();
+        signal_prev_fn = signal (SIGTERM, signal_terminate);
+        {
         struct ScopedFuture
         {
             std::future<void> future;
@@ -108,12 +127,16 @@ void DisplayServerTestFixture::in_server_process(std::function<void()>&& functor
         scoped.future = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
 
         functor();
-
-        display_server()->stop();
+        std::cout << "functor() exit" << std::endl;
+        }
+        std::cout << "joined" << std::endl;
     }
     else
     {
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
+        // A small delay to let the display server get started.
+        // TODO there should be a way the server announces "ready"
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
 
@@ -172,6 +195,7 @@ void DisplayServerTestFixture::TearDown()
 
         // We're in the test process, so make sure we started a service
         ASSERT_TRUE(WasStarted(server_process));
+        server_process->terminate();
         mp::Result const result = server_process->wait_for_termination();
         EXPECT_TRUE(result.succeeded());
     }

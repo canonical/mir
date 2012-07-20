@@ -46,7 +46,7 @@ TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);
 
-    in_server_process([]() -> void {
+    launch_server_process([]() -> void {
         // TODO expect effect of connection and wait for it
     });
 

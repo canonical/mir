@@ -48,7 +48,7 @@ public:
     ~DisplayServerTestFixture();
 
     mir::DisplayServer* display_server() const;
-    void in_server_process(std::function<void()>&& functor);
+    void launch_server_process(std::function<void()>&& functor);
     void launch_client_process(std::function<void()>&& functor);
 
 private:

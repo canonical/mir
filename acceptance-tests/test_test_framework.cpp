@@ -30,11 +30,11 @@ namespace mp = mir::process;
 // display server test fixture.  But don't want them to fail in
 // normal builds.
 
-//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(DisplayServerTestFixture, failing_server_side_test)
 {
-    in_server_process([&]() -> void
+    launch_server_process([&]() -> void
     {
         using namespace testing;
         FAIL() << "Proving a test can fail";
@@ -48,12 +48,8 @@ TEST_F(DisplayServerTestFixture, failing_without_server)
 
 TEST_F(DisplayServerTestFixture, demonstrate_multiple_clients)
 {
-    in_server_process([&]() -> void
+    launch_server_process([&]() -> void
     {
-        using namespace testing;
-
-        // Brute force way to keep server around (need something better)
-        std::this_thread::sleep_for(std::chrono::seconds(3));
     });
 
     auto demo = []() -> void

@@ -49,7 +49,7 @@ TEST_F(DisplayServerTestFixture, notify_sync_and_see_paint)
 
     MockDisplay display;
 
-    in_server_process([&]() -> void
+    launch_server_process([&]() -> void
     {
         EXPECT_CALL(display, notify_update()).Times(1);
 
