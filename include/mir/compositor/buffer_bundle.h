@@ -24,8 +24,8 @@
 #include "buffer_queue.h"
 #include "buffer.h"
 
-#include <atomic>
-#include <mutex>
+#include "mir/thread/all.h"
+
 #include <memory>
 #include <vector>
 

@@ -15,6 +15,9 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
+set(CMAKE_C_COMPILER /usr/bin/gcc-4.4)
+set(CMAKE_CXX_COMPILER /usr/bin/g++-4.4)
+
 project(Mir)
 
 cmake_minimum_required(VERSION 2.8)

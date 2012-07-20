@@ -25,8 +25,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     :
     buffer_a(std::move(buffer_a)),
     buffer_b(std::move(buffer_b)),
-    invalid0(nullptr),
-    invalid1(nullptr)
+    invalid0(),
+    invalid1()
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
@@ -82,7 +82,7 @@ void mc::BufferSwapperDouble::client_to_dequeued()
         }
 
     }
-    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
+    while (!std::atomic_compare_exchange_weak(&dequeued, (void**)&dq_assume, next_state ));
 }
 
 void mc::BufferSwapperDouble::client_to_queued()
@@ -105,7 +105,7 @@ void mc::BufferSwapperDouble::client_to_queued()
         }
 
     }
-    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
+    while (!std::atomic_compare_exchange_weak(&dequeued, (void**)&dq_assume, next_state ));
 }
 
 void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
@@ -136,7 +136,7 @@ void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
             next_state = &buffer_a;
         }
     }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    while (!std::atomic_compare_exchange_weak(&grabbed, (void**)&grabbed_assume, next_state ));
 }
 
 void mc::BufferSwapperDouble::compositor_to_grabbed()
@@ -158,7 +158,7 @@ void mc::BufferSwapperDouble::compositor_to_grabbed()
             next_state = &buffer_b;
         }
     }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    while (!std::atomic_compare_exchange_weak(&grabbed, (void**)&grabbed_assume, next_state ));
 }
 
 void mc::BufferSwapperDouble::compositor_to_ungrabbed()
@@ -179,6 +179,6 @@ void mc::BufferSwapperDouble::compositor_to_ungrabbed()
             next_state = &invalid1;
         }
     }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
+    while (!std::atomic_compare_exchange_weak(&grabbed, (void**)&grabbed_assume, next_state ));
 }
 
