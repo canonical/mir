@@ -158,17 +158,25 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
 }
 
-#if 0
+std::mutex datalock;
 void client_work_timing0( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    mc::Buffer *tmp;
+    *buf = swapper->dequeue_free_buffer();
+    swapper->queue_finished_buffer(*buf);
+    if(synchronizer->child_enter_wait()) return;
+
     for(;;)
     {
+        tmp = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer(tmp);
+
         *buf = swapper->dequeue_free_buffer();
+        swapper->queue_finished_buffer(*buf);
         
-        swapper->queue_finished_buffer();
-        if(synchronizer->child_check()) break;
+        if(synchronizer->child_enter_wait()) return;
     }
 }
 
@@ -176,12 +184,14 @@ void server_work_timing0( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    if(synchronizer->child_enter_wait()) return;
+
     for (;;)
     {
         *buf = swapper->grab_last_posted();
+        swapper->ungrab(*buf);
 
         if(synchronizer->child_check()) break;
-        swapper->ungrab();
     }
 }
 
@@ -191,21 +201,26 @@ TEST(buffer_swapper_double_timing, ensure_compositor_gets_last_posted)
 {
     ThreadFixture fix(server_work_timing0, client_work_timing0);
     const int num_it = 10000;
+
+    /* activate tests */
+    fix.controller2->activate_waiting_child();
+    fix.controller1->activate_waiting_child();
+
     for(int i=0; i< num_it; i++)
     {
 
+        /* stabilize client */
         fix.controller2->ensure_child_is_waiting();
+
         fix.controller1->ensure_child_is_waiting();
 
-        //in order to check the equality of the buffers,
-        //we have to make sure that a grab() happens after
-        //the last dequeue in the test
         fix.controller1->activate_waiting_child();
         fix.controller1->ensure_child_is_waiting();
+
         ASSERT_EQ(fix.buffer1, fix.buffer2);
 
-        fix.controller2->activate_waiting_child();
         fix.controller1->activate_waiting_child();
+        fix.controller2->activate_waiting_child();
+
     }
 }
-#endif
