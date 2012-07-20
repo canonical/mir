@@ -23,8 +23,8 @@
 #include "buffer_swapper.h"
 
 #include <memory>
-#include <atomic>
 #include <thread>
+#include <queue>
 
 namespace mir
 {
@@ -39,30 +39,22 @@ public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
     Buffer* dequeue_free_buffer();
-    void queue_finished_buffer();
+    void queue_finished_buffer(Buffer* queued_buffer);
     Buffer* grab_last_posted();
     void ungrab();
 
 private:
-    void compositor_to_grabbed();
-    void compositor_to_ungrabbed();
-    void compositor_change_toggle_pattern();
-    void client_to_dequeued();
-    void client_to_queued();
+
+    std::mutex swapper_mutex;
+    std::condition_variable posted_cv;
+    std::condition_variable available_cv;
+    std::queue<Buffer*> client_queue;
+    Buffer* grabbed_buffer;
+
 
     typedef const std::unique_ptr<Buffer> BufferPtr;
-    BufferPtr buffer_a;
-    BufferPtr buffer_b;
-
-    BufferPtr invalid0;
-    BufferPtr invalid1;
-
-    std::atomic<BufferPtr*> grabbed;
-    std::atomic<BufferPtr*> dequeued;
-
-    std::mutex cv_mutex;
-    std::condition_variable cv;
-    bool need_to_wait;
+    BufferPtr  buffer_a;
+    BufferPtr  buffer_b;
 };
 
 }

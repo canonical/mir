@@ -19,179 +19,56 @@
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer.h"
 
+#include <iostream>
 namespace mc = mir::compositor;
 
-mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b)
+mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, std::unique_ptr<Buffer> && buf_b)
     :
-    buffer_a(std::move(buffer_a)),
-    buffer_b(std::move(buffer_b)),
-    invalid0(nullptr),
-    invalid1(nullptr),
-    need_to_wait(false)
+    grabbed_buffer(nullptr),
+    buffer_a(std::move(buf_a)),
+    buffer_b(std::move(buf_b))
 {
-    atomic_store(&dequeued, &invalid0);
-    atomic_store(&grabbed, &invalid1);
+    client_queue.push(buffer_a.get());
+    client_queue.push(buffer_b.get());
 }
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
-    client_to_dequeued();
-
-    std::unique_lock<std::mutex> lk(cv_mutex);
-    while(need_to_wait)
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+    
+    while (client_queue.empty())
     {
-        cv.wait(lk);
+        available_cv.wait(lk);
     }
-    need_to_wait = true;
-    cv_mutex.unlock();
 
-    return dequeued.load()->get();
+    Buffer* dequeued_buffer = client_queue.front(); 
+    client_queue.pop();
+    return dequeued_buffer;
 }
 
-void mc::BufferSwapperDouble::queue_finished_buffer()
+void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
 {
-    /* transition dequeued */
-    client_to_queued();
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+    while (grabbed_buffer != nullptr)
+    {
+        posted_cv.wait(lk);
+    }
 
-    /* toggle grabbed pattern */
-    compositor_change_toggle_pattern();
+    grabbed_buffer = queued_buffer;  
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 {
-    compositor_to_grabbed();
-    return grabbed.load()->get();
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+
+
+    grabbed_buffer = nullptr;
+    return nullptr;
 }
 
 void mc::BufferSwapperDouble::ungrab()
 {
-    compositor_to_ungrabbed();
+    std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    std::unique_lock<std::mutex> lk(cv_mutex);
-    need_to_wait = false;
-    cv.notify_all();
-}
-
-/* class helper functions, mostly compare_and_exchange based state computation.
-   we need to compute next state of the atomics based solely on the current state,
-   consts in the class and variables local to the function. */
-void mc::BufferSwapperDouble::client_to_dequeued()
-{
-    BufferPtr* dq_assume;
-    BufferPtr* next_state;
-
-    do
-    {
-        dq_assume = dequeued.load();
-        next_state = dq_assume;
-
-        if (dq_assume == &invalid0)
-        {
-            next_state = &buffer_a;
-        }
-        else if (dq_assume == &invalid1)
-        {
-            next_state = &buffer_b;
-        }
-
-    }
-    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
-}
-
-void mc::BufferSwapperDouble::client_to_queued()
-{
-    BufferPtr* dq_assume;
-    BufferPtr* next_state;
-
-    do
-    {
-        dq_assume = dequeued.load();
-        next_state = dq_assume;
-
-        if (dq_assume == &buffer_a)
-        {
-            next_state = &invalid1;
-        }
-        else if (dq_assume == &buffer_b)
-        {
-            next_state = &invalid0;
-        }
-
-    }
-    while (!std::atomic_compare_exchange_weak(&dequeued, &dq_assume, next_state ));
-}
-
-void mc::BufferSwapperDouble::compositor_change_toggle_pattern()
-{
-    BufferPtr* grabbed_assume;
-    BufferPtr* next_state;
-
-    do
-    {
-        grabbed_assume = grabbed.load();
-        next_state = grabbed_assume;
-
-        if (grabbed_assume == &invalid0)
-        {
-            next_state = &invalid1;
-        }
-        else if (grabbed_assume == &buffer_a)
-        {
-            next_state = &buffer_b;
-        }
-
-        else if (grabbed_assume == &invalid1)
-        {
-            next_state = &invalid0;
-        }
-        else if (grabbed_assume == &buffer_b)
-        {
-            next_state = &buffer_a;
-        }
-    }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
-}
-
-void mc::BufferSwapperDouble::compositor_to_grabbed()
-{
-    BufferPtr* grabbed_assume;
-    BufferPtr* next_state;
-
-    do
-    {
-        grabbed_assume = grabbed.load();
-        next_state = grabbed_assume;
-
-        if (grabbed_assume == &invalid0) /* pattern A */
-        {
-            next_state = &buffer_a;
-        }
-        else if (grabbed_assume == &invalid1) /* pattern B */
-        {
-            next_state = &buffer_b;
-        }
-    }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
-}
-
-void mc::BufferSwapperDouble::compositor_to_ungrabbed()
-{
-    BufferPtr* grabbed_assume;
-    BufferPtr* next_state;
-    do
-    {
-        grabbed_assume = grabbed.load();
-        next_state = grabbed_assume;
-
-        if (grabbed_assume == &buffer_a) /* pattern A */
-        {
-            next_state = &invalid0;
-        }
-        else if (grabbed_assume == &buffer_b) /* pattern B */
-        {
-            next_state = &invalid1;
-        }
-    }
-    while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
 

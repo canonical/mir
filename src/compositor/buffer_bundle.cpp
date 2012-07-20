@@ -58,7 +58,7 @@ void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
     assert(client_buffer == buffer.get());
 
     client_buffer->unlock();
-    swapper->queue_finished_buffer();
+//    swapper->queue_finished_buffer();
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()

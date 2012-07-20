@@ -41,7 +41,7 @@ public:
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
-    virtual void queue_finished_buffer() = 0;
+    virtual void queue_finished_buffer(Buffer* queued_buffer) = 0;
 
     /* caller of grab_last_posted buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
