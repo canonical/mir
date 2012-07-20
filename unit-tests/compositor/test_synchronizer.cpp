@@ -49,15 +49,21 @@ TEST(Synchronizer, thread_stop_start) {
 }
 
 void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
+    bool wait_request;
     for(;;)
     {
+        wait_request = synchronizer->child_check_wait_request();
         *data = *data+1;
-        if (synchronizer->child_check()) break;
+
+        if (wait_request)
+        {
+            if (synchronizer->child_enter_wait()) break;
+        }
     }
 }
 
 TEST(Synchronizer, thread_pause_req) {
-    int data = 0;
+    int data = 0, old_data = 0;
     auto thread_start_time = std::chrono::system_clock::now();
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
@@ -65,11 +71,12 @@ TEST(Synchronizer, thread_pause_req) {
     mt::ScopedThread scoped_thread(std::thread(test_func_pause, &synchronizer, &data));
 
     synchronizer.ensure_child_is_waiting();
-    EXPECT_EQ(data, 1);
+    EXPECT_GT(data, old_data);
+    old_data = data;
     synchronizer.activate_waiting_child();
 
     synchronizer.ensure_child_is_waiting();
-    EXPECT_EQ(data, 2);
+    EXPECT_GT(data, old_data);
     synchronizer.activate_waiting_child();
 
     synchronizer.ensure_child_is_waiting();

@@ -42,7 +42,7 @@ class SynchronizerSpawned
 {
 public:
     virtual bool child_enter_wait() = 0;
-    virtual bool child_check() = 0;
+    virtual bool child_check_wait_request() = 0;
 };
 
 class ScopedThread
@@ -104,19 +104,10 @@ class Synchronizer : public SynchronizerController,
             return kill;
         };
 
-        bool child_check()
+        bool child_check_wait_request()
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
-            if (pause_request)
-            {
-                paused = true;
-                cv.notify_all();
-                while (paused) {
-                    cv.wait(lk);
-                }
-            }
-
-            return kill;
+            return pause_request;
         };
 
         void kill_thread()
