@@ -51,7 +51,7 @@ struct ThreadFixture {
                     std::move(buffer_b));
 
             auto thread_start_time = std::chrono::system_clock::now();
-            auto abs_timeout = thread_start_time + std::chrono::milliseconds(100000);
+            auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
             auto sync1 = new mt::Synchronizer(abs_timeout);
             auto sync2 = new mt::Synchronizer(abs_timeout);
 
