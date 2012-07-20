@@ -22,8 +22,24 @@
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
+namespace
+{
+class LlvmBufferAllocator: public mc::GraphicBufferAllocator
+{
+public:
+    LlvmBufferAllocator() = default;
+
+    virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+        geom::Width, geom::Height, mc::PixelFormat)
+    {
+        return nullptr;
+    }
+};
+
+}
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
-    return nullptr;
+    return std::unique_ptr<LlvmBufferAllocator>(new LlvmBufferAllocator());
 }
