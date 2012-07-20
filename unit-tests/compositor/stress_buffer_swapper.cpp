@@ -119,7 +119,7 @@ void compositor_grab_loop( mt::SynchronizerSpawned* synchronizer,
    buffer */
 TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
 {
-    const int num_iterations = 300;
+    const int num_iterations = 1000;
     ThreadFixture fix(compositor_grab_loop, client_request_loop);
     for(int i=0; i<  num_iterations; i++)
     {
@@ -131,15 +131,9 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
         fix.controller1->activate_waiting_child();
         fix.controller2->activate_waiting_child();
 
-        fix.controller1->ensure_child_is_waiting();
-        fix.controller2->ensure_child_is_waiting();
-
-        fix.controller1->activate_waiting_child();
-        fix.controller2->activate_waiting_child();
     }
 
 }
-#if 0
 /* test that we never get an invalid buffer */
 TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 {
@@ -151,7 +145,10 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
         fix.controller1->ensure_child_is_waiting();
         fix.controller2->ensure_child_is_waiting();
 
-        EXPECT_NE(fix.buffer1, nullptr);
+        if (i > 1)
+        {
+            EXPECT_NE(fix.buffer1, nullptr);
+        }
         EXPECT_NE(fix.buffer2, nullptr);
 
         fix.controller1->activate_waiting_child();
@@ -161,6 +158,7 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
 }
 
+#if 0
 void client_work_timing0( mt::SynchronizerSpawned* synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )

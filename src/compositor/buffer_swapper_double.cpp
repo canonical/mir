@@ -62,7 +62,13 @@ void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
     }
     consumed = false;
 
-    grabbed_buffer = queued_buffer;  
+    if(grabbed_buffer != nullptr)
+    {
+        client_queue.push(grabbed_buffer);
+    }
+
+    grabbed_buffer = queued_buffer;
+     
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
@@ -84,12 +90,11 @@ void mc::BufferSwapperDouble::ungrab(mc::Buffer *ungrabbed_buffer)
 {
     std::cout << "UG\n";
     std::unique_lock<std::mutex> lk(swapper_mutex);
-/*
     if (grabbed_buffer == nullptr)
     {
         grabbed_buffer = ungrabbed_buffer;
     }
-    else */
+    else
     {
         client_queue.push(ungrabbed_buffer);
         available_cv.notify_one();
