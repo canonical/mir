@@ -86,7 +86,11 @@ void client_thread(std::function<void(std::shared_ptr<mc::BufferSwapper>)> funct
        thread that it can start the execution of the timeout function. this way the tiemout
        thread cannot send a cv notify_one before we are actually waiting (as with a very short
        target function */
-    if (cv1.wait_until(lk2, timeout_time ))
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
+    if (!cv1.wait_until(lk2, timeout_time ))
+#else
+    if (std::cv_status::timeout == cv1.wait_until(lk2, timeout_time ))
+#endif
     {
         FAIL();
     }

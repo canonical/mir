@@ -65,6 +65,11 @@ async(launch policy, Callable&& functor, Args&&... args)
     return result;
 }
 
+template <class UnderlyingType>
+inline bool atomic_compare_exchange_weak(atomic<UnderlyingType*>* grabbed, UnderlyingType** grabbed_assume, UnderlyingType* const& next_state)
+{
+    return atomic_compare_exchange_weak(grabbed, (void**)grabbed_assume, next_state);
+}
 }
 }
 #endif
