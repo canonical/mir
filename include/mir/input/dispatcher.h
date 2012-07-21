@@ -22,10 +22,10 @@
 #include "mir/input/event_handler.h"
 #include "mir/input/filter.h"
 
+#include "mir/thread/all.h"
+
 #include <memory>
-#include <mutex>
 #include <set>
-#include <thread>
 
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #define MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES

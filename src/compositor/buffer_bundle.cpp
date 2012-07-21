@@ -18,10 +18,10 @@
  */
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/thread/all.h"
 
 #include <algorithm>
 #include <cassert>
-#include <mutex>
 
 namespace mc = mir::compositor;
 
