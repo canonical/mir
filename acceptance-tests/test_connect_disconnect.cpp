@@ -40,19 +40,21 @@ struct StubCommunicator : public mf::Communicator
     {
     }
 };
-}
 
-TEST(DisplayServerTest, client_connects_and_disconnects)
+
+void client_connects_and_disconnects()
 {
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);
 
-    auto client_connects_and_disconnects = [&]() -> void
-    {
-        SCOPED_TRACE("Client");
-        EXPECT_NO_THROW(application.connect());
-        EXPECT_NO_THROW(application.disconnect());
-    };
+    SCOPED_TRACE("Client");
+    EXPECT_NO_THROW(application.connect());
+    EXPECT_NO_THROW(application.disconnect());
+}
+}
+
+TEST(DisplayServerTest, client_connects_and_disconnects)
+{
 
     std::shared_ptr<mp::Process> client =
             mp::fork_and_run_in_a_different_process(

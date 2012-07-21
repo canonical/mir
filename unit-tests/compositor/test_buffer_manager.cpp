@@ -80,5 +80,5 @@ TEST(buffer_manager, create_buffer)
             height,
             pixel_format)};
 
-    EXPECT_TRUE(bundle != nullptr);
+    EXPECT_TRUE(bundle);
 }

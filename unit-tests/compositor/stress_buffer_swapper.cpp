@@ -33,7 +33,7 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
     for (int i=0; i< num_iterations; i++)
     {
         buf_tmp = swapper->dequeue_free_buffer();
-        EXPECT_NE(nullptr, buf_tmp);
+        EXPECT_TRUE(buf_tmp);
         swapper->queue_finished_buffer();
     }
 }
@@ -46,7 +46,7 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
     for (int i=0; i< num_iterations; i++)
     {
         buf_tmp = swapper->grab_last_posted();
-        EXPECT_NE(nullptr, buf_tmp);
+        EXPECT_TRUE(buf_tmp);
         swapper->ungrab();
     }
 
@@ -86,7 +86,7 @@ void client_thread(std::function<void(std::shared_ptr<mc::BufferSwapper>)> funct
        thread that it can start the execution of the timeout function. this way the tiemout
        thread cannot send a cv notify_one before we are actually waiting (as with a very short
        target function */
-    if (std::cv_status::timeout == cv1.wait_until(lk2, timeout_time ))
+    if (cv1.wait_until(lk2, timeout_time ))
     {
         FAIL();
     }

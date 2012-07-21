@@ -64,6 +64,7 @@ async(launch policy, Callable&& functor, Args&&... args)
     ::boost::thread(std::move(pt)).detach();
     return result;
 }
+
 }
 }
 #endif

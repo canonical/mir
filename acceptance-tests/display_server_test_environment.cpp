@@ -49,7 +49,7 @@ public:
     virtual std::unique_ptr<mc::BufferSwapper> create_swapper(
         geom::Width, geom::Height, mc::PixelFormat)
     {
-        return nullptr;
+        return std::unique_ptr<mc::BufferSwapper>();
     }
 };
 
@@ -60,18 +60,22 @@ int test_exit()
     return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+namespace
+{
+void run_display_server(std::unique_ptr<mir::DisplayServer>& server)
+{
+    SCOPED_TRACE("Server");
+    auto strategy = std::make_shared<StubBufferAllocationStrategy>();
+    auto renderer = std::make_shared<StubRenderer>();
+    server = std::unique_ptr<mir::DisplayServer>(new mir::DisplayServer(strategy, renderer));
+    server->start();
+}
+}
+
 void DisplayServerTestEnvironment::SetUp() 
 {
-    auto run_display_server = [&]() -> void
-    {
-        SCOPED_TRACE("Server");
-        auto strategy = std::make_shared<StubBufferAllocationStrategy>();
-        auto renderer = std::make_shared<StubRenderer>();
-        server = std::unique_ptr<mir::DisplayServer>(new mir::DisplayServer(strategy, renderer));
-        server->start();
-    };
     server_process = mp::fork_and_run_in_a_different_process(
-        run_display_server, test_exit);
+        std::bind(run_display_server, std::ref(server)), test_exit);
 }
 
 void DisplayServerTestEnvironment::TearDown()
