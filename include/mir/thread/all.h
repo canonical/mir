@@ -27,8 +27,10 @@
 #include <atomic>
 #endif
 
-#ifndef MIR_USING_BOOST_THREADS
 #include <thread>
+#include <mutex>
+
+#ifndef MIR_USING_BOOST_THREADS
 #include <future>
 #include <condition_variable>
 #include <mutex>
@@ -36,7 +38,6 @@
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
 namespace mir
 {
 namespace std
@@ -45,9 +46,6 @@ using namespace ::std;
 using ::boost::unique_future;
 #define future unique_future
 using ::boost::thread;
-using ::boost::mutex;
-using ::boost::condition_variable;
-using ::boost::unique_lock;
 
 enum class launch
 {
@@ -69,6 +67,12 @@ template <class UnderlyingType>
 inline bool atomic_compare_exchange_weak(atomic<UnderlyingType*>* grabbed, UnderlyingType** grabbed_assume, UnderlyingType* const& next_state)
 {
     return atomic_compare_exchange_weak(grabbed, (void**)grabbed_assume, next_state);
+}
+
+namespace cv_status
+{
+bool const no_timeout = true;
+bool const timeout = false;
 }
 }
 }
