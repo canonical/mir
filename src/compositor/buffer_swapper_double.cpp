@@ -28,20 +28,20 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
     consumed(true)
 {
     client_queue.push(buffer_a.get());
-    grabbed_buffer = buffer_b.get(); 
+    grabbed_buffer = buffer_b.get();
 }
 
 
 mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
- 
+
     while (client_queue.empty())
     {
         available_cv.wait(lk);
     }
 
-    Buffer* dequeued_buffer = client_queue.front(); 
+    Buffer* dequeued_buffer = client_queue.front();
     client_queue.pop();
     return dequeued_buffer;
 }
@@ -62,7 +62,7 @@ void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
     }
 
     grabbed_buffer = queued_buffer;
-     
+
 }
 
 mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
@@ -71,7 +71,6 @@ mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
 
     mc::Buffer* last_posted;
     last_posted = grabbed_buffer;
-
     grabbed_buffer = nullptr;
 
     consumed = true;

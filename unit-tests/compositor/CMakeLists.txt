@@ -22,7 +22,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_bundle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_synchronizer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/stress_buffer_swapper.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_stress_buffer_swapper.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
