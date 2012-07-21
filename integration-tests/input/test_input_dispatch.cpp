@@ -37,10 +37,11 @@ using mir::input::InputDispatchFixture;
 
 namespace
 {
+static mir::MockTimeSource time_source;
+static mir::Timestamp last_timestamp = time_source.sample();
+
 bool is_weakly_ordered(mi::Event* e)
 {
-    static mir::MockTimeSource time_source;
-    static mir::Timestamp last_timestamp = time_source.sample();
     bool result = e->get_system_timestamp() >= last_timestamp;
     last_timestamp = e->get_system_timestamp();
     return result;

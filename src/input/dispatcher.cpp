@@ -46,14 +46,15 @@ void mi::Dispatcher::on_event(mi::Event* e)
     filter_chain->accept(e);
 }
 
+#ifndef MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
+#define Frig(x) x
+#endif
+
 mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> device)
 {
     assert(device);
-#ifndef MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
-    auto pair = devices.insert(std::move(device));
-#else
     auto pair = devices.insert(Frig(std::move(device)));
-#endif
+
     if (pair.second)
         (*pair.first)->start();
 
