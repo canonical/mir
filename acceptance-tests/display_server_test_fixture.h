@@ -16,8 +16,8 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_DISPLAY_SERVER_TEST_ENVIRONMENT
-#define MIR_DISPLAY_SERVER_TEST_ENVIRONMENT
+#ifndef MIR_DISPLAY_SERVER_TEST_FIXTURE
+#define MIR_DISPLAY_SERVER_TEST_FIXTURE
 
 #include "mir/process/process.h"
 
@@ -65,4 +65,4 @@ private:
 };
 
 
-#endif // MIR_DISPLAY_SERVER_TEST_ENVIRONMENT
+#endif // MIR_DISPLAY_SERVER_TEST_FIXTURE
