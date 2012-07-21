@@ -27,6 +27,10 @@
 #include <set>
 #include <thread>
 
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
+#define MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
+#endif
+
 namespace mir
 {
 
@@ -40,7 +44,20 @@ class LogicalDevice;
 
 class Dispatcher : public EventHandler
 {
+#ifndef MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
     typedef std::set< std::unique_ptr<LogicalDevice> > DeviceCollection;
+#else
+    struct Frig : std::unique_ptr<LogicalDevice>
+    {
+        typedef std::unique_ptr<LogicalDevice> base;
+        Frig(base&& sp);
+        Frig(Frig const& f);
+        ~Frig();
+    };
+
+    typedef std::set< Frig > DeviceCollection;
+#endif
+
  public:
     typedef DeviceCollection::iterator DeviceToken;
 

@@ -78,6 +78,4 @@ bool const timeout = false;
 }
 #endif
 
-
-
 #endif // MIR_THREAD_ALL_H_

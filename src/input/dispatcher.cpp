@@ -46,20 +46,18 @@ void mi::Dispatcher::on_event(mi::Event* e)
     filter_chain->accept(e);
 }
 
-#ifdef MIR_TODO_GXX44_FRIG
 mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> device)
 {
     assert(device);
+#ifndef MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
     auto pair = devices.insert(std::move(device));
+#else
+    auto pair = devices.insert(Frig(std::move(device)));
+#endif
     if (pair.second)
         (*pair.first)->start();
 
     return pair.first;
-#else
-mi::Dispatcher::DeviceToken mi::Dispatcher::register_device(std::unique_ptr<mi::LogicalDevice> /*device*/)
-    {
-    return devices.begin();
-#endif
 }
 
 void mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
@@ -68,3 +66,12 @@ void mi::Dispatcher::unregister_device(mi::Dispatcher::DeviceToken token)
     devices.erase(token);
 }
 
+#ifdef MIR_WORKAROUND_SET_NOT_SUPPORTING_MOVEONLY_TYPES
+mi::Dispatcher::Frig::Frig(base&& sp) :
+        base(std::move(sp)) {}
+
+mi::Dispatcher::Frig::Frig(Frig const& f) :
+        base(std::move(const_cast<base&>(static_cast<base const&>(f)))) {}
+
+mi::Dispatcher::Frig::~Frig() {}
+#endif
