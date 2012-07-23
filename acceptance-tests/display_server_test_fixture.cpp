@@ -59,19 +59,19 @@ public:
 }
 }
 
-std::shared_ptr<mc::BufferAllocationStrategy> mir::DisplayServerTestFixture::make_buffer_allocation_strategy()
+std::shared_ptr<mc::BufferAllocationStrategy> mir::BespokeDisplayServerTestFixture::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
 
-std::shared_ptr<mg::Renderer> mir::DisplayServerTestFixture::make_renderer()
+std::shared_ptr<mg::Renderer> mir::BespokeDisplayServerTestFixture::make_renderer()
 {
     std::shared_ptr < mg::Renderer > renderer =
             std::make_shared<StubRenderer>();
     return renderer;
 }
 
-void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
+void mir::BespokeDisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
 {
     process_manager.launch_server_process(
         make_renderer(),
@@ -79,28 +79,28 @@ void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&
         std::move(functor));
 }
 
-void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
+void BespokeDisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
 {
     process_manager.launch_client_process(std::move(functor));
 }
 
-void DisplayServerTestFixture::SetUp()
+void BespokeDisplayServerTestFixture::SetUp()
 {
 }
 
-void DisplayServerTestFixture::TearDown()
+void BespokeDisplayServerTestFixture::TearDown()
 {
     process_manager.tear_down();
 }
 
-mir::DisplayServer* DisplayServerTestFixture::display_server() const
+mir::DisplayServer* BespokeDisplayServerTestFixture::display_server() const
 {
     return process_manager.display_server();
 }
 
-DisplayServerTestFixture::DisplayServerTestFixture() :
+BespokeDisplayServerTestFixture::BespokeDisplayServerTestFixture() :
     process_manager()
 {
 }
 
-DisplayServerTestFixture::~DisplayServerTestFixture() {}
+BespokeDisplayServerTestFixture::~BespokeDisplayServerTestFixture() {}

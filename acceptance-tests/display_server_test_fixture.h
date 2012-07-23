@@ -30,11 +30,11 @@ namespace mir
 {
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
-class DisplayServerTestFixture : public testing::Test
+class BespokeDisplayServerTestFixture : public testing::Test
 {
 public:
-    DisplayServerTestFixture();
-    ~DisplayServerTestFixture();
+    BespokeDisplayServerTestFixture();
+    ~BespokeDisplayServerTestFixture();
 
     mir::DisplayServer* display_server() const;
     void launch_server_process(std::function<void()>&& functor);
@@ -50,6 +50,6 @@ private:
 };
 }
 
-using mir::DisplayServerTestFixture;
+using mir::BespokeDisplayServerTestFixture;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE

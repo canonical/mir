@@ -44,7 +44,7 @@ void demo()
 
 //#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
-TEST_F(DisplayServerTestFixture, failing_server_side_test)
+TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
     launch_server_process([&]() -> void
     {
@@ -53,12 +53,12 @@ TEST_F(DisplayServerTestFixture, failing_server_side_test)
     });
 }
 
-TEST_F(DisplayServerTestFixture, failing_without_server)
+TEST_F(BespokeDisplayServerTestFixture, failing_without_server)
 {
 }
 #endif
 
-TEST_F(DisplayServerTestFixture, demonstrate_multiple_clients)
+TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 {
     launch_server_process(empty_function);
 

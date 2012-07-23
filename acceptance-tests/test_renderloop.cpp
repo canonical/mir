@@ -41,7 +41,7 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
-void server_processing(mir::DisplayServerTestFixture* dstf)
+void server_processing(mir::BespokeDisplayServerTestFixture* dstf)
 {
     MockDisplay display;
 
@@ -57,7 +57,7 @@ void server_processing(mir::DisplayServerTestFixture* dstf)
 
 }
 
-TEST_F(DisplayServerTestFixture, notify_sync_and_see_paint)
+TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 {
     launch_server_process(std::bind(server_processing, this));
 }

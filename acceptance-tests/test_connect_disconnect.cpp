@@ -54,7 +54,7 @@ void client_connects_and_disconnects()
 }
 }
 
-TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
+TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
 {
     launch_server_process(empty_function);
     launch_client_process(client_connects_and_disconnects);
