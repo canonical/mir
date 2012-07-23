@@ -92,8 +92,19 @@ void signal_terminate (int param)
 }
 }
 
+mir::TestProcessManager::TestProcessManager() :
+    is_test_process(true)
+{
+}
 
-void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
+mir::TestProcessManager::~TestProcessManager()
+{
+}
+
+void mir::TestProcessManager::launch_server_process(
+    std::shared_ptr<mir::graphics::Renderer> const& renderer,
+    std::shared_ptr<mir::compositor::BufferAllocationStrategy> const& buffer_allocation_strategy,
+    std::function<void()>&& functor)
 {
     pid_t pid = fork();
 
@@ -111,8 +122,8 @@ void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
-                        make_buffer_allocation_strategy(),
-                        make_renderer()));
+                        buffer_allocation_strategy,
+                        renderer));
 
         signal_display_server = server.get();
         signal_prev_fn = signal (SIGTERM, signal_terminate);
@@ -141,8 +152,7 @@ void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&
     }
 }
 
-
-void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
+void mir::TestProcessManager::launch_client_process(std::function<void()>&& functor)
 {
     if (!is_test_process)
     {
@@ -171,14 +181,9 @@ void DisplayServerTestFixture::launch_client_process(std::function<void()>&& fun
     {
         clients.push_back(std::shared_ptr<mp::Process>(new mp::Process(pid)));
     }
-
 }
 
-void DisplayServerTestFixture::SetUp() 
-{
-}
-
-void DisplayServerTestFixture::TearDown()
+void mir::TestProcessManager::tear_down()
 {
     if (server)
     {
@@ -203,13 +208,42 @@ void DisplayServerTestFixture::TearDown()
     }
 }
 
-mir::DisplayServer* DisplayServerTestFixture::display_server() const
+mir::DisplayServer* mir::TestProcessManager::display_server() const
 {
     return server.get();
 }
 
+//@@@@
+void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
+{
+    process_manager.launch_server_process(
+        make_renderer(),
+        make_buffer_allocation_strategy(),
+        functor);
+}
+
+
+void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
+{
+    process_manager.launch_client_process(functor);
+}
+
+void DisplayServerTestFixture::SetUp()
+{
+}
+
+void DisplayServerTestFixture::TearDown()
+{
+    process_manager.tear_down();
+}
+
+mir::DisplayServer* DisplayServerTestFixture::display_server() const
+{
+    return process_manager.display_server();
+}
+
 DisplayServerTestFixture::DisplayServerTestFixture() :
-    is_test_process(true)
+    process_manager()
 {
 }
 

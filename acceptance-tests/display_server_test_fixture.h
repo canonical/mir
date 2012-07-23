@@ -38,6 +38,29 @@ namespace graphics
 class Renderer;
 }
 
+class TestProcessManager
+{
+public:
+    TestProcessManager();
+    ~TestProcessManager();
+
+    void launch_server_process(
+            std::shared_ptr<mir::graphics::Renderer> const& renderer,
+            std::shared_ptr<mir::compositor::BufferAllocationStrategy> const& buffer_allocation_strategy,
+            std::function<void()>&& functor);
+    void launch_client_process(std::function<void()>&& functor);
+
+    mir::DisplayServer* display_server() const;
+    void tear_down();
+
+private:
+    std::unique_ptr<mir::DisplayServer> server;
+    std::shared_ptr<mir::process::Process> server_process;
+    std::list<std::shared_ptr<mir::process::Process>> clients;
+
+    bool is_test_process;
+};
+
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
 class DisplayServerTestFixture : public testing::Test
@@ -51,11 +74,7 @@ public:
     void launch_client_process(std::function<void()>&& functor);
 
 private:
-    std::unique_ptr<mir::DisplayServer> server;
-    std::shared_ptr<mir::process::Process> server_process;
-    std::list<std::shared_ptr<mir::process::Process>> clients;
-
-    bool is_test_process;
+    TestProcessManager process_manager;
 
     virtual void SetUp();
     virtual void TearDown();
