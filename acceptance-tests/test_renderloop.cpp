@@ -41,21 +41,23 @@ public:
     MOCK_METHOD0(notify_update, void());
 };
 
+void server_processing(mir::DisplayServerTestFixture* dstf)
+{
+    MockDisplay display;
+
+    using namespace testing;
+
+    EXPECT_CALL(display, notify_update()).Times(1);
+
+    EXPECT_CALL(display, view_area()).Times(AtLeast(1))
+            .WillRepeatedly(Return(geom::Rectangle()));
+
+    dstf->display_server()->render(&display);
+}
+
 }
 
 TEST_F(DisplayServerTestFixture, notify_sync_and_see_paint)
 {
-    using namespace testing;
-
-    MockDisplay display;
-
-    launch_server_process([&]() -> void
-    {
-        EXPECT_CALL(display, notify_update()).Times(1);
-
-        EXPECT_CALL(display, view_area()).Times(AtLeast(1))
-                .WillRepeatedly(Return(geom::Rectangle()));
-
-        display_server()->render(&display);
-    });
+    launch_server_process(std::bind(server_processing, this));
 }

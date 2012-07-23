@@ -30,6 +30,18 @@ namespace mp = mir::process;
 // display server test fixture.  But don't want them to fail in
 // normal builds.
 
+namespace
+{
+void empty_function()
+{
+}
+
+void demo()
+{
+    SCOPED_TRACE("Client");
+}
+}
+
 //#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(DisplayServerTestFixture, failing_server_side_test)
@@ -48,15 +60,7 @@ TEST_F(DisplayServerTestFixture, failing_without_server)
 
 TEST_F(DisplayServerTestFixture, demonstrate_multiple_clients)
 {
-    launch_server_process([&]() -> void
-    {
-    });
-
-    auto demo = []() -> void
-    {
-        SCOPED_TRACE("Client");
-    };
-
+    launch_server_process(empty_function);
 
     for(int i = 0; i != 10; ++i)
     {

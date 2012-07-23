@@ -37,7 +37,6 @@ namespace graphics
 {
 class Renderer;
 }
-}
 
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
@@ -63,6 +62,8 @@ private:
     virtual std::shared_ptr<mir::graphics::Renderer> make_renderer();
     virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
+}
 
+using mir::DisplayServerTestFixture;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE

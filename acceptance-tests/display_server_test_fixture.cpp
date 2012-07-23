@@ -67,12 +67,12 @@ public:
 }
 }
 
-std::shared_ptr<mc::BufferAllocationStrategy> DisplayServerTestFixture::make_buffer_allocation_strategy()
+std::shared_ptr<mc::BufferAllocationStrategy> mir::DisplayServerTestFixture::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
 
-std::shared_ptr<mg::Renderer> DisplayServerTestFixture::make_renderer()
+std::shared_ptr<mg::Renderer> mir::DisplayServerTestFixture::make_renderer()
 {
     std::shared_ptr < mg::Renderer > renderer =
             std::make_shared<StubRenderer>();
@@ -93,7 +93,7 @@ void signal_terminate (int param)
 }
 
 
-void DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
+void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
 {
     pid_t pid = fork();
 
@@ -104,6 +104,7 @@ void DisplayServerTestFixture::launch_server_process(std::function<void()>&& fun
 
     if (pid == 0)
     {
+        using namespace mir;
         is_test_process = false;
 
         // We're in the server process, so create a display server
@@ -116,15 +117,15 @@ void DisplayServerTestFixture::launch_server_process(std::function<void()>&& fun
         signal_display_server = server.get();
         signal_prev_fn = signal (SIGTERM, signal_terminate);
         {
-        struct ScopedFuture
-        {
-            std::future<void> future;
-            ~ScopedFuture() { future.wait(); }
-        } scoped;
+            struct ScopedFuture
+            {
+                std::future<void> future;
+                ~ScopedFuture() { future.wait(); }
+            } scoped;
 
-        scoped.future = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
+            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-        functor();
+            functor();
         }
     }
     else
@@ -132,9 +133,11 @@ void DisplayServerTestFixture::launch_server_process(std::function<void()>&& fun
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
         // A small delay to let the display server get started.
         // TODO there should be a way the server announces "ready"
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        //TODO 4.4 port std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        sleep(0);
     }
 }
+
 
 void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
 {
@@ -184,9 +187,9 @@ void DisplayServerTestFixture::TearDown()
     {
         using namespace testing;
 
-        for(auto& client : clients)
+        for(auto client = clients.begin(); client != clients.end(); ++client)
         {
-            EXPECT_TRUE(client->wait_for_termination().succeeded());
+            EXPECT_TRUE((*client)->wait_for_termination().succeeded());
         }
 
         // We're in the test process, so make sure we started a service
