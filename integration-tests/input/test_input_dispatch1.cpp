@@ -28,11 +28,11 @@
 #include "mir/input/logical_device.h"
 #include "mir/input/position_info.h"
 
+#include "mir/thread/all.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <atomic>
-#include <thread>
 
 namespace mi = mir::input;
 

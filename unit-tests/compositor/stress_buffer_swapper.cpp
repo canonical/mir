@@ -18,11 +18,14 @@
 
 #include "mock_buffer.h"
 
-#include <mir/compositor/buffer_swapper_double.h>
-#include <thread>
+#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+
+namespace mir
+{
 
 void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
 {
@@ -33,7 +36,7 @@ void client_work(std::shared_ptr<mc::BufferSwapper> swapper )
     for (int i=0; i< num_iterations; i++)
     {
         buf_tmp = swapper->dequeue_free_buffer();
-        EXPECT_NE(nullptr, buf_tmp);
+        EXPECT_TRUE(buf_tmp);
         swapper->queue_finished_buffer();
     }
 }
@@ -46,7 +49,7 @@ void server_work(std::shared_ptr<mc::BufferSwapper> swapper )
     for (int i=0; i< num_iterations; i++)
     {
         buf_tmp = swapper->grab_last_posted();
-        EXPECT_NE(nullptr, buf_tmp);
+        EXPECT_TRUE(buf_tmp);
         swapper->ungrab();
     }
 
@@ -116,4 +119,5 @@ TEST(buffer_swapper_double_stress, simple_swaps)
     std::thread t2(client_thread, server_work, &exec_lock1, swapper, timeout);
     t1.join();
     t2.join();
+}
 }

@@ -25,8 +25,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a
     :
     buffer_a(std::move(buffer_a)),
     buffer_b(std::move(buffer_b)),
-    invalid0(nullptr),
-    invalid1(nullptr)
+    invalid0(),
+    invalid1()
 {
     atomic_store(&dequeued, &invalid0);
     atomic_store(&grabbed, &invalid1);
@@ -181,4 +181,3 @@ void mc::BufferSwapperDouble::compositor_to_ungrabbed()
     }
     while (!std::atomic_compare_exchange_weak(&grabbed, &grabbed_assume, next_state ));
 }
-

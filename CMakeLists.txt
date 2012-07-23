@@ -15,6 +15,17 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
+set(
+  MIR_GCC_VERSION
+  4.4
+  CACHE
+  STRING
+  "Version of gcc/g++"
+)
+
+set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
+set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+
 project(Mir)
 
 cmake_minimum_required(VERSION 2.8)

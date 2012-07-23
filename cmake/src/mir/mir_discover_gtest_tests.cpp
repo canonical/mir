@@ -43,15 +43,15 @@ int main (int argc, char **argv)
 
     if (testfilecmake.is_open())
     {
-        for (auto test: tests)
+        for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             if (testfilecmake.good())
             {
                 testfilecmake
                     << "ADD_TEST ("
-                    << test_suite << '.' << test
+                    << test_suite << '.' << *test
                     << " \"" << argv[1] << "\""
-                    << "\"--gtest_filter=" << test << "\")" << endl;
+                    << "\"--gtest_filter=" << *test << "\")" << endl;
             }
         }
 
