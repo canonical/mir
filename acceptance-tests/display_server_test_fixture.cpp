@@ -18,22 +18,14 @@
 
 #include "display_server_test_fixture.h"
 
-#include "mir/display_server.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application.h"
-#include "mir/frontend/communicator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/renderer.h"
 
-#include <gmock/gmock.h>
-
-#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
-namespace mp = mir::process;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 
