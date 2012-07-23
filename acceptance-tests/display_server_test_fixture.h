@@ -43,6 +43,7 @@ private:
     static TestingProcessManager process_manager;
 
     static void SetUpTestCase();
+    virtual void TearDown();
     static void TearDownTestCase();
     static std::shared_ptr<mir::graphics::Renderer> make_renderer();
     static std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();

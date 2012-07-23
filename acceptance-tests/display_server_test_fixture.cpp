@@ -77,9 +77,15 @@ void DefaultDisplayServerTestFixture::SetUpTestCase()
         empty_function);
 }
 
+
+void DefaultDisplayServerTestFixture::TearDown()
+{
+    process_manager.tear_down_clients();
+}
+
 void DefaultDisplayServerTestFixture::TearDownTestCase()
 {
-    process_manager.tear_down();
+    process_manager.tear_down_all();
 }
 
 mir::DisplayServer* DefaultDisplayServerTestFixture::display_server() const
@@ -125,7 +131,7 @@ void BespokeDisplayServerTestFixture::SetUp()
 
 void BespokeDisplayServerTestFixture::TearDown()
 {
-    process_manager.tear_down();
+    process_manager.tear_down_all();
 }
 
 mir::DisplayServer* BespokeDisplayServerTestFixture::display_server() const

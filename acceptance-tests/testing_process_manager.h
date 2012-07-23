@@ -49,7 +49,8 @@ public:
     void launch_client_process(std::function<void()>&& functor);
 
     mir::DisplayServer* display_server() const;
-    void tear_down();
+    void tear_down_clients();
+    void tear_down_all();
 
 private:
     std::unique_ptr<mir::DisplayServer> server;

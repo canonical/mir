@@ -143,14 +143,8 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
     }
 }
 
-void mir::TestingProcessManager::tear_down()
+void mir::TestingProcessManager::tear_down_clients()
 {
-    if (server)
-    {
-        // We're in the server process, so just close down gracefully
-        server->stop();
-    }
-
     if (is_test_process)
     {
         using namespace testing;
@@ -165,6 +159,22 @@ void mir::TestingProcessManager::tear_down()
         server_process->terminate();
         mp::Result const result = server_process->wait_for_termination();
         EXPECT_TRUE(result.succeeded());
+
+        clients.clear();
+    }
+}
+
+void mir::TestingProcessManager::tear_down_all()
+{
+    if (server)
+    {
+        // We're in the server process, so just close down gracefully
+        server->stop();
+    }
+
+    if (is_test_process)
+    {
+        tear_down_clients();
     }
     else
     {
