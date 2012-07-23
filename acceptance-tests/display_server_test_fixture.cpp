@@ -49,15 +49,52 @@ public:
     }
 };
 
-::testing::AssertionResult WasStarted(
-    std::shared_ptr<mir::process::Process> const& server_process)
+void empty_function() {}
+}
+
+mir::TestingProcessManager mir::DefaultDisplayServerTestFixture::process_manager;
+
+std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultDisplayServerTestFixture::make_buffer_allocation_strategy()
 {
-  if (server_process)
-    return ::testing::AssertionSuccess() << "server started";
-  else
-    return ::testing::AssertionFailure() << "server NOT started";
+    return std::make_shared<StubBufferAllocationStrategy>();
 }
+
+std::shared_ptr<mg::Renderer> mir::DefaultDisplayServerTestFixture::make_renderer()
+{
+    std::shared_ptr < mg::Renderer > renderer =
+            std::make_shared<StubRenderer>();
+    return renderer;
 }
+
+void DefaultDisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
+{
+    process_manager.launch_client_process(std::move(functor));
+}
+
+void DefaultDisplayServerTestFixture::SetUpTestCase()
+{
+    process_manager.launch_server_process(
+        make_renderer(),
+        make_buffer_allocation_strategy(),
+        empty_function);
+}
+
+void DefaultDisplayServerTestFixture::TearDownTestCase()
+{
+    process_manager.tear_down();
+}
+
+mir::DisplayServer* DefaultDisplayServerTestFixture::display_server() const
+{
+    return process_manager.display_server();
+}
+
+DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
+{
+}
+
+DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture() {}
+
 
 std::shared_ptr<mc::BufferAllocationStrategy> mir::BespokeDisplayServerTestFixture::make_buffer_allocation_strategy()
 {

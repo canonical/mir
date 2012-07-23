@@ -30,6 +30,26 @@ namespace mir
 {
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
+class DefaultDisplayServerTestFixture : public testing::Test
+{
+public:
+    DefaultDisplayServerTestFixture();
+    ~DefaultDisplayServerTestFixture();
+
+    mir::DisplayServer* display_server() const;
+    void launch_client_process(std::function<void()>&& functor);
+
+private:
+    static TestingProcessManager process_manager;
+
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    static std::shared_ptr<mir::graphics::Renderer> make_renderer();
+    static std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
+};
+
+// The test fixture sets up and tears down a display server for use
+// in display server tests.
 class BespokeDisplayServerTestFixture : public testing::Test
 {
 public:
@@ -50,6 +70,7 @@ private:
 };
 }
 
+using mir::DefaultDisplayServerTestFixture;
 using mir::BespokeDisplayServerTestFixture;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE
