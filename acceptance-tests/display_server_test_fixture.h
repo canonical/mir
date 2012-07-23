@@ -38,11 +38,11 @@ namespace graphics
 class Renderer;
 }
 
-class TestProcessManager
+class TestingProcessManager
 {
 public:
-    TestProcessManager();
-    ~TestProcessManager();
+    TestingProcessManager();
+    ~TestingProcessManager();
 
     void launch_server_process(
             std::shared_ptr<mir::graphics::Renderer> const& renderer,
@@ -74,7 +74,7 @@ public:
     void launch_client_process(std::function<void()>&& functor);
 
 private:
-    TestProcessManager process_manager;
+    TestingProcessManager process_manager;
 
     virtual void SetUp();
     virtual void TearDown();
