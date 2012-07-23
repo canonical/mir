@@ -76,12 +76,12 @@ void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&
     process_manager.launch_server_process(
         make_renderer(),
         make_buffer_allocation_strategy(),
-        functor);
+        std::move(functor));
 }
 
 void DisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
 {
-    process_manager.launch_client_process(functor);
+    process_manager.launch_client_process(std::move(functor));
 }
 
 void DisplayServerTestFixture::SetUp()
