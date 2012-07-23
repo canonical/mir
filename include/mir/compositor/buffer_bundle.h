@@ -24,8 +24,8 @@
 #include "buffer_queue.h"
 #include "buffer.h"
 
-#include <atomic>
-#include <mutex>
+#include "mir/thread/all.h"
+
 #include <memory>
 #include <vector>
 
@@ -45,7 +45,7 @@ public:
     /* todo: shared_ptr<Buffer> is not a rich type. the user of this interface
              wants a data type they can use to send to another process */
     std::shared_ptr<Buffer> dequeue_client_buffer();
-    void queue_client_buffer();
+    void queue_client_buffer(std::shared_ptr<Buffer> buffer);
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();

@@ -45,21 +45,22 @@ struct MockSwapper : public mc::BufferSwapper
             using namespace testing;
 
             /* note: (kdub) we should change grab_last_posted's return type to be a shared or unique_ptr */
-            ON_CALL(*this, grab_last_posted())
-                    .WillByDefault(Return(buffer.get()));
-            ON_CALL(*this, dequeue_free_buffer())
+//            ON_CALL(*this, compositor_acquire())
+//                    .WillByDefault(Return(buffer.get()));
+            ON_CALL(*this, client_acquire())
                     .WillByDefault(Return(buffer.get()));
         };
-        MOCK_METHOD0(dequeue_free_buffer,   mc::Buffer*(void));
-        MOCK_METHOD0(queue_finished_buffer, void(void));
-        MOCK_METHOD0(grab_last_posted,   mc::Buffer*(void));
-        MOCK_METHOD0(ungrab,   void(void));
+        MOCK_METHOD0(client_acquire,   mc::Buffer*(void));
+        MOCK_METHOD1(client_release, void(mc::Buffer*));
+        MOCK_METHOD0(compositor_acquire,   mc::Buffer*(void));
+        MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
 };
 }
 
 TEST(buffer_bundle, get_buffer_for_compositor)
 {
 
+    using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
@@ -67,8 +68,9 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     //testing::Mock::AllowLeak(mock_swapper.get()); 
 
 
-    EXPECT_CALL(*mock_swapper, grab_last_posted())
-            .Times(1);
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
+            .Times(1)
+            .WillOnce(Return(mock_buffer.get()));
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
@@ -91,7 +93,7 @@ TEST(buffer_bundle, get_buffer_for_client)
     /* note, it doesn't look like google mock detects leaks very well after a move */
     //testing::Mock::AllowLeak(mock_swapper.get()); 
 
-    EXPECT_CALL(*mock_swapper, dequeue_free_buffer())
+    EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(1);
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);

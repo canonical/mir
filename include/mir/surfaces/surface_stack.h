@@ -21,9 +21,9 @@
 
 #include "scenegraph.h"
 #include "surface_stack_model.h"
+#include "mir/thread/all.h"
 
 #include <memory>
-#include <mutex>
 #include <set>
 
 namespace mir

@@ -22,8 +22,11 @@
 
 #include "buffer_swapper.h"
 
+#include "mir/thread/all.h"
+
 #include <memory>
-#include <atomic>
+#include <thread>
+#include <queue>
 
 namespace mir
 {
@@ -37,27 +40,25 @@ class BufferSwapperDouble : public BufferSwapper
 public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    Buffer* dequeue_free_buffer();
-    void queue_finished_buffer();
-    Buffer* grab_last_posted();
-    void ungrab();
+    Buffer* client_acquire();
+    void client_release(Buffer* queued_buffer);
+    Buffer* compositor_acquire();
+    void compositor_release(Buffer* released_buffer);
 
 private:
-    void compositor_to_grabbed();
-    void compositor_to_ungrabbed();
-    void compositor_change_toggle_pattern();
-    void client_to_dequeued();
-    void client_to_queued();
+    typedef const std::unique_ptr<Buffer> BufferPtr;
+    BufferPtr  buffer_a;
+    BufferPtr  buffer_b;
 
-    typedef std::unique_ptr<Buffer> BufferPtr;
-    BufferPtr buffer_a;
-    BufferPtr buffer_b;
+    std::mutex swapper_mutex;
 
-    BufferPtr invalid0;
-    BufferPtr invalid1;
+    std::condition_variable consumed_cv;
+    bool compositor_has_consumed;
 
-    std::atomic<BufferPtr*> grabbed;
-    std::atomic<BufferPtr*> dequeued;
+    std::condition_variable buffer_available_cv;
+    std::queue<Buffer*> client_queue;
+
+    Buffer* last_posted_buffer;
 };
 
 }

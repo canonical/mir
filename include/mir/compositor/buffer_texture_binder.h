@@ -43,6 +43,7 @@ protected:
     ~BufferTextureBinder() {}
 
 private:
+    class Unlocker;
     BufferTextureBinder(BufferTextureBinder const&) = delete;
     BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
 };
