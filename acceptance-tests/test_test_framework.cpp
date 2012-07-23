@@ -40,17 +40,19 @@ void demo()
 {
     SCOPED_TRACE("Client");
 }
+
+void fail()
+{
+    using namespace testing;
+    FAIL() << "Proving a test can fail";
+}
 }
 
-//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
-    launch_server_process([&]() -> void
-    {
-        using namespace testing;
-        FAIL() << "Proving a test can fail";
-    });
+    launch_server_process(fail);
 }
 
 TEST_F(BespokeDisplayServerTestFixture, failing_without_server)

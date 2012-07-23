@@ -166,6 +166,10 @@ void mir::TestingProcessManager::tear_down()
         mp::Result const result = server_process->wait_for_termination();
         EXPECT_TRUE(result.succeeded());
     }
+    else
+    {
+        exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+    }
 }
 
 mir::DisplayServer* mir::TestingProcessManager::display_server() const
