@@ -30,7 +30,7 @@ namespace mp = mir::process;
 // display server test fixture.  But don't want them to fail in
 // normal builds.
 
-#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(DisplayServerTestFixture, failing_server_side_test)
 {

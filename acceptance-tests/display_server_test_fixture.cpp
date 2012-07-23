@@ -127,9 +127,7 @@ void DisplayServerTestFixture::launch_server_process(std::function<void()>&& fun
         scoped.future = std::async(std::launch::async, &mir::DisplayServer::start, server.get());
 
         functor();
-        std::cout << "functor() exit" << std::endl;
         }
-        std::cout << "joined" << std::endl;
     }
     else
     {
