@@ -15,8 +15,16 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-set(CMAKE_C_COMPILER /usr/bin/gcc-4.4)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-4.4)
+set(
+  MIR_GCC_VERSION
+  4.4
+  CACHE
+  STRING
+  "Version of gcc/g++"
+)
+
+set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
+set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
 
 project(Mir)
 
