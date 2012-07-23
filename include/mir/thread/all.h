@@ -64,9 +64,9 @@ async(launch policy, Callable&& functor, Args&&... args)
 }
 
 template <class UnderlyingType>
-inline bool atomic_compare_exchange_weak(atomic<UnderlyingType*>* grabbed, UnderlyingType** grabbed_assume, UnderlyingType* const& next_state)
+inline bool atomic_compare_exchange_weak(atomic<UnderlyingType*>* target, UnderlyingType** compare, UnderlyingType* const& next_state)
 {
-    return atomic_compare_exchange_weak(grabbed, (void**)grabbed_assume, next_state);
+    return atomic_compare_exchange_weak(target, (void**)compare, next_state);
 }
 
 namespace cv_status
