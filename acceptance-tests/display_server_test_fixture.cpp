@@ -133,8 +133,11 @@ void mir::DisplayServerTestFixture::launch_server_process(std::function<void()>&
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
         // A small delay to let the display server get started.
         // TODO there should be a way the server announces "ready"
-        //TODO 4.4 port std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        sleep(0);
+#ifndef MIR_USING_BOOST_THREADS
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+#else
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+#endif
     }
 }
 

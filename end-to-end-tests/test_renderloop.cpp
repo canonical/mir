@@ -103,6 +103,10 @@ TEST(display_server, start_stop)
     display_server.stop();
 
     // 200ms chosen as that is longer than the whole test under valgrind
-    //TODO 4.4 port ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(200)));
+#ifndef MIR_USING_BOOST_THREADS
+    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(200)));
+#else
+    ASSERT_TRUE(runner.timed_wait_until(boost::get_system_time() + boost::posix_time::milliseconds(200)));
+#endif
 }
 }
