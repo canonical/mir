@@ -61,9 +61,7 @@ std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultDisplayServerTestFixtu
 
 std::shared_ptr<mg::Renderer> mir::DefaultDisplayServerTestFixture::make_renderer()
 {
-    std::shared_ptr < mg::Renderer > renderer =
-            std::make_shared<StubRenderer>();
-    return renderer;
+    return std::make_shared<StubRenderer>();
 }
 
 void DefaultDisplayServerTestFixture::launch_client_process(std::function<void()>&& functor)
