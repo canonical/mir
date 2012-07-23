@@ -92,10 +92,10 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
 {
     for(;;)
     {
-        *buf = swapper->dequeue_free_buffer();
+        *buf = swapper->client_acquire_buffer();
         if (synchronizer->child_enter_wait()) return;
 
-        swapper->queue_finished_buffer(*buf);
+        swapper->client_release_finished_buffer(*buf);
         if (synchronizer->child_enter_wait()) return;
     }
 }
@@ -106,10 +106,10 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
 {
     for(;;)
     {
-        *buf = swapper->grab_last_posted();
+        *buf = swapper->compositor_secure_last_posted();
         if (synchronizer->child_enter_wait()) return;
 
-        swapper->ungrab(*buf);
+        swapper->compositor_release(*buf);
         if (synchronizer->child_enter_wait()) return;
 
     }
@@ -162,12 +162,12 @@ void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    *buf = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(*buf);
+    *buf = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(*buf);
 
     synchronizer->child_enter_wait();
 
-    *buf = swapper->dequeue_free_buffer();
+    *buf = swapper->client_acquire_buffer();
 
     synchronizer->child_enter_wait();
 }
@@ -178,8 +178,8 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
 {
     synchronizer->child_enter_wait();
 
-    *buf = swapper->grab_last_posted();
-    swapper->ungrab(*buf);
+    *buf = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(*buf);
 
     synchronizer->child_enter_wait();
     synchronizer->child_enter_wait();
@@ -217,8 +217,8 @@ void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> syn
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->dequeue_free_buffer();
-        swapper->queue_finished_buffer(*buf);
+        *buf = swapper->client_acquire_buffer();
+        swapper->client_release_finished_buffer(*buf);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
@@ -234,13 +234,13 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->dequeue_free_buffer();
-        swapper->queue_finished_buffer(*buf);
+        *buf = swapper->client_acquire_buffer();
+        swapper->client_release_finished_buffer(*buf);
 
         /* two dequeues in quick succession like this will wait very often
            hence the 'stress' */
-        *buf = swapper->dequeue_free_buffer();
-        swapper->queue_finished_buffer(*buf);
+        *buf = swapper->client_acquire_buffer();
+        swapper->client_release_finished_buffer(*buf);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
@@ -256,9 +256,9 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->grab_last_posted();
+        *buf = swapper->compositor_secure_last_posted();
 
-        swapper->ungrab(*buf);
+        swapper->compositor_release(*buf);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;

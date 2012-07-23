@@ -25,70 +25,71 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
     :
     buffer_a(std::move(buf_a)),
     buffer_b(std::move(buf_b)),
-    consumed(true)
+    compositor_has_consumed(true)
 {
     client_queue.push(buffer_a.get());
-    grabbed_buffer = buffer_b.get();
+    last_posted_buffer = buffer_b.get();
 }
 
 
-mc::Buffer* mc::BufferSwapperDouble::dequeue_free_buffer()
+mc::Buffer* mc::BufferSwapperDouble::client_acquire_buffer()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     while (client_queue.empty())
     {
-        available_cv.wait(lk);
+        buffer_available_cv.wait(lk);
     }
 
     Buffer* dequeued_buffer = client_queue.front();
     client_queue.pop();
     return dequeued_buffer;
 }
-void mc::BufferSwapperDouble::queue_finished_buffer(mc::Buffer* queued_buffer)
+
+void mc::BufferSwapperDouble::client_release_finished_buffer(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    while (!consumed)
+    while (!compositor_has_consumed)
     {
-        posted_cv.wait(lk);
+        consumed_cv.wait(lk);
     }
-    consumed = false;
+    compositor_has_consumed = false;
 
-    if(grabbed_buffer != nullptr)
+    if(last_posted_buffer != nullptr)
     {
-        client_queue.push(grabbed_buffer);
-        available_cv.notify_one();
+        client_queue.push(last_posted_buffer);
+        buffer_available_cv.notify_one();
     }
 
-    grabbed_buffer = queued_buffer;
+    last_posted_buffer = queued_buffer;
 
 }
 
-mc::Buffer* mc::BufferSwapperDouble::grab_last_posted()
+mc::Buffer* mc::BufferSwapperDouble::compositor_secure_last_posted()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     mc::Buffer* last_posted;
-    last_posted = grabbed_buffer;
-    grabbed_buffer = nullptr;
+    last_posted = last_posted_buffer;
+    last_posted_buffer = nullptr;
 
-    consumed = true;
-    posted_cv.notify_one();
+    compositor_has_consumed = true;
+    consumed_cv.notify_one();
     return last_posted;
 }
 
-void mc::BufferSwapperDouble::ungrab(mc::Buffer *ungrabbed_buffer)
+void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    if (grabbed_buffer == nullptr)
+    if (last_posted_buffer == nullptr)
     {
-        grabbed_buffer = ungrabbed_buffer;
+        last_posted_buffer = released_buffer;
     }
     else
     {
-        client_queue.push(ungrabbed_buffer);
-        available_cv.notify_one();
+        client_queue.push(released_buffer);
+        buffer_available_cv.notify_one();
     }
 }
 

@@ -38,25 +38,25 @@ class BufferSwapperDouble : public BufferSwapper
 public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    Buffer* dequeue_free_buffer();
-    void queue_finished_buffer(Buffer* queued_buffer);
-    Buffer* grab_last_posted();
-    void ungrab(Buffer* ungrabbed_buffer);
+    Buffer* client_acquire_buffer();
+    void client_release_finished_buffer(Buffer* queued_buffer);
+    Buffer* compositor_secure_last_posted();
+    void compositor_release(Buffer* released_buffer);
 
 private:
-
-    std::mutex swapper_mutex;
-    std::condition_variable posted_cv;
-    std::condition_variable available_cv;
-    std::queue<Buffer*> client_queue;
-    Buffer* grabbed_buffer;
-
-
     typedef const std::unique_ptr<Buffer> BufferPtr;
     BufferPtr  buffer_a;
     BufferPtr  buffer_b;
 
-    bool consumed;
+    std::mutex swapper_mutex;
+
+    std::condition_variable consumed_cv;
+    bool compositor_has_consumed;
+
+    std::condition_variable buffer_available_cv;
+    std::queue<Buffer*> client_queue;
+
+    Buffer* last_posted_buffer;
 };
 
 }

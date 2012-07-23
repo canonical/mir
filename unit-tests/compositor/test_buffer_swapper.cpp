@@ -69,10 +69,10 @@ TEST(buffer_swap_double, simple_swaps0)
 
     mc::Buffer* buf_tmp;
 
-    buf_tmp = swapper->dequeue_free_buffer();
+    buf_tmp = swapper->client_acquire_buffer();
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
 
-    swapper->queue_finished_buffer(buf_tmp);
+    swapper->client_release_finished_buffer(buf_tmp);
 }
 
 TEST(buffer_swap_double, simple_swaps1)
@@ -86,14 +86,14 @@ TEST(buffer_swap_double, simple_swaps1)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
-    buf_tmp_a = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_a);
 
-    buf_tmp_b = swapper->grab_last_posted();
-    swapper->ungrab(buf_tmp_b);
+    buf_tmp_b = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(buf_tmp_b);
     
-    buf_tmp_b = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_b);
+    buf_tmp_b = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_b);
 
     EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
     EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b));
@@ -111,10 +111,10 @@ TEST(buffer_swap_double, simple_grabs0)
 
     mc::Buffer* buf_tmp, *buf_tmp_b;
 
-    buf_tmp_b = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_b);
+    buf_tmp_b = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_b);
 
-    buf_tmp = swapper->grab_last_posted();
+    buf_tmp = swapper->compositor_secure_last_posted();
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
 }
 
@@ -128,11 +128,11 @@ TEST(buffer_swap_double, simple_grabs1)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
-    buf_tmp_a = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_a);
 
-    buf_tmp_b = swapper->grab_last_posted();
-    swapper->ungrab(buf_tmp_b);
+    buf_tmp_b = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(buf_tmp_b);
 
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
@@ -149,13 +149,13 @@ TEST(buffer_swap_double, simple_grabs2)
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
 
-    buf_tmp_c = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_c);
+    buf_tmp_c = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_c);
 
-    buf_tmp_b = swapper->grab_last_posted();
-    swapper->ungrab(buf_tmp_b);
+    buf_tmp_b = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(buf_tmp_b);
 
-    buf_tmp_a = swapper->grab_last_posted();
+    buf_tmp_a = swapper->compositor_secure_last_posted();
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
 
@@ -169,16 +169,16 @@ TEST(buffer_swap_double, simple_grabs3)
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
 
-    buf_tmp_a = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_a);
+    buf_tmp_a = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_a);
 
-    buf_tmp_c = swapper->grab_last_posted();
-    swapper->ungrab(buf_tmp_c);
+    buf_tmp_c = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(buf_tmp_c);
    
-    buf_tmp_c = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_c);
+    buf_tmp_c = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_c);
 
-    buf_tmp_b = swapper->grab_last_posted();
+    buf_tmp_b = swapper->compositor_secure_last_posted();
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 
 }
@@ -194,16 +194,16 @@ TEST(buffer_swap_double, simple_grabs4)
     mc::Buffer* buf_tmp_c;
     mc::Buffer* buf_tmp_d;
 
-    buf_tmp_d = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_d);
+    buf_tmp_d = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_d);
 
-    buf_tmp_c = swapper->grab_last_posted();
-    swapper->ungrab(buf_tmp_c);
+    buf_tmp_c = swapper->compositor_secure_last_posted();
+    swapper->compositor_release(buf_tmp_c);
    
-    buf_tmp_b = swapper->dequeue_free_buffer();
-    swapper->queue_finished_buffer(buf_tmp_b);
+    buf_tmp_b = swapper->client_acquire_buffer();
+    swapper->client_release_finished_buffer(buf_tmp_b);
 
-    buf_tmp_a = swapper->grab_last_posted();
+    buf_tmp_a = swapper->compositor_secure_last_posted();
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_c);
 }
