@@ -92,4 +92,3 @@ void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
         buffer_available_cv.notify_one();
     }
 }
-

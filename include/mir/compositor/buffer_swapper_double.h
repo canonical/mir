@@ -22,6 +22,8 @@
 
 #include "buffer_swapper.h"
 
+#include "mir/thread/all.h"
+
 #include <memory>
 #include <thread>
 #include <queue>

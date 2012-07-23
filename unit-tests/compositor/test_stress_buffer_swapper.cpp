@@ -24,6 +24,7 @@
 #include <thread>
 #include <memory>
 #include <functional>
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
@@ -302,5 +303,4 @@ TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
         fix.client_controller->activate_waiting_child();
 
     }
-
 }
