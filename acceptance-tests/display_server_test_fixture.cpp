@@ -29,7 +29,7 @@
 
 #include <gmock/gmock.h>
 
-#include <future>
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -53,7 +53,7 @@ public:
     virtual std::unique_ptr<mc::BufferSwapper> create_swapper(
         geom::Width, geom::Height, mc::PixelFormat)
     {
-        return nullptr;
+        return std::unique_ptr<mc::BufferSwapper>();
     }
 };
 
@@ -79,8 +79,6 @@ std::shared_ptr<mg::Renderer> DisplayServerTestFixture::make_renderer()
     return renderer;
 }
 
-namespace
-{
 mir::DisplayServer* signal_display_server;
 
 extern "C"
@@ -93,7 +91,7 @@ void signal_terminate (int param)
     else signal_prev_fn(param);
 }
 }
-}
+
 
 void DisplayServerTestFixture::launch_server_process(std::function<void()>&& functor)
 {

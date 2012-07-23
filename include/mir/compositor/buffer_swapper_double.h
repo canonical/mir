@@ -22,8 +22,9 @@
 
 #include "buffer_swapper.h"
 
+#include "mir/thread/all.h"
+
 #include <memory>
-#include <atomic>
 
 namespace mir
 {

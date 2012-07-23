@@ -39,20 +39,23 @@ struct StubCommunicator : public mf::Communicator
     {
     }
 };
+
+void empty_function()
+{
 }
 
-TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
+void client_connects_and_disconnects()
 {
     std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
     mf::Application application(communicator);
 
-    launch_server_process([]() -> void {
-        // TODO expect effect of connection and wait for it
-    });
+    EXPECT_NO_THROW(application.connect());
+    EXPECT_NO_THROW(application.disconnect());
+}
+}
 
-    launch_client_process([&]() -> void
-    {
-        EXPECT_NO_THROW(application.connect());
-        EXPECT_NO_THROW(application.disconnect());
-    });
+TEST_F(DisplayServerTestFixture, client_connects_and_disconnects)
+{
+    launch_server_process(empty_function);
+    launch_client_process(client_connects_and_disconnects);
 }

@@ -25,28 +25,30 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+struct mc::BufferTextureBinder::Unlocker
+{
+    explicit Unlocker(BufferTextureBinder* binder) : binder(binder)
+    {
+        assert(binder);
+        binder->lock_back_buffer();
+    }
+
+    void operator()(mg::Texture* texture) const
+    {
+        delete texture;
+        binder->unlock_back_buffer();
+    }
+
+    BufferTextureBinder* binder;
+};
+
+
 std::shared_ptr<mg::Texture> mc::BufferTextureBinder::lock_and_bind_back_buffer()
 {
-    struct Deleter
-    {
-        explicit Deleter(BufferTextureBinder* binder) : binder(binder)
-        {
-            assert(binder);
-            binder->lock_back_buffer();
-        }
-
-        void operator()(graphics::Texture* texture) const
-        {
-            delete texture;
-            binder->unlock_back_buffer();
-        }
-
-        BufferTextureBinder* binder;
-    };
 
     back_buffer()->lock();
 
     return std::shared_ptr<graphics::Texture>(
         back_buffer()->bind_to_texture(),
-        Deleter(this));
+        Unlocker(this));
 }

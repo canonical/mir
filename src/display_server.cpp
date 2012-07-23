@@ -25,7 +25,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
-#include <atomic>
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;

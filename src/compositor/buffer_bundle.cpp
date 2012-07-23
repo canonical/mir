@@ -18,10 +18,10 @@
  */
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/thread/all.h"
 
 #include <algorithm>
 #include <cassert>
-#include <mutex>
 
 namespace mc = mir::compositor;
 
@@ -47,9 +47,12 @@ void mc::BufferBundle::unlock_back_buffer()
     swapper->ungrab();
 }
 
+namespace
+{
+struct NullDeleter { void operator()(void*) const {} };
+}
 std::shared_ptr<mc::Buffer> mc::BufferBundle::back_buffer()
 {
-    struct NullDeleter { void operator()(void*) const {} };
     return std::shared_ptr<mc::Buffer>(compositor_buffer, NullDeleter());
 }
 
@@ -65,7 +68,6 @@ std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
     client_buffer = swapper->dequeue_free_buffer();
     client_buffer->lock();
-    struct NullDeleter { void operator()(void*) const {} };
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }
 
