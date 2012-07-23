@@ -38,9 +38,9 @@ class BufferSwapperDouble : public BufferSwapper
 public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    Buffer* client_acquire_buffer();
-    void client_release_finished_buffer(Buffer* queued_buffer);
-    Buffer* compositor_secure_last_posted();
+    Buffer* client_acquire();
+    void client_release(Buffer* queued_buffer);
+    Buffer* compositor_acquire();
     void compositor_release(Buffer* released_buffer);
 
 private:

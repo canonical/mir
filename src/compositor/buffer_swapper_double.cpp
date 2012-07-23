@@ -32,7 +32,7 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
 }
 
 
-mc::Buffer* mc::BufferSwapperDouble::client_acquire_buffer()
+mc::Buffer* mc::BufferSwapperDouble::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -46,7 +46,7 @@ mc::Buffer* mc::BufferSwapperDouble::client_acquire_buffer()
     return dequeued_buffer;
 }
 
-void mc::BufferSwapperDouble::client_release_finished_buffer(mc::Buffer* queued_buffer)
+void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -66,7 +66,7 @@ void mc::BufferSwapperDouble::client_release_finished_buffer(mc::Buffer* queued_
 
 }
 
-mc::Buffer* mc::BufferSwapperDouble::compositor_secure_last_posted()
+mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
