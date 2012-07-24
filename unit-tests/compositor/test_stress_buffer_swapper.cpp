@@ -133,10 +133,11 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        std::this_thread::sleep_for( fix.sleep_duration );
+        mir::std::this_thread::sleep_for( fix.sleep_duration );
     }
 
 }
+
 /* test that we never get an invalid buffer */
 TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 {
@@ -157,7 +158,7 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        std::this_thread::sleep_for( fix.sleep_duration );
+        mir::std::this_thread::sleep_for( fix.sleep_duration );
 
     }
 }
@@ -287,7 +288,7 @@ TEST(buffer_swapper_double_stress, test_last_posted)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        std::this_thread::sleep_for( fix.sleep_duration );
+        mir::std::this_thread::sleep_for( fix.sleep_duration );
     }
 
 }
@@ -307,6 +308,6 @@ TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        std::this_thread::sleep_for( fix.sleep_duration );
+        mir::std::this_thread::sleep_for( fix.sleep_duration );
     }
 }
