@@ -31,6 +31,7 @@ namespace compositor
 class BufferQueue
 {
 public:
+    virtual ~BufferQueue() {};
     virtual std::shared_ptr<Buffer> dequeue_client_buffer() = 0;
     virtual void queue_client_buffer(std::shared_ptr<Buffer> buffer) = 0;
 

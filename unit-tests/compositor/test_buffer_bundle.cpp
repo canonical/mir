@@ -44,9 +44,9 @@ struct MockSwapper : public mc::BufferSwapper
         {
             using namespace testing;
 
-            /* note: (kdub) we should change grab_last_posted's return type to be a shared or unique_ptr */
-//            ON_CALL(*this, compositor_acquire())
-//                    .WillByDefault(Return(buffer.get()));
+            /* note: (kdub) we should change compositor_acquire's return type to be a shared or unique_ptr */
+            ON_CALL(*this, compositor_acquire())
+                    .WillByDefault(Return(buffer.get()));
             ON_CALL(*this, client_acquire())
                     .WillByDefault(Return(buffer.get()));
         };
@@ -54,6 +54,7 @@ struct MockSwapper : public mc::BufferSwapper
         MOCK_METHOD1(client_release, void(mc::Buffer*));
         MOCK_METHOD0(compositor_acquire,   mc::Buffer*(void));
         MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
+    
 };
 }
 
@@ -64,9 +65,6 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
-    /* note, it doesn't look like google mock detects leaks very well after a move */
-    //testing::Mock::AllowLeak(mock_swapper.get()); 
-
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
             .Times(1)
@@ -74,6 +72,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
+
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
@@ -90,8 +89,6 @@ TEST(buffer_bundle, get_buffer_for_client)
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
-    /* note, it doesn't look like google mock detects leaks very well after a move */
-    //testing::Mock::AllowLeak(mock_swapper.get()); 
 
     EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(1);

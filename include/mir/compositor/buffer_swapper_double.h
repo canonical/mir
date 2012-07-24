@@ -38,7 +38,10 @@ class Buffer;
 class BufferSwapperDouble : public BufferSwapper
 {
 public:
+
+
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
+    ~BufferSwapperDouble() {}
 
     Buffer* client_acquire();
     void client_release(Buffer* queued_buffer);
