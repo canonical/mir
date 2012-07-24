@@ -77,14 +77,14 @@ struct ExitFunctionFactory
 
 }
 
-//TEST(ProcessDeathTest,
-//     construction_with_an_invalid_pid_triggers_assertion)
-//{
-//    EXPECT_EXIT(
-//        mp::Process p(mp::Process::invalid_pid),
-//        ::testing::KilledBySignal(SIGABRT),
-//        ".*");
-//}
+TEST(ProcessDeathTest,
+     construction_with_an_invalid_pid_triggers_assertion)
+{
+    EXPECT_EXIT(
+        mp::Process p(-1),
+        ::testing::KilledBySignal(SIGABRT),
+        ".*");
+}
 
 TEST(ProcessResult,
      a_default_result_never_succeeds)
