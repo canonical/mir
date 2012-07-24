@@ -56,7 +56,7 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
     }
     compositor_has_consumed = false;
 
-    if(last_posted_buffer != nullptr)
+    if(last_posted_buffer != NULL)
     {
         client_queue.push(last_posted_buffer);
         buffer_available_cv.notify_one();
@@ -72,7 +72,7 @@ mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
 
     mc::Buffer* last_posted;
     last_posted = last_posted_buffer;
-    last_posted_buffer = nullptr;
+    last_posted_buffer = NULL;
 
     compositor_has_consumed = true;
     consumed_cv.notify_one();
@@ -82,7 +82,7 @@ mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
 void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    if (last_posted_buffer == nullptr)
+    if (last_posted_buffer == NULL)
     {
         last_posted_buffer = released_buffer;
     }

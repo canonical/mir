@@ -21,10 +21,9 @@
 #include "mir/compositor/buffer_swapper_double.h"
 #include "multithread_harness.h"
 
-#include <thread>
+#include "mir/thread/all.h"
 #include <memory>
 #include <functional>
-#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
@@ -58,8 +57,8 @@ struct ThreadFixture {
             compositor_controller = sync1;
             client_controller = sync2;
 
-            thread1 = std::make_shared<mt::ScopedThread>(std::thread(a, sync1, swapper, &compositor_buffer));
-            thread2 = std::make_shared<mt::ScopedThread>(std::thread(b, sync2, swapper, &client_buffer));
+            thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
+            thread2 = std::thread(b, sync2, swapper, &client_buffer);
         };
 
         ~ThreadFixture()
@@ -71,6 +70,9 @@ struct ThreadFixture {
             compositor_controller->ensure_child_is_waiting();
             compositor_controller->kill_thread();
             compositor_controller->activate_waiting_child();
+
+            thread2.join();
+            thread1.join();
         };
 
         std::shared_ptr<mt::SynchronizerController> compositor_controller;
@@ -81,8 +83,8 @@ struct ThreadFixture {
 
     private:
         /* thread objects must exist over lifetime of test */ 
-        std::shared_ptr<mt::ScopedThread> thread1;
-        std::shared_ptr<mt::ScopedThread> thread2;
+        std::thread thread1;
+        std::thread thread2;
 };
 
 
@@ -148,8 +150,8 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
         if (i > 1)
         {
-            ASSERT_NE(fix.compositor_buffer, nullptr);
-            ASSERT_NE(fix.client_buffer, nullptr);
+            EXPECT_TRUE((fix.compositor_buffer != NULL));
+            EXPECT_TRUE((fix.client_buffer != NULL));
         }
 
         fix.compositor_controller->activate_waiting_child();

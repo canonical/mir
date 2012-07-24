@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_MULTITHREAD_HARNESS_H_
 #define MIR_TEST_MULTITHREAD_HARNESS_H_
 
-#include <thread>
+#include "mir/thread/all.h"
 #include <chrono>
 #include <gtest/gtest.h>
 
@@ -45,15 +45,6 @@ public:
     virtual bool child_check_wait_request() = 0;
 };
 
-class ScopedThread
-{
-public:
-    ScopedThread(std::thread&& thread) :thread (std::move(thread)) {}
-    ~ScopedThread() { thread.join(); }
-private:
-    std::thread thread;
-};
-
 class Synchronizer : public SynchronizerController,
                      public SynchronizerSpawned
 {
@@ -76,7 +67,7 @@ class Synchronizer : public SynchronizerController,
             pause_request = true;
             if (!paused) 
             {
-                if (std::cv_status::timeout == cv.wait_until(lk, abs_timeout))
+                if (!cv.wait_until(lk, abs_timeout))
                 {
                     FAIL();
                     return;

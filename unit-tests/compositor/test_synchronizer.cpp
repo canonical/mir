@@ -37,7 +37,7 @@ TEST(Synchronizer, thread_stop_start) {
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
     mt::Synchronizer synchronizer(abs_timeout);
-    mt::ScopedThread scoped_thread(std::thread(test_func, &synchronizer, &data));
+    std::thread t1(test_func, &synchronizer, &data);
 
     synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 1);
@@ -46,6 +46,8 @@ TEST(Synchronizer, thread_stop_start) {
     synchronizer.ensure_child_is_waiting();
     EXPECT_EQ(data, 2);
     synchronizer.activate_waiting_child();
+
+    t1.join();
 }
 
 void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
@@ -68,7 +70,7 @@ TEST(Synchronizer, thread_pause_req) {
     auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
     mt::Synchronizer synchronizer(abs_timeout);
-    mt::ScopedThread scoped_thread(std::thread(test_func_pause, &synchronizer, &data));
+    std::thread t1(test_func_pause, &synchronizer, &data);
 
     synchronizer.ensure_child_is_waiting();
     EXPECT_GT(data, old_data);
@@ -82,4 +84,6 @@ TEST(Synchronizer, thread_pause_req) {
     synchronizer.ensure_child_is_waiting();
     synchronizer.kill_thread();
     synchronizer.activate_waiting_child();
+
+    t1.join();
 }
