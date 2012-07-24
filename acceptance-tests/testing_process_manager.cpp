@@ -19,10 +19,11 @@
 #include "testing_process_manager.h"
 
 #include "mir/display_server.h"
-
-#include <gmock/gmock.h>
+#include "mir/process/signal_dispatcher.h"
 
 #include "mir/thread/all.h"
+
+#include <gmock/gmock.h>
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
@@ -94,8 +95,9 @@ void mir::TestingProcessManager::launch_server_process(
                         buffer_allocation_strategy,
                         renderer));
 
-        signal_display_server = server.get();
-        signal_prev_fn = signal (SIGTERM, signal_terminate);
+        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
+        mp::SignalDispatcher::instance()->signal_channel().connect(
+                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
         {
             struct ScopedFuture
@@ -206,4 +208,16 @@ void mir::TestingProcessManager::tear_down_all()
 mir::DisplayServer* mir::TestingProcessManager::display_server() const
 {
     return server.get();
+}
+
+void mir::TestingProcessManager::os_signal_handler(int signal)
+{
+    switch(signal)
+    {
+    case SIGTERM:
+        server->stop();
+        break;
+    default:
+        break;
+    }
 }

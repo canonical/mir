@@ -54,6 +54,9 @@ public:
     void tear_down_all();
 
 private:
+
+    void os_signal_handler(int signal);
+
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
     std::list<std::shared_ptr<mir::process::Process>> clients;
