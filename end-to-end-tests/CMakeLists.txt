@@ -30,7 +30,6 @@ target_link_libraries(
   mirsurfaces
 
   ${Boost_LIBRARIES}
-  libboost_thread.so
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
