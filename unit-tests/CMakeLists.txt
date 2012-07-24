@@ -23,6 +23,7 @@ add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
+add_subdirectory(process/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
@@ -33,6 +34,7 @@ target_link_libraries(
   mirfrontend
   mirinput
   mirsurfaces
+  mirprocess
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

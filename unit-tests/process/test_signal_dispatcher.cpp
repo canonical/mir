@@ -19,25 +19,42 @@
 #include "mir/process/process.h"
 #include "mir/process/signal_dispatcher.h"
 
+#include "mir/thread/all.h"
+
 #include <gtest/gtest.h>
 
 namespace mp = mir::process;
 
-namespace
+namespace mir
 {
 
 struct SignalCollector
 {
-    SignalCollector() : signal(mp::Result::invalid_signal)
+    SignalCollector() : signal(-1)
     {
     }
-    
+
     void operator()(int s)
     {
+        std::unique_lock<std::mutex> lock(mutex);
         signal = s;
+        cv.notify_one();
     }
-    
+
+    int load()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+
+        if (signal == -1) cv.wait(lock);
+        return signal;
+    }
+
     int signal;
+
+    std::mutex mutex;
+    std::condition_variable cv;
+
+    SignalCollector(SignalCollector const&) = delete;
 };
 
 void a_main_function_accessing_the_signal_dispatcher()
@@ -52,11 +69,11 @@ void a_main_function_collecting_received_signals()
     mp::SignalDispatcher::instance()->enable_for(signal);
     SignalCollector sc;
     boost::signals2::scoped_connection conn(
-        mp::SignalDispatcher::instance()->signal_channel().connect(sc));
+        mp::SignalDispatcher::instance()->signal_channel().connect(boost::ref(sc)));
 
     ::kill(getpid(), signal);
-    
-    EXPECT_EQ(signal, sc.signal);
+
+    EXPECT_EQ(signal, sc.load());
 }
 
 int a_successful_exit_function()
@@ -71,13 +88,17 @@ int a_gtest_exit_function()
 
 }
 
+using mir::a_main_function_accessing_the_signal_dispatcher;
+using mir::a_successful_exit_function;
+using mir::a_main_function_collecting_received_signals;
+
 TEST(SignalDispatcher,
      a_default_dispatcher_does_not_catch_any_signals)
 {
     auto p = mp::fork_and_run_in_a_different_process(
         a_main_function_accessing_the_signal_dispatcher,
         a_successful_exit_function);
-    
+
     p->terminate();
 
     EXPECT_TRUE(p->wait_for_termination().signalled());
