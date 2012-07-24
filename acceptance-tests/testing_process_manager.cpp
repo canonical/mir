@@ -111,9 +111,6 @@ void mir::TestingProcessManager::launch_server_process(
     else
     {
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
-        // A small delay to let the display server get started.
-        // TODO there should be a way the server announces "ready"
-        startup_pause();
     }
 }
 
@@ -121,6 +118,11 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
 {
     if (!is_test_process)
     {
+        for(auto client = clients.begin(); client != clients.end(); ++client)
+        {
+            (*client)->detach();
+        }
+
         clients.clear();
         return; // We're not in the test process, so just return gracefully
     }

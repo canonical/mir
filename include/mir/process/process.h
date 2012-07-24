@@ -77,6 +77,7 @@ public:
     void terminate();
     void stop();
     void cont();
+    void detach();
 
 protected:
     Process() = delete;
@@ -86,6 +87,7 @@ protected:
 private:
     pid_t pid;
     bool terminated;
+    bool detached;
 };
 
 // Stream print helper
