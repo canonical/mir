@@ -49,7 +49,7 @@ struct StubCommunicator : public mf::Communicator
 
 }
 
-#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
