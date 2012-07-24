@@ -37,9 +37,18 @@ namespace
   else
     return ::testing::AssertionFailure() << "server NOT started";
 }
+
+void startup_pause()
+{
+#ifndef MIR_USING_BOOST_THREADS
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+#else
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+#endif
 }
 
 mir::DisplayServer* signal_display_server;
+}
 
 extern "C"
 {
@@ -104,11 +113,7 @@ void mir::TestingProcessManager::launch_server_process(
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
         // A small delay to let the display server get started.
         // TODO there should be a way the server announces "ready"
-#ifndef MIR_USING_BOOST_THREADS
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-#else
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
-#endif
+        startup_pause();
     }
 }
 
@@ -140,6 +145,8 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
     else
     {
         clients.push_back(std::shared_ptr<mp::Process>(new mp::Process(pid)));
+        // A small delay to let the client get started.
+        startup_pause();  //TODO thus shouldn't be needed
     }
 }
 
@@ -151,7 +158,8 @@ void mir::TestingProcessManager::tear_down_clients()
 
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
-            EXPECT_TRUE((*client)->wait_for_termination().succeeded());
+            auto result((*client)->wait_for_termination());
+            EXPECT_TRUE(result.succeeded()) << "result=" << result;
         }
 
         clients.clear();

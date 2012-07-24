@@ -167,7 +167,7 @@ std::ostream& print_exit_code(std::ostream& out, int exit_code)
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const mp::Result& result)
+std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& result)
 {
     out << "process::Result(";
     print_reason(out, result.reason);

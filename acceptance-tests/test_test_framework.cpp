@@ -18,6 +18,9 @@
 
 #include "display_server_test_fixture.h"
 
+#include "mir/frontend/application.h"
+#include "mir/frontend/communicator.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -25,6 +28,7 @@
 #include <list>
 
 namespace mp = mir::process;
+namespace mf = mir::frontend;
 
 // We need some tests to prove that errors are reported by the
 // display server test fixture.  But don't want them to fail in
@@ -32,6 +36,17 @@ namespace mp = mir::process;
 
 namespace
 {
+struct StubCommunicator : public mf::Communicator
+{
+    StubCommunicator()
+    {
+    }
+
+    void run()
+    {
+    }
+};
+
 void empty_function()
 {
 }
@@ -45,6 +60,15 @@ void fail()
 {
     using namespace testing;
     FAIL() << "Proving a test can fail";
+}
+
+void client_connects_and_disconnects()
+{
+    std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
+    mf::Application application(communicator);
+
+    EXPECT_NO_THROW(application.connect());
+    EXPECT_NO_THROW(application.disconnect());
 }
 }
 
@@ -64,6 +88,20 @@ TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 {
     launch_server_process(empty_function);
 
+    for(int i = 0; i != 10; ++i)
+    {
+        launch_client_process(demo);
+    }
+}
+
+TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
+{
+    launch_server_process(empty_function);
+    launch_client_process(client_connects_and_disconnects);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
+{
     for(int i = 0; i != 10; ++i)
     {
         launch_client_process(demo);

@@ -36,15 +36,16 @@ public:
     DefaultDisplayServerTestFixture();
     ~DefaultDisplayServerTestFixture();
 
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+
     mir::DisplayServer* display_server() const;
     void launch_client_process(std::function<void()>&& functor);
 
 private:
     static TestingProcessManager process_manager;
 
-    static void SetUpTestCase();
     virtual void TearDown();
-    static void TearDownTestCase();
     static std::shared_ptr<mir::graphics::Renderer> make_renderer();
     static std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };

@@ -28,7 +28,7 @@ namespace mf = mir::frontend;
 namespace mp = mir::process;
 
 namespace 
-{    
+{
 struct StubCommunicator : public mf::Communicator
 {
     StubCommunicator()
@@ -54,8 +54,7 @@ void client_connects_and_disconnects()
 }
 }
 
-TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
+TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
-    launch_server_process(empty_function);
     launch_client_process(client_connects_and_disconnects);
 }
