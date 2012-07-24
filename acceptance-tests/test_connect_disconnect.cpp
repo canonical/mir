@@ -48,9 +48,9 @@ void empty_function()
 
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
-    struct Client : TestingClientOptions
+    struct Client : TestingClientConfiguration
     {
-        void operator()()
+        void exec()
         {
             std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
             mf::Application application(communicator);

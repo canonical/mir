@@ -53,9 +53,9 @@ struct StubCommunicator : public mf::Communicator
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
-    struct Server : TestingServerOptions
+    struct Server : TestingServerConfiguration
     {
-        void operator()(mir::DisplayServer* )
+        void exec(mir::DisplayServer* )
         {
             using namespace testing;
             FAIL() << "Proving a test can fail";
@@ -72,9 +72,9 @@ TEST_F(BespokeDisplayServerTestFixture, failing_without_server)
 
 TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 {
-    struct Server : TestingServerOptions
+    struct Server : TestingServerConfiguration
     {
-        void operator()(mir::DisplayServer* )
+        void exec(mir::DisplayServer* )
         {
             // empty function
         }
@@ -82,9 +82,9 @@ TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 
     launch_server_process(empty_function);
 
-    struct Client : TestingClientOptions
+    struct Client : TestingClientConfiguration
     {
-        void operator()()
+        void exec()
         {
             SCOPED_TRACE("Demo Client");
         }
@@ -98,17 +98,17 @@ TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 
 TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
 {
-    struct Server : TestingServerOptions
+    struct Server : TestingServerConfiguration
     {
-        void operator()(mir::DisplayServer* )
+        void exec(mir::DisplayServer* )
         {
             // empty function
         }
     } empty_function;
 
-    struct Client : TestingClientOptions
+    struct Client : TestingClientConfiguration
     {
-        void operator()()
+        void exec()
         {
             std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
             mf::Application application(communicator);
@@ -125,9 +125,9 @@ TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
 
 TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
 {
-    struct Client : TestingClientOptions
+    struct Client : TestingClientConfiguration
     {
-        void operator()()
+        void exec()
         {
             SCOPED_TRACE("Demo Client");
         }

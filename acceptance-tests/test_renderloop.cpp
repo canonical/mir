@@ -44,9 +44,9 @@ public:
 
 TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 {
-    struct Server : TestingServerOptions
+    struct Server : TestingServerConfiguration
     {
-        void operator()(mir::DisplayServer* display_server)
+        void exec(mir::DisplayServer* display_server)
         {
             MockDisplay display;
 

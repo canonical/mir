@@ -36,10 +36,16 @@ namespace graphics
 class Renderer;
 }
 
-struct TestingServerOptions
+struct TestingClientConfiguration
+{
+    // Code to run in client process
+    virtual void exec() = 0;
+};
+
+struct TestingServerConfiguration
 {
     // Code to run in server process
-    virtual void operator()(DisplayServer* display_server);
+    virtual void exec(DisplayServer* display_server);
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();
@@ -54,8 +60,8 @@ public:
     TestingProcessManager();
     ~TestingProcessManager();
 
-    void launch_server_process(TestingServerOptions& parameters);
-    void launch_client_process(std::function<void()>&& functor);
+    void launch_server_process(TestingServerConfiguration& config);
+    void launch_client_process(TestingClientConfiguration& config);
 
     void tear_down_clients();
     void tear_down_server();

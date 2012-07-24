@@ -28,13 +28,6 @@
 
 namespace mir
 {
-
-struct TestingClientOptions
-{
-    // Code to run in client process
-    virtual void operator()() = 0;
-};
-
 // The test fixture sets up and tears down a display server for use
 // in display server test cases.
 class DefaultDisplayServerTestFixture : public testing::Test
@@ -46,7 +39,7 @@ public:
     static void SetUpTestCase();
     static void TearDownTestCase();
 
-    void launch_client_process(TestingClientOptions& functor);
+    void launch_client_process(TestingClientConfiguration& config);
 
 private:
     static TestingProcessManager process_manager;
@@ -64,9 +57,9 @@ public:
     BespokeDisplayServerTestFixture();
     ~BespokeDisplayServerTestFixture();
 
-    void launch_server_process(TestingServerOptions& functor);
+    void launch_server_process(TestingServerConfiguration& config);
 
-    void launch_client_process(TestingClientOptions& functor);
+    void launch_client_process(TestingClientConfiguration& config);
 
 private:
     TestingProcessManager process_manager;
@@ -78,7 +71,7 @@ private:
 
 using mir::DefaultDisplayServerTestFixture;
 using mir::BespokeDisplayServerTestFixture;
-using mir::TestingClientOptions;
-using mir::TestingServerOptions;
+using mir::TestingClientConfiguration;
+using mir::TestingServerConfiguration;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE

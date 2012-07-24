@@ -71,7 +71,7 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
-void mir::TestingProcessManager::launch_server_process(TestingServerOptions& parameters)
+void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -89,8 +89,8 @@ void mir::TestingProcessManager::launch_server_process(TestingServerOptions& par
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
-                        parameters.make_buffer_allocation_strategy(),
-                        parameters.make_renderer()));
+                        config.make_buffer_allocation_strategy(),
+                        config.make_renderer()));
 
         mp::SignalDispatcher::instance()->enable_for(SIGTERM);
         mp::SignalDispatcher::instance()->signal_channel().connect(
@@ -104,7 +104,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerOptions& par
 
         scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-        parameters(display_server());
+        config.exec(display_server());
     }
     else
     {
@@ -115,7 +115,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerOptions& par
     }
 }
 
-void mir::TestingProcessManager::launch_client_process(std::function<void()>&& functor)
+void mir::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -144,7 +144,7 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
         clients.clear();
 
         SCOPED_TRACE("Client");
-        functor();
+        config.exec();
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
     else

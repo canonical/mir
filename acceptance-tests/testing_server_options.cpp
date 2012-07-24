@@ -49,16 +49,16 @@ public:
 };
 }
 
-std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerOptions::make_buffer_allocation_strategy()
+std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
 
-void mir::TestingServerOptions::operator()(DisplayServer* )
+void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
-std::shared_ptr<mg::Renderer> mir::TestingServerOptions::make_renderer()
+std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 {
     return std::make_shared<StubRenderer>();
 }
