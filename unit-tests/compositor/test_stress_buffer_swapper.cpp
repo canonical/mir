@@ -56,7 +56,11 @@ struct ThreadFixture {
 
             thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
             thread2 = std::thread(b, sync2, swapper, &client_buffer);
+#ifndef MIR_USING_BOOST_THREADS
             sleep_duration = std::chrono::microseconds( 50 );
+#else
+            sleep_duration = ::boost::posix_time::microseconds( 50 );
+#endif
         };
 
         ~ThreadFixture()
@@ -79,7 +83,12 @@ struct ThreadFixture {
         mc::Buffer *compositor_buffer;
         mc::Buffer *client_buffer;
 
+#ifndef MIR_USING_BOOST_THREADS
         std::chrono::microseconds sleep_duration;
+#else
+        ::boost::posix_time::time_duration sleep_duration;
+#endif
+
     private:
         /* thread objects must exist over lifetime of test */ 
         std::thread thread1;
@@ -87,6 +96,17 @@ struct ThreadFixture {
 };
 
 
+/* pause the main loop in between iterations */
+/* todo (kdub): resolve how to sleep a thread using gcc 4.4's std */
+#ifndef MIR_USING_BOOST_THREADS
+void main_test_loop_pause(std::chrono::microseconds duration) {
+        std::this_thread::sleep_for( duration );
+}
+#else
+void main_test_loop_pause(boost::posix_time::time_duration duration) {
+        ::boost::this_thread::sleep(duration);
+}
+#endif
 
 void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
@@ -117,6 +137,7 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
     }
 
 }
+
 /* test that the compositor and the client are never in ownership of the same
    buffer */
 TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
@@ -133,7 +154,7 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        mir::std::this_thread::sleep_for( fix.sleep_duration );
+        main_test_loop_pause(fix.sleep_duration);
     }
 
 }
@@ -158,7 +179,7 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        mir::std::this_thread::sleep_for( fix.sleep_duration );
+        main_test_loop_pause(fix.sleep_duration);
 
     }
 }
@@ -288,7 +309,7 @@ TEST(buffer_swapper_double_stress, test_last_posted)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        mir::std::this_thread::sleep_for( fix.sleep_duration );
+        main_test_loop_pause(fix.sleep_duration);
     }
 
 }
@@ -308,6 +329,6 @@ TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
-        mir::std::this_thread::sleep_for( fix.sleep_duration );
+        main_test_loop_pause(fix.sleep_duration);
     }
 }

@@ -38,7 +38,6 @@
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/chrono.hpp>
 namespace mir
 {
 namespace std
@@ -75,17 +74,6 @@ namespace cv_status
 bool const no_timeout = true;
 bool const timeout = false;
 }
-
-namespace this_thread
-{
-    template<typename _rep, typename _period>
-    void sleep_for(const chrono::duration<_rep, _period>& d)
-    {
-        long usec = static_cast<long>(std::chrono::duration_cast<std::chrono::microseconds>(d).count());
-        boost::this_thread::sleep(boost::posix_time::microseconds(usec));
-    }
-}
-
 }
 }
 #endif
