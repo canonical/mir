@@ -99,17 +99,15 @@ void mir::TestingProcessManager::launch_server_process(
         mp::SignalDispatcher::instance()->signal_channel().connect(
                 boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
+        struct ScopedFuture
         {
-            struct ScopedFuture
-            {
-                std::future<void> future;
-                ~ScopedFuture() { future.wait(); }
-            } scoped;
+            std::future<void> future;
+            ~ScopedFuture() { future.wait(); }
+        } scoped;
 
-            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
+        scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-            functor();
-        }
+        functor();
     }
     else
     {

@@ -72,7 +72,7 @@ void client_connects_and_disconnects()
 }
 }
 
-#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
