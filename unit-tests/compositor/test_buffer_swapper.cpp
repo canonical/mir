@@ -21,7 +21,6 @@
 
 #include "mir/compositor/buffer_swapper_double.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;

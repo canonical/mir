@@ -56,6 +56,7 @@ struct ThreadFixture {
 
             thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
             thread2 = std::thread(b, sync2, swapper, &client_buffer);
+            sleep_duration = std::chrono::microseconds( 50 );
         };
 
         ~ThreadFixture()
@@ -78,6 +79,7 @@ struct ThreadFixture {
         mc::Buffer *compositor_buffer;
         mc::Buffer *client_buffer;
 
+        std::chrono::microseconds sleep_duration;
     private:
         /* thread objects must exist over lifetime of test */ 
         std::thread thread1;
@@ -119,7 +121,7 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
    buffer */
 TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
 {
-    const int num_iterations = 1000;
+    const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop, client_request_loop);
     for(int i=0; i<  num_iterations; i++)
     {
@@ -131,13 +133,14 @@ TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
+        std::this_thread::sleep_for( fix.sleep_duration );
     }
 
 }
 /* test that we never get an invalid buffer */
 TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 {
-    const int num_iterations = 1000;
+    const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop, client_request_loop);
 
     for(int i=0; i< num_iterations; i++)
@@ -153,6 +156,8 @@ TEST(buffer_swapper_double_stress, ensure_valid_buffers)
 
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
+
+        std::this_thread::sleep_for( fix.sleep_duration );
 
     }
 }
@@ -270,7 +275,7 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
 /* test normal situation, with moderate amount of waits */
 TEST(buffer_swapper_double_stress, test_last_posted)
 {
-    const int num_iterations = 1000;
+    const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_with_wait);
     for(int i=0; i<  num_iterations; i++)
     {
@@ -282,6 +287,7 @@ TEST(buffer_swapper_double_stress, test_last_posted)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
+        std::this_thread::sleep_for( fix.sleep_duration );
     }
 
 }
@@ -289,7 +295,7 @@ TEST(buffer_swapper_double_stress, test_last_posted)
 /* test situation where we'd wait on resoures more than normal, with moderate amount of waits */
 TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
 {
-    const int num_iterations = 1000;
+    const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_stress_wait);
     for(int i=0; i<  num_iterations; i++)
     {
@@ -301,5 +307,6 @@ TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
         fix.compositor_controller->activate_waiting_child();
         fix.client_controller->activate_waiting_child();
 
+        std::this_thread::sleep_for( fix.sleep_duration );
     }
 }
