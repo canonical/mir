@@ -67,7 +67,7 @@ class Synchronizer : public SynchronizerController,
             pause_request = true;
             if (!paused) 
             {
-                if (!cv.wait_until(lk, abs_timeout))
+                if (std::cv_status::timeout == cv.wait_until(lk, abs_timeout))
                 {
                     FAIL();
                     return;
