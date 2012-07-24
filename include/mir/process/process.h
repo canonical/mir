@@ -72,7 +72,6 @@ public:
     // Wait for the process to terminate, and return the results.
     Result wait_for_termination();
 
-    // Kill, terminate, stop or continue the process.
     void kill();
     void terminate();
     void stop();
