@@ -33,10 +33,10 @@ namespace
 ::testing::AssertionResult WasStarted(
     std::shared_ptr<mir::process::Process> const& server_process)
 {
-  if (server_process)
-    return ::testing::AssertionSuccess() << "server started";
-  else
-    return ::testing::AssertionFailure() << "server NOT started";
+    if (server_process)
+        return ::testing::AssertionSuccess() << "server started";
+    else
+        return ::testing::AssertionFailure() << "server NOT started";
 }
 
 void startup_pause()
