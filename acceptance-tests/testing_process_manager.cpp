@@ -47,19 +47,6 @@ void startup_pause()
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
 #endif
 }
-
-mir::DisplayServer* signal_display_server;
-}
-
-extern "C"
-{
-void (*signal_prev_fn)(int);
-
-void signal_terminate (int param)
-{
-    if (SIGTERM == param) signal_display_server->stop();
-    else signal_prev_fn(param);
-}
 }
 
 mir::TestingProcessManager::TestingProcessManager() :
