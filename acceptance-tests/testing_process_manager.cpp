@@ -96,6 +96,7 @@ void mir::TestingProcessManager::launch_server_process(
 
         signal_display_server = server.get();
         signal_prev_fn = signal (SIGTERM, signal_terminate);
+
         {
             struct ScopedFuture
             {
@@ -111,6 +112,9 @@ void mir::TestingProcessManager::launch_server_process(
     else
     {
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
+        // A small delay to let the display server get started.
+        // TODO there should be a way the server announces "ready"
+        startup_pause();
     }
 }
 
@@ -118,12 +122,6 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
 {
     if (!is_test_process)
     {
-        for(auto client = clients.begin(); client != clients.end(); ++client)
-        {
-            (*client)->detach();
-        }
-
-        clients.clear();
         return; // We're not in the test process, so just return gracefully
     }
 
@@ -140,6 +138,14 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
     if (pid == 0)
     {
         is_test_process = false;
+
+        for(auto client = clients.begin(); client != clients.end(); ++client)
+        {
+            (*client)->detach();
+        }
+
+        clients.clear();
+
         SCOPED_TRACE("Client");
         functor();
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
@@ -147,8 +153,6 @@ void mir::TestingProcessManager::launch_client_process(std::function<void()>&& f
     else
     {
         clients.push_back(std::shared_ptr<mp::Process>(new mp::Process(pid)));
-        // A small delay to let the client get started.
-        startup_pause();  //TODO thus shouldn't be needed
     }
 }
 
@@ -180,8 +184,9 @@ void mir::TestingProcessManager::tear_down_server()
         // We're in the test process, so make sure we started a service
         ASSERT_TRUE(WasStarted(server_process));
         server_process->terminate();
+        startup_pause(); // TODO frig
         mp::Result const result = server_process->wait_for_termination();
-        EXPECT_TRUE(result.succeeded());
+        EXPECT_TRUE(result.succeeded()) << result;
         server_process.reset();
     }
 }
