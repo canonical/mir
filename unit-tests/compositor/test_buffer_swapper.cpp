@@ -27,8 +27,6 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-
-#include <iostream>
 namespace
 {
 geom::Width w {1024};

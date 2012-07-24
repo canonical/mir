@@ -18,9 +18,6 @@
 
 #include "multithread_harness.h"
 
-#include <vector>
-#include <thread>
-
 namespace mt = mir::testing;
 
 void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {

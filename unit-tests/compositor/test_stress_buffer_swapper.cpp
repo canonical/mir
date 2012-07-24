@@ -17,13 +17,10 @@
  */
 
 #include "mock_buffer.h"
-
-#include "mir/compositor/buffer_swapper_double.h"
 #include "multithread_harness.h"
 
+#include "mir/compositor/buffer_swapper_double.h"
 #include "mir/thread/all.h"
-#include <memory>
-#include <functional>
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
