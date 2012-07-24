@@ -50,6 +50,7 @@ public:
 
     mir::DisplayServer* display_server() const;
     void tear_down_clients();
+    void tear_down_server();
     void tear_down_all();
 
 private:

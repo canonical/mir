@@ -154,13 +154,25 @@ void mir::TestingProcessManager::tear_down_clients()
             EXPECT_TRUE((*client)->wait_for_termination().succeeded());
         }
 
+        clients.clear();
+    }
+    else
+    {
+        exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+    }
+}
+
+void mir::TestingProcessManager::tear_down_server()
+{
+    if (is_test_process)
+    {
+        ASSERT_TRUE(clients.empty())  << "Clients should be stopped before server";
         // We're in the test process, so make sure we started a service
         ASSERT_TRUE(WasStarted(server_process));
         server_process->terminate();
         mp::Result const result = server_process->wait_for_termination();
         EXPECT_TRUE(result.succeeded());
-
-        clients.clear();
+        server_process.reset();
     }
 }
 
@@ -172,14 +184,8 @@ void mir::TestingProcessManager::tear_down_all()
         server->stop();
     }
 
-    if (is_test_process)
-    {
-        tear_down_clients();
-    }
-    else
-    {
-        exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
-    }
+    tear_down_clients();
+    tear_down_server();
 }
 
 mir::DisplayServer* mir::TestingProcessManager::display_server() const
