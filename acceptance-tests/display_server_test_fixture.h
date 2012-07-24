@@ -36,7 +36,7 @@ struct TestingClientOptions
 };
 
 // The test fixture sets up and tears down a display server for use
-// in display server tests.
+// in display server test cases.
 class DefaultDisplayServerTestFixture : public testing::Test
 {
 public:
