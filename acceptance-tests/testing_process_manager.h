@@ -36,25 +36,34 @@ namespace graphics
 class Renderer;
 }
 
+struct TestingServerOptions
+{
+    // Code to run in server process
+    virtual void operator()(DisplayServer* display_server);
+
+    // the renderer to use
+    virtual std::shared_ptr<graphics::Renderer> make_renderer();
+
+    // the allocator strategy to use
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
+};
+
 class TestingProcessManager
 {
 public:
     TestingProcessManager();
     ~TestingProcessManager();
 
-    void launch_server_process(
-            std::shared_ptr<mir::graphics::Renderer> const& renderer,
-            std::shared_ptr<mir::compositor::BufferAllocationStrategy> const& buffer_allocation_strategy,
-            std::function<void()>&& functor);
+    void launch_server_process(TestingServerOptions& parameters);
     void launch_client_process(std::function<void()>&& functor);
 
-    mir::DisplayServer* display_server() const;
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
 
 private:
 
+    mir::DisplayServer* display_server() const;
     void os_signal_handler(int signal);
 
     std::unique_ptr<mir::DisplayServer> server;

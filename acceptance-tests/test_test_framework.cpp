@@ -47,35 +47,21 @@ struct StubCommunicator : public mf::Communicator
     }
 };
 
-void empty_function()
-{
 }
 
-void demo()
-{
-    SCOPED_TRACE("Client");
-}
-
-void fail()
-{
-    using namespace testing;
-    FAIL() << "Proving a test can fail";
-}
-
-void client_connects_and_disconnects()
-{
-    std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
-    mf::Application application(communicator);
-
-    EXPECT_NO_THROW(application.connect());
-    EXPECT_NO_THROW(application.disconnect());
-}
-}
-
-//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
+#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 #ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
 TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
 {
+    struct Server : TestingServerOptions
+    {
+        void operator()(mir::DisplayServer* )
+        {
+            using namespace testing;
+            FAIL() << "Proving a test can fail";
+        }
+    } fail;
+
     launch_server_process(fail);
 }
 
@@ -86,7 +72,23 @@ TEST_F(BespokeDisplayServerTestFixture, failing_without_server)
 
 TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 {
+    struct Server : TestingServerOptions
+    {
+        void operator()(mir::DisplayServer* )
+        {
+            // empty function
+        }
+    } empty_function;
+
     launch_server_process(empty_function);
+
+    struct Client : TestingClientOptions
+    {
+        void operator()()
+        {
+            SCOPED_TRACE("Demo Client");
+        }
+    } demo;
 
     for(int i = 0; i != 10; ++i)
     {
@@ -96,12 +98,41 @@ TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 
 TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
 {
+    struct Server : TestingServerOptions
+    {
+        void operator()(mir::DisplayServer* )
+        {
+            // empty function
+        }
+    } empty_function;
+
+    struct Client : TestingClientOptions
+    {
+        void operator()()
+        {
+            std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
+            mf::Application application(communicator);
+
+            EXPECT_NO_THROW(application.connect());
+            EXPECT_NO_THROW(application.disconnect());
+        }
+    } client_connects_and_disconnects;
+
     launch_server_process(empty_function);
+
     launch_client_process(client_connects_and_disconnects);
 }
 
 TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)
 {
+    struct Client : TestingClientOptions
+    {
+        void operator()()
+        {
+            SCOPED_TRACE("Demo Client");
+        }
+    } demo;
+
     for(int i = 0; i != 10; ++i)
     {
         launch_client_process(demo);

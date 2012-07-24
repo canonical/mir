@@ -44,17 +44,21 @@ void empty_function()
 {
 }
 
-void client_connects_and_disconnects()
-{
-    std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
-    mf::Application application(communicator);
-
-    EXPECT_NO_THROW(application.connect());
-    EXPECT_NO_THROW(application.disconnect());
-}
 }
 
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
+    struct Client : TestingClientOptions
+    {
+        void operator()()
+        {
+            std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
+            mf::Application application(communicator);
+
+            EXPECT_NO_THROW(application.connect());
+            EXPECT_NO_THROW(application.disconnect());
+        }
+    } client_connects_and_disconnects;
+
     launch_client_process(client_connects_and_disconnects);
 }

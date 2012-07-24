@@ -28,6 +28,13 @@
 
 namespace mir
 {
+
+struct TestingClientOptions
+{
+    // Code to run in client process
+    virtual void operator()() = 0;
+};
+
 // The test fixture sets up and tears down a display server for use
 // in display server tests.
 class DefaultDisplayServerTestFixture : public testing::Test
@@ -39,8 +46,7 @@ public:
     static void SetUpTestCase();
     static void TearDownTestCase();
 
-    mir::DisplayServer* display_server() const;
-    void launch_client_process(std::function<void()>&& functor);
+    void launch_client_process(TestingClientOptions& functor);
 
 private:
     static TestingProcessManager process_manager;
@@ -58,21 +64,21 @@ public:
     BespokeDisplayServerTestFixture();
     ~BespokeDisplayServerTestFixture();
 
-    mir::DisplayServer* display_server() const;
-    void launch_server_process(std::function<void()>&& functor);
-    void launch_client_process(std::function<void()>&& functor);
+    void launch_server_process(TestingServerOptions& functor);
+
+    void launch_client_process(TestingClientOptions& functor);
 
 private:
     TestingProcessManager process_manager;
 
     virtual void SetUp();
     virtual void TearDown();
-    virtual std::shared_ptr<mir::graphics::Renderer> make_renderer();
-    virtual std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
 }
 
 using mir::DefaultDisplayServerTestFixture;
 using mir::BespokeDisplayServerTestFixture;
+using mir::TestingClientOptions;
+using mir::TestingServerOptions;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE

@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Guest <thomas.guest@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "testing_process_manager.h"
@@ -71,10 +71,7 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
-void mir::TestingProcessManager::launch_server_process(
-    std::shared_ptr<mir::graphics::Renderer> const& renderer,
-    std::shared_ptr<mir::compositor::BufferAllocationStrategy> const& buffer_allocation_strategy,
-    std::function<void()>&& functor)
+void mir::TestingProcessManager::launch_server_process(TestingServerOptions& parameters)
 {
     pid_t pid = fork();
 
@@ -92,8 +89,8 @@ void mir::TestingProcessManager::launch_server_process(
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
-                        buffer_allocation_strategy,
-                        renderer));
+                        parameters.make_buffer_allocation_strategy(),
+                        parameters.make_renderer()));
 
         mp::SignalDispatcher::instance()->enable_for(SIGTERM);
         mp::SignalDispatcher::instance()->signal_channel().connect(
@@ -107,7 +104,7 @@ void mir::TestingProcessManager::launch_server_process(
 
         scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-        functor();
+        parameters(display_server());
     }
     else
     {
