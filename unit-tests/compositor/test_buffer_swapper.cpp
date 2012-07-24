@@ -36,9 +36,9 @@ geom::Height h {768};
 geom::Stride s {1024};
 mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
-struct BufferFixture
+struct BufferSwapper : testing::Test
 {
-    BufferFixture()
+    BufferSwapper()
     {
         std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
         std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
@@ -59,14 +59,8 @@ struct BufferFixture
 
 }
 
-TEST(buffer_swap_double, simple_swaps0)
+TEST_F(BufferSwapper, simple_swaps0)
 {
-    BufferFixture fix;
-
-    mc::Buffer* const buf_a = fix.buf_a;
-    mc::Buffer* const buf_b = fix.buf_b;
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp;
 
     buf_tmp = swapper->client_acquire();
@@ -75,14 +69,8 @@ TEST(buffer_swap_double, simple_swaps0)
     swapper->client_release(buf_tmp);
 }
 
-TEST(buffer_swap_double, simple_swaps1)
+TEST_F(BufferSwapper, simple_swaps1)
 {
-    BufferFixture fix;
-
-    mc::Buffer* const buf_a = fix.buf_a;
-    mc::Buffer* const buf_b = fix.buf_b;
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -101,14 +89,8 @@ TEST(buffer_swap_double, simple_swaps1)
 }
 
 /* tests that grab returns valid buffer */
-TEST(buffer_swap_double, simple_grabs0)
+TEST_F(BufferSwapper, simple_grabs0)
 {
-    BufferFixture fix;
-
-    mc::Buffer* const buf_a = fix.buf_a;
-    mc::Buffer* const buf_b = fix.buf_b;
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp, *buf_tmp_b;
 
     buf_tmp_b = swapper->client_acquire();
@@ -119,12 +101,8 @@ TEST(buffer_swap_double, simple_grabs0)
 }
 
 /* note: tests expectation that we have the last posted buffer */
-TEST(buffer_swap_double, simple_grabs1)
+TEST_F(BufferSwapper, simple_grabs1)
 {
-    BufferFixture fix;
-
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -139,12 +117,8 @@ TEST(buffer_swap_double, simple_grabs1)
 
 
 /* note: tests expectation that two grabs in a row should return same thing */
-TEST(buffer_swap_double, simple_grabs2)
+TEST_F(BufferSwapper, simple_grabs2)
 {
-    BufferFixture fix;
-
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
@@ -159,12 +133,8 @@ TEST(buffer_swap_double, simple_grabs2)
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
 
-TEST(buffer_swap_double, simple_grabs3)
+TEST_F(BufferSwapper, simple_grabs3)
 {
-    BufferFixture fix;
-
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
@@ -183,12 +153,8 @@ TEST(buffer_swap_double, simple_grabs3)
 
 }
 
-TEST(buffer_swap_double, simple_grabs4)
+TEST_F(BufferSwapper, simple_grabs4)
 {
-    BufferFixture fix;
-
-    mc::BufferSwapper * swapper = fix.swapper.get();
-
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
