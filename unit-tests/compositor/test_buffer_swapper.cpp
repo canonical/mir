@@ -91,7 +91,7 @@ TEST(buffer_swap_double, simple_swaps1)
 
     buf_tmp_b = swapper->compositor_acquire();
     swapper->compositor_release(buf_tmp_b);
-    
+
     buf_tmp_b = swapper->client_acquire();
     swapper->client_release(buf_tmp_b);
 
@@ -174,7 +174,7 @@ TEST(buffer_swap_double, simple_grabs3)
 
     buf_tmp_c = swapper->compositor_acquire();
     swapper->compositor_release(buf_tmp_c);
-   
+
     buf_tmp_c = swapper->client_acquire();
     swapper->client_release(buf_tmp_c);
 
@@ -199,7 +199,7 @@ TEST(buffer_swap_double, simple_grabs4)
 
     buf_tmp_c = swapper->compositor_acquire();
     swapper->compositor_release(buf_tmp_c);
-   
+
     buf_tmp_b = swapper->client_acquire();
     swapper->client_release(buf_tmp_b);
 

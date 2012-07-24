@@ -74,7 +74,7 @@ class Synchronizer : public SynchronizerController,
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             pause_request = true;
-            if (!paused) 
+            if (!paused)
             {
                 if (std::cv_status::timeout == cv.wait_until(lk, abs_timeout))
                 {

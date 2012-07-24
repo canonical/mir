@@ -79,13 +79,13 @@ TEST(Compositor, render)
     MockScenegraph scenegraph;
     MockDisplay display;
     MockSurfaceCollection view;
-    
+
     mc::Compositor comp(&scenegraph, renderer);
 
     EXPECT_CALL(view, invoke_for_each_surface(_)).Times(1);
-    
+
     EXPECT_CALL(mock_renderer, render(_)).Times(0);
-    
+
     EXPECT_CALL(display, view_area())
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
@@ -95,9 +95,9 @@ TEST(Compositor, render)
             .WillRepeatedly(
                 Return(
                     std::shared_ptr<MockSurfaceCollection>(&view, EmptyDeleter())));
-    
+
     EXPECT_CALL(display, notify_update())
             .Times(1);
-    
+
     comp.render(&display);
 }

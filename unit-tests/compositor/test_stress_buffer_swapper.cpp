@@ -80,7 +80,7 @@ struct ThreadFixture {
         mc::Buffer *client_buffer;
 
     private:
-        /* thread objects must exist over lifetime of test */ 
+        /* thread objects must exist over lifetime of test */
         std::shared_ptr<mt::ScopedThread> thread1;
         std::shared_ptr<mt::ScopedThread> thread2;
 };
