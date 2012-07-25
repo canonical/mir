@@ -21,6 +21,7 @@ set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(geometry/)
+add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
 
@@ -31,6 +32,7 @@ target_link_libraries(
 
   mircompositor
   mirfrontend
+  mirplatformgraphics
   mirinput
   mirsurfaces
 
