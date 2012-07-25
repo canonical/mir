@@ -18,7 +18,7 @@
 
 #include "mir/process/process.h"
 
-#include <boost/thread.hpp>
+#include "mir/thread/all.h"
 
 #include <gtest/gtest.h>
 
