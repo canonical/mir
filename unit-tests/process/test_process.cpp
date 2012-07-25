@@ -31,15 +31,14 @@ struct MainFunctionFactory
 {
     static void an_empty_main_function()
     {
-        
     }
 
     static void an_infinitely_waiting_main_function()
     {
-        boost::mutex m;
-        boost::unique_lock<boost::mutex> ul(m);
+        std::mutex m;
+        std::unique_lock<std::mutex> ul(m);
 
-        boost::condition_variable cv;
+        std::condition_variable cv;
 
         cv.wait(ul);
     }
