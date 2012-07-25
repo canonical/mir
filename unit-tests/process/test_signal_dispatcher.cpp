@@ -45,7 +45,7 @@ struct SignalCollector
     {
         std::unique_lock<std::mutex> lock(mutex);
 
-        if (signal == -1) cv.wait(lock);
+        while (signal == -1) cv.wait(lock);
         return signal;
     }
 
