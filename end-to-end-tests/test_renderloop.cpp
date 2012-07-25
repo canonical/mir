@@ -23,6 +23,8 @@
 #include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
+#include "mir/thread/all.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -61,6 +63,8 @@ public:
 
 }
 
+namespace mir
+{
 TEST(compositor_renderloop, notify_sync_and_see_paint)
 {
     using namespace testing;
@@ -82,3 +86,27 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
     display_server.render(&display);
 }
 
+TEST(display_server, start_stop)
+{
+    using namespace testing;
+
+    std::shared_ptr<mc::BufferAllocationStrategy> allocation_strategy(
+        new mc::DoubleBufferAllocationStrategy(
+            std::make_shared<StubGraphicBufferAllocator>()));
+
+    mir::DisplayServer display_server(
+        allocation_strategy,
+        std::make_shared<StubSurfaceRenderer>());
+
+    auto runner =  std::async(std::launch::async, std::bind(&mir::DisplayServer::start, &display_server));
+
+    display_server.stop();
+
+    // 200ms chosen as that is longer than the whole test under valgrind
+#ifndef MIR_USING_BOOST_THREADS
+    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds(200)));
+#else
+    ASSERT_TRUE(runner.timed_wait_until(boost::get_system_time() + boost::posix_time::milliseconds(200)));
+#endif
+}
+}

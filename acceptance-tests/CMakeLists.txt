@@ -18,7 +18,11 @@ add_executable(
   acceptance-tests
   
   test_connect_disconnect.cpp
-  display_server_test_environment.cpp
+  display_server_test_fixture.cpp
+  test_renderloop.cpp
+  test_test_framework.cpp
+  testing_process_manager.cpp
+  testing_server_options.cpp
 )
 
 target_link_libraries(
@@ -31,7 +35,7 @@ target_link_libraries(
   mirprocess
   mirsurfaces
 
-  ${Boost_LIBRARIES}  
+  ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

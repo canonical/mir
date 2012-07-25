@@ -39,7 +39,7 @@ include_directories(include/)
 add_subdirectory(src/)
 
 # Check for boost
-find_package(Boost 1.48 COMPONENTS chrono filesystem system REQUIRED)
+find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
 
 # Build Google Test and make its headers known
 # Check for google test and build it locally

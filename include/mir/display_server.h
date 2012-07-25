@@ -52,15 +52,19 @@ public:
     ~DisplayServer();
 
     void start();
+    void stop();
+
     void render(graphics::Display* display);
+
 private:
+    void do_stuff();
+
     struct Private;
     std::unique_ptr<Private> p;
 
     DisplayServer() = delete;
     DisplayServer(const DisplayServer&) = delete;
     DisplayServer& operator=(const DisplayServer&) = delete;
-    
 };
 
 }

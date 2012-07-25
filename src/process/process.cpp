@@ -63,13 +63,14 @@ bool mp::Result::signalled() const
 mp::Process::Process(pid_t pid)
     : pid(pid)
     , terminated(false)
+    , detached(false)
 {
     assert(pid > 0);
 }
 
 mp::Process::~Process()
 {
-    if (!terminated)
+    if (!detached && !terminated)
     {
         try
         {
@@ -88,19 +89,22 @@ mp::Result mp::Process::wait_for_termination()
     Result result;
     int status;
 
-    terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
-    
-    if (terminated)
+    if (!detached)
     {
-        if (WIFEXITED(status))
+        terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
+
+        if (terminated)
         {
-            result.reason = TerminationReason::child_terminated_normally;
-            result.exit_code = WEXITSTATUS(status);
-        }
-        else if (WIFSIGNALED(status))
-        {
-            result.reason = TerminationReason::child_terminated_by_signal;
-            result.signal = WTERMSIG(status);
+            if (WIFEXITED(status))
+            {
+                result.reason = TerminationReason::child_terminated_normally;
+                result.exit_code = WEXITSTATUS(status);
+            }
+            else if (WIFSIGNALED(status))
+            {
+                result.reason = TerminationReason::child_terminated_by_signal;
+                result.signal = WTERMSIG(status);
+            }
         }
     }
     return result;
@@ -108,25 +112,31 @@ mp::Result mp::Process::wait_for_termination()
 
 void mp::Process::kill()
 {
-    signal_process(pid, SIGKILL);
+    if (!detached) signal_process(pid, SIGKILL);
 }
 
 void mp::Process::terminate()
 {
-    signal_process(pid, SIGTERM);
+    if (!detached) signal_process(pid, SIGTERM);
 }
 
 void mp::Process::stop()
 {
-    signal_process(pid, SIGSTOP);
+    if (!detached) signal_process(pid, SIGSTOP);
 }
 
 void mp::Process::cont()
 {
-    signal_process(pid, SIGCONT);
+    if (!detached) signal_process(pid, SIGCONT);
 }
 
+void mp::Process::detach()
+{
+    detached = true;
+}
 
+namespace
+{
 std::ostream& print_reason(std::ostream & out, mp::TerminationReason reason)
 {
     switch (reason)
@@ -166,8 +176,9 @@ std::ostream& print_exit_code(std::ostream& out, int exit_code)
     }
     return out;
 }
+}
 
-std::ostream& operator<<(std::ostream& out, const mp::Result& result)
+std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& result)
 {
     out << "process::Result(";
     print_reason(out, result.reason);

@@ -17,11 +17,10 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "display_server_test_environment.h"
+#include "display_server_test_fixture.h"
 
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
-#include "mir/process/process.h"
 
 #include <gtest/gtest.h>
 
@@ -29,7 +28,7 @@ namespace mf = mir::frontend;
 namespace mp = mir::process;
 
 namespace 
-{    
+{
 struct StubCommunicator : public mf::Communicator
 {
     StubCommunicator()
@@ -41,24 +40,25 @@ struct StubCommunicator : public mf::Communicator
     }
 };
 
-
-void client_connects_and_disconnects()
+void empty_function()
 {
-    std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
-    mf::Application application(communicator);
-
-    SCOPED_TRACE("Client");
-    EXPECT_NO_THROW(application.connect());
-    EXPECT_NO_THROW(application.disconnect());
-}
 }
 
-TEST(DisplayServerTest, client_connects_and_disconnects)
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
+            mf::Application application(communicator);
 
-    std::shared_ptr<mp::Process> client =
-            mp::fork_and_run_in_a_different_process(
-                client_connects_and_disconnects, test_exit);
+            EXPECT_NO_THROW(application.connect());
+            EXPECT_NO_THROW(application.disconnect());
+        }
+    } client_connects_and_disconnects;
 
-    EXPECT_TRUE(client->wait_for_termination().succeeded());
+    launch_client_process(client_connects_and_disconnects);
 }
