@@ -30,10 +30,7 @@ void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
 TEST(Synchronizer, thread_stop_start) {
     int data = 0;
 
-    auto thread_start_time = std::chrono::system_clock::now();
-    auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
-
-    mt::Synchronizer synchronizer(abs_timeout);
+    mt::Synchronizer synchronizer;
     std::thread t1(test_func, &synchronizer, &data);
 
     synchronizer.ensure_child_is_waiting();
@@ -63,10 +60,8 @@ void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
 
 TEST(Synchronizer, thread_pause_req) {
     int data = 0, old_data = 0;
-    auto thread_start_time = std::chrono::system_clock::now();
-    auto abs_timeout = thread_start_time + std::chrono::milliseconds(500);
 
-    mt::Synchronizer synchronizer(abs_timeout);
+    mt::Synchronizer synchronizer;
     std::thread t1(test_func_pause, &synchronizer, &data);
 
     synchronizer.ensure_child_is_waiting();

@@ -47,10 +47,8 @@ struct ThreadFixture {
                     std::move(buffer_a),
                     std::move(buffer_b));
 
-            auto thread_start_time = std::chrono::system_clock::now();
-            auto abs_timeout = thread_start_time + std::chrono::milliseconds(1000);
-            auto sync1 = std::make_shared<mt::Synchronizer>(abs_timeout);
-            auto sync2 = std::make_shared<mt::Synchronizer>(abs_timeout);
+            auto sync1 = std::make_shared<mt::Synchronizer>();
+            auto sync2 = std::make_shared<mt::Synchronizer>();
             compositor_controller = sync1;
             client_controller = sync2;
 
@@ -290,6 +288,11 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
 
+#ifndef MIR_USING_BOOST_THREADS
+        std::this_thread::yield();
+#else
+        boost::this_thread::yield();
+#endif 
     }
 
 }

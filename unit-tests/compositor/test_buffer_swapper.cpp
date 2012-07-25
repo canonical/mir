@@ -27,8 +27,6 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-
-#include <iostream>
 namespace
 {
 geom::Width w {1024};
@@ -59,7 +57,7 @@ struct BufferSwapper : testing::Test
 
 }
 
-TEST_F(BufferSwapper, simple_swaps0)
+TEST_F(BufferSwapper, test_valid_buffer_returned)
 {
     mc::Buffer* buf_tmp;
 
@@ -69,7 +67,7 @@ TEST_F(BufferSwapper, simple_swaps0)
     swapper->client_release(buf_tmp);
 }
 
-TEST_F(BufferSwapper, simple_swaps1)
+TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -88,8 +86,7 @@ TEST_F(BufferSwapper, simple_swaps1)
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 }
 
-/* tests that grab returns valid buffer */
-TEST_F(BufferSwapper, simple_grabs0)
+TEST_F(BufferSwapper, test_compositor_gets_valid)
 {
     mc::Buffer* buf_tmp, *buf_tmp_b;
 
@@ -100,8 +97,7 @@ TEST_F(BufferSwapper, simple_grabs0)
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
 }
 
-/* note: tests expectation that we have the last posted buffer */
-TEST_F(BufferSwapper, simple_grabs1)
+TEST_F(BufferSwapper, test_compositor_gets_last_posted)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -116,8 +112,7 @@ TEST_F(BufferSwapper, simple_grabs1)
 }
 
 
-/* note: tests expectation that two grabs in a row should return same thing */
-TEST_F(BufferSwapper, simple_grabs2)
+TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -133,7 +128,7 @@ TEST_F(BufferSwapper, simple_grabs2)
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
 
-TEST_F(BufferSwapper, simple_grabs3)
+TEST_F(BufferSwapper, test_two_grabs_with_client_updates)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -153,7 +148,7 @@ TEST_F(BufferSwapper, simple_grabs3)
 
 }
 
-TEST_F(BufferSwapper, simple_grabs4)
+TEST_F(BufferSwapper, test_grab_release_pattern)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;

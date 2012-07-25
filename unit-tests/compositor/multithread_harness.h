@@ -49,9 +49,8 @@ class Synchronizer : public SynchronizerController,
                      public SynchronizerSpawned
 {
     public:
-        Synchronizer (const std::chrono::time_point<std::chrono::system_clock> timeout)
-         : abs_timeout(timeout),
-           paused(false),
+        Synchronizer ()
+         : paused(false),
            pause_request(false),
            kill(false)
         {
@@ -65,14 +64,11 @@ class Synchronizer : public SynchronizerController,
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             pause_request = true;
-            if (!paused) 
+            while (!paused) 
             {
-                if (std::cv_status::timeout == cv.wait_until(lk, abs_timeout))
-                {
-                    FAIL();
-                    return;
-                }
+                cv.wait(lk);
             }
+        
             pause_request = false;
         };
 
@@ -107,8 +103,6 @@ class Synchronizer : public SynchronizerController,
             kill = true;
         };
     private:
-
-        std::chrono::time_point<std::chrono::system_clock> abs_timeout;
 
         std::condition_variable cv;
 

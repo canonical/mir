@@ -44,7 +44,6 @@ void mc::BufferBundle::lock_back_buffer()
 void mc::BufferBundle::unlock_back_buffer()
 {
     compositor_buffer->unlock();
-//    swapper->compositor_release();
 }
 
 namespace
@@ -61,7 +60,6 @@ void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
     assert(client_buffer == buffer.get());
 
     client_buffer->unlock();
-//    swapper->client_release();
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
