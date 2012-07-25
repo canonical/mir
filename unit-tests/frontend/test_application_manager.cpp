@@ -50,7 +50,12 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assertion)
 {
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+// Trying to avoid "[WARNING] /usr/src/gtest/src/gtest-death-test.cc:789::
+// Death tests use fork(), which is unsafe particularly in a threaded context.
+// For this test, Google Test couldn't detect the number of threads." by
+//  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+// leads to the test failing under valgrind
+    ::testing::FLAGS_gtest_death_test_style = "fast";
     EXPECT_EXIT(
         mir::frontend::ApplicationManager app(0),
         ::testing::KilledBySignal(SIGABRT),
