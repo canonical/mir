@@ -52,7 +52,7 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 {
     ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     EXPECT_EXIT(
-        mir::frontend::ApplicationManager app(nullptr),
+        mir::frontend::ApplicationManager app(0),
         ::testing::KilledBySignal(SIGABRT),
         ".*");
 }
@@ -76,7 +76,7 @@ TEST(ApplicationManager, create_and_destroy_surface)
 
     ms::SurfaceCreationParameters params;
     std::weak_ptr<ms::Surface> surface{app_manager.create_surface(params)};
-    ASSERT_TRUE(surface.lock().get() != nullptr);
+    ASSERT_TRUE(surface.lock().get());
     
     app_manager.destroy_surface(surface);
 }

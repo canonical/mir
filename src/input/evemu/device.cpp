@@ -35,7 +35,7 @@ namespace {
 
 struct EvemuDeleter
 {
-    void operator() (struct evemu_device*& device)
+    void operator() (struct evemu_device* device)
     {
         evemu_delete(device);
     }

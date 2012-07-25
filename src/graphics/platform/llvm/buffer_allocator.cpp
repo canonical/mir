@@ -34,7 +34,7 @@ public:
     virtual std::unique_ptr<mc::Buffer> alloc_buffer(
         geom::Width, geom::Height, mc::PixelFormat)
     {
-        return nullptr;
+        return std::unique_ptr<mc::Buffer>();
     }
 };
 
