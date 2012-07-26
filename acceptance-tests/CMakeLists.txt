@@ -13,12 +13,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
 
-list(
-  APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
+add_executable(
+  acceptance-tests
+  
+  test_connect_disconnect.cpp
+  display_server_test_environment.cpp
 )
 
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+target_link_libraries(
+  acceptance-tests
+  
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirprocess
+  mirsurfaces
+
+  ${Boost_LIBRARIES}  
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+mir_discover_tests(acceptance-tests)

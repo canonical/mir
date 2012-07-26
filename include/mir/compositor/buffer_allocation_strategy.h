@@ -32,31 +32,23 @@ namespace compositor
 
 class GraphicBufferAllocator;
 class BufferBundle;
+class BufferSwapper;
 
 class BufferAllocationStrategy
 {
- public:
+public:
 
-    virtual void allocate_buffers_for_bundle(
+    virtual std::unique_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pf,
-        BufferBundle* bundle) = 0;
+        PixelFormat pf) = 0;
 
- protected:
+protected:
     ~BufferAllocationStrategy() {}
-    BufferAllocationStrategy(std::shared_ptr<GraphicBufferAllocator> const& allocator);
+    BufferAllocationStrategy() {}
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
-
-    std::shared_ptr<GraphicBufferAllocator> const& graphic_buffer_allocator() const
-    {
-        return gr_allocator;
-    }
-    
- private:
-    std::shared_ptr<GraphicBufferAllocator> gr_allocator;
 };
 
 }

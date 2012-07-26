@@ -16,8 +16,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/surfaces/surface_stack.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/compositor/buffer_swapper.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
@@ -25,6 +27,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir_test/gmock_fixes.h"
 
 #include <memory>
 
@@ -35,6 +38,26 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
+class NullBufferSwapper : public mc::BufferSwapper
+{
+public:
+    /* normally, it is a guarantee that dequeue_free_buffer or grab_last_posted
+       never returns a nullptr. this nullbuffer swapper class does though */
+    virtual mc::Buffer* client_acquire() { return 0; }
+
+    /* once a client is done with the finished buffer, it must queue
+       it. This modifies the buffer the compositor posts to the screen */
+    virtual void client_release(mc::Buffer*) {}
+
+    /* caller of grab_last_posted buffer should get no-wait access to the
+        last posted buffer. However, the client will potentially stall
+        until control of the buffer is returned via ungrab() */
+
+    virtual mc::Buffer* compositor_acquire() { return 0; }
+
+    virtual void compositor_release(mc::Buffer*) { }
+};
 
 struct MockBufferBundleFactory : public mc::BufferBundleFactory
 {
@@ -47,9 +70,10 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                 .WillByDefault(
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
-                            new mc::BufferBundle())));
+                                new mc::BufferBundle(
+                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
-    
+
     MOCK_METHOD3(
         create_buffer_bundle,
         std::shared_ptr<mc::BufferBundle>(
@@ -79,12 +103,15 @@ TEST(
 {
     using namespace ::testing;
 
+    std::unique_ptr<mc::BufferSwapper> swapper_handle;
+    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
     MockBufferBundleFactory buffer_bundle_factory;
+
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_, _, _))
             .Times(AtLeast(1));
-     
+
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
@@ -140,8 +167,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _, _))
-            .WillRepeatedly(Return(std::shared_ptr<mc::BufferBundle>(new mc::BufferBundle())));
+        create_buffer_bundle(_, _, _)).Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 

@@ -19,7 +19,7 @@
 
 #include "mock_buffer.h"
 
-#include <mir/compositor/buffer_swapper_double.h>
+#include "mir/compositor/buffer_swapper_double.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -27,28 +27,144 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-
-/* this tests the start-up behavior of the swap algorithm */
-TEST(buffer_swapper, init_test)
+namespace
 {
-    using namespace testing;
+geom::Width w {1024};
+geom::Height h {768};
+geom::Stride s {1024};
+mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
 
-    geom::Width w{1024};
-    geom::Height h{768};
-    geom::Stride s{1024};
-    mc::PixelFormat pf{mc::PixelFormat::rgba_8888};
-    
-    std::shared_ptr<mc::Buffer> buf_a(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_b(new mc::MockBuffer(w, h, s, pf));
-    std::shared_ptr<mc::Buffer> buf_tmp;
+struct BufferSwapper : testing::Test
+{
+    BufferSwapper()
+    {
+        std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
 
-    /* BufferSwapperDouble implements the BufferSwapper interface */
-    mc::BufferSwapperDouble swapper_double(buf_a, buf_b);
+        buf_a = buffer_a.get();
+        buf_b = buffer_b.get();
+        swapper = std::make_shared<mc::BufferSwapperDouble>(
+                std::move(buffer_a),
+                std::move(buffer_b));
 
-    mc::BufferSwapper * swapper = &swapper_double;
+    }
 
-    swapper->grab_last_posted(buf_tmp);
-    /* note: kdub, the grab_last_posted has something of undefined behavior if nothing has ever been posted */
-    EXPECT_EQ(buf_tmp, nullptr); /* no one has posted yet, so we should be returning nothing (or error) */
+    mc::Buffer* buf_a;
+    mc::Buffer* buf_b;
 
+    std::shared_ptr<mc::BufferSwapper> swapper;
+};
+
+}
+
+TEST_F(BufferSwapper, test_valid_buffer_returned)
+{
+    mc::Buffer* buf_tmp;
+
+    buf_tmp = swapper->client_acquire();
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b));
+
+    swapper->client_release(buf_tmp);
+}
+
+TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
+{
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    buf_tmp_a = swapper->client_acquire();
+    swapper->client_release(buf_tmp_a);
+
+    buf_tmp_b = swapper->compositor_acquire();
+    swapper->compositor_release(buf_tmp_b);
+
+    buf_tmp_b = swapper->client_acquire();
+    swapper->client_release(buf_tmp_b);
+
+    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b));
+    EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b));
+    EXPECT_NE(buf_tmp_a, buf_tmp_b);
+}
+
+TEST_F(BufferSwapper, test_compositor_gets_valid)
+{
+    mc::Buffer* buf_tmp, *buf_tmp_b;
+
+    buf_tmp_b = swapper->client_acquire();
+    swapper->client_release(buf_tmp_b);
+
+    buf_tmp = swapper->compositor_acquire();
+    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
+}
+
+TEST_F(BufferSwapper, test_compositor_gets_last_posted)
+{
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+
+    buf_tmp_a = swapper->client_acquire();
+    swapper->client_release(buf_tmp_a);
+
+    buf_tmp_b = swapper->compositor_acquire();
+    swapper->compositor_release(buf_tmp_b);
+
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+}
+
+
+TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
+{
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp_c;
+
+    buf_tmp_c = swapper->client_acquire();
+    swapper->client_release(buf_tmp_c);
+
+    buf_tmp_b = swapper->compositor_acquire();
+    swapper->compositor_release(buf_tmp_b);
+
+    buf_tmp_a = swapper->compositor_acquire();
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+}
+
+TEST_F(BufferSwapper, test_two_grabs_with_client_updates)
+{
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp_c;
+
+    buf_tmp_a = swapper->client_acquire();
+    swapper->client_release(buf_tmp_a);
+
+    buf_tmp_c = swapper->compositor_acquire();
+    swapper->compositor_release(buf_tmp_c);
+
+    buf_tmp_c = swapper->client_acquire();
+    swapper->client_release(buf_tmp_c);
+
+    buf_tmp_b = swapper->compositor_acquire();
+    EXPECT_NE(buf_tmp_a, buf_tmp_b);
+
+}
+
+TEST_F(BufferSwapper, test_grab_release_pattern)
+{
+    mc::Buffer* buf_tmp_a;
+    mc::Buffer* buf_tmp_b;
+    mc::Buffer* buf_tmp_c;
+    mc::Buffer* buf_tmp_d;
+
+    buf_tmp_d = swapper->client_acquire();
+    swapper->client_release(buf_tmp_d);
+
+    buf_tmp_c = swapper->compositor_acquire();
+    swapper->compositor_release(buf_tmp_c);
+
+    buf_tmp_b = swapper->client_acquire();
+    swapper->client_release(buf_tmp_b);
+
+    buf_tmp_a = swapper->compositor_acquire();
+    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
+    EXPECT_NE(buf_tmp_a, buf_tmp_c);
 }

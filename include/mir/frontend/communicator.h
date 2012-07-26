@@ -13,20 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *  Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_allocation_strategy.h"
+#ifndef MIR_FRONTEND_COMMUNICATOR_H_
+#define MIR_FRONTEND_COMMUNICATOR_H_
 
-#include <cassert>
-#include <memory>
-
-namespace mc = mir::compositor;
-
-mc::BufferAllocationStrategy::BufferAllocationStrategy(
-    std::shared_ptr<GraphicBufferAllocator> const& allocator) :
-    gr_allocator(allocator)
+namespace mir
 {
-    assert(allocator);
+namespace frontend
+{
+
+class Communicator
+{
+ public:
+    virtual ~Communicator() {}
+
+    virtual void run() = 0;
+
+ protected:
+    Communicator() = default;
+    Communicator(const Communicator&) = delete;
+    Communicator& operator=(const Communicator&) = delete;
+};
+
 }
+}
+
+#endif // MIR_FRONTEND_COMMUNICATOR_H_

@@ -12,13 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(
-  APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
+set(
+  PROCESS_SOURCES
+
+  process.cpp
 )
 
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+add_library( 
+  mirprocess STATIC
+  
+  ${PROCESS_SOURCES}
+)

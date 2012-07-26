@@ -21,6 +21,10 @@
 
 #include "mir/input/event_handler.h"
 
+#include <boost/signals2.hpp>
+
+#include <memory>
+
 namespace mir
 {
 namespace frontend
@@ -28,16 +32,43 @@ namespace frontend
 
 namespace mi = mir::input;
 
+class Communicator;
+
 class Application : public mi::EventHandler
 {
- public:
-    virtual ~Application() {}
+public:
 
- protected:
-    Application() = default;
+    enum class State
+    {
+        disconnected,
+        connected
+    };
 
+    typedef boost::signals2::signal<
+        void(State old_state, State new_state)
+        > StateTransitionSignal;
+
+    Application(std::shared_ptr<Communicator> communicator);
+
+    virtual ~Application();
+
+    // From mi::EventHandler
+    void on_event(mi::Event* e);
+
+    StateTransitionSignal& state_transition_signal();
+
+    void connect();
+
+    void disconnect();
+
+protected:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
+
+private:
+    // TODO: Hide away implementation details.
+    std::shared_ptr<Communicator> communicator;
+    StateTransitionSignal state_transition;
 };
 
 }

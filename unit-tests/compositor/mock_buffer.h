@@ -41,14 +41,14 @@ struct MockBuffer : public Buffer
                PixelFormat pf)
 	{
 	    using namespace testing;
-            ON_CALL(*this, width())
-                    .WillByDefault(Return(w));
-            ON_CALL(*this, height())
-                    .WillByDefault(Return(h));
-            ON_CALL(*this, stride())
-                    .WillByDefault(Return(s));
-            ON_CALL(*this, pixel_format())
-                    .WillByDefault(Return(pf));
+        ON_CALL(*this, width())
+                .WillByDefault(Return(w));
+        ON_CALL(*this, height())
+                .WillByDefault(Return(h));
+        ON_CALL(*this, stride())
+                .WillByDefault(Return(s));
+        ON_CALL(*this, pixel_format())
+                .WillByDefault(Return(pf));
 	}
 
     MOCK_CONST_METHOD0(width, geom::Width());

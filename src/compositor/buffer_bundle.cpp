@@ -17,13 +17,17 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 #include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_swapper.h"
+#include "mir/thread/all.h"
 
 #include <algorithm>
-#include <mutex>
+#include <cassert>
 
 namespace mc = mir::compositor;
 
-mc::BufferBundle::BufferBundle()
+mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
+ :
+    swapper(std::move(swapper))
 {
 }
 
@@ -31,33 +35,9 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
-void mc::BufferBundle::set_swap_pattern(mc::BufferSwapper *)
-{
-}
-
-void mc::BufferBundle::add_buffer(std::shared_ptr<Buffer> buffer)
-{
-
-    std::lock_guard<std::mutex> lg(buffer_list_guard);
-    std::lock_guard<std::mutex> lg_back_buffer(back_buffer_guard);
-    compositor_buffer = client_buffer;
-    client_buffer = buffer;
-
-    buffer_list.push_back(buffer);
-}
-
-int mc::BufferBundle::remove_all_buffers()
-{
-    std::lock_guard<std::mutex> lg(buffer_list_guard);
-
-    int size = buffer_list.size();
-    buffer_list.clear();
-
-    return size;
-}
-
 void mc::BufferBundle::lock_back_buffer()
 {
+    compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->lock();
 }
 
@@ -66,30 +46,27 @@ void mc::BufferBundle::unlock_back_buffer()
     compositor_buffer->unlock();
 }
 
+namespace
+{
+struct NullDeleter { void operator()(void*) const {} };
+}
 std::shared_ptr<mc::Buffer> mc::BufferBundle::back_buffer()
 {
-    return compositor_buffer;
+    return std::shared_ptr<mc::Buffer>(compositor_buffer, NullDeleter());
 }
 
 void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
 {
-    // TODO: This is a very dumb strategy for locking
-    std::lock_guard<mc::Buffer> lg_compositor_buffer(*compositor_buffer);
-    std::lock_guard<mc::Buffer> lg_client_buffer(*client_buffer);
+    assert(client_buffer == buffer.get());
 
-    buffer->unlock();
-
-    std::swap(compositor_buffer, client_buffer);
-    std::swap(compositor_buffer, buffer);
+    client_buffer->unlock();
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
-    // TODO: This is a very dumb strategy for locking
-    std::lock_guard<mc::Buffer> lg_client_buffer(*client_buffer);
-
+    client_buffer = swapper->client_acquire();
     client_buffer->lock();
-    return client_buffer;
+    return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }
 
 

@@ -22,8 +22,10 @@
 
 #include "buffer_swapper.h"
 
+#include "mir/thread/all.h"
+
 #include <memory>
-#include <atomic>
+#include <queue>
 
 namespace mir
 {
@@ -32,17 +34,33 @@ namespace compositor
 
 class Buffer;
 
-class BufferSwapperDouble : public BufferSwapper {
+class BufferSwapperDouble : public BufferSwapper
+{
 public:
-    BufferSwapperDouble(std::shared_ptr<Buffer> buffer_a, std::shared_ptr<Buffer> buffer_b);
+    BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
 
-    void dequeue_free_buffer(std::shared_ptr<Buffer>& buffer);
-    void queue_finished_buffer(std::shared_ptr<Buffer>& buffer);
-    void grab_last_posted(std::shared_ptr<Buffer>& buffer);
-    void ungrab(std::shared_ptr<Buffer>& buffer );
+    Buffer* client_acquire();
+    void client_release(Buffer* queued_buffer);
+    Buffer* compositor_acquire();
+    void compositor_release(Buffer* released_buffer);
+
+private:
+    typedef const std::unique_ptr<Buffer> BufferPtr;
+    BufferPtr  buffer_a;
+    BufferPtr  buffer_b;
+
+    std::mutex swapper_mutex;
+
+    std::condition_variable consumed_cv;
+    bool compositor_has_consumed;
+
+    std::condition_variable buffer_available_cv;
+    std::queue<Buffer*> client_queue;
+
+    Buffer* last_posted_buffer;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_ */

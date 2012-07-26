@@ -19,6 +19,7 @@ add_subdirectory(compositor/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
 add_subdirectory(frontend/)
+add_subdirectory(process/)
 
 set(
   SRCS
@@ -30,4 +31,3 @@ add_library(
 
   ${SRCS}
 )
-

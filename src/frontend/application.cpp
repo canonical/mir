@@ -14,29 +14,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
+#include "mir/frontend/application.h"
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include <cassert>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+namespace mf = mir::frontend;
 
-namespace mir
+mf::Application::Application(std::shared_ptr<Communicator> communicator)
+    : communicator(communicator)
 {
-namespace compositor
-{
-
-struct MockGraphicBufferAllocator : mc::GraphicBufferAllocator
-{
- public:
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<Buffer>(geometry::Width, geometry::Height, PixelFormat));
-    MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
-};
-
-}
+    assert(communicator);
 }
 
-#endif // MIR_COMPOSITOR_MOCK_GRAPHIC_BUFFER_ALLOCATOR_H_
+mf::Application::~Application()
+{
+}
+
+void mf::Application::on_event(mi::Event* e)
+{
+    assert(e);
+}
+
+mf::Application::StateTransitionSignal& mf::Application::state_transition_signal()
+{
+    return state_transition;
+}
+
+void mf::Application::connect()
+{
+}
+
+void mf::Application::disconnect()
+{
+}
