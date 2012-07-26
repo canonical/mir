@@ -88,10 +88,7 @@ set(
 set(GTEST_FOUND TRUE)
 # GMock/GTest build finished and available to subsequent components
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(end-to-end-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
+add_subdirectory(tests/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
