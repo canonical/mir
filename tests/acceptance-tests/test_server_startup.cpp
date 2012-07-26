@@ -39,20 +39,16 @@ bool detect_server(
 {
     namespace ba = boost::asio;
     namespace bal = boost::asio::local;
+    namespace bs = boost::system;
+
     ba::io_service io_service;
     bal::stream_protocol::endpoint endpoint(socket_file);
     bal::stream_protocol::socket socket(io_service);
 
-    try
-    {
-        socket.connect(endpoint);
-    }
-    catch (const boost::system::system_error&)
-    {
-        return false;
-    }
+    bs::error_code error;
+    socket.connect(endpoint, error);
 
-    return true;
+    return !error;
 }
 
 }
