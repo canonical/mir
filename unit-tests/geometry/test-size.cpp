@@ -29,8 +29,8 @@ TEST(geometry, width)
     geom::Width width0 {0};
     geom::Width width42 {42};
 
-    EXPECT_EQ(0, width0.as_uint32_t());
-    EXPECT_EQ(42, width42.as_uint32_t());
+    EXPECT_EQ(uint32_t{0}, width0.as_uint32_t());
+    EXPECT_EQ(uint32_t{42}, width42.as_uint32_t());
 
     EXPECT_EQ(width0, width0);
     EXPECT_NE(width0, width42);
@@ -43,8 +43,8 @@ TEST(geometry, height)
     geom::Height height0 {0};
     geom::Height height42 {42};
 
-    EXPECT_EQ(0, height0.as_uint32_t());
-    EXPECT_EQ(42, height42.as_uint32_t());
+    EXPECT_EQ(uint32_t{0}, height0.as_uint32_t());
+    EXPECT_EQ(uint32_t{42}, height42.as_uint32_t());
 
     EXPECT_EQ(height0, height0);
     EXPECT_NE(height0, height42);
