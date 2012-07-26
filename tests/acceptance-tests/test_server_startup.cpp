@@ -18,7 +18,7 @@
  */
 
 #include "display_server_test_fixture.h"
-#include "mir/frontend/communicator.h"
+#include "mir/frontend/protobuf_asio_communicator.h"
 
 #include <boost/asio.hpp>
 
@@ -32,13 +32,13 @@
 
 namespace mir
 {
-namespace ba = boost::asio;
-namespace bal = boost::asio::local;
 
 bool detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& /*timeout*/ )
 {
+    namespace ba = boost::asio;
+    namespace bal = boost::asio::local;
     ba::io_service io_service;
     bal::stream_protocol::endpoint endpoint(socket_file);
     bal::stream_protocol::socket socket(io_service);
@@ -55,26 +55,6 @@ bool detect_server(
     return true;
 }
 
-class ProtobufAsioCommunicator : public mir::frontend::Communicator
-{
-public:
-    ProtobufAsioCommunicator(std::string const& socket_file)
-        : socket_file(socket_file)
-    {
-        ba::io_service io_service;
-        std::remove(socket_file.c_str());
-        bal::stream_protocol::acceptor acceptor(io_service, socket_file);
-        bal::stream_protocol::socket socket(io_service);
-        acceptor.accept(socket);
-    }
-
-    ~ProtobufAsioCommunicator()
-    {
-        std::remove(socket_file.c_str());
-    }
-private:
-    std::string const socket_file;
-};
 }
 
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
@@ -90,7 +70,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            return std::make_shared<mir::ProtobufAsioCommunicator>(socket_file);
+            return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file);
         }
 
         void exec(mir::DisplayServer *)
