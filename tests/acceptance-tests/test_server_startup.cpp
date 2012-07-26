@@ -35,8 +35,10 @@ namespace mir
 
 bool detect_server(
         const std::string& socket_file,
-        std::chrono::milliseconds const& /*timeout*/ )
+        std::chrono::milliseconds const& timeout)
 {
+    std::chrono::time_point<std::chrono::system_clock> limit
+        =  std::chrono::system_clock::now()+timeout;
     namespace ba = boost::asio;
     namespace bal = boost::asio::local;
     namespace bs = boost::system;
@@ -46,7 +48,12 @@ bool detect_server(
     bal::stream_protocol::socket socket(io_service);
 
     bs::error_code error;
-    socket.connect(endpoint, error);
+
+    do
+    {
+        socket.connect(endpoint, error);
+    }
+    while (!error && std::chrono::system_clock::now() < limit);
 
     return !error;
 }
