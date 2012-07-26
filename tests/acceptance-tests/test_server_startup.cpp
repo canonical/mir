@@ -63,7 +63,7 @@ bool detect_server(
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
     const std::string socket_file{"/tmp/mir_socket_test"};
-    ASSERT_FALSE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
+    ASSERT_FALSE(mir::detect_server(socket_file, std::chrono::milliseconds(0)));
 
     struct ServerConfig : TestingServerConfiguration
     {
