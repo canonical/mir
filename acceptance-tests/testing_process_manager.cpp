@@ -41,11 +41,9 @@ namespace
 
 void startup_pause()
 {
-#ifndef MIR_USING_BOOST_THREADS
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-#else
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
-#endif
+    // A small delay to let the display server get started.
+    // TODO there should be a way the server announces "ready"
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 }
 }
 
@@ -96,8 +94,6 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     else
     {
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
-        // A small delay to let the display server get started.
-        // TODO there should be a way the server announces "ready"
         startup_pause();
     }
 }
@@ -168,7 +164,6 @@ void mir::TestingProcessManager::tear_down_server()
         // We're in the test process, so make sure we started a service
         ASSERT_TRUE(WasStarted(server_process));
         server_process->terminate();
-        startup_pause(); // TODO frig
         mp::Result const result = server_process->wait_for_termination();
         EXPECT_TRUE(result.succeeded()) << result;
         server_process.reset();
