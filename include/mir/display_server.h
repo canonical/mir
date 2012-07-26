@@ -32,6 +32,12 @@ class BufferAllocationStrategy;
 class BufferBundleFactory;
 
 }
+namespace frontend
+{
+
+class Communicator;
+
+}
 namespace graphics
 {
 
@@ -46,6 +52,7 @@ public:
     // TODO: Come up with a better way to resolve dependency on
     // the BufferAllocationStrategy.
     DisplayServer(
+        const std::shared_ptr<frontend::Communicator>& communicator,
         const std::shared_ptr<compositor::BufferAllocationStrategy>& strategy,
         const std::shared_ptr<graphics::Renderer>& renderer);
 

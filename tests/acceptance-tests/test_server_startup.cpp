@@ -32,13 +32,13 @@
 
 namespace mir
 {
+namespace ba = boost::asio;
+namespace bal = boost::asio::local;
 
 bool detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& /*timeout*/ )
 {
-    namespace ba = boost::asio;
-    namespace bal = boost::asio::local;
     ba::io_service io_service;
     bal::stream_protocol::endpoint endpoint(socket_file);
     bal::stream_protocol::socket socket(io_service);
@@ -46,7 +46,8 @@ bool detect_server(
     try
     {
         socket.connect(endpoint);
-    } catch(const boost::system::system_error&)
+    }
+    catch (const boost::system::system_error&)
     {
         return false;
     }
@@ -57,14 +58,12 @@ bool detect_server(
 class ProtobufAsioCommunicator : public mir::frontend::Communicator
 {
 public:
-    ProtobufAsioCommunicator(std::string const& socket_file) : socket_file(socket_file)
+    ProtobufAsioCommunicator(std::string const& socket_file)
+        : socket_file(socket_file)
     {
-        namespace ba = boost::asio;
-        namespace bal = boost::asio::local;
         ba::io_service io_service;
         bal::stream_protocol::acceptor acceptor(io_service, socket_file);
         bal::stream_protocol::socket socket(io_service);
-
         acceptor.accept(socket);
     }
 
@@ -78,10 +77,9 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     const std::string socket_file{"/tmp/mir_socket_test"};
     ASSERT_FALSE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
 
-    struct Server : TestingServerConfiguration
+    struct ServerConfig : TestingServerConfiguration
     {
-        std::string const socket_file;
-        Server(std::string const& file) : socket_file(file)
+        ServerConfig(std::string const& file) : socket_file(file)
         {
             std::remove(file.c_str());
         }
@@ -93,17 +91,15 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
         void exec(mir::DisplayServer *)
         {
-            make_communicator();
         }
-
-    } default_config(socket_file);
-
-    launch_server_process(default_config);
-
-    struct Client : TestingClientConfiguration
-    {
         std::string const socket_file;
-        Client(std::string const& socket_file) : socket_file(socket_file)
+    } server_config(socket_file);
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        ClientConfig(std::string const& socket_file) : socket_file(socket_file)
         {
         }
 
@@ -112,9 +108,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
             std::cout << "DEBUG testing server exists" << std::endl;
             EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
         }
-    } client(socket_file);
+        std::string const socket_file;
+    } client_config(socket_file);
 
-    launch_client_process(client);
-
+    launch_client_process(client_config);
 }
-

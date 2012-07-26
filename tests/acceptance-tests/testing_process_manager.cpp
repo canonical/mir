@@ -74,6 +74,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         SCOPED_TRACE("Server");
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
+                        config.make_communicator(),               
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
 

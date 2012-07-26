@@ -18,6 +18,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/frontend/communicator.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderer.h"
@@ -29,6 +30,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -39,6 +41,10 @@ struct MockDisplay : mg::Display
 public:
     MOCK_METHOD0(view_area, geom::Rectangle ());
     MOCK_METHOD0(notify_update, void());
+};
+
+class StubCommunicator : public mf::Communicator
+{
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -74,6 +80,7 @@ TEST(compositor_renderloop, notify_sync_and_see_paint)
             std::make_shared<StubGraphicBufferAllocator>()));
 
     mir::DisplayServer display_server(
+        std::make_shared<StubCommunicator>(),
         allocation_strategy,
         std::make_shared<StubSurfaceRenderer>());
 
@@ -95,6 +102,7 @@ TEST(display_server, start_stop)
             std::make_shared<StubGraphicBufferAllocator>()));
 
     mir::DisplayServer display_server(
+        std::make_shared<StubCommunicator>(),
         allocation_strategy,
         std::make_shared<StubSurfaceRenderer>());
 
