@@ -67,7 +67,7 @@ find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
 # it to ensure/allow for:
 #   (1.) a matching gmock/gtest version
 #   (2.) a stream-lined cross-compilation workflow
-set(GTEST_INCLUDE_DIR gmock-1.6.0/src) 
+set(GTEST_INCLUDE_DIR gmock-1.6.0/src)
 
 include_directories (
   ${Boost_INCLUDE_DIRS}
@@ -81,8 +81,8 @@ add_subdirectory(gmock-1.6.0/)
 set(GMOCK_LIBRARY gmock)
 set(GMOCK_MAIN_LIBRARY gmock_main)
 set(
-  GTEST_BOTH_LIBRARIES 
-  
+  GTEST_BOTH_LIBRARIES
+
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY})
 set(GTEST_FOUND TRUE)

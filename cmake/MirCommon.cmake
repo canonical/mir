@@ -40,13 +40,13 @@ function (mir_discover_tests EXECUTABLE)
 
   add_dependencies (${EXECUTABLE}
     mir_discover_gtest_tests)
-  
+
   add_custom_command (TARGET ${EXECUTABLE}
     POST_BUILD
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Discovering Tests in ${EXECUTABLE}"
-    DEPENDS 
+    DEPENDS
     VERBATIM)
 endfunction ()
 
