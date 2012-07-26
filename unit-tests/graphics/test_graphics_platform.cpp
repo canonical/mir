@@ -28,5 +28,5 @@ TEST(GraphicsPlatform, buffer_allocator)
 {
     std::unique_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
 
-    ASSERT_TRUE(allocator);
+    ASSERT_TRUE(allocator.get());
 }
