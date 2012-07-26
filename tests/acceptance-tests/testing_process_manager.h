@@ -75,11 +75,11 @@ public:
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
+    void os_signal_handler(int signal);
 
 private:
 
     mir::DisplayServer* display_server() const;
-    void os_signal_handler(int signal);
 
     std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;

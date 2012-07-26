@@ -43,10 +43,16 @@ namespace
         return ::testing::AssertionFailure() << "server NOT started";
 }
 
+#define MIR_OLD_SIGNAL_HANDLING
 void startup_pause()
 {
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
         throw std::runtime_error("Failed to find server");
+
+#ifdef  MIR_OLD_SIGNAL_HANDLING
+    // TODO Ugly FRIG to allow server time to register the signal handler
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+#endif
 }
 }
 
@@ -58,6 +64,23 @@ mir::TestingProcessManager::TestingProcessManager() :
 mir::TestingProcessManager::~TestingProcessManager()
 {
 }
+
+#ifdef  MIR_OLD_SIGNAL_HANDLING
+namespace
+{
+mir::DisplayServer* signal_display_server;
+}
+extern "C"
+{
+void (*signal_prev_fn)(int);
+void signal_terminate (int param)
+{
+    if (SIGTERM == param) signal_display_server->stop();
+    else signal_prev_fn(param);
+}
+}
+#endif
+
 
 void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
@@ -76,16 +99,21 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
+#ifndef  MIR_OLD_SIGNAL_HANDLING
         mp::SignalDispatcher::instance()->enable_for(SIGTERM);
         mp::SignalDispatcher::instance()->signal_channel().connect(
                 boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
-
+#endif
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
-                        config.make_communicator(),               
+                        config.make_communicator(),
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
 
+#ifdef  MIR_OLD_SIGNAL_HANDLING
+        signal_display_server = server.get();
+        signal_prev_fn = signal (SIGTERM, signal_terminate);
+#endif
         struct ScopedFuture
         {
             std::future<void> future;
