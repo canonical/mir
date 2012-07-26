@@ -18,7 +18,6 @@
  */
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

@@ -37,8 +37,6 @@ class Buffer;
 class BufferSwapperDouble : public BufferSwapper
 {
 public:
-
-
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
     ~BufferSwapperDouble() {}
 
