@@ -16,31 +16,26 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
-#define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
+#include "mir/frontend/protobuf_asio_communicator.h"
 
-#include "communicator.h"
+#include <boost/asio.hpp>
 
-#include <string>
+namespace mf = mir::frontend;
 
-namespace mir
+mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
+        : socket_file(socket_file)
 {
-namespace frontend
-{
+    namespace ba = boost::asio;
+    namespace bal = boost::asio::local;
 
-class ProtobufAsioCommunicator : public Communicator
-{
-public:
-    // Create communicator based on Boost asio and Google protobufs
-    // using the supplied socket.
-    ProtobufAsioCommunicator(std::string const& socket_file);
-
-    ~ProtobufAsioCommunicator();
-private:
-    std::string const socket_file;
-};
-
-}
+    ba::io_service io_service;
+    std::remove(socket_file.c_str());
+    bal::stream_protocol::acceptor acceptor(io_service, socket_file);
+    bal::stream_protocol::socket socket(io_service);
+    acceptor.accept(socket);
 }
 
-#endif // MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
+mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
+{
+    std::remove(socket_file.c_str());
+}
