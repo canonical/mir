@@ -61,6 +61,8 @@ void a_main_function_accessing_the_signal_dispatcher()
 {
     // Ensure that the SignalDispatcher has been created.
     mp::SignalDispatcher::instance();
+    // Don't return (and exit) before the parent process has a chance to signal
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 template<int signal>
@@ -78,7 +80,7 @@ void a_main_function_collecting_received_signals()
 
 int a_successful_exit_function()
 {
-    return EXIT_SUCCESS; 
+    return EXIT_SUCCESS;
 }
 
 int a_gtest_exit_function()
