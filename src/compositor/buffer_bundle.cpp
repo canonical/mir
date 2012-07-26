@@ -37,14 +37,13 @@ mc::BufferBundle::~BufferBundle()
 
 void mc::BufferBundle::lock_back_buffer()
 {
-    compositor_buffer = swapper->grab_last_posted();
+    compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->lock();
 }
 
 void mc::BufferBundle::unlock_back_buffer()
 {
     compositor_buffer->unlock();
-    swapper->ungrab();
 }
 
 namespace
@@ -61,12 +60,11 @@ void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
     assert(client_buffer == buffer.get());
 
     client_buffer->unlock();
-    swapper->queue_finished_buffer();
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
-    client_buffer = swapper->dequeue_free_buffer();
+    client_buffer = swapper->client_acquire();
     client_buffer->lock();
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }
