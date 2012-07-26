@@ -27,7 +27,7 @@ int main (int argc, char **argv)
         if (::strcmp(argv[2], "--enable-memcheck") == 0)
             enable_memcheck=true;
     }
-        
+
     set<string> tests;
     string line;
     string current_test;
@@ -67,10 +67,10 @@ int main (int argc, char **argv)
                             << "ADD_TEST ("
                             << "memcheck_" << test_suite << '.' << *test
                             << " \"valgrind\"" << " \"" << argv[1] << "\""
-                            << "\"--gtest_death_test_use_fork\"" 
+                            << "\"--gtest_death_test_use_fork\""
                             << "\"--gtest_filter=" << *test << "\")" << endl;
                 }
-            }                
+            }
         }
 
         testfilecmake.close();
