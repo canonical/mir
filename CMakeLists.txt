@@ -26,11 +26,32 @@ set(
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
 
-project(Mir)
+project(
+  Mir
+  CXX
+  C)
 
 cmake_minimum_required(VERSION 2.8)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
+
+include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+
+#####################################################################
+# Enable code coverage calculation with gcov/gcovr/lcov
+# Usage:
+#  * Switch build type to coverage (use ccmake or cmake-gui)
+#  * Invoke make, make test, make coverage
+#  * Find html report in subdir coveragereport
+#  * Find xml report feasible for jenkins in coverage.xml
+#####################################################################
+IF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs" )
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs" )
+  SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
+  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
+ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
 
 enable_testing()
 
@@ -41,42 +62,34 @@ add_subdirectory(src/)
 # Check for boost
 find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
 
-# Build Google Test and make its headers known
-# Check for google test and build it locally
-set(GTEST_ROOT_DIR
-  "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
-  CACHE
-  PATH
-  "Path to Google test srcs"
-  )
-  
-find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
-  
-if(GTEST_INCLUDE_DIR)
-  add_subdirectory(${GTEST_ROOT_DIR} gtest)
-  
-  set(GTEST_BOTH_LIBRARIES gtest gtest_main)
-  set(GTEST_FOUND TRUE)
-endif(GTEST_INCLUDE_DIR)
-
-# TODO(tvoss): Move to its own FindGoogleMock module
-find_library(GMOCK_LIBRARY gmock)
-find_library(GMOCK_MAIN_LIBRARY gmock_main)
-
-if (NOT GMOCK_LIBRARY OR NOT GMOCK_MAIN_LIBRARY OR NOT GTEST_FOUND)
-  message ("Google Mock and Google Test not found - cannot build tests!")
-endif (NOT GMOCK_LIBRARY OR NOT GMOCK_MAIN_LIBRARY OR NOT GTEST_FOUND)
+# Pulling in local gmock version
+# While this seems evil, we are doing
+# it to ensure/allow for:
+#   (1.) a matching gmock/gtest version
+#   (2.) a stream-lined cross-compilation workflow
+set(GTEST_INCLUDE_DIR gmock-1.6.0/src)
 
 include_directories (
   ${Boost_INCLUDE_DIRS}
-  ${GTEST_INCLUDE_DIRS}
+  ${GTEST_INCLUDE_DIR}
 )
 
 find_package (Threads REQUIRED)
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(end-to-end-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
+add_subdirectory(gmock-1.6.0/)
+
+set(GMOCK_LIBRARY gmock)
+set(GMOCK_MAIN_LIBRARY gmock_main)
+set(
+  GTEST_BOTH_LIBRARIES
+
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY})
+set(GTEST_FOUND TRUE)
+# GMock/GTest build finished and available to subsequent components
+
+add_subdirectory(tests/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
+
+enable_coverage_report(mir)

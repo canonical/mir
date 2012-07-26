@@ -1,3 +1,4 @@
+#include <cstring>
 #include <map>
 #include <set>
 #include <string>
@@ -16,8 +17,15 @@ int main (int argc, char **argv)
 
     if (argc < 2)
     {
-        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases PATH_TO_TEST_BINARY";
+        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases PATH_TO_TEST_BINARY [--enable-memcheck]";
         return 1;
+    }
+
+    bool enable_memcheck = false;
+    if(argc > 2)
+    {
+        if (::strcmp(argv[2], "--enable-memcheck") == 0)
+            enable_memcheck=true;
     }
 
     set<string> tests;
@@ -48,10 +56,20 @@ int main (int argc, char **argv)
             if (testfilecmake.good())
             {
                 testfilecmake
-                    << "ADD_TEST ("
-                    << test_suite << '.' << *test
-                    << " \"" << argv[1] << "\""
-                    << "\"--gtest_filter=" << *test << "\")" << endl;
+                        << "ADD_TEST ("
+                        << test_suite << '.' << *test
+                        << " \"" << argv[1] << "\""
+                        << "\"--gtest_filter=" << *test << "\")" << endl;
+
+                if (enable_memcheck)
+                {
+                    testfilecmake
+                            << "ADD_TEST ("
+                            << "memcheck_" << test_suite << '.' << *test
+                            << " \"valgrind\"" << " \"" << argv[1] << "\""
+                            << "\"--gtest_death_test_use_fork\""
+                            << "\"--gtest_filter=" << *test << "\")" << endl;
+                }
             }
         }
 
