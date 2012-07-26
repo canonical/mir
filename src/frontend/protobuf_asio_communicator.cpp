@@ -20,22 +20,34 @@
 
 #include <boost/asio.hpp>
 
+#include <functional>
+
 namespace mf = mir::frontend;
 
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
-        : socket_file(socket_file)
+        : socket_file((std::remove(socket_file.c_str()), socket_file)),
+          acceptor(io_service, socket_file),
+          socket(io_service)
 {
-    namespace ba = boost::asio;
-    namespace bal = boost::asio::local;
 
-    ba::io_service io_service;
-    std::remove(socket_file.c_str());
-    bal::stream_protocol::acceptor acceptor(io_service, socket_file);
-    bal::stream_protocol::socket socket(io_service);
-    acceptor.accept(socket);
+    acceptor.async_accept(
+            socket,
+            std::bind(
+                    &ProtobufAsioCommunicator::on_new_connection,
+                    this,
+                    std::placeholders::_1));
 }
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
     std::remove(socket_file.c_str());
+}
+
+void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_code& ec)
+{
+    if (ec)
+    {
+        // TODO: React to error here.
+        return;
+    }
 }

@@ -21,12 +21,17 @@
 
 #include "communicator.h"
 
+#include <boost/asio.hpp>
+
 #include <string>
 
 namespace mir
 {
 namespace frontend
 {
+
+namespace ba = boost::asio;
+namespace bal = boost::asio::local;
 
 class ProtobufAsioCommunicator : public Communicator
 {
@@ -37,7 +42,12 @@ public:
 
     ~ProtobufAsioCommunicator();
 private:
+    void on_new_connection(const boost::system::error_code& ec);
+
     std::string const socket_file;
+    ba::io_service io_service;
+    bal::stream_protocol::acceptor acceptor;
+    bal::stream_protocol::socket socket;
 };
 
 }
