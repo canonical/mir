@@ -23,7 +23,11 @@
 
 #include "mir/thread/all.h"
 
+#include <boost/asio.hpp>
+
 #include <gmock/gmock.h>
+
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
@@ -41,9 +45,8 @@ namespace
 
 void startup_pause()
 {
-    // A small delay to let the display server get started.
-    // TODO there should be a way the server announces "ready"
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
+        throw std::runtime_error("Failed to find server");
 }
 }
 
@@ -72,15 +75,16 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
+
+        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
+        mp::SignalDispatcher::instance()->signal_channel().connect(
+                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
+
         server = std::unique_ptr<mir::DisplayServer>(
                 new mir::DisplayServer(
                         config.make_communicator(),               
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
-
-        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
-        mp::SignalDispatcher::instance()->signal_channel().connect(
-                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
         struct ScopedFuture
         {
@@ -198,4 +202,30 @@ void mir::TestingProcessManager::os_signal_handler(int signal)
     default:
         break;
     }
+}
+
+bool mir::detect_server(
+        const std::string& socket_file,
+        std::chrono::milliseconds const& timeout)
+{
+    std::chrono::time_point<std::chrono::system_clock> limit
+        =  std::chrono::system_clock::now()+timeout;
+    namespace ba = boost::asio;
+    namespace bal = boost::asio::local;
+    namespace bs = boost::system;
+
+    ba::io_service io_service;
+    bal::stream_protocol::endpoint endpoint(socket_file);
+    bal::stream_protocol::socket socket(io_service);
+
+    bs::error_code error;
+
+    do
+    {
+        if (error) std::thread::yield();
+        socket.connect(endpoint, error);
+    }
+    while (error && std::chrono::system_clock::now() < limit);
+
+    return !error;
 }

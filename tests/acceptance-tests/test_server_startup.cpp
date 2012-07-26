@@ -20,8 +20,6 @@
 #include "display_server_test_fixture.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 
-#include <boost/asio.hpp>
-
 #include <chrono>
 #include <cstdio>
 #include <string>
@@ -30,40 +28,9 @@
 #include <gtest/gtest.h>
 
 
-namespace mir
-{
-
-bool detect_server(
-        const std::string& socket_file,
-        std::chrono::milliseconds const& timeout)
-{
-    std::chrono::time_point<std::chrono::system_clock> limit
-        =  std::chrono::system_clock::now()+timeout;
-    namespace ba = boost::asio;
-    namespace bal = boost::asio::local;
-    namespace bs = boost::system;
-
-    ba::io_service io_service;
-    bal::stream_protocol::endpoint endpoint(socket_file);
-    bal::stream_protocol::socket socket(io_service);
-
-    bs::error_code error;
-
-    do
-    {
-        socket.connect(endpoint, error);
-    }
-    while (error && std::chrono::system_clock::now() < limit);
-
-    return !error;
-}
-
-}
-
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    const std::string socket_file{"/tmp/mir_socket_test"};
-    ASSERT_FALSE(mir::detect_server(socket_file, std::chrono::milliseconds(0)));
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
 
     struct ServerConfig : TestingServerConfiguration
     {
@@ -80,7 +47,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
         {
         }
         std::string const socket_file;
-    } server_config(socket_file);
+    } server_config(mir::test_socket_file());
 
     launch_server_process(server_config);
 
@@ -95,7 +62,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
             EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
         }
         std::string const socket_file;
-    } client_config(socket_file);
+    } client_config(mir::test_socket_file());
 
     launch_client_process(client_config);
 }

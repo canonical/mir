@@ -21,6 +21,7 @@
 
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/frontend/communicator.h"
+#include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -49,12 +50,6 @@ public:
         return std::unique_ptr<mc::BufferSwapper>();
     }
 };
-
-class StubCommunicator : public mf::Communicator
-{
-public:
-    StubCommunicator() {}
-};
 }
 
 
@@ -74,6 +69,13 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 
 std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
 {
-    return std::make_shared<StubCommunicator>();
+    return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(test_socket_file());
 }
+
+std::string const& mir::test_socket_file()
+{
+    static const std::string socket_file{"/tmp/mir_socket_test"};
+    return socket_file;
+}
+
 
