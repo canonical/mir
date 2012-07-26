@@ -31,6 +31,10 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 }
+namespace frontend
+{
+class Communicator;
+}
 namespace graphics
 {
 class Renderer;
@@ -46,6 +50,9 @@ struct TestingServerConfiguration
 {
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
+
+    // the communicator to use
+    virtual std::shared_ptr<frontend::Communicator> make_communicator();
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();

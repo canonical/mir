@@ -20,12 +20,14 @@
 #include "mir/display_server.h"
 
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/frontend/communicator.h"
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer_swapper.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 namespace
@@ -47,7 +49,14 @@ public:
         return std::unique_ptr<mc::BufferSwapper>();
     }
 };
+
+class StubCommunicator : public mf::Communicator
+{
+public:
+    StubCommunicator() {}
+};
 }
+
 
 std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
 {
@@ -61,5 +70,10 @@ void mir::TestingServerConfiguration::exec(DisplayServer* )
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 {
     return std::make_shared<StubRenderer>();
+}
+
+std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
+{
+    return std::make_shared<StubCommunicator>();
 }
 

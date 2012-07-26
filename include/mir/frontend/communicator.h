@@ -29,8 +29,6 @@ class Communicator
  public:
     virtual ~Communicator() {}
 
-    virtual void run() = 0;
-
  protected:
     Communicator() = default;
     Communicator(const Communicator&) = delete;
