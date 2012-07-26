@@ -53,7 +53,7 @@ bool detect_server(
     {
         socket.connect(endpoint, error);
     }
-    while (!error && std::chrono::system_clock::now() < limit);
+    while (error && std::chrono::system_clock::now() < limit);
 
     return !error;
 }
