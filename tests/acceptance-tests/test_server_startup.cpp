@@ -62,11 +62,16 @@ public:
         : socket_file(socket_file)
     {
         ba::io_service io_service;
+        std::remove(socket_file.c_str());
         bal::stream_protocol::acceptor acceptor(io_service, socket_file);
         bal::stream_protocol::socket socket(io_service);
         acceptor.accept(socket);
     }
 
+    ~ProtobufAsioCommunicator()
+    {
+        std::remove(socket_file.c_str());
+    }
 private:
     std::string const socket_file;
 };
@@ -81,7 +86,6 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     {
         ServerConfig(std::string const& file) : socket_file(file)
         {
-            std::remove(file.c_str());
         }
 
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
@@ -105,7 +109,6 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
         void exec()
         {
-            std::cout << "DEBUG testing server exists" << std::endl;
             EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
         }
         std::string const socket_file;
