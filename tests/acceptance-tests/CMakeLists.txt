@@ -23,6 +23,7 @@ add_executable(
   test_test_framework.cpp
   testing_process_manager.cpp
   testing_server_options.cpp
+  test_server_startup.cpp
 )
 
 target_link_libraries(
