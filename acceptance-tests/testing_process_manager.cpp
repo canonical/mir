@@ -24,6 +24,7 @@
 #include "mir/thread/all.h"
 
 #include <gmock/gmock.h>
+#include <valgrind/valgrind.h>
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
@@ -43,7 +44,7 @@ void startup_pause()
 {
     // A small delay to let the display server get started.
     // TODO there should be a way the server announces "ready"
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(RUNNING_ON_VALGRIND? 100 : 20));
 }
 }
 
