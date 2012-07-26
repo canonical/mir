@@ -15,20 +15,10 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(process/)
-add_subdirectory(surfaces/)
-
-set(
-  SRCS
-  display_server.cpp
+list(
+  APPEND UNIT_TEST_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
 )
 
-add_library(
-  mir STATIC
-
-  ${SRCS}
-)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

@@ -13,22 +13,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(process/)
-add_subdirectory(surfaces/)
-
-set(
-  SRCS
-  display_server.cpp
+add_executable(
+  acceptance-tests
+  
+  test_connect_disconnect.cpp
+  display_server_test_fixture.cpp
+  test_renderloop.cpp
+  test_test_framework.cpp
+  testing_process_manager.cpp
+  testing_server_options.cpp
 )
 
-add_library(
-  mir STATIC
+target_link_libraries(
+  acceptance-tests
+  
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirprocess
+  mirsurfaces
 
-  ${SRCS}
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
+
+mir_discover_tests(acceptance-tests)

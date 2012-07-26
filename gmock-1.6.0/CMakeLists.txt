@@ -12,23 +12,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(process/)
-add_subdirectory(surfaces/)
+include_directories(src)
 
-set(
-  SRCS
-  display_server.cpp
+add_library(
+  gmock SHARED
+
+  src/gmock-gtest-all.cc
 )
 
 add_library(
-  mir STATIC
+  gmock_main SHARED
 
-  ${SRCS}
+  src/gmock_main.cc
 )
+
+
+
+
+
+
+

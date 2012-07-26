@@ -14,21 +14,37 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
+add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+
+set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
+add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
-add_subdirectory(process/)
 add_subdirectory(surfaces/)
+add_subdirectory(process/)
 
-set(
-  SRCS
-  display_server.cpp
+add_executable(unit-tests ${UNIT_TEST_SOURCES})
+
+target_link_libraries(
+  unit-tests
+
+  mircompositor
+  mirfrontend
+  mirplatformgraphics
+  mirinput
+  mirsurfaces
+  mirprocess
+
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${Boost_LIBRARIES}
+  libboost_thread.so
+  ${EVEMU_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
-add_library(
-  mir STATIC
-
-  ${SRCS}
-)
+mir_discover_tests(unit-tests)

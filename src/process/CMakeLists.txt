@@ -18,6 +18,7 @@ set(
   PROCESS_SOURCES
 
   process.cpp
+  signal_dispatcher.cpp
 )
 
 add_library( 

@@ -22,6 +22,8 @@
 
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #include <cstdatomic>
+// For std::this_thread::sleep_for etc.
+#define _GLIBCXX_USE_NANOSLEEP
 #define MIR_USING_BOOST_THREADS
 #else
 #include <atomic>
@@ -54,7 +56,7 @@ enum class launch
 
 template<typename Callable, typename... Args>
 future<typename result_of<Callable(Args...)>::type>
-async(launch policy, Callable&& functor, Args&&... args)
+async(launch /*policy*/, Callable&& functor, Args&&... args)
 {
     typedef typename result_of<Callable(Args...)>::type result_type;
     ::boost::packaged_task<result_type> pt(functor, args...);
@@ -73,6 +75,11 @@ namespace cv_status
 {
 bool const no_timeout = true;
 bool const timeout = false;
+}
+
+namespace this_thread
+{
+    using namespace ::std::this_thread;
 }
 }
 }

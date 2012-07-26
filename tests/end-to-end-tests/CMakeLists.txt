@@ -15,20 +15,25 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(process/)
-add_subdirectory(surfaces/)
+add_executable(
+  end-to-end-tests 
+  
+  test_renderloop.cpp)
 
-set(
-  SRCS
-  display_server.cpp
+target_link_libraries(
+  end-to-end-tests
+
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirsurfaces
+
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-add_library(
-  mir STATIC
-
-  ${SRCS}
-)
+mir_discover_tests(end-to-end-tests)

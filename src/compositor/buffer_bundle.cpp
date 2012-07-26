@@ -21,6 +21,7 @@
 #include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
  :
@@ -32,30 +33,36 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
+namespace
+{
+struct NullDeleter { void operator()(void*) const {} };
+}
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
     auto compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->bind_to_texture();
 
-    return std::shared_ptr<mir::graphics::Texture>(nullptr);
+    mg::Texture* tex = NULL;
+    return std::shared_ptr<mg::Texture>(tex, NullDeleter());
 }
 
 void mc::BufferBundle::unlock_back_buffer()
 {
-    swapper->compositor_release(nullptr);
+    swapper->compositor_release(NULL);
 }
 
-void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> client_buffer)
+void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
 {
-    client_buffer->unlock();
-    swapper->client_release(client_buffer.get());
+    auto client_buffer = buffer.get();
+    assert(client_buffer);
+
+    swapper->client_release(client_buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
-    auto client_buffer = swapper->client_acquire();
+    mc::Buffer* client_buffer = swapper->client_acquire();
     client_buffer->lock();
 
-    struct NullDeleter { void operator()(void*) const {} };
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }
