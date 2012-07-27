@@ -41,6 +41,11 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket
                     boost::asio::placeholders::error));
 }
 
+void mf::ProtobufAsioCommunicator::start()
+{
+    //TODO
+}
+
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
     io_service.stop();

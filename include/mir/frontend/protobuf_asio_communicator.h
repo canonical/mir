@@ -48,6 +48,8 @@ public:
     
     ~ProtobufAsioCommunicator();
 
+    void start();
+
     NewSessionSignal& signal_new_session();
 private:
     void on_new_connection(const boost::system::error_code& ec);

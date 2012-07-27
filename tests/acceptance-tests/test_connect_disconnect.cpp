@@ -35,7 +35,7 @@ struct StubCommunicator : public mf::Communicator
     {
     }
 
-    void run()
+    void start()
     {
     }
 };

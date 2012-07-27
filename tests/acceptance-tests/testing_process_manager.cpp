@@ -94,7 +94,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
         //signal_display_server.store(server.get());        
         signal_prev_fn = signal (SIGTERM, signal_terminate);
-        
+
         server = std::unique_ptr<mir::DisplayServer>(
             new mir::DisplayServer(
                 config.make_communicator(),

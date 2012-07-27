@@ -45,6 +45,7 @@ public:
 
 class StubCommunicator : public mf::Communicator
 {
+    void start() {}
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
