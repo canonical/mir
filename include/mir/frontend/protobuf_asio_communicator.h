@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
 #include "communicator.h"
-
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
@@ -32,10 +31,6 @@ namespace mir
 {
 namespace frontend
 {
-
-namespace ba = boost::asio;
-namespace bal = boost::asio::local;
-
 
 class ProtobufAsioCommunicator : public Communicator
 {
@@ -51,13 +46,14 @@ public:
     void start();
 
     NewSessionSignal& signal_new_session();
+
 private:
     void on_new_connection(const boost::system::error_code& ec);
 
     std::string const socket_file;
-    ba::io_service io_service;
-    bal::stream_protocol::acceptor acceptor;
-    bal::stream_protocol::socket socket;
+    boost::asio::io_service io_service;
+    boost::asio::local::stream_protocol::acceptor acceptor;
+    boost::asio::local::stream_protocol::socket socket;
     std::thread io_service_thread;
     NewSessionSignal new_session_signal;
 };
