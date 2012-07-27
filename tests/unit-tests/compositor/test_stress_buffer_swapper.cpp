@@ -110,12 +110,14 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
     for(;;)
     {
-        *buf = swapper->client_acquire();
+        buf_tmp = swapper->client_acquire();
+        *buf = buf_tmp.get();
         if (synchronizer->child_enter_wait()) return;
 
-        swapper->client_release(*buf);
+        swapper->client_release(buf_tmp);
         if (synchronizer->child_enter_wait()) return;
     }
 }
@@ -124,12 +126,14 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
     for(;;)
     {
-        *buf = swapper->compositor_acquire();
+        buf_tmp = swapper->compositor_acquire();
+        *buf = buf_tmp.get();
         if (synchronizer->child_enter_wait()) return;
 
-        swapper->compositor_release(*buf);
+        swapper->compositor_release(buf_tmp);
         if (synchronizer->child_enter_wait()) return;
 
     }
@@ -187,12 +191,16 @@ void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    *buf = swapper->client_acquire();
-    swapper->client_release(*buf);
+    std::unique_ptr<mc::Buffer> buf_tmp;
+
+    buf_tmp = swapper->client_acquire();
+    *buf = buf_tmp.get();
+    swapper->client_release(buf_tmp);
 
     synchronizer->child_enter_wait();
 
-    *buf = swapper->client_acquire();
+    buf_tmp = swapper->client_acquire();
+    *buf = buf_tmp.get();
 
     synchronizer->child_enter_wait();
 }
@@ -201,10 +209,13 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
+
     synchronizer->child_enter_wait();
 
-    *buf = swapper->compositor_acquire();
-    swapper->compositor_release(*buf);
+    buf_tmp = swapper->compositor_acquire();
+    *buf = buf_tmp.get();
+    swapper->compositor_release(buf_tmp);
 
     synchronizer->child_enter_wait();
     synchronizer->child_enter_wait();
@@ -237,13 +248,15 @@ void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> syn
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->client_acquire();
-        swapper->client_release(*buf);
+        buf_tmp = swapper->client_acquire();
+        *buf = buf_tmp.get();
+        swapper->client_release(buf_tmp);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
@@ -254,18 +267,21 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->client_acquire();
-        swapper->client_release(*buf);
+        buf_tmp = swapper->client_acquire();
+        *buf = buf_tmp.get();
+        swapper->client_release(buf_tmp);
 
         /* two dequeues in quick succession like this will wait very often
            hence the 'stress' */
-        *buf = swapper->client_acquire();
-        swapper->client_release(*buf);
+        buf_tmp = swapper->client_acquire();
+        *buf = buf_tmp.get();
+        swapper->client_release(buf_tmp);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
@@ -276,14 +292,16 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
+    std::unique_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {
         wait_request = synchronizer->child_check_wait_request();
 
-        *buf = swapper->compositor_acquire();
+        buf_tmp = swapper->compositor_acquire();
+        *buf = buf_tmp.get();
 
-        swapper->compositor_release(*buf);
+        swapper->compositor_release(buf_tmp);
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
