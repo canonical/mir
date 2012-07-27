@@ -19,43 +19,48 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 
 namespace mf = mir::frontend;
+namespace ba = boost::asio;
 
 // TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
-        : socket_file((std::remove(socket_file.c_str()), socket_file)),
-          acceptor(io_service, socket_file),
-          socket(io_service)
+    : socket_file((std::remove(socket_file.c_str()), socket_file)),
+      acceptor(io_service, socket_file),
+      socket(io_service)
 {
     acceptor.async_accept(
         socket,
         boost::bind(
             &ProtobufAsioCommunicator::on_new_connection,
             this,
-            boost::asio::placeholders::error));
+            ba::placeholders::error));
 }
 
 void mf::ProtobufAsioCommunicator::start()
 {
-      io_service_thread = std::move(std::thread(boost::bind(&boost::asio::io_service::run, &io_service)));
+    auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
+    io_service_thread = std::move(std::thread(run_io_service));
 }
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
     io_service.stop();
     if (io_service_thread.joinable())
+    {
         io_service_thread.join();
+    }
     std::remove(socket_file.c_str());
 }
 
 void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_code& ec)
 {
-    if (ec)
+    if (!ec)
+    {
+        new_session_signal();
+    }
+    else
     {
         // TODO: React to error here.
-        return;
     }
-    
-    new_session_signal();
 }
 
 mf::ProtobufAsioCommunicator::NewSessionSignal& mf::ProtobufAsioCommunicator::signal_new_session()
