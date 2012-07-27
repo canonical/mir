@@ -62,19 +62,12 @@ mir::std::atomic<mir::DisplayServer*> signal_display_server;
 extern "C"
 {
 void (*signal_prev_fn)(int);
-void signal_terminate (int param)
+void signal_terminate (int )
 {
-    if (SIGTERM != param)
-    {
-        signal_prev_fn(param);
-    }
-    else
-    {
-        auto sds = signal_display_server.load();
-        for (; !sds; sds = signal_display_server.load())
-            /* could spin briefly during startup */;
-        sds->stop();
-    }
+    auto sds = signal_display_server.load();
+    for (; !sds; sds = signal_display_server.load())
+        /* could spin briefly during startup */;
+    sds->stop();
 }
 }
 
