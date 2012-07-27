@@ -21,7 +21,7 @@
 
 namespace mf = mir::frontend;
 
-TEST(Communicator, protobuf_asio_communicator)
+TEST(ProtobufAsioCommunicator, connection_results_in_a_session_being_created)
 {
     mf::ProtobufAsioCommunicator comm("/tmp/mir_test_pb_asio_socket");
 /*comm->signal_new_session().connect(
