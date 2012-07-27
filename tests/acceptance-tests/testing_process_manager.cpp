@@ -46,7 +46,6 @@ void startup_pause()
 {
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
         throw std::runtime_error("Failed to find server");
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 }
 
@@ -92,7 +91,6 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        //signal_display_server.store(server.get());        
         signal_prev_fn = signal (SIGTERM, signal_terminate);
 
         server = std::unique_ptr<mir::DisplayServer>(
@@ -101,6 +99,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
                 config.make_buffer_allocation_strategy(),
                 config.make_renderer()));
 
+        //signal_display_server.store(server.get());
         std::atomic_store(&signal_display_server, server.get());
 
         struct ScopedFuture
@@ -164,6 +163,12 @@ void mir::TestingProcessManager::tear_down_clients()
     {
         using namespace testing;
 
+        if (clients.empty())
+        {
+            // Allow some time for server-side only tests to run
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             auto result((*client)->wait_for_termination());
@@ -194,12 +199,6 @@ void mir::TestingProcessManager::tear_down_server()
 
 void mir::TestingProcessManager::tear_down_all()
 {
-    if (server)
-    {
-        // We're in the server process, so just close down gracefully
-        server->stop();
-    }
-
     tear_down_clients();
     tear_down_server();
 }
