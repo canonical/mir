@@ -65,18 +65,20 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-            .Times(1)
-            .WillOnce(Return(mock_buffer.get()));
+            .Times(1);
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
+
+    EXPECT_CALL(*mock_swapper, compositor_release(mock_buffer.get()))
+            .Times(1);
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     /* if binding doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
-        buffer_bundle.lock_and_bind_back_buffer();
+        auto texture = buffer_bundle.lock_and_bind_back_buffer();
     });
 
 }
@@ -90,12 +92,14 @@ TEST(buffer_bundle, get_buffer_for_client)
         .Times(1);
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);
+    EXPECT_CALL(*mock_swapper, client_release(mock_buffer.get()))
+        .Times(1);
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     /* if binding doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
-        buffer_bundle.dequeue_client_buffer();
+        auto buffer_package = buffer_bundle.dequeue_client_buffer();
     });
 }
