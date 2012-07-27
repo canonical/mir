@@ -24,7 +24,6 @@
 #include "mir/thread/all.h"
 
 #include <gmock/gmock.h>
-#include <valgrind/valgrind.h>
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
@@ -44,7 +43,7 @@ void startup_pause()
 {
     // A small delay to let the display server get started.
     // TODO there should be a way the server announces "ready"
-    std::this_thread::sleep_for(std::chrono::milliseconds(RUNNING_ON_VALGRIND? 100 : 20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 }
 }
 
@@ -56,6 +55,30 @@ mir::TestingProcessManager::TestingProcessManager() :
 mir::TestingProcessManager::~TestingProcessManager()
 {
 }
+
+namespace
+{
+mir::std::atomic<mir::DisplayServer*> signal_display_server;
+}
+extern "C"
+{
+void (*signal_prev_fn)(int);
+void signal_terminate (int param)
+{
+    if (SIGTERM != param)
+    {
+        signal_prev_fn(param);
+    }
+    else
+    {
+        auto sds = signal_display_server.load();
+        for (; !sds; sds = signal_display_server.load())
+            /* could spin briefly during startup */;
+        sds->stop();
+    }
+}
+}
+
 
 void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
@@ -73,14 +96,14 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
+
         server = std::unique_ptr<mir::DisplayServer>(
-                new mir::DisplayServer(
+                new DisplayServer(
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
-
-        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
-        mp::SignalDispatcher::instance()->signal_channel().connect(
-                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
+        //signal_display_server.store(server.get());
+        std::atomic_store(&signal_display_server, server.get());
+        signal_prev_fn = signal (SIGTERM, signal_terminate);
 
         struct ScopedFuture
         {
