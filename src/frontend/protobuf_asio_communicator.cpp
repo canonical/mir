@@ -18,10 +18,6 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 
-#include <boost/asio.hpp>
-
-#include <functional>
-
 namespace mf = mir::frontend;
 
 // TODO: Switch to std::bind for launching the thread.
@@ -30,13 +26,12 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket
           acceptor(io_service, socket_file),
           socket(io_service)
 {
-
     acceptor.async_accept(
-            socket,
-            boost::bind(
-                    &ProtobufAsioCommunicator::on_new_connection,
-                    this,
-                    boost::asio::placeholders::error));
+        socket,
+        boost::bind(
+            &ProtobufAsioCommunicator::on_new_connection,
+            this,
+            boost::asio::placeholders::error));
 }
 
 void mf::ProtobufAsioCommunicator::start()
