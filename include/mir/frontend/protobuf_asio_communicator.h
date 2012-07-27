@@ -32,10 +32,12 @@ namespace mir
 namespace frontend
 {
 
+class Session {};
+
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
-    typedef boost::signals2::signal<void()> NewSessionSignal;
+    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&)> NewSessionSignal;
 
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.

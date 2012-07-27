@@ -55,7 +55,7 @@ void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_
 {
     if (!ec)
     {
-        new_session_signal();
+        new_session_signal(std::make_shared<Session>());
     }
     else
     {

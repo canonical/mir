@@ -31,16 +31,18 @@ struct SessionSignalCollector
 
     SessionSignalCollector(SessionSignalCollector const &) = delete;
 
-    void on_new_session()
+    void on_new_session(std::shared_ptr<mf::Session> const& new_session)
     {
         std::unique_lock<std::mutex> ul(guard);
         session_count++;
+        session = new_session;
         wait_condition.notify_one();
     }
 
     std::mutex guard;
     std::condition_variable wait_condition;
     int session_count;
+    std::shared_ptr<mf::Session> session;
 };
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
@@ -60,7 +62,8 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         comm.signal_new_session().connect(
                 std::bind(
                     &SessionSignalCollector::on_new_session,
-                    &collector));
+                    &collector,
+                    std::placeholders::_1));
 
         comm.start();
 
@@ -90,4 +93,20 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_session_bein
         collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
 
     EXPECT_EQ(1, collector.session_count);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+        a_connection_attempt_results_in_a_session_being_created_with_a_session_id)
+{
+    boost::asio::io_service io_service;
+    boost::asio::local::stream_protocol::socket socket(io_service);
+
+    socket.connect(socket_name());
+
+    std::unique_lock<std::mutex> ul(collector.guard);
+
+    while (collector.session_count == 0)
+        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+
+    EXPECT_TRUE(collector.session.get());
 }
