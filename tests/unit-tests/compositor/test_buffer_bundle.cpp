@@ -36,125 +36,66 @@ const geom::Height height {768};
 const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
-struct EmptyDeleter
+struct MockSwapper : public mc::BufferSwapper
 {
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
-
-}
-
-#ifdef MIR_TODO
-/* this would simulate binding and locking a back buffer for the compositor's use */
-/* tests the BufferBundle's implementation of the BufferTextureBinder interface */
-TEST(buffer_bundle, add_buffers_and_bind)
-{
-    using namespace testing;
-
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
-    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
-        &mock_buffer,
-        EmptyDeleter());
-
-    buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.add_buffer(default_buffer);
-
-    int num_iterations = 5;
-    EXPECT_CALL(mock_buffer, bind_to_texture())
-    .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, lock())
-    .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, unlock())
-    .Times(AtLeast(num_iterations));
-    mc::BufferTextureBinder *binder;
-    binder = &buffer_bundle;
-
-    for(int i=0; i<num_iterations; i++)
-    {
-        /* if binding doesn't work, this is a case where we may have an exception */
-        ASSERT_NO_THROW(
+    public:
+        MockSwapper(std::shared_ptr<mc::Buffer> buffer)
         {
-            binder->lock_and_bind_back_buffer();
-        });
-    }
+            using namespace testing;
+
+            /* note: (kdub) we should change compositor_acquire's return type to be a shared or unique_ptr */
+            ON_CALL(*this, compositor_acquire())
+                    .WillByDefault(Return(buffer.get()));
+            ON_CALL(*this, client_acquire())
+                    .WillByDefault(Return(buffer.get()));
+        };
+        MOCK_METHOD0(client_acquire,   mc::Buffer*(void));
+        MOCK_METHOD1(client_release, void(mc::Buffer*));
+        MOCK_METHOD0(compositor_acquire,   mc::Buffer*(void));
+        MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
+
+};
 }
-#endif
 
-#ifdef MIR_TODO
-/* this would simulate locking a buffer for a client's use */
-/* tests the BufferBundle's implemantation of the BufferQueue interface */
-TEST(buffer_bundle, add_buffers_and_distribute)
+TEST(buffer_bundle, get_buffer_for_compositor)
 {
+
     using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
-    mc::MockBuffer mock_buffer {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
-        &mock_buffer,
-        EmptyDeleter());
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
+            .Times(1)
+            .WillOnce(Return(mock_buffer.get()));
 
-    buffer_bundle.add_buffer(default_buffer);
-    buffer_bundle.add_buffer(default_buffer);
+    EXPECT_CALL(*mock_buffer, bind_to_texture())
+        .Times(1);
 
-    mc::BufferQueue * queue;
-    queue = &buffer_bundle;
-    int num_iterations = 5;
-    EXPECT_CALL(mock_buffer, lock())
-            .Times(AtLeast(num_iterations));
-    EXPECT_CALL(mock_buffer, unlock())
-            .Times(AtLeast(num_iterations));
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::Buffer> sent_buffer;
-    for(int i=0; i<num_iterations; i++)
+    /* if binding doesn't work, this is a case where we may have an exception */
+    ASSERT_NO_THROW(
     {
-        /* todo: (kdub) sent_buffer could be swapped out with an IPC-friendly
-           data bundle in the future */
-        sent_buffer = nullptr;
-        sent_buffer = queue->dequeue_client_buffer();
-        EXPECT_NE(nullptr, sent_buffer);
-        queue->queue_client_buffer(sent_buffer);
-    }
-}
-#endif
+        buffer_bundle.lock_and_bind_back_buffer();
+    });
 
-#ifdef MIR_TODO
-TEST(buffer_bundle, add_buffers_bind_and_distribute)
+}
+
+TEST(buffer_bundle, get_buffer_for_client)
 {
-    using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
-    mc::MockBuffer mock_buffer_cli {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer_cli(
-        &mock_buffer_cli,
-        EmptyDeleter());
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(1);
+    EXPECT_CALL(*mock_buffer, lock())
+        .Times(1);
 
-    mc::MockBuffer mock_buffer_com {width, height, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer_com(
-        &mock_buffer_com,
-        EmptyDeleter());
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    buffer_bundle.add_buffer(default_buffer_com);
-    buffer_bundle.add_buffer(default_buffer_cli);
-
-    EXPECT_CALL(mock_buffer_cli, lock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_cli, unlock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, bind_to_texture())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, lock())
-    .Times(AtLeast(1));
-    EXPECT_CALL(mock_buffer_com, unlock())
-    .Times(AtLeast(1));
-
-    buffer_bundle.lock_and_bind_back_buffer();
-    buffer_bundle.dequeue_client_buffer();
-
+    /* if binding doesn't work, this is a case where we may have an exception */
+    ASSERT_NO_THROW(
+    {
+        buffer_bundle.dequeue_client_buffer();
+    });
 }
-#endif

@@ -35,8 +35,8 @@ class Buffer;
 class BufferTextureBinder
 {
 public:
-
-    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
+    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    virtual void unlock_back_buffer() = 0;
 
 protected:
     BufferTextureBinder() = default;
@@ -46,11 +46,6 @@ private:
     class Unlocker;
     BufferTextureBinder(BufferTextureBinder const&) = delete;
     BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
-
-    virtual void lock_back_buffer() = 0;
-    virtual void unlock_back_buffer() = 0;
-
-    virtual std::shared_ptr<Buffer> back_buffer() = 0;
 };
 }
 }
