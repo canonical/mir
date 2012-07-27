@@ -42,24 +42,47 @@ struct SessionSignalCollector
     std::condition_variable wait_condition;
     int session_count;
 };
-}
-TEST(ProtobufAsioCommunicator, connection_results_in_a_session_being_created)
+
+struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
-    std::string const socket_name("/tmp/mir_test_pb_asio_socket");
+    static const std::string& socket_name()
+    {
+        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        return socket_name;
+    }
+
+    ProtobufAsioCommunicatorTestFixture() : comm(socket_name())
+    {
+    }
+
+    void SetUp()
+    {
+        comm.signal_new_session().connect(
+                std::bind(
+                    &SessionSignalCollector::on_new_session,
+                    &collector));
+
+        comm.start();
+
+    }
+
+    void TearDown()
+    {
+
+    }
 
     SessionSignalCollector collector;
-    mf::ProtobufAsioCommunicator comm(socket_name);
-    comm.signal_new_session().connect(
-            std::bind(
-                &SessionSignalCollector::on_new_session,
-                &collector));
 
-    comm.start();
+    mf::ProtobufAsioCommunicator comm;
+};
+}
 
+TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_session_being_created)
+{
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::socket socket(io_service);
 
-    socket.connect(socket_name);
+    socket.connect(socket_name());
 
     std::unique_lock<std::mutex> ul(collector.guard);
 
