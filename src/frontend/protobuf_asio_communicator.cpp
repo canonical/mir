@@ -27,15 +27,17 @@ namespace mf = mir::frontend;
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
         : socket_file((std::remove(socket_file.c_str()), socket_file)),
           acceptor(io_service, socket_file),
-          socket(io_service)
+          socket(io_service),
+          io_service_thread(
+              boost::bind(&boost::asio::io_service::run, &io_service)) 
 {
 
     acceptor.async_accept(
             socket,
-            std::bind(
+            boost::bind(
                     &ProtobufAsioCommunicator::on_new_connection,
                     this,
-                    std::placeholders::_1));
+                    boost::asio::placeholders::error));
 }
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
@@ -50,4 +52,11 @@ void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_
         // TODO: React to error here.
         return;
     }
+
+    new_session_signal();
+}
+
+mf::ProtobufAsioCommunicator::NewSessionSignal& mf::ProtobufAsioCommunicator::signal_new_session()
+{
+    return new_session_signal;
 }
