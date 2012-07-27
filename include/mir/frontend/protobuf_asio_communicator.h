@@ -32,10 +32,27 @@ namespace mir
 namespace frontend
 {
 
-class Session
+class Session : public boost::enable_shared_from_this<Session>
 {
 public:
-    int id() const { return 13; }
+    typedef std::shared_ptr<Session> ptr;
+
+    int id() const
+    {
+        return 13;
+    }
+
+    static ptr create(boost::asio::io_service& io_service)
+    {
+        return std::make_shared<Session>(io_service);
+    }
+
+    boost::asio::local::stream_protocol::socket socket;
+
+    Session(boost::asio::io_service& io_service)
+        : socket(io_service)
+    {
+    }
 };
 
 class ProtobufAsioCommunicator : public Communicator
@@ -54,12 +71,12 @@ public:
     NewSessionSignal& signal_new_session();
 
 private:
-    void on_new_connection(const boost::system::error_code& ec);
+    void start_accept();
+    void on_new_connection(Session::ptr session, const boost::system::error_code& ec);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
-    boost::asio::local::stream_protocol::socket socket;
     std::thread io_service_thread;
     NewSessionSignal new_session_signal;
 };

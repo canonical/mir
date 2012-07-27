@@ -24,14 +24,20 @@ namespace ba = boost::asio;
 // TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
     : socket_file((std::remove(socket_file.c_str()), socket_file)),
-      acceptor(io_service, socket_file),
-      socket(io_service)
+      acceptor(io_service, socket_file)
 {
+    start_accept();
+}
+
+void mf::ProtobufAsioCommunicator::start_accept()
+{
+    Session::ptr session = Session::create(io_service);
     acceptor.async_accept(
-        socket,
+        session->socket,
         boost::bind(
             &ProtobufAsioCommunicator::on_new_connection,
             this,
+            session,
             ba::placeholders::error));
 }
 
@@ -51,16 +57,14 @@ mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
     std::remove(socket_file.c_str());
 }
 
-void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_code& ec)
+void mf::ProtobufAsioCommunicator::on_new_connection(Session::ptr session,
+                                                     const boost::system::error_code& ec)
 {
     if (!ec)
     {
-        new_session_signal(std::make_shared<Session>());
+        new_session_signal(session);
     }
-    else
-    {
-        // TODO: React to error here.
-    }
+    start_accept();
 }
 
 mf::ProtobufAsioCommunicator::NewSessionSignal& mf::ProtobufAsioCommunicator::signal_new_session()

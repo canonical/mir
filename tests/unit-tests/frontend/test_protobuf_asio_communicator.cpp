@@ -31,23 +31,18 @@ struct SessionSignalCollector
 
     SessionSignalCollector(SessionSignalCollector const &) = delete;
 
-    void on_new_session(std::shared_ptr<mf::Session> const& new_session)
+    void on_new_session(mf::Session::ptr const& new_session)
     {
-        std::cout << "DEBUG on_new_session" << std::endl;
         std::unique_lock<std::mutex> ul(guard);
         session_count++;
-        session = new_session;
-        session_ids.insert(session->id());
-
-        std::cout << "DEBUG session_count=" << session_count << std::endl;
+        sessions.insert(new_session);
         wait_condition.notify_one();
     }
 
     std::mutex guard;
     std::condition_variable wait_condition;
     int session_count;
-    std::shared_ptr<mf::Session> session;
-    std::set<int> session_ids;
+    std::set<mf::Session::ptr> sessions;
 };
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
@@ -71,16 +66,9 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
                     std::placeholders::_1));
 
         comm.start();
-
-    }
-
-    void TearDown()
-    {
-
     }
 
     SessionSignalCollector collector;
-
     mf::ProtobufAsioCommunicator comm;
 };
 }
@@ -113,29 +101,27 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     while (collector.session_count == 0)
         collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
 
-    EXPECT_TRUE(collector.session.get());
+    EXPECT_FALSE(collector.sessions.empty());
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-        each_connection_attempt_results_in_a_session_being_created_with_a_distinct_id)
+       each_connection_attempt_results_in_a_new_session_being_created)
 {
-    int const connections{5};
+    int const connection_count{5};
 
     boost::asio::io_service io_service;
 
-    for (int i = 0; i != connections; ++i)
+    for (int i = 0; i != connection_count; ++i)
     {
-        std::cout << "DEBUG entering loop" << std::endl;
         boost::asio::local::stream_protocol::socket socket(io_service);
 
         socket.connect(socket_name());
 
         std::unique_lock<std::mutex> ul(collector.guard);
-        std::cout << "DEBUG i=" << i << std::endl;
         while (collector.session_count == i)
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
     }
 
-    EXPECT_EQ(connections, collector.session_count);
-    EXPECT_EQ(connections, (int)collector.session_ids.size());
+    EXPECT_EQ(connection_count, collector.session_count);
+    EXPECT_EQ(connection_count, (int)collector.sessions.size());
 }
