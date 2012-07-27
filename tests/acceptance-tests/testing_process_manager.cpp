@@ -58,17 +58,21 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
+namespace mir
+{
 namespace
 {
-mir::std::atomic<mir::DisplayServer*> signal_display_server;
+std::atomic<mir::DisplayServer*> signal_display_server;
 }
+}
+
 extern "C"
 {
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    auto sds = signal_display_server.load();
-    for (; !sds; sds = signal_display_server.load())
+    auto sds = mir::signal_display_server.load();
+    for (; !sds; sds = mir::signal_display_server.load())
         /* could spin briefly during startup */;
     sds->stop();
 }
@@ -230,7 +234,7 @@ bool mir::detect_server(
 
     do
     {
-        if (error) std::thread::yield();
+        if (error) std::this_thread::sleep_for(std::chrono::milliseconds(0));
         socket.connect(endpoint, error);
     }
     while (error && std::chrono::system_clock::now() < limit);
