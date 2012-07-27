@@ -19,7 +19,6 @@
 #include "testing_process_manager.h"
 
 #include "mir/display_server.h"
-#include "mir/process/signal_dispatcher.h"
 
 #include "mir/thread/all.h"
 
@@ -56,6 +55,23 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
+namespace
+{
+mir::std::atomic<mir::DisplayServer*> signal_display_server;
+}
+extern "C"
+{
+void (*signal_prev_fn)(int);
+void signal_terminate (int )
+{
+    auto sds = signal_display_server.load();
+    for (; !sds; sds = signal_display_server.load())
+        /* could spin briefly during startup */;
+    sds->stop();
+}
+}
+
+
 void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
@@ -72,14 +88,14 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
+
         server = std::unique_ptr<mir::DisplayServer>(
-                new mir::DisplayServer(
+                new DisplayServer(
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
-
-        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
-        mp::SignalDispatcher::instance()->signal_channel().connect(
-                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
+        //signal_display_server.store(server.get());
+        std::atomic_store(&signal_display_server, server.get());
+        signal_prev_fn = signal (SIGTERM, signal_terminate);
 
         struct ScopedFuture
         {
@@ -185,16 +201,4 @@ void mir::TestingProcessManager::tear_down_all()
 mir::DisplayServer* mir::TestingProcessManager::display_server() const
 {
     return server.get();
-}
-
-void mir::TestingProcessManager::os_signal_handler(int signal)
-{
-    switch(signal)
-    {
-    case SIGTERM:
-        server->stop();
-        break;
-    default:
-        break;
-    }
 }
