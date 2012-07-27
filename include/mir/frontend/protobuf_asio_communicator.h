@@ -21,9 +21,10 @@
 
 #include "communicator.h"
 
+#include "mir/thread/all.h"
+
 #include <boost/asio.hpp>
 #include <boost/signals2.hpp>
-#include <boost/thread.hpp>
 
 #include <string>
 
@@ -55,7 +56,7 @@ private:
     ba::io_service io_service;
     bal::stream_protocol::acceptor acceptor;
     bal::stream_protocol::socket socket;
-    boost::thread io_service_thread;
+    std::thread io_service_thread;
     NewSessionSignal new_session_signal;
 };
 

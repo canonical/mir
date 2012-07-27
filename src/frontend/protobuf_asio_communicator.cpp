@@ -24,6 +24,7 @@
 
 namespace mf = mir::frontend;
 
+// TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
         : socket_file((std::remove(socket_file.c_str()), socket_file)),
           acceptor(io_service, socket_file),
