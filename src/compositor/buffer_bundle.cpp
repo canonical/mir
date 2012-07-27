@@ -47,7 +47,7 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
 
 void mc::BufferBundle::unlock_back_buffer()
 {
-    swapper->compositor_release(NULL);
+    //swapper->compositor_release(NULL);
 }
 
 void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
@@ -55,12 +55,13 @@ void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
     auto client_buffer = buffer.get();
     assert(client_buffer);
 
-    swapper->client_release(client_buffer);
+    //swapper->client_release(client_buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
-    mc::Buffer* client_buffer = swapper->client_acquire();
+    //mc::Buffer* client_buffer = swapper->client_acquire();
+    mc::Buffer* client_buffer = NULL;
     client_buffer->lock();
 
     return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());

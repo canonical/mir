@@ -40,25 +40,21 @@ public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
     ~BufferSwapperDouble() {}
 
-    Buffer* client_acquire();
-    void client_release(Buffer* queued_buffer);
-    Buffer* compositor_acquire();
-    void compositor_release(Buffer* released_buffer);
+    std::unique_ptr<Buffer> client_acquire();
+    void client_release(std::unique_ptr<Buffer>&& queued_buffer);
+    std::unique_ptr<Buffer> compositor_acquire();
+    void compositor_release(std::unique_ptr<Buffer>&& released_buffer);
 
 private:
-    typedef const std::unique_ptr<Buffer> BufferPtr;
-    BufferPtr  buffer_a;
-    BufferPtr  buffer_b;
-
     std::mutex swapper_mutex;
 
     std::condition_variable consumed_cv;
     bool compositor_has_consumed;
 
     std::condition_variable buffer_available_cv;
-    std::queue<Buffer*> client_queue;
 
-    Buffer* last_posted_buffer;
+    std::unique_ptr<Buffer> client_queue;
+    std::unique_ptr<Buffer> last_posted_buffer;
 };
 
 }

@@ -57,6 +57,10 @@ private:
 
     std::unique_ptr<BufferSwapper> swapper;
 
+    std::unique_ptr<Buffer> compositor_owned;
+    std::unique_ptr<Buffer> client_owned;
+
+
 };
 
 }

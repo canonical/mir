@@ -23,30 +23,26 @@ namespace mc = mir::compositor;
 
 mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, std::unique_ptr<Buffer> && buf_b)
     :
-    buffer_a(std::move(buf_a)),
-    buffer_b(std::move(buf_b)),
-    compositor_has_consumed(true)
+    compositor_has_consumed(true),
+    client_queue(std::move(buf_a)),
+    last_posted_buffer(std::move(buf_b))
 {
-    client_queue.push(buffer_a.get());
-    last_posted_buffer = buffer_b.get();
 }
 
 
-mc::Buffer* mc::BufferSwapperDouble::client_acquire()
+std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    while (client_queue.empty())
+    while (client_queue.get() == NULL)
     {
         buffer_available_cv.wait(lk);
     }
 
-    Buffer* dequeued_buffer = client_queue.front();
-    client_queue.pop();
-    return dequeued_buffer;
+    return std::move(client_queue);
 }
 
-void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
+void mc::BufferSwapperDouble::client_release(std::unique_ptr<mc::Buffer> && queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -58,37 +54,37 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
 
     if(last_posted_buffer != NULL)
     {
-        client_queue.push(last_posted_buffer);
+        client_queue = std::move(last_posted_buffer);
         buffer_available_cv.notify_one();
     }
 
-    last_posted_buffer = queued_buffer;
+    last_posted_buffer = std::move(queued_buffer);
 
 }
 
-mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
+std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    mc::Buffer* last_posted;
-    last_posted = last_posted_buffer;
-    last_posted_buffer = NULL;
+    std::unique_ptr<mc::Buffer> last_posted;
+    last_posted = std::move(last_posted_buffer);
 
     compositor_has_consumed = true;
     consumed_cv.notify_one();
+
     return last_posted;
 }
 
-void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
+void mc::BufferSwapperDouble::compositor_release(std::unique_ptr<mc::Buffer> && released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     if (last_posted_buffer == NULL)
     {
-        last_posted_buffer = released_buffer;
+        last_posted_buffer = std::move(released_buffer);
     }
     else
     {
-        client_queue.push(released_buffer);
+        client_queue = std::move(released_buffer);
         buffer_available_cv.notify_one();
     }
 }
