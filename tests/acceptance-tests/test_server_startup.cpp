@@ -106,9 +106,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             return comm;
         }
 
-        void exec(mir::DisplayServer* )
+        void on_exit(mir::DisplayServer* )
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
             EXPECT_EQ(int{1}, collector.session_count);
         }
                    

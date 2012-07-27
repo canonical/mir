@@ -53,6 +53,9 @@ struct TestingServerConfiguration
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
 
+    // Code to run in server process after server exits
+    virtual void on_exit(DisplayServer* display_server);
+
     // the communicator to use
     virtual std::shared_ptr<frontend::Communicator> make_communicator();
 

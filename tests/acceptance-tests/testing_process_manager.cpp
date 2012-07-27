@@ -102,15 +102,19 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         //signal_display_server.store(server.get());
         std::atomic_store(&signal_display_server, server.get());
 
-        struct ScopedFuture
         {
-            std::future<void> future;
-            ~ScopedFuture() { future.wait(); }
-        } scoped;
+            struct ScopedFuture
+            {
+                std::future<void> future;
+                ~ScopedFuture() { future.wait(); }
+            } scoped;
 
-        scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
+            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-        config.exec(display_server());
+            config.exec(display_server());
+        }
+
+        config.on_exit(display_server());
     }
     else
     {

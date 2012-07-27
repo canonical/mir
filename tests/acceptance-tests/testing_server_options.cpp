@@ -62,6 +62,10 @@ void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
+void mir::TestingServerConfiguration::on_exit(DisplayServer* )
+{
+}
+
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 {
     return std::make_shared<StubRenderer>();
