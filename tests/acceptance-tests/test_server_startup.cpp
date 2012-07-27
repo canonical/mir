@@ -29,6 +29,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mf = mir::frontend;
 
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
@@ -36,33 +37,26 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(std::string const& file) : socket_file(file)
-        {
-        }
-
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file);
+            return std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file());
         }
 
-        std::string const socket_file;
-    } server_config(mir::test_socket_file());
+        void exec(mir::DisplayServer *)
+        {
+        }
+    } server_config;
 
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
     {
-        ClientConfig(std::string const& socket_file) : socket_file(socket_file)
-        {
-        }
-
         void exec()
         {
-            EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
         }
-
-        std::string const socket_file;
-    } client_config(mir::test_socket_file());
+    } client_config;
 
     launch_client_process(client_config);
 }
@@ -88,18 +82,11 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(std::string const& socket_file)
-            : socket_file(socket_file)
-        {
-        }
-
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            auto comm(std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file));
+            auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
             comm->signal_new_session().connect(
-                std::bind(
-                    &SessionSignalCollector::on_new_session,
-                    &collector));
+                std::bind(&SessionSignalCollector::on_new_session, &collector));
             return comm;
         }
 
@@ -107,25 +94,19 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             EXPECT_EQ(int {1}, collector.session_count);
         }
-
-        std::string const socket_file;
         SessionSignalCollector collector;
-    } server_config(mir::test_socket_file());
+    } server_config;
 
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
     {
-        ClientConfig(std::string const& socket_file) : socket_file(socket_file)
-        {
-        }
-
         void exec()
         {
-            EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
         }
-        std::string const socket_file;
-    } client_config(mir::test_socket_file());
+    } client_config;
 
     launch_client_process(client_config);
 }
