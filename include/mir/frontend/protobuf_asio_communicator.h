@@ -35,6 +35,7 @@ namespace frontend
 namespace ba = boost::asio;
 namespace bal = boost::asio::local;
 
+
 class ProtobufAsioCommunicator : public Communicator
 {
 public:

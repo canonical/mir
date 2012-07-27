@@ -52,7 +52,7 @@ void mf::ProtobufAsioCommunicator::on_new_connection(const boost::system::error_
         // TODO: React to error here.
         return;
     }
-
+    
     new_session_signal();
 }
 

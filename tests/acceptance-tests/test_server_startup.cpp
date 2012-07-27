@@ -110,7 +110,7 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             EXPECT_EQ(int{1}, collector.session_count);
         }
-                    
+                   
         std::string const socket_file;
         SessionSignalCollector collector;
     } server_config(mir::test_socket_file());
@@ -132,3 +132,4 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_client_process(client_config);
 }
+
