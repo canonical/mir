@@ -124,7 +124,8 @@ TEST_F(BespokeDisplayServerTestFixture,
         }
 
         void exec()
-        {   
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
             EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
         }
         std::string const socket_file;

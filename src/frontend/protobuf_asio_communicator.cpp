@@ -42,6 +42,9 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
+    io_service.stop();
+    if (io_service_thread.joinable())
+        io_service_thread.join();
     std::remove(socket_file.c_str());
 }
 
