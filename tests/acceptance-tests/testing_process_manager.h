@@ -66,7 +66,6 @@ public:
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
-    void os_signal_handler(int signal);
 
 private:
 

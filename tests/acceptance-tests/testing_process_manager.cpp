@@ -19,7 +19,6 @@
 #include "testing_process_manager.h"
 
 #include "mir/display_server.h"
-#include "mir/process/signal_dispatcher.h"
 
 #include "mir/thread/all.h"
 
@@ -209,16 +208,4 @@ void mir::TestingProcessManager::tear_down_all()
 mir::DisplayServer* mir::TestingProcessManager::display_server() const
 {
     return server.get();
-}
-
-void mir::TestingProcessManager::os_signal_handler(int signal)
-{
-    switch(signal)
-    {
-    case SIGTERM:
-        server->stop();
-        break;
-    default:
-        break;
-    }
 }
