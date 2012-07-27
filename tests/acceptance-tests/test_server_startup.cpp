@@ -45,9 +45,6 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
             return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file);
         }
 
-        void exec(mir::DisplayServer *)
-        {
-        }
         std::string const socket_file;
     } server_config(mir::test_socket_file());
 
@@ -63,6 +60,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
         {
             EXPECT_TRUE(mir::detect_server(socket_file, std::chrono::milliseconds(100)));
         }
+
         std::string const socket_file;
     } client_config(mir::test_socket_file());
 
@@ -81,7 +79,7 @@ struct SessionSignalCollector
     {
         session_count++;
     }
-    
+
     int session_count;
 };
 
@@ -89,16 +87,15 @@ TEST_F(BespokeDisplayServerTestFixture,
        a_connection_attempt_results_in_a_session)
 {
     struct ServerConfig : TestingServerConfiguration
-    {        
-        
-        ServerConfig(std::string const& file)
-                : socket_file(file)
+    {
+        ServerConfig(std::string const& socket_file)
+            : socket_file(socket_file)
         {
         }
 
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            auto comm(std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file));      
+            auto comm(std::make_shared<mir::frontend::ProtobufAsioCommunicator>(socket_file));
             comm->signal_new_session().connect(
                 std::bind(
                     &SessionSignalCollector::on_new_session,
@@ -108,13 +105,13 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-            EXPECT_EQ(int{1}, collector.session_count);
+            EXPECT_EQ(int {1}, collector.session_count);
         }
-                   
+
         std::string const socket_file;
         SessionSignalCollector collector;
     } server_config(mir::test_socket_file());
-    
+
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
