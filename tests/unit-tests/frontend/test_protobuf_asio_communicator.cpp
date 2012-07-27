@@ -33,9 +33,13 @@ struct SessionSignalCollector
 
     void on_new_session(std::shared_ptr<mf::Session> const& new_session)
     {
+        std::cout << "DEBUG on_new_session" << std::endl;
         std::unique_lock<std::mutex> ul(guard);
         session_count++;
         session = new_session;
+        session_ids.insert(session->id());
+
+        std::cout << "DEBUG session_count=" << session_count << std::endl;
         wait_condition.notify_one();
     }
 
@@ -43,6 +47,7 @@ struct SessionSignalCollector
     std::condition_variable wait_condition;
     int session_count;
     std::shared_ptr<mf::Session> session;
+    std::set<int> session_ids;
 };
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
@@ -80,7 +85,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 };
 }
 
-TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_session_being_created)
+TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::socket socket(io_service);
@@ -96,7 +101,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_session_bein
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-        a_connection_attempt_results_in_a_session_being_created_with_a_session_id)
+        a_connection_attempt_results_in_a_session_being_created)
 {
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::socket socket(io_service);
@@ -109,4 +114,28 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
 
     EXPECT_TRUE(collector.session.get());
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+        each_connection_attempt_results_in_a_session_being_created_with_a_distinct_id)
+{
+    int const connections{5};
+
+    boost::asio::io_service io_service;
+
+    for (int i = 0; i != connections; ++i)
+    {
+        std::cout << "DEBUG entering loop" << std::endl;
+        boost::asio::local::stream_protocol::socket socket(io_service);
+
+        socket.connect(socket_name());
+
+        std::unique_lock<std::mutex> ul(collector.guard);
+        std::cout << "DEBUG i=" << i << std::endl;
+        while (collector.session_count == i)
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+    }
+
+    EXPECT_EQ(connections, collector.session_count);
+    EXPECT_EQ(connections, (int)collector.session_ids.size());
 }

@@ -32,7 +32,11 @@ namespace mir
 namespace frontend
 {
 
-class Session {};
+class Session
+{
+public:
+    int id() const { return 13; }
+};
 
 class ProtobufAsioCommunicator : public Communicator
 {
