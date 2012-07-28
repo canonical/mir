@@ -53,7 +53,6 @@ protected:
 
 private:
     void queue_client_buffer(std::shared_ptr<Buffer> buffer);
-    void unlock_back_buffer();
 
     std::unique_ptr<BufferSwapper> swapper;
 

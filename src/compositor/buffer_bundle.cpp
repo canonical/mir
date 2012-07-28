@@ -18,6 +18,7 @@
  */
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/graphics/texture.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -34,20 +35,39 @@ mc::BufferBundle::~BufferBundle()
 
 namespace
 {
-struct NullDeleter { void operator()(void*) const {} };
+
+class TexDeleter {
+
+    public:
+    TexDeleter(mc::BufferSwapper * sw, std::unique_ptr<mc::Buffer> && buf)
+    : swapper(sw)
+    {
+        std::unique_ptr<mc::Buffer> tmp(std::move(buf));
+        buffer = buf.get(); 
+    };
+
+    void operator()(mg::Texture* texture)
+    {
+        std::unique_ptr<mc::Buffer> tmp(buffer);
+        swapper->compositor_release(std::move(tmp));
+        delete texture;
+    }
+    
+    private:
+        mc::BufferSwapper *swapper;
+        mc::Buffer* buffer;
+};
+
 }
+
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
     auto compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->bind_to_texture();
 
-    mg::Texture* tex = NULL;
-    return std::shared_ptr<mg::Texture>(tex, NullDeleter());
-}
-
-void mc::BufferBundle::unlock_back_buffer()
-{
-    //swapper->compositor_release(NULL);
+    mg::Texture* tex = new mg::Texture;
+    TexDeleter deleter(swapper.get(), compositor_buffer);
+    return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
 void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
@@ -63,6 +83,8 @@ std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
     //mc::Buffer* client_buffer = swapper->client_acquire();
     mc::Buffer* client_buffer = NULL;
     client_buffer->lock();
+    
+    mc::Buffer* tex = NULL;
+    return std::shared_ptr<mc::Buffer>(tex);
 
-    return std::shared_ptr<mc::Buffer>(client_buffer, NullDeleter());
 }

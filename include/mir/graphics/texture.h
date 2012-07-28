@@ -25,8 +25,11 @@ namespace mir
 namespace graphics
 {
 
-struct Texture
+class Texture
 {
+public:
+    Texture() {};
+    ~Texture() {};
 };
 
 }
