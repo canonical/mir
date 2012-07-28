@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
 #include "buffer_texture_binder.h"
+#include "buffer_ipc_package.h"
 #include "buffer_queue.h"
 #include "buffer.h"
 
@@ -42,7 +43,7 @@ public:
     ~BufferBundle();
 
     /* from BufferQueue */
-    std::shared_ptr<Buffer> secure_client_buffer();
+    std::shared_ptr<BufferIPCPackage> secure_client_buffer();
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
