@@ -44,6 +44,7 @@ class TexDeleter {
     {
         std::unique_ptr<mc::Buffer> tmp(std::move(buf));
         buffer = buf.get(); 
+        /* note, the buffer would be deleted here, where it shouldnt be */
     };
 
     void operator()(mg::Texture* texture)
@@ -65,7 +66,8 @@ class BufDeleter {
     : swapper(sw)
     {
         std::unique_ptr<mc::Buffer> tmp(std::move(buf));
-        buffer = buf.get(); 
+        buffer = buf.get();
+        /* note, the buffer would be deleted here, where it shouldnt be */
     };
 
     void operator()(mc::BufferIPCPackage* package)
