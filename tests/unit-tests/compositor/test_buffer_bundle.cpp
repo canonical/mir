@@ -100,25 +100,27 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     });
 }
 
-#if 0
 TEST(buffer_bundle, get_buffer_for_client)
 {
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+    using namespace testing;
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper);
+    std::unique_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
 
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(1);
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);
-    EXPECT_CALL(*mock_swapper, client_release(mock_buffer.get()))
-        .Times(1);
+    gbuf = std::move(mock_buffer);
+
+    EXPECT_CALL(*mock_swapper, client_acquire())
+            .Times(1)
+            .WillOnce(Invoke(func));
+    EXPECT_CALL(*mock_swapper, client_release(_));
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    /* if binding doesn't work, this is a case where we may have an exception */
+
+    /* if dequeue doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
-        auto buffer_package = buffer_bundle.dequeue_client_buffer();
+        auto buffer_package = buffer_bundle.secure_client_buffer();
     });
 }
-#endif
