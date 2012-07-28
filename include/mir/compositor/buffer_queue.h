@@ -32,7 +32,7 @@ class BufferQueue
 {
 public:
     virtual ~BufferQueue() {};
-    virtual std::shared_ptr<Buffer> dequeue_client_buffer() = 0;
+    virtual std::shared_ptr<Buffer> secure_client_buffer() = 0;
 
 };
 

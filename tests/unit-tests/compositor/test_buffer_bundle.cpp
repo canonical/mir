@@ -117,7 +117,6 @@ TEST(buffer_bundle, get_buffer_for_client)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-
     /* if dequeue doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
