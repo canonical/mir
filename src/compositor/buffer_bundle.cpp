@@ -70,14 +70,6 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-void mc::BufferBundle::queue_client_buffer(std::shared_ptr<mc::Buffer> buffer)
-{
-    auto client_buffer = buffer.get();
-    assert(client_buffer);
-
-    //swapper->client_release(client_buffer);
-}
-
 std::shared_ptr<mc::Buffer> mc::BufferBundle::dequeue_client_buffer()
 {
     //mc::Buffer* client_buffer = swapper->client_acquire();

@@ -52,7 +52,6 @@ protected:
     BufferBundle& operator=(const BufferBundle&) = delete;
 
 private:
-    void queue_client_buffer(std::shared_ptr<Buffer> buffer);
 
     std::unique_ptr<BufferSwapper> swapper;
 
