@@ -57,29 +57,29 @@ class TexDeleter {
         mc::BufferSwapper *swapper;
         mc::Buffer* buffer;
 };
-#if 0
+
 class BufDeleter {
 
     public:
-    TexDeleter(mc::BufferSwapper * sw, std::unique_ptr<mc::Buffer> && buf)
+    BufDeleter(mc::BufferSwapper * sw, std::unique_ptr<mc::Buffer> && buf)
     : swapper(sw)
     {
         std::unique_ptr<mc::Buffer> tmp(std::move(buf));
         buffer = buf.get(); 
     };
 
-    void operator()(mg::Texture* texture)
+    void operator()(mc::BufferIPCPackage* package)
     {
         std::unique_ptr<mc::Buffer> tmp(buffer);
-        swapper->compositor_release(std::move(tmp));
-        delete texture;
+        swapper->client_release(std::move(tmp));
+        delete package;
     }
     
     private:
         mc::BufferSwapper *swapper;
         mc::Buffer* buffer;
 };
-#endif
+
 }
 
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
@@ -97,6 +97,7 @@ std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
     auto client_buffer = swapper->client_acquire();
     client_buffer->lock();
     
-    mc::BufferIPCPackage* buf = NULL;
-    return std::shared_ptr<mc::BufferIPCPackage>(buf);
+    mc::BufferIPCPackage* buf = new mc::BufferIPCPackage;
+    BufDeleter deleter(swapper.get(), client_buffer);
+    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
 }
