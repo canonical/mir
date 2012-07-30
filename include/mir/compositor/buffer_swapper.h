@@ -33,20 +33,32 @@ class BufferSwapper
 public:
     virtual ~BufferSwapper() {}
 
-    /* callers of client_acquire are returned a pointer to the
-      currently usable buffer. This call may potentially wait for a
-      buffer to become available */
+    /* callers of client_acquire are returned a pointer to the buffer that is usable by clients
+     * This call may potentially wait for a buffer to become available.
+     * The BufferSwapper class releases its references to the returned buffer
+    */ 
     virtual std::shared_ptr<Buffer> client_acquire() = 0;
 
-    /* once a client is done with the finished buffer, it must queue
-       it. This modifies the buffer the compositor posts to the screen */
+    /* once a client is done with using a buffer, it must release the buffer back to the swapper 
+     * class. The returned buffer becomes the next buffer the compositor will acquire.
+     * BufferSwapper class retains ownership of the returned buffer until the BufferSwapper class
+     * returns the buffer to its users via the *_aquire() functions 
+     * This call may wait 
+    */
     virtual void client_release(std::shared_ptr<Buffer> queued_buffer) = 0;
 
-    /* caller of compositor_acquire buffer should get no-wait access to the
-        last posted buffer. However, the client will potentially stall
-        until control of the buffer is returned via compositor_release() */
+    /* caller of compositor_acquire buffer acquires ownership of the last buffer 
+     * the client posted via client_release()
+     * caller of this function guarantees that they will call compositor_release() in the future.
+     * The client will potentially stall from the time between compositor_aquire and compositor_release
+     * The BufferSwapper class releases its references to the returned buffer
+     * This call's wait time is guaranteed to be minimal even in worse-case scenarios
+    */ 
     virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
 
+    /* once the compositor is done with the finished buffer, it must queue it
+     * This call's wait time is guaranteed to be minimal even in worse-case scenarios
+    */ 
     virtual void compositor_release(std::shared_ptr<Buffer> released_buffer) = 0;
 };
 
