@@ -21,9 +21,11 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
 #include "buffer_texture_binder.h"
+#include "buffer_swapper.h"
 #include "buffer_ipc_package.h"
 #include "buffer_queue.h"
 #include "buffer.h"
+#include "mir/graphics/texture.h"
 
 #include "mir/thread/all.h"
 
@@ -34,7 +36,48 @@ namespace mir
 {
 namespace compositor
 {
-class BufferSwapper;
+
+class TexDeleter {
+
+public:
+    TexDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> && buf)
+    : swapper(sw),
+      buffer_ptr(buf)
+    {
+    };
+
+    void operator()(graphics::Texture* texture)
+    {
+        swapper->compositor_release(buffer_ptr);
+        delete texture;
+    }
+    
+private:
+    std::shared_ptr<BufferSwapper> swapper;
+    std::shared_ptr<Buffer> buffer_ptr;
+};
+
+
+class BufDeleter {
+public:
+    BufDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> && buf)
+    : swapper(sw),
+      buffer_ptr(buf)
+    {
+    };
+
+    void operator()(BufferIPCPackage* package)
+    {
+        swapper->client_release(buffer_ptr);
+        delete package;
+    }
+    
+private:
+    std::shared_ptr<BufferSwapper> swapper;
+    std::shared_ptr<Buffer> buffer_ptr;
+};
+
+
 class BufferBundle : public BufferTextureBinder,
     public BufferQueue
 {

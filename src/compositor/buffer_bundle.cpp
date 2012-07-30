@@ -33,58 +33,13 @@ mc::BufferBundle::~BufferBundle()
 {
 }
 
-namespace
-{
-
-class TexDeleter {
-
-    public:
-    TexDeleter(std::shared_ptr<mc::BufferSwapper> sw, std::shared_ptr<mc::Buffer> && buf)
-    : swapper(sw),
-        buffer_ptr(buf)
-    {
-    };
-
-    void operator()(mg::Texture* texture)
-    {
-        swapper->compositor_release(buffer_ptr);
-        delete texture;
-    }
-    
-    private:
-        std::shared_ptr<mc::BufferSwapper> swapper;
-        std::shared_ptr<mc::Buffer> buffer_ptr;
-};
-
-class BufDeleter {
-
-    public:
-    BufDeleter(std::shared_ptr<mc::BufferSwapper> sw, std::shared_ptr<mc::Buffer> && buf)
-    : swapper(sw),
-        buffer_ptr(buf)
-    {
-    };
-
-    void operator()(mc::BufferIPCPackage* package)
-    {
-        swapper->client_release(buffer_ptr);
-        delete package;
-    }
-    
-    private:
-        std::shared_ptr<mc::BufferSwapper> swapper;
-        std::shared_ptr<mc::Buffer> buffer_ptr;
-};
-
-}
-
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
     auto compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->bind_to_texture();
 
     mg::Texture* tex = new mg::Texture;
-    TexDeleter deleter(swapper, compositor_buffer);
+    mc::TexDeleter deleter(swapper, compositor_buffer);
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
@@ -94,6 +49,6 @@ std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
     client_buffer->lock();
     
     mc::BufferIPCPackage* buf = new mc::BufferIPCPackage;
-    BufDeleter deleter(swapper, client_buffer);
+    mc::BufDeleter deleter(swapper, client_buffer);
     return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
 }
