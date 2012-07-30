@@ -21,11 +21,11 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, std::unique_ptr<Buffer> && buf_b)
+mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> && buf_a, std::shared_ptr<Buffer> && buf_b)
     :
     compositor_has_consumed(true),
-    client_queue(std::move(buf_a)),
-    last_posted_buffer(std::move(buf_b))
+    client_queue(buf_a),
+    last_posted_buffer(buf_b)
 {
 }
 
@@ -51,13 +51,13 @@ void mc::BufferSwapperDouble::client_release(std::shared_ptr<mc::Buffer> queued_
     }
     compositor_has_consumed = false;
 
-    if(last_posted_buffer != NULL)
+    if(last_posted_buffer.get() != NULL)
     {
-        client_queue = std::move(last_posted_buffer);
+        client_queue = last_posted_buffer;
         buffer_available_cv.notify_one();
     }
 
-    last_posted_buffer = std::move(queued_buffer);
+    last_posted_buffer = queued_buffer;
 
 }
 
@@ -65,25 +65,22 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperDouble::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    std::shared_ptr<mc::Buffer> last_posted;
-    last_posted = std::move(last_posted_buffer);
-
     compositor_has_consumed = true;
     consumed_cv.notify_one();
 
-    return last_posted;
+    return std::move(last_posted_buffer);
 }
 
 void mc::BufferSwapperDouble::compositor_release(std::shared_ptr<mc::Buffer> released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    if (last_posted_buffer == NULL)
+    if (last_posted_buffer.get() == NULL)
     {
-        last_posted_buffer = std::move(released_buffer);
+        last_posted_buffer = released_buffer;
     }
     else
     {
-        client_queue = std::move(released_buffer);
+        client_queue = released_buffer;
         buffer_available_cv.notify_one();
     }
 }

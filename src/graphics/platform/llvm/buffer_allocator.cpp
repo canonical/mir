@@ -31,10 +31,10 @@ class LlvmBufferAllocator: public mc::GraphicBufferAllocator
 public:
     LlvmBufferAllocator() = default;
 
-    virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+    virtual std::shared_ptr<mc::Buffer> alloc_buffer(
         geom::Width, geom::Height, mc::PixelFormat)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::shared_ptr<mc::Buffer>();
     }
 };
 
