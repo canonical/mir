@@ -53,7 +53,7 @@ protected:
     BufferBundle& operator=(const BufferBundle&) = delete;
 
 private:
-    std::unique_ptr<BufferSwapper> swapper;
+    std::shared_ptr<BufferSwapper> swapper;
 
 };
 
