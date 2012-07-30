@@ -31,7 +31,8 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket
 
 void mf::ProtobufAsioCommunicator::start_accept()
 {
-    Session::ptr session = Session::create(io_service);
+    auto session = std::make_shared<Session>(io_service);
+
     acceptor.async_accept(
         session->socket,
         boost::bind(
@@ -57,7 +58,7 @@ mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
     std::remove(socket_file.c_str());
 }
 
-void mf::ProtobufAsioCommunicator::on_new_connection(Session::ptr session,
+void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> const& session,
                                                      const boost::system::error_code& ec)
 {
     if (!ec)

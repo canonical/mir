@@ -32,28 +32,8 @@ namespace mir
 namespace frontend
 {
 
-class Session
-{
-public:
-    typedef std::shared_ptr<Session> ptr;
-
-    int id() const
-    {
-        return 13;
-    }
-
-    static ptr create(boost::asio::io_service& io_service)
-    {
-        return std::make_shared<Session>(io_service);
-    }
-
-    boost::asio::local::stream_protocol::socket socket;
-
-    Session(boost::asio::io_service& io_service)
-        : socket(io_service)
-    {
-    }
-};
+//TODO Session should probably be an interface so that it can be mocked.
+class Session;
 
 class ProtobufAsioCommunicator : public Communicator
 {
@@ -72,7 +52,7 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(Session::ptr session, const boost::system::error_code& ec);
+    void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
@@ -81,6 +61,24 @@ private:
     NewSessionSignal new_session_signal;
 };
 
+class Session
+{
+public:
+    int id() const
+    {
+        return 13;
+    }
+
+    explicit Session(boost::asio::io_service& io_service)
+        : socket(io_service)
+    {
+    }
+
+private:
+    // I wish for "friend void ProtobufAsioCommunicator::start_accept();" but that's private.
+    friend class ProtobufAsioCommunicator;
+    boost::asio::local::stream_protocol::socket socket;
+};
 }
 }
 

@@ -31,7 +31,7 @@ struct SessionSignalCollector
 
     SessionSignalCollector(SessionSignalCollector const &) = delete;
 
-    void on_new_session(mf::Session::ptr const& new_session)
+    void on_new_session(std::shared_ptr<mf::Session> const& new_session)
     {
         std::unique_lock<std::mutex> ul(guard);
         session_count++;
@@ -42,7 +42,7 @@ struct SessionSignalCollector
     std::mutex guard;
     std::condition_variable wait_condition;
     int session_count;
-    std::set<mf::Session::ptr> sessions;
+    std::set<std::shared_ptr<mf::Session>> sessions;
 };
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
