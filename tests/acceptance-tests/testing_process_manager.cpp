@@ -141,12 +141,15 @@ void mir::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     {
         is_test_process = false;
 
+        // Need to avoid terminating server or other clients
+        server_process->detach();
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             (*client)->detach();
         }
 
         clients.clear();
+        server_process.reset();
 
         SCOPED_TRACE("Client");
         config.exec();
