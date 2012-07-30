@@ -39,47 +39,41 @@ namespace
 class TexDeleter {
 
     public:
-    TexDeleter(mc::BufferSwapper * sw, std::unique_ptr<mc::Buffer> && buf)
-    : swapper(sw)
+    TexDeleter(mc::BufferSwapper * sw, std::shared_ptr<mc::Buffer> && buf)
+    : swapper(sw),
+        buffer_ptr(buf)
     {
-        std::unique_ptr<mc::Buffer> tmp(std::move(buf));
-        buffer = buf.get(); 
-        /* note, the buffer would be deleted here, where it shouldnt be */
     };
 
     void operator()(mg::Texture* texture)
     {
-        std::unique_ptr<mc::Buffer> tmp(buffer);
-        swapper->compositor_release(std::move(tmp));
+        swapper->compositor_release(buffer_ptr);
         delete texture;
     }
     
     private:
         mc::BufferSwapper *swapper;
-        mc::Buffer* buffer;
+        std::shared_ptr<mc::Buffer> buffer_ptr;
 };
 
 class BufDeleter {
 
     public:
-    BufDeleter(mc::BufferSwapper * sw, std::unique_ptr<mc::Buffer> && buf)
-    : swapper(sw)
+    BufDeleter(mc::BufferSwapper * sw, std::shared_ptr<mc::Buffer> && buf)
+    : swapper(sw),
+        buffer_ptr(buf)
     {
-        std::unique_ptr<mc::Buffer> tmp(std::move(buf));
-        buffer = buf.get();
-        /* note, the buffer would be deleted here, where it shouldnt be */
     };
 
     void operator()(mc::BufferIPCPackage* package)
     {
-        std::unique_ptr<mc::Buffer> tmp(buffer);
-        swapper->client_release(std::move(tmp));
+        swapper->client_release(buffer_ptr);
         delete package;
     }
     
     private:
         mc::BufferSwapper *swapper;
-        mc::Buffer* buffer;
+        std::shared_ptr<mc::Buffer> buffer_ptr;
 };
 
 }

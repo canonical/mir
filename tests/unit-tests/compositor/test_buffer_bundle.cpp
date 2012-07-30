@@ -37,40 +37,28 @@ const geom::Height height {768};
 const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
-std::unique_ptr<mc::Buffer> gbuf;
-std::unique_ptr<mc::Buffer> func()
-{
-    return std::move(gbuf);
-}
-
 struct MockSwapper : public mc::BufferSwapper
 {
     public:
         MockSwapper() {};
-#if 0
-        MockSwapper(std::shared_ptr<mc::Buffer>)
+        MockSwapper(std::shared_ptr<mc::Buffer> buffer)
+         : default_buffer(buffer)
         {
             using namespace testing;
-            std::unique_ptr<mc::Buffer> returned_buffer;
-            
-//            ON_CALL(*this, compositor_acquire())
-//                    .WillByDefault(Invoke(this, lassfunc));
- //                   .WillByDefault(Invoke(func));
-//            ON_CALL(*this, compositor_acquire())
-//                    .WillByDefault(Return(std::move(returned_buffer)));
-//            ON_CALL(*this, compositor_acquire())
-//                    .WillByDefault(Return(returned_buffer));
-//            ON_CALL(*this, client_acquire())
-//                    .WillByDefault(Return(buffer.get()));
+ 
+            ON_CALL(*this, compositor_acquire())
+                    .WillByDefault(Return(default_buffer));
+            ON_CALL(*this, client_acquire())
+                    .WillByDefault(Return(default_buffer));
         };
-#endif
 
-        MOCK_METHOD0(client_acquire,   std::unique_ptr<mc::Buffer>(void));
-        MOCK_METHOD1(client_release, void(std::unique_ptr<mc::Buffer>&&));
-        MOCK_METHOD0(compositor_acquire,  std::unique_ptr<mc::Buffer>(void));
-        MOCK_METHOD1(compositor_release,   void(std::unique_ptr<mc::Buffer>&&));
+        MOCK_METHOD0(client_acquire,   std::shared_ptr<mc::Buffer>(void));
+        MOCK_METHOD1(client_release, void(std::shared_ptr<mc::Buffer>));
+        MOCK_METHOD0(compositor_acquire,  std::shared_ptr<mc::Buffer>(void));
+        MOCK_METHOD1(compositor_release,   void(std::shared_ptr<mc::Buffer>));
 
     private:
+        std::shared_ptr<mc::Buffer> default_buffer;
 };
 }
 
@@ -78,16 +66,14 @@ struct MockSwapper : public mc::BufferSwapper
 TEST(buffer_bundle, get_buffer_for_compositor)
 {
     using namespace testing;
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper);
-    std::unique_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
-    gbuf = std::move(mock_buffer);
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-            .Times(1)
-            .WillOnce(Invoke(func));
+            .Times(1);
 
     EXPECT_CALL(*mock_swapper, compositor_release(_));
 
@@ -103,16 +89,15 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 TEST(buffer_bundle, get_buffer_for_client)
 {
     using namespace testing;
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper);
-    std::unique_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);
-    gbuf = std::move(mock_buffer);
 
     EXPECT_CALL(*mock_swapper, client_acquire())
-            .Times(1)
-            .WillOnce(Invoke(func));
+            .Times(1);
+
     EXPECT_CALL(*mock_swapper, client_release(_));
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));

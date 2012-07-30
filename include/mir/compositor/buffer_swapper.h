@@ -36,18 +36,18 @@ public:
     /* callers of client_acquire are returned a pointer to the
       currently usable buffer. This call may potentially wait for a
       buffer to become available */
-    virtual std::unique_ptr<Buffer> client_acquire() = 0;
+    virtual std::shared_ptr<Buffer> client_acquire() = 0;
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
-    virtual void client_release(std::unique_ptr<Buffer>&& queued_buffer) = 0;
+    virtual void client_release(std::shared_ptr<Buffer> queued_buffer) = 0;
 
     /* caller of compositor_acquire buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via compositor_release() */
-    virtual std::unique_ptr<Buffer> compositor_acquire() = 0;
+    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
 
-    virtual void compositor_release(std::unique_ptr<Buffer>&& released_buffer) = 0;
+    virtual void compositor_release(std::shared_ptr<Buffer> released_buffer) = 0;
 };
 
 }

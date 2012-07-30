@@ -29,8 +29,7 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
 {
 }
 
-
-std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::client_acquire()
+std::shared_ptr<mc::Buffer> mc::BufferSwapperDouble::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -42,7 +41,7 @@ std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::client_acquire()
     return std::move(client_queue);
 }
 
-void mc::BufferSwapperDouble::client_release(std::unique_ptr<mc::Buffer> && queued_buffer)
+void mc::BufferSwapperDouble::client_release(std::shared_ptr<mc::Buffer> queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -62,11 +61,11 @@ void mc::BufferSwapperDouble::client_release(std::unique_ptr<mc::Buffer> && queu
 
 }
 
-std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::compositor_acquire()
+std::shared_ptr<mc::Buffer> mc::BufferSwapperDouble::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    std::unique_ptr<mc::Buffer> last_posted;
+    std::shared_ptr<mc::Buffer> last_posted;
     last_posted = std::move(last_posted_buffer);
 
     compositor_has_consumed = true;
@@ -75,7 +74,7 @@ std::unique_ptr<mc::Buffer> mc::BufferSwapperDouble::compositor_acquire()
     return last_posted;
 }
 
-void mc::BufferSwapperDouble::compositor_release(std::unique_ptr<mc::Buffer> && released_buffer)
+void mc::BufferSwapperDouble::compositor_release(std::shared_ptr<mc::Buffer> released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     if (last_posted_buffer == NULL)

@@ -110,7 +110,7 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     for(;;)
     {
         buf_tmp = swapper->client_acquire();
@@ -126,7 +126,7 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     for(;;)
     {
         buf_tmp = swapper->compositor_acquire();
@@ -191,7 +191,7 @@ void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
 
     buf_tmp = swapper->client_acquire();
     *buf = buf_tmp.get();
@@ -209,7 +209,7 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
 
     synchronizer->child_enter_wait();
 
@@ -248,7 +248,7 @@ void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> syn
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {
@@ -267,7 +267,7 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {
@@ -292,7 +292,7 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     bool wait_request = false;
     for(;;)
     {

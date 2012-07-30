@@ -59,7 +59,7 @@ struct BufferSwapper : testing::Test
 
 TEST_F(BufferSwapper, test_valid_buffer_returned)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
 
     buf_tmp = swapper->client_acquire();
     EXPECT_TRUE((buf_tmp.get() == buf_a) || (buf_tmp.get() == buf_b));
@@ -69,7 +69,7 @@ TEST_F(BufferSwapper, test_valid_buffer_returned)
 
 TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -92,7 +92,7 @@ TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
 
 TEST_F(BufferSwapper, test_compositor_gets_valid)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
 
     buf_tmp = swapper->client_acquire();
     swapper->client_release(buf_tmp);
@@ -103,7 +103,7 @@ TEST_F(BufferSwapper, test_compositor_gets_valid)
 
 TEST_F(BufferSwapper, test_compositor_gets_last_posted)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -120,7 +120,7 @@ TEST_F(BufferSwapper, test_compositor_gets_last_posted)
 
 TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -138,7 +138,7 @@ TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
 
 TEST_F(BufferSwapper, test_two_grabs_with_client_updates)
 {
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
 
@@ -163,7 +163,7 @@ TEST_F(BufferSwapper, test_grab_release_pattern)
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
     mc::Buffer* buf_tmp_c;
-    std::unique_ptr<mc::Buffer> buf_tmp;
+    std::shared_ptr<mc::Buffer> buf_tmp;
 
     buf_tmp = swapper->client_acquire();
     swapper->client_release(buf_tmp);
