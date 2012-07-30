@@ -61,13 +61,15 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     launch_client_process(client_config);
 }
 
-struct SessionSignalCollector
+namespace
 {
-    SessionSignalCollector() : session_count(0)
+struct SessionSignalCounter
+{
+    SessionSignalCounter() : session_count(0)
     {
     }
 
-    SessionSignalCollector(SessionSignalCollector const &) = delete;
+    SessionSignalCounter(SessionSignalCounter const &) = delete;
 
     void on_new_session()
     {
@@ -76,6 +78,7 @@ struct SessionSignalCollector
 
     int session_count;
 };
+}
 
 TEST_F(BespokeDisplayServerTestFixture,
        a_connection_attempt_results_in_a_session)
@@ -86,7 +89,7 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
             comm->signal_new_session().connect(
-                std::bind(&SessionSignalCollector::on_new_session, &collector));
+                std::bind(&SessionSignalCounter::on_new_session, &collector));
             return comm;
         }
 
@@ -94,7 +97,7 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             EXPECT_EQ(1, collector.session_count);
         }
-        SessionSignalCollector collector;
+        SessionSignalCounter collector;
     } server_config;
 
     launch_server_process(server_config);
@@ -121,3 +124,72 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+namespace
+{
+struct SessionSignalCollecter
+{
+    SessionSignalCollecter() : sessions()
+    {
+    }
+
+    SessionSignalCollecter(SessionSignalCounter const &) = delete;
+
+    void on_new_session(std::shared_ptr<mf::Session> const& session)
+    {
+        sessions[session->id()] = session;
+    }
+
+    std::map<int, std::shared_ptr<mf::Session>> sessions;
+};
+}
+
+TEST_F(BespokeDisplayServerTestFixture,
+       each_connection_attempt_results_in_a_session_with_a_unique_id)
+{
+    std::size_t const connections = 5;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(int const connections) : connections(connections) {}
+
+        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        {
+            auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
+            comm->signal_new_session().connect(
+                boost::bind(&SessionSignalCollecter::on_new_session, &collector, _1));
+            return comm;
+        }
+
+        void on_exit(mir::DisplayServer* )
+        {
+            EXPECT_EQ(connections, collector.sessions.size());
+        }
+
+        SessionSignalCollecter collector;
+        std::size_t connections;
+    } server_config(connections);
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            namespace ba = boost::asio;
+            namespace bal = boost::asio::local;
+            namespace bs = boost::system;
+
+            ba::io_service io_service;
+            bal::stream_protocol::endpoint endpoint(mir::test_socket_file());
+            bal::stream_protocol::socket socket(io_service);
+
+            bs::error_code error;
+            socket.connect(endpoint, error);
+
+            EXPECT_TRUE(!error);
+        }
+    } client_config;
+
+    for (std::size_t i = 0; i != connections; ++i)
+        launch_client_process(client_config);
+}
