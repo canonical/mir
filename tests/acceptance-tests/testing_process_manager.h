@@ -82,9 +82,6 @@ public:
 
 private:
 
-    mir::DisplayServer* display_server() const;
-
-    std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
     std::list<std::shared_ptr<mir::process::Process>> clients;
 

@@ -92,10 +92,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-            //TODO the TestingProcessManager uses detect_server() and that creates
-            //      a spurious session.  That shouldn't happen, but that's why we have
-            //      2 here not 1.
-            EXPECT_EQ(2, collector.session_count);
+            EXPECT_EQ(1, collector.session_count);
         }
         SessionSignalCollector collector;
     } server_config;
@@ -106,8 +103,18 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
-                                           std::chrono::milliseconds(100)));
+            namespace ba = boost::asio;
+            namespace bal = boost::asio::local;
+            namespace bs = boost::system;
+
+            ba::io_service io_service;
+            bal::stream_protocol::endpoint endpoint(mir::test_socket_file());
+            bal::stream_protocol::socket socket(io_service);
+
+            bs::error_code error;
+            socket.connect(endpoint, error);
+
+            EXPECT_TRUE(!error);
         }
     } client_config;
 

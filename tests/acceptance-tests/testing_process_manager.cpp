@@ -97,7 +97,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
         signal_prev_fn = signal (SIGTERM, signal_terminate);
 
-        server = std::unique_ptr<mir::DisplayServer>(
+        std::unique_ptr<mir::DisplayServer> server = std::unique_ptr<mir::DisplayServer>(
             new mir::DisplayServer(
                 config.make_communicator(),
                 config.make_buffer_allocation_strategy(),
@@ -115,10 +115,10 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
 
             scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
 
-            config.exec(display_server());
+            config.exec(server.get());
         }
 
-        config.on_exit(display_server());
+        config.on_exit(server.get());
     }
     else
     {
@@ -211,31 +211,20 @@ void mir::TestingProcessManager::tear_down_all()
     tear_down_server();
 }
 
-mir::DisplayServer* mir::TestingProcessManager::display_server() const
-{
-    return server.get();
-}
-
 bool mir::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {
     std::chrono::time_point<std::chrono::system_clock> limit
         =  std::chrono::system_clock::now()+timeout;
-    namespace ba = boost::asio;
-    namespace bal = boost::asio::local;
-    namespace bs = boost::system;
 
-    ba::io_service io_service;
-    bal::stream_protocol::endpoint endpoint(socket_file);
-    bal::stream_protocol::socket socket(io_service);
-
-    bs::error_code error;
+    bool error;
+    struct stat file_status;
 
     do
     {
         if (error) std::this_thread::sleep_for(std::chrono::milliseconds(0));
-        socket.connect(endpoint, error);
+        error = stat(socket_file.c_str(), &file_status);
     }
     while (error && std::chrono::system_clock::now() < limit);
 
