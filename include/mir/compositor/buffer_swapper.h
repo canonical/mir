@@ -29,6 +29,8 @@ class Buffer;
 class BufferSwapper
 {
 public:
+    virtual ~BufferSwapper() {}
+
     /* callers of client_acquire are returned a pointer to the
       currently usable buffer. This call may potentially wait for a
       buffer to become available */

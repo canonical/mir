@@ -22,7 +22,6 @@ set(
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_double.cpp
-  buffer_texture_binder.cpp
   double_buffer_allocation_strategy.cpp
 )
 
