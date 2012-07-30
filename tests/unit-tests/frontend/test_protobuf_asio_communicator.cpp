@@ -68,8 +68,8 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         comm.start();
     }
 
-    SessionSignalCollector collector;
     mf::ProtobufAsioCommunicator comm;
+    SessionSignalCollector collector;
 };
 }
 
