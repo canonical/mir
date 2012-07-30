@@ -218,7 +218,7 @@ bool mir::detect_server(
     std::chrono::time_point<std::chrono::system_clock> limit
         =  std::chrono::system_clock::now()+timeout;
 
-    bool error;
+    bool error = false;
     struct stat file_status;
 
     do
