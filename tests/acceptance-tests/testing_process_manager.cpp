@@ -55,17 +55,21 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
+namespace mir
+{
 namespace
 {
-mir::std::atomic<mir::DisplayServer*> signal_display_server;
+std::atomic<mir::DisplayServer*> signal_display_server;
 }
+}
+
 extern "C"
 {
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    auto sds = signal_display_server.load();
-    for (; !sds; sds = signal_display_server.load())
+    auto sds = mir::signal_display_server.load();
+    for (; !sds; sds = mir::signal_display_server.load())
         /* could spin briefly during startup */;
     sds->stop();
 }
@@ -89,13 +93,15 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
+        signal_prev_fn = signal (SIGTERM, signal_terminate);
+
         server = std::unique_ptr<mir::DisplayServer>(
                 new DisplayServer(
                         config.make_buffer_allocation_strategy(),
                         config.make_renderer()));
+
         //signal_display_server.store(server.get());
         std::atomic_store(&signal_display_server, server.get());
-        signal_prev_fn = signal (SIGTERM, signal_terminate);
 
         struct ScopedFuture
         {
