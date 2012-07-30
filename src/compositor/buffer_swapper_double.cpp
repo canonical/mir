@@ -21,7 +21,7 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> && buf_a, std::shared_ptr<Buffer> && buf_b)
+mc::BufferSwapperDouble::BufferSwapperDouble(std::shared_ptr<Buffer> buf_a, std::shared_ptr<Buffer> buf_b)
     :
     compositor_has_consumed(true),
     client_queue(buf_a),
