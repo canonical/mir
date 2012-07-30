@@ -57,10 +57,14 @@ enable_testing()
 
 include_directories(include/)
 
-add_subdirectory(src/)
-
 # Check for boost
 find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
+include_directories (
+  ${Boost_INCLUDE_DIRS}
+)
+add_subdirectory(src/)
+
+find_package (Threads REQUIRED)
 
 # Pulling in local gmock version
 # While this seems evil, we are doing
@@ -69,15 +73,7 @@ find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
 #   (2.) a stream-lined cross-compilation workflow
 set(GTEST_INCLUDE_DIR gmock-1.6.0/src)
 
-include_directories (
-  ${Boost_INCLUDE_DIRS}
-  ${GTEST_INCLUDE_DIR}
-)
-
-find_package (Threads REQUIRED)
-
 add_subdirectory(gmock-1.6.0/)
-
 set(GMOCK_LIBRARY gmock)
 set(GMOCK_MAIN_LIBRARY gmock_main)
 set(
@@ -87,6 +83,9 @@ set(
   ${GMOCK_MAIN_LIBRARY})
 set(GTEST_FOUND TRUE)
 # GMock/GTest build finished and available to subsequent components
+include_directories (
+  ${GTEST_INCLUDE_DIR}
+)
 
 add_subdirectory(tests/)
 add_subdirectory(guides/)
