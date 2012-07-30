@@ -15,6 +15,5 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
 add_subdirectory(acceptance-tests/)
-add_subdirectory(end-to-end-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)
