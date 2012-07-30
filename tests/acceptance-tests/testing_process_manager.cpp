@@ -95,16 +95,14 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        signal_prev_fn = signal (SIGTERM, signal_terminate);
+        signal_prev_fn = signal(SIGTERM, signal_terminate);
 
-        std::unique_ptr<mir::DisplayServer> server = std::unique_ptr<mir::DisplayServer>(
-            new mir::DisplayServer(
+        mir::DisplayServer server(
                 config.make_communicator(),
                 config.make_buffer_allocation_strategy(),
-                config.make_renderer()));
+                config.make_renderer());
 
-        //signal_display_server.store(server.get());
-        std::atomic_store(&signal_display_server, server.get());
+        std::atomic_store(&signal_display_server, &server);
 
         {
             struct ScopedFuture
@@ -113,12 +111,12 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
                 ~ScopedFuture() { future.wait(); }
             } scoped;
 
-            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
+            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, &server));
 
-            config.exec(server.get());
+            config.exec(&server);
         }
 
-        config.on_exit(server.get());
+        config.on_exit(&server);
     }
     else
     {
