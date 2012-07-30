@@ -73,10 +73,14 @@ struct SessionSignalCounter
 
     void on_new_session()
     {
+        std::unique_lock<std::mutex> lock(guard);
         session_count++;
+        wait_condition.notify_one();
     }
 
     int session_count;
+    std::mutex guard;
+    std::condition_variable wait_condition;
 };
 }
 
@@ -95,6 +99,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
+            std::unique_lock<std::mutex> lock(collector.guard);
+            while (collector.session_count != 1)
+                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
             EXPECT_EQ(1, collector.session_count);
         }
         SessionSignalCounter collector;
@@ -136,9 +143,13 @@ struct SessionSignalCollecter
 
     void on_new_session(std::shared_ptr<mf::Session> const& session)
     {
+        std::unique_lock<std::mutex> lock(guard);
         sessions[session->id()] = session;
+        wait_condition.notify_one();
     }
 
+    std::mutex guard;
+    std::condition_variable wait_condition;
     std::map<int, std::shared_ptr<mf::Session>> sessions;
 };
 }
@@ -162,6 +173,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
+            std::unique_lock<std::mutex> lock(collector.guard);
+            while (collector.sessions.size() != connections)
+                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
             EXPECT_EQ(connections, collector.sessions.size());
         }
 
