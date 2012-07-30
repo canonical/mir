@@ -177,6 +177,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             while (collector.sessions.size() != connections)
                 collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
             EXPECT_EQ(connections, collector.sessions.size());
+
+            collector.sessions.clear();
         }
 
         SessionSignalCollecter collector;
