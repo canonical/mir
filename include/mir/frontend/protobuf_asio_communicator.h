@@ -32,7 +32,7 @@ namespace mir
 namespace frontend
 {
 
-class Session : public boost::enable_shared_from_this<Session>
+class Session
 {
 public:
     typedef std::shared_ptr<Session> ptr;
