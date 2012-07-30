@@ -42,7 +42,7 @@ public:
 
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
-    ProtobufAsioCommunicator(std::string const& socket_file);
+    explicit ProtobufAsioCommunicator(std::string const& socket_file);
 
     ~ProtobufAsioCommunicator();
 
