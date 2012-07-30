@@ -24,14 +24,15 @@ namespace ba = boost::asio;
 // TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
     : socket_file((std::remove(socket_file.c_str()), socket_file)),
-      acceptor(io_service, socket_file)
+      acceptor(io_service, socket_file),
+      next_id(1)
 {
     start_accept();
 }
 
 void mf::ProtobufAsioCommunicator::start_accept()
 {
-    auto session = std::make_shared<Session>(io_service);
+    auto session = std::make_shared<Session>(io_service, next_id++);
 
     acceptor.async_accept(
         session->socket,

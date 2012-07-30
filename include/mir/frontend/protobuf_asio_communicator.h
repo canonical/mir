@@ -59,6 +59,8 @@ private:
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
     NewSessionSignal new_session_signal;
+
+    int next_id;
 };
 
 class Session
@@ -66,11 +68,11 @@ class Session
 public:
     int id() const
     {
-        return 13;
+        return id_;
     }
 
-    explicit Session(boost::asio::io_service& io_service)
-        : socket(io_service)
+    explicit Session(boost::asio::io_service& io_service, int id_)
+        : socket(io_service), id_(id_)
     {
     }
 
@@ -78,6 +80,7 @@ private:
     // I wish for "friend void ProtobufAsioCommunicator::start_accept();" but that's private.
     friend class ProtobufAsioCommunicator;
     boost::asio::local::stream_protocol::socket socket;
+    int const id_;
 };
 }
 }
