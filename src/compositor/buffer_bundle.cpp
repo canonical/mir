@@ -20,6 +20,8 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/graphics/texture.h"
 
+#include <cassert>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
