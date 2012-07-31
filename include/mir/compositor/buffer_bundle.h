@@ -37,12 +37,13 @@ namespace mir
 namespace compositor
 {
 
-class TexDeleter {
+class TexDeleter
+{
 
 public:
     TexDeleter(BufferSwapper* sw, Buffer* buf)
-    : swapper(std::move(sw)),
-      buffer_ptr(buf)
+        : swapper(std::move(sw)),
+          buffer_ptr(buf)
     {
     };
 
@@ -51,18 +52,19 @@ public:
         swapper->compositor_release(buffer_ptr);
         delete texture;
     }
-    
+
 private:
     BufferSwapper* const swapper;
     Buffer* const buffer_ptr;
 };
 
 
-class BufDeleter {
+class BufDeleter
+{
 public:
     BufDeleter(BufferSwapper* sw, Buffer* buf)
-    : swapper(sw),
-      buffer_ptr(buf)
+        : swapper(sw),
+          buffer_ptr(buf)
     {
     };
 
@@ -71,7 +73,7 @@ public:
         swapper->client_release(buffer_ptr);
         delete package;
     }
-    
+
 private:
     BufferSwapper* const swapper;
     Buffer* const buffer_ptr;

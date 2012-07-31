@@ -26,7 +26,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper> swapper)
- :
+    :
     swapper(std::move(swapper))
 {
 }
@@ -49,7 +49,7 @@ std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
     client_buffer->lock();
-    
+
     mc::BufferIPCPackage* buf = new mc::BufferIPCPackage;
     mc::BufDeleter deleter(swapper.get(), client_buffer);
     return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);

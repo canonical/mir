@@ -39,26 +39,26 @@ const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
 struct MockSwapper : public mc::BufferSwapper
 {
-    public:
-        MockSwapper() {};
-        MockSwapper(std::shared_ptr<mc::Buffer> buffer)
-         : default_buffer(buffer)
-        {
-            using namespace testing;
- 
-            ON_CALL(*this, compositor_acquire())
-                    .WillByDefault(Return(default_buffer.get()));
-            ON_CALL(*this, client_acquire())
-                    .WillByDefault(Return(default_buffer.get()));
-        };
+public:
+    MockSwapper() {};
+    MockSwapper(std::shared_ptr<mc::Buffer> buffer)
+        : default_buffer(buffer)
+    {
+        using namespace testing;
 
-        MOCK_METHOD0(client_acquire,   mc::Buffer*(void));
-        MOCK_METHOD1(client_release, void(mc::Buffer*));
-        MOCK_METHOD0(compositor_acquire,  mc::Buffer*(void));
-        MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
+        ON_CALL(*this, compositor_acquire())
+        .WillByDefault(Return(default_buffer.get()));
+        ON_CALL(*this, client_acquire())
+        .WillByDefault(Return(default_buffer.get()));
+    };
 
-    private:
-        std::shared_ptr<mc::Buffer> default_buffer;
+    MOCK_METHOD0(client_acquire,   mc::Buffer*(void));
+    MOCK_METHOD1(client_release, void(mc::Buffer*));
+    MOCK_METHOD0(compositor_acquire,  mc::Buffer*(void));
+    MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
+
+private:
+    std::shared_ptr<mc::Buffer> default_buffer;
 };
 }
 
@@ -70,10 +70,10 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
-        .Times(1);
+    .Times(1);
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-            .Times(1);
+    .Times(1);
 
     EXPECT_CALL(*mock_swapper, compositor_release(_));
 
@@ -93,10 +93,10 @@ TEST(buffer_bundle, get_buffer_for_client)
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, lock())
-        .Times(1);
+    .Times(1);
 
     EXPECT_CALL(*mock_swapper, client_acquire())
-            .Times(1);
+    .Times(1);
 
     EXPECT_CALL(*mock_swapper, client_release(_));
 
