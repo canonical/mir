@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mock_buffer.h"
-#include "mock_graphic_buffer_allocator.h"
+#include "mir_test/mock_buffer.h"
+#include "mir_test/mock_graphic_buffer_allocator.h"
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_swapper.h"

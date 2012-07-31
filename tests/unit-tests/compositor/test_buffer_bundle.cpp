@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mock_buffer.h"
+#include "mir_test/mock_buffer.h"
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"

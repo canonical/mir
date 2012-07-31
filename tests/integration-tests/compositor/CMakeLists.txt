@@ -12,15 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_compositor.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocation_strategy.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_manager.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_bundle.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper.cpp
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_stress_buffer_swapper.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_synchronizer.cpp
 )
 
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+set(
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE)
