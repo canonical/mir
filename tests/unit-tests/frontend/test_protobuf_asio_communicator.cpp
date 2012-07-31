@@ -82,6 +82,18 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         comm.start();
     }
 
+    void expect_session_count(int expected_count)
+    {
+        std::unique_lock<std::mutex> ul(collector.guard);
+        for (int ntries = 20;
+             ntries-- != 0 && collector.session_count != expected_count; )
+        {
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+        }
+        EXPECT_EQ(collector.session_count, expected_count);
+    }
+
+    ba::io_service io_service;
     mf::ProtobufAsioCommunicator comm;
     SessionEventCollector collector;
 };
@@ -89,31 +101,19 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
-    ba::io_service io_service;
     ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
-
-    std::unique_lock<std::mutex> ul(collector.guard);
-
-    while (collector.session_count == 0)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-
-    EXPECT_EQ(1, collector.session_count);
+    expect_session_count(1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_created)
 {
-    ba::io_service io_service;
     ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
-
-    std::unique_lock<std::mutex> ul(collector.guard);
-
-    while (collector.session_count == 0)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+    expect_session_count(1);
 
     EXPECT_FALSE(collector.sessions.empty());
 }
@@ -123,50 +123,35 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     int const connection_count{5};
 
-    ba::io_service io_service;
-
     for (int i = 0; i != connection_count; ++i)
     {
         ba::local::stream_protocol::socket socket(io_service);
-
         socket.connect(socket_name());
-
-        std::unique_lock<std::mutex> ul(collector.guard);
-        while (collector.session_count == i)
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
     }
 
-    EXPECT_EQ(connection_count, collector.session_count);
+    expect_session_count(connection_count);
     EXPECT_EQ(connection_count, (int)collector.sessions.size());
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
-    ba::io_service io_service;
     ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
-    
-    std::unique_lock<std::mutex> ul(collector.guard);
-    while (collector.session_count == 0)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
 
-    EXPECT_EQ(collector.session_count, 1);
+    expect_session_count(1);
 
     bs::error_code error;
     ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
     EXPECT_FALSE(error);
 
-    int ntries = 20;
-    while (ntries-- != 0 && collector.session_count == 1)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-
-    EXPECT_EQ(collector.session_count, 0);
+    expect_session_count(0);
 }
 
 namespace
 {
+// Synchronously writes the message to the socket one character at a time.
 void write_fragmented_message(ba::local::stream_protocol::socket & socket, std::string const & message)
 {
     bs::error_code error;
@@ -182,23 +167,11 @@ void write_fragmented_message(ba::local::stream_protocol::socket & socket, std::
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session_with_a_fragmented_message)
 {
-    ba::io_service io_service;
     ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
-    
-    std::unique_lock<std::mutex> ul(collector.guard);
-    while (collector.session_count == 0)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-
-    EXPECT_EQ(collector.session_count, 1);
-
+    expect_session_count(1);
     write_fragmented_message(socket, "disconnect\n");
-
-    int ntries = 20;
-    while (ntries-- != 0 && collector.session_count == 1)
-        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-
-    EXPECT_EQ(collector.session_count, 0);
+    expect_session_count(0);
 }
 
