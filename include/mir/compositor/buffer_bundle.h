@@ -34,7 +34,7 @@ class BufferBundle : public BufferTextureBinder,
     public BufferQueue
 {
 public:
-    explicit BufferBundle(std::unique_ptr<BufferSwapper> swapper);
+    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
     ~BufferBundle();
 
     /* from BufferQueue */

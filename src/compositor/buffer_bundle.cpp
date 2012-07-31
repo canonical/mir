@@ -71,7 +71,7 @@ private:
 };
 }
 
-mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper> swapper)
+mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
     :
     swapper(std::move(swapper))
 {
