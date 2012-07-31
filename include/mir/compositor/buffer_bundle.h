@@ -40,7 +40,7 @@ namespace compositor
 class TexDeleter {
 
 public:
-    TexDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> && buf)
+    TexDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> buf)
     : swapper(sw),
       buffer_ptr(buf)
     {
@@ -60,7 +60,7 @@ private:
 
 class BufDeleter {
 public:
-    BufDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> && buf)
+    BufDeleter(std::shared_ptr<BufferSwapper> sw, std::shared_ptr<Buffer> buf)
     : swapper(sw),
       buffer_ptr(buf)
     {
@@ -82,7 +82,7 @@ class BufferBundle : public BufferTextureBinder,
     public BufferQueue
 {
 public:
-    explicit BufferBundle(std::shared_ptr<BufferSwapper>&& swapper);
+    explicit BufferBundle(std::shared_ptr<BufferSwapper> swapper);
     ~BufferBundle();
 
     /* from BufferQueue */
