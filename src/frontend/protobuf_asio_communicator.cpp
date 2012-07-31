@@ -64,12 +64,12 @@ void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> co
 {
     if (!ec)
     {
-        new_session_signal(session);
+        session_event_signal(session, SessionEvent::connected);
     }
     start_accept();
 }
 
-mf::ProtobufAsioCommunicator::NewSessionSignal& mf::ProtobufAsioCommunicator::signal_new_session()
+mf::ProtobufAsioCommunicator::SessionEventSignal& mf::ProtobufAsioCommunicator::signal_session_event()
 {
-    return new_session_signal;
+    return session_event_signal;
 }

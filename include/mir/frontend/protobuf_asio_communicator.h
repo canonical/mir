@@ -35,10 +35,16 @@ namespace frontend
 //TODO Session should probably be an interface so that it can be mocked.
 class Session;
 
+enum class SessionEvent
+{
+    connected,
+    disconnected
+};
+
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
-    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&)> NewSessionSignal;
+    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&, SessionEvent)> SessionEventSignal;
 
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
@@ -48,7 +54,7 @@ public:
 
     void start();
 
-    NewSessionSignal& signal_new_session();
+    SessionEventSignal& signal_session_event();
 
 private:
     void start_accept();
@@ -58,7 +64,7 @@ private:
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    NewSessionSignal new_session_signal;
+    SessionEventSignal session_event_signal;
 
     int next_id;
 };

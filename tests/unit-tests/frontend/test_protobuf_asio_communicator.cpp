@@ -21,21 +21,24 @@
 
 namespace mf = mir::frontend;
 
+namespace ba = boost::asio;
+namespace bs = boost::system;
+
 namespace
 {
-struct SessionSignalCollector
+struct SessionEventCollector
 {
-    SessionSignalCollector() : session_count(0)
+    SessionEventCollector() : session_count(0)
     {
     }
 
-    SessionSignalCollector(SessionSignalCollector const &) = delete;
+    SessionEventCollector(SessionEventCollector const &) = delete;
 
-    void on_new_session(std::shared_ptr<mf::Session> const& new_session)
+    void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent)
     {
         std::unique_lock<std::mutex> ul(guard);
         session_count++;
-        sessions.insert(new_session);
+        sessions.insert(session);
         wait_condition.notify_one();
     }
 
@@ -59,24 +62,23 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     void SetUp()
     {
-        comm.signal_new_session().connect(
-                std::bind(
-                    &SessionSignalCollector::on_new_session,
-                    &collector,
-                    std::placeholders::_1));
+        comm.signal_session_event().connect(
+                boost::bind(
+                    &SessionEventCollector::on_session_event,
+                    &collector, _1, _2));
 
         comm.start();
     }
 
     mf::ProtobufAsioCommunicator comm;
-    SessionSignalCollector collector;
+    SessionEventCollector collector;
 };
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
-    boost::asio::io_service io_service;
-    boost::asio::local::stream_protocol::socket socket(io_service);
+    ba::io_service io_service;
+    ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
 
@@ -91,8 +93,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_created)
 {
-    boost::asio::io_service io_service;
-    boost::asio::local::stream_protocol::socket socket(io_service);
+    ba::io_service io_service;
+    ba::local::stream_protocol::socket socket(io_service);
 
     socket.connect(socket_name());
 
@@ -109,11 +111,11 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     int const connection_count{5};
 
-    boost::asio::io_service io_service;
+    ba::io_service io_service;
 
     for (int i = 0; i != connection_count; ++i)
     {
-        boost::asio::local::stream_protocol::socket socket(io_service);
+        ba::local::stream_protocol::socket socket(io_service);
 
         socket.connect(socket_name());
 
@@ -125,3 +127,29 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_EQ(connection_count, collector.session_count);
     EXPECT_EQ(connection_count, (int)collector.sessions.size());
 }
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+       connect_then_disconnect_a_session)
+{
+    ba::io_service io_service;
+    ba::local::stream_protocol::socket socket(io_service);
+
+    socket.connect(socket_name());
+    
+    std::unique_lock<std::mutex> ul(collector.guard);
+    while (collector.session_count == 0)
+        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+
+    EXPECT_EQ(collector.session_count, 1);
+
+    bs::error_code error;
+    ba::write(socket, ba::buffer("disconnect\n"), error);
+
+    EXPECT_FALSE(error);
+    int ntries = 20;
+    while (ntries-- != 0 && collector.session_count == 1)
+        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+
+    EXPECT_EQ(collector.session_count, 0);
+}
+
