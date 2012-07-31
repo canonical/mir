@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_BUFFER_QUEUE_H_
 
 #include "buffer.h"
+#include "buffer_ipc_package.h"
 #include <memory>
 
 namespace mir
@@ -32,8 +33,7 @@ class BufferQueue
 {
 public:
     virtual ~BufferQueue() {};
-    virtual std::shared_ptr<Buffer> dequeue_client_buffer() = 0;
-    virtual void queue_client_buffer(std::shared_ptr<Buffer> buffer) = 0;
+    virtual std::shared_ptr<BufferIPCPackage> secure_client_buffer() = 0;
 
 };
 

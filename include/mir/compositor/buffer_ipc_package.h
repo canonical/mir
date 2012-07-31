@@ -13,39 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
-#define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
-
-#include <memory>
+#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
+#define MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
 
 namespace mir
 {
-namespace graphics
-{
-class Texture;
-}
-
 namespace compositor
 {
-class Buffer;
 
-class BufferTextureBinder
+class BufferIPCPackage
 {
 public:
-    virtual ~BufferTextureBinder() {}
-    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    BufferIPCPackage() {}
+    virtual ~BufferIPCPackage() {}
 
-protected:
-    BufferTextureBinder() = default;
-
-    BufferTextureBinder(BufferTextureBinder const&) = delete;
-    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+    BufferIPCPackage(BufferIPCPackage const&) = delete;
+    BufferIPCPackage& operator=(BufferIPCPackage const&) = delete;
 };
+
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_ */

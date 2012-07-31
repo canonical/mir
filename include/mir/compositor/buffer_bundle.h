@@ -24,16 +24,12 @@
 #include "buffer_queue.h"
 #include "buffer.h"
 
-#include "mir/thread/all.h"
-
-#include <memory>
-#include <vector>
-
 namespace mir
 {
 namespace compositor
 {
 class BufferSwapper;
+
 class BufferBundle : public BufferTextureBinder,
     public BufferQueue
 {
@@ -42,14 +38,10 @@ public:
     ~BufferBundle();
 
     /* from BufferQueue */
-    /* todo: shared_ptr<Buffer> is not a rich type. the user of this interface
-             wants a data type they can use to send to another process */
-    std::shared_ptr<Buffer> dequeue_client_buffer();
-    void queue_client_buffer(std::shared_ptr<Buffer> buffer);
+    std::shared_ptr<BufferIPCPackage> secure_client_buffer();
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
-    void unlock_back_buffer();
 
 protected:
     BufferBundle(const BufferBundle&) = delete;
