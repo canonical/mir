@@ -22,27 +22,31 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/frontend/communicator.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface_stack.h"
 
 #include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 struct mir::DisplayServer::Private
 {
     Private(
+        const std::shared_ptr<mf::Communicator>& communicator,
         const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
         const std::shared_ptr<mg::Renderer>& renderer)
-            : buffer_bundle_manager(strategy),
+            : communicator(communicator),
+              buffer_bundle_manager(strategy),
               surface_stack(&buffer_bundle_manager),
               compositor(&surface_stack, renderer),
               exit(false)
     {
     }
-    
+    std::shared_ptr<frontend::Communicator> communicator;
     compositor::BufferBundleManager buffer_bundle_manager;
     surfaces::SurfaceStack surface_stack;
     compositor::Compositor compositor;
@@ -50,8 +54,10 @@ struct mir::DisplayServer::Private
 };
 
 mir::DisplayServer::DisplayServer(
+    const std::shared_ptr<mf::Communicator>& communicator,
     const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
-    const std::shared_ptr<mg::Renderer>& renderer) : p(new mir::DisplayServer::Private(strategy, renderer))
+    const std::shared_ptr<mg::Renderer>& renderer)
+    : p(new mir::DisplayServer::Private(communicator, strategy, renderer))
 {
 }
 
@@ -61,6 +67,7 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::start()
 {
+    p->communicator->start();
     while (!p->exit.load(std::memory_order_seq_cst))
         do_stuff();
 }

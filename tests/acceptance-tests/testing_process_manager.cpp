@@ -22,7 +22,11 @@
 
 #include "mir/thread/all.h"
 
+#include <boost/asio.hpp>
+
 #include <gmock/gmock.h>
+
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
@@ -40,9 +44,8 @@ namespace
 
 void startup_pause()
 {
-    // A small delay to let the display server get started.
-    // TODO there should be a way the server announces "ready"
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
+        throw std::runtime_error("Failed to find server");
 }
 }
 
@@ -75,7 +78,6 @@ void signal_terminate (int )
 }
 }
 
-
 void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
@@ -93,25 +95,28 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        signal_prev_fn = signal (SIGTERM, signal_terminate);
+        signal_prev_fn = signal(SIGTERM, signal_terminate);
 
-        server = std::unique_ptr<mir::DisplayServer>(
-                new DisplayServer(
-                        config.make_buffer_allocation_strategy(),
-                        config.make_renderer()));
+        mir::DisplayServer server(
+                config.make_communicator(),
+                config.make_buffer_allocation_strategy(),
+                config.make_renderer());
 
-        //signal_display_server.store(server.get());
-        std::atomic_store(&signal_display_server, server.get());
+        std::atomic_store(&signal_display_server, &server);
 
-        struct ScopedFuture
         {
-            std::future<void> future;
-            ~ScopedFuture() { future.wait(); }
-        } scoped;
+            struct ScopedFuture
+            {
+                std::future<void> future;
+                ~ScopedFuture() { future.wait(); }
+            } scoped;
 
-        scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, server.get()));
+            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, &server));
 
-        config.exec(display_server());
+            config.exec(&server);
+        }
+
+        config.on_exit(&server);
     }
     else
     {
@@ -141,12 +146,15 @@ void mir::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     {
         is_test_process = false;
 
+        // Need to avoid terminating server or other clients
+        server_process->detach();
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             (*client)->detach();
         }
 
         clients.clear();
+        server_process.reset();
 
         SCOPED_TRACE("Client");
         config.exec();
@@ -163,6 +171,12 @@ void mir::TestingProcessManager::tear_down_clients()
     if (is_test_process)
     {
         using namespace testing;
+
+        if (clients.empty())
+        {
+            // Allow some time for server-side only tests to run
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
 
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
@@ -194,17 +208,27 @@ void mir::TestingProcessManager::tear_down_server()
 
 void mir::TestingProcessManager::tear_down_all()
 {
-    if (server)
-    {
-        // We're in the server process, so just close down gracefully
-        server->stop();
-    }
-
     tear_down_clients();
     tear_down_server();
 }
 
-mir::DisplayServer* mir::TestingProcessManager::display_server() const
+bool mir::detect_server(
+        const std::string& socket_file,
+        std::chrono::milliseconds const& timeout)
 {
-    return server.get();
+    std::chrono::time_point<std::chrono::system_clock> limit
+        =  std::chrono::system_clock::now()+timeout;
+
+    bool error = false;
+    struct stat file_status;
+
+    do
+    {
+        if (error) std::this_thread::sleep_for(std::chrono::milliseconds(0));
+        error = stat(socket_file.c_str(), &file_status);
+    }
+    while (error && std::chrono::system_clock::now() < limit);
+
+    return !error;
 }
+

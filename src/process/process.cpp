@@ -164,6 +164,12 @@ std::ostream& print_reason(std::ostream & out, mp::TerminationReason reason)
     return out;
 }
 
+std::ostream& print_signal(std::ostream& out, int signal)
+{
+    out << "signal(" << signal << ")";
+    return out;
+}
+
 std::ostream& print_exit_code(std::ostream& out, int exit_code)
 {
     if (exit_code == EXIT_SUCCESS)
@@ -182,6 +188,8 @@ std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& resu
 {
     out << "process::Result(";
     print_reason(out, result.reason);
+    out << ", ";
+    print_signal(out, result.signal);
     out << ", ";
     print_exit_code(out, result.exit_code) << ')';
     return out;

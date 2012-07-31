@@ -21,6 +21,8 @@
 
 #include "mir/process/process.h"
 
+#include <chrono>
+
 #include <memory>
 #include <list>
 
@@ -30,6 +32,10 @@ class DisplayServer;
 namespace compositor
 {
 class BufferAllocationStrategy;
+}
+namespace frontend
+{
+class Communicator;
 }
 namespace graphics
 {
@@ -46,6 +52,12 @@ struct TestingServerConfiguration
 {
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
+
+    // Code to run in server process after server exits
+    virtual void on_exit(DisplayServer* display_server);
+
+    // the communicator to use
+    virtual std::shared_ptr<frontend::Communicator> make_communicator();
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();
@@ -66,17 +78,22 @@ public:
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
+    void os_signal_handler(int signal);
 
 private:
 
-    mir::DisplayServer* display_server() const;
-
-    std::unique_ptr<mir::DisplayServer> server;
     std::shared_ptr<mir::process::Process> server_process;
     std::list<std::shared_ptr<mir::process::Process>> clients;
 
     bool is_test_process;
 };
+
+std::string const& test_socket_file();
+
+bool detect_server(
+        const std::string& socket_file,
+        std::chrono::milliseconds const& timeout);
+
 }
 
 #endif // MIR_TESTING_PROCESS_MANAGER

@@ -20,12 +20,15 @@
 #include "mir/display_server.h"
 
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/frontend/communicator.h"
+#include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer_swapper.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 namespace
@@ -49,6 +52,7 @@ public:
 };
 }
 
+
 std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
@@ -58,8 +62,24 @@ void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
+void mir::TestingServerConfiguration::on_exit(DisplayServer* )
+{
+}
+
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 {
     return std::make_shared<StubRenderer>();
 }
+
+std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
+{
+    return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(test_socket_file());
+}
+
+std::string const& mir::test_socket_file()
+{
+    static const std::string socket_file{"/tmp/mir_socket_test"};
+    return socket_file;
+}
+
 

@@ -42,7 +42,7 @@ void DefaultDisplayServerTestFixture::TearDown()
 
 void DefaultDisplayServerTestFixture::TearDownTestCase()
 {
-    process_manager.tear_down_all();
+    process_manager.tear_down_server();
 }
 
 DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
