@@ -20,8 +20,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
 #define MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
 
-#include <memory>
-
 namespace mir
 {
 namespace compositor
@@ -30,9 +28,11 @@ namespace compositor
 class BufferIPCPackage
 {
 public:
-    BufferIPCPackage() {};
-    virtual ~BufferIPCPackage() {};
+    BufferIPCPackage() {}
+    virtual ~BufferIPCPackage() {}
 
+    BufferIPCPackage(BufferIPCPackage const&) = delete;
+    BufferIPCPackage& operator=(BufferIPCPackage const&) = delete;
 };
 
 }
