@@ -26,6 +26,8 @@ namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 
+namespace mir
+{
 struct ThreadFixture {
     public:
         ThreadFixture(
@@ -54,11 +56,8 @@ struct ThreadFixture {
 
             thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
             thread2 = std::thread(b, sync2, swapper, &client_buffer);
-#ifndef MIR_USING_BOOST_THREADS
+
             sleep_duration = std::chrono::microseconds( 50 );
-#else
-            sleep_duration = ::boost::posix_time::microseconds( 50 );
-#endif
         };
 
         ~ThreadFixture()
@@ -81,11 +80,7 @@ struct ThreadFixture {
         mc::Buffer *compositor_buffer;
         mc::Buffer *client_buffer;
 
-#ifndef MIR_USING_BOOST_THREADS
         std::chrono::microseconds sleep_duration;
-#else
-        ::boost::posix_time::time_duration sleep_duration;
-#endif
 
     private:
         /* thread objects must exist over lifetime of test */ 
@@ -93,18 +88,12 @@ struct ThreadFixture {
         std::thread thread2;
 };
 
-
-/* pause the main loop in between iterations */
-/* todo (kdub): resolve how to sleep a thread using gcc 4.4's std */
-#ifndef MIR_USING_BOOST_THREADS
 void main_test_loop_pause(std::chrono::microseconds duration) {
         std::this_thread::sleep_for( duration );
 }
-#else
-void main_test_loop_pause(boost::posix_time::time_duration duration) {
-        ::boost::this_thread::sleep(duration);
 }
-#endif
+using mir::main_test_loop_pause;
+using mir::ThreadFixture;
 
 void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
