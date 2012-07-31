@@ -71,10 +71,11 @@ struct SessionCounter
 
     SessionCounter(SessionCounter const &) = delete;
 
-    void on_session_event()
+    void on_session_event(mf::SessionEvent event)
     {
+        int const delta = event == mf::SessionEvent::connected ? 1 : -1;
         std::unique_lock<std::mutex> lock(guard);
-        session_count++;
+        session_count += delta;
         wait_condition.notify_one();
     }
 
@@ -93,18 +94,18 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
             comm->signal_session_event().connect(
-                std::bind(&SessionCounter::on_session_event, &collector));
+                boost::bind(&SessionCounter::on_session_event, &counter, _2));
             return comm;
         }
 
         void on_exit(mir::DisplayServer* )
         {
-            std::unique_lock<std::mutex> lock(collector.guard);
-            while (collector.session_count != 1)
-                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
-            EXPECT_EQ(1, collector.session_count);
+            std::unique_lock<std::mutex> lock(counter.guard);
+            while (counter.session_count != 1)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
+            EXPECT_EQ(1, counter.session_count);
         }
-        SessionCounter collector;
+        SessionCounter counter;
     } server_config;
 
     launch_server_process(server_config);

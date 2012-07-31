@@ -65,8 +65,30 @@ void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> co
     if (!ec)
     {
         session_event_signal(session, SessionEvent::connected);
+        // Use newline delimited messages for now
+        ba::async_read_until(
+             session->socket,
+             session->message, "\n",
+             boost::bind(&mf::ProtobufAsioCommunicator::on_new_message,
+                         this, session,
+                         ba::placeholders::error));
     }
     start_accept();
+}
+
+void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const& session,
+                                                  const boost::system::error_code& ec)
+{
+    if (!ec)
+    {
+        std::istream in(&session->message);
+        std::string message;
+        in >> message;
+        if (message == "disconnect")
+        {
+            session_event_signal(session, SessionEvent::disconnected);
+        }
+    }
 }
 
 mf::ProtobufAsioCommunicator::SessionEventSignal& mf::ProtobufAsioCommunicator::signal_session_event()

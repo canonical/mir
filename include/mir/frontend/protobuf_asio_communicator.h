@@ -59,6 +59,7 @@ public:
 private:
     void start_accept();
     void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
+    void on_new_message(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
@@ -86,6 +87,7 @@ private:
     // I wish for "friend void ProtobufAsioCommunicator::start_accept();" but that's private.
     friend class ProtobufAsioCommunicator;
     boost::asio::local::stream_protocol::socket socket;
+    boost::asio::streambuf message;
     int const id_;
 };
 }

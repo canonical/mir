@@ -34,11 +34,23 @@ struct SessionEventCollector
 
     SessionEventCollector(SessionEventCollector const &) = delete;
 
-    void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent)
+    void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent event)
     {
         std::unique_lock<std::mutex> ul(guard);
-        session_count++;
-        sessions.insert(session);
+        if (event == mf::SessionEvent::connected)
+        {
+            ++session_count;
+            sessions.insert(session);
+        }
+        else if (event == mf::SessionEvent::disconnected)
+        {
+            --session_count;
+            EXPECT_EQ(sessions.erase(session), 1u);
+        }
+        else
+        {
+            FAIL() << "unknown session event!";
+        }
         wait_condition.notify_one();
     }
 
