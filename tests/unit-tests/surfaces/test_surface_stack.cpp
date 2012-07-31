@@ -39,24 +39,49 @@ namespace geom = mir::geometry;
 namespace
 {
 
+class NullBuffer : public mc::Buffer
+{
+    geom::Width width() const { return geom::Width(0); }
+
+    geom::Height height() const {return geom::Height(0); }
+
+    geom::Stride stride() const {return geom::Stride(0); }
+
+    mc::PixelFormat pixel_format() const { return mc::PixelFormat(0); }
+
+    void lock() {}
+
+    void unlock() {}
+
+    mg::Texture* bind_to_texture() { return NULL; }
+
+
+};
+
 class NullBufferSwapper : public mc::BufferSwapper
 {
 public:
     /* normally, it is a guarantee that dequeue_free_buffer or grab_last_posted
        never returns a nullptr. this nullbuffer swapper class does though */
-    virtual mc::Buffer* client_acquire() { return 0; }
+    virtual std::shared_ptr<mc::Buffer> client_acquire() 
+    {
+        return std::shared_ptr<mc::Buffer>(new NullBuffer);
+    }
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
-    virtual void client_release(mc::Buffer*) {}
+    virtual void client_release(std::shared_ptr<mc::Buffer>) {}
 
     /* caller of grab_last_posted buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via ungrab() */
 
-    virtual mc::Buffer* compositor_acquire() { return 0; }
+    virtual std::shared_ptr<mc::Buffer> compositor_acquire()
+    {
+        return std::shared_ptr<mc::Buffer>(new NullBuffer);
+    }
 
-    virtual void compositor_release(mc::Buffer*) { }
+    virtual void compositor_release(std::shared_ptr<mc::Buffer>) { }
 };
 
 struct MockBufferBundleFactory : public mc::BufferBundleFactory
@@ -71,7 +96,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
                                 new mc::BufferBundle(
-                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
+                                std::shared_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD3(
@@ -103,8 +128,8 @@ TEST(
 {
     using namespace ::testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
+    std::shared_ptr<mc::BufferSwapper> swapper_handle;
+    mc::BufferBundle buffer_bundle(swapper_handle);
     MockBufferBundleFactory buffer_bundle_factory;
 
     EXPECT_CALL(
