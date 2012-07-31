@@ -34,12 +34,12 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
     assert(gr_alloc);
 }
 
-std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
+std::shared_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
     geometry::Width width,
     geometry::Height height,
     PixelFormat pf)
 {
-    return std::unique_ptr<BufferSwapper>(
+    return std::shared_ptr<BufferSwapper>(
         new BufferSwapperDouble(
             gr_allocator->alloc_buffer(width, height, pf),
             gr_allocator->alloc_buffer(width, height, pf)));

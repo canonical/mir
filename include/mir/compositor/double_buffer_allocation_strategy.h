@@ -36,7 +36,7 @@ public:
     explicit DoubleBufferAllocationStrategy(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
 
-    std::unique_ptr<BufferSwapper> create_swapper(
+    std::shared_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
         PixelFormat pf);

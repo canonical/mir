@@ -38,7 +38,7 @@ class BufferAllocationStrategy
 {
 public:
 
-    virtual std::unique_ptr<BufferSwapper> create_swapper(
+    virtual std::shared_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
         PixelFormat pf) = 0;

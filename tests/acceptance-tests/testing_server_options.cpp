@@ -41,10 +41,10 @@ public:
 class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
 public:
-    virtual std::unique_ptr<mc::BufferSwapper> create_swapper(
+    virtual std::shared_ptr<mc::BufferSwapper> create_swapper(
         geom::Width, geom::Height, mc::PixelFormat)
     {
-        return std::unique_ptr<mc::BufferSwapper>();
+        return std::shared_ptr<mc::BufferSwapper>();
     }
 };
 }

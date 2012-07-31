@@ -67,7 +67,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+    std::shared_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
@@ -90,7 +90,7 @@ TEST(buffer_bundle, get_buffer_for_client)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+    std::shared_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);
