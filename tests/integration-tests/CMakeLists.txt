@@ -15,6 +15,7 @@
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 add_subdirectory(frontend/)
+add_subdirectory(compositor/)
 add_subdirectory(input/)
 
 add_executable(
