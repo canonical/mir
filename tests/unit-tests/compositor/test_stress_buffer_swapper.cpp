@@ -44,8 +44,8 @@ struct ThreadFixture {
             std::shared_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
 
             auto swapper = std::make_shared<mc::BufferSwapperDouble>(
-                    std::move(buffer_a),
-                    std::move(buffer_b));
+                    buffer_a,
+                    buffer_b);
 
             auto sync1 = std::make_shared<mt::Synchronizer>();
             auto sync2 = std::make_shared<mt::Synchronizer>();

@@ -44,8 +44,8 @@ struct BufferSwapper : testing::Test
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
         swapper = std::make_shared<mc::BufferSwapperDouble>(
-                std::move(buffer_a),
-                std::move(buffer_b));
+                buffer_a,
+                buffer_b);
 
     }
 

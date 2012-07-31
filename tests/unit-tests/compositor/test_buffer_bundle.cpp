@@ -77,7 +77,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 
     EXPECT_CALL(*mock_swapper, compositor_release(_));
 
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundle buffer_bundle(mock_swapper);
 
     /* if binding doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
@@ -100,7 +100,7 @@ TEST(buffer_bundle, get_buffer_for_client)
 
     EXPECT_CALL(*mock_swapper, client_release(_));
 
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundle buffer_bundle(mock_swapper);
 
     /* if dequeue doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
