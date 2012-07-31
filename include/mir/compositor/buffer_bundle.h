@@ -21,8 +21,11 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
 #include "buffer_texture_binder.h"
+#include "buffer_swapper.h"
+#include "buffer_ipc_package.h"
 #include "buffer_queue.h"
 #include "buffer.h"
+#include "mir/graphics/texture.h"
 
 #include "mir/thread/all.h"
 
@@ -33,23 +36,60 @@ namespace mir
 {
 namespace compositor
 {
-class BufferSwapper;
+
+class TexDeleter {
+
+public:
+    TexDeleter(BufferSwapper* sw, Buffer* buf)
+    : swapper(std::move(sw)),
+      buffer_ptr(buf)
+    {
+    };
+
+    void operator()(graphics::Texture* texture)
+    {
+        swapper->compositor_release(buffer_ptr);
+        delete texture;
+    }
+    
+private:
+    BufferSwapper* const swapper;
+    Buffer* const buffer_ptr;
+};
+
+
+class BufDeleter {
+public:
+    BufDeleter(BufferSwapper* sw, Buffer* buf)
+    : swapper(sw),
+      buffer_ptr(buf)
+    {
+    };
+
+    void operator()(BufferIPCPackage* package)
+    {
+        swapper->client_release(buffer_ptr);
+        delete package;
+    }
+    
+private:
+    BufferSwapper* const swapper;
+    Buffer* const buffer_ptr;
+};
+
+
 class BufferBundle : public BufferTextureBinder,
     public BufferQueue
 {
 public:
-    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
+    explicit BufferBundle(std::unique_ptr<BufferSwapper> swapper);
     ~BufferBundle();
 
     /* from BufferQueue */
-    /* todo: shared_ptr<Buffer> is not a rich type. the user of this interface
-             wants a data type they can use to send to another process */
-    std::shared_ptr<Buffer> dequeue_client_buffer();
-    void queue_client_buffer(std::shared_ptr<Buffer> buffer);
+    std::shared_ptr<BufferIPCPackage> secure_client_buffer();
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
-    void unlock_back_buffer();
 
 protected:
     BufferBundle(const BufferBundle&) = delete;

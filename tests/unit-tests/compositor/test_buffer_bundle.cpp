@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper_double.h"
 
+#include <mir_test/gmock_fixes.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -39,63 +40,71 @@ const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 struct MockSwapper : public mc::BufferSwapper
 {
     public:
+        MockSwapper() {};
         MockSwapper(std::shared_ptr<mc::Buffer> buffer)
+         : default_buffer(buffer)
         {
             using namespace testing;
-
-            /* note: (kdub) we should change compositor_acquire's return type to be a shared or unique_ptr */
+ 
             ON_CALL(*this, compositor_acquire())
-                    .WillByDefault(Return(buffer.get()));
+                    .WillByDefault(Return(default_buffer.get()));
             ON_CALL(*this, client_acquire())
-                    .WillByDefault(Return(buffer.get()));
+                    .WillByDefault(Return(default_buffer.get()));
         };
+
         MOCK_METHOD0(client_acquire,   mc::Buffer*(void));
         MOCK_METHOD1(client_release, void(mc::Buffer*));
-        MOCK_METHOD0(compositor_acquire,   mc::Buffer*(void));
+        MOCK_METHOD0(compositor_acquire,  mc::Buffer*(void));
         MOCK_METHOD1(compositor_release,   void(mc::Buffer*));
 
+    private:
+        std::shared_ptr<mc::Buffer> default_buffer;
 };
 }
 
+
 TEST(buffer_bundle, get_buffer_for_compositor)
 {
-
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
-            .Times(1)
-            .WillOnce(Return(mock_buffer.get()));
-
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(1);
+
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
+            .Times(1);
+
+    EXPECT_CALL(*mock_swapper, compositor_release(_));
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     /* if binding doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
-        buffer_bundle.lock_and_bind_back_buffer();
+        auto texture = buffer_bundle.lock_and_bind_back_buffer();
     });
-
 }
 
 TEST(buffer_bundle, get_buffer_for_client)
 {
+    using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(1);
     EXPECT_CALL(*mock_buffer, lock())
         .Times(1);
 
+    EXPECT_CALL(*mock_swapper, client_acquire())
+            .Times(1);
+
+    EXPECT_CALL(*mock_swapper, client_release(_));
+
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    /* if binding doesn't work, this is a case where we may have an exception */
+    /* if dequeue doesn't work, this is a case where we may have an exception */
     ASSERT_NO_THROW(
     {
-        buffer_bundle.dequeue_client_buffer();
+        auto buffer_package = buffer_bundle.secure_client_buffer();
     });
 }
