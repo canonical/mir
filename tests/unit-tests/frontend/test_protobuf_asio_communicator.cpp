@@ -155,9 +155,46 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_EQ(collector.session_count, 1);
 
     bs::error_code error;
-    ba::write(socket, ba::buffer("disconnect\n"), error);
-
+    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
     EXPECT_FALSE(error);
+
+    int ntries = 20;
+    while (ntries-- != 0 && collector.session_count == 1)
+        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+
+    EXPECT_EQ(collector.session_count, 0);
+}
+
+namespace
+{
+void write_fragmented_message(ba::local::stream_protocol::socket & socket, std::string const & message)
+{
+    bs::error_code error;
+
+    for (size_t i = 0, n = message.size(); i != n; ++i)
+    {
+        ba::write(socket, ba::buffer(message.substr(i, 1)), error);
+        EXPECT_FALSE(error);
+    }
+}
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+       connect_then_disconnect_a_session_with_a_fragmented_message)
+{
+    ba::io_service io_service;
+    ba::local::stream_protocol::socket socket(io_service);
+
+    socket.connect(socket_name());
+    
+    std::unique_lock<std::mutex> ul(collector.guard);
+    while (collector.session_count == 0)
+        collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+
+    EXPECT_EQ(collector.session_count, 1);
+
+    write_fragmented_message(socket, "disconnect\n");
+
     int ntries = 20;
     while (ntries-- != 0 && collector.session_count == 1)
         collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
