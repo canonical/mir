@@ -27,7 +27,7 @@ namespace mg = mir::graphics;
 
 mc::BufferBundle::BufferBundle(std::shared_ptr<BufferSwapper> swapper)
  :
-    swapper(std::move(swapper))
+    swapper(swapper)
 {
 }
 
