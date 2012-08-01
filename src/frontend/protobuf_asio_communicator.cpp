@@ -64,16 +64,21 @@ void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> co
 {
     if (!ec)
     {
-        session_event_signal(session, SessionEvent::connected);
-        // Use newline delimited messages for now
-        ba::async_read_until(
-             session->socket,
-             session->message, "\n",
-             boost::bind(&mf::ProtobufAsioCommunicator::on_new_message,
-                         this, session,
-                         ba::placeholders::error));
+        change_state(session, SessionEvent::connected);
+        read_next_message(session);
     }
     start_accept();
+}
+
+void mf::ProtobufAsioCommunicator::read_next_message(std::shared_ptr<Session> const& session)
+{
+    // Read newline delimited messages for now
+    ba::async_read_until(
+         session->socket,
+         session->message, "\n",
+         boost::bind(&mf::ProtobufAsioCommunicator::on_new_message,
+                     this, session,
+                     ba::placeholders::error));
 }
 
 void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const& session,
@@ -86,9 +91,31 @@ void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const
         in >> message;
         if (message == "disconnect")
         {
-            session_event_signal(session, SessionEvent::disconnected);
+            change_state(session, SessionEvent::disconnected);
         }
     }
+    read_next_message(session);
+}
+
+void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& session,
+                                                SessionEvent new_state)
+{
+    struct Transition { SessionEvent from, to; };
+    static const Transition valid_transitions[] =
+        {
+            { SessionEvent::initialised, SessionEvent::connected },
+            { SessionEvent::connected, SessionEvent::disconnected },
+        };
+
+    Transition const * t = valid_transitions;
+    Transition const * const t_end = valid_transitions + sizeof(valid_transitions);
+
+    while (t != t_end && (t->from != session->state || t->to != new_state))
+    {
+        ++t;
+    }
+    session->state = t == t_end ? SessionEvent::error : new_state;
+    session_event_signal(session, session->state);
 }
 
 mf::ProtobufAsioCommunicator::SessionEventSignal& mf::ProtobufAsioCommunicator::signal_session_event()

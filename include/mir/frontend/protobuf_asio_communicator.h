@@ -32,13 +32,14 @@ namespace mir
 namespace frontend
 {
 
-//TODO Session should probably be an interface so that it can be mocked.
 class Session;
 
 enum class SessionEvent
 {
+    initialised,
     connected,
-    disconnected
+    disconnected,
+    error
 };
 
 class ProtobufAsioCommunicator : public Communicator
@@ -60,6 +61,8 @@ private:
     void start_accept();
     void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
     void on_new_message(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
+    void read_next_message(std::shared_ptr<Session> const& session);
+    void change_state(std::shared_ptr<Session> const& session, SessionEvent new_state);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
@@ -79,16 +82,19 @@ public:
     }
 
     explicit Session(boost::asio::io_service& io_service, int id_)
-        : socket(io_service), id_(id_)
+        : socket(io_service)
+        , id_(id_)
+        , state(SessionEvent::initialised)
     {
     }
 
 private:
-    // I wish for "friend void ProtobufAsioCommunicator::start_accept();" but that's private.
     friend class ProtobufAsioCommunicator;
+
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     int const id_;
+    SessionEvent state;
 };
 }
 }

@@ -45,18 +45,19 @@ struct SessionEventCollector
     void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent event)
     {
         std::unique_lock<std::mutex> ul(guard);
-        if (event == mf::SessionEvent::connected)
+        switch (event)
         {
+        case mf::SessionEvent::connected:
             ++session_count;
             sessions.insert(session);
-        }
-        else if (event == mf::SessionEvent::disconnected)
-        {
+            break;
+        case mf::SessionEvent::disconnected:
             --session_count;
             EXPECT_EQ(sessions.erase(session), 1u);
-        }
-        else
-        {
+        case mf::SessionEvent::error:
+            ++error_count;
+            break;
+        default:
             FAIL() << "unknown session event!";
         }
         wait_condition.notify_one();
@@ -172,7 +173,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
     EXPECT_FALSE(error);
-
     expect_session_count(0);
     EXPECT_EQ(collector.error_count, 1);
 }
@@ -230,4 +230,3 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     write_fragmented_message(socket, "disconnect\n");
     expect_session_count(0);
 }
-
