@@ -39,6 +39,7 @@ namespace bs = boost::system;
 struct SurfaceState
 {
     virtual bool is_valid() const = 0;
+    virtual bs::error_code disconnect() = 0;
     virtual ~SurfaceState() = default;
 protected:
     SurfaceState() = default;
@@ -47,6 +48,11 @@ protected:
 };
 struct InvalidSurfaceState : public SurfaceState
 {
+    bs::error_code disconnect()
+    {
+        return bs::error_code();
+    }
+
     bool is_valid() const
     {
         return false;
@@ -84,6 +90,14 @@ public:
     Surface() : body(new detail::InvalidSurfaceState()) {}
     Surface(int /*width*/, int /*height*/, int /*pix_format*/)
         : body(new detail::ValidSurfaceState()) {}
+    ~Surface()
+    {
+        if (body)
+        {
+            body->disconnect();
+        }
+        delete body;
+    }
 
     bool is_valid() const
     {
@@ -114,10 +128,15 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
     {
         void exec()
         {
+            // Default surface is not connected
             Surface mysurface;
             EXPECT_FALSE(mysurface.is_valid());
+
+            // connect surface
             EXPECT_NO_THROW(mysurface = Surface(640, 480, 0));
             EXPECT_TRUE(mysurface.is_valid());
+
+            // disconnect surface
             EXPECT_NO_THROW(mysurface = Surface());
             EXPECT_FALSE(mysurface.is_valid());
         }
