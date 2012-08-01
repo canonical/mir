@@ -63,18 +63,21 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
 namespace
 {
-struct SessionSignalCounter
+struct SessionCounter
 {
-    SessionSignalCounter() : session_count(0)
+    SessionCounter() : session_count(0)
     {
     }
 
-    SessionSignalCounter(SessionSignalCounter const &) = delete;
+    SessionCounter(SessionCounter const &) = delete;
 
-    void on_new_session()
+    void on_session_state_change(mf::SessionState state)
     {
+        int const delta =
+            state == mf::SessionState::connected ? 1 :
+            state == mf::SessionState::disconnected ? -1 : 0;
         std::unique_lock<std::mutex> lock(guard);
-        session_count++;
+        session_count += delta;
         wait_condition.notify_one();
     }
 
@@ -92,19 +95,19 @@ TEST_F(BespokeDisplayServerTestFixture,
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
-            comm->signal_new_session().connect(
-                std::bind(&SessionSignalCounter::on_new_session, &collector));
+            comm->signal_session_state().connect(
+                boost::bind(&SessionCounter::on_session_state_change, &counter, _2));
             return comm;
         }
 
         void on_exit(mir::DisplayServer* )
         {
-            std::unique_lock<std::mutex> lock(collector.guard);
-            while (collector.session_count != 1)
-                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
-            EXPECT_EQ(1, collector.session_count);
+            std::unique_lock<std::mutex> lock(counter.guard);
+            while (counter.session_count != 1)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
+            EXPECT_EQ(1, counter.session_count);
         }
-        SessionSignalCounter collector;
+        SessionCounter counter;
     } server_config;
 
     launch_server_process(server_config);
@@ -133,15 +136,15 @@ TEST_F(BespokeDisplayServerTestFixture,
 
 namespace
 {
-struct SessionSignalCollecter
+struct SessionCollector
 {
-    SessionSignalCollecter() : sessions()
+    SessionCollector() : sessions()
     {
     }
 
-    SessionSignalCollecter(SessionSignalCounter const &) = delete;
+    SessionCollector(SessionCounter const &) = delete;
 
-    void on_new_session(std::shared_ptr<mf::Session> const& session)
+    void on_session_state(std::shared_ptr<mf::Session> const& session, mf::SessionState)
     {
         std::unique_lock<std::mutex> lock(guard);
         sessions[session->id()] = session;
@@ -166,8 +169,8 @@ TEST_F(BespokeDisplayServerTestFixture,
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
-            comm->signal_new_session().connect(
-                boost::bind(&SessionSignalCollecter::on_new_session, &collector, _1));
+            comm->signal_session_state().connect(
+                boost::bind(&SessionCollector::on_session_state, &collector, _1, _2));
             return comm;
         }
 
@@ -181,7 +184,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             collector.sessions.clear();
         }
 
-        SessionSignalCollecter collector;
+        SessionCollector collector;
         std::size_t connections;
     } server_config(connections);
 

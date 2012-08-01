@@ -32,13 +32,20 @@ namespace mir
 namespace frontend
 {
 
-//TODO Session should probably be an interface so that it can be mocked.
 class Session;
+
+enum class SessionState
+{
+    initialised,
+    connected,
+    disconnected,
+    error
+};
 
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
-    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&)> NewSessionSignal;
+    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&, SessionState)> SessionStateSignal;
 
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
@@ -48,17 +55,20 @@ public:
 
     void start();
 
-    NewSessionSignal& signal_new_session();
+    SessionStateSignal& signal_session_state();
 
 private:
     void start_accept();
     void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
+    void on_new_message(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
+    void read_next_message(std::shared_ptr<Session> const& session);
+    void change_state(std::shared_ptr<Session> const& session, SessionState new_state);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    NewSessionSignal new_session_signal;
+    SessionStateSignal session_state_signal;
 
     int next_id;
 };
@@ -72,16 +82,21 @@ public:
     }
 
     explicit Session(boost::asio::io_service& io_service, int id_)
-        : socket(io_service), id_(id_)
+        : socket(io_service)
+        , id_(id_)
+        , state(SessionState::initialised)
     {
     }
 
 private:
-    // I wish for "friend void ProtobufAsioCommunicator::start_accept();" but that's private.
     friend class ProtobufAsioCommunicator;
+
     boost::asio::local::stream_protocol::socket socket;
+    boost::asio::streambuf message;
     int const id_;
+    SessionState state;
 };
+
 }
 }
 
