@@ -94,7 +94,7 @@ public:
     {
         if (body)
         {
-            body->disconnect();
+            EXPECT_EQ(boost::system::errc::success, body->disconnect());
         }
         delete body;
     }
