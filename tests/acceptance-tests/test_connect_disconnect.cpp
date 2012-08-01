@@ -15,48 +15,52 @@
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  *              Thomas Guest <thomas.guest@canonical.com>
+ *              Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "display_server_test_fixture.h"
 
-#include "mir/frontend/application.h"
-#include "mir/frontend/communicator.h"
+#include <boost/asio.hpp>
+#include <boost/signals2.hpp>
 
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
 namespace mp = mir::process;
 
-namespace 
-{
-struct StubCommunicator : public mf::Communicator
-{
-    StubCommunicator()
-    {
-    }
-
-    void start()
-    {
-    }
-};
-
-void empty_function()
-{
-}
-
-}
-
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
+    namespace ba = boost::asio;
+    namespace bal = boost::asio::local;
+    namespace bs = boost::system;
+
     struct Client : TestingClientConfiguration
     {
+        ba::io_service io_service;
+        bal::stream_protocol::endpoint endpoint;
+        bal::stream_protocol::socket socket;
+
+        Client() : endpoint(mir::test_socket_file()), socket(io_service) {}
+
+        bs::error_code connect()
+        {
+            bs::error_code error;
+            socket.connect(endpoint, error);
+            return error;
+        }
+
+        bs::error_code disconnect()
+        {
+            bs::error_code error;
+            ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
+            EXPECT_FALSE(error);
+            return error;
+        }
+
         void exec()
         {
-            std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
-            mf::Application application(communicator);
-
-            EXPECT_NO_THROW(application.connect());
-            EXPECT_NO_THROW(application.disconnect());
+            EXPECT_EQ(bs::errc::success, connect());
+            EXPECT_EQ(bs::errc::success, disconnect());
         }
     } client_connects_and_disconnects;
 
