@@ -28,6 +28,11 @@
 namespace mf = mir::frontend;
 namespace mp = mir::process;
 
+namespace
+{
+class Surface {};
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
     namespace ba = boost::asio;
@@ -42,14 +47,13 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 
         Client() : endpoint(mir::test_socket_file()), socket(io_service) {}
 
-        bs::error_code connect()
+        Surface connect(int /*width*/, int /*height*/, int /*pix_format*/)
         {
-            bs::error_code error;
-            socket.connect(endpoint, error);
-            return error;
+            socket.connect(endpoint);
+            return Surface();
         }
 
-        bs::error_code disconnect()
+        bs::error_code disconnect(Surface const& /*surface*/)
         {
             bs::error_code error;
             ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
@@ -59,8 +63,9 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 
         void exec()
         {
-            EXPECT_EQ(bs::errc::success, connect());
-            EXPECT_EQ(bs::errc::success, disconnect());
+            Surface mysurface;
+            EXPECT_NO_THROW(mysurface = connect(640, 480, 0));
+            EXPECT_EQ(bs::errc::success, disconnect(mysurface));
         }
     } client_connects_and_disconnects;
 
