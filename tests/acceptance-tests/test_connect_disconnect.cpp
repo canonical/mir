@@ -30,42 +30,96 @@ namespace mp = mir::process;
 
 namespace
 {
-class Surface {};
+namespace detail
+{
+namespace ba = boost::asio;
+namespace bal = boost::asio::local;
+namespace bs = boost::system;
+
+struct SurfaceState
+{
+    virtual bool is_valid() const = 0;
+    virtual ~SurfaceState() = default;
+protected:
+    SurfaceState() = default;
+    SurfaceState(SurfaceState const&) = delete;
+    SurfaceState& operator=(SurfaceState const&) = delete;
+};
+struct InvalidSurfaceState : public SurfaceState
+{
+    bool is_valid() const
+    {
+        return false;
+    }
+};
+struct ValidSurfaceState : public SurfaceState
+{
+    ba::io_service io_service;
+    bal::stream_protocol::endpoint endpoint;
+    bal::stream_protocol::socket socket;
+
+    ValidSurfaceState()
+    : endpoint(mir::test_socket_file()), socket(io_service)
+    {
+        socket.connect(endpoint);
+    }
+
+    bs::error_code disconnect()
+    {
+        bs::error_code error;
+        ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
+        return error;
+    }
+
+    bool is_valid() const
+    {
+        return true;
+    }
+};
+}
+
+class Surface
+{
+public:
+    Surface() : body(new detail::InvalidSurfaceState()) {}
+    Surface(int /*width*/, int /*height*/, int /*pix_format*/)
+        : body(new detail::ValidSurfaceState()) {}
+
+    bool is_valid() const
+    {
+        return body->is_valid();
+    }
+    Surface(Surface&& that) : body(that.body)
+    {
+        that.body = 0;
+    }
+    Surface& operator=(Surface&& that)
+    {
+        delete body;
+        body = that.body;
+        that.body = 0;
+        return *this;
+    }
+
+private:
+    detail::SurfaceState* body;
+    Surface(Surface const&) = delete;
+    Surface& operator=(Surface const&) = delete;
+};
 }
 
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
-    namespace ba = boost::asio;
-    namespace bal = boost::asio::local;
-    namespace bs = boost::system;
-
     struct Client : TestingClientConfiguration
     {
-        ba::io_service io_service;
-        bal::stream_protocol::endpoint endpoint;
-        bal::stream_protocol::socket socket;
-
-        Client() : endpoint(mir::test_socket_file()), socket(io_service) {}
-
-        Surface connect(int /*width*/, int /*height*/, int /*pix_format*/)
-        {
-            socket.connect(endpoint);
-            return Surface();
-        }
-
-        bs::error_code disconnect(Surface const& /*surface*/)
-        {
-            bs::error_code error;
-            ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-            EXPECT_FALSE(error);
-            return error;
-        }
-
         void exec()
         {
             Surface mysurface;
-            EXPECT_NO_THROW(mysurface = connect(640, 480, 0));
-            EXPECT_EQ(bs::errc::success, disconnect(mysurface));
+            EXPECT_FALSE(mysurface.is_valid());
+            EXPECT_NO_THROW(mysurface = Surface(640, 480, 0));
+            EXPECT_TRUE(mysurface.is_valid());
+            EXPECT_NO_THROW(mysurface = Surface());
+            EXPECT_FALSE(mysurface.is_valid());
         }
     } client_connects_and_disconnects;
 
