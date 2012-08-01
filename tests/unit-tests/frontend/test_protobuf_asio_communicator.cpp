@@ -34,7 +34,9 @@ namespace
 {
 struct SessionEventCollector
 {
-    SessionEventCollector() : session_count(0)
+    SessionEventCollector()
+        : session_count(0)
+        , error_count(0)
     {
     }
 
@@ -63,6 +65,7 @@ struct SessionEventCollector
     std::mutex guard;
     std::condition_variable wait_condition;
     int session_count;
+    int error_count;
     std::set<std::shared_ptr<mf::Session>> sessions;
 };
 
@@ -153,6 +156,25 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_FALSE(error);
 
     expect_session_count(0);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+       double_disconnection_results_in_an_error)
+{
+    stream_protocol::socket socket(io_service);
+    socket.connect(socket_name());
+    expect_session_count(1);
+
+    bs::error_code error;
+    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
+    EXPECT_FALSE(error);
+    expect_session_count(0);
+
+    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
+    EXPECT_FALSE(error);
+
+    expect_session_count(0);
+    EXPECT_EQ(collector.error_count, 1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
