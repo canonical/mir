@@ -40,7 +40,7 @@ struct SurfaceState
 {
     virtual bool is_valid() const = 0;
     virtual bs::error_code disconnect() = 0;
-    virtual ~SurfaceState() = default;
+    virtual ~SurfaceState() {}
 protected:
     SurfaceState() = default;
     SurfaceState(SurfaceState const&) = delete;
