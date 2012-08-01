@@ -94,7 +94,10 @@ void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const
             change_state(session, SessionState::disconnected);
         }
     }
-    read_next_message(session);
+    if (session->state == SessionState::connected)
+    {
+        read_next_message(session);
+    }
 }
 
 void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& session,

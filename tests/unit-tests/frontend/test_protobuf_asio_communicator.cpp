@@ -160,7 +160,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-       double_disconnection_results_in_an_error)
+       double_disconnection_attempt_results_in_an_error)
 {
     stream_protocol::socket socket(io_service);
     socket.connect(socket_name());
@@ -172,9 +172,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     expect_session_count(0);
 
     ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
+    EXPECT_TRUE(error);
     expect_session_count(0);
-    EXPECT_EQ(collector.error_count, 1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
