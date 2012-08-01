@@ -64,7 +64,7 @@ void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> co
 {
     if (!ec)
     {
-        change_state(session, SessionEvent::connected);
+        change_state(session, SessionState::connected);
         read_next_message(session);
     }
     start_accept();
@@ -91,20 +91,20 @@ void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const
         in >> message;
         if (message == "disconnect")
         {
-            change_state(session, SessionEvent::disconnected);
+            change_state(session, SessionState::disconnected);
         }
     }
     read_next_message(session);
 }
 
 void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& session,
-                                                SessionEvent new_state)
+                                                SessionState new_state)
 {
-    struct Transition { SessionEvent from, to; };
+    struct Transition { SessionState from, to; };
     static const Transition valid_transitions[] =
         {
-            { SessionEvent::initialised, SessionEvent::connected },
-            { SessionEvent::connected, SessionEvent::disconnected },
+            { SessionState::initialised, SessionState::connected },
+            { SessionState::connected, SessionState::disconnected },
         };
 
     Transition const * t = valid_transitions;
@@ -114,11 +114,11 @@ void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& 
     {
         ++t;
     }
-    session->state = t == t_end ? SessionEvent::error : new_state;
-    session_event_signal(session, session->state);
+    session->state = t == t_end ? SessionState::error : new_state;
+    session_state_signal(session, session->state);
 }
 
-mf::ProtobufAsioCommunicator::SessionEventSignal& mf::ProtobufAsioCommunicator::signal_session_event()
+mf::ProtobufAsioCommunicator::SessionStateSignal& mf::ProtobufAsioCommunicator::signal_session_state()
 {
-    return session_event_signal;
+    return session_state_signal;
 }

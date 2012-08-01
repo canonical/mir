@@ -34,7 +34,7 @@ namespace frontend
 
 class Session;
 
-enum class SessionEvent
+enum class SessionState
 {
     initialised,
     connected,
@@ -45,7 +45,7 @@ enum class SessionEvent
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
-    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&, SessionEvent)> SessionEventSignal;
+    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&, SessionState)> SessionStateSignal;
 
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
@@ -55,20 +55,20 @@ public:
 
     void start();
 
-    SessionEventSignal& signal_session_event();
+    SessionStateSignal& signal_session_state();
 
 private:
     void start_accept();
     void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
     void on_new_message(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
     void read_next_message(std::shared_ptr<Session> const& session);
-    void change_state(std::shared_ptr<Session> const& session, SessionEvent new_state);
+    void change_state(std::shared_ptr<Session> const& session, SessionState new_state);
 
     std::string const socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    SessionEventSignal session_event_signal;
+    SessionStateSignal session_state_signal;
 
     int next_id;
 };
@@ -84,7 +84,7 @@ public:
     explicit Session(boost::asio::io_service& io_service, int id_)
         : socket(io_service)
         , id_(id_)
-        , state(SessionEvent::initialised)
+        , state(SessionState::initialised)
     {
     }
 
@@ -94,8 +94,9 @@ private:
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     int const id_;
-    SessionEvent state;
+    SessionState state;
 };
+
 }
 }
 

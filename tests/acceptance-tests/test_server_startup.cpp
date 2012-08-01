@@ -71,9 +71,11 @@ struct SessionCounter
 
     SessionCounter(SessionCounter const &) = delete;
 
-    void on_session_event(mf::SessionEvent event)
+    void on_session_state_change(mf::SessionState state)
     {
-        int const delta = event == mf::SessionEvent::connected ? 1 : -1;
+        int const delta =
+            state == mf::SessionState::connected ? 1 :
+            state == mf::SessionState::disconnected ? -1 : 0;
         std::unique_lock<std::mutex> lock(guard);
         session_count += delta;
         wait_condition.notify_one();
@@ -93,8 +95,8 @@ TEST_F(BespokeDisplayServerTestFixture,
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
-            comm->signal_session_event().connect(
-                boost::bind(&SessionCounter::on_session_event, &counter, _2));
+            comm->signal_session_state().connect(
+                boost::bind(&SessionCounter::on_session_state_change, &counter, _2));
             return comm;
         }
 
@@ -142,7 +144,7 @@ struct SessionCollector
 
     SessionCollector(SessionCounter const &) = delete;
 
-    void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent)
+    void on_session_state(std::shared_ptr<mf::Session> const& session, mf::SessionState)
     {
         std::unique_lock<std::mutex> lock(guard);
         sessions[session->id()] = session;
@@ -167,8 +169,8 @@ TEST_F(BespokeDisplayServerTestFixture,
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
             auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
-            comm->signal_session_event().connect(
-                boost::bind(&SessionCollector::on_session_event, &collector, _1, _2));
+            comm->signal_session_state().connect(
+                boost::bind(&SessionCollector::on_session_state, &collector, _1, _2));
             return comm;
         }
 

@@ -32,33 +32,33 @@ using ba::local::stream_protocol;
 
 namespace
 {
-struct SessionEventCollector
+struct SessionStateCollector
 {
-    SessionEventCollector()
+    SessionStateCollector()
         : session_count(0)
         , error_count(0)
     {
     }
 
-    SessionEventCollector(SessionEventCollector const &) = delete;
+    SessionStateCollector(SessionStateCollector const &) = delete;
 
-    void on_session_event(std::shared_ptr<mf::Session> const& session, mf::SessionEvent event)
+    void on_session_state_change(std::shared_ptr<mf::Session> const& session, mf::SessionState state)
     {
         std::unique_lock<std::mutex> ul(guard);
-        switch (event)
+        switch (state)
         {
-        case mf::SessionEvent::connected:
+        case mf::SessionState::connected:
             ++session_count;
             sessions.insert(session);
             break;
-        case mf::SessionEvent::disconnected:
+        case mf::SessionState::disconnected:
             --session_count;
             EXPECT_EQ(sessions.erase(session), 1u);
-        case mf::SessionEvent::error:
+        case mf::SessionState::error:
             ++error_count;
             break;
         default:
-            FAIL() << "unknown session event!";
+            FAIL() << "unknown session state!";
         }
         wait_condition.notify_one();
     }
@@ -84,9 +84,9 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     void SetUp()
     {
-        comm.signal_session_event().connect(
+        comm.signal_session_state().connect(
                 boost::bind(
-                    &SessionEventCollector::on_session_event,
+                    &SessionStateCollector::on_session_state_change,
                     &collector, _1, _2));
 
         comm.start();
@@ -105,7 +105,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     ba::io_service io_service;
     mf::ProtobufAsioCommunicator comm;
-    SessionEventCollector collector;
+    SessionStateCollector collector;
 };
 }
 
