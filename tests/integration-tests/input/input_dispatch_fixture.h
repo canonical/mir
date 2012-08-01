@@ -42,6 +42,7 @@ class MockTimeSource : public mir::TimeSource
         using namespace ::testing;
 
         ON_CALL(*this, sample()).WillByDefault(Invoke(this, &MockTimeSource::sample_hrc));
+        EXPECT_CALL(*this, sample()).Times(AtLeast(0));
     }
     MOCK_CONST_METHOD0(sample, mir::Timestamp());
 
