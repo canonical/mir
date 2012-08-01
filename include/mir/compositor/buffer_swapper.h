@@ -29,16 +29,9 @@ class Buffer;
 class BufferSwapper
 {
 public:
-    virtual ~BufferSwapper() {}
-
     /* callers of client_acquire are returned a pointer to the
       currently usable buffer. This call may potentially wait for a
       buffer to become available */
-    /* note: (kdub) we could probably come up with a richer type for the
-                    BufferSwapper interface than a Buffer* as the return
-                    for client_acquire and compositor_acquire */
-    // TODO (alan_g) Agree with kdub - the returned object should likely
-    //               be responsible for "release", not the client code?
     virtual Buffer* client_acquire() = 0;
 
     /* once a client is done with the finished buffer, it must queue
@@ -48,11 +41,16 @@ public:
     /* caller of compositor_acquire buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via compositor_release() */
-    // TODO (alan_g) the returned object should likely be responsible
-    //               for release, not the client code?
     virtual Buffer* compositor_acquire() = 0;
 
     virtual void compositor_release(Buffer* released_buffer) = 0;
+
+    virtual ~BufferSwapper() {}
+
+protected:
+    BufferSwapper() = default;
+    BufferSwapper(BufferSwapper const&) = delete;
+    BufferSwapper& operator=(BufferSwapper const&) = delete;
 };
 
 }
