@@ -160,7 +160,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-       double_disconnection_attempt_results_in_an_error)
+       double_disconnection_attempt_has_no_effect)
 {
     stream_protocol::socket socket(io_service);
     socket.connect(socket_name());
@@ -172,24 +172,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     expect_session_count(0);
 
     ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_EQ(error, bs::errc::broken_pipe);
-    expect_session_count(0);
-}
-
-TEST_F(ProtobufAsioCommunicatorTestFixture,
-       sending_messages_after_disconnection_results_in_an_error)
-{
-    stream_protocol::socket socket(io_service);
-    socket.connect(socket_name());
-    expect_session_count(1);
-
-    bs::error_code error;
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
-    expect_session_count(0);
-
-    ba::write(socket, ba::buffer(std::string("ping?\n")), error);
-    EXPECT_EQ(error, bs::errc::broken_pipe);
     expect_session_count(0);
 }
 
