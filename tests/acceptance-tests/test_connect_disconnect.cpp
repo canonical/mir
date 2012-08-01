@@ -25,9 +25,6 @@
 
 #include <gtest/gtest.h>
 
-namespace mf = mir::frontend;
-namespace mp = mir::process;
-
 namespace
 {
 namespace detail
