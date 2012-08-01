@@ -64,12 +64,64 @@ void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> co
 {
     if (!ec)
     {
-        new_session_signal(session);
+        change_state(session, SessionState::connected);
+        read_next_message(session);
     }
     start_accept();
 }
 
-mf::ProtobufAsioCommunicator::NewSessionSignal& mf::ProtobufAsioCommunicator::signal_new_session()
+void mf::ProtobufAsioCommunicator::read_next_message(std::shared_ptr<Session> const& session)
 {
-    return new_session_signal;
+    // Read newline delimited messages for now
+    ba::async_read_until(
+         session->socket,
+         session->message, "\n",
+         boost::bind(&mf::ProtobufAsioCommunicator::on_new_message,
+                     this, session,
+                     ba::placeholders::error));
+}
+
+void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const& session,
+                                                  const boost::system::error_code& ec)
+{
+    if (!ec)
+    {
+        std::istream in(&session->message);
+        std::string message;
+        in >> message;
+        if (message == "disconnect")
+        {
+            change_state(session, SessionState::disconnected);
+        }
+    }
+    if (session->state == SessionState::connected)
+    {
+        read_next_message(session);
+    }
+}
+
+void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& session,
+                                                SessionState new_state)
+{
+    struct Transition { SessionState from, to; };
+    static const Transition valid_transitions[] =
+        {
+            { SessionState::initialised, SessionState::connected },
+            { SessionState::connected, SessionState::disconnected },
+        };
+
+    Transition const * t = valid_transitions;
+    Transition const * const t_end = valid_transitions + sizeof(valid_transitions);
+
+    while (t != t_end && (t->from != session->state || t->to != new_state))
+    {
+        ++t;
+    }
+    session->state = t == t_end ? SessionState::error : new_state;
+    session_state_signal(session, session->state);
+}
+
+mf::ProtobufAsioCommunicator::SessionStateSignal& mf::ProtobufAsioCommunicator::signal_session_state()
+{
+    return session_state_signal;
 }
