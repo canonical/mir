@@ -14,18 +14,6 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-IF(PROTOBUF_FOUND)
-
-INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
-
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS
-  protobuf/mir_protobuf_wire.proto
-  protobuf/mir_protobuf.proto
-)
-
-ENDIF()
 
 set(
   FRONTEND_SOURCES
@@ -33,7 +21,6 @@ set(
   application.cpp
   application_manager.cpp
   protobuf_asio_communicator.cpp
-  ${PROTO_SRCS}
   ${PROTO_HDRS}
 )
 

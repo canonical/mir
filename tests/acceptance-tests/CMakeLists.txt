@@ -35,6 +35,7 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
+  mirprotobuf
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
