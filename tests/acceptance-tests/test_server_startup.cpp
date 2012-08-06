@@ -21,6 +21,8 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 
+#include "mir_protobuf.pb.h"
+
 #include <chrono>
 #include <cstdio>
 #include <functional>
@@ -31,6 +33,51 @@
 
 namespace mf = mir::frontend;
 
+namespace
+{
+class StubDisplayServer : public mir::protobuf::DisplayServer
+{
+public:
+    void connect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::ConnectMessage* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        // TODO do the real work
+        response->set_width(request->width());
+        response->set_height(request->height());
+        response->set_pixel_format(request->pixel_format());
+
+        done->Run();
+    }
+
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+};
+
+class StubCommunicator : public mf::Communicator
+{
+public:
+    StubCommunicator(const std::string& socket_file)
+    : communicator(socket_file, &display_server)
+    {
+    }
+
+    void start()
+    {
+        communicator.start();
+    }
+
+    StubDisplayServer display_server;
+    mir::frontend::ProtobufAsioCommunicator communicator;
+};
+}
+
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
     ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
@@ -39,9 +86,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     {
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            // TODO can't really pass 0 here
-            mir::protobuf::DisplayServer* frig = 0;
-            return std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file(), frig);
+            return std::make_shared<StubCommunicator>(mir::test_socket_file());
         }
 
         void exec(mir::DisplayServer *)
