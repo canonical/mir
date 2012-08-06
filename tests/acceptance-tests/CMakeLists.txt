@@ -36,6 +36,7 @@ target_link_libraries(
   mirprocess
   mirsurfaces
 
+  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

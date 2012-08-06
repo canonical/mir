@@ -73,7 +73,9 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 
 std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
 {
-    return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(test_socket_file());
+    // TODO can't really pass 0 here
+    mir::protobuf::DisplayServer* frig = 0;
+    return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(test_socket_file(), frig);
 }
 
 std::string const& mir::test_socket_file()

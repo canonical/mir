@@ -30,6 +30,7 @@ namespace bs = boost::system;
 
 using ba::local::stream_protocol;
 
+#ifdef MIR_TODO // Sessions are no longer exposed
 namespace
 {
 struct SessionStateCollector
@@ -228,3 +229,5 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     write_fragmented_message(socket, "disconnect\n");
     expect_session_count(0);
 }
+
+#endif
