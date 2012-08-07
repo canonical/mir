@@ -26,6 +26,7 @@ set(
   CLIENT_SOURCES
 
   mir_rpc_channel.cpp
+  mir_surface.cpp
   ${PROTO_HDRS}
 )
 

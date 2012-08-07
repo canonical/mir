@@ -38,7 +38,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
             EXPECT_FALSE(mysurface.is_valid());
 
             // connect surface
-            EXPECT_NO_THROW(mysurface = Surface(640, 480, 0));
+            EXPECT_NO_THROW(mysurface = Surface(mir::test_socket_file(), 640, 480, 0));
             EXPECT_TRUE(mysurface.is_valid());
 
             // disconnect surface
