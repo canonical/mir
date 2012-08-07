@@ -103,7 +103,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
-        EXPECT_EQ(collector.session_count, expected_count);
+        EXPECT_EQ(expected_count, collector.session_count);
     }
 
     void expect_connected_session_count(int expected_count)
@@ -114,7 +114,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
-        EXPECT_EQ(collector.connected_sessions, expected_count);
+        EXPECT_EQ(expected_count, collector.connected_sessions);
     }
 
     // "Server" side
@@ -126,6 +126,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectMessage connect_message;
     mir::protobuf::Surface surface;
+    mir::protobuf::Void ignored;
 };
 }
 
@@ -170,39 +171,55 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     expect_connected_session_count(connection_count);
 }
 
-#ifdef MIR_TODO
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
-    stream_protocol::socket socket(io_service);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    socket.connect(socket_name());
+    expect_connected_session_count(1);
 
-    expect_session_count(1);
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    bs::error_code error;
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
-
-    expect_session_count(0);
+    expect_connected_session_count(0);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        double_disconnection_attempt_has_no_effect)
 {
-    stream_protocol::socket socket(io_service);
-    socket.connect(socket_name());
-    expect_session_count(1);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    bs::error_code error;
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
-    expect_session_count(0);
+    expect_connected_session_count(1);
 
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    expect_session_count(0);
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
+
+    expect_connected_session_count(0);
+
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
+
+    expect_connected_session_count(0);
 }
 
+#ifdef MIR_TODO
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_multiple_sessions)
 {
