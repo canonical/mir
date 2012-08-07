@@ -37,6 +37,7 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
+  mirclient
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}

@@ -20,8 +20,9 @@
 
 #include "display_server_test_fixture.h"
 
-#include <boost/asio.hpp>
-#include <boost/signals2.hpp>
+// TODO move out rpc_channel/protobuf stuff with the Surface implementation
+#include "client/mir_rpc_channel.h"
+#include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>
 
@@ -29,14 +30,15 @@ namespace
 {
 namespace detail
 {
-namespace ba = boost::asio;
-namespace bal = boost::asio::local;
-namespace bs = boost::system;
 
 struct SurfaceState
 {
+    int width;
+    int height;
+    int pix_format;
+
     virtual bool is_valid() const = 0;
-    virtual bs::error_code disconnect() = 0;
+    virtual void disconnect() = 0;
     virtual ~SurfaceState() {}
 protected:
     SurfaceState() = default;
@@ -45,9 +47,8 @@ protected:
 };
 struct InvalidSurfaceState : public SurfaceState
 {
-    bs::error_code disconnect()
+    void disconnect()
     {
-        return bs::error_code();
     }
 
     bool is_valid() const
@@ -57,21 +58,44 @@ struct InvalidSurfaceState : public SurfaceState
 };
 struct ValidSurfaceState : public SurfaceState
 {
-    ba::io_service io_service;
-    bal::stream_protocol::endpoint endpoint;
-    bal::stream_protocol::socket socket;
+    mir::client::MirRpcChannel channel;
+    mir::protobuf::DisplayServer::Stub display_server;
 
-    ValidSurfaceState()
-    : endpoint(mir::test_socket_file()), socket(io_service)
+    ValidSurfaceState(int width, int height, int pix_format) :
+        channel(mir::test_socket_file()),
+        display_server(&channel)
     {
-        socket.connect(endpoint);
+        GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+        mir::protobuf::ConnectMessage connect_message;
+        connect_message.set_width(width);
+        connect_message.set_height(height);
+        connect_message.set_pixel_format(pix_format);
+
+        mir::protobuf::Surface surface;
+
+        display_server.connect(
+            0,
+            &connect_message,
+            &surface,
+            google::protobuf::NewCallback(&mir::client::done));
+
+        SurfaceState::width = surface.width();
+        SurfaceState::height = surface.height();
+        SurfaceState::pix_format = surface.pixel_format();
     }
 
-    bs::error_code disconnect()
+    void disconnect()
     {
-        bs::error_code error;
-        ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-        return error;
+        mir::protobuf::Void ignored;
+
+        display_server.disconnect(
+            0,
+            &ignored,
+            &ignored,
+            google::protobuf::NewCallback(&mir::client::done));
+
+        google::protobuf::ShutdownProtobufLibrary();
     }
 
     bool is_valid() const
@@ -85,13 +109,16 @@ class Surface
 {
 public:
     Surface() : body(new detail::InvalidSurfaceState()) {}
-    Surface(int /*width*/, int /*height*/, int /*pix_format*/)
-        : body(new detail::ValidSurfaceState()) {}
+    Surface(int width, int height, int pix_format)
+        : body(new detail::ValidSurfaceState(width, height, pix_format))
+    {
+    }
+
     ~Surface()
     {
         if (body)
         {
-            EXPECT_EQ(boost::system::errc::success, body->disconnect());
+            body->disconnect();
         }
         delete body;
     }
@@ -100,10 +127,12 @@ public:
     {
         return body->is_valid();
     }
+
     Surface(Surface&& that) : body(that.body)
     {
         that.body = 0;
     }
+
     Surface& operator=(Surface&& that)
     {
         delete body;
