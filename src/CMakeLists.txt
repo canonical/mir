@@ -15,9 +15,6 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/protobuf)
-
-add_subdirectory(protobuf/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(graphics/)

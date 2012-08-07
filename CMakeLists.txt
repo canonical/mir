@@ -32,7 +32,6 @@ project(
   C)
 
 cmake_minimum_required(VERSION 2.8)
-find_package( Protobuf REQUIRED )
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
 
@@ -63,6 +62,13 @@ find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
+
+# Check for google protocol buffers and generate code
+find_package( Protobuf REQUIRED )
+set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+add_subdirectory(src/protobuf)
+INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(src/)
 
 find_package (Threads REQUIRED)

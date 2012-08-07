@@ -14,7 +14,6 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 
-INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/src/protobuf)
 
 add_executable(
   acceptance-tests
