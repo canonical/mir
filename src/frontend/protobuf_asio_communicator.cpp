@@ -18,21 +18,71 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 
+#include "mir_protobuf.pb.h"
+#include "mir_protobuf_wire.pb.h"
+
+#include <google/protobuf/descriptor.h>
+
+#include <map>
+
 namespace mf = mir::frontend;
+namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
+namespace bs = boost::system;
+
+class mfd::Session
+{
+public:
+    Session(
+        boost::asio::io_service& io_service,
+        int id_,
+        ConnectedSessions* connected_sessions,
+        mir::protobuf::DisplayServer* display_server);
+
+    int id() const
+    {
+        return id_;
+    }
+
+private:
+    void read_next_message();
+    void on_response_sent(boost::system::error_code const& error, std::size_t);
+    void send_response(size_t id, google::protobuf::Message* response);
+    void on_new_message(const boost::system::error_code& ec);
+    void on_read_size(const boost::system::error_code& ec);
+
+    friend class ::mir::frontend::ProtobufAsioCommunicator;
+
+    boost::asio::local::stream_protocol::socket socket;
+    boost::asio::streambuf message;
+    int const id_;
+    ConnectedSessions* connected_sessions;
+    mir::protobuf::DisplayServer* const display_server;
+    mir::protobuf::Surface surface;
+    unsigned char message_header_bytes[2];
+};
+
 
 // TODO: Switch to std::bind for launching the thread.
-mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(std::string const& socket_file)
-    : socket_file((std::remove(socket_file.c_str()), socket_file)),
-      acceptor(io_service, socket_file),
-      next_id(1)
+mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
+    std::string const& socket_file,
+    mir::protobuf::DisplayServer* display_server)
+:   socket_file((std::remove(socket_file.c_str()), socket_file)),
+    acceptor(io_service, socket_file),
+    display_server(display_server),
+    next_session_id(0)
 {
     start_accept();
+    io_service.poll();
 }
 
 void mf::ProtobufAsioCommunicator::start_accept()
 {
-    auto session = std::make_shared<Session>(io_service, next_id++);
+    auto session = std::make_shared<detail::Session>(
+        io_service,
+        next_id(),
+        &connected_sessions,
+        display_server);
 
     acceptor.async_accept(
         session->socket,
@@ -43,6 +93,15 @@ void mf::ProtobufAsioCommunicator::start_accept()
             ba::placeholders::error));
 }
 
+int mf::ProtobufAsioCommunicator::next_id()
+{
+    int id;
+    do { id = next_session_id.load(); }
+    while (!next_session_id.compare_exchange_weak(id, id + 1));
+    return id;
+}
+
+
 void mf::ProtobufAsioCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
@@ -51,6 +110,8 @@ void mf::ProtobufAsioCommunicator::start()
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
+    connected_sessions.clear();
+
     io_service.stop();
     if (io_service_thread.joinable())
     {
@@ -59,69 +120,166 @@ mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
     std::remove(socket_file.c_str());
 }
 
-void mf::ProtobufAsioCommunicator::on_new_connection(std::shared_ptr<Session> const& session,
-                                                     const boost::system::error_code& ec)
+void mf::ProtobufAsioCommunicator::on_new_connection(
+    std::shared_ptr<detail::Session> const& session,
+    const boost::system::error_code& ec)
 {
     if (!ec)
     {
-        change_state(session, SessionState::connected);
-        read_next_message(session);
+        connected_sessions.add(session);
+
+        session->read_next_message();
     }
     start_accept();
 }
 
-void mf::ProtobufAsioCommunicator::read_next_message(std::shared_ptr<Session> const& session)
+mfd::Session::Session(
+    boost::asio::io_service& io_service,
+    int id_,
+    ConnectedSessions* connected_sessions,
+    mir::protobuf::DisplayServer* display_server)
+    : socket(io_service),
+    id_(id_),
+    connected_sessions(connected_sessions),
+    display_server(display_server)
 {
-    // Read newline delimited messages for now
-    ba::async_read_until(
-         session->socket,
-         session->message, "\n",
-         boost::bind(&mf::ProtobufAsioCommunicator::on_new_message,
-                     this, session,
-                     ba::placeholders::error));
 }
 
-void mf::ProtobufAsioCommunicator::on_new_message(std::shared_ptr<Session> const& session,
-                                                  const boost::system::error_code& ec)
+void mfd::Session::read_next_message()
+{
+    boost::asio::async_read(socket,
+        boost::asio::buffer(message_header_bytes),
+        boost::bind(&mfd::Session::on_read_size,
+            this, ba::placeholders::error));
+}
+
+void mfd::Session::on_read_size(const boost::system::error_code& ec)
 {
     if (!ec)
     {
-        std::istream in(&session->message);
-        std::string message;
-        in >> message;
-        if (message == "disconnect")
+        size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
+        // Read newline delimited messages for now
+        ba::async_read(
+             socket,
+             message,
+             boost::asio::transfer_exactly(body_size),
+             boost::bind(&Session::on_new_message,
+                         this, ba::placeholders::error));
+    }
+}
+
+void mfd::Session::on_new_message(const boost::system::error_code& ec)
+{
+    if (!ec)
+    {
+        std::istream in(&message);
+        mir::protobuf::wire::Invocation invoke;
+
+        invoke.ParseFromIstream(&in);
+
+        if ("connect" == invoke.method_name())
         {
-            change_state(session, SessionState::disconnected);
+            mir::protobuf::ConnectMessage connect_message;
+            connect_message.ParseFromString(invoke.parameters());
+
+            display_server->connect(
+                0,
+                &connect_message,
+                &surface,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invoke.id(),
+                    static_cast<google::protobuf::Message*>(&surface)));
+        }
+        else if ("disconnect" == invoke.method_name())
+        {
+            mir::protobuf::Void ignored;
+            ignored.ParseFromString(invoke.parameters());
+
+            display_server->disconnect(
+                0,
+                &ignored,
+                &ignored,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invoke.id(),
+                    static_cast<google::protobuf::Message*>(&ignored)));
+
+            // Careful about what you do after this - it deletes this
+            connected_sessions->remove(id());
+            return;
         }
     }
-    if (session->state == SessionState::connected)
+
+    if (connected_sessions->includes(id()))
     {
-        read_next_message(session);
+        read_next_message();
     }
 }
 
-void mf::ProtobufAsioCommunicator::change_state(std::shared_ptr<Session> const& session,
-                                                SessionState new_state)
+void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
 {
-    struct Transition { SessionState from, to; };
-    static const Transition valid_transitions[] =
-        {
-            { SessionState::initialised, SessionState::connected },
-            { SessionState::connected, SessionState::disconnected },
-        };
-
-    Transition const * t = valid_transitions;
-    Transition const * const t_end = valid_transitions + sizeof(valid_transitions);
-
-    while (t != t_end && (t->from != session->state || t->to != new_state))
-    {
-        ++t;
-    }
-    session->state = t == t_end ? SessionState::error : new_state;
-    session_state_signal(session, session->state);
+    if (error)
+        std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
 
-mf::ProtobufAsioCommunicator::SessionStateSignal& mf::ProtobufAsioCommunicator::signal_session_state()
+void mfd::Session::send_response(
+    std::size_t id,
+    google::protobuf::Message* response)
 {
-    return session_state_signal;
+    std::ostringstream buffer1;
+    response->SerializeToOstream(&buffer1);
+
+    mir::protobuf::wire::Result result;
+    result.set_id(id);
+    result.set_response(buffer1.str());
+
+    std::ostringstream buffer2;
+    result.SerializeToOstream(&buffer2);
+
+    const std::string& body = buffer2.str();
+    const size_t size = body.size();
+    const unsigned char header_bytes[2] =
+    {
+        static_cast<unsigned char>((size >> 8) & 0xff),
+        static_cast<unsigned char>((size >> 0) & 0xff)
+    };
+
+    std::vector<char> message(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
+    std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
+
+    ba::async_write(
+        socket,
+        ba::buffer(message),
+        boost::bind(&Session::on_response_sent, this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
+}
+
+
+mfd::ConnectedSessions::~ConnectedSessions()
+{
+}
+
+void mfd::ConnectedSessions::add(std::shared_ptr<Session> const& session)
+{
+    sessions_list[session->id()] = session;
+}
+
+void mfd::ConnectedSessions::remove(int id)
+{
+    sessions_list.erase(id);
+}
+
+bool mfd::ConnectedSessions::includes(int id)
+{
+    return sessions_list.find(id) != sessions_list.end();
+}
+
+void mfd::ConnectedSessions::clear()
+{
+    sessions_list.clear();
 }

@@ -12,24 +12,36 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(process/)
-add_subdirectory(surfaces/)
-add_subdirectory(client/)
+IF(PROTOBUF_FOUND)
+
+INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS
+  mir_protobuf_wire.proto
+  mir_protobuf.proto
+)
+
+ENDIF()
 
 set(
-  SRCS
-  display_server.cpp
+  PROTBUF_SOURCES
+
+  ${PROTO_SRCS}
+  ${PROTO_HDRS}
 )
 
-add_library(
-  mir STATIC
-
-  ${SRCS}
+add_library( 
+  mirprotobuf STATIC
+  
+  ${PROTBUF_SOURCES}
 )
+
+list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+
+
+set(MIR_GENERATED_INCLUDE_DIRECTORIES ${MIR_GENERATED_INCLUDE_DIRECTORIES} PARENT_SCOPE)
+

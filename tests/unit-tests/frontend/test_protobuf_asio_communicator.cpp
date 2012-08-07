@@ -18,6 +18,9 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 
+#include "mir_protobuf.pb.h"
+#include "mir_client/mir_rpc_channel.h"
+
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -25,50 +28,49 @@
 
 namespace mf = mir::frontend;
 
-namespace ba = boost::asio;
-namespace bs = boost::system;
-
-using ba::local::stream_protocol;
-
 namespace
 {
-struct SessionStateCollector
+struct SessionCounter : mir::protobuf::DisplayServer
 {
-    SessionStateCollector()
-        : session_count(0)
-        , error_count(0)
-    {
-    }
-
-    SessionStateCollector(SessionStateCollector const &) = delete;
-
-    void on_session_state_change(std::shared_ptr<mf::Session> const& session, mf::SessionState state)
-    {
-        std::unique_lock<std::mutex> ul(guard);
-        switch (state)
-        {
-        case mf::SessionState::connected:
-            ++session_count;
-            sessions.insert(session);
-            break;
-        case mf::SessionState::disconnected:
-            --session_count;
-            EXPECT_EQ(sessions.erase(session), 1u);
-        case mf::SessionState::error:
-            ++error_count;
-            break;
-        default:
-            FAIL() << "unknown session state!";
-        }
-        wait_condition.notify_one();
-    }
-
+    int session_count;
+    int connected_sessions;
     std::mutex guard;
     std::condition_variable wait_condition;
-    int session_count;
-    int error_count;
-    std::set<std::shared_ptr<mf::Session>> sessions;
+
+    SessionCounter() : session_count(0), connected_sessions(0)
+    {
+    }
+
+    SessionCounter(SessionCounter const &) = delete;
+    void connect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::ConnectMessage* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        response->set_width(request->width());
+        response->set_height(request->height());
+        response->set_pixel_format(request->pixel_format());
+
+        std::unique_lock<std::mutex> lock(guard);
+        ++session_count;
+        ++connected_sessions;
+        wait_condition.notify_one();
+
+        done->Run();
+    }
+
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        --connected_sessions;
+        wait_condition.notify_one();
+        done->Run();
+    }
 };
+
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
@@ -78,17 +80,18 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         return socket_name;
     }
 
-    ProtobufAsioCommunicatorTestFixture() : comm(socket_name())
+    ProtobufAsioCommunicatorTestFixture() :
+        comm(socket_name(), &collector),
+        channel(socket_name()),
+        display_server(&channel)
     {
+        connect_message.set_width(640);
+        connect_message.set_height(480);
+        connect_message.set_pixel_format(0);
     }
 
     void SetUp()
     {
-        comm.signal_session_state().connect(
-                boost::bind(
-                    &SessionStateCollector::on_session_state_change,
-                    &collector, _1, _2));
-
         comm.start();
     }
 
@@ -100,32 +103,54 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
-        EXPECT_EQ(collector.session_count, expected_count);
+        EXPECT_EQ(expected_count, collector.session_count);
     }
 
-    ba::io_service io_service;
+    void expect_connected_session_count(int expected_count)
+    {
+        std::unique_lock<std::mutex> ul(collector.guard);
+        for (int ntries = 20;
+             ntries-- != 0 && collector.connected_sessions != expected_count; )
+        {
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+        }
+        EXPECT_EQ(expected_count, collector.connected_sessions);
+    }
+
+    // "Server" side
+    SessionCounter collector;
     mf::ProtobufAsioCommunicator comm;
-    SessionStateCollector collector;
+
+    // "Client" side
+    mir::client::MirRpcChannel channel;
+    mir::protobuf::DisplayServer::Stub display_server;
+    mir::protobuf::ConnectMessage connect_message;
+    mir::protobuf::Surface surface;
+    mir::protobuf::Void ignored;
 };
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
-    stream_protocol::socket socket(io_service);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    socket.connect(socket_name());
     expect_session_count(1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-        a_connection_attempt_results_in_a_session_being_created)
+        a_connection_attempt_results_in_a_session_being_connected)
 {
-    stream_protocol::socket socket(io_service);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    socket.connect(socket_name());
-    expect_session_count(1);
-
-    EXPECT_FALSE(collector.sessions.empty());
+    expect_connected_session_count(1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
@@ -135,96 +160,61 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
-        stream_protocol::socket socket(io_service);
-        socket.connect(socket_name());
+        display_server.connect(
+            0,
+            &connect_message,
+            &surface,
+            google::protobuf::NewCallback(&mir::client::done));
     }
 
     expect_session_count(connection_count);
-    EXPECT_EQ(connection_count, (int)collector.sessions.size());
+    expect_connected_session_count(connection_count);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
-    stream_protocol::socket socket(io_service);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    socket.connect(socket_name());
+    expect_connected_session_count(1);
 
-    expect_session_count(1);
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    bs::error_code error;
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
-
-    expect_session_count(0);
+    expect_connected_session_count(0);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        double_disconnection_attempt_has_no_effect)
 {
-    stream_protocol::socket socket(io_service);
-    socket.connect(socket_name());
-    expect_session_count(1);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    bs::error_code error;
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    EXPECT_FALSE(error);
-    expect_session_count(0);
+    expect_connected_session_count(1);
 
-    ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-    expect_session_count(0);
-}
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
 
-TEST_F(ProtobufAsioCommunicatorTestFixture,
-       connect_then_disconnect_multiple_sessions)
-{
-    typedef std::unique_ptr<stream_protocol::socket> SocketPtr;
-    typedef std::vector<SocketPtr> Sockets;
+    expect_connected_session_count(0);
 
-    Sockets sockets;
-    int const connection_count{5};
+    display_server.disconnect(
+        0,
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    for (int i = 0; i != connection_count; ++i)
-    {
-        sockets.push_back(SocketPtr(new stream_protocol::socket(io_service)));
-        sockets.back()->connect(socket_name());
-    }
-
-    expect_session_count(connection_count);
-
-    for (Sockets::iterator s = sockets.begin(); s != sockets.end(); ++s)
-    {
-        bs::error_code error;
-        ba::write(**s, ba::buffer(std::string("disconnect\n")), error);
-        EXPECT_FALSE(error);
-    }
-    sockets.clear();
-
-    expect_session_count(0);
-}
-
-namespace
-{
-// Synchronously writes the message to the socket one character at a time.
-void write_fragmented_message(stream_protocol::socket & socket, std::string const & message)
-{
-    bs::error_code error;
-
-    for (size_t i = 0, n = message.size(); i != n; ++i)
-    {
-        ba::write(socket, ba::buffer(message.substr(i, 1)), error);
-        EXPECT_FALSE(error);
-    }
-}
-}
-
-TEST_F(ProtobufAsioCommunicatorTestFixture,
-       connect_then_disconnect_a_session_with_a_fragmented_message)
-{
-    stream_protocol::socket socket(io_service);
-
-    socket.connect(socket_name());
-    expect_session_count(1);
-    write_fragmented_message(socket, "disconnect\n");
-    expect_session_count(0);
+    expect_connected_session_count(0);
 }
