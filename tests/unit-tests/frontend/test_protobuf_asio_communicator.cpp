@@ -117,19 +117,20 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         EXPECT_EQ(collector.connected_sessions, expected_count);
     }
 
+    // "Server" side
     SessionCounter collector;
     mf::ProtobufAsioCommunicator comm;
 
+    // "Client" side
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectMessage connect_message;
+    mir::protobuf::Surface surface;
 };
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
-    mir::protobuf::Surface surface;
-
     display_server.connect(
         0,
         &connect_message,
@@ -142,8 +143,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_connected)
 {
-    mir::protobuf::Surface surface;
-
     display_server.connect(
         0,
         &connect_message,
@@ -156,8 +155,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        each_connection_attempt_results_in_a_new_session_being_created)
 {
-    mir::protobuf::Surface surface;
-
     int const connection_count{5};
 
     for (int i = 0; i != connection_count; ++i)
