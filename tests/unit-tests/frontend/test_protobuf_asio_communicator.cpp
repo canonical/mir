@@ -85,6 +85,9 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         channel(socket_name()),
         display_server(&channel)
     {
+        connect_message.set_width(640);
+        connect_message.set_height(480);
+        connect_message.set_pixel_format(0);
     }
 
     void SetUp()
@@ -103,21 +106,28 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         EXPECT_EQ(collector.session_count, expected_count);
     }
 
+    void expect_connected_session_count(int expected_count)
+    {
+        std::unique_lock<std::mutex> ul(collector.guard);
+        for (int ntries = 20;
+             ntries-- != 0 && collector.connected_sessions != expected_count; )
+        {
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+        }
+        EXPECT_EQ(collector.connected_sessions, expected_count);
+    }
+
     SessionCounter collector;
     mf::ProtobufAsioCommunicator comm;
 
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
+    mir::protobuf::ConnectMessage connect_message;
 };
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
-    mir::protobuf::ConnectMessage connect_message;
-    connect_message.set_width(640);
-    connect_message.set_height(480);
-    connect_message.set_pixel_format(0);
-
     mir::protobuf::Surface surface;
 
     display_server.connect(
@@ -129,33 +139,41 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
     expect_session_count(1);
 }
 
-#ifdef MIR_TODO
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-        a_connection_attempt_results_in_a_session_being_created)
+        a_connection_attempt_results_in_a_session_being_connected)
 {
-    stream_protocol::socket socket(io_service);
+    mir::protobuf::Surface surface;
 
-    socket.connect(socket_name());
-    expect_session_count(1);
+    display_server.connect(
+        0,
+        &connect_message,
+        &surface,
+        google::protobuf::NewCallback(&mir::client::done));
 
-    EXPECT_FALSE(collector.sessions.empty());
+    expect_connected_session_count(1);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        each_connection_attempt_results_in_a_new_session_being_created)
 {
+    mir::protobuf::Surface surface;
+
     int const connection_count{5};
 
     for (int i = 0; i != connection_count; ++i)
     {
-        stream_protocol::socket socket(io_service);
-        socket.connect(socket_name());
+        display_server.connect(
+            0,
+            &connect_message,
+            &surface,
+            google::protobuf::NewCallback(&mir::client::done));
     }
 
     expect_session_count(connection_count);
-    EXPECT_EQ(connection_count, (int)collector.sessions.size());
+    expect_connected_session_count(connection_count);
 }
 
+#ifdef MIR_TODO
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
