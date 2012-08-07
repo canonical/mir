@@ -280,7 +280,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 }
 
 
-#ifdef MIR_TODO // Sessions are no longer visible
+#ifdef MIR_TODO // Sessions are no longer visible - but we will need a server-side object for each
 namespace
 {
 struct SessionCollector
