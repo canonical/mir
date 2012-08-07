@@ -192,6 +192,94 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+TEST_F(BespokeDisplayServerTestFixture,
+       after_disconnect_there_are_no_connected_sessions)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        {
+            return std::make_shared<mf::ProtobufAsioCommunicator>(
+                mir::test_socket_file(),
+                &counter);
+        }
+
+        void on_exit(mir::DisplayServer* )
+        {
+            std::unique_lock<std::mutex> lock(counter.guard);
+            if (counter.session_count != 1)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            if (counter.connected_sessions != 0)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            EXPECT_EQ(0, counter.connected_sessions);
+        }
+        SessionCounter counter;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            EXPECT_TRUE(mysurface.is_valid());
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture,
+       can_connect_multiple_sessions)
+{
+    std::size_t const connections = 5;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(int const connections) : connections(connections) {}
+
+        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        {
+            return std::make_shared<mf::ProtobufAsioCommunicator>(
+                mir::test_socket_file(),
+                &counter);
+        }
+
+        void on_exit(mir::DisplayServer* )
+        {
+            std::unique_lock<std::mutex> lock(counter.guard);
+            if (counter.session_count != connections)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            if (counter.connected_sessions != 0)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            EXPECT_EQ(0, counter.connected_sessions);
+        }
+        SessionCounter counter;
+        int connections;
+    } server_config(connections);
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            EXPECT_TRUE(mysurface.is_valid());
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    } client_config;
+
+    for (std::size_t i = 0; i != connections; ++i)
+        launch_client_process(client_config);
+}
+
+
 #ifdef MIR_TODO // Sessions are no longer visible
 namespace
 {
