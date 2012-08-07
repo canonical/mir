@@ -21,7 +21,7 @@
 #include "display_server_test_fixture.h"
 
 // TODO move out rpc_channel/protobuf stuff with the Surface implementation
-#include "client/mir_rpc_channel.h"
+#include "mir_client/mir_rpc_channel.h"
 #include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>
