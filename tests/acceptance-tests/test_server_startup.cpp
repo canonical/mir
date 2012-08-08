@@ -34,46 +34,11 @@
 
 namespace mf = mir::frontend;
 
-namespace
-{
-class StubDisplayServer : public mir::protobuf::DisplayServer
-{
-public:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        // TODO do the real work
-        response->set_width(request->width());
-        response->set_height(request->height());
-        response->set_pixel_format(request->pixel_format());
-
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-};
-}
-
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
     ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
-        {
-                return std::make_shared<StubDisplayServer>();
-        }
-
-    } server_config;
+    TestingServerConfiguration server_config;
 
     launch_server_process(server_config);
 
