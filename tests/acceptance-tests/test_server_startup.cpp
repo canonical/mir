@@ -34,26 +34,6 @@
 
 namespace mf = mir::frontend;
 
-TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
-{
-    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
-
-    TestingServerConfiguration server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
-                                           std::chrono::milliseconds(100)));
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
 namespace
 {
 struct SessionCounter : mir::protobuf::DisplayServer
@@ -103,6 +83,26 @@ struct NullDeleter
     {
     }
 };
+}
+
+TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
+{
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
+
+    TestingServerConfiguration server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
+        }
+    } client_config;
+
+    launch_client_process(client_config);
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
