@@ -132,6 +132,12 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
+struct NullDeleter
+{
+    void operator()(void* )
+    {
+    }
+};
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -141,7 +147,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-                return std::make_shared<StubDisplayServer>();
+            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
         }
 
         void on_exit(mir::DisplayServer* )
@@ -177,7 +183,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-                return std::make_shared<StubDisplayServer>();
+            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
         }
 
         void on_exit(mir::DisplayServer* )
@@ -219,7 +225,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-                return std::make_shared<StubDisplayServer>();
+            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
         }
 
         void on_exit(mir::DisplayServer* )
