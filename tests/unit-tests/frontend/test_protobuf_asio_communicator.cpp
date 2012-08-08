@@ -71,6 +71,15 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
+namespace
+{
+struct NullDeleter
+{
+    void operator()(void* )
+    {
+    }
+};
+}
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
@@ -81,7 +90,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     ProtobufAsioCommunicatorTestFixture() :
-        comm(socket_name(), &collector),
+        comm(socket_name(), std::shared_ptr<mir::protobuf::DisplayServer>(&collector, NullDeleter())),
         channel(socket_name()),
         display_server(&channel)
     {

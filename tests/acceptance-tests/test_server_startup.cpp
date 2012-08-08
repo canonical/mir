@@ -60,23 +60,6 @@ public:
         done->Run();
     }
 };
-
-class StubCommunicator : public mf::Communicator
-{
-public:
-    StubCommunicator(const std::string& socket_file)
-    : communicator(socket_file, &display_server)
-    {
-    }
-
-    void start()
-    {
-        communicator.start();
-    }
-
-    StubDisplayServer display_server;
-    mir::frontend::ProtobufAsioCommunicator communicator;
-};
 }
 
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
@@ -85,14 +68,11 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-            return std::make_shared<StubCommunicator>(mir::test_socket_file());
+                return std::make_shared<StubDisplayServer>();
         }
 
-        void exec(mir::DisplayServer *)
-        {
-        }
     } server_config;
 
     launch_server_process(server_config);
@@ -159,11 +139,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+                return std::make_shared<StubDisplayServer>();
         }
 
         void on_exit(mir::DisplayServer* )
@@ -197,11 +175,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+                return std::make_shared<StubDisplayServer>();
         }
 
         void on_exit(mir::DisplayServer* )
@@ -241,11 +217,9 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         ServerConfig(int const connections) : connections(connections) {}
 
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+                return std::make_shared<StubDisplayServer>();
         }
 
         void on_exit(mir::DisplayServer* )

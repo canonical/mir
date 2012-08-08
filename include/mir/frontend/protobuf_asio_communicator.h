@@ -74,7 +74,9 @@ class ProtobufAsioCommunicator : public Communicator
 public:
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
-    explicit ProtobufAsioCommunicator(const std::string& socket_file, mir::protobuf::DisplayServer* display_server);
+    explicit ProtobufAsioCommunicator(
+        const std::string& socket_file,
+        std::shared_ptr<protobuf::DisplayServer> const& ipc_server);
     ~ProtobufAsioCommunicator();
     void start();
 
@@ -87,7 +89,7 @@ private:
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    mir::protobuf::DisplayServer* const display_server;
+    std::shared_ptr<protobuf::DisplayServer> display_server;
     std::atomic<int> next_session_id;
     detail::ConnectedSessions connected_sessions;
 };

@@ -98,7 +98,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         signal_prev_fn = signal(SIGTERM, signal_terminate);
 
         mir::DisplayServer server(
-                config.make_communicator(),
+                config.make_communicator(config.make_ipc_server()),
                 config.make_buffer_allocation_strategy(),
                 config.make_renderer());
 

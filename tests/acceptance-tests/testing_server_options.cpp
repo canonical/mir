@@ -99,28 +99,19 @@ public:
         done->Run();
     }
 };
-
-class StubCommunicator : public mf::Communicator
-{
-public:
-    StubCommunicator(const std::string& socket_file)
-    : communicator(socket_file, &display_server)
-    {
-    }
-
-    void start()
-    {
-        communicator.start();
-    }
-
-    StubDisplayServer display_server;
-    mir::frontend::ProtobufAsioCommunicator communicator;
-};
 }
 
-std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
+std::shared_ptr<mir::protobuf::DisplayServer>
+mir::TestingServerConfiguration::make_ipc_server()
 {
-    return std::make_shared<StubCommunicator>(test_socket_file());
+        return std::make_shared<StubDisplayServer>();
+}
+
+std::shared_ptr<mf::Communicator>
+mir::TestingServerConfiguration::make_communicator(
+    std::shared_ptr<protobuf::DisplayServer> const& ipc_server)
+{
+    return std::make_shared<mf::ProtobufAsioCommunicator>(test_socket_file(), ipc_server);
 }
 
 std::string const& mir::test_socket_file()

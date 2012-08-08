@@ -41,6 +41,10 @@ namespace graphics
 {
 class Renderer;
 }
+namespace protobuf
+{
+class DisplayServer;
+}
 
 struct TestingClientConfiguration
 {
@@ -56,8 +60,11 @@ struct TestingServerConfiguration
     // Code to run in server process after server exits
     virtual void on_exit(DisplayServer* display_server);
 
+    // the communications interface to use
+    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server();
+
     // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator> make_communicator();
+    virtual std::shared_ptr<frontend::Communicator> make_communicator(std::shared_ptr<protobuf::DisplayServer> const& ipc_server);
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();

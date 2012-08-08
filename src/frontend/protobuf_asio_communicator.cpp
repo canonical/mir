@@ -66,10 +66,10 @@ private:
 // TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     std::string const& socket_file,
-    mir::protobuf::DisplayServer* display_server)
+    std::shared_ptr<protobuf::DisplayServer> const& ipc_server)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
-    display_server(display_server),
+    display_server(ipc_server),
     next_session_id(0)
 {
     start_accept();
@@ -82,7 +82,7 @@ void mf::ProtobufAsioCommunicator::start_accept()
         io_service,
         next_id(),
         &connected_sessions,
-        display_server);
+        display_server.get());
 
     acceptor.async_accept(
         session->socket,
