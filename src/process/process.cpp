@@ -19,6 +19,7 @@
 
 #include "mir/process/process.h"
 
+#include <errno.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/types.h>

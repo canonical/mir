@@ -18,10 +18,10 @@
  */
 
 #include "display_server_test_fixture.h"
+#include "mir/chrono/all.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 
-#include <chrono>
 #include <cstdio>
 #include <functional>
 #include <string>
@@ -31,6 +31,8 @@
 
 namespace mf = mir::frontend;
 
+namespace mir
+{
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
     ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
@@ -60,7 +62,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
     launch_client_process(client_config);
 }
-
+}
 namespace
 {
 struct SessionCounter
@@ -76,14 +78,14 @@ struct SessionCounter
         int const delta =
             state == mf::SessionState::connected ? 1 :
             state == mf::SessionState::disconnected ? -1 : 0;
-        std::unique_lock<std::mutex> lock(guard);
+	mir::std::unique_lock<mir::std::mutex> lock(guard);
         session_count += delta;
         wait_condition.notify_one();
     }
 
-    int session_count;
-    std::mutex guard;
-    std::condition_variable wait_condition;
+  int session_count;
+  mir::std::mutex guard;
+  mir::std::condition_variable wait_condition;
 };
 }
 
@@ -102,9 +104,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-            std::unique_lock<std::mutex> lock(counter.guard);
+	  mir::std::unique_lock<mir::std::mutex> lock(counter.guard);
             while (counter.session_count != 1)
-                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
+	      counter.wait_condition.wait(lock);
             EXPECT_EQ(1, counter.session_count);
         }
         SessionCounter counter;
@@ -146,13 +148,13 @@ struct SessionCollector
 
     void on_session_state(std::shared_ptr<mf::Session> const& session, mf::SessionState)
     {
-        std::unique_lock<std::mutex> lock(guard);
+      mir::std::unique_lock<mir::std::mutex> lock(guard);
         sessions[session->id()] = session;
         wait_condition.notify_one();
     }
 
-    std::mutex guard;
-    std::condition_variable wait_condition;
+  mir::std::mutex guard;
+  mir::std::condition_variable wait_condition;
     std::map<int, std::shared_ptr<mf::Session>> sessions;
 };
 }
@@ -176,9 +178,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-            std::unique_lock<std::mutex> lock(collector.guard);
+	  mir::std::unique_lock<mir::std::mutex> lock(collector.guard);
             while (collector.sessions.size() != connections)
-                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
+	      collector.wait_condition.wait(lock);
             EXPECT_EQ(connections, collector.sessions.size());
 
             collector.sessions.clear();

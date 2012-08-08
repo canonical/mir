@@ -19,9 +19,8 @@
 #ifndef MIR_TESTING_PROCESS_MANAGER
 #define MIR_TESTING_PROCESS_MANAGER
 
+#include "mir/chrono/all.h"
 #include "mir/process/process.h"
-
-#include <chrono>
 
 #include <memory>
 #include <list>

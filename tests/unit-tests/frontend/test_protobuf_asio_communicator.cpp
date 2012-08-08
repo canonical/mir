@@ -16,7 +16,9 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/chrono/all.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/thread/all.h"
 
 #include <gtest/gtest.h>
 
@@ -30,7 +32,7 @@ namespace bs = boost::system;
 
 using ba::local::stream_protocol;
 
-namespace
+namespace mir
 {
 struct SessionStateCollector
 {
@@ -44,7 +46,7 @@ struct SessionStateCollector
 
     void on_session_state_change(std::shared_ptr<mf::Session> const& session, mf::SessionState state)
     {
-        std::unique_lock<std::mutex> ul(guard);
+      std::unique_lock<std::mutex> ul(guard);
         switch (state)
         {
         case mf::SessionState::connected:
@@ -74,7 +76,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
@@ -94,11 +96,14 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     void expect_session_count(int expected_count)
     {
-        std::unique_lock<std::mutex> ul(collector.guard);
+	std::unique_lock<std::mutex> ul(collector.guard);
         for (int ntries = 20;
              ntries-- != 0 && collector.session_count != expected_count; )
         {
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+	    // This might wait for an infinite amount of time but
+	    // we capture this case in terms of specifying a timeout
+	    // on the tests using the fixture.
+            collector.wait_condition.wait(ul);
         }
         EXPECT_EQ(collector.session_count, expected_count);
     }
@@ -107,7 +112,6 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     mf::ProtobufAsioCommunicator comm;
     SessionStateCollector collector;
 };
-}
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
@@ -202,6 +206,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     expect_session_count(0);
 }
+}
 
 namespace
 {
@@ -218,6 +223,8 @@ void write_fragmented_message(stream_protocol::socket & socket, std::string cons
 }
 }
 
+namespace mir
+{
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session_with_a_fragmented_message)
 {
@@ -227,4 +234,5 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     expect_session_count(1);
     write_fragmented_message(socket, "disconnect\n");
     expect_session_count(0);
+}
 }

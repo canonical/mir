@@ -20,6 +20,7 @@
 
 #include "mir/display_server.h"
 
+#include "mir/chrono/all.h"
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
@@ -31,7 +32,7 @@
 namespace mc = mir::compositor;
 namespace mp = mir::process;
 
-namespace
+namespace mir
 {
 ::testing::AssertionResult WasStarted(
     std::shared_ptr<mir::process::Process> const& server_process)
@@ -47,23 +48,20 @@ void startup_pause()
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
         throw std::runtime_error("Failed to find server");
 }
-}
 
-mir::TestingProcessManager::TestingProcessManager() :
+
+TestingProcessManager::TestingProcessManager() :
     is_test_process(true)
 {
 }
 
-mir::TestingProcessManager::~TestingProcessManager()
+TestingProcessManager::~TestingProcessManager()
 {
 }
 
-namespace mir
-{
 namespace
 {
 std::atomic<mir::DisplayServer*> signal_display_server;
-}
 }
 
 extern "C"
@@ -78,7 +76,7 @@ void signal_terminate (int )
 }
 }
 
-void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
+void TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -125,7 +123,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     }
 }
 
-void mir::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
+void TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -166,7 +164,7 @@ void mir::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     }
 }
 
-void mir::TestingProcessManager::tear_down_clients()
+void TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
     {
@@ -192,7 +190,7 @@ void mir::TestingProcessManager::tear_down_clients()
     }
 }
 
-void mir::TestingProcessManager::tear_down_server()
+void TestingProcessManager::tear_down_server()
 {
     if (is_test_process)
     {
@@ -206,29 +204,30 @@ void mir::TestingProcessManager::tear_down_server()
     }
 }
 
-void mir::TestingProcessManager::tear_down_all()
+void TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
 }
 
-bool mir::detect_server(
+bool detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {
-    std::chrono::time_point<std::chrono::system_clock> limit
-        =  std::chrono::system_clock::now()+timeout;
+    auto limit = std::chrono::system_clock::now() + timeout;
 
     bool error = false;
     struct stat file_status;
 
     do
     {
-        if (error) std::this_thread::sleep_for(std::chrono::milliseconds(0));
-        error = stat(socket_file.c_str(), &file_status);
+      if (error) {
+	  std::this_thread::sleep_for(std::chrono::milliseconds(0));
+      }
+      error = stat(socket_file.c_str(), &file_status);
     }
     while (error && std::chrono::system_clock::now() < limit);
 
     return !error;
 }
-
+}

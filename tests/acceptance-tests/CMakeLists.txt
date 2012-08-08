@@ -40,7 +40,7 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+#  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
 mir_discover_tests(acceptance-tests)

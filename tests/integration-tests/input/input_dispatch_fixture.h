@@ -19,6 +19,7 @@
 #ifndef MIR_INPUT_DISPATCH_FIXTURE_H
 #define MIR_INPUT_DISPATCH_FIXTURE_H
 
+#include "mir/chrono/all.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/grab_filter.h"
 #include "mir/input/shell_filter.h"
@@ -41,14 +42,15 @@ class MockTimeSource : public mir::TimeSource
     {
         using namespace ::testing;
 
-        ON_CALL(*this, sample()).WillByDefault(Invoke(this, &MockTimeSource::sample_hrc));
-        EXPECT_CALL(*this, sample()).Times(AtLeast(0));
+        ON_CALL(*this, sample()).WillByDefault(InvokeWithoutArgs(MockTimeSource::sample_hrc));
+	EXPECT_CALL(*this, sample()).Times(AtLeast(0));
     }
-    MOCK_CONST_METHOD0(sample, mir::Timestamp());
+    
+    MOCK_CONST_METHOD0(sample, mir::Timestamp ());
 
-    mir::Timestamp sample_hrc() const
+    static mir::Timestamp sample_hrc()
     {
-        return boost::chrono::high_resolution_clock::now();
+        return std::chrono::high_resolution_clock::now();
     }
 };
 

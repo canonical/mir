@@ -20,6 +20,8 @@
 #ifndef MIR_THREAD_ALL_H_
 #define MIR_THREAD_ALL_H_
 
+#include "mir/chrono/all.h"
+
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #include <cstdatomic>
 // For std::this_thread::sleep_for etc.
@@ -46,8 +48,12 @@ namespace std
 {
 using namespace ::std;
 using ::boost::unique_future;
+using ::boost::unique_lock;
+using ::boost::condition_variable;
+using ::boost::lock_guard;
 #define future unique_future
 using ::boost::thread;
+using ::boost::mutex;
 
 enum class launch
 {
@@ -79,7 +85,20 @@ bool const timeout = false;
 
 namespace this_thread
 {
-    using namespace ::std::this_thread;
+using namespace ::boost::this_thread;
+
+template <class Timepoint>
+void sleep_until(const Timepoint& abs_time)
+{
+    sleep(abs_time);
+}
+
+template <class Duration>
+void sleep_for(const Duration& rel_time)
+{
+    sleep(rel_time);
+}
+
 }
 }
 }

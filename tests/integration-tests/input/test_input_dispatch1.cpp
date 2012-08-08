@@ -55,7 +55,7 @@ TEST_F(InputDispatchFixture, incoming_input_triggers_filter)
     EXPECT_CALL(*mock_grab_filter, accept(_)).Times(AtLeast(1));
     EXPECT_CALL(*mock_app_filter, accept(_)).Times(AtLeast(1));
 
-    EXPECT_CALL(time_source, sample());
+    //EXPECT_CALL(time_source, sample());
 
     mock_device->trigger_event();
 

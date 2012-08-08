@@ -19,14 +19,14 @@
 #ifndef MIR_TIME_SOURCE_H_
 #define MIR_TIME_SOURCE_H_
 
-#include <boost/chrono.hpp>
+#include "mir/chrono/all.h"
 
 #include <cstdint>
 
 namespace mir
 {
 
-typedef boost::chrono::high_resolution_clock::time_point Timestamp;
+typedef std::chrono::high_resolution_clock::time_point Timestamp;
 
 class TimeSource {
  public:

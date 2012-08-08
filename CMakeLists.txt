@@ -33,7 +33,7 @@ project(
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
@@ -58,13 +58,13 @@ enable_testing()
 include_directories(include/)
 
 # Check for boost
-find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
 add_subdirectory(src/)
 
-find_package (Threads REQUIRED)
+# find_package (Threads REQUIRED)
 
 # Pulling in local gmock version
 # While this seems evil, we are doing

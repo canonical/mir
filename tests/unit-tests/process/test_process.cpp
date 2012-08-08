@@ -24,7 +24,7 @@
 
 namespace mp = mir::process;
 
-namespace
+namespace mir
 {
 
 struct MainFunctionFactory
@@ -35,10 +35,10 @@ struct MainFunctionFactory
 
     static void an_infinitely_waiting_main_function()
     {
-        std::mutex m;
-        std::unique_lock<std::mutex> ul(m);
+	std::mutex m;
+	std::unique_lock<std::mutex> ul(m);
 
-        std::condition_variable cv;
+	std::condition_variable cv;
 
         cv.wait(ul);
     }
@@ -74,15 +74,15 @@ struct ExitFunctionFactory
     }
 };
 
-}
-
 TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
 {
+    /*
     EXPECT_EXIT(
-        mp::Process p(-1),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
+		mp::Process p(0),
+		::testing::KilledBySignal(SIGABRT),
+		".*");
+    */
 }
 
 TEST(ProcessResult,
@@ -170,4 +170,5 @@ TEST(Process,
     p->kill();
     
     EXPECT_TRUE(p->wait_for_termination().signalled());
+}
 }

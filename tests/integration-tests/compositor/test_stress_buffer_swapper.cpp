@@ -19,8 +19,10 @@
 #include "mir_test/mock_buffer.h"
 #include "multithread_harness.h"
 
+#include "mir/chrono/all.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/thread/all.h"
+
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
@@ -37,7 +39,8 @@ struct ThreadFixture {
             std::function<void( std::shared_ptr<mt::SynchronizerSpawned>,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
-        {
+	: sleep_duration(50)
+    {
             geom::Width w {1024};
             geom::Height h {768};
             geom::Stride s {1024};
@@ -57,7 +60,6 @@ struct ThreadFixture {
             thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
             thread2 = std::thread(b, sync2, swapper, &client_buffer);
 
-            sleep_duration = std::chrono::microseconds( 50 );
         };
 
         ~ThreadFixture()
@@ -89,7 +91,7 @@ struct ThreadFixture {
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
-        std::this_thread::sleep_for( duration );
+    std::this_thread::sleep_for(duration);
 }
 }
 using mir::main_test_loop_pause;

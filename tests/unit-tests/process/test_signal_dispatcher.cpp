@@ -19,6 +19,7 @@
 #include "mir/process/process.h"
 #include "mir/process/signal_dispatcher.h"
 
+#include "mir/chrono/all.h"
 #include "mir/thread/all.h"
 
 #include <gtest/gtest.h>

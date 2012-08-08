@@ -37,8 +37,8 @@ using mir::input::InputDispatchFixture;
 
 namespace
 {
-static mir::MockTimeSource time_source;
-static mir::Timestamp last_timestamp = time_source.sample();
+    //static mir::MockTimeSource time_source;
+static mir::Timestamp last_timestamp;
 
 bool is_weakly_ordered(mi::Event* e)
 {
@@ -55,6 +55,8 @@ void worker(mi::MockInputDevice* dev)
 }
 }
 
+namespace mir
+{
 TEST_F(InputDispatchFixture, filters_are_always_invoked_in_order_and_events_are_weakly_ordered_by_their_timestamp)
 {
     using namespace::testing;
@@ -94,4 +96,5 @@ TEST_F(InputDispatchFixture, filters_are_always_invoked_in_order_and_events_are_
     
     dispatcher.unregister_device(token1);
     dispatcher.unregister_device(token2);
+}
 }

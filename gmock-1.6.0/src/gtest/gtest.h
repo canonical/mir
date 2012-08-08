@@ -2125,7 +2125,7 @@ const ::std::vector<String>& GetArgvs();
 
 // Defines synchronization primitives.
 
-#if GTEST_HAS_PTHREAD
+#if 0 //GTEST_HAS_PTHREAD
 
 // Sleeps for (roughly) n milli-seconds.  This function is only for
 // testing Google Test's own constructs.  Don't use it in user tests,

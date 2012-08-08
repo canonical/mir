@@ -28,6 +28,8 @@ add_subdirectory(process/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
+add_executable(tests-unit-tests test_test.cpp)
+
 target_link_libraries(
   unit-tests
 
@@ -42,9 +44,27 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-  libboost_thread.so
+  ${EVEMU_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+)
+
+target_link_libraries(
+  tests-unit-tests
+
+  mircompositor
+  mirfrontend
+  mirplatformgraphics
+  mirinput
+  mirsurfaces
+  mirprocess
+
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
 mir_discover_tests(unit-tests)
+mir_discover_tests(tests-unit-tests)
