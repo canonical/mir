@@ -274,7 +274,7 @@ void mfd::ConnectedSessions::remove(int id)
     sessions_list.erase(id);
 }
 
-bool mfd::ConnectedSessions::includes(int id)
+bool mfd::ConnectedSessions::includes(int id) const
 {
     return sessions_list.find(id) != sessions_list.end();
 }
