@@ -156,6 +156,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != 1)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(1, counter.session_count);
+
             if (counter.connected_sessions != 0)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
@@ -198,6 +200,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != connections)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(connections, counter.session_count);
+
             if (counter.connected_sessions != 0)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
