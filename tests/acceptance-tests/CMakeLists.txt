@@ -14,6 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 
+
 add_executable(
   acceptance-tests
   
@@ -35,7 +36,10 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
+  mirclient
+  mirprotobuf
 
+  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

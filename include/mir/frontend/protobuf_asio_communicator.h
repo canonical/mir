@@ -26,75 +26,70 @@
 #include <boost/signals2.hpp>
 
 #include <string>
+#include <map>
+
+namespace google
+{
+namespace protobuf
+{
+class Message;
+}
+}
 
 namespace mir
 {
+namespace protobuf { class DisplayServer; }
 namespace frontend
 {
-
-class Session;
-
-enum class SessionState
+class ProtobufAsioCommunicator;
+namespace detail
 {
-    initialised,
-    connected,
-    disconnected,
-    error
+class Session;
+class ConnectedSessions
+{
+public:
+    ConnectedSessions() {}
+    ~ConnectedSessions();
+
+    void add(std::shared_ptr<Session> const& session);
+
+    void remove(int id);
+
+    bool includes(int id) const;
+
+    void clear();
+
+private:
+    ConnectedSessions(ConnectedSessions const&) = delete;
+    ConnectedSessions& operator =(ConnectedSessions const&) = delete;
+
+    std::map<int, std::shared_ptr<Session>> sessions_list;
 };
+}
+
+
 
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
-    typedef boost::signals2::signal<void(std::shared_ptr<Session> const&, SessionState)> SessionStateSignal;
-
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
-    explicit ProtobufAsioCommunicator(std::string const& socket_file);
-
+    explicit ProtobufAsioCommunicator(const std::string& socket_file, mir::protobuf::DisplayServer* display_server);
     ~ProtobufAsioCommunicator();
-
     void start();
-
-    SessionStateSignal& signal_session_state();
 
 private:
     void start_accept();
-    void on_new_connection(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
-    void on_new_message(std::shared_ptr<Session> const& session, const boost::system::error_code& ec);
-    void read_next_message(std::shared_ptr<Session> const& session);
-    void change_state(std::shared_ptr<Session> const& session, SessionState new_state);
+    void on_new_connection(const std::shared_ptr<detail::Session>& session, const boost::system::error_code& ec);
+    int next_id();
 
-    std::string const socket_file;
+    const std::string socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    SessionStateSignal session_state_signal;
-
-    int next_id;
-};
-
-class Session
-{
-public:
-    int id() const
-    {
-        return id_;
-    }
-
-    explicit Session(boost::asio::io_service& io_service, int id_)
-        : socket(io_service)
-        , id_(id_)
-        , state(SessionState::initialised)
-    {
-    }
-
-private:
-    friend class ProtobufAsioCommunicator;
-
-    boost::asio::local::stream_protocol::socket socket;
-    boost::asio::streambuf message;
-    int const id_;
-    SessionState state;
+    mir::protobuf::DisplayServer* const display_server;
+    std::atomic<int> next_session_id;
+    detail::ConnectedSessions connected_sessions;
 };
 
 }

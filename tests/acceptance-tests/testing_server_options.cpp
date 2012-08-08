@@ -26,6 +26,8 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer_swapper.h"
 
+#include "mir_protobuf.pb.h"
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -71,9 +73,54 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
     return std::make_shared<StubRenderer>();
 }
 
+namespace
+{
+class StubDisplayServer : public mir::protobuf::DisplayServer
+{
+public:
+    void connect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::ConnectMessage* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        // TODO do the real work
+        response->set_width(request->width());
+        response->set_height(request->height());
+        response->set_pixel_format(request->pixel_format());
+
+        done->Run();
+    }
+
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+};
+
+class StubCommunicator : public mf::Communicator
+{
+public:
+    StubCommunicator(const std::string& socket_file)
+    : communicator(socket_file, &display_server)
+    {
+    }
+
+    void start()
+    {
+        communicator.start();
+    }
+
+    StubDisplayServer display_server;
+    mir::frontend::ProtobufAsioCommunicator communicator;
+};
+}
+
 std::shared_ptr<mf::Communicator> mir::TestingServerConfiguration::make_communicator()
 {
-    return std::make_shared<mir::frontend::ProtobufAsioCommunicator>(test_socket_file());
+    return std::make_shared<StubCommunicator>(test_socket_file());
 }
 
 std::string const& mir::test_socket_file()

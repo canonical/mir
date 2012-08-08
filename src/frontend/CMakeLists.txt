@@ -14,12 +14,14 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+
 set(
   FRONTEND_SOURCES
 
   application.cpp
   application_manager.cpp
   protobuf_asio_communicator.cpp
+  ${PROTO_HDRS}
 )
 
 add_library( 
