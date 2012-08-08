@@ -90,7 +90,8 @@ public:
 
         ON_CALL(*this, make_ipc_server()).WillByDefault(Return(this->server));
 
-        // called during initialisation (when the client channel opens)
+        // called during initialisation:
+        // there's always a server awaiting the next connection
         EXPECT_CALL(*this, make_ipc_server()).Times(1);
     }
 
