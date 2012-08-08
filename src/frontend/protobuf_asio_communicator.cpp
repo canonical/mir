@@ -47,7 +47,7 @@ public:
 private:
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
-    void send_response(size_t id, google::protobuf::Message* response);
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
@@ -226,7 +226,7 @@ void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
 }
 
 void mfd::Session::send_response(
-    std::size_t id,
+    ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
     std::ostringstream buffer1;
@@ -274,7 +274,7 @@ void mfd::ConnectedSessions::remove(int id)
     sessions_list.erase(id);
 }
 
-bool mfd::ConnectedSessions::includes(int id)
+bool mfd::ConnectedSessions::includes(int id) const
 {
     return sessions_list.find(id) != sessions_list.end();
 }

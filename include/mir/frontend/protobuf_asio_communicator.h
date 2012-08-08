@@ -55,7 +55,7 @@ public:
 
     void remove(int id);
 
-    bool includes(int id);
+    bool includes(int id) const;
 
     void clear();
 
