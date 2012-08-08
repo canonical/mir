@@ -22,6 +22,7 @@
 #include "mir_client/mir_rpc_channel.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <memory>
 #include <vector>
@@ -79,17 +80,24 @@ struct NullDeleter
 };
 
 
-class StubIpcFactory : public mf::ProtobufIpcFactory
+class MockIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    StubIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(server) {}
-private:
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    MockIpcFactory(mir::protobuf::DisplayServer& server) :
+        server(&server, NullDeleter())
     {
-        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
+        using namespace testing;
+
+        ON_CALL(*this, make_ipc_server()).WillByDefault(Return(this->server));
+
+        // called during initialisation (when the client channel opens)
+        EXPECT_CALL(*this, make_ipc_server()).Times(1);
     }
-    mir::protobuf::DisplayServer& server;
+
+    MOCK_METHOD0(make_ipc_server, std::shared_ptr<mir::protobuf::DisplayServer>());
+
+private:
+    std::shared_ptr<mir::protobuf::DisplayServer> server;
 };
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
@@ -101,8 +109,8 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     ProtobufAsioCommunicatorTestFixture() :
-        factory(collector),
-        comm(socket_name(), std::shared_ptr<mf::ProtobufIpcFactory>(&factory, NullDeleter())),
+        factory(std::make_shared<MockIpcFactory>(collector)),
+        comm(socket_name(), factory),
         channel(socket_name()),
         display_server(&channel)
     {
@@ -140,7 +148,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     // "Server" side
     SessionCounter collector;
-    StubIpcFactory factory;
+    std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 
     // "Client" side
@@ -154,6 +162,8 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
+    EXPECT_CALL(*factory, make_ipc_server()).Times(1);
+
     display_server.connect(
         0,
         &connect_message,
@@ -166,6 +176,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_connected)
 {
+    EXPECT_CALL(*factory, make_ipc_server()).Times(1);
+
     display_server.connect(
         0,
         &connect_message,
@@ -178,6 +190,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        each_connection_attempt_results_in_a_new_session_being_created)
 {
+    EXPECT_CALL(*factory, make_ipc_server()).Times(1);
+
     int const connection_count{5};
 
     for (int i = 0; i != connection_count; ++i)
@@ -196,6 +210,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
+    EXPECT_CALL(*factory, make_ipc_server()).Times(1);
+
     display_server.connect(
         0,
         &connect_message,
@@ -216,6 +232,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        double_disconnection_attempt_has_no_effect)
 {
+    EXPECT_CALL(*factory, make_ipc_server()).Times(1);
+
     display_server.connect(
         0,
         &connect_message,
