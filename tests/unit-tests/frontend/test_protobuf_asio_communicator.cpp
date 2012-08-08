@@ -71,15 +71,26 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
-namespace
-{
 struct NullDeleter
 {
     void operator()(void* )
     {
     }
 };
-}
+
+
+class StubIpcFactory : public mf::ProtobufIpcFactory
+{
+public:
+    StubIpcFactory(mir::protobuf::DisplayServer& server) :
+        server(server) {}
+private:
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
+    }
+    mir::protobuf::DisplayServer& server;
+};
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
@@ -90,7 +101,8 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     ProtobufAsioCommunicatorTestFixture() :
-        comm(socket_name(), std::shared_ptr<mir::protobuf::DisplayServer>(&collector, NullDeleter())),
+        factory(collector),
+        comm(socket_name(), std::shared_ptr<mf::ProtobufIpcFactory>(&factory, NullDeleter())),
         channel(socket_name()),
         display_server(&channel)
     {
@@ -128,6 +140,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     // "Server" side
     SessionCounter collector;
+    StubIpcFactory factory;
     mf::ProtobufAsioCommunicator comm;
 
     // "Client" side

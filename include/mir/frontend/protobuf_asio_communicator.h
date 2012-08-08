@@ -67,6 +67,17 @@ private:
 };
 }
 
+class ProtobufIpcFactory
+{
+public:
+    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
+
+protected:
+    ProtobufIpcFactory() {}
+    virtual ~ProtobufIpcFactory() {}
+    ProtobufIpcFactory(ProtobufIpcFactory const&) = delete;
+    ProtobufIpcFactory& operator =(ProtobufIpcFactory const&) = delete;
+};
 
 
 class ProtobufAsioCommunicator : public Communicator
@@ -76,7 +87,7 @@ public:
     // using the supplied socket.
     explicit ProtobufAsioCommunicator(
         const std::string& socket_file,
-        std::shared_ptr<protobuf::DisplayServer> const& ipc_server);
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
     ~ProtobufAsioCommunicator();
     void start();
 
@@ -89,7 +100,7 @@ private:
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::thread io_service_thread;
-    std::shared_ptr<protobuf::DisplayServer> display_server;
+    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
     detail::ConnectedSessions connected_sessions;
 };

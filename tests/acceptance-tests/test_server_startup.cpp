@@ -83,6 +83,20 @@ struct NullDeleter
     {
     }
 };
+
+class StubIpcFactory : public mf::ProtobufIpcFactory
+{
+public:
+    StubIpcFactory(mir::protobuf::DisplayServer& server) :
+        server(server) {}
+private:
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
+    }
+    mir::protobuf::DisplayServer& server;
+};
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
@@ -110,9 +124,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
         {
-            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -146,9 +160,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
         {
-            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -190,9 +204,9 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         ServerConfig(int const connections) : connections(connections) {}
 
-        virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
         {
-            return std::shared_ptr<mir::protobuf::DisplayServer>(&counter, NullDeleter());
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )

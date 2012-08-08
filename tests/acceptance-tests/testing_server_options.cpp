@@ -52,29 +52,7 @@ public:
         return std::unique_ptr<mc::BufferSwapper>();
     }
 };
-}
 
-
-std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
-{
-    return std::make_shared<StubBufferAllocationStrategy>();
-}
-
-void mir::TestingServerConfiguration::exec(DisplayServer* )
-{
-}
-
-void mir::TestingServerConfiguration::on_exit(DisplayServer* )
-{
-}
-
-std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
-{
-    return std::make_shared<StubRenderer>();
-}
-
-namespace
-{
 class StubDisplayServer : public mir::protobuf::DisplayServer
 {
 public:
@@ -99,17 +77,44 @@ public:
         done->Run();
     }
 };
+
+class StubIpcFactory : public mf::ProtobufIpcFactory
+{
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return std::make_shared<StubDisplayServer>();
+    }
+};
 }
 
-std::shared_ptr<mir::protobuf::DisplayServer>
-mir::TestingServerConfiguration::make_ipc_server()
+
+std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
 {
-        return std::make_shared<StubDisplayServer>();
+    return std::make_shared<StubBufferAllocationStrategy>();
+}
+
+void mir::TestingServerConfiguration::exec(DisplayServer* )
+{
+}
+
+void mir::TestingServerConfiguration::on_exit(DisplayServer* )
+{
+}
+
+std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
+{
+    return std::make_shared<StubRenderer>();
+}
+
+std::shared_ptr<mir::frontend::ProtobufIpcFactory>
+mir::TestingServerConfiguration::make_ipc_factory()
+{
+    return std::make_shared<StubIpcFactory>();
 }
 
 std::shared_ptr<mf::Communicator>
 mir::TestingServerConfiguration::make_communicator(
-    std::shared_ptr<protobuf::DisplayServer> const& ipc_server)
+    std::shared_ptr<mf::ProtobufIpcFactory> const& ipc_server)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(test_socket_file(), ipc_server);
 }
