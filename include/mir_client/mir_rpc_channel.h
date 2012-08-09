@@ -21,6 +21,7 @@
 #define MIR_RPC_CHANNEL_H_
 
 #include "mir/thread/all.h"
+#include "mir_client/mir_logger.h"
 
 #include <boost/asio.hpp>
 
@@ -72,21 +73,6 @@ private:
     std::map<int, PendingCall> pending_calls;
 };
 }
-
-class Logger
-{
-public:
-    virtual std::ostream& error() = 0;
-protected:
-    Logger() {}
-    virtual ~Logger() {}
-};
-
-class ConsoleLogger
-{
-public:
-    virtual std::ostream& error();
-};
 
 class MirRpcChannel : public google::protobuf::RpcChannel
 {
