@@ -18,7 +18,7 @@
  */
 
 #include "display_server_test_fixture.h"
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 
@@ -35,7 +35,7 @@ namespace mir
 {
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
+    //ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)));
 
     struct ServerConfig : TestingServerConfiguration
     {
@@ -62,7 +62,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
     launch_client_process(client_config);
 }
-}
+
 namespace
 {
 struct SessionCounter
@@ -78,14 +78,14 @@ struct SessionCounter
         int const delta =
             state == mf::SessionState::connected ? 1 :
             state == mf::SessionState::disconnected ? -1 : 0;
-	mir::std::unique_lock<mir::std::mutex> lock(guard);
+	std::unique_lock<std::mutex> lock(guard);
         session_count += delta;
         wait_condition.notify_one();
     }
 
   int session_count;
-  mir::std::mutex guard;
-  mir::std::condition_variable wait_condition;
+  std::mutex guard;
+  std::condition_variable wait_condition;
 };
 }
 
@@ -104,9 +104,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-	  mir::std::unique_lock<mir::std::mutex> lock(counter.guard);
+	  std::unique_lock<std::mutex> lock(counter.guard);
             while (counter.session_count != 1)
-	      counter.wait_condition.wait(lock);
+		std::wait_on_cv_for(counter.wait_condition, lock, std::chrono::milliseconds(100));
             EXPECT_EQ(1, counter.session_count);
         }
         SessionCounter counter;
@@ -129,7 +129,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             bs::error_code error;
             socket.connect(endpoint, error);
 
-            EXPECT_TRUE(!error);
+            EXPECT_TRUE(!error) << error;
         }
     } client_config;
 
@@ -148,13 +148,13 @@ struct SessionCollector
 
     void on_session_state(std::shared_ptr<mf::Session> const& session, mf::SessionState)
     {
-      mir::std::unique_lock<mir::std::mutex> lock(guard);
+      std::unique_lock<std::mutex> lock(guard);
         sessions[session->id()] = session;
         wait_condition.notify_one();
     }
 
-  mir::std::mutex guard;
-  mir::std::condition_variable wait_condition;
+  std::mutex guard;
+  std::condition_variable wait_condition;
     std::map<int, std::shared_ptr<mf::Session>> sessions;
 };
 }
@@ -178,9 +178,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-	  mir::std::unique_lock<mir::std::mutex> lock(collector.guard);
+	  std::unique_lock<std::mutex> lock(collector.guard);
             while (collector.sessions.size() != connections)
-	      collector.wait_condition.wait(lock);
+		std::wait_on_cv_for(collector.wait_condition, lock, std::chrono::milliseconds(5));
             EXPECT_EQ(connections, collector.sessions.size());
 
             collector.sessions.clear();
@@ -213,4 +213,5 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     for (std::size_t i = 0; i != connections; ++i)
         launch_client_process(client_config);
+}
 }

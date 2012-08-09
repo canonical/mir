@@ -20,7 +20,7 @@
 
 #include "mir/display_server.h"
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
@@ -45,7 +45,7 @@ namespace mir
 
 void startup_pause()
 {
-    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(100)))
+    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)))
         throw std::runtime_error("Failed to find server");
 }
 
@@ -70,8 +70,11 @@ void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
     auto sds = mir::signal_display_server.load();
+    
+    /* could spin briefly during startup */;
     for (; !sds; sds = mir::signal_display_server.load())
-        /* could spin briefly during startup */;
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
     sds->stop();
 }
 }
@@ -101,6 +104,8 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
                 config.make_renderer());
 
         std::atomic_store(&signal_display_server, &server);
+
+	std::cout << "stored the pointer to the server instance." << std::endl;
 
         {
             struct ScopedFuture

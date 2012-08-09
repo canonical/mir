@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_CHRONO_ALL_H_
-#define MIR_CHRONO_ALL_H_
+#ifndef MIR_CHRONO_CHRONO_H_
+#define MIR_CHRONO_CHRONO_H_
 
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #define MIR_USING_BOOST_CHRONO
@@ -60,7 +60,6 @@ namespace system_clock
 
 // Clocks
 using ::boost::chrono::high_resolution_clock;
-    //using ::boost::chrono::system_clock;
 }
 
 }
@@ -68,4 +67,4 @@ using ::boost::chrono::high_resolution_clock;
 
 #endif
 
-#endif // MIR_CHRONO_ALL_H_
+#endif // MIR_CHRONO_CHRONO_H_

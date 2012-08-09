@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 

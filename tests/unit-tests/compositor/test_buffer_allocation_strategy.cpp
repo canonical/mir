@@ -39,6 +39,7 @@ struct EmptyDeleter
 };
 }
 
+#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(
     double_buffer_allocation_strategy_death_test,
     if_dependency_on_allocator_is_missing_an_assertion_is_triggered)
@@ -48,8 +49,8 @@ TEST(
 // For this test, Google Test couldn't detect the number of threads." by
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
-    /*::testing::FLAGS_gtest_death_test_style = "fast";
-      EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");*/
+    ::testing::FLAGS_gtest_death_test_style = "fast";
+    EXPECT_EXIT(mc::DoubleBufferAllocationStrategy(std::shared_ptr<mc::GraphicBufferAllocator>()), ::testing::KilledBySignal(SIGABRT), ".*");
 }
-
+#endif // defined(MIR_DEATH_TESTS_ENABLED)
 

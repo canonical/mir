@@ -20,7 +20,7 @@
 #ifndef MIR_THREAD_ALL_H_
 #define MIR_THREAD_ALL_H_
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #include <cstdatomic>
@@ -81,6 +81,18 @@ namespace cv_status
 {
 bool const no_timeout = true;
 bool const timeout = false;
+}
+
+template<typename Lock, typename Duration>
+bool wait_on_cv_for(condition_variable& cv, Lock& lock, const Duration& d)
+{
+    return cv.timed_wait(lock, d);
+}
+
+template<typename Lock, typename Timepoint>
+bool wait_on_cv_until(condition_variable& cv, Lock& lock, const Timepoint& tp)
+{
+    return cv.timed_wait(lock, tp);
 }
 
 namespace this_thread

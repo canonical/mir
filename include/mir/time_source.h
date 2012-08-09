@@ -19,7 +19,7 @@
 #ifndef MIR_TIME_SOURCE_H_
 #define MIR_TIME_SOURCE_H_
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 
 #include <cstdint>
 

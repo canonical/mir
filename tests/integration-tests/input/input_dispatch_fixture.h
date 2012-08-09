@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_DISPATCH_FIXTURE_H
 #define MIR_INPUT_DISPATCH_FIXTURE_H
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/grab_filter.h"
 #include "mir/input/shell_filter.h"

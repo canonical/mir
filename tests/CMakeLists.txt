@@ -14,6 +14,16 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+option(
+  MIR_ENABLE_DEATH_TESTS
+  "Option to control whether to run death tests"
+  ON
+)
+
+if(MIR_ENABLE_DEATH_TESTS)
+  add_definitions(-DMIR_DEATH_TESTS_ENABLED)
+endif(MIR_ENABLE_DEATH_TESTS)
+
 add_subdirectory(acceptance-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)

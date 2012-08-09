@@ -47,6 +47,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 }
 
+#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assertion)
 {
 // Trying to avoid "[WARNING] /usr/src/gtest/src/gtest-death-test.cc:789::
@@ -54,11 +55,12 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 // For this test, Google Test couldn't detect the number of threads." by
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
-    /*EXPECT_EXIT(
+    EXPECT_EXIT(
 		mir::frontend::ApplicationManager app(NULL),
 		::testing::KilledBySignal(SIGABRT),
-		".*");*/
+		".*");
 }
+#endif // defined(MIR_DEATH_TESTS_ENABLED)
 
 TEST(ApplicationManager, create_and_destroy_surface)
 {

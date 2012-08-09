@@ -19,7 +19,7 @@
 #include "mir_test/mock_buffer.h"
 #include "multithread_harness.h"
 
-#include "mir/chrono/all.h"
+#include "mir/chrono/chrono.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/thread/all.h"
 
