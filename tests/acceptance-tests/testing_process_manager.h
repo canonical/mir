@@ -36,10 +36,19 @@ class BufferAllocationStrategy;
 namespace frontend
 {
 class Communicator;
+class ProtobufIpcFactory;
 }
 namespace graphics
 {
 class Renderer;
+}
+namespace protobuf
+{
+class DisplayServer;
+}
+namespace surfaces
+{
+class ApplicationSurfaceOrganiser;
 }
 
 struct TestingClientConfiguration
@@ -56,8 +65,13 @@ struct TestingServerConfiguration
     // Code to run in server process after server exits
     virtual void on_exit(DisplayServer* display_server);
 
+    // the communications interface to use
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
+        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
+
     // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator> make_communicator();
+    virtual std::shared_ptr<frontend::Communicator>
+    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory);
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();

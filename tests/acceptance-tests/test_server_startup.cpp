@@ -33,81 +33,7 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-
-namespace
-{
-class StubDisplayServer : public mir::protobuf::DisplayServer
-{
-public:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        // TODO do the real work
-        response->set_width(request->width());
-        response->set_height(request->height());
-        response->set_pixel_format(request->pixel_format());
-
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-};
-
-class StubCommunicator : public mf::Communicator
-{
-public:
-    StubCommunicator(const std::string& socket_file)
-    : communicator(socket_file, &display_server)
-    {
-    }
-
-    void start()
-    {
-        communicator.start();
-    }
-
-    StubDisplayServer display_server;
-    mir::frontend::ProtobufAsioCommunicator communicator;
-};
-}
-
-TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
-{
-    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
-
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
-        {
-            return std::make_shared<StubCommunicator>(mir::test_socket_file());
-        }
-
-        void exec(mir::DisplayServer *)
-        {
-        }
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
-                                           std::chrono::milliseconds(100)));
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -152,6 +78,46 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
+struct NullDeleter
+{
+    void operator()(void* )
+    {
+    }
+};
+
+class StubIpcFactory : public mf::ProtobufIpcFactory
+{
+public:
+    StubIpcFactory(mir::protobuf::DisplayServer& server) :
+        server(server) {}
+private:
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
+    }
+    mir::protobuf::DisplayServer& server;
+};
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
+{
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
+
+    TestingServerConfiguration server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
+        }
+    } client_config;
+
+    launch_client_process(client_config);
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -159,11 +125,10 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -197,11 +162,10 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -209,6 +173,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != 1)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(1, counter.session_count);
+
             if (counter.connected_sessions != 0)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
@@ -241,11 +207,10 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         ServerConfig(int const connections) : connections(connections) {}
 
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -253,6 +218,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != connections)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(connections, counter.session_count);
+
             if (counter.connected_sessions != 0)
                 counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
