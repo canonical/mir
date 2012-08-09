@@ -33,6 +33,7 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -124,7 +125,8 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
             return std::make_shared<StubIpcFactory>(counter);
         }
@@ -160,7 +162,8 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
             return std::make_shared<StubIpcFactory>(counter);
         }
@@ -204,7 +207,8 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         ServerConfig(int const connections) : connections(connections) {}
 
-        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
             return std::make_shared<StubIpcFactory>(counter);
         }

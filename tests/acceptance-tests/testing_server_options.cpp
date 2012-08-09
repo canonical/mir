@@ -25,6 +25,9 @@
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_stack.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -32,6 +35,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 namespace
 {
@@ -80,10 +84,32 @@ public:
 
 class StubIpcFactory : public mf::ProtobufIpcFactory
 {
+public:
+    explicit StubIpcFactory(
+        std::shared_ptr<mir::surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
+        surface_organiser(surface_organiser)
+    {
+    }
+
+private:
+    std::shared_ptr<mir::surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<StubDisplayServer>();
     }
+};
+
+// TODO This (with make_ipc_factory()) builds a large chunk of the "inner" system,
+// it probably ought to be moved out of the testing framework to the system proper.
+struct Surfaces :
+    public mc::BufferBundleManager,
+    public ms::SurfaceStack, public ms::SurfaceController
+{
+    Surfaces(std::shared_ptr<mc::BufferAllocationStrategy> const& strategy) :
+        mc::BufferBundleManager(strategy),
+        ms::SurfaceStack(this),
+        ms::SurfaceController(this) {}
 };
 }
 
@@ -107,9 +133,12 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
-mir::TestingServerConfiguration::make_ipc_factory()
+mir::TestingServerConfiguration::make_ipc_factory(
+    std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy)
 {
-    return std::make_shared<StubIpcFactory>();
+    auto surface_organiser = std::make_shared<Surfaces>(
+        buffer_allocation_strategy);
+    return std::make_shared<StubIpcFactory>(surface_organiser);
 }
 
 std::shared_ptr<mf::Communicator>

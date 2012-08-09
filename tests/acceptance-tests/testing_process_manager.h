@@ -46,6 +46,10 @@ namespace protobuf
 {
 class DisplayServer;
 }
+namespace surfaces
+{
+class ApplicationSurfaceOrganiser;
+}
 
 struct TestingClientConfiguration
 {
@@ -62,7 +66,8 @@ struct TestingServerConfiguration
     virtual void on_exit(DisplayServer* display_server);
 
     // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory();
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
+        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
 
     // the communicator to use
     virtual std::shared_ptr<frontend::Communicator>
