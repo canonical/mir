@@ -28,6 +28,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -57,15 +58,34 @@ public:
     }
 };
 
-class StubDisplayServer : public mir::protobuf::DisplayServer
+// TODO this is turning from a "stub" into real implementation. Hence,
+// it ought to be moved out of the testing framework to the system proper.
+class ApplicationProxy : public mir::protobuf::DisplayServer
 {
 public:
+
+    ApplicationProxy(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
+    surface_organiser(surface_organiser)
+    {
+    }
+
+private:
     void connect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::ConnectMessage* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        // TODO do the real work
+        auto tmp = surface_organiser->create_surface(
+            ms::SurfaceCreationParameters()
+            .of_width(geom::Width(request->width()))
+            .of_height(geom::Height(request->height()))
+            );
+
+        auto surface = tmp.lock();
+        // TODO cannot interrogate the surface for its properties.
+
+        // These need to be set for the response to be valid,
+        // but they should derive from the surface we just created!
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());
@@ -80,23 +100,25 @@ public:
     {
         done->Run();
     }
+
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
 };
 
 class StubIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit StubIpcFactory(
-        std::shared_ptr<mir::surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
+        std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
         surface_organiser(surface_organiser)
     {
     }
 
 private:
-    std::shared_ptr<mir::surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<StubDisplayServer>();
+        return std::make_shared<ApplicationProxy>(surface_organiser);
     }
 };
 
@@ -104,7 +126,8 @@ private:
 // it probably ought to be moved out of the testing framework to the system proper.
 struct Surfaces :
     public mc::BufferBundleManager,
-    public ms::SurfaceStack, public ms::SurfaceController
+    public ms::SurfaceStack,
+    public ms::SurfaceController
 {
     Surfaces(std::shared_ptr<mc::BufferAllocationStrategy> const& strategy) :
         mc::BufferBundleManager(strategy),
