@@ -54,8 +54,8 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 }
 
 
-c::MirRpcChannel::MirRpcChannel(std::string const& endpoint)
-: next_message_id(0), endpoint(endpoint), socket(io_service)
+c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
+    log(log), next_message_id(0), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
 }
@@ -163,3 +163,7 @@ void c::done()
 {
 }
 
+std::ostream& c::ConsoleLogger::error()
+{
+    return std::cerr;
+}

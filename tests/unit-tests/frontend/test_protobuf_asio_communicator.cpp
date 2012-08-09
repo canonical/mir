@@ -71,6 +71,13 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
+class MockLogger : public mir::client::Logger
+{
+    virtual std::ostream& error()
+    {
+        return std::cerr;
+    }
+};
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
@@ -82,7 +89,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     ProtobufAsioCommunicatorTestFixture() :
         comm(socket_name(), &collector),
-        channel(socket_name()),
+        channel(socket_name(), std::make_shared<MockLogger>()),
         display_server(&channel)
     {
         connect_message.set_width(640);

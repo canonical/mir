@@ -23,6 +23,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/mir_logger.h"
 
 #include <chrono>
 #include <cstdio>
@@ -183,8 +184,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -223,8 +225,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -268,8 +271,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }

@@ -27,6 +27,8 @@
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
+#include <iosfwd>
+
 namespace mir
 {
 namespace protobuf
@@ -71,10 +73,27 @@ private:
 };
 }
 
+class Logger
+{
+public:
+    virtual std::ostream& error() = 0;
+protected:
+    Logger() {}
+    virtual ~Logger() {}
+};
+
+class ConsoleLogger
+{
+public:
+    virtual std::ostream& error();
+};
+
 class MirRpcChannel : public google::protobuf::RpcChannel
 {
 public:
-    MirRpcChannel(std::string const& endpoint);
+    MirRpcChannel(
+        std::string const& endpoint,
+        std::shared_ptr<Logger> const& log);
 
 private:
     virtual void CallMethod(
@@ -84,6 +103,7 @@ private:
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
 
+    std::shared_ptr<Logger> log;
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
