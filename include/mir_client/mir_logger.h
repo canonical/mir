@@ -33,6 +33,8 @@ public:
 protected:
     Logger() {}
     virtual ~Logger() {}
+    Logger(Logger const&) = delete;
+    Logger& operator=(Logger const&) = delete;
 };
 
 class ConsoleLogger : public Logger
