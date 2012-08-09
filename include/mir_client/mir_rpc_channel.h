@@ -48,6 +48,8 @@ namespace detail
 class PendingCallCache
 {
 public:
+    PendingCallCache(std::shared_ptr<Logger> const& log);
+
     void save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
         google::protobuf::Message* response,
@@ -71,6 +73,7 @@ private:
 
     std::mutex mutable mutex;
     std::map<int, PendingCall> pending_calls;
+    std::shared_ptr<Logger> const log;
 };
 }
 
