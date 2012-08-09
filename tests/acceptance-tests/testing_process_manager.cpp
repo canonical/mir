@@ -61,7 +61,8 @@ TestingProcessManager::~TestingProcessManager()
 
 namespace
 {
-std::atomic<mir::DisplayServer*> signal_display_server;
+std::mutex guard;
+mir::DisplayServer* signal_display_server;
 }
 
 extern "C"
@@ -69,13 +70,28 @@ extern "C"
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    auto sds = mir::signal_display_server.load();
+    while (true)
+    {
+	{
+	    std::lock_guard<std::mutex> lg(guard);
+	    if(signal_display_server)
+		break;
+	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
     
+    signal_display_server->stop();
+ 
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // TODO: Investigate into C99 atomic-support to get rid
+    // of the ugly mutex-based synchronization approach.
+    //auto sds = mir::signal_display_server.load();
+        
     /* could spin briefly during startup */;
-    for (; !sds; sds = mir::signal_display_server.load())
+    /*for (; !sds; sds = mir::signal_display_server.load())
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    sds->stop();
+	sds->stop();*/
 }
 }
 
@@ -103,9 +119,13 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
                 config.make_buffer_allocation_strategy(),
                 config.make_renderer());
 
-        std::atomic_store(&signal_display_server, &server);
-
-	std::cout << "stored the pointer to the server instance." << std::endl;
+        //std::atomic_store(&signal_display_server, &server);
+	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	// TODO: Re-enable once we have proper support for atomics.
+	{
+	    std::lock_guard<std::mutex> lg(guard);
+	    signal_display_server = &server;
+	}
 
         {
             struct ScopedFuture
