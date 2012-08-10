@@ -33,84 +33,10 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mc = mir::compositor;
 
 namespace mir
 {
-namespace
-{
-class StubDisplayServer : public mir::protobuf::DisplayServer
-{
-public:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        // TODO do the real work
-        response->set_width(request->width());
-        response->set_height(request->height());
-        response->set_pixel_format(request->pixel_format());
-
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-};
-
-class StubCommunicator : public mf::Communicator
-{
-public:
-    StubCommunicator(const std::string& socket_file)
-    : communicator(socket_file, &display_server)
-    {
-    }
-
-    void start()
-    {
-        communicator.start();
-    }
-
-    StubDisplayServer display_server;
-    mir::frontend::ProtobufAsioCommunicator communicator;
-};
-}
-
-TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
-{
-    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)));
-
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
-        {
-            return std::make_shared<StubCommunicator>(mir::test_socket_file());
-        }
-
-        void exec(mir::DisplayServer *)
-        {
-        }
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
-                                           std::chrono::milliseconds(100)));
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
 namespace
 {
 struct SessionCounter : mir::protobuf::DisplayServer
@@ -154,6 +80,46 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 };
 
+struct NullDeleter
+{
+    void operator()(void* )
+    {
+    }
+};
+
+class StubIpcFactory : public mf::ProtobufIpcFactory
+{
+public:
+    StubIpcFactory(mir::protobuf::DisplayServer& server) :
+        server(server) {}
+private:
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
+    }
+    mir::protobuf::DisplayServer& server;
+};
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
+{
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
+
+    TestingServerConfiguration server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
+        }
+    } client_config;
+
+    launch_client_process(client_config);
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -161,11 +127,10 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -199,11 +164,10 @@ TEST_F(BespokeDisplayServerTestFixture,
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -251,11 +215,10 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         ServerConfig(int const connections) : connections(connections) {}
 
-        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
+            std::shared_ptr<mc::BufferAllocationStrategy> const& )
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(
-                mir::test_socket_file(),
-                &counter);
+            return std::make_shared<StubIpcFactory>(counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -313,8 +276,8 @@ struct SessionCollector
         wait_condition.notify_one();
     }
 
-  std::mutex guard;
-  std::condition_variable wait_condition;
+    std::mutex guard;
+    std::condition_variable wait_condition;
     std::map<int, std::shared_ptr<mf::Session>> sessions;
 };
 }

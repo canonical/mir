@@ -45,7 +45,7 @@ namespace mir
 
 void startup_pause()
 {
-    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)))
+    if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(200)))
         throw std::runtime_error("Failed to find server");
 }
 
@@ -114,9 +114,12 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
 
         signal_prev_fn = signal(SIGTERM, signal_terminate);
 
+        auto buffer_allocation_strategy =
+            config.make_buffer_allocation_strategy();
+
         mir::DisplayServer server(
-                config.make_communicator(),
-                config.make_buffer_allocation_strategy(),
+                config.make_communicator(config.make_ipc_factory(buffer_allocation_strategy)),
+                buffer_allocation_strategy,
                 config.make_renderer());
 
         //std::atomic_store(&signal_display_server, &server);

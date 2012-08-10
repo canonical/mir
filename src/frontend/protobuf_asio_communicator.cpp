@@ -37,7 +37,7 @@ public:
         boost::asio::io_service& io_service,
         int id_,
         ConnectedSessions* connected_sessions,
-        mir::protobuf::DisplayServer* display_server);
+        std::shared_ptr<protobuf::DisplayServer> const&);
 
     int id() const
     {
@@ -57,7 +57,7 @@ private:
     boost::asio::streambuf message;
     int const id_;
     ConnectedSessions* connected_sessions;
-    mir::protobuf::DisplayServer* const display_server;
+    std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
 };
@@ -66,10 +66,10 @@ private:
 // TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     std::string const& socket_file,
-    mir::protobuf::DisplayServer* display_server)
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
-    display_server(display_server),
+    ipc_factory(ipc_factory),
     next_session_id(0)
 {
     start_accept();
@@ -82,7 +82,7 @@ void mf::ProtobufAsioCommunicator::start_accept()
         io_service,
         next_id(),
         &connected_sessions,
-        display_server);
+        ipc_factory->make_ipc_server());
 
     acceptor.async_accept(
         session->socket,
@@ -137,7 +137,7 @@ mfd::Session::Session(
     boost::asio::io_service& io_service,
     int id_,
     ConnectedSessions* connected_sessions,
-    mir::protobuf::DisplayServer* display_server)
+    std::shared_ptr<protobuf::DisplayServer> const& display_server)
     : socket(io_service),
     id_(id_),
     connected_sessions(connected_sessions),
