@@ -22,6 +22,9 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 
+#include "mir_protobuf.pb.h"
+#include "mir_client/mir_surface.h"
+
 #include <cstdio>
 #include <functional>
 #include <string>
@@ -33,15 +36,60 @@ namespace mf = mir::frontend;
 
 namespace mir
 {
+namespace
+{
+class StubDisplayServer : public mir::protobuf::DisplayServer
+{
+public:
+    void connect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::ConnectMessage* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        // TODO do the real work
+        response->set_width(request->width());
+        response->set_height(request->height());
+        response->set_pixel_format(request->pixel_format());
+
+        done->Run();
+    }
+
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+};
+
+class StubCommunicator : public mf::Communicator
+{
+public:
+    StubCommunicator(const std::string& socket_file)
+    : communicator(socket_file, &display_server)
+    {
+    }
+
+    void start()
+    {
+        communicator.start();
+    }
+
+    StubDisplayServer display_server;
+    mir::frontend::ProtobufAsioCommunicator communicator;
+};
+}
+
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    //ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)));
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(1000)));
 
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            return std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file());
+            return std::make_shared<StubCommunicator>(mir::test_socket_file());
         }
 
         void exec(mir::DisplayServer *)
@@ -65,28 +113,47 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
 namespace
 {
-struct SessionCounter
+struct SessionCounter : mir::protobuf::DisplayServer
 {
-    SessionCounter() : session_count(0)
+    int session_count;
+    int connected_sessions;
+    std::mutex guard;
+    std::condition_variable wait_condition;
+
+    SessionCounter() : session_count(0), connected_sessions(0)
     {
     }
 
     SessionCounter(SessionCounter const &) = delete;
-
-    void on_session_state_change(mf::SessionState state)
+    void connect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::ConnectMessage* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
     {
-        int const delta =
-            state == mf::SessionState::connected ? 1 :
-            state == mf::SessionState::disconnected ? -1 : 0;
-	std::unique_lock<std::mutex> lock(guard);
-        session_count += delta;
+        response->set_width(request->width());
+        response->set_height(request->height());
+        response->set_pixel_format(request->pixel_format());
+
+        std::unique_lock<std::mutex> lock(guard);
+        ++session_count;
+        ++connected_sessions;
         wait_condition.notify_one();
+
+        done->Run();
     }
 
-  int session_count;
-  std::mutex guard;
-  std::condition_variable wait_condition;
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        --connected_sessions;
+        wait_condition.notify_one();
+        done->Run();
+    }
 };
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -96,10 +163,9 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         std::shared_ptr<mir::frontend::Communicator> make_communicator()
         {
-            auto comm(std::make_shared<mf::ProtobufAsioCommunicator>(mir::test_socket_file()));
-            comm->signal_session_state().connect(
-                boost::bind(&SessionCounter::on_session_state_change, &counter, _2));
-            return comm;
+            return std::make_shared<mf::ProtobufAsioCommunicator>(
+                mir::test_socket_file(),
+                &counter);
         }
 
         void on_exit(mir::DisplayServer* )
@@ -118,24 +184,118 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            namespace ba = boost::asio;
-            namespace bal = boost::asio::local;
-            namespace bs = boost::system;
+            using ::mir::client::Surface;
 
-            ba::io_service io_service;
-            bal::stream_protocol::endpoint endpoint(mir::test_socket_file());
-            bal::stream_protocol::socket socket(io_service);
-
-            bs::error_code error;
-            socket.connect(endpoint, error);
-
-            EXPECT_TRUE(!error) << error;
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
 
     launch_client_process(client_config);
 }
 
+TEST_F(BespokeDisplayServerTestFixture,
+       after_disconnect_there_are_no_connected_sessions)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        {
+            return std::make_shared<mf::ProtobufAsioCommunicator>(
+                mir::test_socket_file(),
+                &counter);
+        }
+
+        void on_exit(mir::DisplayServer* )
+        {
+            std::unique_lock<std::mutex> lock(counter.guard);
+            if (counter.session_count != 1)
+		std::wait_on_cv_for(
+				    counter.wait_condition,
+				    lock,
+				    std::chrono::milliseconds(100));
+
+            if (counter.connected_sessions != 0)
+		std::wait_on_cv_for(
+				    counter.wait_condition,
+				    lock,
+				    std::chrono::milliseconds(100));
+
+            EXPECT_EQ(0, counter.connected_sessions);
+        }
+        SessionCounter counter;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            EXPECT_TRUE(mysurface.is_valid());
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture,
+       can_connect_multiple_sessions)
+{
+    std::size_t const connections = 5;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(int const connections) : connections(connections) {}
+
+        std::shared_ptr<mir::frontend::Communicator> make_communicator()
+        {
+            return std::make_shared<mf::ProtobufAsioCommunicator>(
+                mir::test_socket_file(),
+                &counter);
+        }
+
+        void on_exit(mir::DisplayServer* )
+        {
+            std::unique_lock<std::mutex> lock(counter.guard);
+            if (counter.session_count != connections)
+		std::wait_on_cv_for(counter.wait_condition,
+				    lock,
+				    std::chrono::milliseconds(100));
+            if (counter.connected_sessions != 0)
+		std::wait_on_cv_for(counter.wait_condition,
+				    lock,
+				    std::chrono::milliseconds(100));
+
+            EXPECT_EQ(0, counter.connected_sessions);
+        }
+        SessionCounter counter;
+        int connections;
+    } server_config(connections);
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            EXPECT_TRUE(mysurface.is_valid());
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    } client_config;
+
+    for (std::size_t i = 0; i != connections; ++i)
+        launch_client_process(client_config);
+}
+
+
+#ifdef MIR_TODO // Sessions are no longer visible - but we will need a server-side object for each
 namespace
 {
 struct SessionCollector
@@ -214,4 +374,6 @@ TEST_F(BespokeDisplayServerTestFixture,
     for (std::size_t i = 0; i != connections; ++i)
         launch_client_process(client_config);
 }
+#endif // MIR_TODO
 }
+

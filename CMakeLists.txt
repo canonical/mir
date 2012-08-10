@@ -62,6 +62,13 @@ find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread R
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
+
+# Check for google protocol buffers and generate code
+find_package( Protobuf REQUIRED )
+set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+add_subdirectory(src/protobuf)
+INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(src/)
 
 # find_package (Threads REQUIRED)

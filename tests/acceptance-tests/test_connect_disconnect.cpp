@@ -20,104 +20,10 @@
 
 #include "display_server_test_fixture.h"
 
-#include <boost/asio.hpp>
-#include <boost/signals2.hpp>
+#include "mir_client/mir_surface.h"
 
 #include <gtest/gtest.h>
 
-namespace
-{
-namespace detail
-{
-namespace ba = boost::asio;
-namespace bal = boost::asio::local;
-namespace bs = boost::system;
-
-struct SurfaceState
-{
-    virtual bool is_valid() const = 0;
-    virtual bs::error_code disconnect() = 0;
-    virtual ~SurfaceState() {}
-protected:
-    SurfaceState() = default;
-    SurfaceState(SurfaceState const&) = delete;
-    SurfaceState& operator=(SurfaceState const&) = delete;
-};
-struct InvalidSurfaceState : public SurfaceState
-{
-    bs::error_code disconnect()
-    {
-        return bs::error_code();
-    }
-
-    bool is_valid() const
-    {
-        return false;
-    }
-};
-struct ValidSurfaceState : public SurfaceState
-{
-    ba::io_service io_service;
-    bal::stream_protocol::endpoint endpoint;
-    bal::stream_protocol::socket socket;
-
-    ValidSurfaceState()
-    : endpoint(mir::test_socket_file()), socket(io_service)
-    {
-        socket.connect(endpoint);
-    }
-
-    bs::error_code disconnect()
-    {
-        bs::error_code error;
-        ba::write(socket, ba::buffer(std::string("disconnect\n")), error);
-        return error;
-    }
-
-    bool is_valid() const
-    {
-        return true;
-    }
-};
-}
-
-class Surface
-{
-public:
-    Surface() : body(new detail::InvalidSurfaceState()) {}
-    Surface(int /*width*/, int /*height*/, int /*pix_format*/)
-        : body(new detail::ValidSurfaceState()) {}
-    ~Surface()
-    {
-        if (body)
-        {
-            EXPECT_EQ(boost::system::errc::success, body->disconnect());
-        }
-        delete body;
-    }
-
-    bool is_valid() const
-    {
-        return body->is_valid();
-    }
-    Surface(Surface&& that) : body(that.body)
-    {
-        that.body = 0;
-    }
-    Surface& operator=(Surface&& that)
-    {
-        delete body;
-        body = that.body;
-        that.body = 0;
-        return *this;
-    }
-
-private:
-    detail::SurfaceState* body;
-    Surface(Surface const&) = delete;
-    Surface& operator=(Surface const&) = delete;
-};
-}
 
 TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
@@ -125,12 +31,14 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
     {
         void exec()
         {
+            using ::mir::client::Surface;
+
             // Default surface is not connected
             Surface mysurface;
             EXPECT_FALSE(mysurface.is_valid());
 
             // connect surface
-            EXPECT_NO_THROW(mysurface = Surface(640, 480, 0));
+            EXPECT_NO_THROW(mysurface = Surface(mir::test_socket_file(), 640, 480, 0));
             EXPECT_TRUE(mysurface.is_valid());
 
             // disconnect surface

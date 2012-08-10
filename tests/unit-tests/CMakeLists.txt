@@ -37,7 +37,10 @@ target_link_libraries(
   mirinput
   mirsurfaces
   mirprocess
+  mirclient
+  mirprotobuf
 
+  ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
