@@ -71,14 +71,18 @@ INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(src/)
 
-find_package (Threads)
+# find_package (Threads)
 
 # Pulling in local gmock version
 # While this seems evil, we are doing
 # it to ensure/allow for:
 #   (1.) a matching gmock/gtest version
 #   (2.) a stream-lined cross-compilation workflow
-set(GTEST_INCLUDE_DIR gmock-1.6.0/src)
+set(
+  GTEST_INCLUDE_DIR 
+
+  gmock-1.6.0/include
+  gmock-1.6.0/gtest/include)
 
 add_subdirectory(gmock-1.6.0/)
 set(GMOCK_LIBRARY gmock)
