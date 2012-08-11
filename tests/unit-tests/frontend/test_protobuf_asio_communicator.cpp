@@ -35,6 +35,9 @@ namespace mir
 {
 namespace
 {
+
+std::string global_socket_name("./mir_test_pb_asio_socket");
+
 struct SessionCounter : mir::protobuf::DisplayServer
 {
     int session_count;
@@ -109,8 +112,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     static const std::string& socket_name()
     {
-        static std::string socket_name("./mir_test_pb_asio_socket");
-        return socket_name;
+        return global_socket_name;
     }
 
     ProtobufAsioCommunicatorTestFixture() :
@@ -137,7 +139,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         {
 	    std::wait_on_cv_for(collector.wait_condition,
 				ul,
-				std::chrono::milliseconds(50));
+				std::chrono::milliseconds(100));
         }
         EXPECT_EQ(expected_count, collector.session_count);
     }
@@ -175,8 +177,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
-        return socket_name;
+	return global_socket_name;
     }
 
     ProtobufAsioMultiClientCommunicatorTestFixture() :

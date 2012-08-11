@@ -61,8 +61,7 @@ TestingProcessManager::~TestingProcessManager()
 
 namespace
 {
-std::mutex guard;
-mir::DisplayServer* signal_display_server;
+mir::DisplayServer* volatile signal_display_server;
 }
 
 extern "C"
@@ -72,11 +71,8 @@ void signal_terminate (int )
 {
     while (true)
     {
-	{
-	    std::lock_guard<std::mutex> lg(guard);
-	    if(signal_display_server)
-		break;
-	}
+	if(signal_display_server)
+	    break;
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
@@ -126,7 +122,7 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
 	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	// TODO: Re-enable once we have proper support for atomics.
 	{
-	    std::lock_guard<std::mutex> lg(guard);
+	    //std::lock_guard<std::mutex> lg(guard);
 	    signal_display_server = &server;
 	}
 
