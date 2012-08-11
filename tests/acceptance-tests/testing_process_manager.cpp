@@ -76,18 +76,7 @@ void signal_terminate (int )
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
-    signal_display_server->stop();
- 
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // TODO: Investigate into C99 atomic-support to get rid
-    // of the ugly mutex-based synchronization approach.
-    //auto sds = mir::signal_display_server.load();
-        
-    /* could spin briefly during startup */;
-    /*for (; !sds; sds = mir::signal_display_server.load())
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-	sds->stop();*/
+    signal_display_server->stop(); 
 }
 }
 
@@ -118,14 +107,8 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
                 buffer_allocation_strategy,
                 config.make_renderer());
 
-        //std::atomic_store(&signal_display_server, &server);
-	//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	// TODO: Re-enable once we have proper support for atomics.
-	{
-	    //std::lock_guard<std::mutex> lg(guard);
-	    signal_display_server = &server;
-	}
-
+	signal_display_server = &server;
+	
         {
             struct ScopedFuture
             {
