@@ -17,10 +17,14 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "android_buffer.h"
+
+/* from android */
+#include <hardware/hardware.h>
 
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+
+#include "android_buffer.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -34,16 +38,21 @@ namespace graphics
 class AndroidBufferAllocator: public mc::GraphicBufferAllocator
 {
 public:
-    AndroidBufferAllocator() = default;
+    AndroidBufferAllocator();
 
     virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width, geom::Height, mc::PixelFormat)
+        geom::Width w, geom::Height h, mc::PixelFormat pf)
     {
-        return std::unique_ptr<mc::Buffer>( new mg::AndroidBuffer() );
+        return std::unique_ptr<mc::Buffer>( new mg::AndroidBuffer(w, h, pf) );
     }
 };
 
 }
+}
+
+mg::AndroidBufferAllocator::AndroidBufferAllocator()
+{
+
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
