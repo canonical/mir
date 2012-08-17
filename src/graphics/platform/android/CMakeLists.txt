@@ -14,9 +14,18 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-ADD_LIBRARY( 
+add_library( 
   mirplatformgraphics STATIC
   
   buffer_allocator.cpp
   android_buffer.cpp
+)
+
+
+#add a findhardware here
+
+target_link_libraries(
+  mirplatformgraphics
+
+  hardware
 )

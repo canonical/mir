@@ -20,6 +20,7 @@
 
 /* from android */
 #include <hardware/hardware.h>
+#include <hardware/gralloc.h>
 
 #include <stdexcept>
 
@@ -47,6 +48,10 @@ public:
     {
         return std::unique_ptr<mc::Buffer>( new mg::AndroidBuffer(w, h, pf) );
     }
+private:
+    const hw_module_t    *hw_module;
+    struct alloc_device_t *alloc_device;
+
 };
 
 }
@@ -54,7 +59,20 @@ public:
 
 mg::AndroidBufferAllocator::AndroidBufferAllocator()
 {
-    throw std::runtime_error("Could not open hardware module");
+    int err;
+
+    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+    if (err < 0)
+    {
+        throw std::runtime_error("Could not open hardware module");
+    }
+
+    err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_device);
+    if(err < 0)
+    {
+        throw std::runtime_error("Could not open hardware module");
+    }
+ 
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
