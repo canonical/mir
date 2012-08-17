@@ -35,13 +35,12 @@ class AndroidBufferAllocator: public mc::GraphicBufferAllocator
 {
 public:
     AndroidBufferAllocator();
-    ~AndroidBufferAllocator();
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
 private:
     const hw_module_t    *hw_module;
-    struct alloc_device_t *alloc_device;
+    std::shared_ptr<struct alloc_device_t> alloc_device;
 
 };
 
