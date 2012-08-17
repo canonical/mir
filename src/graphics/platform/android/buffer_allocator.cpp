@@ -53,14 +53,15 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
     alloc_device = std::shared_ptr<struct alloc_device_t>(alloc_dev, AllocDeviceDeleter());
 }
 
-std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
-{
-    return std::unique_ptr<AndroidBufferAllocator>(new AndroidBufferAllocator());
-}
-
 std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
    geom::Width, geom::Height, mc::PixelFormat)
 {
     return std::unique_ptr<mc::Buffer>();
 }
+
+std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
+{
+    return std::unique_ptr<AndroidBufferAllocator>(new AndroidBufferAllocator());
+}
+
 
