@@ -17,6 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "android_buffer.h"
+
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
@@ -32,9 +34,9 @@ public:
     AndroidBufferAllocator() = default;
 
     virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width, geom::Height, mc::PixelFormat)
+        geom::Width w, geom::Height h, mc::PixelFormat pf)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::unique_ptr<mc::Buffer>( new AndroidBuffer(w, h, pf) );
     }
 };
 
