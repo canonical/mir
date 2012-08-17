@@ -42,6 +42,7 @@ class AndroidBufferAllocator: public mc::GraphicBufferAllocator
 {
 public:
     AndroidBufferAllocator();
+    ~AndroidBufferAllocator();
 
     virtual std::unique_ptr<mc::Buffer> alloc_buffer(
         geom::Width w, geom::Height h, mc::PixelFormat pf)
@@ -73,6 +74,11 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
         throw std::runtime_error("Could not open hardware module");
     }
  
+}
+
+mg::AndroidBufferAllocator::~AndroidBufferAllocator()
+{
+    alloc_device->common.close(&alloc_device->common);
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
