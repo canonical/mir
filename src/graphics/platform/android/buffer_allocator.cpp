@@ -21,6 +21,8 @@
 /* from android */
 #include <hardware/hardware.h>
 
+#include <stdexcept>
+
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
@@ -52,7 +54,7 @@ public:
 
 mg::AndroidBufferAllocator::AndroidBufferAllocator()
 {
-
+    throw std::runtime_error("Could not open hardware module");
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()

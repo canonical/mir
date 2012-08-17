@@ -28,7 +28,12 @@ namespace geom = mir::geometry;
 
 TEST(GraphicsPlatform, buffer_allocator_creation)
 {
-    std::unique_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
+    using namespace testing;
+    std::unique_ptr<mc::GraphicBufferAllocator> allocator;
+
+    EXPECT_NO_THROW (
+        allocator = mg::create_buffer_allocator();
+    );
 
     EXPECT_TRUE(allocator.get());
 }
