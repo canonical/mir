@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "android_buffer.h"
+#include "mir_platform/android/android_buffer.h"
 
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;

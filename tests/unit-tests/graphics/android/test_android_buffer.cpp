@@ -16,9 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_platform/android/android_buffer.h"
+
 #include <gtest/gtest.h>
 
 TEST(AndroidGraphicsBuffer, create) 
 {
 
 }
+
