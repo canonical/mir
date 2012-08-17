@@ -12,10 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 ADD_LIBRARY( 
   mirplatformgraphics STATIC
   
   buffer_allocator.cpp
+  android_buffer.cpp
 )
