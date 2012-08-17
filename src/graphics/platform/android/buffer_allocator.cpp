@@ -17,46 +17,13 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-
-/* from android */
-#include <hardware/hardware.h>
-#include <hardware/gralloc.h>
+#include "buffer_allocator.h"
 
 #include <stdexcept>
-
-#include "mir/graphics/platform.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
-
-#include "android_buffer.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-
-namespace mir
-{
-namespace graphics
-{
-
-class AndroidBufferAllocator: public mc::GraphicBufferAllocator
-{
-public:
-    AndroidBufferAllocator();
-    ~AndroidBufferAllocator();
-
-    virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width w, geom::Height h, mc::PixelFormat pf)
-    {
-        return std::unique_ptr<mc::Buffer>( new mg::AndroidBuffer(w, h, pf) );
-    }
-private:
-    const hw_module_t    *hw_module;
-    struct alloc_device_t *alloc_device;
-
-};
-
-}
-}
 
 mg::AndroidBufferAllocator::AndroidBufferAllocator()
 {
