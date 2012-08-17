@@ -26,20 +26,24 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
+namespace mir
 {
+namespace graphics
+{
+
 class AndroidBufferAllocator: public mc::GraphicBufferAllocator
 {
 public:
     AndroidBufferAllocator() = default;
 
     virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width w, geom::Height h, mc::PixelFormat pf)
+        geom::Width, geom::Height, mc::PixelFormat)
     {
-        return std::unique_ptr<mc::Buffer>( new AndroidBuffer(w, h, pf) );
+        return std::unique_ptr<mc::Buffer>( new mg::AndroidBuffer() );
     }
 };
 
+}
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
