@@ -17,7 +17,9 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include <mir/compositor/buffer.h>
+#include "mir/compositor/buffer.h"
+
+#include <hardware/gralloc.h>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
