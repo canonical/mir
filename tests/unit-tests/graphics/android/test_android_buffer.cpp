@@ -23,6 +23,8 @@
 #include <memory>
 
 namespace mc=mir::compositor;
+namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 
 
 class AllocDevice 
@@ -78,4 +80,40 @@ TEST(AndroidGraphicsBuffer, struct_mock)
     EXPECT_CALL(mock_alloc, mock_free(&mock_alloc, NULL));
     mock_alloc.free(&mock_alloc,NULL);
 }
+
+
+TEST(AndroidGraphicsBuffer, creation)
+{
+    using namespace testing;
+
+    MockAllocDevice mock_alloc_device;
+    geom::Width w(300);
+    geom::Width h(200);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);    
+
+    EXPECT_CALL(mock_alloc_device, mock_alloc(&mock_alloc_device, w.as_uint32_t() , h.as_uint32_t(),
+                                              4, 0x300, _, _ )); /* todo: get rid of magic numbers, figure out which android headers have these values */
+//    EXPECT_CALL(mock_alloc_device, mock_free(&mock_alloc, NULL));
+
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, w, h, pf);
+
+    EXPECT_NE((int)buffer, NULL);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
