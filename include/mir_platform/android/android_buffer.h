@@ -32,7 +32,7 @@ namespace graphics
 class AndroidBuffer: public mc::Buffer
 {
 public:
-    AndroidBuffer(geom::Width w, geom::Height h, mc::PixelFormat pf); 
+    explicit AndroidBuffer(struct alloc_device_t* device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
 
     geom::Width width() const;
 

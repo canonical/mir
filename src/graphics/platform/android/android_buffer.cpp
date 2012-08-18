@@ -22,7 +22,8 @@
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(geom::Width w, geom::Height h, mc::PixelFormat pf)
+mg::AndroidBuffer::AndroidBuffer(struct alloc_device_t *,
+                 geom::Width w, geom::Height h, mc::PixelFormat pf)
  :
 buffer_width(w),
 buffer_height(h),
