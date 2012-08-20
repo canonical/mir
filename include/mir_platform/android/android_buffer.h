@@ -18,7 +18,7 @@
  */
 
 #include "mir/compositor/buffer.h"
-//#include "mir_platform/android/android_gralloc_adaptor.h"
+#include "mir_platform/graphic_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
 #include <stdexcept>
@@ -35,7 +35,7 @@ namespace graphics
 class AndroidBuffer: public mc::Buffer
 {
 public:
-    explicit AndroidBuffer(std::shared_ptr<struct alloc_device_t> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
+    explicit AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
     ~AndroidBuffer(); 
 
     geom::Width width() const;
@@ -60,7 +60,7 @@ private:
     const mc::PixelFormat buffer_format;
     geom::Stride buffer_stride;
 
-    std::shared_ptr<struct alloc_device_t> alloc_device;
+    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
     buffer_handle_t android_handle;
 };
