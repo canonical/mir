@@ -27,7 +27,7 @@ namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-struct MockAllocDevice : public mg::AllocDevice,
+struct MockAllocDevice : public mg::GraphicAllocAdaptor,
                          public alloc_device_t 
 {
     public:
