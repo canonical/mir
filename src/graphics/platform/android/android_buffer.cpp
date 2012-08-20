@@ -30,17 +30,13 @@ buffer_height(h),
 buffer_format(pf),
 alloc_device(alloc_dev)
 {
-    int ret;
+    int ret, format, usage, stride = 0;
 
     if ((!alloc_device) || (!alloc_device->alloc) || (!alloc_device->free))
         throw std::runtime_error("No allocation device for graphics buffer");
 
-
-    int format, usage, stride = 0;
-
     format = convert_to_android_format(pf);
-    usage = 0x300;
-
+    usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     ret = alloc_device->alloc(
                         /* alloc_device is guaranteed by C library to remain same */
                         const_cast<struct alloc_device_t*> (alloc_device),
@@ -67,7 +63,7 @@ int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)
     switch (pf)
     {
         case mc::PixelFormat::rgba_8888:
-            return 4;
+            return HAL_PIXEL_FORMAT_RGBA_8888;
         default:
             /* will cause gralloc to error, exception thrown */
             return -1;
