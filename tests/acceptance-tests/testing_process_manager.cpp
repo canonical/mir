@@ -82,8 +82,9 @@ void signal_terminate (int )
     signal_display_server->stop();
 }
 }
+}
 
-void TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
+void mir::TestingProcessManager::launch_server_process(mir::TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -132,7 +133,6 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
         startup_pause();
     }
 }
-}
 
 void mir::TestingProcessManager::launch_client_process(mir::TestingClientConfiguration& config)
 {
@@ -175,9 +175,7 @@ void mir::TestingProcessManager::launch_client_process(mir::TestingClientConfigu
     }
 }
 
-namespace mir
-{
-void TestingProcessManager::tear_down_clients()
+void mir::TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
     {
@@ -201,7 +199,6 @@ void TestingProcessManager::tear_down_clients()
     {
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
-}
 }
 
 void mir::TestingProcessManager::tear_down_server()
