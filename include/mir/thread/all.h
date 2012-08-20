@@ -47,7 +47,6 @@ namespace mir
 namespace std
 {
 using namespace ::std;
-using ::boost::unique_future;
 using ::boost::unique_lock;
 using ::boost::lock_guard;
 using ::boost::thread;
