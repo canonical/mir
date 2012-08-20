@@ -54,9 +54,9 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
 }
 
 std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
-   geom::Width, geom::Height, mc::PixelFormat)
+   geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
-    return std::unique_ptr<mc::Buffer>();
+    return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
