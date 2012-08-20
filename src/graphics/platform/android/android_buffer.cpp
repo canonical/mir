@@ -58,17 +58,20 @@ alloc_device(alloc_dev)
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
-    printf("DESTRUCTOR\n");
-    alloc_device->free(
-                        const_cast<struct alloc_device_t*> (alloc_device),
+    alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device),
                         android_handle);
 }
 
-int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat )
+int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)
 {
-//    switch (pf):
-//        case mc::PixelFormat
-    return 4;
+    switch (pf)
+    {
+        case mc::PixelFormat::rgba_8888:
+            return 4;
+        default:
+            /* will cause gralloc to error, exception thrown */
+            return -1;
+    }
 }
 
 geom::Width mg::AndroidBuffer::width() const
