@@ -22,13 +22,53 @@
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(struct alloc_device_t *,
+mg::AndroidBuffer::AndroidBuffer(struct alloc_device_t * alloc_dev,
                  geom::Width w, geom::Height h, mc::PixelFormat pf)
  :
 buffer_width(w),
 buffer_height(h),
-buffer_format(pf) 
+buffer_format(pf),
+alloc_device(alloc_dev)
 {
+    int ret;
+
+    if ((!alloc_device) || (!alloc_device->alloc) || (!alloc_device->free))
+        throw std::runtime_error("No allocation device for graphics buffer");
+
+
+    int format, usage, stride = 0;
+
+    format = convert_to_android_format(pf);
+    usage = 0x300;
+
+    ret = alloc_device->alloc(
+                        /* alloc_device is guaranteed by C library to remain same */
+                        const_cast<struct alloc_device_t*> (alloc_device),
+                        (int) buffer_width.as_uint32_t(),
+                        (int) buffer_height.as_uint32_t(),
+                        format, usage, &android_handle, &stride); 
+    buffer_stride = geom::Stride(stride);
+
+    if (ret == 0)
+        return;
+    else
+        throw std::runtime_error("Graphics buffer allocation failed");
+}
+
+
+mg::AndroidBuffer::~AndroidBuffer()
+{
+    printf("DESTRUCTOR\n");
+    alloc_device->free(
+                        const_cast<struct alloc_device_t*> (alloc_device),
+                        android_handle);
+}
+
+int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat )
+{
+//    switch (pf):
+//        case mc::PixelFormat
+    return 4;
 }
 
 geom::Width mg::AndroidBuffer::width() const

@@ -56,6 +56,7 @@ struct MockAllocDevice : public AllocDevice,
 
     static int hook_free(alloc_device_t* mock_alloc, buffer_handle_t handle)
     {
+        printf("HOOKFREE\n");
         MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
         return mocker->mock_free(mock_alloc, handle);
     }
@@ -105,6 +106,7 @@ TEST(AndroidGraphicsBuffer, creation)
 
     EXPECT_NE((int)buffer, NULL);
 
+    delete buffer;
 }
 
 

@@ -20,6 +20,7 @@
 #include "mir/compositor/buffer.h"
 
 #include <hardware/gralloc.h>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
@@ -33,6 +34,7 @@ class AndroidBuffer: public mc::Buffer
 {
 public:
     explicit AndroidBuffer(struct alloc_device_t* device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
+    ~AndroidBuffer(); 
 
     geom::Width width() const;
 
@@ -49,10 +51,16 @@ public:
     Texture* bind_to_texture();
 
 private:
+    int convert_to_android_format(mc::PixelFormat);
+
     const geom::Width  buffer_width;
     const geom::Height buffer_height;
-    const geom::Stride buffer_stride;
-    const mc::PixelFormat buffer_format; 
+    const mc::PixelFormat buffer_format;
+    geom::Stride buffer_stride;
+
+    const struct alloc_device_t* alloc_device;
+
+    buffer_handle_t android_handle;
 };
 
 }
