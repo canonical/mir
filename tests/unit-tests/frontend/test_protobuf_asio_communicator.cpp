@@ -114,7 +114,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
@@ -176,7 +176,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
