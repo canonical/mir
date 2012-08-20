@@ -16,29 +16,23 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
+#include "mir_platform/android/android_display.h"
+#include "mir/geometry/rectangle.h"
 
-#include "mir/graphics/display.h"
+namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 
-namespace mir
+mg::AndroidDisplay::AndroidDisplay()
 {
-namespace geometry
-{
-class Rectangle;
 }
-namespace graphics
+    
+geom::Rectangle mg::AndroidDisplay::view_area()
 {
+    geom::Rectangle rect;
+    return rect;
+}
 
-class AndroidDisplay : public Display
+void mg::AndroidDisplay::notify_update()
 {
-public:
-    explicit AndroidDisplay();
-    geometry::Rectangle view_area();
-    void notify_update();
-
-};
 
 }
-}
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_ */

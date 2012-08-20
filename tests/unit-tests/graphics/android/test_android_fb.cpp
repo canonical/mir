@@ -25,4 +25,7 @@ namespace mg=mir::graphics;
 TEST(framebuffer_test, fb_initialize)
 {
    std::shared_ptr<mg::Display>(new mg::AndroidDisplay);
+
+
+
 }
