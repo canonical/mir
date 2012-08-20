@@ -15,7 +15,8 @@
 # Authored by: Thomas Guest <thomas.guest@canonical.com>,
 
 list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
+#  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_output.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
