@@ -93,18 +93,13 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     virtual void SetUp()
     {
         dummy_handle = &native_handle;
-        mock_alloc_device = new MockAllocDevice(dummy_handle);
+        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(dummy_handle));
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
         width = geom::Width(300);
         height = geom::Height(200);
 
-    }
-
-    virtual void TearDown()
-    {
-        delete mock_alloc_device;
     }
 
     native_handle_t native_handle;
@@ -118,8 +113,8 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
-    EXPECT_CALL(*mock_alloc_device, mock_free(mock_alloc_device, NULL));
-    mock_alloc_device->free(mock_alloc_device, NULL);
+    EXPECT_CALL(*mock_alloc_device, mock_free(mock_alloc_device.get(), NULL));
+    mock_alloc_device->free(mock_alloc_device.get(), NULL);
 }
 
 /* tests correct allocation type */
@@ -138,7 +133,6 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
 
     delete buffer;
 }
-#if 0
 
 TEST_F(AndroidGraphicBufferBasic, dimensions_gralloc_conversion) 
 {
@@ -190,4 +184,3 @@ TEST_F(AndroidGraphicBufferBasic, format_echo_test)
     EXPECT_EQ(buffer->pixel_format(), pf);
     delete buffer;
 }
-#endif

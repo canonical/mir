@@ -22,7 +22,7 @@
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(struct alloc_device_t * alloc_dev,
+mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<struct alloc_device_t> alloc_dev,
                  geom::Width w, geom::Height h, mc::PixelFormat pf)
  :
 buffer_width(w),
@@ -39,7 +39,7 @@ alloc_device(alloc_dev)
     usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     ret = alloc_device->alloc(
                         /* alloc_device is guaranteed by C library to remain same */
-                        const_cast<struct alloc_device_t*> (alloc_device),
+                        const_cast<struct alloc_device_t*> (alloc_device.get()),
                         (int) buffer_width.as_uint32_t(),
                         (int) buffer_height.as_uint32_t(),
                         format, usage, &android_handle, &stride); 
@@ -53,7 +53,7 @@ alloc_device(alloc_dev)
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
-    alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device),
+    alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device.get()),
                         android_handle);
 }
 
