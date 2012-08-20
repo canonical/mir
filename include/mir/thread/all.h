@@ -80,11 +80,6 @@ bool const timeout = false;
 namespace this_thread
 {
     using namespace ::std::this_thread;
-
-    inline void yield()
-    {
-        ::boost::thread::yield();
-    }
 }
 }
 }
