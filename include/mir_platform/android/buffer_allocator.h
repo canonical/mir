@@ -40,7 +40,7 @@ public:
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
 private:
     const hw_module_t    *hw_module;
-    std::shared_ptr<struct alloc_device_t> alloc_device;
+    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
 };
 

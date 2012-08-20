@@ -25,14 +25,6 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-struct AllocDeviceDeleter
-{
-    void operator() (struct alloc_device_t* alloc_device) const
-    {
-        alloc_device->common.close(&alloc_device->common);
-    }
-};
-
 mg::AndroidBufferAllocator::AndroidBufferAllocator()
 {
     int err;
@@ -43,14 +35,17 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
         throw std::runtime_error("Could not open hardware module");
     }
 
+
+/*    
     struct alloc_device_t* alloc_dev;
     err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
     if(err < 0)
     {
         throw std::runtime_error("Could not open hardware module");
     }
-
-    alloc_device = std::shared_ptr<struct alloc_device_t>(alloc_dev, AllocDeviceDeleter());
+*/
+//    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocDevice(hw_module));
+    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>();
 }
 
 std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(

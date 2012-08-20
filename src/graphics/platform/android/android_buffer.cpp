@@ -22,7 +22,7 @@
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<struct alloc_device_t> alloc_dev,
+mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> alloc_dev,
                  geom::Width w, geom::Height h, mc::PixelFormat pf)
  :
 buffer_width(w),
@@ -30,19 +30,21 @@ buffer_height(h),
 buffer_format(pf),
 alloc_device(alloc_dev)
 {
-    int ret, format, usage, stride = 0;
+    int ret = -1, format, usage, stride = 0;
 
-    if ((!alloc_device) || (!alloc_device->alloc) || (!alloc_device->free))
+    if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
     format = convert_to_android_format(pf);
     usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    ret = alloc_device->alloc(
+#if 0
+    ret = alloc_device->alloc_buffer(
                         /* alloc_device is guaranteed by C library to remain same */
                         const_cast<struct alloc_device_t*> (alloc_device.get()),
                         (int) buffer_width.as_uint32_t(),
                         (int) buffer_height.as_uint32_t(),
-                        format, usage, &android_handle, &stride); 
+                        format, usage, &android_handle, &stride);
+#endif 
     buffer_stride = geom::Stride(stride);
 
     if (ret == 0)
@@ -53,8 +55,10 @@ alloc_device(alloc_dev)
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
+#if 0
     alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device.get()),
                         android_handle);
+#endif
 }
 
 int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)

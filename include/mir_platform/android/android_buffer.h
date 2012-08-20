@@ -17,6 +17,10 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_
+#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_
+
+
 #include "mir/compositor/buffer.h"
 #include "mir_platform/graphic_alloc_adaptor.h"
 
@@ -35,7 +39,7 @@ namespace graphics
 class AndroidBuffer: public mc::Buffer
 {
 public:
-    explicit AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
+    AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
     ~AndroidBuffer(); 
 
     geom::Width width() const;
@@ -67,3 +71,6 @@ private:
 
 }
 }
+
+
+#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_ */
