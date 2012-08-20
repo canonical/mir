@@ -33,9 +33,9 @@ mf::Application::~Application()
 {
 }
 
-void mf::Application::on_event(mi::Event* /*e*/)
+void mf::Application::on_event(mi::Event* e)
 {
-  // assert(e);
+    assert(e);
 }
 
 mf::Application::StateTransitionSignal& mf::Application::state_transition_signal()

@@ -71,12 +71,12 @@ void signal_terminate (int )
 {
     while (true)
     {
-	if(signal_display_server)
-	    break;
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if(signal_display_server)
+            break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    
-    signal_display_server->stop(); 
+
+    signal_display_server->stop();
 }
 }
 
@@ -107,8 +107,8 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
                 buffer_allocation_strategy,
                 config.make_renderer());
 
-	signal_display_server = &server;
-	
+        signal_display_server = &server;
+
         {
             struct ScopedFuture
             {
@@ -229,7 +229,7 @@ bool detect_server(
     do
     {
       if (error) {
-	  std::this_thread::sleep_for(std::chrono::milliseconds(0));
+          std::this_thread::sleep_for(std::chrono::milliseconds(0));
       }
       error = stat(socket_file.c_str(), &file_status);
     }

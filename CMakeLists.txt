@@ -71,8 +71,6 @@ INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(src/)
 
-# find_package (Threads)
-
 # Pulling in local gmock version
 # While this seems evil, we are doing
 # it to ensure/allow for:
