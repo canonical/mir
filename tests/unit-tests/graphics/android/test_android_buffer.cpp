@@ -39,13 +39,13 @@ struct MockAllocDevice : public mg::AllocDevice,
         alloc = hook_alloc;
         free = hook_free;
         dump = hook_dump;
-        ON_CALL(*this, mock_alloc(_,_,_,_,_,_,_))
+        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_,_))
                 .WillByDefault(DoAll(
                             SaveArg<1>(&w),
                             SetArgPointee<5>(buffer_handle),
                             SetArgPointee<6>(w * 4), /* stride must be >= (bpp * width). 4bpp is the max supported */
                             Return(0)));
-        ON_CALL(*this, mock_free(_,_))
+        ON_CALL(*this, free_buffer(_,_))
                 .WillByDefault(Return(0));
     }
 
@@ -54,25 +54,25 @@ struct MockAllocDevice : public mg::AllocDevice,
                            buffer_handle_t* handle, int* stride)
     {
         MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
-        return mocker->mock_alloc(mock_alloc, w, h, format, usage, handle, stride);
+        return mocker->alloc_buffer(mock_alloc, w, h, format, usage, handle, stride);
     }
 
     static int hook_free(alloc_device_t* mock_alloc, buffer_handle_t handle)
     {
         MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
-        return mocker->mock_free(mock_alloc, handle);
+        return mocker->free_buffer(mock_alloc, handle);
     }
 
     static void hook_dump(alloc_device_t* mock_alloc, char* buf, int buf_len)
     {
         MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
-        return mocker->mock_dump(mock_alloc, buf, buf_len);
+        mocker->inspect_buffer(mock_alloc, buf, buf_len);
     }
 
-    MOCK_METHOD7(mock_alloc, int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*) );
+    MOCK_METHOD7(alloc_buffer, int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*) );
 
-    MOCK_METHOD2(mock_free,  int(alloc_device_t*, buffer_handle_t)); 
-    MOCK_METHOD3(mock_dump, void(alloc_device_t*, char*, int));
+    MOCK_METHOD2(free_buffer,  int(alloc_device_t*, buffer_handle_t)); 
+    MOCK_METHOD3(inspect_buffer, bool(alloc_device_t*, char*, int));
     
     private:
     buffer_handle_t buffer_handle;
@@ -106,7 +106,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
-    EXPECT_CALL(*mock_alloc_device, mock_free(mock_alloc_device.get(), NULL));
+    EXPECT_CALL(*mock_alloc_device, free_buffer(mock_alloc_device.get(), NULL));
     mock_alloc_device->free(mock_alloc_device.get(), NULL);
 }
 
@@ -115,10 +115,10 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, mock_alloc(mock_alloc_device.get(), _, _, _,
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer(mock_alloc_device.get(), _, _, _,
                                          (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
                                           _, _ ));
-    EXPECT_CALL(*mock_alloc_device, mock_free(mock_alloc_device.get(), dummy_handle));
+    EXPECT_CALL(*mock_alloc_device, free_buffer(mock_alloc_device.get(), dummy_handle));
 
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
