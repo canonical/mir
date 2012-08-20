@@ -84,7 +84,7 @@ void signal_terminate (int )
 }
 }
 
-void mir::TestingProcessManager::launch_server_process(mir::TestingServerConfiguration& config)
+void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -134,7 +134,7 @@ void mir::TestingProcessManager::launch_server_process(mir::TestingServerConfigu
     }
 }
 
-void mir::TestingProcessManager::launch_client_process(mir::TestingClientConfiguration& config)
+void mir::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -221,9 +221,7 @@ void mir::TestingProcessManager::tear_down_all()
     tear_down_server();
 }
 
-namespace mir
-{
-bool detect_server(
+bool mir::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {
@@ -242,5 +240,4 @@ bool detect_server(
     while (error && std::chrono::system_clock::now() < limit);
 
     return !error;
-}
 }
