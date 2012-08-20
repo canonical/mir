@@ -26,27 +26,31 @@ option(
 
 function (mir_discover_tests EXECUTABLE)
 
-  if(ENABLE_MEMCHECK_OPTION)
-    find_program(
-      VALGRIND_EXECUTABLE
-      valgrind)
-
-    if(VALGRIND_EXECUTABLE)
-      set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
-    else(VALGRIND_EXECUTABLE)
-      message("Not enabling memcheck as valgrind is missing on your system")
-    endif(VALGRIND_EXECUTABLE)
-  endif(ENABLE_MEMCHECK_OPTION)
-
-  add_dependencies (${EXECUTABLE}
-    mir_discover_gtest_tests)
-
-  add_custom_command (TARGET ${EXECUTABLE}
-    POST_BUILD
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Discovering Tests in ${EXECUTABLE}"
-    DEPENDS
-    VERBATIM)
+  if(BUILD_ANDROID)
+    add_test(${EXECUTABLE} ${EXECUTABLE})
+  else()
+    if(ENABLE_MEMCHECK_OPTION)
+      find_program(
+	VALGRIND_EXECUTABLE
+	valgrind)
+      
+      if(VALGRIND_EXECUTABLE)
+	set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
+      else(VALGRIND_EXECUTABLE)
+	message("Not enabling memcheck as valgrind is missing on your system")
+      endif(VALGRIND_EXECUTABLE)
+    endif(ENABLE_MEMCHECK_OPTION)
+    
+    add_dependencies (${EXECUTABLE}
+      mir_discover_gtest_tests)
+    
+    add_custom_command (TARGET ${EXECUTABLE}
+      POST_BUILD
+      COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Discovering Tests in ${EXECUTABLE}"
+      DEPENDS
+      VERBATIM)
+  endif()
 endfunction ()
 

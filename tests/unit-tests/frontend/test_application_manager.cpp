@@ -47,6 +47,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 }
 
+#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assertion)
 {
 // Trying to avoid "[WARNING] /usr/src/gtest/src/gtest-death-test.cc:789::
@@ -54,12 +55,12 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 // For this test, Google Test couldn't detect the number of threads." by
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
-    ::testing::FLAGS_gtest_death_test_style = "fast";
     EXPECT_EXIT(
-        mir::frontend::ApplicationManager app(0),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
+                mir::frontend::ApplicationManager app(NULL),
+                ::testing::KilledBySignal(SIGABRT),
+                ".*");
 }
+#endif // defined(MIR_DEATH_TESTS_ENABLED)
 
 TEST(ApplicationManager, create_and_destroy_surface)
 {
@@ -71,7 +72,7 @@ TEST(ApplicationManager, create_and_destroy_surface)
         new ms::Surface(
             ms::a_surface(),
             buffer_texture_binder));
-    
+
     MockApplicationSurfaceOrganiser organizer;
     mf::ApplicationManager app_manager(&organizer);
     ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
@@ -81,7 +82,6 @@ TEST(ApplicationManager, create_and_destroy_surface)
     ms::SurfaceCreationParameters params;
     std::weak_ptr<ms::Surface> surface{app_manager.create_surface(params)};
     ASSERT_TRUE(surface.lock().get());
-    
+
     app_manager.destroy_surface(surface);
 }
-

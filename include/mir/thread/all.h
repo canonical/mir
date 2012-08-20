@@ -20,6 +20,8 @@
 #ifndef MIR_THREAD_ALL_H_
 #define MIR_THREAD_ALL_H_
 
+#include "mir/chrono/chrono.h"
+
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
 #include <cstdatomic>
 // For std::this_thread::sleep_for etc.
@@ -45,9 +47,48 @@ namespace mir
 namespace std
 {
 using namespace ::std;
-using ::boost::unique_future;
-#define future unique_future
+using ::boost::unique_lock;
+using ::boost::lock_guard;
 using ::boost::thread;
+using ::boost::mutex;
+
+template <typename R>
+class future : ::boost::unique_future<R> {
+public:
+    future() : ::boost::unique_future<R>() { }
+    future(future&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future(::boost::unique_future<R>&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future& operator=(future&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+    future& operator=(::boost::unique_future<R>&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+
+    using ::boost::unique_future<R>::wait;
+    using ::boost::unique_future<R>::get;
+    using ::boost::unique_future<R>::get_state;
+    using ::boost::unique_future<R>::is_ready;
+    using ::boost::unique_future<R>::has_exception;
+    using ::boost::unique_future<R>::has_value;
+
+    template<typename Duration>
+    bool wait_for(Duration const& rel_time) const
+    {
+        return ::boost::unique_future<R>::timed_wait(rel_time);
+    }
+};
+
+class condition_variable: ::boost::condition_variable
+{
+public:
+    using ::boost::condition_variable::wait;
+    using ::boost::condition_variable::notify_all;
+    using ::boost::condition_variable::notify_one;
+
+    template<typename Duration>
+    bool wait_for(unique_lock<mutex>& mutex, Duration const& rel_time)
+    {
+        return ::boost::condition_variable::timed_wait(mutex, rel_time);
+    }
+};
+
 
 enum class launch
 {
@@ -79,7 +120,20 @@ bool const timeout = false;
 
 namespace this_thread
 {
-    using namespace ::std::this_thread;
+using namespace ::boost::this_thread;
+
+template <class Timepoint>
+void sleep_until(const Timepoint& abs_time)
+{
+    sleep(abs_time);
+}
+
+template <class Duration>
+void sleep_for(const Duration& rel_time)
+{
+    sleep(rel_time);
+}
+
 }
 }
 }

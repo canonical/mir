@@ -20,6 +20,7 @@
 
 #include "mir/display_server.h"
 
+#include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
@@ -41,7 +42,10 @@ namespace
     else
         return ::testing::AssertionFailure() << "server NOT started";
 }
+}
 
+namespace mir
+{
 void startup_pause()
 {
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(200)))
@@ -58,23 +62,25 @@ mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
-namespace mir
-{
 namespace
 {
-std::atomic<mir::DisplayServer*> signal_display_server;
-}
+// TODO: Get rid of the volatile-hack here and replace it with
+// some sane atomic-pointer once we have left GCC 4.4 behind.
+mir::DisplayServer* volatile signal_display_server;
 }
 
+namespace mir
+{
 extern "C"
 {
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    auto sds = mir::signal_display_server.load();
-    for (; !sds; sds = mir::signal_display_server.load())
-        /* could spin briefly during startup */;
-    sds->stop();
+    while (!signal_display_server)
+        std::this_thread::yield();
+ 
+    signal_display_server->stop();
+}
 }
 }
 
@@ -105,7 +111,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
                 buffer_allocation_strategy,
                 config.make_renderer());
 
-        std::atomic_store(&signal_display_server, &server);
+        signal_display_server = &server;
 
         {
             struct ScopedFuture
@@ -219,19 +225,19 @@ bool mir::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {
-    std::chrono::time_point<std::chrono::system_clock> limit
-        =  std::chrono::system_clock::now()+timeout;
+    auto limit = std::chrono::system_clock::now() + timeout;
 
     bool error = false;
     struct stat file_status;
 
     do
     {
-        if (error) std::this_thread::sleep_for(std::chrono::milliseconds(0));
-        error = stat(socket_file.c_str(), &file_status);
+      if (error) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(0));
+      }
+      error = stat(socket_file.c_str(), &file_status);
     }
     while (error && std::chrono::system_clock::now() < limit);
 
     return !error;
 }
-

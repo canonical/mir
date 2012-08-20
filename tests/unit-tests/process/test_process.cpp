@@ -24,7 +24,7 @@
 
 namespace mp = mir::process;
 
-namespace
+namespace mir
 {
 
 struct MainFunctionFactory
@@ -74,16 +74,16 @@ struct ExitFunctionFactory
     }
 };
 
-}
-
+#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
 {
     EXPECT_EXIT(
-        mp::Process p(-1),
+        mp::Process p(0),
         ::testing::KilledBySignal(SIGABRT),
         ".*");
 }
+#endif // defined(MIR_DEATH_TESTS_ENABLED)
 
 TEST(ProcessResult,
      a_default_result_never_succeeds)
@@ -156,7 +156,7 @@ TEST(Process,
         ExitFunctionFactory::a_successful_exit_function);
 
     p->terminate();
-    
+
     EXPECT_TRUE(p->wait_for_termination().signalled());
 }
 
@@ -168,6 +168,7 @@ TEST(Process,
         ExitFunctionFactory::a_successful_exit_function);
 
     p->kill();
-    
+
     EXPECT_TRUE(p->wait_for_termination().signalled());
+}
 }

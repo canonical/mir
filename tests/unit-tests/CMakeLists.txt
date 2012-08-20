@@ -45,7 +45,6 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-  libboost_thread.so
   ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )

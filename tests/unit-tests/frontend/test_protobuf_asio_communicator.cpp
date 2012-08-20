@@ -29,6 +29,8 @@
 
 namespace mf = mir::frontend;
 
+namespace mir
+{
 namespace
 {
 struct SessionCounter : mir::protobuf::DisplayServer
@@ -112,7 +114,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
@@ -174,7 +176,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     static const std::string& socket_name()
     {
-        static std::string socket_name("/tmp/mir_test_pb_asio_socket");
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
@@ -367,4 +369,4 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
     expect_session_count(connection_count);
     expect_connected_session_count(0);
 }
-
+}
