@@ -86,7 +86,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     virtual void SetUp()
     {
         dummy_handle = &native_handle;
-        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(dummy_handle));
+        mock_alloc_device = std::shared_ptr<GraphicAllocDevice> (new MockAllocDevice(dummy_handle));
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
@@ -97,7 +97,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
     native_handle_t native_handle;
     buffer_handle_t dummy_handle;
-    std::shared_ptr<MockAllocDevice> mock_alloc_device;
+    std::shared_ptr<mg::GraphicAllocAdaptor> mock_alloc_device;
     mc::PixelFormat pf;
     geom::Width width;
     geom::Height height;
@@ -106,7 +106,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
-    EXPECT_CALL(*mock_alloc_device, free_buffer(mock_alloc_device.get(), NULL));
+    EXPECT_CALL(*mock_alloc_device, free_buffer(mock_alloc_device, NULL));
     mock_alloc_device->free(mock_alloc_device.get(), NULL);
 }
 
@@ -115,7 +115,7 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer(mock_alloc_device.get(), _, _, _,
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer(mock_alloc_device, _, _, _,
                                          (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
                                           _, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(mock_alloc_device.get(), dummy_handle));
