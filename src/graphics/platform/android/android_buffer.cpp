@@ -51,7 +51,6 @@ alloc_device(alloc_dev)
         throw std::runtime_error("Graphics buffer allocation failed");
 }
 
-
 mg::AndroidBuffer::~AndroidBuffer()
 {
     alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device),
