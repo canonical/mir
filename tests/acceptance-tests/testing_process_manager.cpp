@@ -32,7 +32,7 @@
 namespace mc = mir::compositor;
 namespace mp = mir::process;
 
-namespace mir
+namespace
 {
 ::testing::AssertionResult WasStarted(
     std::shared_ptr<mir::process::Process> const& server_process)
@@ -42,20 +42,23 @@ namespace mir
     else
         return ::testing::AssertionFailure() << "server NOT started";
 }
+}
 
+namespace mir
+{
 void startup_pause()
 {
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(200)))
         throw std::runtime_error("Failed to find server");
 }
+}
 
-
-TestingProcessManager::TestingProcessManager() :
+mir::TestingProcessManager::TestingProcessManager() :
     is_test_process(true)
 {
 }
 
-TestingProcessManager::~TestingProcessManager()
+mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
@@ -66,6 +69,8 @@ namespace
 mir::DisplayServer* volatile signal_display_server;
 }
 
+namespace mir
+{
 extern "C"
 {
 void (*signal_prev_fn)(int);
@@ -127,8 +132,9 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
         startup_pause();
     }
 }
+}
 
-void TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
+void mir::TestingProcessManager::launch_client_process(mir::TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -169,6 +175,8 @@ void TestingProcessManager::launch_client_process(TestingClientConfiguration& co
     }
 }
 
+namespace mir
+{
 void TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
@@ -194,8 +202,9 @@ void TestingProcessManager::tear_down_clients()
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
 }
+}
 
-void TestingProcessManager::tear_down_server()
+void mir::TestingProcessManager::tear_down_server()
 {
     if (is_test_process)
     {
@@ -209,12 +218,14 @@ void TestingProcessManager::tear_down_server()
     }
 }
 
-void TestingProcessManager::tear_down_all()
+void mir::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
 }
 
+namespace mir
+{
 bool detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)

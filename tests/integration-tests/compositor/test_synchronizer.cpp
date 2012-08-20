@@ -20,7 +20,7 @@
 
 namespace mt = mir::testing;
 
-namespace mir
+namespace
 {
 void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
     *data = 1;
@@ -28,7 +28,10 @@ void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
     *data = 2;
     synchronizer->child_enter_wait();
 }
+}
 
+namespace mir
+{
 TEST(Synchronizer, thread_stop_start) {
     int data = 0;
 
@@ -45,7 +48,10 @@ TEST(Synchronizer, thread_stop_start) {
 
     t1.join();
 }
+}
 
+namespace
+{
 void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
     bool wait_request;
     for(;;)
@@ -59,7 +65,10 @@ void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
         }
     }
 }
+}
 
+namespace mir
+{
 TEST(Synchronizer, thread_pause_req) {
     int data = 0, old_data = 0;
 
