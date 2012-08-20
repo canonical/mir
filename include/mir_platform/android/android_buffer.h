@@ -18,6 +18,7 @@
  */
 
 #include "mir/compositor/buffer.h"
+//#include "mir_platform/android/android_gralloc_adaptor.h"
 
 #include <hardware/gralloc.h>
 #include <stdexcept>
