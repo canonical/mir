@@ -75,8 +75,8 @@ struct ValidSurfaceState : public SurfaceState
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
 
-    ValidSurfaceState(std::string const& socketfile, int width, int height, int pix_format) :
-        channel(socketfile),
+    ValidSurfaceState(std::string const& socketfile, int width, int height, int pix_format, std::shared_ptr<Logger> const& log) :
+        channel(socketfile, log),
         display_server(&channel)
     {
         google_protobuf_guard();
@@ -127,8 +127,13 @@ c::Surface::Surface() :
 {
 }
 
-c::Surface::Surface(std::string const& socketfile, int width, int height, int pix_format) :
-    body(new detail::ValidSurfaceState(socketfile, width, height, pix_format))
+c::Surface::Surface(
+    std::string const& socketfile,
+    int width,
+    int height,
+    int pix_format,
+    std::shared_ptr<Logger> const& log) :
+    body(new detail::ValidSurfaceState(socketfile, width, height, pix_format, log))
 {
 }
 

@@ -21,11 +21,14 @@
 #define MIR_RPC_CHANNEL_H_
 
 #include "mir/thread/all.h"
+#include "mir_client/mir_logger.h"
 
 #include <boost/asio.hpp>
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
+
+#include <iosfwd>
 
 namespace mir
 {
@@ -45,6 +48,8 @@ namespace detail
 class PendingCallCache
 {
 public:
+    PendingCallCache(std::shared_ptr<Logger> const& log);
+
     void save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
         google::protobuf::Message* response,
@@ -68,13 +73,16 @@ private:
 
     std::mutex mutable mutex;
     std::map<int, PendingCall> pending_calls;
+    std::shared_ptr<Logger> const log;
 };
 }
 
 class MirRpcChannel : public google::protobuf::RpcChannel
 {
 public:
-    MirRpcChannel(std::string const& endpoint);
+    MirRpcChannel(
+        std::string const& endpoint,
+        std::shared_ptr<Logger> const& log);
 
 private:
     virtual void CallMethod(
@@ -84,6 +92,7 @@ private:
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
 
+    std::shared_ptr<Logger> log;
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;

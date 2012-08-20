@@ -79,6 +79,13 @@ struct NullDeleter
     }
 };
 
+class MockLogger : public mir::client::Logger
+{
+    virtual std::ostream& error()
+    {
+        return std::cerr;
+    }
+};
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
 {
@@ -112,7 +119,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     ProtobufAsioCommunicatorTestFixture() :
         factory(std::make_shared<MockIpcFactory>(collector)),
         comm(socket_name(), factory),
-        channel(socket_name()),
+        channel(socket_name(), std::make_shared<MockLogger>()),
         display_server(&channel)
     {
         connect_message.set_width(640);
@@ -213,7 +220,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
     struct Client
     {
         Client() :
-            channel(ProtobufAsioMultiClientCommunicatorTestFixture::socket_name()),
+            channel(ProtobufAsioMultiClientCommunicatorTestFixture::socket_name(), std::make_shared<MockLogger>()),
             display_server(&channel)
         {
             connect_message.set_width(640);
