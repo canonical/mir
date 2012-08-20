@@ -69,13 +69,9 @@ extern "C"
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    while (true)
-    {
-        if(signal_display_server)
-            break;
+    while (!signal_display_server)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
+ 
     signal_display_server->stop();
 }
 }

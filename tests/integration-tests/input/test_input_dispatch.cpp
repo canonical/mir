@@ -37,7 +37,6 @@ using mir::input::InputDispatchFixture;
 
 namespace
 {
-    //static mir::MockTimeSource time_source;
 static mir::Timestamp last_timestamp;
 
 bool is_weakly_ordered(mi::Event* e)

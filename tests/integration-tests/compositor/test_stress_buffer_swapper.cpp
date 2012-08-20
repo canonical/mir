@@ -39,7 +39,7 @@ struct ThreadFixture {
             std::function<void( std::shared_ptr<mt::SynchronizerSpawned>,
                             std::shared_ptr<mc::BufferSwapper>,
                             mc::Buffer** )> b)
-	: sleep_duration(50)
+        : sleep_duration(50)
     {
             geom::Width w {1024};
             geom::Height h {768};
@@ -85,7 +85,7 @@ struct ThreadFixture {
         std::chrono::microseconds sleep_duration;
 
     private:
-        /* thread objects must exist over lifetime of test */ 
+        /* thread objects must exist over lifetime of test */
         std::thread thread1;
         std::thread thread2;
 };
@@ -283,7 +283,7 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
         std::this_thread::yield();
 #else
         boost::this_thread::yield();
-#endif 
+#endif
     }
 
 }
