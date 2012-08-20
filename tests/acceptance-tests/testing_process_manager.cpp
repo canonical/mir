@@ -77,7 +77,7 @@ void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
     while (!signal_display_server)
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
  
     signal_display_server->stop();
 }
