@@ -18,12 +18,13 @@
  */
 
 #include "display_server_test_fixture.h"
-#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
+#include "mir/chrono/chrono.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/mir_logger.h"
 
 #include <cstdio>
 #include <functional>
@@ -135,9 +136,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-	  std::unique_lock<std::mutex> lock(counter.guard);
-            while (counter.session_count != 1)
-		std::wait_on_cv_for(counter.wait_condition, lock, std::chrono::milliseconds(100));
+            std::unique_lock<std::mutex> lock(counter.guard);
+            if (counter.session_count != 1)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(1, counter.session_count);
         }
         SessionCounter counter;
@@ -150,8 +151,11 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            auto log = std::make_shared<ConsoleLogger>();
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, log);
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -174,17 +178,11 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != 1)
-		std::wait_on_cv_for(
-				    counter.wait_condition,
-				    lock,
-				    std::chrono::milliseconds(100));
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(1, counter.session_count);
 
             if (counter.connected_sessions != 0)
-		std::wait_on_cv_for(
-				    counter.wait_condition,
-				    lock,
-				    std::chrono::milliseconds(100));
-
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
         }
         SessionCounter counter;
@@ -197,8 +195,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -225,14 +224,11 @@ TEST_F(BespokeDisplayServerTestFixture,
         {
             std::unique_lock<std::mutex> lock(counter.guard);
             if (counter.session_count != connections)
-		std::wait_on_cv_for(counter.wait_condition,
-				    lock,
-				    std::chrono::milliseconds(100));
-            if (counter.connected_sessions != 0)
-		std::wait_on_cv_for(counter.wait_condition,
-				    lock,
-				    std::chrono::milliseconds(100));
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+            ASSERT_EQ(connections, counter.session_count);
 
+            if (counter.connected_sessions != 0)
+                counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
             EXPECT_EQ(0, counter.connected_sessions);
         }
         SessionCounter counter;
@@ -246,8 +242,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
@@ -271,7 +268,7 @@ struct SessionCollector
 
     void on_session_state(std::shared_ptr<mf::Session> const& session, mf::SessionState)
     {
-      std::unique_lock<std::mutex> lock(guard);
+        std::unique_lock<std::mutex> lock(guard);
         sessions[session->id()] = session;
         wait_condition.notify_one();
     }
@@ -301,9 +298,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         void on_exit(mir::DisplayServer* )
         {
-	  std::unique_lock<std::mutex> lock(collector.guard);
+            std::unique_lock<std::mutex> lock(collector.guard);
             while (collector.sessions.size() != connections)
-		std::wait_on_cv_for(collector.wait_condition, lock, std::chrono::milliseconds(5));
+                collector.wait_condition.wait_for(lock, std::chrono::milliseconds(1));
             EXPECT_EQ(connections, collector.sessions.size());
 
             collector.sessions.clear();
@@ -337,6 +334,5 @@ TEST_F(BespokeDisplayServerTestFixture,
     for (std::size_t i = 0; i != connections; ++i)
         launch_client_process(client_config);
 }
-#endif // MIR_TODO
+#endif
 }
-

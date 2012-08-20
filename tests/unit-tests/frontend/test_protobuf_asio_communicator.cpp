@@ -21,8 +21,6 @@
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_rpc_channel.h"
 
-#include "mir/chrono/chrono.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -35,7 +33,6 @@ namespace mir
 {
 namespace
 {
-
 struct SessionCounter : mir::protobuf::DisplayServer
 {
     int session_count;
@@ -84,6 +81,13 @@ struct NullDeleter
     }
 };
 
+class MockLogger : public mir::client::Logger
+{
+    virtual std::ostream& error()
+    {
+        return std::cerr;
+    }
+};
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
 {
@@ -110,14 +114,14 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     static const std::string& socket_name()
     {
-        static const std::string socket_name{"./mir_test_pb_asio_socket"};
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
     ProtobufAsioCommunicatorTestFixture() :
         factory(std::make_shared<MockIpcFactory>(collector)),
         comm(socket_name(), factory),
-        channel(socket_name()),
+        channel(socket_name(), std::make_shared<MockLogger>()),
         display_server(&channel)
     {
         connect_message.set_width(640);
@@ -136,9 +140,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         for (int ntries = 20;
              ntries-- != 0 && collector.session_count != expected_count; )
         {
-            std::wait_on_cv_for(collector.wait_condition,
-                                ul,
-                                std::chrono::milliseconds(100));
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
         EXPECT_EQ(expected_count, collector.session_count);
     }
@@ -149,9 +151,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         for (int ntries = 20;
              ntries-- != 0 && collector.connected_sessions != expected_count; )
         {
-            std::wait_on_cv_for(collector.wait_condition,
-                                ul,
-                                std::chrono::milliseconds(50));
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
         EXPECT_EQ(expected_count, collector.connected_sessions);
     }
@@ -176,7 +176,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     static const std::string& socket_name()
     {
-        static const std::string socket_name{"./mir_test_pb_asio_socket"};
+        static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
     }
 
@@ -197,9 +197,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
         for (int ntries = 20;
              ntries-- != 0 && collector.session_count != expected_count; )
         {
-            std::wait_on_cv_for(collector.wait_condition,
-                                ul,
-                                std::chrono::milliseconds(50));
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
         EXPECT_EQ(expected_count, collector.session_count);
     }
@@ -210,9 +208,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
         for (int ntries = 20;
              ntries-- != 0 && collector.connected_sessions != expected_count; )
         {
-            std::wait_on_cv_for(collector.wait_condition,
-                                ul,
-                                std::chrono::milliseconds(50));
+            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
         }
         EXPECT_EQ(expected_count, collector.connected_sessions);
     }
@@ -226,8 +222,8 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
     struct Client
     {
         Client() :
-                channel(ProtobufAsioMultiClientCommunicatorTestFixture::socket_name()),
-                display_server(&channel)
+            channel(ProtobufAsioMultiClientCommunicatorTestFixture::socket_name(), std::make_shared<MockLogger>()),
+            display_server(&channel)
         {
             connect_message.set_width(640);
             connect_message.set_height(480);
@@ -373,5 +369,4 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
     expect_session_count(connection_count);
     expect_connected_session_count(0);
 }
-
 }

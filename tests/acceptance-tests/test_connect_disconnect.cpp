@@ -21,6 +21,7 @@
 #include "display_server_test_fixture.h"
 
 #include "mir_client/mir_surface.h"
+#include "mir_client/mir_logger.h"
 
 #include <gtest/gtest.h>
 
@@ -32,13 +33,15 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
             // Default surface is not connected
             Surface mysurface;
             EXPECT_FALSE(mysurface.is_valid());
 
             // connect surface
-            EXPECT_NO_THROW(mysurface = Surface(mir::test_socket_file(), 640, 480, 0));
+            EXPECT_NO_THROW(mysurface =
+                Surface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>()));
             EXPECT_TRUE(mysurface.is_valid());
 
             // disconnect surface
@@ -65,8 +68,9 @@ TEST_F(BespokeDisplayServerTestFixture,
         void exec()
         {
             using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;

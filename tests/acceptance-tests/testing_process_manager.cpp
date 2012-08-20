@@ -186,7 +186,7 @@ void TestingProcessManager::tear_down_clients()
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             auto result((*client)->wait_for_termination());
-            EXPECT_TRUE(result.succeeded()) << "result=" << result;
+            EXPECT_TRUE(result.succeeded()) << "client terminate error=" << result;
         }
 
         clients.clear();
