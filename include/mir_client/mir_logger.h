@@ -17,47 +17,33 @@
  */
 
 
-#ifndef MIR_SURFACE_H_
-#define MIR_SURFACE_H_
+#ifndef MIR_LOGGER_H_
+#define MIR_LOGGER_H_
 
-#include <string>
-#include <memory>
+#include <iosfwd>
 
 namespace mir
 {
 namespace client
 {
-namespace detail
-{
-struct SurfaceState;
-}
-class Logger;
-
-class Surface
+class Logger
 {
 public:
-    Surface();
-    Surface(
-        std::string const& socketfile,
-        int width,
-        int height,
-        int pix_format,
-        std::shared_ptr<Logger> const& log);
-
-    ~Surface();
-
-    bool is_valid() const;
-
-    Surface(Surface&& that);
-
-    Surface& operator=(Surface&& that);
-
-private:
-    detail::SurfaceState* body;
-    Surface(Surface const&) = delete;
-    Surface& operator=(Surface const&) = delete;
+    virtual std::ostream& error() = 0;
+protected:
+    Logger() {}
+    virtual ~Logger() {}
+    Logger(Logger const&) = delete;
+    Logger& operator=(Logger const&) = delete;
 };
+
+class ConsoleLogger : public Logger
+{
+public:
+    virtual std::ostream& error();
+};
+
 }
 }
 
-#endif /* MIR_SURFACE_H_ */
+#endif /* MIR_LOGGER_H_ */

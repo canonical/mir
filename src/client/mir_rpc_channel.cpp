@@ -26,6 +26,10 @@
 namespace c = mir::client;
 namespace cd = mir::client::detail;
 
+cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
+    log(log)
+{
+}
 
 void cd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
@@ -42,7 +46,7 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
     auto call = pending_calls.find(result.id());
     if (call == pending_calls.end())
     {
-        std::cerr << "ERROR orphaned result: " << result.ShortDebugString() << std::endl;
+        log->error() << "ERROR orphaned result: " << result.ShortDebugString() << std::endl;
     }
     else
     {
@@ -54,8 +58,8 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 }
 
 
-c::MirRpcChannel::MirRpcChannel(std::string const& endpoint)
-: next_message_id(0), endpoint(endpoint), socket(io_service)
+c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
+    log(log), next_message_id(0), pending_calls(log), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
 }
@@ -120,7 +124,7 @@ void c::MirRpcChannel::send_message(const std::string& body)
     boost::system::error_code error;
     boost::asio::write(socket, boost::asio::buffer(message), error);
     if (error)
-        std::cerr << "ERROR: " << error.message() << std::endl;
+        log->error() << "ERROR: " << error.message() << std::endl;
 }
 
 
@@ -139,7 +143,7 @@ size_t c::MirRpcChannel::read_message_header()
     boost::system::error_code error;
     boost::asio::read(socket, boost::asio::buffer(header_bytes), boost::asio::transfer_exactly(sizeof header_bytes), error);
     if (error)
-        std::cerr << "ERROR: " << error.message() << std::endl;
+        log->error() << "ERROR: " << error.message() << std::endl;
 
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
@@ -151,7 +155,7 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
     boost::asio::streambuf message;
     boost::asio::read(socket, message, boost::asio::transfer_at_least(body_size), error);
     if (error)
-        std::cerr << "ERROR: " << error.message() << std::endl;
+        log->error() << "ERROR: " << error.message() << std::endl;
 
     std::istream in(&message);
     mir::protobuf::wire::Result result;
@@ -163,3 +167,7 @@ void c::done()
 {
 }
 
+std::ostream& c::ConsoleLogger::error()
+{
+    return std::cerr;
+}
