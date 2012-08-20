@@ -70,7 +70,6 @@ struct MockAllocDevice : public AllocDevice,
     MOCK_METHOD2(mock_free,  int(alloc_device_t*, buffer_handle_t)); 
     MOCK_METHOD3(mock_dump, void(alloc_device_t*, char*, int));
 
-
 };
 
 TEST(AndroidGraphicsBuffer, struct_mock) 
@@ -90,10 +89,17 @@ TEST(AndroidGraphicsBuffer, creation)
     struct alloc_device_t* mock_alloc_device_struct = &mock_alloc_device;
 
     unsigned int w = 300, h = 200;
+    buffer_handle_t dummy_handle;
 
+    /* todo: get rid of magic numbers, figure out which android headers have these values */
     EXPECT_CALL(mock_alloc_device, mock_alloc(&mock_alloc_device, w, h,
-                                              4, 0x300, _, _ )); /* todo: get rid of magic numbers, figure out which android headers have these values */
-//    EXPECT_CALL(mock_alloc_device, mock_free(&mock_alloc, NULL));
+                                             4, 0x300, _, _ ))
+                .WillOnce(DoAll(
+                            SetArgPointee<5>(dummy_handle),
+                            SetArgPointee<6>(w*4),
+                            Return(0)));
+
+    EXPECT_CALL(mock_alloc_device, mock_free(&mock_alloc_device, dummy_handle));
 
     mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device_struct, geom::Width(w), geom::Height(h), mc::PixelFormat::rgba_8888);
 
