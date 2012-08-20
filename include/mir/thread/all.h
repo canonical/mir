@@ -45,9 +45,30 @@ namespace mir
 namespace std
 {
 using namespace ::std;
-using ::boost::unique_future;
-#define future unique_future
 using ::boost::thread;
+
+template <typename R>
+class future : ::boost::unique_future<R> {
+public:
+    future() : ::boost::unique_future<R>() { }
+    future(future&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future(::boost::unique_future<R>&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future& operator=(future&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+    future& operator=(::boost::unique_future<R>&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+
+    using ::boost::unique_future<R>::wait;
+    using ::boost::unique_future<R>::get;
+    using ::boost::unique_future<R>::get_state;
+    using ::boost::unique_future<R>::is_ready;
+    using ::boost::unique_future<R>::has_exception;
+    using ::boost::unique_future<R>::has_value;
+
+    template<typename Duration>
+    bool wait_for(Duration const& rel_time) const
+    {
+        return ::boost::unique_future<R>::timed_wait(rel_time);
+    }
+};
 
 enum class launch
 {
@@ -70,6 +91,12 @@ inline bool atomic_compare_exchange_weak(atomic<UnderlyingType*>* target, Underl
 {
     return atomic_compare_exchange_weak(target, (void**)compare, next_state);
 }
+
+//class condition_variable : public ::boost::condition_variable
+//{
+//public:
+//    using ::boost::condition_variable::wait;
+//};
 
 namespace cv_status
 {
