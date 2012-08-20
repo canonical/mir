@@ -94,6 +94,12 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     {
         dummy_handle = &native_handle;
         mock_alloc_device = new MockAllocDevice(dummy_handle);
+
+        /* set up common defaults */
+        pf = mc::PixelFormat::rgba_8888;
+        width = geom::Width(300);
+        height = geom::Height(200);
+
     }
 
     virtual void TearDown()
@@ -104,7 +110,11 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     native_handle_t native_handle;
     buffer_handle_t dummy_handle;
     MockAllocDevice *mock_alloc_device;
+    mc::PixelFormat pf;
+    geom::Width width;
+    geom::Height height;
 };
+
 
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
@@ -112,22 +122,70 @@ TEST_F(AndroidGraphicBufferBasic, struct_mock)
     mock_alloc_device->free(mock_alloc_device,NULL);
 }
 
-TEST_F(AndroidGraphicBufferBasic, creation_test) 
+/* tests correct allocation type */
+TEST_F(AndroidGraphicBufferBasic, resource_test) 
 {
     using namespace testing;
-    unsigned int w = 300, h = 200;
 
-    EXPECT_CALL(*mock_alloc_device, mock_alloc(mock_alloc_device, w, h,
-                                         HAL_PIXEL_FORMAT_RGBA_8888,
+    EXPECT_CALL(*mock_alloc_device, mock_alloc(mock_alloc_device, _, _, _,
                                          (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
                                           _, _ ));
     EXPECT_CALL(*mock_alloc_device, mock_free(mock_alloc_device, dummy_handle));
 
-    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device,
-                                        geom::Width(w), geom::Height(h), mc::PixelFormat::rgba_8888);
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, width, height, pf);
 
     EXPECT_NE((int)buffer, NULL);
 
     delete buffer;
 }
 
+TEST_F(AndroidGraphicBufferBasic, dimensions_gralloc_conversion) 
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, mock_alloc(_,
+                                 (int)width.as_uint32_t(), (int)height.as_uint32_t(),
+                                  _, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, mock_free(_,_));
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, width, height, pf);
+
+    EXPECT_EQ(width, buffer->width());
+    EXPECT_EQ(height, buffer->height());
+    delete buffer;
+}
+
+TEST_F(AndroidGraphicBufferBasic, format_test_8888_gralloc_conversion) 
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, mock_alloc(_, _, _, HAL_PIXEL_FORMAT_RGBA_8888, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, mock_free(_,_));
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, width, height, pf);
+
+    delete buffer;
+}
+
+TEST_F(AndroidGraphicBufferBasic, dimensions_echo) 
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, mock_alloc(_, _, _, _, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, mock_free(_,_));
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, width, height, pf);
+
+    EXPECT_EQ(width, buffer->width());
+    EXPECT_EQ(height, buffer->height());
+    delete buffer;
+}
+
+TEST_F(AndroidGraphicBufferBasic, format_echo_test)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, mock_alloc(_, _, _, _, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, mock_free(_,_));
+    mc::Buffer* buffer = new mg::AndroidBuffer(mock_alloc_device, width, height, pf);
+
+    EXPECT_EQ(buffer->pixel_format(), pf);
+    delete buffer;
+}
