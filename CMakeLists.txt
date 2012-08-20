@@ -33,7 +33,7 @@ project(
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -pedantic -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
@@ -58,7 +58,7 @@ enable_testing()
 include_directories(include/)
 
 # Check for boost
-find_package(Boost 1.48 COMPONENTS chrono filesystem system thread REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
@@ -71,14 +71,16 @@ INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(src/)
 
-find_package (Threads REQUIRED)
-
 # Pulling in local gmock version
 # While this seems evil, we are doing
 # it to ensure/allow for:
 #   (1.) a matching gmock/gtest version
 #   (2.) a stream-lined cross-compilation workflow
-set(GTEST_INCLUDE_DIR gmock-1.6.0/src)
+set(
+  GTEST_INCLUDE_DIR 
+
+  gmock-1.6.0/include
+  gmock-1.6.0/gtest/include)
 
 add_subdirectory(gmock-1.6.0/)
 set(GMOCK_LIBRARY gmock)

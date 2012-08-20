@@ -20,6 +20,8 @@
 
 namespace mt = mir::testing;
 
+namespace mir
+{
 void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
     *data = 1;
     synchronizer->child_enter_wait();
@@ -78,4 +80,5 @@ TEST(Synchronizer, thread_pause_req) {
     synchronizer.activate_waiting_child();
 
     t1.join();
+}
 }

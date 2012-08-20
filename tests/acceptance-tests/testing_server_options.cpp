@@ -173,7 +173,7 @@ mir::TestingServerConfiguration::make_communicator(
 
 std::string const& mir::test_socket_file()
 {
-    static const std::string socket_file{"/tmp/mir_socket_test"};
+    static const std::string socket_file{"./mir_socket_test"};
     return socket_file;
 }
 

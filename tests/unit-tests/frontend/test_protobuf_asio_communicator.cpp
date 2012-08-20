@@ -29,6 +29,8 @@
 
 namespace mf = mir::frontend;
 
+namespace mir
+{
 namespace
 {
 struct SessionCounter : mir::protobuf::DisplayServer
@@ -367,4 +369,4 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
     expect_session_count(connection_count);
     expect_connected_session_count(0);
 }
-
+}

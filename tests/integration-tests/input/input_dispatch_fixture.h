@@ -19,6 +19,7 @@
 #ifndef MIR_INPUT_DISPATCH_FIXTURE_H
 #define MIR_INPUT_DISPATCH_FIXTURE_H
 
+#include "mir/chrono/chrono.h"
 #include "mir/input/dispatcher.h"
 #include "mir/input/grab_filter.h"
 #include "mir/input/shell_filter.h"
@@ -41,14 +42,15 @@ class MockTimeSource : public mir::TimeSource
     {
         using namespace ::testing;
 
-        ON_CALL(*this, sample()).WillByDefault(Invoke(this, &MockTimeSource::sample_hrc));
+        ON_CALL(*this, sample()).WillByDefault(InvokeWithoutArgs(MockTimeSource::sample_hrc));
         EXPECT_CALL(*this, sample()).Times(AtLeast(0));
     }
-    MOCK_CONST_METHOD0(sample, mir::Timestamp());
 
-    mir::Timestamp sample_hrc() const
+    MOCK_CONST_METHOD0(sample, mir::Timestamp ());
+
+    static mir::Timestamp sample_hrc()
     {
-        return boost::chrono::high_resolution_clock::now();
+        return std::chrono::high_resolution_clock::now();
     }
 };
 
@@ -62,10 +64,10 @@ class MockFilter : public T
     MockFilter()
     {
         using namespace testing;
-        
+
         ON_CALL(*this, accept(_)).WillByDefault(Invoke(this, &MockFilter::forward_accept));
     }
-    
+
     template<typename... Types>
     MockFilter(Types&&... args) : T(std::forward<Types>(args)...)
     {
@@ -83,16 +85,16 @@ class InputDispatchFixture : public ::testing::Test
 {
  public:
     InputDispatchFixture()
-		: mock_null_filter(new MockFilter<NullFilter>()),
-		  mock_app_filter(new MockFilter<ApplicationFilter>(mock_null_filter)),
-		  mock_shell_filter(new MockFilter<ShellFilter>(mock_app_filter)),
-		  mock_grab_filter(new MockFilter<GrabFilter>(mock_shell_filter)),
-		  dispatcher(&time_source, mock_grab_filter)
+                : mock_null_filter(new MockFilter<NullFilter>()),
+                  mock_app_filter(new MockFilter<ApplicationFilter>(mock_null_filter)),
+                  mock_shell_filter(new MockFilter<ShellFilter>(mock_app_filter)),
+                  mock_grab_filter(new MockFilter<GrabFilter>(mock_shell_filter)),
+                  dispatcher(&time_source, mock_grab_filter)
     {
         mir::Timestamp ts;
         ::testing::DefaultValue<mir::Timestamp>::Set(ts);
     }
-    
+
     ~InputDispatchFixture()
     {
         ::testing::DefaultValue<mir::Timestamp>::Clear();

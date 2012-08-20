@@ -135,6 +135,7 @@ TEST(
     EXPECT_FALSE(stack.try_lock());
     stack.unlock();
     EXPECT_TRUE(stack.try_lock());
+    stack.unlock();
 }
 
 TEST(
@@ -155,7 +156,7 @@ TEST(
         EXPECT_FALSE(stack.try_lock());
     }
     EXPECT_TRUE(stack.try_lock());
- 
+    stack.unlock();
 }
 
 TEST(

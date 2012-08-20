@@ -20,12 +20,12 @@
 #include "display_server_test_fixture.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
+#include "mir/chrono/chrono.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_logger.h"
 
-#include <chrono>
 #include <cstdio>
 #include <functional>
 #include <string>
@@ -36,6 +36,8 @@
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
+namespace mir
+{
 namespace
 {
 struct SessionCounter : mir::protobuf::DisplayServer
@@ -333,3 +335,4 @@ TEST_F(BespokeDisplayServerTestFixture,
         launch_client_process(client_config);
 }
 #endif
+}
