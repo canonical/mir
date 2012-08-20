@@ -16,4 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
+#define MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
+
 #include "mir/graphics/display.h"
+
+#endif /* MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_ */
