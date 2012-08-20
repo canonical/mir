@@ -261,6 +261,8 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
     }
 }
 
+namespace mir
+{
 void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -277,14 +279,13 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
 
-#ifndef MIR_USING_BOOST_THREADS
         std::this_thread::yield();
-#else
-        boost::this_thread::yield();
-#endif 
     }
 
 }
+}
+
+using mir::compositor_grab_loop_with_wait;
 
 /* test normal situation, with moderate amount of waits */
 TEST(buffer_swapper_double_stress, test_last_posted)
