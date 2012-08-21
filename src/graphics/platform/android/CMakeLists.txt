@@ -14,17 +14,17 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-add_library(
-    mirplatformgraphics STATIC
-
-    buffer_allocator.cpp
-    android_buffer.cpp
-    android_alloc_adaptor.cpp
+add_library( 
+  mirplatformgraphics STATIC
+  
+  buffer_allocator.cpp
+  android_buffer.cpp
+  android_alloc_adaptor.cpp
 )
 
 #add a findhardware here
 target_link_libraries(
-    mirplatformgraphics
+  mirplatformgraphics
 
-    hardware
+  hardware
 )
