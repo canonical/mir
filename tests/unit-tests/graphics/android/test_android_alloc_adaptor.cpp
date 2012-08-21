@@ -224,3 +224,10 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
                      (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 } 
+
+TEST_F(AdaptorICSTest, free_test)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    alloc_adaptor->free_buffer(buffer_data);
+}

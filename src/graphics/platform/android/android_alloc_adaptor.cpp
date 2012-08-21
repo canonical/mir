@@ -19,6 +19,7 @@
 
 #include "mir_platform/android/android_alloc_adaptor.h"
 #include <stdexcept>
+
 namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
@@ -41,7 +42,6 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride& stride, ge
 
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage_flag, &buf_handle, &stride_as_int);
-printf("STRIDE IS %i\n", stride_as_int);
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
         return false;
 
