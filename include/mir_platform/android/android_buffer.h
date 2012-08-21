@@ -57,8 +57,6 @@ public:
     Texture* bind_to_texture();
 
 private:
-    int convert_to_android_format(mc::PixelFormat);
-
     const geom::Width  buffer_width;
     const geom::Height buffer_height;
     const mc::PixelFormat buffer_format;

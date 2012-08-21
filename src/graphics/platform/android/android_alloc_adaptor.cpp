@@ -20,6 +20,7 @@
 #include "mir_platform/android/android_alloc_adaptor.h"
 #include <stdexcept>
 namespace mg=mir::graphics;
+namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
@@ -29,15 +30,20 @@ alloc_dev(alloc_device)
 }
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Width width, geom::Height height,
-                                          compositor::PixelFormat, BufferUsage)
+                                          compositor::PixelFormat pf, BufferUsage)
 {
-    int ret;
     int stride;
     buffer_handle_t buf_handle;
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), 0,0, &buf_handle, &stride);
+
+    int ret;
+    int format = convert_to_android_format(pf);
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format,0x300, &buf_handle, &stride);
+
+    printf("alloc: %i, %X, %i\n", ret,(int) buf_handle, stride);
     if (( ret ) || (buf_handle == NULL) || (stride == 0))
         return false;
 
+    printf("ALLOC SUCCESS\n");
     return true;
 }
 
@@ -50,3 +56,15 @@ bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
 {
     return false;
 }
+
+int mg::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
+{
+    switch (pf)
+    {
+        case mc::PixelFormat::rgba_8888:
+            return HAL_PIXEL_FORMAT_RGBA_8888;
+        default:
+            return -1;
+    }
+}
+

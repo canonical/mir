@@ -39,28 +39,15 @@ alloc_device(alloc_dev)
     ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
                         buffer_width, buffer_height,
                         buffer_format, usage);
-
-    if (ret == 0)
+    if (ret)
         return;
-    else
-        throw std::runtime_error("Graphics buffer allocation failed");
+
+    throw std::runtime_error("Graphics buffer allocation failed");
 }
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
     alloc_device->free_buffer(android_handle);
-}
-
-int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)
-{
-    switch (pf)
-    {
-        case mc::PixelFormat::rgba_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888;
-        default:
-            /* will cause gralloc to error, exception thrown */
-            return -1;
-    }
 }
 
 geom::Width mg::AndroidBuffer::width() const

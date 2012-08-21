@@ -40,6 +40,9 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         using namespace testing;
 
         buffer_handle = buf_handle;
+
+        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
+            .WillByDefault(Return(true));
     }
     MOCK_METHOD6(alloc_buffer, bool(BufferData&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
 
