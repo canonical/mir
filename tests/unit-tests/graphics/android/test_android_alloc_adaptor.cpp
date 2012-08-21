@@ -178,7 +178,8 @@ TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
 
-    geom::Stride saved_stride = stride;
+    geom::Stride saved_stride(0);
+    stride = geom::Stride(0);
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
     EXPECT_NE(saved_stride, stride );
 }
