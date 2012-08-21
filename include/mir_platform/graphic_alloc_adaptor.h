@@ -42,7 +42,6 @@ public:
                              geometry::Width, geometry::Height,
                              compositor::PixelFormat, BufferUsage usage) = 0;
     virtual bool inspect_buffer(char *buf, int buf_len) = 0;
-    virtual bool free_buffer(BufferData handle) = 0;
 };
 
 }

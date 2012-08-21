@@ -44,7 +44,6 @@ public:
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);
     bool inspect_buffer(char *buf, int buf_len);
-    bool free_buffer(BufferData handle);
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;

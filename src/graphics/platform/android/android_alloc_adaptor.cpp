@@ -66,14 +66,6 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferData>& handle, 
     return true;
 }
 
-bool mg::AndroidAllocAdaptor::free_buffer(BufferData)
-{
-//    int ret = alloc_dev->free(alloc_dev.get(), data);
-//    if (ret == 0) 
-//        return true;
-    return false;
-}
-
 bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
 {
     return false;

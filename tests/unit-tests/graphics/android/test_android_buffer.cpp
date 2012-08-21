@@ -49,7 +49,6 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
     
     private:
-    MOCK_METHOD1(free_buffer,  bool(BufferData));
 
     BufferData buffer_handle;
     int w;
