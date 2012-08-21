@@ -30,7 +30,7 @@ alloc_dev(alloc_device)
 }
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Width width, geom::Height height,
-                                          compositor::PixelFormat pf, BufferUsage)
+                                          compositor::PixelFormat pf, BufferUsage usage)
 {
     int stride;
     buffer_handle_t buf_handle;
@@ -39,8 +39,8 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Wid
     int format = convert_to_android_format(pf);
 
 
-    int usage = convert_to_android_usage(usage);
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage, &buf_handle, &stride);
+    int usage_flag = convert_to_android_usage(usage);
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage_flag, &buf_handle, &stride);
 
     if (( ret ) || (buf_handle == NULL) || (stride == 0))
         return false;
@@ -56,6 +56,18 @@ bool mg::AndroidAllocAdaptor::free_buffer(BufferData)
 bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
 {
     return false;
+}
+
+int mg::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
+{
+    switch (usage)
+    {
+        case mg::BufferUsage::use_hardware:
+            return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+        case mg::BufferUsage::use_software:
+        default:
+            return -1;
+    }
 }
 
 int mg::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
