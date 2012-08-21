@@ -167,6 +167,7 @@ TEST_F(AdaptorICSTest, resource_type_test_success_ret)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     bool ret = alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
     EXPECT_TRUE(ret);
@@ -177,6 +178,7 @@ TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     geom::Stride saved_stride(0);
     stride = geom::Stride(0);
@@ -203,6 +205,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, HAL_PIXEL_FORMAT_RGBA_8888, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 }
@@ -213,6 +216,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
     int w = (int) width.as_uint32_t(); 
     int h = (int) height.as_uint32_t(); 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, w, h, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 } 
@@ -222,23 +226,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _,
                      (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 } 
-
-TEST_F(AdaptorICSTest, free_test_success)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
-    bool ret = alloc_adaptor->free_buffer(buffer_data);
-    EXPECT_TRUE(ret);
-}
-
-TEST_F(AdaptorICSTest, free_test_failure)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_alloc_device, free_interface( _, _ ) )
-                .WillOnce(Return(-1));
-    bool ret = alloc_adaptor->free_buffer(buffer_data);
-    EXPECT_FALSE(ret);
-}
 

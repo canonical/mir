@@ -33,13 +33,11 @@ alloc_dev(alloc_device)
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride& stride, geom::Width width, geom::Height height,
                                           compositor::PixelFormat pf, BufferUsage usage)
 {
-    int stride_as_int;
+    /* todo: to go away */
     buffer_handle_t buf_handle;
 
-    int ret;
+    int ret, stride_as_int;
     int format = convert_to_android_format(pf);
-
-
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage_flag, &buf_handle, &stride_as_int);
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
@@ -51,6 +49,9 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride& stride, ge
 
 bool mg::AndroidAllocAdaptor::free_buffer(BufferData)
 {
+//    int ret = alloc_dev->free(alloc_dev.get(), data);
+//    if (ret == 0) 
+//        return true;
     return false;
 }
 
