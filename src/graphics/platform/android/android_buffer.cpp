@@ -39,7 +39,6 @@ alloc_device(alloc_dev)
     usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
 #if 0
     ret = alloc_device->alloc_buffer(
-                        /* alloc_device is guaranteed by C library to remain same */
                         const_cast<struct alloc_device_t*> (alloc_device.get()),
                         (int) buffer_width.as_uint32_t(),
                         (int) buffer_height.as_uint32_t(),

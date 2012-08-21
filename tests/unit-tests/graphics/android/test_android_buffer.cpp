@@ -44,7 +44,6 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         alloc = hook_alloc;
         free = hook_free;
         dump = hook_dump;
-#endif
         ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
                 .WillByDefault(DoAll(
                             SaveArg<0>(&w),
@@ -53,6 +52,7 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
                             Return(0)));
         ON_CALL(*this, free_buffer(_))
                 .WillByDefault(Return(0));
+#endif
     }
 #if 0
     static int hook_alloc(alloc_device_t* mock_alloc,
@@ -75,7 +75,7 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         mocker->inspect_buffer(mock_alloc, buf, buf_len);
     }
 #endif
-    MOCK_METHOD6(alloc_buffer, int(int, int, int, int, BufferData*, int*) );
+    MOCK_METHOD6(alloc_buffer, int(geometry::Width, geometry::Height, compositor::PixelFormat, int, BufferData*, geometry::Stride*));
 
     MOCK_METHOD1(free_buffer,  int(BufferData)); 
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
@@ -123,7 +123,7 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer(_, _, _,
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _,
                                          (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
                                           _, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
@@ -138,7 +138,7 @@ TEST_F(AndroidGraphicBufferBasic, dimensions_gralloc_conversion)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer(
-                                 (int)width.as_uint32_t(), (int)height.as_uint32_t(),
+                                 width, height,
                                   _, _ , _, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
@@ -151,7 +151,7 @@ TEST_F(AndroidGraphicBufferBasic, format_test_8888_gralloc_conversion)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, HAL_PIXEL_FORMAT_RGBA_8888, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, pf, _ , _, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
