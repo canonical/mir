@@ -30,8 +30,18 @@ mg::AndroidAllocAdaptor::AndroidAllocAdaptor(const hw_module_t* module)
     }
 }
 
-int mg::AndroidAllocAdaptor::alloc_buffer(geometry::Width, geometry::Height, compositor::PixelFormat, int, BufferData*, geometry::Stride*)
-{ return 0;}
+int mg::AndroidAllocAdaptor::alloc_buffer(geometry::Width, geometry::Height,
+                                          compositor::PixelFormat, int, BufferData*, geometry::Stride*)
+{
+    return 0;
+}
+
 int mg::AndroidAllocAdaptor::free_buffer(BufferData)
-{ return 0;}
-bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int) {return false;}
+{
+    return 0;
+}
+
+bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
+{
+    return false;
+}
