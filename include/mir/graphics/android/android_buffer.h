@@ -39,8 +39,8 @@ namespace graphics
 class AndroidBuffer: public mc::Buffer
 {
 public:
-    AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
-    ~AndroidBuffer(); 
+    AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf);
+    ~AndroidBuffer();
 
     geom::Width width() const;
 

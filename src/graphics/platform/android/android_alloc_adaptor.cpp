@@ -25,28 +25,28 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
- :
-alloc_dev(alloc_device)
-{ 
+    :
+    alloc_dev(alloc_device)
+{
 }
 
 struct BufferHandleDeleter
 {
     BufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
-     : alloc_device(alloc_dev)
+        : alloc_device(alloc_dev)
     {}
 
-    void operator()(mg::AndroidBufferHandle* t) 
+    void operator()(mg::AndroidBufferHandle* t)
     {
         alloc_device->free(alloc_device.get(), t->handle);
-        delete t; 
+        delete t;
     }
-    private:
-        std::shared_ptr<alloc_device_t> alloc_device;
+private:
+    std::shared_ptr<alloc_device_t> alloc_device;
 };
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride, geom::Width width, geom::Height height,
-                                          compositor::PixelFormat pf, BufferUsage usage)
+        compositor::PixelFormat pf, BufferUsage usage)
 {
     /* todo: to go away */
     buffer_handle_t buf_handle;
@@ -75,11 +75,11 @@ int mg::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
     switch (usage)
     {
-        case mg::BufferUsage::use_hardware:
-            return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
-        case mg::BufferUsage::use_software:
-        default:
-            return -1;
+    case mg::BufferUsage::use_hardware:
+        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+    case mg::BufferUsage::use_software:
+    default:
+        return -1;
     }
 }
 
@@ -87,10 +87,10 @@ int mg::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
 {
     switch (pf)
     {
-        case mc::PixelFormat::rgba_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888;
-        default:
-            return -1;
+    case mc::PixelFormat::rgba_8888:
+        return HAL_PIXEL_FORMAT_RGBA_8888;
+    default:
+        return -1;
     }
 }
 

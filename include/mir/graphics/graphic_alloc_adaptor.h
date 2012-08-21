@@ -35,12 +35,12 @@ enum class BufferUsage : uint32_t
 
 class BufferHandle {};
 
-class GraphicAllocAdaptor 
+class GraphicAllocAdaptor
 {
 public:
     virtual bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
-                             geometry::Width, geometry::Height,
-                             compositor::PixelFormat, BufferUsage usage) = 0;
+                              geometry::Width, geometry::Height,
+                              compositor::PixelFormat, BufferUsage usage) = 0;
     virtual bool inspect_buffer(char *buf, int buf_len) = 0;
 };
 

@@ -31,12 +31,12 @@ class AndroidBufferHandle: public BufferHandle
 {
 public:
     AndroidBufferHandle(buffer_handle_t han)
-     :handle(han)
+        :handle(han)
     {}
     buffer_handle_t handle;
 };
 
-class AndroidAllocAdaptor : public GraphicAllocAdaptor 
+class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);

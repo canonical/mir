@@ -33,8 +33,8 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
     err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (err < 0)
         throw std::runtime_error("Could not open hardware module");
-  
-    struct alloc_device_t* alloc_dev;  
+
+    struct alloc_device_t* alloc_dev;
     err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
     if (err < 0)
         throw std::runtime_error("Could not open hardware module");
@@ -47,7 +47,7 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
 }
 
 std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
-   geom::Width width, geom::Height height, mc::PixelFormat pf)
+    geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
     return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
 }

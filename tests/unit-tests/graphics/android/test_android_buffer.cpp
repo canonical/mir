@@ -32,9 +32,9 @@ namespace mir
 namespace graphics
 {
 class MockAllocAdaptor : public GraphicAllocAdaptor,
-                         public alloc_device_t 
+    public alloc_device_t
 {
-    public:
+public:
     MockAllocAdaptor(BufferHandle buf_handle)
     {
         using namespace testing;
@@ -42,24 +42,24 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         buffer_handle = buf_handle;
 
         ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
-            .WillByDefault(Return(true));
+        .WillByDefault(Return(true));
     }
 
     MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferHandle>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
-    
-    private:
+
+private:
 
     BufferHandle buffer_handle;
     int w;
-        
+
 };
 }
 }
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {
-    protected:
+protected:
     virtual void SetUp()
     {
         mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor(dummy_handle));
@@ -80,7 +80,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 };
 
 
-TEST_F(AndroidGraphicBufferBasic, basic_allocation_is_non_null) 
+TEST_F(AndroidGraphicBufferBasic, basic_allocation_is_non_null)
 {
     using namespace testing;
 
@@ -91,7 +91,7 @@ TEST_F(AndroidGraphicBufferBasic, basic_allocation_is_non_null)
     EXPECT_NE((int)buffer.get(), NULL);
 }
 
-TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default) 
+TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
 {
     using namespace testing;
 
@@ -100,7 +100,7 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 }
 
-TEST_F(AndroidGraphicBufferBasic, dimensions_test) 
+TEST_F(AndroidGraphicBufferBasic, dimensions_test)
 {
     using namespace testing;
 
@@ -111,7 +111,7 @@ TEST_F(AndroidGraphicBufferBasic, dimensions_test)
     EXPECT_EQ(height, buffer->height());
 }
 
-TEST_F(AndroidGraphicBufferBasic, format_passthrough_test) 
+TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
 {
     using namespace testing;
 
