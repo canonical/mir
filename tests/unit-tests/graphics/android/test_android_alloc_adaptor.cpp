@@ -162,7 +162,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_nullptr)
     EXPECT_FALSE(ret);
 }
 
-TEST_F(AdaptorICSTest, resource_type_test_success) 
+TEST_F(AdaptorICSTest, resource_type_test_success_ret) 
 {
     using namespace testing;
 
@@ -170,6 +170,17 @@ TEST_F(AdaptorICSTest, resource_type_test_success)
 
     bool ret = alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
     EXPECT_TRUE(ret);
+}
+
+TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set) 
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+
+    geom::Stride saved_stride = stride;
+    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+    EXPECT_NE(saved_stride, stride );
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888) 
@@ -198,61 +209,3 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
                      (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 } 
-#if 0
-
-TEST_F(AdaptorICSTest, dimensions_test) 
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, width, height, _, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
-
-    EXPECT_EQ(width, buffer->width());
-    EXPECT_EQ(height, buffer->height());
-}
-
-TEST_F(AdaptorICSTest, format_passthrough_test) 
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, pf, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
-
-}
-
-TEST_F(AdaptorICSTest, format_echo_test)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _ , _, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
-
-    EXPECT_EQ(buffer->pixel_format(), pf);
-
-}
-
-TEST_F(AndroidGraphicBufferBasic, struct_mock) 
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
-    mock_alloc_device->free_buffer( dummy_handle);
-}
-
-
-/* dimension conversion test */
-TEST_F(AndroidGraphicBufferBasic, dimensions_echo) 
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _ , _, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
-
-    EXPECT_EQ(width, buffer->width());
-    EXPECT_EQ(height, buffer->height());
-
-}
-#endif
