@@ -35,7 +35,7 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
                          public alloc_device_t 
 {
     public:
-    MockAllocAdaptor(buffer_handle_t buf_handle)
+    MockAllocAdaptor(BufferData buf_handle)
     {
         using namespace testing;
 
@@ -75,13 +75,13 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         mocker->inspect_buffer(mock_alloc, buf, buf_len);
     }
 #endif
-    MOCK_METHOD6(alloc_buffer, int(int, int, int, int, buffer_handle_t*, int*) );
+    MOCK_METHOD6(alloc_buffer, int(int, int, int, int, BufferData*, int*) );
 
-    MOCK_METHOD1(free_buffer,  int(buffer_handle_t)); 
+    MOCK_METHOD1(free_buffer,  int(BufferData)); 
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
     
     private:
-    buffer_handle_t buffer_handle;
+    BufferData buffer_handle;
     int w;
         
 };
@@ -93,7 +93,6 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     protected:
     virtual void SetUp()
     {
-        dummy_handle = &native_handle;
         mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor(dummy_handle));
 
         /* set up common defaults */
@@ -104,7 +103,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     }
 
     native_handle_t native_handle;
-    buffer_handle_t dummy_handle;
+    mg::BufferData dummy_handle;
     std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_device;
     mc::PixelFormat pf;
     geom::Width width;
@@ -114,8 +113,9 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
-    EXPECT_CALL(*mock_alloc_device, free_buffer( NULL));
-    mock_alloc_device->free_buffer( NULL);
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, free_buffer( _));
+    mock_alloc_device->free_buffer( dummy_handle);
 }
 
 #if 0
