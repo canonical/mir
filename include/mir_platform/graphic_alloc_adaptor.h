@@ -18,8 +18,6 @@
 #ifndef MIR_PLATFORM_GRAPHIC_ALLOC_ADAPTOR_H_
 #define MIR_PLATFORM_GRAPHIC_ALLOC_ADAPTOR_H_
 
-/* NOTE: TO GO AWAY --kdub */
-#include <hardware/gralloc.h>
 #include <mir/geometry/dimensions.h>
 #include <mir/compositor/buffer.h>
 namespace mir

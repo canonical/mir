@@ -56,5 +56,3 @@ std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
     return std::unique_ptr<AndroidBufferAllocator>(new AndroidBufferAllocator());
 }
-
-
