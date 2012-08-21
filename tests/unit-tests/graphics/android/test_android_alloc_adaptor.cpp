@@ -28,6 +28,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
+
 class ICSAllocInterface 
 {
 public:
