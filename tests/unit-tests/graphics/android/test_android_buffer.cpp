@@ -133,14 +133,11 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
     EXPECT_NE((int)buffer.get(), NULL);
 }
 
-#if 0
 TEST_F(AndroidGraphicBufferBasic, dimensions_gralloc_conversion) 
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer(
-                                 width, height,
-                                  _, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, width, height, _, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
@@ -152,7 +149,7 @@ TEST_F(AndroidGraphicBufferBasic, format_test_8888_gralloc_conversion)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, pf, _ , _, _ ));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, pf, _ ));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
@@ -182,4 +179,3 @@ TEST_F(AndroidGraphicBufferBasic, format_echo_test)
     EXPECT_EQ(buffer->pixel_format(), pf);
 
 }
-#endif
