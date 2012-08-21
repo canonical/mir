@@ -19,6 +19,7 @@ add_library(
   
   buffer_allocator.cpp
   android_buffer.cpp
+  android_alloc_adaptor.cpp
 )
 
 

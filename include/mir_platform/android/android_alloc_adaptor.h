@@ -33,6 +33,9 @@ public:
     int  alloc_buffer(geometry::Width, geometry::Height, compositor::PixelFormat, int usage, BufferData*, geometry::Stride*);
     int  free_buffer(BufferData handle);
     bool inspect_buffer(char *buf, int buf_len);
+
+private:
+    struct alloc_device_t* alloc_dev;
 };
 
 }

@@ -20,8 +20,11 @@
 
 /* NOTE: TO GO AWAY --kdub */
 #include <hardware/gralloc.h>
+#include <mir/geometry/dimensions.h>
+#include <mir/compositor/buffer.h>
 namespace mir
 {
+
 namespace graphics
 {
 

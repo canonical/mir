@@ -36,14 +36,6 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
         throw std::runtime_error("Could not open hardware module");
     }
 
-/*    
-    struct alloc_device_t* alloc_dev;
-    err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
-    if(err < 0)
-    {
-        throw std::runtime_error("Could not open hardware module");
-    }
-*/
     alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocAdaptor(hw_module));
 }
 
