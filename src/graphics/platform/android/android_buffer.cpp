@@ -30,21 +30,15 @@ buffer_height(h),
 buffer_format(pf),
 alloc_device(alloc_dev)
 {
-    int ret = -1, format, usage, stride = 0;
+    int ret = -1, usage;
 
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    format = convert_to_android_format(pf);
     usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-#if 0
     ret = alloc_device->alloc_buffer(
-                        const_cast<struct alloc_device_t*> (alloc_device.get()),
-                        (int) buffer_width.as_uint32_t(),
-                        (int) buffer_height.as_uint32_t(),
-                        format, usage, &android_handle, &stride);
-#endif 
-    buffer_stride = geom::Stride(stride);
+                        buffer_width, buffer_height,
+                        buffer_format, usage, &android_handle, &buffer_stride);
 
     if (ret == 0)
         return;
@@ -54,10 +48,7 @@ alloc_device(alloc_dev)
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
-#if 0
-    alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device.get()),
-                        android_handle);
-#endif
+    alloc_device->free_buffer(android_handle);
 }
 
 int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)
