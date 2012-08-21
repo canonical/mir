@@ -76,7 +76,7 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         mocker->inspect_buffer(mock_alloc, buf, buf_len);
     }
 #endif
-    MOCK_METHOD6(alloc_buffer, bool(BufferData&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, int));
+    MOCK_METHOD6(alloc_buffer, bool(BufferData&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
 
     MOCK_METHOD1(free_buffer,  bool(BufferData)); 
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
@@ -111,7 +111,6 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     geom::Height height;
 };
 
-
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
     using namespace testing;
@@ -124,8 +123,7 @@ TEST_F(AndroidGraphicBufferBasic, resource_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, _,
-                                         (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, _, mg::BufferUsage::use_hardware));
     EXPECT_CALL(*mock_alloc_device, free_buffer(_));
 
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
@@ -179,3 +177,4 @@ TEST_F(AndroidGraphicBufferBasic, format_echo_test)
     EXPECT_EQ(buffer->pixel_format(), pf);
 
 }
+

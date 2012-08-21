@@ -28,13 +28,20 @@ namespace mir
 namespace graphics
 {
 
+enum class BufferUsage : uint32_t
+{
+    use_hardware,
+    use_software
+};
+
 class BufferData {};
 
 class GraphicAllocAdaptor 
 {
 public:
     virtual bool alloc_buffer(BufferData&, geometry::Stride&,
-                             geometry::Width, geometry::Height, compositor::PixelFormat, int usage) = 0;
+                             geometry::Width, geometry::Height,
+                             compositor::PixelFormat, BufferUsage usage) = 0;
 
     virtual bool free_buffer(BufferData handle) = 0;
     virtual bool inspect_buffer(char *buf, int buf_len) = 0;

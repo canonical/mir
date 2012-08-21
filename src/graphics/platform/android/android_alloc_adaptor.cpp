@@ -31,7 +31,7 @@ mg::AndroidAllocAdaptor::AndroidAllocAdaptor(const hw_module_t* module)
 }
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geometry::Stride&, geometry::Width, geometry::Height,
-                                          compositor::PixelFormat, int)
+                                          compositor::PixelFormat, BufferUsage)
 {
     return 0;
 }

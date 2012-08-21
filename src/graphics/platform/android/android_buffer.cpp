@@ -30,12 +30,12 @@ buffer_height(h),
 buffer_format(pf),
 alloc_device(alloc_dev)
 {
-    int ret = -1, usage;
-
+    bool ret;
+    BufferUsage usage = mg::BufferUsage::use_hardware;
+    
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
                         buffer_width, buffer_height,
                         buffer_format, usage);
