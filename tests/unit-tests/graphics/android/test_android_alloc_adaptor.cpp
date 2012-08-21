@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
 
 #include <hardware/hardware.h>
 #include <gtest/gtest.h>

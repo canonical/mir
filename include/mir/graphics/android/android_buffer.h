@@ -22,7 +22,7 @@
 
 
 #include "mir/compositor/buffer.h"
-#include "mir_platform/graphic_alloc_adaptor.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
 #include <stdexcept>

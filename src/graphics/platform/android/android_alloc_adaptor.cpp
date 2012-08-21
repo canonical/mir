@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
 #include <stdexcept>
 
 namespace mg=mir::graphics;

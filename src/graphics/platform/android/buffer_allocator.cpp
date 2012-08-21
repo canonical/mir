@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/buffer_allocator.h"
-#include "mir_platform/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/buffer_allocator.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
 
 #include <stdexcept>
 

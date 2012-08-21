@@ -19,7 +19,7 @@
 #define MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 
 #include <hardware/gralloc.h>
-#include "mir_platform/graphic_alloc_adaptor.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
 #include <memory>
 
 namespace mir

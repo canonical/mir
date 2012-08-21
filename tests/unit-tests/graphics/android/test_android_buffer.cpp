@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_buffer.h"
-#include "mir_platform/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
