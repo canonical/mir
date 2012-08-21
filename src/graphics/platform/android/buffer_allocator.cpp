@@ -18,6 +18,7 @@
  */
 
 #include "mir_platform/android/buffer_allocator.h"
+#include "mir_platform/android/android_alloc_adaptor.h"
 
 #include <stdexcept>
 
@@ -35,7 +36,6 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
         throw std::runtime_error("Could not open hardware module");
     }
 
-
 /*    
     struct alloc_device_t* alloc_dev;
     err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
@@ -44,8 +44,7 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
         throw std::runtime_error("Could not open hardware module");
     }
 */
-//    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocDevice(hw_module));
-    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>();
+    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocAdaptor(hw_module));
 }
 
 std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
