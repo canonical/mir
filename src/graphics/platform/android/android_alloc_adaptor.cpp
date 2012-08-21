@@ -34,8 +34,8 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Wid
     int ret;
     int stride;
     buffer_handle_t buf_handle;
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), 4, 0x300, &buf_handle, &stride);
-    if ( ret )
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), 0,0, &buf_handle, &stride);
+    if (( ret ) || (buf_handle == NULL) || (stride == 0))
         return false;
 
     return true;
