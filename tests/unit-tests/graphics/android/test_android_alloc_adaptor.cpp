@@ -61,7 +61,6 @@ public:
         ON_CALL(*this, free_interface(_,_))
                 .WillByDefault(Return(0));
     
-        printf("done done\n");
     }
 
     static int hook_alloc(alloc_device_t* mock_alloc,
@@ -124,11 +123,6 @@ class AdaptorICSTest : public ::testing::Test
     mg::BufferUsage usage;
 };
 
-TEST_F(AdaptorICSTest, basic_test)
-{
-
-}
-
 TEST_F(AdaptorICSTest, resource_type_test_fail_ret) 
 {
     using namespace testing;
@@ -187,6 +181,23 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888)
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 }
 
+TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
+{
+    using namespace testing;
+    int w = (int) width.as_uint32_t(); 
+    int h = (int) height.as_uint32_t(); 
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, w, h, _, _, _, _));
+
+    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+} 
+
+TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _,
+                     (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
+    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+} 
 #if 0
 
 TEST_F(AdaptorICSTest, dimensions_test) 

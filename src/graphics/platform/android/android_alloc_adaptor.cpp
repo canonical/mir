@@ -37,13 +37,14 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Wid
 
     int ret;
     int format = convert_to_android_format(pf);
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format,0x300, &buf_handle, &stride);
 
-    printf("alloc: %i, %X, %i\n", ret,(int) buf_handle, stride);
+
+    int usage = convert_to_android_usage(usage);
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage, &buf_handle, &stride);
+
     if (( ret ) || (buf_handle == NULL) || (stride == 0))
         return false;
 
-    printf("ALLOC SUCCESS\n");
     return true;
 }
 
