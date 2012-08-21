@@ -20,6 +20,7 @@
 
 #include <hardware/gralloc.h>
 #include "mir_platform/graphic_alloc_adaptor.h"
+#include <memory>
 
 namespace mir
 {
@@ -29,7 +30,7 @@ namespace graphics
 class AndroidAllocAdaptor : public GraphicAllocAdaptor 
 {
 public:
-    AndroidAllocAdaptor(const hw_module_t* module);
+    AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> && alloc_device);
     bool alloc_buffer(BufferData&, geometry::Stride&,
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);
@@ -38,7 +39,7 @@ public:
     bool inspect_buffer(char *buf, int buf_len);
 
 private:
-    struct alloc_device_t* alloc_dev;
+    std::shared_ptr<struct alloc_device_t> alloc_dev;
 };
 
 }

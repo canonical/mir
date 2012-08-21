@@ -21,13 +21,10 @@
 #include <stdexcept>
 namespace mg=mir::graphics;
 
-mg::AndroidAllocAdaptor::AndroidAllocAdaptor(const hw_module_t* module)
+mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> && alloc_device)
+ :
+alloc_dev(std::move(alloc_device))
 { 
-    int err = module->methods->open(module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
-    if(err < 0)
-    {
-        throw std::runtime_error("Could not open hardware module");
-    }
 }
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geometry::Stride&, geometry::Width, geometry::Height,
