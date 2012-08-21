@@ -17,6 +17,7 @@
  */
 
 #include "mir_platform/android/android_buffer.h"
+#include "mir_platform/graphic_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -26,58 +27,66 @@ namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-struct MockAllocDevice : public mg::GraphicAllocAdaptor,
+namespace mir
+{
+namespace graphics
+{
+class MockAllocAdaptor : public GraphicAllocAdaptor,
                          public alloc_device_t 
 {
     public:
-    MockAllocDevice(buffer_handle_t buf_handle)
+    MockAllocAdaptor(buffer_handle_t buf_handle)
     {
         using namespace testing;
 
         buffer_handle = buf_handle;
+#if 0 
         alloc = hook_alloc;
         free = hook_free;
         dump = hook_dump;
-        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_,_))
+#endif
+        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
                 .WillByDefault(DoAll(
-                            SaveArg<1>(&w),
-                            SetArgPointee<5>(buffer_handle),
-                            SetArgPointee<6>(w * 4), /* stride must be >= (bpp * width). 4bpp is the max supported */
+                            SaveArg<0>(&w),
+                            SetArgPointee<4>(buffer_handle),
+                            SetArgPointee<5>(w * 4), /* stride must be >= (bpp * width). 4bpp is the max supported */
                             Return(0)));
-        ON_CALL(*this, free_buffer(_,_))
+        ON_CALL(*this, free_buffer(_))
                 .WillByDefault(Return(0));
     }
-
+#if 0
     static int hook_alloc(alloc_device_t* mock_alloc,
                            int w, int h, int format, int usage,
                            buffer_handle_t* handle, int* stride)
     {
-        MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
+        MockAllocAdaptor* mocker = static_cast<MockAllocAdaptor*>(mock_alloc);
         return mocker->alloc_buffer(mock_alloc, w, h, format, usage, handle, stride);
     }
 
     static int hook_free(alloc_device_t* mock_alloc, buffer_handle_t handle)
     {
-        MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
-        return mocker->free_buffer(mock_alloc, handle);
+        MockAllocAdaptor* mocker = static_cast<MockAllocAdaptor*>(mock_alloc);
+        return mocker->free_buffer(handle);
     }
 
     static void hook_dump(alloc_device_t* mock_alloc, char* buf, int buf_len)
     {
-        MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
+        MockAllocAdaptor* mocker = static_cast<MockAllocAdaptor*>(mock_alloc);
         mocker->inspect_buffer(mock_alloc, buf, buf_len);
     }
+#endif
+    MOCK_METHOD6(alloc_buffer, int(int, int, int, int, buffer_handle_t*, int*) );
 
-    MOCK_METHOD7(alloc_buffer, int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*) );
-
-    MOCK_METHOD2(free_buffer,  int(alloc_device_t*, buffer_handle_t)); 
-    MOCK_METHOD3(inspect_buffer, bool(alloc_device_t*, char*, int));
+    MOCK_METHOD1(free_buffer,  int(buffer_handle_t)); 
+    MOCK_METHOD2(inspect_buffer, bool(char*, int));
     
     private:
     buffer_handle_t buffer_handle;
     int w;
         
 };
+}
+}
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {
@@ -85,7 +94,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
     virtual void SetUp()
     {
         dummy_handle = &native_handle;
-        mock_alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor> (new MockAllocDevice(dummy_handle));
+        mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor(dummy_handle));
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
@@ -96,7 +105,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 
     native_handle_t native_handle;
     buffer_handle_t dummy_handle;
-    std::shared_ptr<mg::GraphicAllocAdaptor> mock_alloc_device;
+    std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_device;
     mc::PixelFormat pf;
     geom::Width width;
     geom::Height height;
@@ -106,7 +115,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 TEST_F(AndroidGraphicBufferBasic, struct_mock) 
 {
     EXPECT_CALL(*mock_alloc_device, free_buffer( NULL));
-//    mock_alloc_device->free_buffer(mock_alloc_device.get(), NULL);
+    mock_alloc_device->free_buffer( NULL);
 }
 
 #if 0
