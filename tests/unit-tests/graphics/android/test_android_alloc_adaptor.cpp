@@ -200,6 +200,31 @@ TEST_F(AdaptorICSTest, resource_type_test_success_data_is_set)
     EXPECT_NE((int)buffer_data.get(), NULL );
 }
 
+TEST_F(AdaptorICSTest, resource_type_test_proper_alloc_is_used) 
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( mock_alloc_device.get(), _, _, _, _, _, _)); 
+    EXPECT_CALL(*mock_alloc_device, free_interface( mock_alloc_device.get(), _) );
+
+    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+}
+
+TEST_F(AdaptorICSTest, resource_type_test_deleter_deletes_correct_handle) 
+{
+    using namespace testing;
+
+    native_handle_t test_native_handle;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _)) 
+                .WillOnce(DoAll(
+                            SetArgPointee<5>((native_handle_t*)&test_native_handle),
+                            SetArgPointee<6>(width.as_uint32_t()*4),
+                            Return(0)));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, &test_native_handle) );
+
+    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+}
+
 TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888) 
 {
     using namespace testing;
