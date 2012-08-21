@@ -225,9 +225,20 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
 } 
 
-TEST_F(AdaptorICSTest, free_test)
+TEST_F(AdaptorICSTest, free_test_success)
 {
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
-    alloc_adaptor->free_buffer(buffer_data);
+    bool ret = alloc_adaptor->free_buffer(buffer_data);
+    EXPECT_TRUE(ret);
 }
+
+TEST_F(AdaptorICSTest, free_test_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _ ) )
+                .WillOnce(Return(-1));
+    bool ret = alloc_adaptor->free_buffer(buffer_data);
+    EXPECT_FALSE(ret);
+}
+
