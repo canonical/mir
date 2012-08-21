@@ -27,7 +27,7 @@ namespace mir
 namespace graphics
 {
 
-class AndroidBufferHandle: public BufferData
+class AndroidBufferHandle: public BufferHandle
 {
 public:
     AndroidBufferHandle(buffer_handle_t han)
@@ -40,7 +40,7 @@ class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);
-    bool alloc_buffer(std::shared_ptr<BufferData>&, geometry::Stride&,
+    bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);
     bool inspect_buffer(char *buf, int buf_len);

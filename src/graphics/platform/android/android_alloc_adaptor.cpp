@@ -30,9 +30,9 @@ alloc_dev(alloc_device)
 { 
 }
 
-struct BufferDataDeleter
+struct BufferHandleDeleter
 {
-    BufferDataDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
+    BufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
      : alloc_device(alloc_dev)
     {}
 
@@ -45,7 +45,7 @@ struct BufferDataDeleter
         std::shared_ptr<alloc_device_t> alloc_device;
 };
 
-bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferData>& handle, geom::Stride& stride, geom::Width width, geom::Height height,
+bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride, geom::Width width, geom::Height height,
                                           compositor::PixelFormat pf, BufferUsage usage)
 {
     /* todo: to go away */
@@ -56,13 +56,13 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferData>& handle, 
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage_flag, &buf_handle, &stride_as_int);
 
-    BufferDataDeleter del(alloc_dev);
-    handle = std::shared_ptr<mg::BufferData>(new mg::AndroidBufferHandle(buf_handle), del);
-
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
         return false;
 
+    BufferHandleDeleter del(alloc_dev);
+    handle = std::shared_ptr<mg::BufferHandle>(new mg::AndroidBufferHandle(buf_handle), del);
     stride = geom::Stride(stride_as_int);
+
     return true;
 }
 

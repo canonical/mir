@@ -119,7 +119,7 @@ class AdaptorICSTest : public ::testing::Test
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    std::shared_ptr<mg::BufferData> buffer_data;
+    std::shared_ptr<mg::BufferHandle> buffer_data;
     mg::BufferUsage usage;
 };
 
@@ -195,7 +195,7 @@ TEST_F(AdaptorICSTest, resource_type_test_success_data_is_set)
 
     geom::Stride saved_stride(0);
     stride = geom::Stride(0);
-    buffer_data = std::shared_ptr<mg::BufferData>();
+    buffer_data = std::shared_ptr<mg::BufferHandle>();
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
     EXPECT_NE((int)buffer_data.get(), NULL );
 }
