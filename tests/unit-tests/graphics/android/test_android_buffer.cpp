@@ -44,12 +44,13 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
             .WillByDefault(Return(true));
     }
-    MOCK_METHOD6(alloc_buffer, bool(BufferData&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
 
-    MOCK_METHOD1(free_buffer,  bool(BufferData)); 
+    MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferData>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
     
     private:
+    MOCK_METHOD1(free_buffer,  bool(BufferData));
+
     BufferData buffer_handle;
     int w;
         
@@ -86,7 +87,6 @@ TEST_F(AndroidGraphicBufferBasic, resource_type_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, _, mg::BufferUsage::use_hardware));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
 
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
@@ -98,7 +98,6 @@ TEST_F(AndroidGraphicBufferBasic, dimensions_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, width, height, _, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_EQ(width, buffer->width());
@@ -110,7 +109,6 @@ TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, pf, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
 }
@@ -120,7 +118,6 @@ TEST_F(AndroidGraphicBufferBasic, format_echo_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _ , _, _ ));
-    EXPECT_CALL(*mock_alloc_device, free_buffer(_));
     std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_EQ(buffer->pixel_format(), pf);

@@ -119,7 +119,7 @@ class AdaptorICSTest : public ::testing::Test
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    mg::BufferData buffer_data;
+    std::shared_ptr<mg::BufferData> buffer_data;
     mg::BufferUsage usage;
 };
 
@@ -186,19 +186,19 @@ TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
     EXPECT_NE(saved_stride, stride );
 }
 
-#if 0
 TEST_F(AdaptorICSTest, resource_type_test_success_data_is_set) 
 {
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     geom::Stride saved_stride(0);
     stride = geom::Stride(0);
+    buffer_data = std::shared_ptr<mg::BufferData>();
     alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
-    EXPECT_NE(saved_stride, stride );
+    EXPECT_NE((int)buffer_data.get(), NULL );
 }
-#endif 
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888) 
 {

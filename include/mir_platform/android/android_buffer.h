@@ -64,7 +64,7 @@ private:
 
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
-    BufferData android_handle;
+    std::shared_ptr<BufferData> android_handle;
 };
 
 }

@@ -20,6 +20,7 @@
 
 #include <mir/geometry/dimensions.h>
 #include <mir/compositor/buffer.h>
+#include <memory>
 namespace mir
 {
 
@@ -37,12 +38,11 @@ class BufferData {};
 class GraphicAllocAdaptor 
 {
 public:
-    virtual bool alloc_buffer(BufferData&, geometry::Stride&,
+    virtual bool alloc_buffer(std::shared_ptr<BufferData>&, geometry::Stride&,
                              geometry::Width, geometry::Height,
                              compositor::PixelFormat, BufferUsage usage) = 0;
-
-    virtual bool free_buffer(BufferData handle) = 0;
     virtual bool inspect_buffer(char *buf, int buf_len) = 0;
+    virtual bool free_buffer(BufferData handle) = 0;
 };
 
 }

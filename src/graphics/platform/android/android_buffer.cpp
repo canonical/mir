@@ -47,7 +47,6 @@ alloc_device(alloc_dev)
 
 mg::AndroidBuffer::~AndroidBuffer()
 {
-    alloc_device->free_buffer(android_handle);
 }
 
 geom::Width mg::AndroidBuffer::width() const
