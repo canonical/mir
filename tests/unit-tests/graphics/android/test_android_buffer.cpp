@@ -40,6 +40,7 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
         using namespace testing;
 
         buffer_handle = buf_handle;
+/* TODO:  kdub-- this is useful code for testing AllocAdaptor */
 #if 0 
         alloc = hook_alloc;
         free = hook_free;

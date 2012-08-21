@@ -22,9 +22,7 @@ add_library(
   android_alloc_adaptor.cpp
 )
 
-
 #add a findhardware here
-
 target_link_libraries(
   mirplatformgraphics
 
