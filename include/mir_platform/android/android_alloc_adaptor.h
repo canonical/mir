@@ -30,7 +30,7 @@ namespace graphics
 class AndroidAllocAdaptor : public GraphicAllocAdaptor 
 {
 public:
-    AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> && alloc_device);
+    AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);
     bool alloc_buffer(BufferData&, geometry::Stride&,
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);

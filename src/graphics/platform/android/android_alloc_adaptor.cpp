@@ -21,21 +21,22 @@
 #include <stdexcept>
 namespace mg=mir::graphics;
 
-mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> && alloc_device)
+mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
  :
-alloc_dev(std::move(alloc_device))
+alloc_dev(alloc_device)
 { 
 }
 
 bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geometry::Stride&, geometry::Width, geometry::Height,
                                           compositor::PixelFormat, BufferUsage)
 {
-    return 0;
+    printf("alloc_buffer\n");
+    return false;
 }
 
 bool mg::AndroidAllocAdaptor::free_buffer(BufferData)
 {
-    return 0;
+    return false;
 }
 
 bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
