@@ -20,6 +20,7 @@
 #include "mir_platform/android/android_alloc_adaptor.h"
 #include <stdexcept>
 namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 
 mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
  :
@@ -27,11 +28,17 @@ alloc_dev(alloc_device)
 { 
 }
 
-bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geometry::Stride&, geometry::Width, geometry::Height,
+bool mg::AndroidAllocAdaptor::alloc_buffer(BufferData&, geom::Stride&, geom::Width width, geom::Height height,
                                           compositor::PixelFormat, BufferUsage)
 {
-    printf("alloc_buffer\n");
-    return false;
+    int ret;
+    int stride;
+    buffer_handle_t buf_handle;
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), 4, 0x300, &buf_handle, &stride);
+    if ( ret )
+        return false;
+
+    return true;
 }
 
 bool mg::AndroidAllocAdaptor::free_buffer(BufferData)
