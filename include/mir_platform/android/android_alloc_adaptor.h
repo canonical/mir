@@ -30,8 +30,8 @@ class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     AndroidAllocAdaptor(const hw_module_t* module);
-    int  alloc_buffer(geometry::Width, geometry::Height, compositor::PixelFormat, int usage, BufferData*, geometry::Stride*);
-    int  free_buffer(BufferData handle);
+    bool alloc_buffer(BufferData&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, int usage);
+    bool free_buffer(BufferData handle);
     bool inspect_buffer(char *buf, int buf_len);
 
 private:

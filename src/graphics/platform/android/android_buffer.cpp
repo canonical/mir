@@ -36,9 +36,9 @@ alloc_device(alloc_dev)
         throw std::runtime_error("No allocation device for graphics buffer");
 
     usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    ret = alloc_device->alloc_buffer(
+    ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
                         buffer_width, buffer_height,
-                        buffer_format, usage, &android_handle, &buffer_stride);
+                        buffer_format, usage);
 
     if (ret == 0)
         return;

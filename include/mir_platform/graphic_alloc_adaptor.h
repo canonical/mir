@@ -33,9 +33,10 @@ class BufferData {};
 class GraphicAllocAdaptor 
 {
 public:
-    virtual int  alloc_buffer(geometry::Width, geometry::Height, compositor::PixelFormat, int usage, BufferData*, geometry::Stride*) = 0;
+    virtual bool alloc_buffer(BufferData&, geometry::Stride&,
+                             geometry::Width, geometry::Height, compositor::PixelFormat, int usage) = 0;
 
-    virtual int  free_buffer(BufferData handle) = 0;
+    virtual bool free_buffer(BufferData handle) = 0;
     virtual bool inspect_buffer(char *buf, int buf_len) = 0;
 };
 
