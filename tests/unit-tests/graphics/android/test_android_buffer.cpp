@@ -19,6 +19,7 @@
 #include "mir/graphics/android/android_buffer.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
+#include <hardware/gralloc.h> 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <memory>
