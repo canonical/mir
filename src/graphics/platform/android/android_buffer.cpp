@@ -24,7 +24,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::AndroidBuffer::AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> alloc_dev,
+mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
                                  geom::Width w, geom::Height h, mc::PixelFormat pf)
     :
     buffer_width(w),
