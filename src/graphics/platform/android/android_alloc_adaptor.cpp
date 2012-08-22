@@ -68,11 +68,6 @@ bool mga::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handl
     return true;
 }
 
-bool mga::AndroidAllocAdaptor::inspect_buffer(char *, int)
-{
-    return false;
-}
-
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
     switch (usage)
