@@ -72,12 +72,12 @@ public:
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 
 private:
+    virtual std::string const& default_socket_file();
+
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
         std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
 };
-
-std::string const& default_socket_file(); //TODO leaks abstraction
 }
 
 

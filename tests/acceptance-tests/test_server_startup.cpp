@@ -105,7 +105,7 @@ private:
 
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    ASSERT_FALSE(mir::detect_server(mir::default_socket_file(), std::chrono::milliseconds(0)));
+    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
 
     TestingServerConfiguration server_config;
 
@@ -115,7 +115,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     {
         void exec()
         {
-            EXPECT_TRUE(mir::detect_server(mir::default_socket_file(),
+            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
                                            std::chrono::milliseconds(100)));
         }
     } client_config;
@@ -155,7 +155,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 
             auto log = std::make_shared<ConsoleLogger>();
 
-            Surface mysurface(mir::default_socket_file(), 640, 480, 0, log);
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, log);
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -197,7 +197,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             using ::mir::client::Surface;
             using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::default_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
@@ -244,7 +244,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             using ::mir::client::Surface;
             using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::default_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }

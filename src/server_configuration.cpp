@@ -160,8 +160,8 @@ mir::DefaultServerConfiguration::make_communicator(
         default_socket_file(), make_ipc_factory(buffer_allocation_strategy));
 }
 
-std::string const& mir::default_socket_file()
+std::string const& mir::DefaultServerConfiguration::default_socket_file()
 {
-    static const std::string socket_file{"./mir_socket_test"};
+    static const std::string socket_file{"./mir_socket"};
     return socket_file;
 }
