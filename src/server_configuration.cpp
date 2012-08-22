@@ -117,8 +117,8 @@ private:
     }
 };
 
-// TODO This (with make_ipc_factory()) builds a large chunk of the "inner" system,
-// it probably ought to be moved out of the testing framework to the system proper.
+// This (with make_ipc_factory()) builds a large chunk of the "inner" system.
+// We may want to move this out of "configuration" someday
 struct Surfaces :
     public mc::BufferBundleManager,
     public ms::SurfaceStack,
