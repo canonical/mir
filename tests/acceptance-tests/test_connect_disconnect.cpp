@@ -53,6 +53,16 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
     launch_client_process(client_connects_and_disconnects);
 }
 
+namespace
+{
+struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
+{
+    MOCK_METHOD3(
+        create_swapper,
+        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
+};
+}
+
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffers_on_server)
 {

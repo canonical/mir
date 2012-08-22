@@ -45,10 +45,10 @@ class SurfaceStack : public Scenegraph,
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
-    // Make this a model of Lockable.
-    void lock();
-    void unlock();
-    bool try_lock();
+//    // Make this a model of Lockable.
+//    void lock();
+//    void unlock();
+//    bool try_lock();
     
     // From Scenegraph
     virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);

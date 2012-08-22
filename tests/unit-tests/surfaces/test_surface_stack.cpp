@@ -119,24 +119,24 @@ TEST(
     stack.destroy_surface(surface);
 }
 
-TEST(
-    SurfaceStack,
-    lock_and_unlock_variants)
-{
-    using namespace ::testing;
-
-    MockBufferBundleFactory buffer_bundle_factory;
-    EXPECT_CALL(
-        buffer_bundle_factory,
-        create_buffer_bundle(_, _, _)).Times(0);
-     
-    ms::SurfaceStack stack(&buffer_bundle_factory);
-    stack.lock();
-    EXPECT_FALSE(stack.try_lock());
-    stack.unlock();
-    EXPECT_TRUE(stack.try_lock());
-    stack.unlock();
-}
+//TEST(
+//    SurfaceStack,
+//    lock_and_unlock_variants)
+//{
+//    using namespace ::testing;
+//
+//    MockBufferBundleFactory buffer_bundle_factory;
+//    EXPECT_CALL(
+//        buffer_bundle_factory,
+//        create_buffer_bundle(_, _, _)).Times(0);
+//
+//    ms::SurfaceStack stack(&buffer_bundle_factory);
+//    stack.lock();
+//    EXPECT_FALSE(stack.try_lock());
+//    stack.unlock();
+//    EXPECT_TRUE(stack.try_lock());
+//    stack.unlock();
+//}
 
 TEST(
     SurfaceStack,
@@ -153,10 +153,10 @@ TEST(
 
     {
         std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(geom::Rectangle());
-        EXPECT_FALSE(stack.try_lock());
+//        EXPECT_FALSE(stack.try_lock());
     }
-    EXPECT_TRUE(stack.try_lock());
-    stack.unlock();
+//    EXPECT_TRUE(stack.try_lock());
+//    stack.unlock();
 }
 
 TEST(

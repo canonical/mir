@@ -76,20 +76,20 @@ ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bun
     assert(buffer_bundle_factory);
 }
 
-void ms::SurfaceStack::lock()
-{
-    guard.lock();
-}
-
-void ms::SurfaceStack::unlock()
-{
-    guard.unlock();
-}
-
-bool ms::SurfaceStack::try_lock()
-{
-    return guard.try_lock();
-}
+//void ms::SurfaceStack::lock()
+//{
+//    guard.lock();
+//}
+//
+//void ms::SurfaceStack::unlock()
+//{
+//    guard.unlock();
+//}
+//
+//bool ms::SurfaceStack::try_lock()
+//{
+//    return guard.try_lock();
+//}
 
 std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
