@@ -45,7 +45,7 @@ struct LockGuardDeleter
     {
         lockable.lock();
     }
-    
+
     template<typename T>
     void operator()(T* t)
     {
@@ -64,7 +64,7 @@ public:
         for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             f(**it);
-        }        
+        }
     }
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;

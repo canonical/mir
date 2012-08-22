@@ -38,10 +38,9 @@ namespace surfaces
 class Surface;
 class SurfaceCreationParameters;
 
-class SurfaceStack : public Scenegraph,
-                     public SurfaceStackModel
+class SurfaceStack : public Scenegraph, public SurfaceStackModel
 {
- public:
+public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
@@ -53,7 +52,7 @@ class SurfaceStack : public Scenegraph,
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
 
- private:
+private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
     std::mutex guard;
