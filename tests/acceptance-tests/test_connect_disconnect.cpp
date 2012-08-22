@@ -52,39 +52,3 @@ TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 
     launch_client_process(client_connects_and_disconnects);
 }
-
-namespace
-{
-struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
-{
-    MOCK_METHOD3(
-        create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
-};
-}
-
-TEST_F(BespokeDisplayServerTestFixture,
-       creating_a_client_surface_allocates_buffers_on_server)
-{
-    struct ServerConfig : TestingServerConfiguration
-    {
-        // TODO mock the buffer allocator and set expectation for creating buffers
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            using ::mir::client::Surface;
-            using ::mir::client::ConsoleLogger;
-
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
-            EXPECT_TRUE(mysurface.is_valid());
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
