@@ -19,6 +19,8 @@
 #ifndef MIR_TESTING_PROCESS_MANAGER
 #define MIR_TESTING_PROCESS_MANAGER
 
+#include "mir/server_configuration.h"
+
 #include "mir/chrono/chrono.h"
 #include "mir/process/process.h"
 
@@ -28,72 +30,11 @@
 namespace mir
 {
 class DisplayServer;
-namespace compositor
-{
-class BufferAllocationStrategy;
-}
-namespace frontend
-{
-class Communicator;
-class ProtobufIpcFactory;
-}
-namespace graphics
-{
-class Renderer;
-}
-namespace protobuf
-{
-class DisplayServer;
-}
 
 struct TestingClientConfiguration
 {
     // Code to run in client process
     virtual void exec() = 0;
-};
-
-class ServerConfiguration
-{
-public:
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy) = 0;
-
-    // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory) = 0;
-
-    // the renderer to use
-    virtual std::shared_ptr<graphics::Renderer> make_renderer() = 0;
-
-    // the allocator strategy to use
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy() = 0;
-
-protected:
-    ServerConfiguration() = default;
-    virtual ~ServerConfiguration() {}
-
-    ServerConfiguration(ServerConfiguration const&) = delete;
-    ServerConfiguration& operator=(ServerConfiguration const&) = delete;
-};
-
-class DefaultServerConfiguration : public ServerConfiguration
-{
-public:
-
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
-
-    // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory);
-
-    // the renderer to use
-    virtual std::shared_ptr<graphics::Renderer> make_renderer();
-
-    // the allocator strategy to use
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
 
 struct TestingServerConfiguration : DefaultServerConfiguration
