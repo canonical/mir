@@ -35,7 +35,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidBufferAllocator: public mc::GraphicBufferAllocator
+class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
     AndroidBufferAllocator();

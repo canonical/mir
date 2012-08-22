@@ -27,9 +27,6 @@
 #include <stdexcept>
 #include <memory>
 
-namespace mc=mir::compositor;
-namespace geom=mir::geometry;
-
 namespace mir
 {
 namespace graphics
@@ -37,19 +34,19 @@ namespace graphics
 namespace android
 {
 
-class AndroidBuffer: public mc::Buffer
+class AndroidBuffer: public compositor::Buffer
 {
 public:
-    AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geom::Width w, geom::Height h, mc::PixelFormat pf);
+    AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> device, geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
     ~AndroidBuffer();
 
-    geom::Width width() const;
+    geometry::Width width() const;
 
-    geom::Height height() const;
+    geometry::Height height() const;
 
-    geom::Stride stride() const;
+    geometry::Stride stride() const;
 
-    mc::PixelFormat pixel_format() const;
+    compositor::PixelFormat pixel_format() const;
 
     void lock();
 
@@ -58,10 +55,10 @@ public:
     Texture* bind_to_texture();
 
 private:
-    const geom::Width  buffer_width;
-    const geom::Height buffer_height;
-    const mc::PixelFormat buffer_format;
-    geom::Stride buffer_stride;
+    const geometry::Width  buffer_width;
+    const geometry::Height buffer_height;
+    const compositor::PixelFormat buffer_format;
+    geometry::Stride buffer_stride;
 
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 

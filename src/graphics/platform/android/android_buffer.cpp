@@ -19,6 +19,7 @@
 
 #include "mir/graphics/android/android_buffer.h"
 
+namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
