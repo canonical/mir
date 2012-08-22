@@ -19,6 +19,7 @@
  */
 
 #include "mir/display_server.h"
+#include "mir/server_configuration.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_bundle_manager.h"
@@ -53,12 +54,15 @@ struct mir::DisplayServer::Private
     std::atomic<bool> exit;
 };
 
-mir::DisplayServer::DisplayServer(
-    const std::shared_ptr<mf::Communicator>& communicator,
-    const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
-    const std::shared_ptr<mg::Renderer>& renderer)
-    : p(new mir::DisplayServer::Private(communicator, strategy, renderer))
+mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
+    p()
 {
+    auto buffer_allocation_strategy = config.make_buffer_allocation_strategy();
+
+    p.reset(new mir::DisplayServer::Private(
+        config.make_communicator(config.make_ipc_factory(buffer_allocation_strategy)),
+        buffer_allocation_strategy,
+        config.make_renderer()));
 }
 
 mir::DisplayServer::~DisplayServer()
