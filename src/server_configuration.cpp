@@ -162,6 +162,6 @@ mir::DefaultServerConfiguration::make_communicator(
 
 std::string const& mir::DefaultServerConfiguration::default_socket_file()
 {
-    static const std::string socket_file{"./mir_socket"};
+    static const std::string socket_file{"/tmp/mir_socket"};
     return socket_file;
 }
