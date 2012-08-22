@@ -37,6 +37,8 @@ namespace ms = mir::surfaces;
 
 namespace
 {
+
+// TODO replace with a real renderer appropriate to the platform default
 class StubRenderer : public mg::Renderer
 {
 public:
@@ -45,6 +47,7 @@ public:
     }
 };
 
+// TODO replace with a allocation strategy
 class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
 public:
