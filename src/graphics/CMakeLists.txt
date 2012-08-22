@@ -19,6 +19,7 @@
 if (MIR_PLATFORM_LLVM)
   add_subdirectory(platform/llvm/)
 endif()
+
 if (MIR_PLATFORM_ANDROID)
   add_subdirectory(platform/android/)
 endif()

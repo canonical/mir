@@ -74,11 +74,14 @@ option(
   "controls building for llvm based graphics backend"
   ON
 )
-
 if (MIR_PLATFORM_ANDROID)
   #these are not intrinsically exclusive. we don't have any way to build
   #platform llvm on android
   set(MIR_PLATFORM_LLVM OFF)
+  find_package( LibHardware REQUIRED )
+  if (LibHardware_FOUND)
+    include_directories(${LibHardware_INCLUDE_DIRS})
+  endif() 
 endif()
 
 
