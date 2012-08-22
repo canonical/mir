@@ -42,8 +42,7 @@ public:
 class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
-/*TODO*/
-    explicit AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);
+    explicit AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device);
     bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);
