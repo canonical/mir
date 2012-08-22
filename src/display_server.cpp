@@ -60,7 +60,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
     auto buffer_allocation_strategy = config.make_buffer_allocation_strategy();
 
     p.reset(new mir::DisplayServer::Private(
-        config.make_communicator(config.make_ipc_factory(buffer_allocation_strategy)),
+        config.make_communicator(buffer_allocation_strategy),
         buffer_allocation_strategy,
         config.make_renderer()));
 }
