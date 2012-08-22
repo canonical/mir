@@ -137,7 +137,7 @@ struct Surfaces :
 }
 
 
-std::shared_ptr<mc::BufferAllocationStrategy> mir::TestingServerConfiguration::make_buffer_allocation_strategy()
+std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
 }
@@ -150,13 +150,13 @@ void mir::TestingServerConfiguration::on_exit(DisplayServer* )
 {
 }
 
-std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer()
+std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer()
 {
     return std::make_shared<StubRenderer>();
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
-mir::TestingServerConfiguration::make_ipc_factory(
+mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy)
 {
     auto surface_organiser = std::make_shared<Surfaces>(
@@ -165,7 +165,7 @@ mir::TestingServerConfiguration::make_ipc_factory(
 }
 
 std::shared_ptr<mf::Communicator>
-mir::TestingServerConfiguration::make_communicator(
+mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<mf::ProtobufIpcFactory> const& ipc_server)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(test_socket_file(), ipc_server);

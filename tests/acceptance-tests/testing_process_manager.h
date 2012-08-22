@@ -56,13 +56,34 @@ struct TestingClientConfiguration
     virtual void exec() = 0;
 };
 
-struct TestingServerConfiguration
+class ServerConfiguration
 {
-    // Code to run in server process
-    virtual void exec(DisplayServer* display_server);
+public:
+    // the communications interface to use
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
+        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy) = 0;
 
-    // Code to run in server process after server exits
-    virtual void on_exit(DisplayServer* display_server);
+    // the communicator to use
+    virtual std::shared_ptr<frontend::Communicator>
+    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory) = 0;
+
+    // the renderer to use
+    virtual std::shared_ptr<graphics::Renderer> make_renderer() = 0;
+
+    // the allocator strategy to use
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy() = 0;
+
+protected:
+    ServerConfiguration() = default;
+    virtual ~ServerConfiguration() {}
+
+    ServerConfiguration(ServerConfiguration const&) = delete;
+    ServerConfiguration& operator=(ServerConfiguration const&) = delete;
+};
+
+class DefaultServerConfiguration : public ServerConfiguration
+{
+public:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
@@ -77,6 +98,15 @@ struct TestingServerConfiguration
 
     // the allocator strategy to use
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
+};
+
+struct TestingServerConfiguration : DefaultServerConfiguration
+{
+    // Code to run in server process
+    virtual void exec(DisplayServer* display_server);
+
+    // Code to run in server process after server exits
+    virtual void on_exit(DisplayServer* display_server);
 };
 
 class TestingProcessManager
