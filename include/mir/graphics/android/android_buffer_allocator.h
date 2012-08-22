@@ -19,9 +19,9 @@
 
 #ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
 #define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
+
 /* from android */
 #include <hardware/hardware.h>
-#include <hardware/gralloc.h>
 
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
