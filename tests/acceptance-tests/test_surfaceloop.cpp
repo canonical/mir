@@ -77,7 +77,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             using ::mir::client::Surface;
             using ::mir::client::ConsoleLogger;
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
+            Surface mysurface(mir::default_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
             EXPECT_TRUE(mysurface.is_valid());
         }
     } client_config;
