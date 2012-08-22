@@ -35,11 +35,9 @@ class MockAllocAdaptor : public GraphicAllocAdaptor,
     public alloc_device_t
 {
 public:
-    MockAllocAdaptor(BufferHandle buf_handle)
+    MockAllocAdaptor()
     {
         using namespace testing;
-
-        buffer_handle = buf_handle;
 
         ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
         .WillByDefault(Return(true));
@@ -47,11 +45,6 @@ public:
 
     MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferHandle>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
-
-private:
-
-    BufferHandle buffer_handle;
-    int w;
 
 };
 }
@@ -62,7 +55,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor(dummy_handle));
+        mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor);
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
@@ -72,7 +65,6 @@ protected:
     }
 
     native_handle_t native_handle;
-    mg::BufferHandle dummy_handle;
     std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_device;
     mc::PixelFormat pf;
     geom::Width width;

@@ -33,7 +33,13 @@ enum class BufferUsage : uint32_t
     use_software
 };
 
-class BufferHandle {};
+class BufferHandle 
+{
+    virtual ~BufferHandle() = default;
+protected:
+    BufferHandle() = default;
+
+};
 
 class GraphicAllocAdaptor
 {
