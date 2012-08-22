@@ -76,11 +76,11 @@ option(
 )
 if (MIR_PLATFORM_ANDROID)
   #these are not intrinsically exclusive. we don't have any way to build
-  #platform llvm on android
+  #platform llvm on android yet
   set(MIR_PLATFORM_LLVM OFF)
   find_package( LibHardware REQUIRED )
-  if (LibHardware_FOUND)
-    include_directories(${LibHardware_INCLUDE_DIRS})
+  if (LIBHARDWARE_FOUND)
+    include_directories(${LIBHARDWARE_INCLUDE_DIR})
   endif() 
 endif()
 
