@@ -12,14 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Thomas Guest <thomas.guest@canonical.com>,
 
-# By default, build for LLVM
+list(APPEND UNIT_TEST_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor.cpp
+)
 
-if (MIR_PLATFORM_LLVM)
-  add_subdirectory(platform/llvm/)
-endif()
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 
-if (MIR_PLATFORM_ANDROID)
-  add_subdirectory(platform/android/)
-endif()

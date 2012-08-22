@@ -12,14 +12,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-# By default, build for LLVM
+add_library( 
+  mirplatformgraphics STATIC
+  
+  android_buffer_allocator.cpp
+  android_buffer.cpp
+  android_alloc_adaptor.cpp
+)
 
-if (MIR_PLATFORM_LLVM)
-  add_subdirectory(platform/llvm/)
-endif()
+#add a findhardware here
+target_link_libraries(
+  mirplatformgraphics
 
-if (MIR_PLATFORM_ANDROID)
-  add_subdirectory(platform/android/)
-endif()
+  hardware
+)

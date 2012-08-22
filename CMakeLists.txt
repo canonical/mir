@@ -63,6 +63,28 @@ include_directories (
   ${Boost_INCLUDE_DIRS}
 )
 
+#detect mir platforms
+option(
+  MIR_PLATFORM_ANDROID
+  "controls building for android based graphics backend"
+  OFF
+)
+option(
+  MIR_PLATFORM_LLVM
+  "controls building for llvm based graphics backend"
+  ON
+)
+if (MIR_PLATFORM_ANDROID)
+  #these are not intrinsically exclusive. we don't have any way to build
+  #platform llvm on android yet
+  set(MIR_PLATFORM_LLVM OFF)
+  find_package( LibHardware REQUIRED )
+  if (LIBHARDWARE_FOUND)
+    include_directories(${LIBHARDWARE_INCLUDE_DIR})
+  endif() 
+endif()
+
+
 # Check for google protocol buffers and generate code
 find_package( Protobuf REQUIRED )
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
