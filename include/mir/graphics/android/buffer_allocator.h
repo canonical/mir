@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_ANDROID_BUFFER_ALLOCATOR_H_
+#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
+#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
 /* from android */
 #include <hardware/hardware.h>
 #include <hardware/gralloc.h>
@@ -48,4 +48,4 @@ private:
 
 }
 }
-#endif /* MIR_PLATFORM_ANDROID_BUFFER_ALLOCATOR_H_ */
+#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */

@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_PLATFORM_GRAPHIC_ALLOC_ADAPTOR_H_
-#define MIR_PLATFORM_GRAPHIC_ALLOC_ADAPTOR_H_
+#ifndef MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
+#define MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
 
 #include <mir/geometry/dimensions.h>
 #include <mir/compositor/buffer.h>
@@ -47,4 +47,4 @@ public:
 }
 }
 
-#endif /* MIR_PLATFORM_GRAPHIC_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_ */

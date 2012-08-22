@@ -17,9 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_
-
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
@@ -70,5 +69,4 @@ private:
 }
 }
 
-
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_ */

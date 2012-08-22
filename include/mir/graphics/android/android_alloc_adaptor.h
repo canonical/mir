@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
-#define MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
@@ -56,4 +56,4 @@ private:
 }
 }
 
-#endif /* MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_ */

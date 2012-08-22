@@ -17,7 +17,7 @@
 add_library( 
   mirplatformgraphics STATIC
   
-  buffer_allocator.cpp
+  android_buffer_allocator.cpp
   android_buffer.cpp
   android_alloc_adaptor.cpp
 )
