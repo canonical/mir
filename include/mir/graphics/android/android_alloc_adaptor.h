@@ -18,8 +18,9 @@
 #ifndef MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 #define MIR_PLATFORM_GRAPHIC_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 
-#include <hardware/gralloc.h>
 #include "mir/graphics/graphic_alloc_adaptor.h"
+
+#include <hardware/gralloc.h>
 #include <memory>
 
 namespace mir
@@ -30,7 +31,7 @@ namespace graphics
 class AndroidBufferHandle: public BufferHandle
 {
 public:
-    AndroidBufferHandle(buffer_handle_t han)
+    explicit AndroidBufferHandle(buffer_handle_t han)
         :handle(han)
     {}
     buffer_handle_t handle;
@@ -39,7 +40,7 @@ public:
 class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
-    AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);
+    explicit AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device);
     bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
                       geometry::Width, geometry::Height,
                       compositor::PixelFormat, BufferUsage usage);

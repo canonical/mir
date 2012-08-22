@@ -26,6 +26,16 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+
+struct AllocDevDeleter
+{
+    void operator()(alloc_device_t* t)
+    {
+        t->common.close((hw_device_t*)t);
+        delete t;
+    }
+};
+
 mg::AndroidBufferAllocator::AndroidBufferAllocator()
 {
     int err;

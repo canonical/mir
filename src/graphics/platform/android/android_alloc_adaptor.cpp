@@ -45,16 +45,17 @@ private:
     std::shared_ptr<alloc_device_t> alloc_device;
 };
 
-bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride, geom::Width width, geom::Height height,
-        compositor::PixelFormat pf, BufferUsage usage)
+bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride,
+                                           geom::Width width, geom::Height height,
+                                           compositor::PixelFormat pf, BufferUsage usage)
 {
-    /* todo: to go away */
     buffer_handle_t buf_handle;
 
     int ret, stride_as_int;
     int format = convert_to_android_format(pf);
     int usage_flag = convert_to_android_usage(usage);
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(), format, usage_flag, &buf_handle, &stride_as_int);
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),
+                            format, usage_flag, &buf_handle, &stride_as_int);
 
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
         return false;
