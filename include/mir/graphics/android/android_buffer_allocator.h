@@ -32,6 +32,8 @@ namespace mir
 {
 namespace graphics
 {
+namespace android
+{
 
 class AndroidBufferAllocator: public mc::GraphicBufferAllocator
 {
@@ -46,6 +48,7 @@ private:
 
 };
 
+}
 }
 }
 #endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */

@@ -25,6 +25,7 @@
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
+namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 namespace mir
@@ -78,7 +79,7 @@ TEST_F(AndroidGraphicBufferBasic, basic_allocation_is_non_null)
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, _, _));
 
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_NE((int)buffer.get(), NULL);
 }
@@ -89,7 +90,7 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, _, mg::BufferUsage::use_hardware));
 
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 }
 
 TEST_F(AndroidGraphicBufferBasic, dimensions_test)
@@ -97,7 +98,7 @@ TEST_F(AndroidGraphicBufferBasic, dimensions_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, width, height, _, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_EQ(width, buffer->width());
     EXPECT_EQ(height, buffer->height());
@@ -108,7 +109,7 @@ TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _, pf, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
 }
 
@@ -117,7 +118,7 @@ TEST_F(AndroidGraphicBufferBasic, format_echo_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _ , _, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mg::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_EQ(buffer->pixel_format(), pf);
 

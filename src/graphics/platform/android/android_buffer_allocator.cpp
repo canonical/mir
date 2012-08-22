@@ -22,8 +22,9 @@
 
 #include <stdexcept>
 
-namespace mg = mir::graphics;
-namespace mc = mir::compositor;
+namespace mg  = mir::graphics;
+namespace mga = mir::graphics::android;
+namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
 
@@ -36,7 +37,7 @@ struct AllocDevDeleter
     }
 };
 
-mg::AndroidBufferAllocator::AndroidBufferAllocator()
+mga::AndroidBufferAllocator::AndroidBufferAllocator()
 {
     int err;
 
@@ -56,7 +57,7 @@ mg::AndroidBufferAllocator::AndroidBufferAllocator()
     alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
+std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
     return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
@@ -64,5 +65,5 @@ std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
-    return std::unique_ptr<AndroidBufferAllocator>(new AndroidBufferAllocator());
+    return std::unique_ptr<mga::AndroidBufferAllocator>(new mga::AndroidBufferAllocator());
 }

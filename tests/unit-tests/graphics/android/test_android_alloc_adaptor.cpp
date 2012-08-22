@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
@@ -98,7 +99,7 @@ protected:
     {
         mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(&native_handle));
 
-        alloc_adaptor = std::shared_ptr<mg::AndroidAllocAdaptor> (new mg::AndroidAllocAdaptor(mock_alloc_device));
+        alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
@@ -112,7 +113,7 @@ protected:
 
     native_handle_t native_handle;
     std::shared_ptr<MockAllocDevice> mock_alloc_device;
-    std::shared_ptr<mg::AndroidAllocAdaptor> alloc_adaptor;
+    std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 
     mc::PixelFormat pf;
     geom::Width width;

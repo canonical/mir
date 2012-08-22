@@ -20,9 +20,10 @@
 #include "mir/graphics/android/android_buffer.h"
 
 namespace mg=mir::graphics;
+namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> alloc_dev,
+mga::AndroidBuffer::AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> alloc_dev,
                                  geom::Width w, geom::Height h, mc::PixelFormat pf)
     :
     buffer_width(w),
@@ -45,39 +46,39 @@ mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<GraphicAllocAdaptor> alloc_dev,
     throw std::runtime_error("Graphics buffer allocation failed");
 }
 
-mg::AndroidBuffer::~AndroidBuffer()
+mga::AndroidBuffer::~AndroidBuffer()
 {
 }
 
-geom::Width mg::AndroidBuffer::width() const
+geom::Width mga::AndroidBuffer::width() const
 {
     return buffer_width;
 }
 
-geom::Height mg::AndroidBuffer::height() const
+geom::Height mga::AndroidBuffer::height() const
 {
     return buffer_height;
 }
 
-geom::Stride mg::AndroidBuffer::stride() const
+geom::Stride mga::AndroidBuffer::stride() const
 {
     return geom::Stride(0);
 }
 
-mc::PixelFormat mg::AndroidBuffer::pixel_format() const
+mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 {
     return buffer_format;
 }
 
-void mg::AndroidBuffer::lock()
+void mga::AndroidBuffer::lock()
 {
 }
 
-void mg::AndroidBuffer::unlock()
+void mga::AndroidBuffer::unlock()
 {
 }
 
-mg::Texture* mg::AndroidBuffer::bind_to_texture()
+mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
     return NULL;
 }

@@ -27,6 +27,8 @@ namespace mir
 {
 namespace graphics
 {
+namespace android
+{
 
 class AndroidBufferHandle: public BufferHandle
 {
@@ -53,6 +55,7 @@ private:
 
 };
 
+}
 }
 }
 

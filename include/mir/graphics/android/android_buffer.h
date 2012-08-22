@@ -34,6 +34,8 @@ namespace mir
 {
 namespace graphics
 {
+namespace android
+{
 
 class AndroidBuffer: public mc::Buffer
 {
@@ -66,6 +68,7 @@ private:
     std::shared_ptr<BufferHandle> android_handle;
 };
 
+}
 }
 }
 

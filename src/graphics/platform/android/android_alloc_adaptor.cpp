@@ -21,10 +21,11 @@
 #include <stdexcept>
 
 namespace mg=mir::graphics;
+namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mg::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
+mga::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> alloc_device)
     :
     alloc_dev(alloc_device)
 {
@@ -36,7 +37,7 @@ struct BufferHandleDeleter
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(mg::AndroidBufferHandle* t)
+    void operator()(mga::AndroidBufferHandle* t)
     {
         alloc_device->free(alloc_device.get(), t->handle);
         delete t;
@@ -45,7 +46,7 @@ private:
     std::shared_ptr<alloc_device_t> alloc_device;
 };
 
-bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride,
+bool mga::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride,
                                            geom::Width width, geom::Height height,
                                            compositor::PixelFormat pf, BufferUsage usage)
 {
@@ -61,18 +62,18 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle
         return false;
 
     BufferHandleDeleter del(alloc_dev);
-    handle = std::shared_ptr<mg::BufferHandle>(new mg::AndroidBufferHandle(buf_handle), del);
+    handle = std::shared_ptr<mg::BufferHandle>(new mga::AndroidBufferHandle(buf_handle), del);
     stride = geom::Stride(stride_as_int);
 
     return true;
 }
 
-bool mg::AndroidAllocAdaptor::inspect_buffer(char *, int)
+bool mga::AndroidAllocAdaptor::inspect_buffer(char *, int)
 {
     return false;
 }
 
-int mg::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
+int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
     switch (usage)
     {
@@ -84,7 +85,7 @@ int mg::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     }
 }
 
-int mg::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
+int mga::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
 {
     switch (pf)
     {
