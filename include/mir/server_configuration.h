@@ -80,7 +80,7 @@ public:
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
 
-std::string const& default_socket_file();
+std::string const& default_socket_file(); //TODO leaks abstraction
 }
 
 
