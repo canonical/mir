@@ -45,10 +45,6 @@ namespace protobuf
 {
 class DisplayServer;
 }
-namespace surfaces
-{
-class ApplicationSurfaceOrganiser;
-}
 
 struct TestingClientConfiguration
 {
