@@ -76,21 +76,6 @@ ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bun
     assert(buffer_bundle_factory);
 }
 
-//void ms::SurfaceStack::lock()
-//{
-//    guard.lock();
-//}
-//
-//void ms::SurfaceStack::unlock()
-//{
-//    guard.unlock();
-//}
-//
-//bool ms::SurfaceStack::try_lock()
-//{
-//    return guard.try_lock();
-//}
-
 std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
 {
     LockGuardDeleter<std::mutex> lgd(guard);
@@ -102,7 +87,7 @@ std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometr
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)
 {
     std::lock_guard<std::mutex> lg(guard);
-    
+
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params,
