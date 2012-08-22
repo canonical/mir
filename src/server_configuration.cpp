@@ -55,8 +55,6 @@ public:
     }
 };
 
-// TODO this is turning from a "stub" into real implementation. Hence,
-// it ought to be moved out of the testing framework to the system proper.
 class ApplicationProxy : public mir::protobuf::DisplayServer
 {
 public:
