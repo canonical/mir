@@ -32,7 +32,7 @@
 namespace mc = mir::compositor;
 namespace mp = mir::process;
 
-namespace mir
+namespace
 {
 ::testing::AssertionResult WasStarted(
     std::shared_ptr<mir::process::Process> const& server_process)
@@ -42,45 +42,49 @@ namespace mir
     else
         return ::testing::AssertionFailure() << "server NOT started";
 }
+}
 
+namespace mir
+{
 void startup_pause()
 {
     if (!mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(200)))
         throw std::runtime_error("Failed to find server");
 }
+}
 
-
-TestingProcessManager::TestingProcessManager() :
+mir::TestingProcessManager::TestingProcessManager() :
     is_test_process(true)
 {
 }
 
-TestingProcessManager::~TestingProcessManager()
+mir::TestingProcessManager::~TestingProcessManager()
 {
 }
 
 namespace
 {
+// TODO: Get rid of the volatile-hack here and replace it with
+// some sane atomic-pointer once we have left GCC 4.4 behind.
 mir::DisplayServer* volatile signal_display_server;
 }
 
+namespace mir
+{
 extern "C"
 {
 void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
-    while (true)
-    {
-	if(signal_display_server)
-	    break;
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    
-    signal_display_server->stop(); 
+    while (!signal_display_server)
+        std::this_thread::yield();
+ 
+    signal_display_server->stop();
+}
 }
 }
 
-void TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
+void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -107,8 +111,8 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
                 buffer_allocation_strategy,
                 config.make_renderer());
 
-	signal_display_server = &server;
-	
+        signal_display_server = &server;
+
         {
             struct ScopedFuture
             {
@@ -130,7 +134,7 @@ void TestingProcessManager::launch_server_process(TestingServerConfiguration& co
     }
 }
 
-void TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
+void mir::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -171,7 +175,7 @@ void TestingProcessManager::launch_client_process(TestingClientConfiguration& co
     }
 }
 
-void TestingProcessManager::tear_down_clients()
+void mir::TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
     {
@@ -186,7 +190,7 @@ void TestingProcessManager::tear_down_clients()
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             auto result((*client)->wait_for_termination());
-            EXPECT_TRUE(result.succeeded()) << "result=" << result;
+            EXPECT_TRUE(result.succeeded()) << "client terminate error=" << result;
         }
 
         clients.clear();
@@ -197,7 +201,7 @@ void TestingProcessManager::tear_down_clients()
     }
 }
 
-void TestingProcessManager::tear_down_server()
+void mir::TestingProcessManager::tear_down_server()
 {
     if (is_test_process)
     {
@@ -211,13 +215,13 @@ void TestingProcessManager::tear_down_server()
     }
 }
 
-void TestingProcessManager::tear_down_all()
+void mir::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
 }
 
-bool detect_server(
+bool mir::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {
@@ -229,12 +233,11 @@ bool detect_server(
     do
     {
       if (error) {
-	  std::this_thread::sleep_for(std::chrono::milliseconds(0));
+          std::this_thread::sleep_for(std::chrono::milliseconds(0));
       }
       error = stat(socket_file.c_str(), &file_status);
     }
     while (error && std::chrono::system_clock::now() < limit);
 
     return !error;
-}
 }

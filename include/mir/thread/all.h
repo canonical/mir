@@ -47,13 +47,48 @@ namespace mir
 namespace std
 {
 using namespace ::std;
-using ::boost::unique_future;
 using ::boost::unique_lock;
-using ::boost::condition_variable;
 using ::boost::lock_guard;
-#define future unique_future
 using ::boost::thread;
 using ::boost::mutex;
+
+template <typename R>
+class future : ::boost::unique_future<R> {
+public:
+    future() : ::boost::unique_future<R>() { }
+    future(future&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future(::boost::unique_future<R>&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
+    future& operator=(future&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+    future& operator=(::boost::unique_future<R>&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+
+    using ::boost::unique_future<R>::wait;
+    using ::boost::unique_future<R>::get;
+    using ::boost::unique_future<R>::get_state;
+    using ::boost::unique_future<R>::is_ready;
+    using ::boost::unique_future<R>::has_exception;
+    using ::boost::unique_future<R>::has_value;
+
+    template<typename Duration>
+    bool wait_for(Duration const& rel_time) const
+    {
+        return ::boost::unique_future<R>::timed_wait(rel_time);
+    }
+};
+
+class condition_variable: ::boost::condition_variable
+{
+public:
+    using ::boost::condition_variable::wait;
+    using ::boost::condition_variable::notify_all;
+    using ::boost::condition_variable::notify_one;
+
+    template<typename Duration>
+    bool wait_for(unique_lock<mutex>& mutex, Duration const& rel_time)
+    {
+        return ::boost::condition_variable::timed_wait(mutex, rel_time);
+    }
+};
+
 
 enum class launch
 {
@@ -81,18 +116,6 @@ namespace cv_status
 {
 bool const no_timeout = true;
 bool const timeout = false;
-}
-
-template<typename Lock, typename Duration>
-bool wait_on_cv_for(condition_variable& cv, Lock& lock, const Duration& d)
-{
-    return cv.timed_wait(lock, d);
-}
-
-template<typename Lock, typename Timepoint>
-bool wait_on_cv_until(condition_variable& cv, Lock& lock, const Timepoint& tp)
-{
-    return cv.timed_wait(lock, tp);
 }
 
 namespace this_thread

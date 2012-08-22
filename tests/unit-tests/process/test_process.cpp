@@ -35,10 +35,10 @@ struct MainFunctionFactory
 
     static void an_infinitely_waiting_main_function()
     {
-	std::mutex m;
-	std::unique_lock<std::mutex> ul(m);
+        std::mutex m;
+        std::unique_lock<std::mutex> ul(m);
 
-	std::condition_variable cv;
+        std::condition_variable cv;
 
         cv.wait(ul);
     }
@@ -79,9 +79,9 @@ TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
 {
     EXPECT_EXIT(
-		mp::Process p(0),
-		::testing::KilledBySignal(SIGABRT),
-		".*");
+        mp::Process p(0),
+        ::testing::KilledBySignal(SIGABRT),
+        ".*");
 }
 #endif // defined(MIR_DEATH_TESTS_ENABLED)
 
@@ -156,7 +156,7 @@ TEST(Process,
         ExitFunctionFactory::a_successful_exit_function);
 
     p->terminate();
-    
+
     EXPECT_TRUE(p->wait_for_termination().signalled());
 }
 
@@ -168,7 +168,7 @@ TEST(Process,
         ExitFunctionFactory::a_successful_exit_function);
 
     p->kill();
-    
+
     EXPECT_TRUE(p->wait_for_termination().signalled());
 }
 }
