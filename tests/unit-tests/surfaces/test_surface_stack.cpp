@@ -129,7 +129,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_, _, _)).Times(0);
-     
+
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
