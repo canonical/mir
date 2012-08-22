@@ -49,9 +49,9 @@ bool mg::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle
                                            geom::Width width, geom::Height height,
                                            compositor::PixelFormat pf, BufferUsage usage)
 {
-    buffer_handle_t buf_handle;
+    buffer_handle_t buf_handle = NULL;
 
-    int ret, stride_as_int;
+    int ret, stride_as_int = 0;
     int format = convert_to_android_format(pf);
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),

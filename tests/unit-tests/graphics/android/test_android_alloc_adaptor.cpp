@@ -55,9 +55,8 @@ public:
         dump = hook_dump;
         ON_CALL(*this, alloc_interface(_,_,_,_,_,_,_))
         .WillByDefault(DoAll(
-                           SaveArg<1>(&w),
                            SetArgPointee<5>(buffer_handle),
-                           SetArgPointee<6>(w * 4), /* stride must be >= (bpp * width). 4bpp is the max supported */
+                           SetArgPointee<6>(300),
                            Return(0)));
         ON_CALL(*this, free_interface(_,_))
         .WillByDefault(Return(0));
@@ -89,7 +88,6 @@ public:
     MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
 
     buffer_handle_t buffer_handle;
-    int w;
 };
 }
 
