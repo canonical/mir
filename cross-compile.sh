@@ -14,6 +14,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/android.toolchain.cmake \
 -DBOOST_LIBRARYDIR=/tmp/ndk-standalone-9/sysroot/usr/lib \
 -DMIR_ENABLE_DEATH_TESTS=NO \
 -DMIR_INPUT_ENABLE_EVEMU=NO \
+-DMIR_PLATFORM_ANDROID=YES \
 -Dgtest_disable_pthreads=YES \
 $cwd
 
