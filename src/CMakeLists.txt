@@ -26,6 +26,7 @@ add_subdirectory(client/)
 set(
   SRCS
   display_server.cpp
+  server_configuration.cpp
 )
 
 add_library(
