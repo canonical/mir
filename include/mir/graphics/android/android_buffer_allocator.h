@@ -23,10 +23,8 @@
 /* from android */
 #include <hardware/hardware.h>
 
-#include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-
-#include "android_buffer.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
 
 namespace mir
 {
