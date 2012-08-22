@@ -47,6 +47,11 @@ public:
     virtual bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
                               geometry::Width, geometry::Height,
                               compositor::PixelFormat, BufferUsage usage) = 0;
+protected:
+    GraphicAllocAdaptor() = default;
+    virtual ~GraphicAllocAdaptor() = default;
+    GraphicAllocAdaptor(const GraphicAllocAdaptor&) = delete;
+    GraphicAllocAdaptor& operator=(const GraphicAllocAdaptor&) = delete;
 };
 
 }
