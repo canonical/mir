@@ -68,8 +68,6 @@ private:
     bool is_test_process;
 };
 
-std::string const& test_socket_file();
-
 bool detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout);

@@ -133,8 +133,6 @@ struct Surfaces :
 };
 }
 
-namespace mir { std::string const& test_socket_file(); } // FRIG
-
 std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
 {
     return std::make_shared<StubBufferAllocationStrategy>();
@@ -158,6 +156,11 @@ std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<mf::ProtobufIpcFactory> const& ipc_server)
 {
-    return std::make_shared<mf::ProtobufAsioCommunicator>(test_socket_file(), ipc_server);
+    return std::make_shared<mf::ProtobufAsioCommunicator>(default_socket_file(), ipc_server);
 }
 
+std::string const& mir::default_socket_file()
+{
+    static const std::string socket_file{"./mir_socket_test"};
+    return socket_file;
+}

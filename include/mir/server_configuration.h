@@ -19,6 +19,7 @@
 #define MIR_SERVER_CONFIGURATION_H_
 
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -78,6 +79,9 @@ public:
     // the allocator strategy to use
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 };
+
+std::string const& default_socket_file();
 }
+
 
 #endif /* MIR_SERVER_CONFIGURATION_H_ */

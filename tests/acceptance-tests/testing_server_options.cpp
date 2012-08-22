@@ -25,11 +25,3 @@ void mir::TestingServerConfiguration::exec(DisplayServer* )
 void mir::TestingServerConfiguration::on_exit(DisplayServer* )
 {
 }
-
-std::string const& mir::test_socket_file()
-{
-    static const std::string socket_file{"./mir_socket_test"};
-    return socket_file;
-}
-
-
