@@ -38,27 +38,21 @@ namespace surfaces
 class Surface;
 class SurfaceCreationParameters;
 
-class SurfaceStack : public Scenegraph,
-                     public SurfaceStackModel
+class SurfaceStack : public Scenegraph, public SurfaceStackModel
 {
- public:
+public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
-    // Make this a model of Lockable.
-    void lock();
-    void unlock();
-    bool try_lock();
-    
     // From Scenegraph
     virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);
-    
+
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
 
- private:
+private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
     std::mutex guard;
