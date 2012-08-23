@@ -13,3 +13,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+
+add_library(
+  mirplatformgraphics STATIC
+
+  buffer_allocator.cpp
+  gbm_buffer.cpp
+)
