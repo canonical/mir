@@ -74,6 +74,11 @@ option(
   "controls building for llvm based graphics backend"
   ON
 )
+option(
+  MIR_PLATFORM_GBM
+  "controls building for mesa based graphics backend"
+  ON
+)
 if (MIR_PLATFORM_ANDROID)
   #these are not intrinsically exclusive. we don't have any way to build
   #platform llvm on android yet

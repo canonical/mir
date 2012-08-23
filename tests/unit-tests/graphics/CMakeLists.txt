@@ -26,5 +26,9 @@ if (MIR_PLATFORM_LLVM)
 add_subdirectory(llvm/)
 endif()
 
+if (MIR_PLATFORM_GBM)
+add_subdirectory(gbm/)
+endif()
+
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 

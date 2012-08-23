@@ -12,18 +12,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
-
-# By default, build for LLVM
-
-if (MIR_PLATFORM_LLVM)
-  add_subdirectory(platform/llvm/)
-endif()
-
-if (MIR_PLATFORM_ANDROID)
-  add_subdirectory(platform/android/)
-endif()
-
-if (MIR_PLATFORM_GBM)
-  add_subdirectory(platform/gbm/)
-endif()
+# Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
