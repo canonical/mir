@@ -44,6 +44,15 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
         std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
 };
 
+class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+ public:
+    MOCK_METHOD3(
+        alloc_buffer,
+        std::unique_ptr<mc::Buffer> (geom::Width, geom::Height, mc::PixelFormat));
+};
+
+
 geom::Width const width{640};
 geom::Height const height{480};
 mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
@@ -85,3 +94,40 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+TEST_F(BespokeDisplayServerTestFixture,
+       creating_a_client_surface_allocates_buffers_on_server)
+{
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mc::GraphicBufferAllocator> make_graphic_buffer_allocator()
+        {
+            using testing::AtLeast;
+
+            if (!buffer_allocator)
+                buffer_allocator = std::make_shared<MockGraphicBufferAllocator>();
+
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(width, height, format)).Times(AtLeast(2));
+
+            return buffer_allocator;
+        }
+
+        std::shared_ptr<MockGraphicBufferAllocator> buffer_allocator;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
+            EXPECT_TRUE(mysurface.is_valid());
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
