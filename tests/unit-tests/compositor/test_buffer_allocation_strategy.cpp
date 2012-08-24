@@ -22,7 +22,6 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/mock_buffer.h"
-#include "mir_test/mock_graphic_buffer_allocator.h"
 
 
 namespace mc = mir::compositor;
