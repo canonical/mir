@@ -40,13 +40,9 @@ class Renderer;
 class ServerConfiguration
 {
 public:
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy) = 0;
-
     // the communicator to use
     virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory) = 0;
+    make_communicator(std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy) = 0;
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer() = 0;
@@ -65,22 +61,23 @@ protected:
 class DefaultServerConfiguration : public ServerConfiguration
 {
 public:
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
-
     // the communicator to use
     virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory);
+    make_communicator(std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
 
     // the renderer to use
     virtual std::shared_ptr<graphics::Renderer> make_renderer();
 
     // the allocator strategy to use
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
-};
 
-std::string const& default_socket_file(); //TODO leaks abstraction
+private:
+    virtual std::string const& default_socket_file();
+
+    // the communications interface to use
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
+        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
+};
 }
 
 

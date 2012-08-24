@@ -37,6 +37,8 @@ namespace ms = mir::surfaces;
 
 namespace
 {
+
+// TODO replace with a real renderer appropriate to the platform default
 class StubRenderer : public mg::Renderer
 {
 public:
@@ -45,6 +47,7 @@ public:
     }
 };
 
+// TODO replace with a allocation strategy
 class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
 public:
@@ -55,8 +58,6 @@ public:
     }
 };
 
-// TODO this is turning from a "stub" into real implementation. Hence,
-// it ought to be moved out of the testing framework to the system proper.
 class ApplicationProxy : public mir::protobuf::DisplayServer
 {
 public:
@@ -101,10 +102,10 @@ private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
 };
 
-class StubIpcFactory : public mf::ProtobufIpcFactory
+class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    explicit StubIpcFactory(
+    explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
         surface_organiser(surface_organiser)
     {
@@ -119,8 +120,8 @@ private:
     }
 };
 
-// TODO This (with make_ipc_factory()) builds a large chunk of the "inner" system,
-// it probably ought to be moved out of the testing framework to the system proper.
+// This (with make_ipc_factory()) builds a large chunk of the "inner" system.
+// We may want to move this out of "configuration" someday
 struct Surfaces :
     public mc::BufferBundleManager,
     public ms::SurfaceStack,
@@ -149,18 +150,19 @@ mir::DefaultServerConfiguration::make_ipc_factory(
 {
     auto surface_organiser = std::make_shared<Surfaces>(
         buffer_allocation_strategy);
-    return std::make_shared<StubIpcFactory>(surface_organiser);
+    return std::make_shared<DefaultIpcFactory>(surface_organiser);
 }
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::ProtobufIpcFactory> const& ipc_server)
+    std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy)
 {
-    return std::make_shared<mf::ProtobufAsioCommunicator>(default_socket_file(), ipc_server);
+    return std::make_shared<mf::ProtobufAsioCommunicator>(
+        default_socket_file(), make_ipc_factory(buffer_allocation_strategy));
 }
 
-std::string const& mir::default_socket_file()
+std::string const& mir::DefaultServerConfiguration::default_socket_file()
 {
-    static const std::string socket_file{"./mir_socket_test"};
+    static const std::string socket_file{"/tmp/mir_socket"};
     return socket_file;
 }
