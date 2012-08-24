@@ -89,6 +89,10 @@ if (MIR_PLATFORM_ANDROID)
   endif() 
 endif()
 
+if (MIR_PLATFORM_GBM)
+  find_package( PkgConfig )
+  pkg_check_modules( GBM REQUIRED gbm )
+endif()
 
 # Check for google protocol buffers and generate code
 find_package( Protobuf REQUIRED )

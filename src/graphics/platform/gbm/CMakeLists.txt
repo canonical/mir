@@ -17,6 +17,6 @@
 add_library(
   mirplatformgraphics STATIC
 
-  buffer_allocator.cpp
+  gbm_buffer_allocator.cpp
   gbm_buffer.cpp
 )

@@ -1,3 +1,4 @@
+
 /*
  * Copyright © 2012 Canonical Ltd.
  *
@@ -16,23 +17,21 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_buffer.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
 
+#include <memory>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <cstdint>
-
-namespace mc=mir::compositor;
-namespace mg=mir::graphics;
-namespace mgg=mir::graphics::gbm;
-namespace geom=mir::geometry;
+namespace mg = mir::graphics;
+namespace mgg = mir::graphics::gbm;
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 #include "mock_gbm_device.cpp"
 
-class GBMGraphicBufferBasic : public ::testing::Test
+class GBMBufferAllocatorTest  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -40,28 +39,25 @@ protected:
         mocker = std::shared_ptr<MockGBMDevice> (new MockGBMDevice);
         allocator = std::shared_ptr<mgg::GBMBufferAllocator> (new mgg::GBMBufferAllocator(mocker->get_device()));
 
-        width = geom::Width(300);
-        height = geom::Height(200);
+        w = geom::Width(300);
+        h = geom::Height(200);
         pf = mc::PixelFormat::rgba_8888;
     }
 
+    // Defaults
+    geom::Width w;
+    geom::Height h;
+    mc::PixelFormat pf;
+
     std::shared_ptr<MockGBMDevice> mocker;
     std::shared_ptr<mgg::GBMBufferAllocator> allocator;
-
-    // Defaults
-    mc::PixelFormat pf;
-    geom::Width width;
-    geom::Height height;
 };
 
-TEST_F(GBMGraphicBufferBasic, dimensions_test)
+TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
 {
     using namespace testing;
-
-    EXPECT_CALL(*mocker, bo_create( _, width.as_uint32_t(), height.as_uint32_t(), _, _ ));
+    EXPECT_CALL(*mocker, bo_create(_,_,_,_,_));
     EXPECT_CALL(*mocker, bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
-    ASSERT_EQ(width, buffer->width());
-    ASSERT_EQ(height, buffer->height());
+    EXPECT_TRUE(allocator->alloc_buffer(w, h, pf).get() != NULL);
 }

@@ -21,10 +21,11 @@
 #define MIR_GRAPHICS_GBM_GBM_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
 
 #include <stdexcept>
 #include <memory>
+
+#include <gbm.h>
 
 namespace mir
 {
@@ -36,8 +37,16 @@ namespace gbm
 class GBMBuffer: public compositor::Buffer
 {
 public:
-    GBMBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
-    virtual ~GBMBuffer();
+    GBMBuffer(struct gbm_bo *handle)
+        : buffer_format(compositor::PixelFormat::rgba_8888),
+          gbm_handle(handle)
+    {
+    }
+
+    virtual ~GBMBuffer()
+    {
+        gbm_bo_destroy(gbm_handle);
+    }
 
     virtual geometry::Width width() const;
 
@@ -59,9 +68,7 @@ private:
     const compositor::PixelFormat buffer_format;
     geometry::Stride buffer_stride;
 
-    const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
-    std::shared_ptr<BufferHandle> gbm_handle;
+    struct gbm_bo *gbm_handle;
 };
 
 }

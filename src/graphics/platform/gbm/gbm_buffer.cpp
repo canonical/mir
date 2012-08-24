@@ -25,42 +25,14 @@ namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
 
-mgg::GBMBuffer::GBMBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
-                          geom::Width w, geom::Height h, mc::PixelFormat pf)
-    :
-    buffer_width(w),
-    buffer_height(h),
-    buffer_format(pf),
-    alloc_device(device)
-{
-    bool ret;
-    BufferUsage usage = mg::BufferUsage::use_hardware;
-
-    if (!alloc_device)
-        throw std::runtime_error("No allocation device for graphics buffer");
-
-    ret = alloc_device->alloc_buffer( gbm_handle, buffer_stride,
-                                      buffer_width, buffer_height,
-                                      buffer_format, usage);
-    if (ret)
-        return;
-
-    throw std::runtime_error("Graphics buffer allocation failed");
-}
-
-mgg::GBMBuffer::~GBMBuffer()
-{
-
-}
-
 geom::Width mgg::GBMBuffer::width() const
 {
-    return buffer_width;
+    return geom::Width(gbm_bo_get_width(gbm_handle));
 }
 
 geom::Height mgg::GBMBuffer::height() const
 {
-    return buffer_height;
+    return geom::Height(gbm_bo_get_height(gbm_handle));
 }
 
 geom::Stride mgg::GBMBuffer::stride() const
