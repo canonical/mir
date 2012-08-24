@@ -26,6 +26,7 @@ namespace mir
 namespace compositor
 {
 class BufferAllocationStrategy;
+class GraphicBufferAllocator;
 }
 namespace frontend
 {
@@ -77,6 +78,9 @@ private:
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
         std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
+
+    // the graphic buffer source to use
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> make_graphic_buffer_allocator();
 };
 }
 
