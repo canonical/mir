@@ -23,6 +23,8 @@
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
@@ -47,14 +49,13 @@ public:
     }
 };
 
-// TODO replace with a allocation strategy
-class StubBufferAllocationStrategy : public mc::BufferAllocationStrategy
+// TODO replace with a real buffer allocator appropriate to the platform default
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
-public:
-    virtual std::unique_ptr<mc::BufferSwapper> create_swapper(
-        geom::Width, geom::Height, mc::PixelFormat)
+ public:
+    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Width, geom::Height, mc::PixelFormat)
     {
-        return std::unique_ptr<mc::BufferSwapper>();
+        return std::unique_ptr<mc::Buffer>();
     }
 };
 
@@ -134,9 +135,15 @@ struct Surfaces :
 };
 }
 
+std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
+{
+    return std::make_shared<StubGraphicBufferAllocator>();
+}
+
 std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
 {
-    return std::make_shared<StubBufferAllocationStrategy>();
+    auto graphic_buffer_allocator = make_graphic_buffer_allocator();
+    return std::make_shared<mc::DoubleBufferAllocationStrategy>(graphic_buffer_allocator);
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer()
