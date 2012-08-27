@@ -58,7 +58,7 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create( _, width.as_uint32_t(), height.as_uint32_t(), _, _ ));
+    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
     EXPECT_CALL(*mocker, bo_destroy(_));
 
     std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
