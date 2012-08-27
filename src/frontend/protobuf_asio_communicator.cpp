@@ -117,13 +117,15 @@ void mf::ProtobufAsioCommunicator::stop()
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
-    connected_sessions.clear();
-
     stop();
+
     if (io_service_thread.joinable())
     {
         io_service_thread.join();
     }
+
+    connected_sessions.clear();
+
     std::remove(socket_file.c_str());
 }
 
@@ -220,10 +222,7 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         }
     }
 
-    if (connected_sessions->includes(id()))
-    {
-        read_next_message();
-    }
+    read_next_message();
 }
 
 void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
