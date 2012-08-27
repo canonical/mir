@@ -47,6 +47,9 @@ public:
     ~Surface();
 
     bool is_valid() const;
+    int width() const;
+    int height() const;
+    int pix_format() const;
 
     Surface(Surface&& that);
 
