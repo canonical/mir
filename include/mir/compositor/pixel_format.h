@@ -17,8 +17,8 @@
  */
 
 
-#ifndef PIXEL_FORMAT_H_
-#define PIXEL_FORMAT_H_
+#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
 
 namespace mir
@@ -32,4 +32,4 @@ enum class PixelFormat : uint32_t
 }
 }
 
-#endif /* PIXEL_FORMAT_H_ */
+#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
