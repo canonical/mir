@@ -76,3 +76,19 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
     std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
     ASSERT_EQ(pf, buffer->pixel_format());
 }
+
+TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
+    EXPECT_CALL(*mocker, bo_destroy(_));
+
+    // RGBA 8888 cannot take less than 4 bytes
+    // TODO: is there a *maximum* sane value for stride?
+    geom::Stride minimum(width.as_uint32_t() * 4);
+
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
+
+    ASSERT_LE(minimum, buffer->stride());
+}

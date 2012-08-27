@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <gbm.h>
 #include "gbmint.h"
 
 class MockGBMDevice;
@@ -47,6 +49,13 @@ private:
         bo->gbm = dev;
         bo->width = w;
         bo->height = h;
+        switch (format) {
+        case GBM_BO_FORMAT_ARGB8888:
+            bo->stride = w * 4;
+            break;
+        default:
+            throw std::runtime_error("Attempted to create buffer with unknown format");
+        }
         return bo;
     }
 
