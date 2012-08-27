@@ -131,6 +131,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     void SetUp()
     {
+        ::testing::Mock::VerifyAndClearExpectations(factory.get());
         comm.start();
     }
 
