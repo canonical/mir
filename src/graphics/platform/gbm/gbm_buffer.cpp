@@ -37,7 +37,7 @@ geom::Height mgg::GBMBuffer::height() const
 
 geom::Stride mgg::GBMBuffer::stride() const
 {
-    return geom::Stride(0);
+    return geom::Stride(gbm_bo_get_stride(gbm_handle));
 }
 
 mc::PixelFormat mgg::GBMBuffer::pixel_format() const
