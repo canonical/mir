@@ -42,7 +42,7 @@ geom::Stride mgg::GBMBuffer::stride() const
 
 mc::PixelFormat mgg::GBMBuffer::pixel_format() const
 {
-    return buffer_format;
+    return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle));
 }
 
 void mgg::GBMBuffer::lock()
@@ -58,4 +58,16 @@ void mgg::GBMBuffer::unlock()
 mg::Texture* mgg::GBMBuffer::bind_to_texture()
 {
     return NULL;
+}
+
+mc::PixelFormat mgg::GBMBuffer::gbm_format_to_mir_format(uint32_t format)
+{
+    (void)format;
+    return mc::PixelFormat::rgba_8888;
+}
+
+uint32_t mgg::GBMBuffer::mir_format_to_gbm_format(mc::PixelFormat format)
+{
+    (void)format;
+    return GBM_BO_FORMAT_ARGB8888;
 }

@@ -62,6 +62,9 @@ public:
 
     virtual Texture* bind_to_texture();
 
+    static compositor::PixelFormat gbm_format_to_mir_format(uint32_t format);
+    static uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
+
 private:
     const geometry::Width  buffer_width;
     const geometry::Height buffer_height;
