@@ -38,8 +38,7 @@ class GBMBuffer: public compositor::Buffer
 {
 public:
     GBMBuffer(struct gbm_bo *handle)
-        : buffer_format(compositor::PixelFormat::rgba_8888),
-          gbm_handle(handle)
+        : gbm_handle(handle)
     {
     }
 
@@ -66,11 +65,6 @@ public:
     static uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
 
 private:
-    const geometry::Width  buffer_width;
-    const geometry::Height buffer_height;
-    const compositor::PixelFormat buffer_format;
-    geometry::Stride buffer_stride;
-
     struct gbm_bo *gbm_handle;
 };
 
