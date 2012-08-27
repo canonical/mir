@@ -24,7 +24,7 @@ public:
 
         thunk = this;
 
-        dev = std::shared_ptr<struct gbm_device>(new gbm_device());
+        dev = new gbm_device();
 
         dev->bo_create = mock_bo_create;
         dev->bo_destroy = mock_bo_destroy;
@@ -36,7 +36,7 @@ public:
     MOCK_METHOD5(bo_create, struct gbm_bo *(struct gbm_device *, uint32_t, uint32_t, uint32_t, uint32_t));
     MOCK_METHOD1(bo_destroy, void(struct gbm_bo *));
 
-    std::shared_ptr<struct gbm_device> get_device()
+    struct gbm_device *get_device()
     {
         return dev;
     }
@@ -59,7 +59,7 @@ private:
         return bo;
     }
 
-    std::shared_ptr<struct gbm_device> dev;
+    struct gbm_device *dev;
 };
 
 extern "C" {

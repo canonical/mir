@@ -36,7 +36,7 @@ class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 public:
     GBMBufferAllocator();
 
-    GBMBufferAllocator(std::shared_ptr<struct gbm_device> device)
+    GBMBufferAllocator(struct gbm_device *device)
         : dev(device)
     {}
 
@@ -44,7 +44,7 @@ public:
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
 
 private:
-    std::shared_ptr<struct gbm_device> dev;
+    struct gbm_device *dev;
 };
 
 }
