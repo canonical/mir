@@ -112,7 +112,7 @@ private:
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
-    static const std::string& socket_name()
+    static std::string const & socket_name()
     {
         static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
@@ -132,6 +132,11 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     void SetUp()
     {
         comm.start();
+    }
+
+    void TearDown()
+    {
+        comm.stop();
     }
 
     void expect_session_count(int expected_count)
