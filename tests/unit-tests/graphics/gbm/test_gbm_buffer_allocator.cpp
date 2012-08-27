@@ -24,6 +24,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <gbm.h>
+
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
@@ -60,4 +62,14 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_CALL(*mocker, bo_destroy(_));
 
     EXPECT_TRUE(allocator->alloc_buffer(w, h, pf).get() != NULL);
+}
+
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mocker, bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
+    EXPECT_CALL(*mocker, bo_destroy(_));
+
+    allocator->alloc_buffer(w, h, mc::PixelFormat::rgba_8888);
 }
