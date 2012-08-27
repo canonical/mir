@@ -110,14 +110,11 @@ void mf::ProtobufAsioCommunicator::start()
 
 void mf::ProtobufAsioCommunicator::stop()
 {
-    io_service.stop();
-    // Shouldn't be needed - but works around error on Android stack
-    std::this_thread::yield();
 }
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
-    stop();
+    io_service.stop();
 
     if (io_service_thread.joinable())
     {
