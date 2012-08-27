@@ -108,11 +108,18 @@ void mf::ProtobufAsioCommunicator::start()
     io_service_thread = std::move(std::thread(run_io_service));
 }
 
+void mf::ProtobufAsioCommunicator::stop()
+{
+    io_service.stop();
+    // Shouldn't be needed - but works around error on Android stack
+    std::this_thread::yield();
+}
+
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 {
     connected_sessions.clear();
 
-    io_service.stop();
+    stop();
     if (io_service_thread.joinable())
     {
         io_service_thread.join();
