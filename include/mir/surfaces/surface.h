@@ -59,9 +59,11 @@ class Surface : public graphics::Renderable
     Surface(const SurfaceCreationParameters& params,
             std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
 
-    geometry::Width width() const { return geometry::Width(); }
-    geometry::Height height() const { return geometry::Height(); }
+    geometry::Width width() const;
+    geometry::Height height() const;
+
  private:
+    SurfaceCreationParameters params;
     std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
 };
 
