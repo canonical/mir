@@ -87,3 +87,13 @@ TEST_F(GBMBufferAllocatorTest, creates_hw_rendering_buffer_by_default)
 
     allocator->alloc_buffer(w, h, pf);
 }
+
+TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mocker, bo_create(_,w.as_uint32_t(),h.as_uint32_t(),_,_));
+    EXPECT_CALL(*mocker, bo_destroy(_));
+
+    allocator->alloc_buffer(w, h, pf);
+}
