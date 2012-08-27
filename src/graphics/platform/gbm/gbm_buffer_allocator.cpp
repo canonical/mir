@@ -37,7 +37,8 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
     (void)pf;
-    struct gbm_bo *handle = gbm_bo_create(dev.get(), width.as_uint32_t(), height.as_uint32_t(), GBM_BO_FORMAT_ARGB8888, 0);
+    struct gbm_bo *handle = gbm_bo_create(dev.get(), width.as_uint32_t(), height.as_uint32_t(),
+                                          GBM_BO_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
     if (handle != NULL)
         return std::unique_ptr<mc::Buffer>(new GBMBuffer(handle));
 
