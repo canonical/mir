@@ -45,6 +45,12 @@ mir::geometry::Height ms::Surface::height() const
     return params.height;
 }
 
+mc::PixelFormat ms::Surface::pixel_format() const
+{
+    // TODO This should actually be supplied from somewhere (where?)
+    return mc::PixelFormat();
+}
+
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_width(geometry::Width new_width)
 {
     width = new_width;

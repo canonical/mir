@@ -30,7 +30,7 @@ namespace compositor
 {
 
 class BufferTextureBinder;
-
+enum class PixelFormat : uint32_t;
 }
 namespace surfaces
 {
@@ -61,6 +61,7 @@ class Surface : public graphics::Renderable
 
     geometry::Width width() const;
     geometry::Height height() const;
+    compositor::PixelFormat pixel_format() const;
 
  private:
     SurfaceCreationParameters params;
