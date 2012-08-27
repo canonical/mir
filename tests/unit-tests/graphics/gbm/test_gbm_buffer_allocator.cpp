@@ -97,3 +97,17 @@ TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
 
     allocator->alloc_buffer(w, h, pf);
 }
+
+TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
+{
+    using namespace testing;
+
+    struct gbm_bo *bo = new gbm_bo();
+    bo->gbm = mocker->get_device().get();
+
+    EXPECT_CALL(*mocker, bo_create(_,_,_,_,_))
+    .WillOnce(Return(bo));
+    EXPECT_CALL(*mocker, bo_destroy(bo));
+
+    allocator->alloc_buffer(w, h, pf);
+}
