@@ -65,3 +65,14 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     ASSERT_EQ(width, buffer->width());
     ASSERT_EQ(height, buffer->height());
 }
+
+TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
+    EXPECT_CALL(*mocker, bo_destroy(_));
+
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
+    ASSERT_EQ(pf, buffer->pixel_format());
+}
