@@ -16,49 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/geometry/dimensions.h"
-#include "mir/compositor/pixel_format.h"
+#ifndef PIXEL_FORMAT_H_
+#define PIXEL_FORMAT_H_
+
 
 namespace mir
 {
-
-namespace graphics
-{
-class Texture;
-}
-
 namespace compositor
 {
-
-class Buffer
+enum class PixelFormat : uint32_t
 {
-public:
-
-    virtual ~Buffer() {}
-
-    virtual geometry::Width width() const = 0;
-
-    virtual geometry::Height height() const = 0;
-
-    virtual geometry::Stride stride() const = 0;
-
-    virtual PixelFormat pixel_format() const = 0;
-
-    virtual void lock() = 0;
-
-    virtual void unlock() = 0;
-
-    virtual graphics::Texture* bind_to_texture() = 0;
-
-protected:
-    Buffer() = default;
-    Buffer(Buffer const&) = delete;
-    Buffer& operator=(Buffer const&) = delete;
+    rgba_8888
 };
+}
+}
 
-}
-}
-#endif // MIR_COMPOSITOR_BUFFER_H_
+#endif /* PIXEL_FORMAT_H_ */

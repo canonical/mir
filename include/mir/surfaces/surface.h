@@ -21,6 +21,7 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/pixel_format.h"
 
 #include <memory>
 
@@ -28,10 +29,9 @@ namespace mir
 {
 namespace compositor
 {
-
 class BufferTextureBinder;
-enum class PixelFormat : uint32_t;
 }
+
 namespace surfaces
 {
 
