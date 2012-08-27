@@ -73,3 +73,17 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
 
     allocator->alloc_buffer(w, h, mc::PixelFormat::rgba_8888);
 }
+
+static bool has_hardware_rendering_flag_set(uint32_t flags) {
+    return flags & GBM_BO_USE_RENDERING;
+}
+
+TEST_F(GBMBufferAllocatorTest, creates_hw_rendering_buffer_by_default)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mocker, bo_create(_,_,_,_,Truly(has_hardware_rendering_flag_set)));
+    EXPECT_CALL(*mocker, bo_destroy(_));
+
+    allocator->alloc_buffer(w, h, pf);
+}
