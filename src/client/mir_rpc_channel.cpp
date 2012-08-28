@@ -195,9 +195,6 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
     return result;
 }
 
-void c::done()
-{
-}
 
 std::ostream& c::ConsoleLogger::error()
 {

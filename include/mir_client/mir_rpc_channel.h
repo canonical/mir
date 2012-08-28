@@ -124,7 +124,6 @@ private:
     void run_io_service_debug_wrapper();
 };
 
-void done();
 }
 }
 
