@@ -38,7 +38,7 @@ typedef void (* mir_connected_callback)(MirConnection * connection, void * clien
 /* Request a connection to the MIR server.
    The supplied callback is called when the connection is established, or fails.
 */
-void mir_connect(mir_connected_callback * callback, void * client_context);
+void mir_connect(mir_connected_callback callback, void * client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_connection_is_valid(MirConnection * connection);
