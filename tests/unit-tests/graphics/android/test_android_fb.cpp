@@ -24,8 +24,13 @@ namespace mg=mir::graphics;
 
 TEST(framebuffer_test, fb_initialize)
 {
-   std::shared_ptr<mg::Display>(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
 
+    glClearColor(1.0f, 1.0f , 1.0f, 1.0f);
+    glClearBit(); 
 
+    display->notify_update();
+
+    
 
 }

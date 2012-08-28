@@ -36,7 +36,6 @@ public:
     explicit AndroidDisplay();
     geometry::Rectangle view_area();
     void notify_update();
-
 };
 
 }
