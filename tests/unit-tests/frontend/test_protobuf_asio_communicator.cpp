@@ -179,6 +179,9 @@ struct TestClient
     mir::protobuf::ConnectMessage connect_message;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
+
+    void connect_done() {}
+    void disconnect_done() {}
 };
 
 struct BasicTestFixture : public ::testing::Test
@@ -220,7 +223,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
         0,
         &client.connect_message,
         &client.surface,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     server.expect_session_count(1);
 }
@@ -234,7 +237,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.connect_message,
         &client.surface,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     server.expect_connected_session_count(1);
 }
@@ -252,7 +255,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             0,
             &client.connect_message,
             &client.surface,
-            google::protobuf::NewCallback(&mir::client::done));
+            google::protobuf::NewCallback(&client, &TestClient::connect_done));
     }
 
     server.expect_session_count(connection_count);
@@ -268,7 +271,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.connect_message,
         &client.surface,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     server.expect_connected_session_count(1);
 
@@ -276,7 +279,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.ignored,
         &client.ignored,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
 
     server.expect_connected_session_count(0);
 }
@@ -290,7 +293,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.connect_message,
         &client.surface,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     server.expect_connected_session_count(1);
 
@@ -298,7 +301,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.ignored,
         &client.ignored,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
 
     server.expect_connected_session_count(0);
 
@@ -308,7 +311,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         0,
         &client.ignored,
         &client.ignored,
-        google::protobuf::NewCallback(&mir::client::done));
+        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
 
     server.expect_connected_session_count(0);
 }
@@ -324,7 +327,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
             0,
             &client[i].connect_message,
             &client[i].surface,
-            google::protobuf::NewCallback(&mir::client::done));
+            google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
     }
 
     server.expect_session_count(connection_count);
@@ -336,7 +339,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
             0,
             &client[i].ignored,
             &client[i].ignored,
-            google::protobuf::NewCallback(&mir::client::done));
+            google::protobuf::NewCallback(&client[i], &TestClient::disconnect_done));
     }
 
     server.expect_session_count(connection_count);
