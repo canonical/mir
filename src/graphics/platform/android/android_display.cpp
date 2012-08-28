@@ -25,10 +25,22 @@ namespace geom=mir::geometry;
 
 mg::AndroidDisplay::AndroidDisplay()
 {
+    EGLint major, minor;
+
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (egl_display == EGL_NO_DISPLAY)
     {
         throw std::runtime_error("eglGetDisplay failed\n");
+    }
+    
+    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+    {
+        throw std::runtime_error("eglInitialize failure\n");
+    }
+    /* todo: we could adapt to different versions. */
+    if ((major != 1) || (minor != 4))
+    {
+        throw std::runtime_error("must have EGL 1.4\n");
     }
      
 
