@@ -20,7 +20,7 @@
 #include "mir_test/egl_mock.h"
 #include <gtest/gtest.h>
 #include <memory>
-
+#include <stdexcept>
 namespace mg=mir::graphics;
 
 TEST(framebuffer_test, fb_initialize)
@@ -31,7 +31,23 @@ TEST(framebuffer_test, fb_initialize)
     EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
             .Times(Exactly(1));
 
+    EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
-    display->notify_update();
+    });
+}
+
+TEST(framebuffer_test, fb_initialize_display_failure)
+{
+    using namespace testing;
+
+    mir::EglMock mock_egl;
+    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+            .Times(Exactly(1))
+            .WillOnce(Return((EGLDisplay)NULL));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    }, std::runtime_error   );
 }
 
