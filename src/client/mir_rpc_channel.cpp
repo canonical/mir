@@ -60,11 +60,19 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 
 
 c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
-    log(log), next_message_id(0), pending_calls(log), endpoint(endpoint), socket(io_service)
+    log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
+
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
     io_service_thread = std::move(std::thread(run_io_service));
+}
+
+void c::MirRpcChannel::run_io_service_debug_wrapper()
+{
+    std::cerr << "DEBUG: entering " << __PRETTY_FUNCTION__ << std::endl;
+    io_service.run();
+    std::cerr << "DEBUG: exiting " << __PRETTY_FUNCTION__ << std::endl;
 }
 
 c::MirRpcChannel::~MirRpcChannel()
@@ -94,8 +102,6 @@ void c::MirRpcChannel::CallMethod(
 
     // Only send message when details saved for handling response
     send_message(buffer.str());
-
-    read_message();
 }
 
 mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
@@ -131,11 +137,9 @@ void c::MirRpcChannel::send_message(const std::string& body)
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    std::vector<char> message(sizeof header_bytes + size);
+    message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
     std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
-
-    boost::system::error_code error;
 
     boost::asio::async_write(
         socket,
@@ -151,6 +155,8 @@ void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
         log->error() << "ERROR: " << error.message() << std::endl;
         return;
     }
+
+    read_message();
 }
 
 

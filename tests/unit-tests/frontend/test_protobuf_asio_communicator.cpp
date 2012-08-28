@@ -171,6 +171,9 @@ struct TestClient
         connect_message.set_width(640);
         connect_message.set_height(480);
         connect_message.set_pixel_format(0);
+
+        ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
+        ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
     }
 
     std::shared_ptr<MockLogger> logger;
@@ -182,6 +185,29 @@ struct TestClient
 
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
+
+    void on_connect_done() { connect_done_called.store(true); }
+    void on_disconnect_done() { disconnect_done_called.store(true); }
+
+    void wait_for_connect_done()
+    {
+        for (int i = 0; !connect_done_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        connect_done_called.store(false);
+    }
+    void wait_for_disconnect_done()
+    {
+        for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        disconnect_done_called.store(false);
+    }
+
+    std::atomic<bool> connect_done_called;
+    std::atomic<bool> disconnect_done_called;
 };
 
 struct BasicTestFixture : public ::testing::Test
@@ -227,6 +253,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
+    client.wait_for_connect_done();
+
     server.expect_session_count(1);
 }
 
@@ -241,6 +269,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.connect_message,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+    client.wait_for_connect_done();
 
     server.expect_connected_session_count(1);
 }
@@ -261,6 +291,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             &client.connect_message,
             &client.surface,
             google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+        client.wait_for_connect_done();
     }
 
     server.expect_session_count(connection_count);
@@ -279,6 +311,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
+    client.wait_for_connect_done();
+
     server.expect_connected_session_count(1);
 
     EXPECT_CALL(client, disconnect_done()).Times(1);
@@ -288,6 +322,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.ignored,
         google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
 
+    client.wait_for_disconnect_done();
     server.expect_connected_session_count(0);
 }
 
@@ -303,6 +338,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
+    client.wait_for_connect_done();
     server.expect_connected_session_count(1);
 
     EXPECT_CALL(client, disconnect_done()).Times(1);
@@ -312,6 +348,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.ignored,
         google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
 
+    client.wait_for_disconnect_done();
     server.expect_connected_session_count(0);
 
     EXPECT_CALL(*client.logger, error()).Times(testing::AtLeast(1));
@@ -321,6 +358,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         &client.ignored,
         &client.ignored,
         google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
+    client.wait_for_disconnect_done();
 
     server.expect_connected_session_count(0);
 }
@@ -338,6 +376,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
             &client[i].connect_message,
             &client[i].surface,
             google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
+        client[i].wait_for_connect_done();
     }
 
     server.expect_session_count(connection_count);
@@ -351,6 +390,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
             &client[i].ignored,
             &client[i].ignored,
             google::protobuf::NewCallback(&client[i], &TestClient::disconnect_done));
+        client[i].wait_for_disconnect_done();
     }
 
     server.expect_session_count(connection_count);

@@ -73,7 +73,6 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     next_session_id(0)
 {
     start_accept();
-    io_service.poll();
 }
 
 void mf::ProtobufAsioCommunicator::start_accept()

@@ -100,8 +100,11 @@ private:
     detail::PendingCallCache pending_calls;
     std::thread io_service_thread;
     boost::asio::io_service io_service;
+    boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
+
+    std::vector<char> message;
 
     mir::protobuf::wire::Invocation invocation_for(
         const google::protobuf::MethodDescriptor* method,
@@ -117,6 +120,8 @@ private:
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
+
+    void run_io_service_debug_wrapper();
 };
 
 void done();
