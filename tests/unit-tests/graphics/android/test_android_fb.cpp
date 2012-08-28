@@ -28,12 +28,10 @@ TEST(framebuffer_test, fb_initialize)
     using namespace testing;
 
     mir::EglMock mock_egl;
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
     EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
             .Times(Exactly(1));
-/*
-    glClearColor(1.0f, 1.0f , 1.0f, 1.0f);
-    glClearBit(); 
-*/
+
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
     display->notify_update();
 }
+
