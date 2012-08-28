@@ -40,6 +40,8 @@ target_link_libraries(
   mirclient
   mirprotobuf
 
+  mirtest_eglmock
+
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
