@@ -170,8 +170,7 @@ struct TestClient
     mir::protobuf::Void ignored;
 };
 
-
-struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
+struct BasicTestFixture : public ::testing::Test
 {
     void SetUp()
     {
@@ -185,25 +184,17 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     TestServer server;
+};
+
+
+struct ProtobufAsioCommunicatorTestFixture : public BasicTestFixture
+{
     TestClient client;
 };
 
 
-struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
+struct ProtobufAsioMultiClientCommunicatorTestFixture : public BasicTestFixture
 {
-    void SetUp()
-    {
-        ::testing::Mock::VerifyAndClearExpectations(server.factory.get());
-        server.comm.start();
-    }
-
-    void TearDown()
-    {
-        server.comm.stop();
-    }
-
-    TestServer server;
-
     static int const connection_count = 10;
 
     TestClient client[connection_count];
