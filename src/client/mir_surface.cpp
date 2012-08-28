@@ -151,6 +151,22 @@ bool c::Surface::is_valid() const
     return body->is_valid();
 }
 
+int c::Surface::width() const
+{
+    return body->width;
+}
+
+int c::Surface::height() const
+{
+    return body->height;
+}
+
+int c::Surface::pix_format() const
+{
+    return body->pix_format;
+}
+
+
 c::Surface::Surface(Surface&& that) : body(that.body)
 {
     that.body = 0;

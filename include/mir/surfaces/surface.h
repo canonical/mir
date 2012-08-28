@@ -56,10 +56,14 @@ SurfaceCreationParameters a_surface();
 class Surface : public graphics::Renderable
 {
  public:
-    Surface(const SurfaceCreationParameters& /*params*/,
+    Surface(const SurfaceCreationParameters& params,
             std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
 
+    geometry::Width width() const;
+    geometry::Height height() const;
+
  private:
+    SurfaceCreationParameters params;
     std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
 };
 

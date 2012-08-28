@@ -112,7 +112,7 @@ private:
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
-    static const std::string& socket_name()
+    static std::string const & socket_name()
     {
         static std::string socket_name("./mir_test_pb_asio_socket");
         return socket_name;
@@ -120,18 +120,19 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 
     ProtobufAsioCommunicatorTestFixture() :
         factory(std::make_shared<MockIpcFactory>(collector)),
-        comm(socket_name(), factory),
-        channel(socket_name(), std::make_shared<MockLogger>()),
-        display_server(&channel)
+        comm(socket_name(), factory)
     {
-        connect_message.set_width(640);
-        connect_message.set_height(480);
-        connect_message.set_pixel_format(0);
     }
 
     void SetUp()
     {
+        ::testing::Mock::VerifyAndClearExpectations(factory.get());
         comm.start();
+    }
+
+    void TearDown()
+    {
+        comm.stop();
     }
 
     void expect_session_count(int expected_count)
@@ -161,12 +162,25 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 
-    // "Client" side
-    mir::client::MirRpcChannel channel;
-    mir::protobuf::DisplayServer::Stub display_server;
-    mir::protobuf::ConnectMessage connect_message;
-    mir::protobuf::Surface surface;
-    mir::protobuf::Void ignored;
+    struct Client
+    {
+        Client() :
+            channel(ProtobufAsioCommunicatorTestFixture::socket_name(), std::make_shared<MockLogger>()),
+            display_server(&channel)
+        {
+            connect_message.set_width(640);
+            connect_message.set_height(480);
+            connect_message.set_pixel_format(0);
+        }
+
+        mir::client::MirRpcChannel channel;
+        mir::protobuf::DisplayServer::Stub display_server;
+        mir::protobuf::ConnectMessage connect_message;
+        mir::protobuf::Surface surface;
+        mir::protobuf::Void ignored;
+    };
+
+    Client client;
 };
 
 
@@ -245,10 +259,10 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
     EXPECT_CALL(*factory, make_ipc_server()).Times(1);
 
-    display_server.connect(
+    client.display_server.connect(
         0,
-        &connect_message,
-        &surface,
+        &client.connect_message,
+        &client.surface,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_session_count(1);
@@ -259,10 +273,10 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     EXPECT_CALL(*factory, make_ipc_server()).Times(1);
 
-    display_server.connect(
+    client.display_server.connect(
         0,
-        &connect_message,
-        &surface,
+        &client.connect_message,
+        &client.surface,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(1);
@@ -277,10 +291,10 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
-        display_server.connect(
+        client.display_server.connect(
             0,
-            &connect_message,
-            &surface,
+            &client.connect_message,
+            &client.surface,
             google::protobuf::NewCallback(&mir::client::done));
     }
 
@@ -293,18 +307,18 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     EXPECT_CALL(*factory, make_ipc_server()).Times(1);
 
-    display_server.connect(
+    client.display_server.connect(
         0,
-        &connect_message,
-        &surface,
+        &client.connect_message,
+        &client.surface,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(1);
 
-    display_server.disconnect(
+    client.display_server.disconnect(
         0,
-        &ignored,
-        &ignored,
+        &client.ignored,
+        &client.ignored,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(0);
@@ -315,26 +329,26 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     EXPECT_CALL(*factory, make_ipc_server()).Times(1);
 
-    display_server.connect(
+    client.display_server.connect(
         0,
-        &connect_message,
-        &surface,
+        &client.connect_message,
+        &client.surface,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(1);
 
-    display_server.disconnect(
+    client.display_server.disconnect(
         0,
-        &ignored,
-        &ignored,
+        &client.ignored,
+        &client.ignored,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(0);
 
-    display_server.disconnect(
+    client.display_server.disconnect(
         0,
-        &ignored,
-        &ignored,
+        &client.ignored,
+        &client.ignored,
         google::protobuf::NewCallback(&mir::client::done));
 
     expect_connected_session_count(0);

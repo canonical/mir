@@ -90,6 +90,7 @@ public:
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
     ~ProtobufAsioCommunicator();
     void start();
+    void stop();
 
 private:
     void start_accept();
