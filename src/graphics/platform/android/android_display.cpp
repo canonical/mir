@@ -19,13 +19,17 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
-
+#include <stdexcept>
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
 mg::AndroidDisplay::AndroidDisplay()
 {
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (egl_display == EGL_NO_DISPLAY)
+    {
+        throw std::runtime_error("eglGetDisplay failed\n");
+    }
 }
     
 geom::Rectangle mg::AndroidDisplay::view_area()
