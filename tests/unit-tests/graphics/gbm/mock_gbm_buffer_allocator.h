@@ -16,13 +16,16 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#ifndef MOCK_GBM_BUFFER_ALLOCATOR_H
+#define MOCK_GBM_BUFFER_ALLOCATOR_H
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-
+#include <stdexcept>
 #include <memory>
 #include <gbm.h>
+#include "gbmint.h"
+#include <gmock/gmock.h>
+
+#include "mir/graphics/gbm/gbm_buffer_allocator.h"
 
 namespace mir
 {
@@ -31,26 +34,24 @@ namespace graphics
 namespace gbm
 {
 
-class GBMBufferAllocator: public compositor::GraphicBufferAllocator
+class MockGBMDeviceCreator
 {
 public:
-    GBMBufferAllocator();
+    MockGBMDeviceCreator();
 
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
+    MOCK_METHOD5(bo_create, struct gbm_bo *(struct gbm_device *, uint32_t, uint32_t, uint32_t, uint32_t));
+    MOCK_METHOD1(bo_destroy, void(struct gbm_bo *));
 
+    std::unique_ptr<GBMBufferAllocator> create_gbm_allocator();
+    std::shared_ptr<gbm_device> get_device();
 
 private:
+    struct gbm_bo *bo_create_impl(struct gbm_device *dev, uint32_t w, uint32_t h, uint32_t format, uint32_t usage);
 
-    struct gbm_device *dev;
-
-    // For the purposes of testing
-    explicit GBMBufferAllocator(struct gbm_device *device);
-    friend class MockGBMDeviceCreator;
+    std::shared_ptr<gbm_device> fake_device;
 };
 
 }
 }
 }
-
-#endif // MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#endif // MOCK_GBM_BUFFER_ALLOCATOR_H

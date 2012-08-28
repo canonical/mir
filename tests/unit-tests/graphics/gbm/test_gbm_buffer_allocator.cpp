@@ -19,6 +19,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
+#include "mock_gbm_buffer_allocator.h"
 
 #include <memory>
 #include <gtest/gtest.h>
@@ -31,15 +32,13 @@ namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-#include "mock_gbm_device.cpp"
-
 class GBMBufferAllocatorTest  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        mocker = std::shared_ptr<MockGBMDevice> (new MockGBMDevice);
-        allocator = std::shared_ptr<mgg::GBMBufferAllocator> (new mgg::GBMBufferAllocator(mocker->get_device()));
+        mocker = std::shared_ptr<mgg::MockGBMDeviceCreator>(new mgg::MockGBMDeviceCreator);
+        allocator = mocker->create_gbm_allocator();
 
         w = geom::Width(300);
         h = geom::Height(200);
@@ -51,8 +50,8 @@ protected:
     geom::Height h;
     mc::PixelFormat pf;
 
-    std::shared_ptr<MockGBMDevice> mocker;
-    std::shared_ptr<mgg::GBMBufferAllocator> allocator;
+    std::shared_ptr<mgg::MockGBMDeviceCreator> mocker;
+    std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 };
 
 TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
@@ -103,7 +102,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
     using namespace testing;
 
     struct gbm_bo *bo = new gbm_bo();
-    bo->gbm = mocker->get_device();
+    bo->gbm = mocker->get_device().get();
 
     EXPECT_CALL(*mocker, bo_create(_,_,_,_,_))
     .WillOnce(Return(bo));

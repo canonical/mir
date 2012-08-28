@@ -33,6 +33,11 @@ mgg::GBMBufferAllocator::GBMBufferAllocator()
 
 }
 
+mgg::GBMBufferAllocator::GBMBufferAllocator(gbm_device *device) : dev(device)
+{
+
+}
+
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     geom::Width width, geom::Height height, mc::PixelFormat pf)
 {

@@ -20,6 +20,8 @@
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
+#include "mock_gbm_buffer_allocator.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -30,23 +32,21 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
-#include "mock_gbm_device.cpp"
-
 class GBMGraphicBufferBasic : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        mocker = std::shared_ptr<MockGBMDevice> (new MockGBMDevice);
-        allocator = std::shared_ptr<mgg::GBMBufferAllocator> (new mgg::GBMBufferAllocator(mocker->get_device()));
+        mocker = std::shared_ptr<mgg::MockGBMDeviceCreator>(new mgg::MockGBMDeviceCreator);
+        allocator = mocker->create_gbm_allocator();
 
         width = geom::Width(300);
         height = geom::Height(200);
         pf = mc::PixelFormat::rgba_8888;
     }
 
-    std::shared_ptr<MockGBMDevice> mocker;
-    std::shared_ptr<mgg::GBMBufferAllocator> allocator;
+    std::shared_ptr<mgg::MockGBMDeviceCreator> mocker;
+    std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
     mc::PixelFormat pf;
@@ -61,7 +61,7 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
     EXPECT_CALL(*mocker, bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
+    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(width, height, pf);
     ASSERT_EQ(width, buffer->width());
     ASSERT_EQ(height, buffer->height());
 }
