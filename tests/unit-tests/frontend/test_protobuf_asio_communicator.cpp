@@ -180,8 +180,8 @@ struct TestClient
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
 
-    void connect_done() {}
-    void disconnect_done() {}
+    MOCK_METHOD0(connect_done, void ());
+    MOCK_METHOD0(disconnect_done, void ());
 };
 
 struct BasicTestFixture : public ::testing::Test
@@ -219,6 +219,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
 
+    EXPECT_CALL(client, connect_done()).Times(1);
+
     client.display_server.connect(
         0,
         &client.connect_message,
@@ -232,6 +234,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_connected)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    EXPECT_CALL(client, connect_done()).Times(1);
 
     client.display_server.connect(
         0,
@@ -248,6 +251,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
 
     int const connection_count{5};
+
+    EXPECT_CALL(client, connect_done()).Times(connection_count);
 
     for (int i = 0; i != connection_count; ++i)
     {
@@ -267,6 +272,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
 
+    EXPECT_CALL(client, connect_done()).Times(1);
     client.display_server.connect(
         0,
         &client.connect_message,
@@ -275,6 +281,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     server.expect_connected_session_count(1);
 
+    EXPECT_CALL(client, disconnect_done()).Times(1);
     client.display_server.disconnect(
         0,
         &client.ignored,
@@ -289,6 +296,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
 
+    EXPECT_CALL(client, connect_done()).Times(1);
     client.display_server.connect(
         0,
         &client.connect_message,
@@ -297,6 +305,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     server.expect_connected_session_count(1);
 
+    EXPECT_CALL(client, disconnect_done()).Times(1);
     client.display_server.disconnect(
         0,
         &client.ignored,
@@ -323,6 +332,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
+        EXPECT_CALL(client[i], connect_done()).Times(1);
         client[i].display_server.connect(
             0,
             &client[i].connect_message,
@@ -335,6 +345,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
+        EXPECT_CALL(client[i], disconnect_done()).Times(1);
         client[i].display_server.disconnect(
             0,
             &client[i].ignored,
