@@ -62,9 +62,12 @@ void mir_surface_release(MirSurface *)
 {
 }
 
-void mir_advance_buffer(MirSurface * surface,
+void mir_advance_buffer(MirSurface *,
                         mir_buffer_advanced_callback callback,
-                        void * context);
+                        void * context)
+{
+    callback(NULL, context);
+}   
 
 int mir_buffer_is_valid(MirBuffer *)
 {
