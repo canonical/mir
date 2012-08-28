@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ *              Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/frontend/protobuf_asio_communicator.h"
@@ -25,7 +26,7 @@
 #include <gmock/gmock.h>
 
 #include <memory>
-#include <vector>
+//#include <vector>
 
 namespace mf = mir::frontend;
 
