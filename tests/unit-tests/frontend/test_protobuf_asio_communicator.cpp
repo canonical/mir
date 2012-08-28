@@ -193,7 +193,7 @@ struct TestClient
     {
         for (int i = 0; !connect_done_called.load() && i < 100; ++i)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         connect_done_called.store(false);
     }
@@ -201,7 +201,7 @@ struct TestClient
     {
         for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         disconnect_done_called.store(false);
     }
