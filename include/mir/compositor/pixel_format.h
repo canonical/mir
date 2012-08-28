@@ -17,50 +17,19 @@
  */
 
 
-#ifndef MIR_SURFACE_H_
-#define MIR_SURFACE_H_
+#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
-#include <string>
-#include <memory>
 
 namespace mir
 {
-namespace client
+namespace compositor
 {
-namespace detail
+enum class PixelFormat : uint32_t
 {
-struct SurfaceState;
-}
-class Logger;
-
-class Surface
-{
-public:
-    Surface();
-    Surface(
-        std::string const& socketfile,
-        int width,
-        int height,
-        int pix_format,
-        std::shared_ptr<Logger> const& log);
-
-    ~Surface();
-
-    bool is_valid() const;
-    int width() const;
-    int height() const;
-    int pixel_format() const;
-
-    Surface(Surface&& that);
-
-    Surface& operator=(Surface&& that);
-
-private:
-    detail::SurfaceState* body;
-    Surface(Surface const&) = delete;
-    Surface& operator=(Surface const&) = delete;
+    rgba_8888
 };
 }
 }
 
-#endif /* MIR_SURFACE_H_ */
+#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */

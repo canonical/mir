@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_BUFFER_H_
 
 #include "mir/geometry/dimensions.h"
+#include "mir/compositor/pixel_format.h"
 
 namespace mir
 {
@@ -31,11 +32,6 @@ class Texture;
 
 namespace compositor
 {
-
-enum class PixelFormat : uint32_t
-{
-    rgba_8888
-};
 
 class Buffer
 {

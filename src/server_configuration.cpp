@@ -81,13 +81,9 @@ private:
             );
 
         auto surface = tmp.lock();
-        // TODO cannot interrogate the surface for its properties.
-
-        // These need to be set for the response to be valid,
-        // but they should derive from the surface we just created!
         response->set_width(surface->width().as_uint32_t());
         response->set_height(surface->height().as_uint32_t());
-        response->set_pixel_format(request->pixel_format());
+        response->set_pixel_format((int)surface->pixel_format());
 
         done->Run();
     }
