@@ -155,7 +155,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             EXPECT_EQ(1200, mysurface.height());
             EXPECT_EQ(0, mysurface.pixel_format());
         }
-    } client_connects_and_disconnects;
+    } client_creates_surfaces;
 
-    launch_client_process(client_connects_and_disconnects);
+    launch_client_process(client_creates_surfaces);
 }
