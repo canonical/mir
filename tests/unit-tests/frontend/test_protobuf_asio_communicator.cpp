@@ -124,17 +124,6 @@ struct TestServer
     {
     }
 
-    void SetUp()
-    {
-        ::testing::Mock::VerifyAndClearExpectations(factory.get());
-        comm.start();
-    }
-
-    void TearDown()
-    {
-        comm.stop();
-    }
-
     void expect_session_count(int expected_count)
     {
         std::unique_lock<std::mutex> ul(collector.guard);
@@ -184,12 +173,35 @@ struct TestClient
 
 struct ProtobufAsioCommunicatorTestFixture : public TestServer, public ::testing::Test
 {
+    void SetUp()
+    {
+        ::testing::Mock::VerifyAndClearExpectations(factory.get());
+        comm.start();
+    }
+
+    void TearDown()
+    {
+        comm.stop();
+    }
+
     TestClient client;
 };
 
 
 struct ProtobufAsioMultiClientCommunicatorTestFixture : public TestServer, public ::testing::Test
 {
+    void SetUp()
+    {
+        ::testing::Mock::VerifyAndClearExpectations(factory.get());
+        comm.start();
+    }
+
+    void TearDown()
+    {
+        comm.stop();
+    }
+
+
     static int const connection_count = 10;
 
     TestClient client[connection_count];
