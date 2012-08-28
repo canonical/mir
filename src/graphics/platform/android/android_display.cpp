@@ -30,6 +30,8 @@ mg::AndroidDisplay::AndroidDisplay()
     {
         throw std::runtime_error("eglGetDisplay failed\n");
     }
+     
+
 }
     
 geom::Rectangle mg::AndroidDisplay::view_area()

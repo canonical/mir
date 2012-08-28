@@ -52,6 +52,8 @@ class EglMock
     MOCK_METHOD1(eglWaitNative, EGLBoolean(EGLint));
     MOCK_METHOD2(eglSwapBuffers, EGLBoolean(EGLDisplay,EGLSurface));
     MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,NativePixmapType));
+
+    EGLDisplay fake_egl_display;
 };
 }
 
