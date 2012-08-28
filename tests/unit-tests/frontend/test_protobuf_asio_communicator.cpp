@@ -26,7 +26,6 @@
 #include <gmock/gmock.h>
 
 #include <memory>
-//#include <vector>
 
 namespace mf = mir::frontend;
 
