@@ -83,10 +83,19 @@ struct NullDeleter
 
 class MockLogger : public mir::client::Logger
 {
-    virtual std::ostream& error()
+    std::ostringstream out;
+
+    std::ostream& dummy_out() { return out; }
+
+public:
+    MockLogger()
     {
-        return std::cerr;
+        ON_CALL(*this, error())
+            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_out));
+        EXPECT_CALL(*this, error()).Times(0);
     }
+
+    MOCK_METHOD0(error,std::ostream& ());
 };
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
@@ -155,7 +164,8 @@ struct TestServer
 struct TestClient
 {
     TestClient() :
-        channel(TestServer::socket_name(), std::make_shared<MockLogger>()),
+        logger(std::make_shared<MockLogger>()),
+        channel(TestServer::socket_name(), logger),
         display_server(&channel)
     {
         connect_message.set_width(640);
@@ -163,6 +173,7 @@ struct TestClient
         connect_message.set_pixel_format(0);
     }
 
+    std::shared_ptr<MockLogger> logger;
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectMessage connect_message;
@@ -290,6 +301,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         google::protobuf::NewCallback(&mir::client::done));
 
     server.expect_connected_session_count(0);
+
+    EXPECT_CALL(*client.logger, error()).Times(testing::AtLeast(1));
 
     client.display_server.disconnect(
         0,
