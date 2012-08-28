@@ -131,3 +131,31 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_client_process(client_config);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
+{
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            using ::mir::client::Surface;
+            using ::mir::client::ConsoleLogger;
+
+            auto const logger = std::make_shared<ConsoleLogger>();
+
+            Surface mysurface(mir::test_socket_file(), 640, 480, 0, logger);
+
+            EXPECT_EQ(640, mysurface.width());
+            EXPECT_EQ(480, mysurface.height());
+            EXPECT_EQ(0, mysurface.pixel_format());
+
+            mysurface = Surface(mir::test_socket_file(), 1600, 1200, 0, logger);
+
+            EXPECT_EQ(1600, mysurface.width());
+            EXPECT_EQ(1200, mysurface.height());
+            EXPECT_EQ(0, mysurface.pixel_format());
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}

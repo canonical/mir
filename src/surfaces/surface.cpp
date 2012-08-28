@@ -26,14 +26,30 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 
 ms::Surface::Surface(
-    const ms::SurfaceCreationParameters& /*params*/,
+    const ms::SurfaceCreationParameters& params,
     std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder) :
+    params(params),
     buffer_texture_binder(buffer_texture_binder)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_texture_binder);
 }
 
+mir::geometry::Width ms::Surface::width() const
+{
+    return params.width;
+}
+
+mir::geometry::Height ms::Surface::height() const
+{
+    return params.height;
+}
+
+mc::PixelFormat ms::Surface::pixel_format() const
+{
+    // TODO This should actually be supplied from somewhere (where?)
+    return mc::PixelFormat();
+}
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_width(geometry::Width new_width)
 {
