@@ -110,7 +110,7 @@ private:
     std::shared_ptr<mir::protobuf::DisplayServer> server;
 };
 
-struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
+struct TestServer
 {
     static std::string const & socket_name()
     {
@@ -118,7 +118,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
         return socket_name;
     }
 
-    ProtobufAsioCommunicatorTestFixture() :
+    TestServer() :
         factory(std::make_shared<MockIpcFactory>(collector)),
         comm(socket_name(), factory)
     {
@@ -161,97 +161,38 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     SessionCounter collector;
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
+};
 
-    struct Client
+struct TestClient
+{
+    TestClient() :
+        channel(TestServer::socket_name(), std::make_shared<MockLogger>()),
+        display_server(&channel)
     {
-        Client() :
-            channel(ProtobufAsioCommunicatorTestFixture::socket_name(), std::make_shared<MockLogger>()),
-            display_server(&channel)
-        {
-            connect_message.set_width(640);
-            connect_message.set_height(480);
-            connect_message.set_pixel_format(0);
-        }
+        connect_message.set_width(640);
+        connect_message.set_height(480);
+        connect_message.set_pixel_format(0);
+    }
 
-        mir::client::MirRpcChannel channel;
-        mir::protobuf::DisplayServer::Stub display_server;
-        mir::protobuf::ConnectMessage connect_message;
-        mir::protobuf::Surface surface;
-        mir::protobuf::Void ignored;
-    };
-
-    Client client;
+    mir::client::MirRpcChannel channel;
+    mir::protobuf::DisplayServer::Stub display_server;
+    mir::protobuf::ConnectMessage connect_message;
+    mir::protobuf::Surface surface;
+    mir::protobuf::Void ignored;
 };
 
 
-struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
+struct ProtobufAsioCommunicatorTestFixture : public TestServer, public ::testing::Test
+{
+    TestClient client;
+};
+
+
+struct ProtobufAsioMultiClientCommunicatorTestFixture : public TestServer, public ::testing::Test
 {
     static int const connection_count = 10;
 
-    static const std::string& socket_name()
-    {
-        static std::string socket_name("./mir_test_pb_asio_socket");
-        return socket_name;
-    }
-
-    ProtobufAsioMultiClientCommunicatorTestFixture() :
-        factory(std::make_shared<MockIpcFactory>(collector)),
-        comm(socket_name(), factory)
-    {
-    }
-
-    void SetUp()
-    {
-        comm.start();
-    }
-
-    void expect_session_count(int expected_count)
-    {
-        std::unique_lock<std::mutex> ul(collector.guard);
-        for (int ntries = 20;
-             ntries-- != 0 && collector.session_count != expected_count; )
-        {
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-        }
-        EXPECT_EQ(expected_count, collector.session_count);
-    }
-
-    void expect_connected_session_count(int expected_count)
-    {
-        std::unique_lock<std::mutex> ul(collector.guard);
-        for (int ntries = 20;
-             ntries-- != 0 && collector.connected_sessions != expected_count; )
-        {
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-        }
-        EXPECT_EQ(expected_count, collector.connected_sessions);
-    }
-
-    // "Server" side
-    SessionCounter collector;
-    std::shared_ptr<MockIpcFactory> factory;
-    mf::ProtobufAsioCommunicator comm;
-
-
-    struct Client
-    {
-        Client() :
-            channel(ProtobufAsioMultiClientCommunicatorTestFixture::socket_name(), std::make_shared<MockLogger>()),
-            display_server(&channel)
-        {
-            connect_message.set_width(640);
-            connect_message.set_height(480);
-            connect_message.set_pixel_format(0);
-        }
-
-        mir::client::MirRpcChannel channel;
-        mir::protobuf::DisplayServer::Stub display_server;
-        mir::protobuf::ConnectMessage connect_message;
-        mir::protobuf::Surface surface;
-        mir::protobuf::Void ignored;
-    };
-
-    Client client[connection_count];
+    TestClient client[connection_count];
 };
 }
 
