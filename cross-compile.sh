@@ -11,9 +11,10 @@ export ANDROID_STANDALONE_TOOLCHAIN=$MIR_ANDROID_NDK_DIR
 cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/android.toolchain.cmake \
 -DCMAKE_VERBOSE_MAKEFILE=ON \
 -DBoost_COMPILER=-gcc \
--DBOOST_LIBRARYDIR=/tmp/ndk-standalone-9/sysroot/usr/lib \
+-DBOOST_LIBRARYDIR=${MIR_ANDROID_NDK_DIR}/sysroot/usr/lib \
 -DMIR_ENABLE_DEATH_TESTS=NO \
 -DMIR_INPUT_ENABLE_EVEMU=NO \
+-DMIR_PLATFORM_ANDROID=YES \
 -Dgtest_disable_pthreads=YES \
 $cwd
 

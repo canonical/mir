@@ -17,51 +17,55 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/buffer_allocator.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/android/android_buffer_allocator.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer.h"
 
 #include <stdexcept>
 
-namespace mg = mir::graphics;
-namespace mc = mir::compositor;
+namespace mg  = mir::graphics;
+namespace mga = mir::graphics::android;
+namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
-struct AllocDeviceDeleter
+
+struct AllocDevDeleter
 {
-    void operator() (struct alloc_device_t* alloc_device) const
+    void operator()(alloc_device_t* t)
     {
-        alloc_device->common.close(&alloc_device->common);
+        t->common.close((hw_device_t*)t);
+        delete t;
     }
 };
 
-mg::AndroidBufferAllocator::AndroidBufferAllocator()
+mga::AndroidBufferAllocator::AndroidBufferAllocator()
 {
     int err;
 
     err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (err < 0)
-    {
         throw std::runtime_error("Could not open hardware module");
-    }
 
     struct alloc_device_t* alloc_dev;
     err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
-    if(err < 0)
-    {
+    if (err < 0)
         throw std::runtime_error("Could not open hardware module");
-    }
 
-    alloc_device = std::shared_ptr<struct alloc_device_t>(alloc_dev, AllocDeviceDeleter());
+    /* note for future use: at this point, the hardware module should be filled with vendor information
+       that we can determine different courses of action based upon */
+
+    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev);
+    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::unique_ptr<mc::Buffer> mg::AndroidBufferAllocator::alloc_buffer(
-   geom::Width width, geom::Height height, mc::PixelFormat pf)
+std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
+    geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
     return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
 }
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
-    return std::unique_ptr<AndroidBufferAllocator>(new AndroidBufferAllocator());
+    return std::unique_ptr<mga::AndroidBufferAllocator>(new mga::AndroidBufferAllocator());
 }
-
-

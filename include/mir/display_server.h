@@ -46,15 +46,12 @@ class Renderer;
 
 }
 
+class ServerConfiguration;
+
 class DisplayServer
 {
 public:
-    // TODO: Come up with a better way to resolve dependency on
-    // the BufferAllocationStrategy.
-    DisplayServer(
-        const std::shared_ptr<frontend::Communicator>& communicator,
-        const std::shared_ptr<compositor::BufferAllocationStrategy>& strategy,
-        const std::shared_ptr<graphics::Renderer>& renderer);
+    explicit DisplayServer(ServerConfiguration& config);
 
     ~DisplayServer();
 

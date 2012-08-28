@@ -17,33 +17,35 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
-#include <hardware/gralloc.h>
+#include "mir/compositor/buffer.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
+
 #include <stdexcept>
 #include <memory>
-
-namespace mc=mir::compositor;
-namespace geom=mir::geometry;
 
 namespace mir
 {
 namespace graphics
 {
+namespace android
+{
 
-class AndroidBuffer: public mc::Buffer
+class AndroidBuffer: public compositor::Buffer
 {
 public:
-    explicit AndroidBuffer(std::shared_ptr<struct alloc_device_t> device, geom::Width w, geom::Height h, mc::PixelFormat pf); 
-    ~AndroidBuffer(); 
+    AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
+    ~AndroidBuffer();
 
-    geom::Width width() const;
+    geometry::Width width() const;
 
-    geom::Height height() const;
+    geometry::Height height() const;
 
-    geom::Stride stride() const;
+    geometry::Stride stride() const;
 
-    mc::PixelFormat pixel_format() const;
+    compositor::PixelFormat pixel_format() const;
 
     void lock();
 
@@ -52,17 +54,18 @@ public:
     Texture* bind_to_texture();
 
 private:
-    int convert_to_android_format(mc::PixelFormat);
+    const geometry::Width  buffer_width;
+    const geometry::Height buffer_height;
+    const compositor::PixelFormat buffer_format;
+    geometry::Stride buffer_stride;
 
-    const geom::Width  buffer_width;
-    const geom::Height buffer_height;
-    const mc::PixelFormat buffer_format;
-    geom::Stride buffer_stride;
+    const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
-    std::shared_ptr<struct alloc_device_t> alloc_device;
-
-    buffer_handle_t android_handle;
+    std::shared_ptr<BufferHandle> android_handle;
 };
 
 }
 }
+}
+
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_ */

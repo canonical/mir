@@ -13,36 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-/* from android */
-#include <hardware/hardware.h>
-#include <hardware/gralloc.h>
 
-#include "mir/graphics/platform.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
-#include "android_buffer.h"
 
 namespace mir
 {
-namespace graphics
+namespace compositor
 {
-
-class AndroidBufferAllocator: public mc::GraphicBufferAllocator
+enum class PixelFormat : uint32_t
 {
-public:
-    AndroidBufferAllocator();
-
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
-private:
-    const hw_module_t    *hw_module;
-    std::shared_ptr<struct alloc_device_t> alloc_device;
-
+    rgba_8888
 };
+}
+}
 
-}
-}
+#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */

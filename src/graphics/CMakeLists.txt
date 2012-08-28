@@ -15,8 +15,11 @@
 # Authored by: Thomas Guest <thomas.guest@canonical.com>
 
 # By default, build for LLVM
-IF(NOT DEFINED MIR_PLATFORM)
-  set(MIR_PLATFORM llvm)
-ENDIF()
 
-add_subdirectory(platform/${MIR_PLATFORM}/)
+if (MIR_PLATFORM_LLVM)
+  add_subdirectory(platform/llvm/)
+endif()
+
+if (MIR_PLATFORM_ANDROID)
+  add_subdirectory(platform/android/)
+endif()

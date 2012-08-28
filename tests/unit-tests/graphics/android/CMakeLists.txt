@@ -17,6 +17,7 @@
 list(APPEND UNIT_TEST_SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_fb.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

@@ -19,7 +19,13 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 add_subdirectory(egl_mock/)
-add_subdirectory(${MIR_PLATFORM}/)
+if (MIR_PLATFORM_ANDROID)
+add_subdirectory(android/)
+endif()
+
+if (MIR_PLATFORM_LLVM)
+add_subdirectory(llvm/)
+endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 

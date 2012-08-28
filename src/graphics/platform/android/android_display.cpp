@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_display.h"
+#include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mg=mir::graphics;

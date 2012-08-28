@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_display.h"
+#include "mir/graphics/android/android_display.h"
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -25,12 +25,9 @@ namespace mg=mir::graphics;
 TEST(framebuffer_test, fb_initialize)
 {
     std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
-
+/*
     glClearColor(1.0f, 1.0f , 1.0f, 1.0f);
     glClearBit(); 
-
+*/
     display->notify_update();
-
-    
-
 }

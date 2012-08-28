@@ -45,7 +45,7 @@ struct LockGuardDeleter
     {
         lockable.lock();
     }
-    
+
     template<typename T>
     void operator()(T* t)
     {
@@ -64,7 +64,7 @@ public:
         for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             f(**it);
-        }        
+        }
     }
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;
@@ -74,21 +74,6 @@ public:
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
-}
-
-void ms::SurfaceStack::lock()
-{
-    guard.lock();
-}
-
-void ms::SurfaceStack::unlock()
-{
-    guard.unlock();
-}
-
-bool ms::SurfaceStack::try_lock()
-{
-    return guard.try_lock();
 }
 
 std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
@@ -102,7 +87,7 @@ std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometr
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)
 {
     std::lock_guard<std::mutex> lg(guard);
-    
+
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params,

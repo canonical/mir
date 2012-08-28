@@ -17,87 +17,69 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_platform/android/android_buffer.h"
+#include "mir/graphics/android/android_buffer.h"
 
+namespace mc=mir::compositor;
 namespace mg=mir::graphics;
+namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mg::AndroidBuffer::AndroidBuffer(std::shared_ptr<struct alloc_device_t> alloc_dev,
-                 geom::Width w, geom::Height h, mc::PixelFormat pf)
- :
-buffer_width(w),
-buffer_height(h),
-buffer_format(pf),
-alloc_device(alloc_dev)
+mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
+                                 geom::Width w, geom::Height h, mc::PixelFormat pf)
+    :
+    buffer_width(w),
+    buffer_height(h),
+    buffer_format(pf),
+    alloc_device(alloc_dev)
 {
-    int ret, format, usage, stride = 0;
+    bool ret;
+    BufferUsage usage = mg::BufferUsage::use_hardware;
 
-    if ((!alloc_device) || (!alloc_device->alloc) || (!alloc_device->free))
+    if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    format = convert_to_android_format(pf);
-    usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    ret = alloc_device->alloc(
-                        /* alloc_device is guaranteed by C library to remain same */
-                        const_cast<struct alloc_device_t*> (alloc_device.get()),
-                        (int) buffer_width.as_uint32_t(),
-                        (int) buffer_height.as_uint32_t(),
-                        format, usage, &android_handle, &stride); 
-    buffer_stride = geom::Stride(stride);
-
-    if (ret == 0)
+    ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
+                                      buffer_width, buffer_height,
+                                      buffer_format, usage);
+    if (ret)
         return;
-    else
-        throw std::runtime_error("Graphics buffer allocation failed");
+
+    throw std::runtime_error("Graphics buffer allocation failed");
 }
 
-mg::AndroidBuffer::~AndroidBuffer()
+mga::AndroidBuffer::~AndroidBuffer()
 {
-    alloc_device->free( const_cast<struct alloc_device_t*> (alloc_device.get()),
-                        android_handle);
 }
 
-int mg::AndroidBuffer::convert_to_android_format(mc::PixelFormat pf)
-{
-    switch (pf)
-    {
-        case mc::PixelFormat::rgba_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888;
-        default:
-            /* will cause gralloc to error, exception thrown */
-            return -1;
-    }
-}
-
-geom::Width mg::AndroidBuffer::width() const
+geom::Width mga::AndroidBuffer::width() const
 {
     return buffer_width;
 }
 
-geom::Height mg::AndroidBuffer::height() const
+geom::Height mga::AndroidBuffer::height() const
 {
     return buffer_height;
 }
 
-geom::Stride mg::AndroidBuffer::stride() const
+geom::Stride mga::AndroidBuffer::stride() const
 {
     return geom::Stride(0);
 }
 
-mc::PixelFormat mg::AndroidBuffer::pixel_format() const
+mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 {
     return buffer_format;
 }
 
-void mg::AndroidBuffer::lock()
+void mga::AndroidBuffer::lock()
 {
 }
 
-void mg::AndroidBuffer::unlock()
+void mga::AndroidBuffer::unlock()
 {
 }
 
-mg::Texture* mg::AndroidBuffer::bind_to_texture()
+mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
     return NULL;
 }

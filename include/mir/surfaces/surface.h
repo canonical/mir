@@ -21,6 +21,7 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/pixel_format.h"
 
 #include <memory>
 
@@ -28,10 +29,9 @@ namespace mir
 {
 namespace compositor
 {
-
 class BufferTextureBinder;
-
 }
+
 namespace surfaces
 {
 
@@ -56,10 +56,15 @@ SurfaceCreationParameters a_surface();
 class Surface : public graphics::Renderable
 {
  public:
-    Surface(const SurfaceCreationParameters& /*params*/,
+    Surface(const SurfaceCreationParameters& params,
             std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
 
+    geometry::Width width() const;
+    geometry::Height height() const;
+    compositor::PixelFormat pixel_format() const;
+
  private:
+    SurfaceCreationParameters params;
     std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
 };
 

@@ -68,6 +68,7 @@ private:
     virtual void SetUp();
     virtual void TearDown();
 };
+
 }
 
 using mir::DefaultDisplayServerTestFixture;

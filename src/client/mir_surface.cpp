@@ -48,7 +48,7 @@ struct SurfaceState
 {
     int width;
     int height;
-    int pix_format;
+    int pixel_format;
 
     virtual bool is_valid() const = 0;
     virtual void disconnect() = 0;
@@ -96,7 +96,7 @@ struct ValidSurfaceState : public SurfaceState
 
         SurfaceState::width = surface.width();
         SurfaceState::height = surface.height();
-        SurfaceState::pix_format = surface.pixel_format();
+        SurfaceState::pixel_format = surface.pixel_format();
     }
 
     void disconnect()
@@ -150,6 +150,22 @@ bool c::Surface::is_valid() const
 {
     return body->is_valid();
 }
+
+int c::Surface::width() const
+{
+    return body->width;
+}
+
+int c::Surface::height() const
+{
+    return body->height;
+}
+
+int c::Surface::pixel_format() const
+{
+    return body->pixel_format;
+}
+
 
 c::Surface::Surface(Surface&& that) : body(that.body)
 {

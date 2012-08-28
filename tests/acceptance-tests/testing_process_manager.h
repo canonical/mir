@@ -19,6 +19,8 @@
 #ifndef MIR_TESTING_PROCESS_MANAGER
 #define MIR_TESTING_PROCESS_MANAGER
 
+#include "mir/server_configuration.h"
+
 #include "mir/chrono/chrono.h"
 #include "mir/process/process.h"
 
@@ -28,27 +30,6 @@
 namespace mir
 {
 class DisplayServer;
-namespace compositor
-{
-class BufferAllocationStrategy;
-}
-namespace frontend
-{
-class Communicator;
-class ProtobufIpcFactory;
-}
-namespace graphics
-{
-class Renderer;
-}
-namespace protobuf
-{
-class DisplayServer;
-}
-namespace surfaces
-{
-class ApplicationSurfaceOrganiser;
-}
 
 struct TestingClientConfiguration
 {
@@ -56,7 +37,7 @@ struct TestingClientConfiguration
     virtual void exec() = 0;
 };
 
-struct TestingServerConfiguration
+struct TestingServerConfiguration : DefaultServerConfiguration
 {
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
@@ -64,19 +45,7 @@ struct TestingServerConfiguration
     // Code to run in server process after server exits
     virtual void on_exit(DisplayServer* display_server);
 
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
-
-    // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<frontend::ProtobufIpcFactory> const& ipc_factory);
-
-    // the renderer to use
-    virtual std::shared_ptr<graphics::Renderer> make_renderer();
-
-    // the allocator strategy to use
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
+    virtual std::string const& default_socket_file();
 };
 
 class TestingProcessManager
