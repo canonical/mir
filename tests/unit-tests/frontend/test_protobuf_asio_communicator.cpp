@@ -166,7 +166,9 @@ struct TestClient
     TestClient() :
         logger(std::make_shared<MockLogger>()),
         channel(TestServer::socket_name(), logger),
-        display_server(&channel)
+        display_server(&channel),
+        connect_done_called(false),
+        disconnect_done_called(false)
     {
         connect_message.set_width(640);
         connect_message.set_height(480);
