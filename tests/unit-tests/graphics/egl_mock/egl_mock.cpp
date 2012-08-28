@@ -35,6 +35,11 @@ mir::EglMock::EglMock()
 
     ON_CALL(*this, eglGetDisplay(_))
         .WillByDefault(Return(fake_egl_display));
+    ON_CALL(*this, eglInitialize(_,_,_))
+        .WillByDefault(DoAll(
+                    SetArgPointee<1>(1),
+                    SetArgPointee<2>(4),
+                    Return(EGL_TRUE)));
 
 }
 

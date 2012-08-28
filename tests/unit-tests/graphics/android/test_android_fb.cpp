@@ -64,3 +64,34 @@ TEST(framebuffer_test, fb_initialize_display_failure)
     }, std::runtime_error   );
 }
 
+TEST(framebuffer_test, fb_initialize_Initialize_failure)
+{
+    using namespace testing;
+
+    mir::EglMock mock_egl;
+    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+            .Times(Exactly(1))
+            .WillOnce(Return(EGL_FALSE));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    }, std::runtime_error   );
+}
+
+TEST(framebuffer_test, fb_initialize_Initialize_version_mismatch)
+{
+    using namespace testing;
+
+    mir::EglMock mock_egl;
+    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+            .Times(Exactly(1))
+            .WillOnce(DoAll(
+                    SetArgPointee<2>(2),
+                    Return(EGL_FALSE)));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    }, std::runtime_error   );
+}
