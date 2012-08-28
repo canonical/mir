@@ -21,6 +21,7 @@
 
 #include "mir_protobuf_wire.pb.h"
 
+#include <boost/bind.hpp>
 #include <iostream>
 
 namespace c = mir::client;
@@ -62,7 +63,20 @@ c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Log
     log(log), next_message_id(0), pending_calls(log), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
+    auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
+    io_service_thread = std::move(std::thread(run_io_service));
 }
+
+c::MirRpcChannel::~MirRpcChannel()
+{
+    io_service.stop();
+
+    if (io_service_thread.joinable())
+    {
+        io_service_thread.join();
+    }
+}
+
 
 void c::MirRpcChannel::CallMethod(
     const google::protobuf::MethodDescriptor* method,

@@ -84,6 +84,8 @@ public:
         std::string const& endpoint,
         std::shared_ptr<Logger> const& log);
 
+    ~MirRpcChannel();
+
 private:
     virtual void CallMethod(
         const google::protobuf::MethodDescriptor* method,
@@ -96,6 +98,7 @@ private:
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
+    std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
