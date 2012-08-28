@@ -68,13 +68,6 @@ c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Log
     io_service_thread = std::move(std::thread(run_io_service));
 }
 
-void c::MirRpcChannel::run_io_service_debug_wrapper()
-{
-    std::cerr << "DEBUG: entering " << __PRETTY_FUNCTION__ << std::endl;
-    io_service.run();
-    std::cerr << "DEBUG: exiting " << __PRETTY_FUNCTION__ << std::endl;
-}
-
 c::MirRpcChannel::~MirRpcChannel()
 {
     io_service.stop();

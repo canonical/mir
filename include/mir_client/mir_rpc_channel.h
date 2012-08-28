@@ -120,8 +120,6 @@ private:
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
-
-    void run_io_service_debug_wrapper();
 };
 
 }
