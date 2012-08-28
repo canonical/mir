@@ -30,6 +30,11 @@ mir::EglMock::EglMock()
     assert(global_mock == NULL && "Only one mock object per process is allowed");
 
     global_mock = this;
+
+    using namespace testing;
+    ON_CALL(*this, eglGetDisplay(_))
+        .WillByDefault(Return((EGLDisplay)0x0530));
+
 }
 
 mir::EglMock::~EglMock()

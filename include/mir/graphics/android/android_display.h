@@ -21,6 +21,8 @@
 
 #include "mir/graphics/display.h"
 
+#include <EGL/egl.h>
+
 namespace mir
 {
 namespace geometry
@@ -36,6 +38,8 @@ public:
     explicit AndroidDisplay();
     geometry::Rectangle view_area();
     void notify_update();
+private:
+    EGLDisplay egl_display;
 };
 
 }
