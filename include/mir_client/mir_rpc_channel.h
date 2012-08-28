@@ -110,6 +110,7 @@ private:
     int next_id();
 
     void send_message(const std::string& body);
+    void on_message_sent(boost::system::error_code const& error);
 
     void read_message();
 

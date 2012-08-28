@@ -136,9 +136,21 @@ void c::MirRpcChannel::send_message(const std::string& body)
     std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
 
     boost::system::error_code error;
-    boost::asio::write(socket, boost::asio::buffer(message), error);
+
+    boost::asio::async_write(
+        socket,
+        boost::asio::buffer(message),
+        boost::bind(&MirRpcChannel::on_message_sent, this,
+            boost::asio::placeholders::error));
+}
+
+void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
+{
     if (error)
+    {
         log->error() << "ERROR: " << error.message() << std::endl;
+        return;
+    }
 }
 
 
