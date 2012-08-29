@@ -25,7 +25,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-class MockAndroidFramebufferWindow : public mga::AndroidFramebufferWindow
+class MockAndroidFramebufferWindow : public mga::AndroidFramebufferWindowQuery
 {
 public:
     MockAndroidFramebufferWindow()

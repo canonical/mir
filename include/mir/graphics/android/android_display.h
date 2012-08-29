@@ -39,12 +39,12 @@ namespace android
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>&);
+    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
     geometry::Rectangle view_area();
     void notify_update();
 private:
     EGLDisplay egl_display;
-    std::shared_ptr<AndroidFramebufferWindow> native_window;
+    std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
     EGLConfig egl_config;
     EGLContext egl_context;
     EGLSurface egl_surface;

@@ -38,7 +38,7 @@ static const EGLint context_attr [] =
     EGL_NONE
 };
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>& native_win)
+mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
  : native_window(native_win)
 {
     EGLint major, minor;
