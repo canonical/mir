@@ -30,7 +30,8 @@ static const EGLint attr [] =
     EGL_NONE
 };
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>&)
+mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>& native_win)
+ : native_window(native_win)
 {
     EGLint major, minor;
 
@@ -49,11 +50,13 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     {
         throw std::runtime_error("must have EGL 1.4\n");
     }
-  
- 
+   
     EGLConfig egl_config;
     EGLint num_match_configs;
-    eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs ); 
+    eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs );
+
+    /*int android_native_id =*/ native_window->getAndroidVisualId();
+     
 
 }
     
