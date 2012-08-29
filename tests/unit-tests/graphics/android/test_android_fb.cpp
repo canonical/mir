@@ -462,3 +462,38 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateContext_context_uses_clie
 
     EXPECT_TRUE(validated);
 }
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_MakeCurrent_uses_correct_surface)
+{
+    using namespace testing;
+    EGLSurface fake_surface = (EGLSurface) 0x715;
+
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
+        .Times(Exactly(1))
+        .WillOnce(Return(fake_surface));
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, fake_surface, fake_surface, _))
+        .Times(Exactly(1));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+    
+}
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_MakeCurrent_uses_correct_context)
+{
+    using namespace testing;
+    EGLContext fake_context = (EGLContext) 0x432;
+
+    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+        .Times(Exactly(1))
+        .WillOnce(Return(fake_context));
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, fake_context))
+        .Times(Exactly(1));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+    
+}
