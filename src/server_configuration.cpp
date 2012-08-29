@@ -161,10 +161,10 @@ mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(
-        default_socket_file(), make_ipc_factory(buffer_allocation_strategy));
+        socket_file(), make_ipc_factory(buffer_allocation_strategy));
 }
 
-std::string const& mir::DefaultServerConfiguration::default_socket_file()
+std::string const& mir::DefaultServerConfiguration::socket_file()
 {
     static const std::string socket_file{"/tmp/mir_socket"};
     return socket_file;

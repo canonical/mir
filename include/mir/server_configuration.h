@@ -73,7 +73,7 @@ public:
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 
 private:
-    virtual std::string const& default_socket_file();
+    virtual std::string const& socket_file();
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
