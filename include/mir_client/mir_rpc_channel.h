@@ -101,7 +101,7 @@ private:
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
-    static const int threads = 2;
+    static const int threads = 1;
     std::thread io_service_thread[threads];
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;

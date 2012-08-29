@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/thread/all.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -60,6 +61,7 @@ private:
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
+    std::vector<char> whole_message;
 };
 
 
@@ -226,7 +228,7 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
 void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
 {
-//    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
+    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
 
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
@@ -254,18 +256,29 @@ void mfd::Session::send_response(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    std::vector<char> message(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
-    std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
+    whole_message.resize(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
+    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
 
-//    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " id:" << id << std::endl;
+//    ba::async_write(
+//        socket,
+//        ba::buffer(whole_message),
+//        boost::bind(&Session::on_response_sent, this,
+//            boost::asio::placeholders::error,
+//            boost::asio::placeholders::bytes_transferred));
+    bs::error_code error;
 
-    ba::async_write(
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+
+    ba::write(
         socket,
-        ba::buffer(message),
-        boost::bind(&Session::on_response_sent, this,
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+        ba::buffer(whole_message),
+        error);
+
+    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " id:" << id << std::endl;
+
+    on_response_sent(error, 0);
 }
 
 
