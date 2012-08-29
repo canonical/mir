@@ -339,3 +339,33 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_without_proper_visual_id_throws
        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     }, std::runtime_error );
 }
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateWindow_nullarg)
+{
+    using namespace testing;
+  
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, NULL))
+        .Times(Exactly(1))
+        .WillOnce(Return((EGLSurface)NULL));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+}
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateWindow_uses_native_window_type)
+{
+    using namespace testing;
+    EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
+
+    EXPECT_CALL(native_win, getAndroidNativeEGLWindow())
+        .Times(Exactly(1))
+        .WillOnce(Return(egl_window));
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))
+        .Times(Exactly(1))
+        .WillOnce(Return((EGLSurface)NULL)));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+}
