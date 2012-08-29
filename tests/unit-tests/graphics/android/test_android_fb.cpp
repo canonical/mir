@@ -17,16 +17,12 @@
  */
 
 #include "mir/graphics/android/android_display.h"
+#include "mir/graphics/android/android_framebuffer_window.h"
 #include "mir_test/egl_mock.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
 namespace mg=mir::graphics;
-
-class AndroidFramebufferWindow 
-{
-    virtual int getAndroidVisualId() = 0;
-};
 
 class MockAndroidFramebufferWindow : public AndroidFramebufferWindow
 {
