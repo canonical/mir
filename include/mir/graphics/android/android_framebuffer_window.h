@@ -18,6 +18,9 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
+
+#include <EGL/egl.h>
+
 namespace mir
 {
 namespace graphics
@@ -29,6 +32,7 @@ class AndroidFramebufferWindow
 public:
     virtual ~AndroidFramebufferWindow() {}
     virtual int getAndroidVisualId() = 0;
+    virtual EGLNativeWindowType getAndroidNativeEGLWindow() = 0;
 };
 }
 }

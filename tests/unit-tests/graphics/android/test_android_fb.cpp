@@ -40,6 +40,7 @@ public:
     ~MockAndroidFramebufferWindow() {};
 
     MOCK_METHOD0(getAndroidVisualId, int());
+    MOCK_METHOD0(getAndroidNativeEGLWindow, EGLNativeWindowType());
 
     int fake_visual_id;
 };
@@ -358,12 +359,12 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateWindow_uses_native_window
     using namespace testing;
     EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
 
-    EXPECT_CALL(native_win, getAndroidNativeEGLWindow())
+    EXPECT_CALL(*native_win, getAndroidNativeEGLWindow())
         .Times(Exactly(1))
         .WillOnce(Return(egl_window));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))
         .Times(Exactly(1))
-        .WillOnce(Return((EGLSurface)NULL)));
+        .WillOnce(Return((EGLSurface)NULL));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
