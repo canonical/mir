@@ -109,7 +109,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
         .WillOnce(DoAll(
                 SaveArg<1>(&attr),
                 SaveArg<3>(&num),
-                SetArgPointee<2>(&mock_egl.fake_configs),
+                SetArgPointee<2>(mock_egl.fake_configs),
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
     EXPECT_NO_THROW({
