@@ -20,8 +20,10 @@
 #define MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/android/android_framebuffer_window.h" 
 
 #include <EGL/egl.h>
+#include <memory>
 
 namespace mir
 {
@@ -31,17 +33,20 @@ class Rectangle;
 }
 namespace graphics
 {
+namespace android
+{
 
 class AndroidDisplay : public Display
 {
 public:
-    explicit AndroidDisplay();
+    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>&);
     geometry::Rectangle view_area();
     void notify_update();
 private:
     EGLDisplay egl_display;
 };
 
+}
 }
 }
 #endif /* MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_ */

@@ -20,7 +20,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>
-namespace mg=mir::graphics;
+namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 static const EGLint attr [] =
@@ -30,7 +30,7 @@ static const EGLint attr [] =
     EGL_NONE
 };
 
-mg::AndroidDisplay::AndroidDisplay()
+mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>&)
 {
     EGLint major, minor;
 
@@ -57,13 +57,13 @@ mg::AndroidDisplay::AndroidDisplay()
 
 }
     
-geom::Rectangle mg::AndroidDisplay::view_area()
+geom::Rectangle mga::AndroidDisplay::view_area()
 {
     geom::Rectangle rect;
     return rect;
 }
 
-void mg::AndroidDisplay::notify_update()
+void mga::AndroidDisplay::notify_update()
 {
 
 }

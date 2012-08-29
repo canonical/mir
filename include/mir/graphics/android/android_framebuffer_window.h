@@ -16,14 +16,21 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
-
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
 class AndroidFramebufferWindow 
 {
 public:
-    virtual ~AndroidFramebufferWindow();
+    virtual ~AndroidFramebufferWindow() {}
     virtual int getAndroidVisualId() = 0;
 };
-
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_ */
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_ */
