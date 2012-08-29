@@ -223,6 +223,25 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_checks_native_visual_id)
     });
 }
 
+TEST_F(AndroidTestFramebufferInit, fb_initialize_queries_with_enough_room_for_all_potential_cfg)
+{
+    using namespace testing;
+
+    int num_cfg = 43;
+    EXPECT_CALL(mock_egl, eglGetConfigs(mock_egl.fake_egl_display, NULL, 0, _))
+        .Times(AtLeast(1))
+        .WillOnce(DoAll(
+            SetArgPointee<3>(num_cfg),
+            Return(EGL_TRUE)));
+
+    EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, num_cfg, _))
+        .Times(AtLeast(1));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+
+}
 TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id)
 {
     using namespace testing;

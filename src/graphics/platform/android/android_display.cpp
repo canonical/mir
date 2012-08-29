@@ -53,9 +53,11 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
    
     EGLConfig egl_config;
     EGLint num_match_configs;
+
+
     eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs );
 
-    /*int android_native_id =*/ native_window->getAndroidVisualId();
+/*    int android_native_id =*/ native_window->getAndroidVisualId();
      
 
 }
