@@ -16,14 +16,10 @@
 
 # By default, build for LLVM
 
-if (MIR_PLATFORM_LLVM)
-  add_subdirectory(platform/llvm/)
-endif()
-
-if (MIR_PLATFORM_ANDROID)
+if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(platform/android/)
 endif()
 
-if (MIR_PLATFORM_GBM)
+if (MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory(platform/gbm/)
 endif()

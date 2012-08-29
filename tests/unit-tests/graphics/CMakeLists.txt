@@ -18,15 +18,11 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
 )
 
-if (MIR_PLATFORM_ANDROID)
+if (MIR_PLATFORM STREQUAL "android")
 add_subdirectory(android/)
 endif()
 
-if (MIR_PLATFORM_LLVM)
-add_subdirectory(llvm/)
-endif()
-
-if (MIR_PLATFORM_GBM)
+if (MIR_PLATFORM STREQUAL "gbm")
 add_subdirectory(gbm/)
 endif()
 

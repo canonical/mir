@@ -63,36 +63,26 @@ include_directories (
   ${Boost_INCLUDE_DIRS}
 )
 
-#detect mir platforms
-option(
-  MIR_PLATFORM_ANDROID
-  "controls building for android based graphics backend"
-  OFF
+# Default to gbm backend
+set(
+  MIR_PLATFORM
+  gbm
+  CACHE
+  STRING
+  "graphics backend to build (options are 'gbm' or 'android')"
 )
-option(
-  MIR_PLATFORM_LLVM
-  "controls building for llvm based graphics backend"
-  ON
-)
-option(
-  MIR_PLATFORM_GBM
-  "controls building for mesa based graphics backend"
-  ON
-)
-if (MIR_PLATFORM_ANDROID)
-  #these are not intrinsically exclusive. we don't have any way to build
-  #platform llvm on android yet
-  set(MIR_PLATFORM_LLVM OFF)
+
+if (MIR_PLATFORM STREQUAL "android")
   find_package( LibHardware REQUIRED )
   if (LIBHARDWARE_FOUND)
     include_directories(${LIBHARDWARE_INCLUDE_DIR})
-  endif() 
-endif()
-
-if (MIR_PLATFORM_GBM)
+  endif()
+elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm )
   pkg_check_modules( DRM REQUIRED libdrm )
+else ()
+  message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
 # Check for google protocol buffers and generate code
