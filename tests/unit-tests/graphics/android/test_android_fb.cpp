@@ -370,3 +370,27 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateWindow_uses_native_window
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     });
 }
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateContext_window_cfg_matches_context_cfg)
+{
+    using namespace testing;
+
+    EGLConfig chosen_cfg, cfg;
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+            SaveArg<1>(&chosen_cfg),
+            Return((EGLSurface)NULL)));
+
+    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+            SaveArg<1>(&cfg),
+            Return((EGLContext)NULL)));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+    
+    EXPECT_EQ(chosen_cfg, cfg);
+}
