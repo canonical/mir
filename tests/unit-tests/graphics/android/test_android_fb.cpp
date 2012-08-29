@@ -425,7 +425,9 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateContext_context_attr_null
     });
     
     int i=0;
+    EXPECT_NO_THROW({
     while(context_attr[i++] != EGL_NONE);
+    });
 
     SUCCEED();
 }

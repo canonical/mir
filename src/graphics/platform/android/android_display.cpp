@@ -32,6 +32,12 @@ static const EGLint attr [] =
     EGL_NONE
 };
 
+static const EGLint context_attr [] =
+{
+    EGL_CONTEXT_CLIENT_VERSION, 2,
+    EGL_NONE
+};
+
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindow>& native_win)
  : native_window(native_win)
 {
@@ -84,7 +90,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     EGLNativeWindowType native_win_type = native_window->getAndroidNativeEGLWindow();
     eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
-
+    eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
 }
     
 geom::Rectangle mga::AndroidDisplay::view_area()
