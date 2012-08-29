@@ -19,6 +19,8 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
+#include "system/window.h"
+
 #include <stdexcept>
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -80,7 +82,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (!found)
         throw std::runtime_error("could not select EGL config");
 
-    eglCreateWindowSurface(egl_display, egl_config, NULL, NULL); 
+    EGLNativeWindowType native_win_type = native_window->getAndroidNativeEGLWindow();
+    eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL); 
 }
     
 geom::Rectangle mga::AndroidDisplay::view_area()
