@@ -17,12 +17,75 @@
  */
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/mir_rpc_channel.h"
+
+#include "mir_protobuf.pb.h"
 
 #include <cstddef>
 
+namespace mc = mir::client;
+namespace mp = mir::protobuf;
+
+struct MirClient
+{
+    mc::MirRpcChannel channel;
+    mp::DisplayServer::Stub server;
+    mp::Surface surface;
+
+    void connect()
+    {
+        mir::protobuf::ConnectMessage connect_message;
+        connect_message.set_width(0);
+        connect_message.set_height(0);
+        connect_message.set_pixel_format(0);
+
+        server.connect(
+            0,
+            &connect_message,
+            &surface,
+            google::protobuf::NewCallback(this, &MirClient::done_connect));
+    }
+
+    void done_connect()
+    {
+        callback(connection, context);
+    }
+
+    MirClient(MirConnection * connection,
+              std::shared_ptr<mc::Logger> const & log,
+              mir_connected_callback callback,
+              void * context)
+        : channel("./mir_socket_test", log)
+        , server(&channel)
+        , connection(connection)
+        , callback(callback)
+        , context(context)
+    {
+    }
+    MirConnection * connection;
+    mir_connected_callback callback;
+    void * context;
+};
+
+struct MirConnection
+{
+    MirClient * details;
+};
+
+MirConnection * create_connection(mir_connected_callback callback, void * context)
+{
+    MirConnection * connection = new MirConnection;
+    auto log = std::make_shared<mc::ConsoleLogger>();
+    MirClient * client = new MirClient(connection, log, callback, context);
+
+    connection->details = client;
+    client->connect();
+    return connection;
+}
+
 void mir_connect(mir_connected_callback callback, void * context)
 {
-    callback(NULL, context);
+    create_connection(callback, context);
 }
 
 int mir_connection_is_valid(MirConnection *)

@@ -95,8 +95,7 @@ private:
     mir::protobuf::DisplayServer& server;
 };
 
-TEST_F(BespokeDisplayServerTestFixture,
-       a_connection_attempt_results_in_a_session)
+TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
 {
     struct ServerConfig : TestingServerConfiguration
     {
@@ -120,22 +119,39 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     struct ClientConfig : TestingClientConfiguration
     {
+        ClientConfig()
+            : connection(NULL)
+        {
+        }
+
         static void connection_callback(MirConnection * connection, void * context)
         {
             ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
             config->connected(connection);
         }
 
-        void connected(MirConnection * connection)
+        void connected(MirConnection * new_connection)
         {
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+            std::unique_lock<std::mutex> lock(guard);
+            connection = new_connection;
+            wait_condition.notify_one();
         }
 
         void exec()
         {
             mir_connect(connection_callback, this);
+            std::unique_lock<std::mutex> lock(guard);
+            if (!connection)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
         }
+
+        std::mutex guard;
+        std::condition_variable wait_condition;
+        MirConnection * connection;
     } client_config;
 
     launch_client_process(client_config);
