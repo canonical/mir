@@ -91,6 +91,10 @@ void mir::EglMock::silence_uninteresting()
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglCreateContext(_,_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglMakeCurrent(_,_,_,_))
+        .Times(AtLeast(0));
 }
 
 #define CHECK_GLOBAL_MOCK(rettype)  \

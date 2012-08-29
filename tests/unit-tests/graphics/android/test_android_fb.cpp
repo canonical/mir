@@ -58,6 +58,9 @@ protected:
         mock_egl.silence_uninteresting();    
         EXPECT_CALL(*native_win, getAndroidVisualId())
             .Times(AtLeast(0));
+
+        EXPECT_CALL(*native_win, getAndroidNativeEGLWindow())
+            .Times(AtLeast(0));
     }
 
     std::shared_ptr<MockAndroidFramebufferWindow> native_win;
