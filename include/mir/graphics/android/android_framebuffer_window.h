@@ -33,6 +33,7 @@ public:
     virtual ~AndroidFramebufferWindow() {}
     virtual int android_visual_id() = 0;
     virtual EGLNativeWindowType android_native_window_type() = 0;
+    virtual EGLConfig android_display_egl_config() = 0;
 };
 }
 }
