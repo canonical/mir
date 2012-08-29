@@ -47,6 +47,7 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
   ${GBM_LIBRARIES}
+  ${DRM_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 

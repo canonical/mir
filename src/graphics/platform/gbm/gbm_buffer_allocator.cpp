@@ -22,6 +22,7 @@
 #include "mir/graphics/gbm/gbm_buffer.h"
 
 #include <stdexcept>
+#include <xf86drm.h>
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -30,7 +31,29 @@ namespace geom = mir::geometry;
 
 mgg::GBMBufferAllocator::GBMBufferAllocator()
 {
+    /*
+     * TODO:
+     *  - We need an API to actually select the right driver here
+     *  - We need to fix libgbm to support out-of-tree backends, then write and use a software-only backend
+     *    that we can load for the tests.
+     *
+     * For the moment, just ignore the fact that we're not actually creating a usable device.
+     */
 
+    int drm_fd = drmOpen("radeon", NULL);
+
+    /*
+    if (drm_fd < 0) {
+        throw std::runtime_error("Failed to open drm device");
+    }
+    */
+
+    dev = gbm_create_device(drm_fd);
+/*
+    if (!dev) {
+        throw std::runtime_error("Failed to create gbm device");
+    }
+*/
 }
 
 mgg::GBMBufferAllocator::GBMBufferAllocator(gbm_device *device) : dev(device)
@@ -51,5 +74,5 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
 
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
-    return std::unique_ptr<mgg::GBMBufferAllocator>(new mgg::GBMBufferAllocator());
+    return std::unique_ptr<mgg::GBMBufferAllocator>(new mgg::GBMBufferAllocator);
 }

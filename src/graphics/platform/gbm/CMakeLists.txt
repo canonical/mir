@@ -14,6 +14,8 @@
 #
 # Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
+
 add_library(
   mirplatformgraphics STATIC
 
