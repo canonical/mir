@@ -41,7 +41,7 @@ public:
 
     MOCK_METHOD0(android_visual_id, int());
     MOCK_METHOD0(android_native_window_type, EGLNativeWindowType());
-    MOCK_METHOD0(android_display_egl_config, EGLConfig());
+    MOCK_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
 
     int fake_visual_id;
 };
@@ -140,7 +140,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
 {
     using namespace testing;
     EGLConfig fake_config = (EGLConfig) 0x3432;
-    EXPECT_CALL(*native_win, android_display_egl_config())
+    EXPECT_CALL(*native_win, android_display_egl_config(_))
         .Times(Exactly(1))
         .WillOnce(Return(fake_config));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, fake_config, _, _)) 
