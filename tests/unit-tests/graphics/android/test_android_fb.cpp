@@ -33,14 +33,14 @@ public:
     fake_visual_id(5)
     {
         using namespace testing;
-        ON_CALL(*this, getAndroidVisualId())
+        ON_CALL(*this, android_visual_id())
             .WillByDefault(Return(fake_visual_id));
         
     };
     ~MockAndroidFramebufferWindow() {};
 
-    MOCK_METHOD0(getAndroidVisualId, int());
-    MOCK_METHOD0(getAndroidNativeEGLWindow, EGLNativeWindowType());
+    MOCK_METHOD0(android_visual_id, int());
+    MOCK_METHOD0(android_native_window_type, EGLNativeWindowType());
 
     int fake_visual_id;
 };
@@ -56,10 +56,10 @@ protected:
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();    
-        EXPECT_CALL(*native_win, getAndroidVisualId())
+        EXPECT_CALL(*native_win, android_visual_id())
             .Times(AtLeast(0));
 
-        EXPECT_CALL(*native_win, getAndroidNativeEGLWindow())
+        EXPECT_CALL(*native_win, android_native_window_type())
             .Times(AtLeast(0));
     }
 
@@ -226,7 +226,7 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_configure_attr_requests_ogl2)
 TEST_F(AndroidTestFramebufferInit, fb_initialize_checks_native_visual_id)
 {
     using namespace testing;
-    EXPECT_CALL(*native_win, getAndroidVisualId())
+    EXPECT_CALL(*native_win, android_visual_id())
         .Times(Exactly(1));
 
     EXPECT_NO_THROW({
@@ -362,7 +362,7 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateWindow_uses_native_window
     using namespace testing;
     EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
 
-    EXPECT_CALL(*native_win, getAndroidNativeEGLWindow())
+    EXPECT_CALL(*native_win, android_native_window_type())
         .Times(Exactly(1))
         .WillOnce(Return(egl_window));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))

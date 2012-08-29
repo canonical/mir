@@ -31,8 +31,8 @@ class AndroidFramebufferWindow
 {
 public:
     virtual ~AndroidFramebufferWindow() {}
-    virtual int getAndroidVisualId() = 0;
-    virtual EGLNativeWindowType getAndroidNativeEGLWindow() = 0;
+    virtual int android_visual_id() = 0;
+    virtual EGLNativeWindowType android_native_window_type() = 0;
 };
 }
 }

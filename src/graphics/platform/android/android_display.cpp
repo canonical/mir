@@ -67,7 +67,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
     eglChooseConfig(egl_display, attr, config_slots, num_potential_configs, &num_match_configs );
-    int android_native_id = native_window->getAndroidVisualId();
+    int android_native_id = native_window->android_visual_id();
 
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
      * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
@@ -88,7 +88,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (!found)
         throw std::runtime_error("could not select EGL config");
 
-    EGLNativeWindowType native_win_type = native_window->getAndroidNativeEGLWindow();
+    EGLNativeWindowType native_win_type = native_window->android_native_window_type();
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
