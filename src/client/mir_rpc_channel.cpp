@@ -82,16 +82,23 @@ c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Log
     socket.connect(endpoint);
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
-    io_service_thread = std::move(std::thread(run_io_service));
+
+    for (int i = 0; i != threads; ++i)
+    {
+        io_service_thread[i] = std::move(std::thread(run_io_service));
+    }
 }
 
 c::MirRpcChannel::~MirRpcChannel()
 {
     io_service.stop();
 
-    if (io_service_thread.joinable())
+    for (int i = 0; i != threads; ++i)
     {
-        io_service_thread.join();
+        if (io_service_thread[i].joinable())
+        {
+            io_service_thread[i].join();
+        }
     }
 }
 

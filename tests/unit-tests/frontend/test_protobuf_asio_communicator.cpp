@@ -440,4 +440,31 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
     server.expect_session_count(connection_count);
     server.expect_connected_session_count(0);
 }
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+       each_connection_attempt_results_in_a_new_session_being_created_asynchronously)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+
+    int const connection_count{5};
+
+    EXPECT_CALL(client, connect_done()).Times(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client.display_server.connect(
+            0,
+            &client.connect_message,
+            &client.surface,
+            google::protobuf::NewCallback(&client, &TestClient::connect_done));
+    }
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client.wait_for_connect_done();
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(connection_count);
+}
 }

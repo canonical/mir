@@ -98,7 +98,8 @@ private:
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
-    std::thread io_service_thread;
+    static const int threads = 5;
+    std::thread io_service_thread[threads];
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
