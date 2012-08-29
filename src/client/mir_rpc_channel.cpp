@@ -22,6 +22,9 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/null.hpp>
+
 #include <iostream>
 
 namespace
@@ -65,7 +68,7 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
     auto call = pending_calls.find(result.id());
     if (call == pending_calls.end())
     {
-        log->error() << "ERROR orphaned result: " << result.ShortDebugString() << std::endl;
+        log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
     }
     else
     {
@@ -171,7 +174,7 @@ void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
     if (error)
     {
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
         return;
     }
 
@@ -185,7 +188,7 @@ void c::MirRpcChannel::read_message()
 
     mir::protobuf::wire::Result result = read_message_body(body_size);
 
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
+    log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
     pending_calls.complete_response(result);
 }
@@ -196,7 +199,7 @@ size_t c::MirRpcChannel::read_message_header()
     boost::system::error_code error;
     boost::asio::read(socket, boost::asio::buffer(header_bytes), boost::asio::transfer_exactly(sizeof header_bytes), error);
     if (error)
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
 
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
@@ -208,7 +211,7 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
     boost::asio::streambuf message;
     boost::asio::read(socket, message, boost::asio::transfer_at_least(body_size), error);
     if (error)
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
 
     std::istream in(&message);
     mir::protobuf::wire::Result result;
@@ -216,8 +219,15 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
     return result;
 }
 
-
 std::ostream& c::ConsoleLogger::error()
 {
-    return std::cerr;
+    return std::cerr  << "ERROR: ";
 }
+
+std::ostream& c::ConsoleLogger::debug()
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
+}
+
+

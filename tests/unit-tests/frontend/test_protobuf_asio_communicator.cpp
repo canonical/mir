@@ -85,17 +85,26 @@ class MockLogger : public mir::client::Logger
 {
     std::ostringstream out;
 
-    std::ostream& dummy_out() { return out; }
+    std::ostream& dummy_error() { return std::cerr << "ERROR: "; }
+//    std::ostream& dummy_error() { return out << "ERROR: "; }
+
+    std::ostream& dummy_debug() { return std::cerr << "DEBUG: "; }
+//    std::ostream& dummy_debug() { return out << "DEBUG: "; }
 
 public:
     MockLogger()
     {
         ON_CALL(*this, error())
-            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_out));
+            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_error));
         EXPECT_CALL(*this, error()).Times(0);
+
+        ON_CALL(*this, debug())
+            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_debug));
+        EXPECT_CALL(*this, debug()).Times(testing::AtLeast(0));
     }
 
     MOCK_METHOD0(error,std::ostream& ());
+    MOCK_METHOD0(debug,std::ostream& ());
 };
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
