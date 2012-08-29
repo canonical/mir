@@ -168,7 +168,9 @@ struct TestClient
         channel(TestServer::socket_name(), logger),
         display_server(&channel),
         connect_done_called(false),
-        disconnect_done_called(false)
+        disconnect_done_called(false),
+        connect_done_count(0),
+        disconnect_done_count(0)
     {
         connect_message.set_width(640);
         connect_message.set_height(480);
@@ -188,8 +190,23 @@ struct TestClient
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
 
-    void on_connect_done() { connect_done_called.store(true); }
-    void on_disconnect_done() { disconnect_done_called.store(true); }
+    void on_connect_done()
+    {
+        connect_done_called.store(true);
+
+        auto old = connect_done_count.load();
+
+        while (!connect_done_count.compare_exchange_weak(old, old+1));
+    }
+
+    void on_disconnect_done()
+    {
+        disconnect_done_called.store(true);
+
+        auto old = disconnect_done_count.load();
+
+        while (!disconnect_done_count.compare_exchange_weak(old, old+1));
+    }
 
     void wait_for_connect_done()
     {
@@ -208,8 +225,26 @@ struct TestClient
         disconnect_done_called.store(false);
     }
 
+    void wait_for_connect_count(int count)
+    {
+        for (int i = 0; count != connect_done_count.load() && i < 10000; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+    void wait_for_disconnect_count(int count)
+    {
+        for (int i = 0; count != disconnect_done_count.load() && i < 10000; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+
     std::atomic<bool> connect_done_called;
     std::atomic<bool> disconnect_done_called;
+
+    std::atomic<int> connect_done_count;
+    std::atomic<int> disconnect_done_count;
 };
 
 struct BasicTestFixture : public ::testing::Test
@@ -459,15 +494,12 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             google::protobuf::NewCallback(&client, &TestClient::connect_done));
     }
 
+    std::cerr << "DEBUG server.expect_session_count(connection_count);" << std::endl;
     server.expect_session_count(connection_count);
+    std::cerr << "DEBUG server.expect_connected_session_count(connection_count);" << std::endl;
     server.expect_connected_session_count(connection_count);
 
-    //    for (int i = 0; i != connection_count; ++i)
-    //    {
-            client.wait_for_connect_done();
-    //    }
-
-    // FRIG - allows time for all callbacks to occur
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    std::cerr << "DEBUG client.wait_for_connect_count(connection_count);" << std::endl;
+    client.wait_for_connect_count(connection_count);
 }
 }
