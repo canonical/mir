@@ -23,16 +23,33 @@
 #include <stdexcept>
 namespace mg=mir::graphics;
 
+class AndroidFramebufferWindow 
+{
+    virtual int getAndroidVisualId() = 0;
+};
+
+class MockAndroidFramebufferWindow : public AndroidFramebufferWindow
+{
+public:
+    MockAndroidFramebufferWindow() {};
+    ~MockAndroidFramebufferWindow() {};
+
+    MOCK_METHOD0(getAndroidVisualId, int());
+
+};
+
 TEST(framebuffer_test, fb_initialize_GetDisplay)
 {
     using namespace testing;
 
+    std::shared_ptr<AndroidFramebufferWindow> native_win(new MockAndroidFramebufferWindow);
     mir::EglMock mock_egl;
+
     EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
             .Times(Exactly(1));
 
     EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     });
 }
 
@@ -40,12 +57,13 @@ TEST(framebuffer_test, fb_initialize_Initialize)
 {
     using namespace testing;
 
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
             .Times(Exactly(1));
 
     EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     });
 }
 
@@ -53,6 +71,7 @@ TEST(framebuffer_test, fb_initialize_display_failure)
 {
     using namespace testing;
 
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
             .Times(Exactly(1))
@@ -60,7 +79,7 @@ TEST(framebuffer_test, fb_initialize_display_failure)
 
     EXPECT_THROW(
     {
-       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     }, std::runtime_error   );
 }
 
@@ -68,6 +87,7 @@ TEST(framebuffer_test, fb_initialize_Initialize_failure)
 {
     using namespace testing;
 
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
             .Times(Exactly(1))
@@ -75,7 +95,7 @@ TEST(framebuffer_test, fb_initialize_Initialize_failure)
 
     EXPECT_THROW(
     {
-       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     }, std::runtime_error   );
 }
 
@@ -83,6 +103,7 @@ TEST(framebuffer_test, fb_initialize_Initialize_version_mismatch)
 {
     using namespace testing;
 
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
             .Times(Exactly(1))
@@ -92,7 +113,7 @@ TEST(framebuffer_test, fb_initialize_Initialize_version_mismatch)
 
     EXPECT_THROW(
     {
-       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+       std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     }, std::runtime_error   );
 }
 
@@ -100,6 +121,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
 {
     using namespace testing;
     
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     const EGLint *attr;
 
@@ -111,7 +133,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
     EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     });
 
     int i=0;
@@ -124,6 +146,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_contains_window_bit)
 {
     using namespace testing;
     
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     const EGLint *attr;
 
@@ -135,7 +158,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_contains_window_bit)
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
     EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     });
 
     int i=0;
@@ -157,6 +180,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_requests_ogl2)
 {
     using namespace testing;
     
+    MockAndroidFramebufferWindow win;
     mir::EglMock mock_egl;
     const EGLint *attr;
 
@@ -168,7 +192,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_requests_ogl2)
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
     EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
     });
 
     int i=0;
@@ -184,4 +208,20 @@ TEST(framebuffer_test, fb_initialize_configure_attr_requests_ogl2)
     };
 
     EXPECT_TRUE(validated);
+}
+
+
+TEST(framebuffer_test, fb_initialize_check_config_uses_proper_native_visual_id)
+{
+    using namespace testing;
+    
+    MockAndroidFramebufferWindow win;
+    mir::EglMock mock_egl;
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay(native_win));
+    });
+
+
+
 }
