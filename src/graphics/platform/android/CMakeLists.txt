@@ -20,6 +20,7 @@ add_library(
   android_buffer_allocator.cpp
   android_buffer.cpp
   android_display.cpp
+  android_framebuffer_window.cpp
   android_alloc_adaptor.cpp
 )
 

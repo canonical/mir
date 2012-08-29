@@ -16,32 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
+#include "mir/graphics/android/android_framebuffer_window.h"
+namespace mga = mir::graphics::android;
 
-#include <mir/graphics/android/android_framebuffer_window_query.h>
-
-namespace mir
+EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
 {
-namespace graphics
-{
-namespace android
-{
-
-class AndroidFramebufferWindow : public AndroidFramebufferWindowQuery
-{
-public:
-    AndroidFramebufferWindow() {}
-    virtual ~AndroidFramebufferWindow() {}
-
-    int android_visual_id() {return 9;}
-    EGLNativeWindowType android_native_window_type();
-    EGLConfig android_display_egl_config(EGLDisplay);
-    
-
-};
-
+    return (EGLNativeWindowType) NULL;
 }
+
+EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay) 
+{
+    return (EGLConfig)NULL;
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_ */
