@@ -83,7 +83,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
         throw std::runtime_error("could not select EGL config");
 
     EGLNativeWindowType native_win_type = native_window->getAndroidNativeEGLWindow();
-    eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL); 
+    eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
+
 }
     
 geom::Rectangle mga::AndroidDisplay::view_area()
