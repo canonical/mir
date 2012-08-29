@@ -51,19 +51,33 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
         throw std::runtime_error("must have EGL 1.4\n");
     }
    
-    EGLConfig egl_config;
     EGLint num_match_configs;
     int num_potential_configs;
-    EGLint* config_slots;
+    EGLConfig* config_slots;
     eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
-    config_slots = new EGLint[num_potential_configs]; 
+    config_slots = new EGLConfig[num_potential_configs]; 
 
-    eglChooseConfig(egl_display, attr, &egl_config, num_potential_configs, &num_match_configs );
+    /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
+    eglChooseConfig(egl_display, attr, config_slots, num_potential_configs, &num_match_configs );
+    int android_native_id = native_window->getAndroidVisualId();
+
+    /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
+     * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
+     * eglChooseConfig */ 
+    for(int i=0; i < num_match_configs; i++)
+    {
+        int visual_id;
+        eglGetConfigAttrib(egl_display, config_slots[i], EGL_NATIVE_VISUAL_ID, &visual_id); 
+        if(visual_id == android_native_id)
+        {
+            egl_config = config_slots[i];
+        } 
+    }
 
     delete config_slots;
-/*    int android_native_id =*/ native_window->getAndroidVisualId();
-     
 
+    printf("EGLconfig in thing 0x%X\n", (unsigned int)egl_config); 
+    eglCreateWindowSurface(egl_display, egl_config, NULL, NULL); 
 }
     
 geom::Rectangle mga::AndroidDisplay::view_area()

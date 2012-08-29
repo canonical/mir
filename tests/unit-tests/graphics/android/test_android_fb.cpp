@@ -257,7 +257,7 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id)
 {
     using namespace testing;
   
-    EGLConfig cfg; 
+    EGLConfig cfg, chosen_cfg; 
 
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
         .Times(AtLeast(1))
@@ -265,12 +265,18 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id)
             SetArgPointee<3>(native_win->fake_visual_id),
             SaveArg<1>(&cfg),
             Return(EGL_TRUE)));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, cfg, _, _))
-        .Times(Exactly(1));
+
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+            SaveArg<1>(&chosen_cfg),
+            Return((EGLSurface)NULL)));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     });
+
+    EXPECT_EQ(cfg, chosen_cfg);
 }
 
 TEST_F(AndroidTestFramebufferInit, fb_initialize_without_proper_visual_id_throws)

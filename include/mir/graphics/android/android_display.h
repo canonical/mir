@@ -45,6 +45,7 @@ public:
 private:
     EGLDisplay egl_display;
     std::shared_ptr<AndroidFramebufferWindow> native_window;
+    EGLConfig egl_config;
 };
 
 }
