@@ -34,10 +34,8 @@ public:
     AndroidFramebufferWindow() {}
     virtual ~AndroidFramebufferWindow() {}
 
-    int android_visual_id() {return 9;}
     EGLNativeWindowType android_native_window_type();
     EGLConfig android_display_egl_config(EGLDisplay);
-    
 
 };
 

@@ -33,13 +33,10 @@ public:
     fake_visual_id(5)
     {
         using namespace testing;
-        ON_CALL(*this, android_visual_id())
-            .WillByDefault(Return(fake_visual_id));
         
     };
     ~MockAndroidFramebufferWindow() {};
 
-    MOCK_METHOD0(android_visual_id, int());
     MOCK_METHOD0(android_native_window_type, EGLNativeWindowType());
     MOCK_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
 
@@ -57,8 +54,6 @@ protected:
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();    
-        EXPECT_CALL(*native_win, android_visual_id())
-            .Times(AtLeast(0));
 
         EXPECT_CALL(*native_win, android_native_window_type())
             .Times(AtLeast(0));
