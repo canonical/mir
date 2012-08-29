@@ -25,6 +25,8 @@ namespace geom=mir::geometry;
 
 static const EGLint attr [] =
 {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_NONE
 };
 

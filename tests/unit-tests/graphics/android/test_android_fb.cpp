@@ -140,13 +140,14 @@ TEST(framebuffer_test, fb_initialize_configure_attr_contains_window_bit)
 
     int i=0;
     bool validated = false;
-    while(attr[i++] != EGL_NONE)
+    while(attr[i] != EGL_NONE)
     {
         if ((attr[i] == EGL_SURFACE_TYPE) && (attr[i+1] == EGL_WINDOW_BIT))
         {
             validated = true;
             break;
-        } 
+        }
+        i++; 
     };
 
     EXPECT_TRUE(validated);
@@ -172,13 +173,14 @@ TEST(framebuffer_test, fb_initialize_configure_attr_requests_ogl2)
 
     int i=0;
     bool validated = false;
-    while(attr[i++] != EGL_NONE)
+    while(attr[i] != EGL_NONE)
     {
         if ((attr[i] == EGL_RENDERABLE_TYPE) && (attr[i+1] == EGL_OPENGL_ES2_BIT))
         {
             validated = true;
             break;
         } 
+        i++; 
     };
 
     EXPECT_TRUE(validated);
