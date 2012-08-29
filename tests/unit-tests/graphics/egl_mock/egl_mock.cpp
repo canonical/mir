@@ -76,6 +76,23 @@ mir::EglMock::~EglMock()
     global_mock = NULL;
 }
 
+void mir::EglMock::silence_uninteresting()
+{
+    using namespace testing;
+    EXPECT_CALL(*this, eglGetDisplay(_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglInitialize(_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglGetConfigs(_,_,_, _))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglGetConfigAttrib(_,_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglChooseConfig(_,_,_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglCreateWindowSurface(_,_,_,_))
+        .Times(AtLeast(0));
+}
+
 #define CHECK_GLOBAL_MOCK(rettype)  \
     if (!global_mock)               \
     {                               \

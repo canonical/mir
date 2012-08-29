@@ -49,7 +49,14 @@ class AndroidTestFramebufferInit : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
         native_win = std::shared_ptr<MockAndroidFramebufferWindow>(new MockAndroidFramebufferWindow);
+
+        /* silence uninteresting warning messages */
+        mock_egl.silence_uninteresting();    
+        EXPECT_CALL(*native_win, getAndroidVisualId())
+            .Times(AtLeast(0));
     }
 
     std::shared_ptr<MockAndroidFramebufferWindow> native_win;

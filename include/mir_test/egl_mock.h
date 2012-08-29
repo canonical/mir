@@ -12,6 +12,7 @@ class EglMock
   public:
     EglMock();
     ~EglMock();
+    void silence_uninteresting();
 
     MOCK_METHOD0(eglGetError, EGLint (void));
 

@@ -69,7 +69,6 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     {
         int visual_id;
         eglGetConfigAttrib(egl_display, config_slots[i], EGL_NATIVE_VISUAL_ID, &visual_id);
-        printf("VISUAL ID %i, %i\n", i, visual_id); 
         if(visual_id == android_native_id)
         {
             egl_config = config_slots[i];
