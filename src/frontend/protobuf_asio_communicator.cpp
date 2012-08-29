@@ -182,8 +182,8 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
         invoke.ParseFromIstream(&in);
 
-        std::cerr << "DEBUG: " << __PRETTY_FUNCTION__
-            << " method_name:" << invoke.method_name() << ", id:" << invoke.id() << std::endl;
+//        std::cerr << "DEBUG: " << __PRETTY_FUNCTION__
+//            << " method_name:" << invoke.method_name() << ", id:" << invoke.id() << std::endl;
 
         if ("connect" == invoke.method_name())
         {
@@ -226,7 +226,7 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
 void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
 {
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
+//    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
 
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
@@ -258,7 +258,7 @@ void mfd::Session::send_response(
     std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
     std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
 
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " id:" << id << std::endl;
+//    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " id:" << id << std::endl;
 
     ba::async_write(
         socket,

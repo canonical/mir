@@ -503,12 +503,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             google::protobuf::NewCallback(&client, &TestClient::connect_done));
     }
 
-    std::cerr << "DEBUG server.expect_session_count(connection_count);" << std::endl;
     server.expect_session_count(connection_count);
-    std::cerr << "DEBUG server.expect_connected_session_count(connection_count);" << std::endl;
     server.expect_connected_session_count(connection_count);
 
-    std::cerr << "DEBUG client.wait_for_connect_count(connection_count);" << std::endl;
     client.wait_for_connect_count(connection_count);
 }
 }

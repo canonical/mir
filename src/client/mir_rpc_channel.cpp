@@ -172,6 +172,7 @@ void c::MirRpcChannel::send_message(const std::string& body, detail::SendBuffer&
 
 void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
     if (error)
     {
         log->error() << error.message() << std::endl;
@@ -184,7 +185,10 @@ void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 
 void c::MirRpcChannel::read_message()
 {
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
     const size_t body_size = read_message_header();
+
+    log->debug() << __PRETTY_FUNCTION__ << " body_size:" << body_size << std::endl;
 
     mir::protobuf::wire::Result result = read_message_body(body_size);
 
