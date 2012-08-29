@@ -48,7 +48,22 @@ struct MirClient
 
     void done_connect()
     {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            connected = true;
+        }
         callback(connection, context);
+    }
+
+    bool is_valid()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return connected;
+    }
+
+    char const * get_error_message()
+    {
+        return error_message.c_str();
     }
 
     MirClient(MirConnection * connection,
@@ -58,18 +73,23 @@ struct MirClient
         : channel("./mir_socket_test", log)
         , server(&channel)
         , connection(connection)
+        , connected(false)
         , callback(callback)
         , context(context)
     {
     }
+
     MirConnection * connection;
+    bool connected;
+    std::string error_message;
     mir_connected_callback callback;
     void * context;
+    std::mutex mutex;
 };
 
 struct MirConnection
 {
-    MirClient * details;
+    MirClient * client;
 };
 
 MirConnection * create_connection(mir_connected_callback callback, void * context)
@@ -78,7 +98,7 @@ MirConnection * create_connection(mir_connected_callback callback, void * contex
     auto log = std::make_shared<mc::ConsoleLogger>();
     MirClient * client = new MirClient(connection, log, callback, context);
 
-    connection->details = client;
+    connection->client = client;
     client->connect();
     return connection;
 }
@@ -88,14 +108,14 @@ void mir_connect(mir_connected_callback callback, void * context)
     create_connection(callback, context);
 }
 
-int mir_connection_is_valid(MirConnection *)
+int mir_connection_is_valid(MirConnection * connection)
 {
-    return 0;
+    return connection->client->is_valid() ? 1 : 0;
 }
 
-char const * mir_connection_get_error_message(MirConnection *)
+char const * mir_connection_get_error_message(MirConnection * connection)
 {
-    return "not yet implemented!";
+    return connection->client->get_error_message();
 }
 
 void mir_create_surface(MirConnection *,

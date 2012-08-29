@@ -34,6 +34,11 @@
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
+namespace mir
+{
+namespace
+{
+
 struct SessionCounter : mir::protobuf::DisplayServer
 {
     int session_count;
@@ -95,6 +100,8 @@ private:
     mir::protobuf::DisplayServer& server;
 };
 
+}
+
 TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
 {
     struct ServerConfig : TestingServerConfiguration
@@ -155,4 +162,6 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
     } client_config;
 
     launch_client_process(client_config);
+}
+
 }
