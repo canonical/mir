@@ -19,6 +19,8 @@
 
 #include "mir/graphics/gbm/gbm_buffer.h"
 
+#include <gbm.h>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
