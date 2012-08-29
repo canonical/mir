@@ -45,12 +45,14 @@ namespace client
 {
 namespace detail
 {
+typedef std::vector<char> SendBuffer;
+
 class PendingCallCache
 {
 public:
     PendingCallCache(std::shared_ptr<Logger> const& log);
 
-    void save_completion_details(
+    SendBuffer& save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
@@ -67,6 +69,7 @@ private:
         PendingCall()
         : response(0), complete(0) {}
 
+        SendBuffer send_buffer;
         google::protobuf::Message* response;
         google::protobuf::Closure* complete;
     };
@@ -98,14 +101,12 @@ private:
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
-    static const int threads = 5;
+    static const int threads = 1;
     std::thread io_service_thread[threads];
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
-
-    std::vector<char> message;
 
     mir::protobuf::wire::Invocation invocation_for(
         const google::protobuf::MethodDescriptor* method,
@@ -113,7 +114,7 @@ private:
 
     int next_id();
 
-    void send_message(const std::string& body);
+    void send_message(const std::string& body, detail::SendBuffer& buffer);
     void on_message_sent(boost::system::error_code const& error);
 
     void read_message();

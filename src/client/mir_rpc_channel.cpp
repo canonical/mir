@@ -48,13 +48,15 @@ cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
 {
 }
 
-void cd::PendingCallCache::save_completion_details(
+cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    pending_calls[invoke.id()] = PendingCall(response, complete);
+
+    auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
+    return current.send_buffer;
 }
 
 void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
@@ -115,10 +117,10 @@ void c::MirRpcChannel::CallMethod(
     invocation.SerializeToOstream(&buffer);
 
     // Only save details after serialization succeeds
-    pending_calls.save_completion_details(invocation, response, complete);
+    auto& send_buffer = pending_calls.save_completion_details(invocation, response, complete);
 
     // Only send message when details saved for handling response
-    send_message(buffer.str());
+    send_message(buffer.str(), send_buffer);
 }
 
 mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
@@ -145,7 +147,7 @@ int c::MirRpcChannel::next_id()
     return id;
 }
 
-void c::MirRpcChannel::send_message(const std::string& body)
+void c::MirRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -154,13 +156,13 @@ void c::MirRpcChannel::send_message(const std::string& body)
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    message.resize(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
-    std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
+    send_buffer.resize(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
+    std::copy(body.begin(), body.end(), send_buffer.begin() + sizeof header_bytes);
 
     boost::asio::async_write(
         socket,
-        boost::asio::buffer(message),
+        boost::asio::buffer(send_buffer),
         boost::bind(&MirRpcChannel::on_message_sent, this,
             boost::asio::placeholders::error));
 }
@@ -182,6 +184,8 @@ void c::MirRpcChannel::read_message()
     const size_t body_size = read_message_header();
 
     mir::protobuf::wire::Result result = read_message_body(body_size);
+
+    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
     pending_calls.complete_response(result);
 }
