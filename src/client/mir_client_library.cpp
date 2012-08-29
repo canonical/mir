@@ -23,14 +23,27 @@
 
 #include <cstddef>
 
+namespace
+{
+
 namespace mc = mir::client;
 namespace mp = mir::protobuf;
 
-struct MirClient
+class MirClient
 {
-    mc::MirRpcChannel channel;
-    mp::DisplayServer::Stub server;
-    mp::Surface surface;
+public:
+    MirClient(MirConnection * connection,
+              std::shared_ptr<mc::Logger> const & log,
+              mir_connected_callback callback,
+              void * context)
+        : channel("./mir_socket_test", log)
+        , server(&channel)
+        , connection(connection)
+        , connected(false)
+        , callback(callback)
+        , context(context)
+    {
+    }
 
     void connect()
     {
@@ -46,15 +59,6 @@ struct MirClient
             google::protobuf::NewCallback(this, &MirClient::done_connect));
     }
 
-    void done_connect()
-    {
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            connected = true;
-        }
-        callback(connection, context);
-    }
-
     bool is_valid()
     {
         std::lock_guard<std::mutex> lock(mutex);
@@ -66,18 +70,19 @@ struct MirClient
         return error_message.c_str();
     }
 
-    MirClient(MirConnection * connection,
-              std::shared_ptr<mc::Logger> const & log,
-              mir_connected_callback callback,
-              void * context)
-        : channel("./mir_socket_test", log)
-        , server(&channel)
-        , connection(connection)
-        , connected(false)
-        , callback(callback)
-        , context(context)
+private:
+    void done_connect()
     {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            connected = true;
+        }
+        callback(connection, context);
     }
+
+    mc::MirRpcChannel channel;
+    mp::DisplayServer::Stub server;
+    mp::Surface surface;
 
     MirConnection * connection;
     bool connected;
@@ -86,6 +91,8 @@ struct MirClient
     void * context;
     std::mutex mutex;
 };
+
+}
 
 struct MirConnection
 {
