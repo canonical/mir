@@ -168,13 +168,7 @@ TEST_F(AndroidTestFramebufferWindow, creates_with_proper_visual_id)
             SaveArg<1>(&cfg),
             Return(EGL_TRUE)));
 
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-            SaveArg<1>(&chosen_cfg),
-            Return((EGLSurface)NULL)));
-
-    fb_win.android_display_egl_config(mock_egl.fake_egl_display);
+    chosen_cfg = fb_win.android_display_egl_config(mock_egl.fake_egl_display);
 
     EXPECT_EQ(cfg, chosen_cfg);
 }
@@ -200,13 +194,7 @@ TEST_F(AndroidTestFramebufferWindow, creates_with_proper_visual_id_mixed_valid_i
             SetArgPointee<3>(bad_id),
             Return(EGL_TRUE)));
 
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-            SaveArg<1>(&chosen_cfg),
-            Return((EGLSurface)NULL)));
-
-    fb_win.android_display_egl_config(mock_egl.fake_egl_display);
+    chosen_cfg = fb_win.android_display_egl_config(mock_egl.fake_egl_display);
 
     EXPECT_EQ(cfg, chosen_cfg);
 }

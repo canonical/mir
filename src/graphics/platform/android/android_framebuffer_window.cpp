@@ -31,6 +31,7 @@ EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
     return (EGLNativeWindowType) NULL;
 }
 
+#include <stdio.h>
 EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) 
 {
     EGLint num_match_configs;
@@ -54,10 +55,12 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     {
         int visual_id;
         eglGetConfigAttrib(egl_display, config_slots[i], EGL_NATIVE_VISUAL_ID, &visual_id);
+    printf("CHECKING VISUAL ID %i %i\n", i,  visual_id);
         if(visual_id == android_native_id)
         {
             egl_config = config_slots[i];
             found = true;
+            break;
         } 
     }
     delete config_slots;
