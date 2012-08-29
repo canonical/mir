@@ -28,11 +28,20 @@ namespace mga=mir::graphics::android;
 class MockAndroidFramebufferWindow : public mga::AndroidFramebufferWindow
 {
 public:
-    MockAndroidFramebufferWindow() {};
+    MockAndroidFramebufferWindow()
+     :
+    fake_visual_id(5)
+    {
+        using namespace testing;
+        ON_CALL(*this, getAndroidVisualId())
+            .WillByDefault(Return(fake_visual_id));
+        
+    };
     ~MockAndroidFramebufferWindow() {};
 
     MOCK_METHOD0(getAndroidVisualId, int());
 
+    int fake_visual_id;
 };
 
 class AndroidTestFramebufferInit : public ::testing::Test
@@ -206,13 +215,8 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_configure_attr_requests_ogl2)
 TEST_F(AndroidTestFramebufferInit, fb_initialize_checks_native_visual_id)
 {
     using namespace testing;
-   
-    int native_id = 5; 
-
     EXPECT_CALL(*native_win, getAndroidVisualId())
-        .Times(Exactly(1))
-        .WillOnce(Return(native_id));
-
+        .Times(Exactly(1));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -224,23 +228,37 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id)
     using namespace testing;
   
     EGLConfig cfg; 
-    int native_id = 5; 
 
-    EXPECT_CALL(*native_win, getAndroidVisualId())
-        .Times(Exactly(1))
-        .WillOnce(Return(native_id));
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
         .Times(AtLeast(1))
-        .WillOnce(DoAll(
-            SetArgPointee<3>(native_id),
+        .WillRepeatedly(DoAll(
+            SetArgPointee<3>(native_win->fake_visual_id),
             SaveArg<1>(&cfg),
             Return(EGL_TRUE)));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, cfg, _, _))
         .Times(Exactly(1));
 
-
-
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     });
+}
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_without_proper_visual_id_throws)
+{
+    using namespace testing;
+  
+    EGLConfig cfg; 
+
+    int bad_id = native_win->fake_visual_id + 1;
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(
+            SetArgPointee<3>(bad_id),
+            SaveArg<1>(&cfg),
+            Return(EGL_TRUE)));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    }, std::runtime_error );
 }
