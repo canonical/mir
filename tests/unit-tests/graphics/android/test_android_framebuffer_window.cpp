@@ -33,13 +33,13 @@ protected:
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
 
-        mga::AndroidFramebufferWindow fb_win; 
     }
 
+    mga::AndroidFramebufferWindow fb_win; 
     mir::EglMock mock_egl;
 };
 
-TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_is_terminated_by_null)
+TEST_F(AndroidTestFramebufferWindow, eglChooseConfig_attr_is_terminated_by_null)
 {
     using namespace testing;
     
@@ -53,7 +53,7 @@ TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_is_terminated_by_null)
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
 
-    auto config = fb_win.android_display_egl_config();
+    fb_win.android_display_egl_config(mock_egl.fake_egl_display);
 
     int i=0;
     while(attr[i++] != EGL_NONE);
