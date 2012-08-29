@@ -61,8 +61,7 @@ TEST_F(AndroidTestFramebufferWindow, eglChooseConfig_attr_is_terminated_by_null)
     SUCCEED();
 }
 
-#if 0
-TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_contains_window_bit)
+TEST_F(AndroidTestFramebufferWindow, eglChooseConfig_attr_contains_window_bit)
 {
     using namespace testing;
     
@@ -75,9 +74,8 @@ TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_contains_window_bit)
                 SetArgPointee<2>(mock_egl.fake_configs),
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
-    EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
-    });
+
+    fb_win.android_display_egl_config(mock_egl.fake_egl_display);
 
     int i=0;
     bool validated = false;
@@ -94,7 +92,7 @@ TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_contains_window_bit)
     EXPECT_TRUE(validated);
 }
 
-TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_requests_ogl2)
+TEST_F(AndroidTestFramebufferWindow, eglChooseConfig_attr_requests_ogl2)
 {
     using namespace testing;
     
@@ -107,9 +105,8 @@ TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_requests_ogl2)
                 SetArgPointee<2>(mock_egl.fake_configs),
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
-    EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
-    });
+
+    fb_win.android_display_egl_config(mock_egl.fake_egl_display);
 
     int i=0;
     bool validated = false;
@@ -127,6 +124,7 @@ TEST_F(AndroidFramebufferWindow, eglChooseConfig_attr_requests_ogl2)
 }
 
 
+#if 0
 TEST_F(AndroidFramebufferWindow, checks_native_visual_id)
 {
     using namespace testing;
