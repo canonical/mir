@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/android_framebuffer_window.h"
+#include <stdexcept>
 namespace mga = mir::graphics::android;
 
 static const EGLint attr [] =
@@ -65,9 +66,8 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     }
     delete config_slots;
 
-#if 0
     if (!found)
         throw std::runtime_error("could not select EGL config");
-#endif
+
     return egl_config;
 }
