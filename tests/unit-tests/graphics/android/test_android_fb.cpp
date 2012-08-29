@@ -228,6 +228,8 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_queries_with_enough_room_for_al
     using namespace testing;
 
     int num_cfg = 43;
+    const EGLint *attr;
+
     EXPECT_CALL(mock_egl, eglGetConfigs(mock_egl.fake_egl_display, NULL, 0, _))
         .Times(AtLeast(1))
         .WillOnce(DoAll(
@@ -235,11 +237,20 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_queries_with_enough_room_for_al
             Return(EGL_TRUE)));
 
     EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, num_cfg, _))
-        .Times(AtLeast(1));
+        .Times(AtLeast(1))
+        .WillOnce(DoAll(
+                SaveArg<1>(&attr),
+                SetArgPointee<2>(mock_egl.fake_configs),
+                SetArgPointee<4>(mock_egl.fake_configs_num),
+                Return(EGL_TRUE)));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     });
+
+    /* should be able to ref this spot */
+    EGLint test_last_spot = attr[num_cfg-1];
+    EXPECT_EQ(test_last_spot, test_last_spot);
 
 }
 TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id)

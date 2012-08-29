@@ -53,10 +53,14 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
    
     EGLConfig egl_config;
     EGLint num_match_configs;
+    int num_potential_configs;
+    EGLint* config_slots;
+    eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
+    config_slots = new EGLint[num_potential_configs]; 
 
+    eglChooseConfig(egl_display, attr, &egl_config, num_potential_configs, &num_match_configs );
 
-    eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs );
-
+    delete config_slots;
 /*    int android_native_id =*/ native_window->getAndroidVisualId();
      
 
