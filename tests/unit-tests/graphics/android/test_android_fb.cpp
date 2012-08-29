@@ -429,3 +429,34 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateContext_context_attr_null
 
     SUCCEED();
 }
+
+TEST_F(AndroidTestFramebufferInit, fb_initialize_CreateContext_context_uses_client_version_2)
+{
+    using namespace testing;
+
+    const EGLint* context_attr;
+
+    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+            SaveArg<3>(&context_attr),
+            Return((EGLContext)NULL)));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+    
+    int i=0;
+    bool validated = false;
+    while(context_attr[i] != EGL_NONE)
+    {
+        if ((context_attr[i] == EGL_CONTEXT_CLIENT_VERSION) && (context_attr[i+1] == 2))
+        {
+            validated = true;
+            break;
+        }
+        i++; 
+    };
+
+    EXPECT_TRUE(validated);
+}
