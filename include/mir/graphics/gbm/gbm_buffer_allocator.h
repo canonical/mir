@@ -41,11 +41,10 @@ public:
 
 
 private:
-
-    struct gbm_device *dev;
+    gbm_device *dev;
 
     // For the purposes of testing
-    explicit GBMBufferAllocator(struct gbm_device *device);
+    explicit GBMBufferAllocator(gbm_device *device);
     friend class MockGBMDeviceCreator;
 };
 

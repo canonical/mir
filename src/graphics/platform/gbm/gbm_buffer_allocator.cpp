@@ -64,8 +64,8 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(gbm_device *device) : dev(device)
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
-    struct gbm_bo *handle = gbm_bo_create(dev, width.as_uint32_t(), height.as_uint32_t(),
-                                          GBMBuffer::mir_format_to_gbm_format(pf), GBM_BO_USE_RENDERING);
+    gbm_bo *handle = gbm_bo_create(dev, width.as_uint32_t(), height.as_uint32_t(),
+                                   GBMBuffer::mir_format_to_gbm_format(pf), GBM_BO_USE_RENDERING);
     if (handle != NULL)
         return std::unique_ptr<mc::Buffer>(new GBMBuffer(handle));
 

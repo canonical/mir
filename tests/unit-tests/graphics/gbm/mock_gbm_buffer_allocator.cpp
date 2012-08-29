@@ -31,12 +31,12 @@ namespace geom=mir::geometry;
 static mgg::MockGBMDeviceCreator *thunk = NULL;
 
 extern "C" {
-static struct gbm_bo *mock_bo_create(struct gbm_device *gbm,
+static gbm_bo *mock_bo_create(gbm_device *gbm,
                             uint32_t width, uint32_t height,
                             uint32_t format,
                             uint32_t usage);
 
-static void mock_bo_destroy(struct gbm_bo *bo);
+static void mock_bo_destroy(gbm_bo *bo);
 }
 
 mgg::MockGBMDeviceCreator::MockGBMDeviceCreator()
@@ -61,10 +61,10 @@ std::unique_ptr<mgg::GBMBufferAllocator> mgg::MockGBMDeviceCreator::create_gbm_a
     return std::unique_ptr<mgg::GBMBufferAllocator>(new GBMBufferAllocator(fake_device.get()));
 }
 
-struct gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(struct gbm_device *dev,
+gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
                                                       uint32_t w, uint32_t h, uint32_t format, uint32_t usage)
 {
-    struct gbm_bo *bo = new gbm_bo();
+    gbm_bo *bo = new gbm_bo();
     (void)format;
     (void)usage;
     (void)dev;
@@ -87,7 +87,7 @@ std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::get_device()
 }
 
 extern "C" {
-static struct gbm_bo *mock_bo_create(struct gbm_device *gbm,
+static gbm_bo *mock_bo_create(gbm_device *gbm,
                             uint32_t width, uint32_t height,
                             uint32_t format,
                             uint32_t usage)
@@ -95,7 +95,7 @@ static struct gbm_bo *mock_bo_create(struct gbm_device *gbm,
     return thunk->bo_create(gbm, width, height, format, usage);
 }
 
-static void mock_bo_destroy(struct gbm_bo *bo)
+static void mock_bo_destroy(gbm_bo *bo)
 {
     return thunk->bo_destroy(bo);
 }

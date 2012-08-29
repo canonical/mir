@@ -37,7 +37,7 @@ namespace gbm
 class GBMBuffer: public compositor::Buffer
 {
 public:
-    GBMBuffer(struct gbm_bo *handle)
+    GBMBuffer(gbm_bo *handle)
         : gbm_handle(handle)
     {
     }
@@ -65,7 +65,7 @@ public:
     static uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
 
 private:
-    struct gbm_bo *gbm_handle;
+    gbm_bo *gbm_handle;
 };
 
 }
