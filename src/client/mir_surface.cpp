@@ -21,6 +21,8 @@
 #include "mir_client/mir_rpc_channel.h"
 #include "mir_protobuf.pb.h"
 
+#include "mir/thread/all.h"
+
 namespace
 {
 // Too clever? The idea is to ensure protbuf version is verified once (on
@@ -74,10 +76,16 @@ struct ValidSurfaceState : public SurfaceState
 {
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
+    mir::protobuf::Surface surface;
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool created;
 
     ValidSurfaceState(std::string const& socketfile, int width, int height, int pix_format, std::shared_ptr<Logger> const& log) :
         channel(socketfile, log),
-        display_server(&channel)
+        display_server(&channel),
+        created(false)
     {
         google_protobuf_guard();
 
@@ -86,17 +94,24 @@ struct ValidSurfaceState : public SurfaceState
         connect_message.set_height(height);
         connect_message.set_pixel_format(pix_format);
 
-        mir::protobuf::Surface surface;
-
         display_server.connect(
             0,
             &connect_message,
             &surface,
-            google::protobuf::NewCallback(&mir::client::done));
+            google::protobuf::NewCallback(this, &ValidSurfaceState::done_connect));
 
+        std::unique_lock<std::mutex> lock(mutex);
+        while (!created) cv.wait(lock);
+    }
+
+    void done_connect()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
         SurfaceState::width = surface.width();
         SurfaceState::height = surface.height();
         SurfaceState::pixel_format = surface.pixel_format();
+        created = true;
+        cv.notify_one();
     }
 
     void disconnect()
@@ -107,12 +122,22 @@ struct ValidSurfaceState : public SurfaceState
             0,
             &ignored,
             &ignored,
-            google::protobuf::NewCallback(&mir::client::done));
+            google::protobuf::NewCallback(this, &ValidSurfaceState::done_disconnect));
+
+        std::unique_lock<std::mutex> lock(mutex);
+        while (created) cv.wait(lock);
+    }
+
+    void done_disconnect()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        created = false;
+        cv.notify_one();
     }
 
     bool is_valid() const
     {
-        return true;
+        return created;
     }
 };
 }

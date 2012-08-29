@@ -45,7 +45,7 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     // Code to run in server process after server exits
     virtual void on_exit(DisplayServer* display_server);
 
-    virtual std::string const& default_socket_file();
+    virtual std::string const& socket_file();
 };
 
 class TestingProcessManager
