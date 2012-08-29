@@ -125,16 +125,6 @@ TEST_F(AndroidTestFramebufferWindow, eglChooseConfig_attr_requests_ogl2)
 
 
 #if 0
-TEST_F(AndroidFramebufferWindow, checks_native_visual_id)
-{
-    using namespace testing;
-    EXPECT_CALL(*native_win, android_visual_id())
-        .Times(Exactly(1));
-
-    EXPECT_NO_THROW({
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
-    });
-}
 
 TEST_F(AndroidFramebufferWindow, queries_with_enough_room_for_all_potential_cfg)
 {
