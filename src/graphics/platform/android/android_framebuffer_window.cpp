@@ -19,6 +19,13 @@
 #include "mir/graphics/android/android_framebuffer_window.h"
 namespace mga = mir::graphics::android;
 
+static const EGLint attr [] =
+{
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
 EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
 {
     return (EGLNativeWindowType) NULL;
