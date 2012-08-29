@@ -99,7 +99,7 @@ struct MirConnection
     MirClient * client;
 };
 
-MirConnection * create_connection(mir_connected_callback callback, void * context)
+void mir_connect(mir_connected_callback callback, void * context)
 {
     MirConnection * connection = new MirConnection;
     auto log = std::make_shared<mc::ConsoleLogger>();
@@ -107,12 +107,6 @@ MirConnection * create_connection(mir_connected_callback callback, void * contex
 
     connection->client = client;
     client->connect();
-    return connection;
-}
-
-void mir_connect(mir_connected_callback callback, void * context)
-{
-    create_connection(callback, context);
 }
 
 int mir_connection_is_valid(MirConnection * connection)
