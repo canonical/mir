@@ -68,7 +68,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     for(int i=0; i < num_match_configs; i++)
     {
         int visual_id;
-        eglGetConfigAttrib(egl_display, config_slots[i], EGL_NATIVE_VISUAL_ID, &visual_id); 
+        eglGetConfigAttrib(egl_display, config_slots[i], EGL_NATIVE_VISUAL_ID, &visual_id);
+        printf("VISUAL ID %i, %i\n", i, visual_id); 
         if(visual_id == android_native_id)
         {
             egl_config = config_slots[i];
@@ -80,8 +81,6 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (!found)
         throw std::runtime_error("could not select EGL config");
 
-
-    printf("EGLconfig in thing 0x%X\n", (unsigned int)egl_config); 
     eglCreateWindowSurface(egl_display, egl_config, NULL, NULL); 
 }
     

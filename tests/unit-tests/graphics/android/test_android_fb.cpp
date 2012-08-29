@@ -296,7 +296,7 @@ TEST_F(AndroidTestFramebufferInit, fb_initialize_creates_with_proper_visual_id_m
             SetArgPointee<3>(native_win->fake_visual_id),
             SaveArg<1>(&cfg),
             Return(EGL_TRUE)))
-        .WillOnce(DoAll(
+        .WillRepeatedly(DoAll(
             SetArgPointee<3>(bad_id),
             Return(EGL_TRUE)));
 
