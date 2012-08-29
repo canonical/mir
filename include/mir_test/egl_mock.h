@@ -56,6 +56,7 @@ class EglMock
     EGLDisplay fake_egl_display;
     EGLConfig* fake_configs;
     EGLint fake_configs_num;
+    int fake_visual_id;
 };
 }
 

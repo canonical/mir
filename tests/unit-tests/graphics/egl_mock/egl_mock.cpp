@@ -37,7 +37,8 @@ EGLint config_size = 4;
 mir::EglMock::EglMock()
     : fake_egl_display((EGLDisplay) 0x0530),
     fake_configs(configs),
-    fake_configs_num(config_size)
+    fake_configs_num(config_size),
+    fake_visual_id(5)
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");
@@ -56,6 +57,11 @@ mir::EglMock::EglMock()
         .WillByDefault(DoAll(
                     SetArgPointee<3>(config_size),
                     Return(EGL_TRUE)));
+
+    ON_CALL(*this, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+        .WillByDefault(DoAll(
+            SetArgPointee<3>(fake_visual_id),
+            Return(EGL_TRUE)));
 
     ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
         .WillByDefault(DoAll(
