@@ -102,13 +102,11 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
     
     mir::EglMock mock_egl;
     const EGLint *attr;
-    EGLint num;
 
     EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, _, _))
         .Times(AtLeast(0))
         .WillOnce(DoAll(
                 SaveArg<1>(&attr),
-                SaveArg<3>(&num),
                 SetArgPointee<2>(mock_egl.fake_configs),
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
@@ -116,7 +114,11 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
     std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
     });
 
-    EXPECT_EQ(attr[num-1], EGL_NONE);
+    int i=0;
+    while(attr[i] != EGL_NONE)
+        i++;
+
+    SUCCEED();
 }
 
 #if 0

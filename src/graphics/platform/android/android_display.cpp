@@ -42,7 +42,14 @@ mg::AndroidDisplay::AndroidDisplay()
     {
         throw std::runtime_error("must have EGL 1.4\n");
     }
-     
+   
+    const EGLint attr [] =
+    {
+        EGL_NONE
+    };
+    EGLConfig egl_config;
+    EGLint num_match_configs; 
+    eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs ); 
 
 }
     
