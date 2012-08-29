@@ -25,8 +25,19 @@ namespace
 mir::EglMock* global_mock = NULL;
 }
 
+
+EGLConfig configs[] = {
+    (void*)3,
+    (void*)4,
+    (void*)8,
+    (void*)14
+};
+EGLint config_size = 4;
+
 mir::EglMock::EglMock()
-    : fake_egl_display((EGLDisplay) 0x0530)
+    : fake_egl_display((EGLDisplay) 0x0530),
+    fake_configs(configs),
+    fake_configs_num(config_size)
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");
@@ -39,6 +50,17 @@ mir::EglMock::EglMock()
         .WillByDefault(DoAll(
                     SetArgPointee<1>(1),
                     SetArgPointee<2>(4),
+                    Return(EGL_TRUE)));
+
+    ON_CALL(*this, eglGetConfigs(_,NULL, 0, _))
+        .WillByDefault(DoAll(
+                    SetArgPointee<3>(config_size),
+                    Return(EGL_TRUE)));
+
+    ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
+        .WillByDefault(DoAll(
+                    SetArgPointee<2>(&fake_configs),
+                    SetArgPointee<4>(fake_configs_num),
                     Return(EGL_TRUE)));
 
 }

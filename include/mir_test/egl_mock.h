@@ -54,6 +54,8 @@ class EglMock
     MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,NativePixmapType));
 
     EGLDisplay fake_egl_display;
+    EGLConfig* fake_configs;
+    EGLint fake_configs_num;
 };
 }
 

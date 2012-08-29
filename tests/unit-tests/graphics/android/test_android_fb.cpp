@@ -95,3 +95,52 @@ TEST(framebuffer_test, fb_initialize_Initialize_version_mismatch)
        std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
     }, std::runtime_error   );
 }
+
+TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
+{
+    using namespace testing;
+    
+    mir::EglMock mock_egl;
+    const EGLint *attr;
+    EGLint num;
+
+    EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, _, _))
+        .Times(AtLeast(0))
+        .WillOnce(DoAll(
+                SaveArg<1>(&attr),
+                SaveArg<3>(&num),
+                SetArgPointee<2>(&mock_egl.fake_configs),
+                SetArgPointee<4>(mock_egl.fake_configs_num),
+                Return(EGL_TRUE)));
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    });
+
+    EXPECT_EQ(attr[num-1], EGL_NONE);
+}
+
+#if 0
+TEST(framebuffer_test, fb_initialize_configure_attr_contains_win_type)
+{
+    using namespace testing;
+    
+    mir::EglMock mock_egl;
+    const EGLint *attr;
+    EGLint num;
+
+    EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, _, _))
+        .Times(AtLeast(0))
+        .WillOnce(DoAll(
+                SaveArg<1>(&attr),
+                SaveArgPointee<5>(&num),
+                SetArgPointee<2>(&mock_egl.fake_configs),
+                SetArgPointee<4>(mock_egl.fake_configs_num),
+                Return(EGL_TRUE)));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
+    });
+
+    EXPECT_EQ(attr[num-1], EGL_NONE);
+}
+#endif
