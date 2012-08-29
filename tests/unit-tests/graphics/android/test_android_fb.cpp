@@ -115,8 +115,7 @@ TEST(framebuffer_test, fb_initialize_configure_attr_is_terminated_by_null)
     });
 
     int i=0;
-    while(attr[i] != EGL_NONE)
-        i++;
+    while(attr[i++] != EGL_NONE);
 
     SUCCEED();
 }

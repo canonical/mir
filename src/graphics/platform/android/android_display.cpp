@@ -23,6 +23,11 @@
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
+static const EGLint attr [] =
+{
+    EGL_NONE
+};
+
 mg::AndroidDisplay::AndroidDisplay()
 {
     EGLint major, minor;
@@ -42,13 +47,10 @@ mg::AndroidDisplay::AndroidDisplay()
     {
         throw std::runtime_error("must have EGL 1.4\n");
     }
-   
-    const EGLint attr [] =
-    {
-        EGL_NONE
-    };
+  
+ 
     EGLConfig egl_config;
-    EGLint num_match_configs; 
+    EGLint num_match_configs;
     eglChooseConfig(egl_display, attr, &egl_config, 1, &num_match_configs ); 
 
 }
