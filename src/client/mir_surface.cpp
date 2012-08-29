@@ -23,22 +23,6 @@
 
 #include "mir/thread/all.h"
 
-namespace
-{
-// Too clever? The idea is to ensure protbuf version is verified once (on
-// the first google_protobuf_guard() call) and memory is released on exit.
-struct google_protobuf_guard_t
-{
-    google_protobuf_guard_t() { GOOGLE_PROTOBUF_VERIFY_VERSION; }
-    ~google_protobuf_guard_t() { google::protobuf::ShutdownProtobufLibrary(); }
-};
-
-void google_protobuf_guard()
-{
-    static google_protobuf_guard_t guard;
-}
-}
-
 namespace mir
 {
 namespace client
@@ -87,8 +71,6 @@ struct ValidSurfaceState : public SurfaceState
         display_server(&channel),
         created(false)
     {
-        google_protobuf_guard();
-
         mir::protobuf::ConnectMessage connect_message;
         connect_message.set_width(width);
         connect_message.set_height(height);

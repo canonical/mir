@@ -398,4 +398,46 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
     server.expect_session_count(connection_count);
     server.expect_connected_session_count(0);
 }
+
+TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
+       multiple_clients_can_connect_and_disconnect_asynchronously)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        EXPECT_CALL(client[i], connect_done()).Times(1);
+        client[i].display_server.connect(
+            0,
+            &client[i].connect_message,
+            &client[i].surface,
+            google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
+    }
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client[i].wait_for_connect_done();
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        EXPECT_CALL(client[i], disconnect_done()).Times(1);
+        client[i].display_server.disconnect(
+            0,
+            &client[i].ignored,
+            &client[i].ignored,
+            google::protobuf::NewCallback(&client[i], &TestClient::disconnect_done));
+    }
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client[i].wait_for_disconnect_done();
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(0);
+}
 }

@@ -24,6 +24,22 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
+namespace
+{
+// Too clever? The idea is to ensure protbuf version is verified once (on
+// the first google_protobuf_guard() call) and memory is released on exit.
+struct google_protobuf_guard_t
+{
+    google_protobuf_guard_t() { GOOGLE_PROTOBUF_VERIFY_VERSION; }
+    ~google_protobuf_guard_t() { google::protobuf::ShutdownProtobufLibrary(); }
+};
+
+void google_protobuf_guard()
+{
+    static google_protobuf_guard_t guard;
+}
+}
+
 namespace c = mir::client;
 namespace cd = mir::client::detail;
 
@@ -62,6 +78,7 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
+    google_protobuf_guard();
     socket.connect(endpoint);
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
