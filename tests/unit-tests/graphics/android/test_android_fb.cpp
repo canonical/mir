@@ -152,28 +152,34 @@ TEST(framebuffer_test, fb_initialize_configure_attr_contains_window_bit)
     EXPECT_TRUE(validated);
 }
 
-#if 0
-TEST(framebuffer_test, fb_initialize_configure_attr_contains_win_type)
+TEST(framebuffer_test, fb_initialize_configure_attr_requests_ogl2)
 {
     using namespace testing;
     
     mir::EglMock mock_egl;
     const EGLint *attr;
-    EGLint num;
 
     EXPECT_CALL(mock_egl, eglChooseConfig(mock_egl.fake_egl_display, _, _, _, _))
         .Times(AtLeast(0))
         .WillOnce(DoAll(
                 SaveArg<1>(&attr),
-                SaveArgPointee<5>(&num),
-                SetArgPointee<2>(&mock_egl.fake_configs),
+                SetArgPointee<2>(mock_egl.fake_configs),
                 SetArgPointee<4>(mock_egl.fake_configs_num),
                 Return(EGL_TRUE)));
-
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mg::AndroidDisplay);
     });
 
-    EXPECT_EQ(attr[num-1], EGL_NONE);
+    int i=0;
+    bool validated = false;
+    while(attr[i++] != EGL_NONE)
+    {
+        if ((attr[i] == EGL_RENDERABLE_TYPE) && (attr[i+1] == EGL_OPENGL_ES2_BIT))
+        {
+            validated = true;
+            break;
+        } 
+    };
+
+    EXPECT_TRUE(validated);
 }
-#endif
