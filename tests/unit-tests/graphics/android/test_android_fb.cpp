@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/android/android_display.h"
-#include "mir/graphics/android/android_framebuffer_window.h"
+#include "mir/graphics/android/android_framebuffer_window_query.h"
 #include "mir_test/egl_mock.h"
 #include <gtest/gtest.h>
 #include <memory>

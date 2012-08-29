@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
 
-#include <mir/graphics/android/android_framebuffer_window_query.h>
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -28,20 +28,18 @@ namespace graphics
 namespace android
 {
 
-class AndroidFramebufferWindow : public AndroidFramebufferWindowQuery
+class AndroidFramebufferWindowQuery 
 {
 public:
-    AndroidFramebufferWindow() {}
-    virtual ~AndroidFramebufferWindow() {}
+    virtual ~AndroidFramebufferWindowQuery() {}
 
-    int android_visual_id() {return 9;}
-    EGLNativeWindowType android_native_window_type() {return (EGLNativeWindowType) NULL;}
-    EGLConfig android_display_egl_config(EGLDisplay) {return (EGLConfig)NULL;}
-    
-
+    virtual int android_visual_id() = 0;
+    virtual EGLNativeWindowType android_native_window_type() = 0;
+    virtual EGLConfig android_display_egl_config(EGLDisplay display) = 0;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_ */
