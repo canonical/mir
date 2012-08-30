@@ -267,11 +267,11 @@ TEST_F(AndroidFramebufferWindowConfigSelection, without_proper_visual_id_throws)
     }, std::runtime_error );
 }
 
-TEST_F(AndroidFramebufferWindowConfigSelection, creates_with_proper_visual_id_mixed_valid_invalid)
+TEST_F(AndroidFramebufferWindowConfigSelection, anw_is_not_null)
 {
     using namespace testing;
   
     auto win_handle = fb_win->android_native_window_type();
 
-    EXPECT_NE(win_handle.get(), NULL);
+    EXPECT_NE(win_handle, (EGLNativeWindowType) NULL);
 }

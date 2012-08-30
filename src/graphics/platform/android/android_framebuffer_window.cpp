@@ -37,7 +37,7 @@ native_window(anw)
 
 EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
 {
-    return (EGLNativeWindowType) NULL;
+    return (EGLNativeWindowType) native_window.get();
 }
 
 EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) 
