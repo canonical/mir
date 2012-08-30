@@ -203,6 +203,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     }, std::runtime_error);
 }
+
 /* create context stuff */
 TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
 {
