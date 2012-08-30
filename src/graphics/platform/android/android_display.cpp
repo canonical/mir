@@ -87,5 +87,7 @@ geom::Rectangle mga::AndroidDisplay::view_area()
 
 bool mga::AndroidDisplay::post_update()
 {
-    return false;
+    if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
+        return false;
+    return true;
 }
