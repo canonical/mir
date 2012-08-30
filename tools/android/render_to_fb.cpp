@@ -32,10 +32,11 @@ namespace mga=mir::graphics::android;
 static const GLchar *vtex_shader_src = { 
 "attribute vec4 vPosition;\n"
 "attribute vec4 uvCoord;\n"
-"varying vec2 texcoord;\n" 
+"varying vec2 texcoord;\n"
+"uniform float slide;\n"
 "void main() {\n"
 "   gl_Position = vPosition;\n"
-"   texcoord = uvCoord.xy;\n" 
+"   texcoord = uvCoord.xy + vec2(slide);\n" 
 "}\n"};
 
 static const GLchar *frag_shader_src = {
@@ -62,7 +63,7 @@ GLfloat uv_data[] = {
 
 };
 
-void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord)
+void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord, GLuint& slideUniform)
 {
     glClearColor(0.0, 1.0, 0.0, 1.0);
 
@@ -72,23 +73,8 @@ void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord)
 
     GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(frag_shader, 1, &frag_shader_src, 0);
-    glCompileShader(frag_shader); 
- GLint compiled = 0;
-        glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &compiled);
-        if (!compiled) {
-            GLint infoLen = 0;
-            glGetShaderiv(frag_shader, GL_INFO_LOG_LENGTH, &infoLen);
-            if (infoLen) {
-                char* buf = (char*) malloc(infoLen);
-                if (buf) {
-                    glGetShaderInfoLog(frag_shader, infoLen, NULL, buf);
-                    fprintf(stderr, "Could not compile shader %d:\n%s\n",
-                            GL_VERTEX_SHADER, buf);
-                    free(buf);
-                }
-            }
-        } 
-
+    glCompileShader(frag_shader);
+ 
     program = glCreateProgram();
     glAttachShader(program, vtex_shader);
     glAttachShader(program, frag_shader);
@@ -114,14 +100,17 @@ void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord)
         GL_RGBA, GL_UNSIGNED_BYTE,
         mir_image.pixel_data);
 
- 
+    slideUniform = glGetUniformLocation(program, "slide"); 
 }
 
-void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord)
+void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
+                GLuint slideUniform, float slide)
 {
     glUseProgram(program);
 
     glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+
+    glUniform1fv(slideUniform, 1, &slide);
 
     glActiveTexture(GL_TEXTURE0);
     glEnableVertexAttribArray(vPosition);
@@ -149,14 +138,20 @@ int main(int, char**)
     std::shared_ptr<mga::AndroidDisplay> display(new mga::AndroidDisplay(window));
 
 
-    GLuint program, vPosition, uvCoord;
-    setup_gl(program, vPosition, uvCoord);
+    GLuint program, vPosition, uvCoord, slideUniform;
+    setup_gl(program, vPosition, uvCoord, slideUniform);
     adjust_vertices();
 
+    float slide = 0.0f;
     for(;;)
     {
-        gl_render(program, vPosition, uvCoord);
+        gl_render(program, vPosition, uvCoord, slideUniform, slide);
         display->post_update();
+
+        usleep(167);//60fps
+        slide += 0.01f;
+        if (slide > 1.0f)
+            slide = 0.0f;
     }
 
     return 0;
