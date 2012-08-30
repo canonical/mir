@@ -22,5 +22,6 @@ service DisplayServer {
   rpc connect(ConnectMessage) returns (Surface);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(Surface) returns (Surface);
+  rpc release_surface(Surface) returns (Void);
 }
 

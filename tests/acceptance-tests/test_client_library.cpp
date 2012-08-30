@@ -84,6 +84,17 @@ struct ActivityCounter : mir::protobuf::DisplayServer
         done->Run();
     }
 
+    void release_surface(google::protobuf::RpcController* /*controller*/,
+                         const mir::protobuf::Surface*,
+                         mir::protobuf::Void*,
+                         google::protobuf::Closure* done)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        --surface_count;
+        wait_condition.notify_one();
+        done->Run();
+    }
+
     void disconnect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::Void* /*request*/,
                  mir::protobuf::Void* /*response*/,
@@ -273,10 +284,16 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
         }
 
+        void release_surface()
+        {
+            mir_surface_release(surface);
+        }
+
         void exec()
         {
             connect();
             create_surface();
+            release_surface();
         }
 
         std::mutex guard;

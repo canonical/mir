@@ -212,6 +212,22 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
                     invoke.id(),
                     static_cast<google::protobuf::Message*>(&surface)));
         }
+        else if ("release_surface" == invoke.method_name())
+        {
+            mir::protobuf::Void ignored;
+            mir::protobuf::Surface surface_message;
+            surface_message.ParseFromString(invoke.parameters());
+
+            display_server->release_surface(
+                0,
+                &surface_message,
+                &ignored,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invoke.id(),
+                    static_cast<google::protobuf::Message*>(&ignored)));
+        }
         else if ("disconnect" == invoke.method_name())
         {
             mir::protobuf::Void ignored;
