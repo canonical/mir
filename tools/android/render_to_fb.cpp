@@ -122,8 +122,8 @@ void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
 
 void adjust_vertices()
 {
-    float x_scale = (float) HEIGHT/ (float) mir_image.width;
-    float y_scale = (float) WIDTH / (float) mir_image.height;
+    float x_scale = (float) HEIGHT/ (1.5f * (float) mir_image.width);
+    float y_scale = (float) WIDTH / (1.5f * (float) mir_image.height);
     for(int i=0; i< num_vertex; i++)
     {
         uv_data[i*4] *= x_scale;
