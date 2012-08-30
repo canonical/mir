@@ -23,6 +23,7 @@
 
 #include <stdexcept>
 namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
 
@@ -90,4 +91,8 @@ bool mga::AndroidDisplay::post_update()
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
         return false;
     return true;
+}
+
+std::unique_ptr<mg::Display> create_display()
+{ 
 }
