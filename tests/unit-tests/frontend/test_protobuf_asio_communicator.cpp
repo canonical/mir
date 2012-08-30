@@ -88,8 +88,8 @@ class MockLogger : public mir::client::Logger
     std::ostream& dummy_error() { return std::cerr << "ERROR: "; }
 //    std::ostream& dummy_error() { return out << "ERROR: "; }
 
-    std::ostream& dummy_debug() { return std::cerr << "DEBUG: "; }
-//    std::ostream& dummy_debug() { return out << "DEBUG: "; }
+//    std::ostream& dummy_debug() { return std::cerr << "DEBUG: "; }
+    std::ostream& dummy_debug() { return out << "DEBUG: "; }
 
 public:
     MockLogger()

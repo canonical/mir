@@ -184,9 +184,6 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
         invoke.ParseFromIstream(&in);
 
-//        std::cerr << "DEBUG: " << __PRETTY_FUNCTION__
-//            << " method_name:" << invoke.method_name() << ", id:" << invoke.id() << std::endl;
-
         if ("connect" == invoke.method_name())
         {
             mir::protobuf::ConnectMessage connect_message;
@@ -228,8 +225,6 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
 void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
 {
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
-
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
@@ -256,29 +251,16 @@ void mfd::Session::send_response(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    static std::mutex mutex;
-    std::unique_lock<std::mutex> lock(mutex);
-
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
 
-//    ba::async_write(
-//        socket,
-//        ba::buffer(whole_message),
-//        boost::bind(&Session::on_response_sent, this,
-//            boost::asio::placeholders::error,
-//            boost::asio::placeholders::bytes_transferred));
-    bs::error_code error;
-
-    ba::write(
+    ba::async_write(
         socket,
         ba::buffer(whole_message),
-        error);
-
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << " id:" << id << std::endl;
-
-    on_response_sent(error, 0);
+        boost::bind(&Session::on_response_sent, this,
+            boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
 }
 
 

@@ -213,7 +213,7 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
 {
     boost::system::error_code error;
     boost::asio::streambuf message;
-    boost::asio::read(socket, message, boost::asio::transfer_at_least(body_size), error);
+    boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
     if (error)
         log->error() << error.message() << std::endl;
 
