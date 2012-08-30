@@ -30,12 +30,14 @@ target_link_libraries(
   mirfrontend
   mirinput
   mirsurfaces
+  mirplatformgraphics
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ui
 )
 
 mir_discover_tests(integration-tests)

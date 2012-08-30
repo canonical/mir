@@ -105,6 +105,12 @@ void mir::EglMock::silence_uninteresting()
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglMakeCurrent(_,_,_,_))
         .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglDestroyContext(_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglDestroySurface(_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglTerminate(_))
+        .Times(AtLeast(0));
 }
 
 #define CHECK_GLOBAL_MOCK(rettype)  \

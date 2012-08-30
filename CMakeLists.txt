@@ -81,7 +81,12 @@ if (MIR_PLATFORM_ANDROID)
   find_package( LibHardware REQUIRED )
   if (LIBHARDWARE_FOUND)
     include_directories(${LIBHARDWARE_INCLUDE_DIR})
-  endif() 
+  endif()
+ 
+  find_package( AndroidUI REQUIRED )
+  if(ANDROID_UI_FOUND)
+    include_directories(${ANDROID_UI_INCLUDE_DIR})
+  endif()
 endif()
 
 

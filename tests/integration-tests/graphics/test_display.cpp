@@ -16,7 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/android_framebuffer_window.h" 
+#include "mir/graphics/android/android_display.h" 
+#include <ui/FramebufferNativeWindow.h>
 #include <gtest/gtest.h>
+
+namespace mga=mir::graphics::android;
 
 class AndroidFramebufferIntegration : public ::testing::Test
 {
@@ -24,8 +29,9 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
+        android_window = std::shared_ptr<ANativeWindow> (android_createDisplaySurface());
     }
-
+    std::shared_ptr<ANativeWindow> android_window;
 };
 
 
@@ -33,4 +39,8 @@ TEST_F(AndroidFramebufferIntegration, init_does_not_throw)
 {
     using namespace testing;
 
+    std::shared_ptr<mga::AndroidFramebufferWindow> window(new mga::AndroidFramebufferWindow(android_window));
+    EXPECT_NO_THROW({
+    std::shared_ptr<mga::AndroidDisplay> display(new mga::AndroidDisplay(window));
+    });
 }
