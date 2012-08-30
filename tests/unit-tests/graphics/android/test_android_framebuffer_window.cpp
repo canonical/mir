@@ -73,6 +73,9 @@ protected:
         fake_visual_id = 5;
         mock_anw = std::shared_ptr<MockANativeWindow>(new MockANativeWindow(fake_visual_id));
         fb_win = std::shared_ptr<mga::AndroidFramebufferWindow> (new mga::AndroidFramebufferWindow(mock_anw));
+
+        EXPECT_CALL(*mock_anw, query_interface(_,_,_))
+            .Times(AtLeast(0));
     }
 
     int fake_visual_id;

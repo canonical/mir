@@ -57,6 +57,8 @@ protected:
 
         EXPECT_CALL(*native_win, android_native_window_type())
             .Times(AtLeast(0));
+        EXPECT_CALL(*native_win, android_display_egl_config(_))
+            .Times(AtLeast(0));
     }
 
     std::shared_ptr<MockAndroidFramebufferWindow> native_win;
