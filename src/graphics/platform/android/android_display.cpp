@@ -75,6 +75,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 mga::AndroidDisplay::~AndroidDisplay()
 {
     eglDestroyContext(egl_display, egl_context);
+    eglDestroySurface(egl_display, egl_surface);
 }
 
 geom::Rectangle mga::AndroidDisplay::view_area()
