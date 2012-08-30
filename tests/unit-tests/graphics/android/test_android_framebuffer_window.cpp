@@ -266,3 +266,12 @@ TEST_F(AndroidFramebufferWindowConfigSelection, without_proper_visual_id_throws)
         fb_win->android_display_egl_config(mock_egl.fake_egl_display);
     }, std::runtime_error );
 }
+
+TEST_F(AndroidFramebufferWindowConfigSelection, creates_with_proper_visual_id_mixed_valid_invalid)
+{
+    using namespace testing;
+  
+    auto win_handle = fb_win->android_native_window_type();
+
+    EXPECT_NE(win_handle.get(), NULL);
+}
