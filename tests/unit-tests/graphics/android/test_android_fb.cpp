@@ -403,9 +403,19 @@ TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
     
 }
 
-TEST_F(AndroidTestFramebufferInit, display_post_successful)
+TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
 {
     using namespace testing;
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+
+    EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
+        .Times(Exactly(1));
+
+    display->post_update();
+}
+
+TEST_F(AndroidTestFramebufferInit, display_post_successful)
+{
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
 
     bool success = display->post_update();
