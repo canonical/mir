@@ -1,3 +1,4 @@
+
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,14 +15,13 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-option(
-  MIR_ENABLE_TOOLS
-  "Option to control whether to build tools useful for Mir development or debug"
-  ON
-)
+set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
+add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
+target_link_libraries(
+    render_to_fb
 
-if(MIR_ENABLE_TOOLS)
-  if(MIR_PLATFORM_ANDROID)
-    add_subdirectory(android)
-  endif()
-endif()
+    mirplatformgraphics
+    ui
+    EGL
+    GLESv2
+)
