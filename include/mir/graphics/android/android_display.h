@@ -43,7 +43,7 @@ public:
     ~AndroidDisplay();
 
     geometry::Rectangle view_area();
-    void notify_update();
+    bool post_update();
 private:
     EGLDisplay egl_display;
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;

@@ -22,6 +22,8 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
+#include "mir_test/mock_display.h"
+
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -45,12 +47,6 @@ public:
     MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::SurfaceCollection> (geom::Rectangle const&));
 };
 
-struct MockDisplay : mg::Display
-{
-public:
-    MOCK_METHOD0(view_area, geom::Rectangle ());
-    MOCK_METHOD0(notify_update, void ());
-};
 
 struct MockSurfaceCollection : public ms::SurfaceCollection
 {
@@ -77,7 +73,7 @@ TEST(Compositor, render)
         &mock_renderer,
         EmptyDeleter());
     MockScenegraph scenegraph;
-    MockDisplay display;
+    mg::MockDisplay display;
     MockSurfaceCollection view;
 
     mc::Compositor comp(&scenegraph, renderer);
@@ -96,7 +92,7 @@ TEST(Compositor, render)
                 Return(
                     std::shared_ptr<MockSurfaceCollection>(&view, EmptyDeleter())));
 
-    EXPECT_CALL(display, notify_update())
+    EXPECT_CALL(display, post_update())
             .Times(1);
 
     comp.render(&display);

@@ -79,6 +79,9 @@ mir::EglMock::EglMock()
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
         .WillByDefault(Return(EGL_TRUE));
+
+    ON_CALL(*this, eglSwapBuffers(_,_))
+        .WillByDefault(Return(EGL_TRUE));
 }
 
 mir::EglMock::~EglMock()
@@ -110,6 +113,8 @@ void mir::EglMock::silence_uninteresting()
     EXPECT_CALL(*this, eglDestroySurface(_,_))
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglTerminate(_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglSwapBuffers(_,_))
         .Times(AtLeast(0));
 }
 

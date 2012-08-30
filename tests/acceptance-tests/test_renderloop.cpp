@@ -24,6 +24,7 @@
 #include "mir/display_server.h"
 
 #include "display_server_test_fixture.h"
+#include "mir_test/mock_display.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,27 +33,17 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-namespace
-{
-struct MockDisplay : mg::Display
-{
-public:
-    MOCK_METHOD0(view_area, geom::Rectangle ());
-    MOCK_METHOD0(notify_update, void());
-};
-}
-
 TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 {
     struct Server : TestingServerConfiguration
     {
         void exec(mir::DisplayServer* display_server)
         {
-            MockDisplay display;
+            mg::MockDisplay display;
 
             using namespace testing;
 
-            EXPECT_CALL(display, notify_update()).Times(1);
+            EXPECT_CALL(display, post_update()).Times(1);
 
             EXPECT_CALL(display, view_area()).Times(AtLeast(1))
                     .WillRepeatedly(Return(geom::Rectangle()));

@@ -85,6 +85,7 @@ geom::Rectangle mga::AndroidDisplay::view_area()
     return rect;
 }
 
-void mga::AndroidDisplay::notify_update()
+bool mga::AndroidDisplay::post_update()
 {
+    return false;
 }

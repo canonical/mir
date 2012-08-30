@@ -35,7 +35,7 @@ int main(int, char**)
     for(;;)
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        display->notify_update();
+        display->post_update();
     }
 
     return 0;

@@ -47,7 +47,7 @@ TEST_F(AndroidFramebufferIntegration, init_does_not_throw)
 
     EXPECT_NO_THROW({
     display = std::shared_ptr<mga::AndroidDisplay>(new mga::AndroidDisplay(window));
-    display->notify_update();
+    display->post_update();
     });
 
 }
