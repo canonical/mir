@@ -37,8 +37,6 @@ public:
     MirClient(std::shared_ptr<mc::Logger> const & log)
         : channel("./mir_socket_test", log)
         , server(&channel)
-        , surface_created_callback(0)
-        , surface_context(0)
     {
     }
 
@@ -50,10 +48,6 @@ public:
                         mir_surface_created_callback callback,
                         void * context)
     {
-        client_surface = surface_;
-        surface_created_callback = callback;
-        surface_context = context;
-
         mir::protobuf::SurfaceParameters message;
         message.set_width(params.width);
         message.set_height(params.height);
@@ -61,7 +55,7 @@ public:
 
         server.create_surface(
             0, &message, &surface,
-            google::protobuf::NewCallback(this, &MirClient::surface_created));
+            google::protobuf::NewCallback(callback, surface_, context));
     }
 
     char const * get_error_message()
@@ -74,21 +68,11 @@ public:
         return surface;
     }
 private:
-    void surface_created()
-    {
-        surface_created_callback(client_surface, surface_context);
-    }
-
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     mp::Surface surface;
 
     std::string error_message;
-
-    MirSurface * client_surface;
-    mir_surface_created_callback surface_created_callback;
-    void * surface_context;
-
     std::mutex mutex;
 };
 
