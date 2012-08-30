@@ -94,6 +94,10 @@ public:
         return error_message.c_str();
     }
 
+    mp::Surface const & get_surface() const
+    {
+        return surface;
+    }
 private:
     void connected()
     {
@@ -178,9 +182,11 @@ char const * mir_surface_get_error_message(MirSurface * surface)
     return surface->client->get_error_message();
 }
 
-MirSurfaceParameters mir_surface_get_parameters(MirSurface *)
+MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
 {
-    return MirSurfaceParameters{0, 0, mir_pixel_format_rgba_8888};
+    mp::Surface const & sf = surface->client->get_surface();
+    return MirSurfaceParameters{sf.width(), sf.height(),
+                                static_cast<MirPixelFormat>(sf.pixel_format())};
 }
 
 void mir_surface_release(MirSurface *)
