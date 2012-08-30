@@ -17,7 +17,10 @@
 add_subdirectory(frontend/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
-add_subdirectory(graphics/)
+
+if(MIR_PLATFORM_ANDROID)
+  add_subdirectory(graphics/android)
+endif()
 
 add_executable(
   integration-tests 
@@ -37,7 +40,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ui
+  ${ANDROID_UI_LIBRARY}
   EGL
 )
 

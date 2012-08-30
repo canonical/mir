@@ -15,6 +15,8 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+if(MIR_PLATFORM_ANDROID)
+
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
 target_link_libraries(
@@ -25,3 +27,5 @@ target_link_libraries(
     EGL
     GLESv2
 )
+
+endif()
