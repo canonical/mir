@@ -27,8 +27,6 @@ static const EGLint attr [] =
     EGL_NONE
 };
 
-
-
 mga::AndroidFramebufferWindow::AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw)
  :
 native_window(anw)
