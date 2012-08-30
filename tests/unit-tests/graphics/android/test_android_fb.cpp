@@ -407,6 +407,7 @@ TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 {
     using namespace testing;
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
-    bool success = display->notify_update();
+
+    bool success = display->post_update();
     EXPECT_TRUE(success); 
 }
