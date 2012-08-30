@@ -168,14 +168,14 @@ void mir_create_surface(MirConnection * connection,
     surface->client = connection->client;
 }
 
-int mir_surface_is_valid(MirSurface *)
+int mir_surface_is_valid(MirSurface * surface)
 {
-    return 0;
+    return surface->client->is_valid() ? 1 : 0;
 }
 
-char const * mir_surface_get_error_message(MirSurface *)
+char const * mir_surface_get_error_message(MirSurface * surface)
 {
-    return "not yet implemented!";
+    return surface->client->get_error_message();
 }
 
 MirSurfaceParameters mir_surface_get_parameters(MirSurface *)

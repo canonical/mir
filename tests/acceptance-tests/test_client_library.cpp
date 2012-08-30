@@ -261,14 +261,16 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
 
             std::unique_lock<std::mutex> lock(guard);
             if (!surface)
-                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+                wait_condition.wait_for(lock, std::chrono::milliseconds(1000));
 
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
             MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
-            EXPECT_EQ(0, memcmp(&request_params, &response_params, sizeof(MirSurfaceParameters)));
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
         }
 
         void exec()
