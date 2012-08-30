@@ -117,7 +117,23 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure)
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_version)
+TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+            .Times(Exactly(1))
+            .WillOnce(DoAll(
+                    SetArgPointee<1>(2),
+                    Return(EGL_FALSE)));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    }, std::runtime_error   );
+}
+
+TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
 {
     using namespace testing;
 
@@ -148,7 +164,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
     });
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateWindow_nullarg)
+TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
 {
     using namespace testing;
   
@@ -161,7 +177,7 @@ TEST_F(AndroidTestFramebufferInit, CreateWindow_nullarg)
     });
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateWindow_uses_native_window_type)
+TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_type)
 {
     using namespace testing;
     EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
@@ -170,14 +186,25 @@ TEST_F(AndroidTestFramebufferInit, CreateWindow_uses_native_window_type)
         .Times(Exactly(1))
         .WillOnce(Return(egl_window));
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))
-        .Times(Exactly(1))
-        .WillOnce(Return((EGLSurface)NULL));
+        .Times(Exactly(1));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
     });
 }
 
+TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(Return((EGLSurface)NULL));
+
+    EXPECT_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    }, std::runtime_error);
+}
+/* create context stuff */
 TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
 {
     using namespace testing;

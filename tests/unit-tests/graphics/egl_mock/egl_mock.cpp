@@ -38,6 +38,7 @@ mir::EglMock::EglMock()
     : fake_egl_display((EGLDisplay) 0x0530),
     fake_configs(configs),
     fake_configs_num(config_size),
+    fake_egl_surface((EGLSurface) 0xa034),
     fake_visual_id(5)
 {
     using namespace testing;
@@ -68,6 +69,9 @@ mir::EglMock::EglMock()
                     SetArgPointee<2>(&fake_configs),
                     SetArgPointee<4>(fake_configs_num),
                     Return(EGL_TRUE)));
+
+    ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
+        .WillByDefault(Return(fake_egl_surface));
 
 }
 
