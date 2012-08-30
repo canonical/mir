@@ -38,6 +38,7 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ui
+  GLESv2
 )
 
 mir_discover_tests(integration-tests)

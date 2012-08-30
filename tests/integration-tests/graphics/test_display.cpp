@@ -19,6 +19,9 @@
 #include "mir/graphics/android/android_framebuffer_window.h" 
 #include "mir/graphics/android/android_display.h" 
 #include <ui/FramebufferNativeWindow.h>
+
+
+#include <GLES2/gl2.h>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
@@ -29,18 +32,22 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        android_window = std::shared_ptr<ANativeWindow> (android_createDisplaySurface());
+        android_window = std::shared_ptr<ANativeWindow> ((ANativeWindow*) new android::FramebufferNativeWindow);
+        window = std::shared_ptr<mga::AndroidFramebufferWindow> (new mga::AndroidFramebufferWindow(android_window));
     }
     std::shared_ptr<ANativeWindow> android_window;
+    std::shared_ptr<mga::AndroidFramebufferWindow> window;
 };
 
 
 TEST_F(AndroidFramebufferIntegration, init_does_not_throw)
 {
     using namespace testing;
+    std::shared_ptr<mga::AndroidDisplay> display;
 
-    std::shared_ptr<mga::AndroidFramebufferWindow> window(new mga::AndroidFramebufferWindow(android_window));
     EXPECT_NO_THROW({
-    std::shared_ptr<mga::AndroidDisplay> display(new mga::AndroidDisplay(window));
+    display = std::shared_ptr<mga::AndroidDisplay>(new mga::AndroidDisplay(window));
+    display->notify_update();
     });
+
 }
