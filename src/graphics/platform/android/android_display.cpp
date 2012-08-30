@@ -76,6 +76,7 @@ mga::AndroidDisplay::~AndroidDisplay()
 {
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
+    eglTerminate(egl_display);
 }
 
 geom::Rectangle mga::AndroidDisplay::view_area()
