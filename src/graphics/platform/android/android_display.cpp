@@ -34,20 +34,20 @@ static const EGLint context_attr [] =
 };
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
- : native_window(native_win)
+    : native_window(native_win)
 {
     EGLint major, minor;
 
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (egl_display == EGL_NO_DISPLAY)
         throw std::runtime_error("eglGetDisplay failed\n");
-    
+
     if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
         throw std::runtime_error("eglInitialize failure\n");
 
     if ((major != 1) || (minor != 4))
         throw std::runtime_error("must have EGL 1.4\n");
-   
+
     egl_config = native_window->android_display_egl_config(egl_display);
     EGLNativeWindowType native_win_type = native_window->android_native_window_type();
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);

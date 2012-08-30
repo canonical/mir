@@ -26,7 +26,8 @@ mir::EglMock* global_mock = NULL;
 }
 
 
-EGLConfig configs[] = {
+EGLConfig configs[] =
+{
     (void*)3,
     (void*)4,
     (void*)8,
@@ -36,11 +37,11 @@ EGLint config_size = 4;
 
 mir::EglMock::EglMock()
     : fake_egl_display((EGLDisplay) 0x0530),
-    fake_configs(configs),
-    fake_configs_num(config_size),
-    fake_egl_surface((EGLSurface) 0xa034),
-    fake_egl_context((EGLContext) 0xbeef),
-    fake_visual_id(5)
+      fake_configs(configs),
+      fake_configs_num(config_size),
+      fake_egl_surface((EGLSurface) 0xa034),
+      fake_egl_context((EGLContext) 0xbeef),
+      fake_visual_id(5)
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");
@@ -48,40 +49,40 @@ mir::EglMock::EglMock()
     global_mock = this;
 
     ON_CALL(*this, eglGetDisplay(_))
-        .WillByDefault(Return(fake_egl_display));
+    .WillByDefault(Return(fake_egl_display));
     ON_CALL(*this, eglInitialize(_,_,_))
-        .WillByDefault(DoAll(
-                    SetArgPointee<1>(1),
-                    SetArgPointee<2>(4),
-                    Return(EGL_TRUE)));
+    .WillByDefault(DoAll(
+                       SetArgPointee<1>(1),
+                       SetArgPointee<2>(4),
+                       Return(EGL_TRUE)));
 
     ON_CALL(*this, eglGetConfigs(_,NULL, 0, _))
-        .WillByDefault(DoAll(
-                    SetArgPointee<3>(config_size),
-                    Return(EGL_TRUE)));
+    .WillByDefault(DoAll(
+                       SetArgPointee<3>(config_size),
+                       Return(EGL_TRUE)));
 
     ON_CALL(*this, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
-        .WillByDefault(DoAll(
-            SetArgPointee<3>(fake_visual_id),
-            Return(EGL_TRUE)));
+    .WillByDefault(DoAll(
+                       SetArgPointee<3>(fake_visual_id),
+                       Return(EGL_TRUE)));
 
     ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
-        .WillByDefault(DoAll(
-                    SetArgPointee<2>(&fake_configs),
-                    SetArgPointee<4>(fake_configs_num),
-                    Return(EGL_TRUE)));
+    .WillByDefault(DoAll(
+                       SetArgPointee<2>(&fake_configs),
+                       SetArgPointee<4>(fake_configs_num),
+                       Return(EGL_TRUE)));
 
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .WillByDefault(Return(fake_egl_surface));
+    .WillByDefault(Return(fake_egl_surface));
 
     ON_CALL(*this, eglCreateContext(_,_,_,_))
-        .WillByDefault(Return(fake_egl_context));
+    .WillByDefault(Return(fake_egl_context));
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
-        .WillByDefault(Return(EGL_TRUE));
+    .WillByDefault(Return(EGL_TRUE));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-        .WillByDefault(Return(EGL_TRUE));
+    .WillByDefault(Return(EGL_TRUE));
 }
 
 mir::EglMock::~EglMock()
@@ -93,29 +94,29 @@ void mir::EglMock::silence_uninteresting()
 {
     using namespace testing;
     EXPECT_CALL(*this, eglGetDisplay(_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglInitialize(_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglGetConfigs(_,_,_, _))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglGetConfigAttrib(_,_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglChooseConfig(_,_,_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglCreateContext(_,_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglMakeCurrent(_,_,_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglDestroyContext(_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglDestroySurface(_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglTerminate(_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
     EXPECT_CALL(*this, eglSwapBuffers(_,_))
-        .Times(AtLeast(0));
+    .Times(AtLeast(0));
 }
 
 #define CHECK_GLOBAL_MOCK(rettype)  \

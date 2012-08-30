@@ -39,7 +39,7 @@ const PixelFormat pixel_format {PixelFormat::rgba_8888};
 
 struct MockGraphicBufferAllocator : GraphicBufferAllocator
 {
- public:
+public:
     MOCK_METHOD3(alloc_buffer, std::unique_ptr<Buffer> (geometry::Width, geometry::Height, PixelFormat));
     MOCK_METHOD1(free_buffer, void(std::shared_ptr<Buffer>));
 };

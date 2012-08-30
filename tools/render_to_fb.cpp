@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/platform.h" 
+#include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 
 #include <ui/FramebufferNativeWindow.h>
@@ -29,33 +29,39 @@
 
 namespace mg=mir::graphics;
 
-static const GLchar *vtex_shader_src = { 
-"attribute vec4 vPosition;\n"
-"attribute vec4 uvCoord;\n"
-"varying vec2 texcoord;\n"
-"uniform float slide;\n"
-"void main() {\n"
-"   gl_Position = vPosition;\n"
-"   texcoord = uvCoord.xy + vec2(slide);\n" 
-"}\n"};
+static const GLchar *vtex_shader_src =
+{
+    "attribute vec4 vPosition;\n"
+    "attribute vec4 uvCoord;\n"
+    "varying vec2 texcoord;\n"
+    "uniform float slide;\n"
+    "void main() {\n"
+    "   gl_Position = vPosition;\n"
+    "   texcoord = uvCoord.xy + vec2(slide);\n"
+    "}\n"
+};
 
-static const GLchar *frag_shader_src = {
-"precision mediump float;\n"
-"uniform sampler2D tex;\n"
-"varying vec2 texcoord;\n" 
-"void main() {\n"
-"   gl_FragColor = texture2D(tex, texcoord);\n"
-"}\n"};
+static const GLchar *frag_shader_src =
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "varying vec2 texcoord;\n"
+    "void main() {\n"
+    "   gl_FragColor = texture2D(tex, texcoord);\n"
+    "}\n"
+};
 
-const GLint num_vertex = 4; 
-GLfloat vertex_data[] = {
+const GLint num_vertex = 4;
+GLfloat vertex_data[] =
+{
     -1.0f, -1.0f, 0.0f, 1.0f,
     -1.0f,  1.0f, 0.0f, 1.0f,
-     1.0f, -1.0f, 0.0f, 1.0f,
-     1.0f,  1.0f, 0.0f, 1.0f,
-}; 
+    1.0f, -1.0f, 0.0f, 1.0f,
+    1.0f,  1.0f, 0.0f, 1.0f,
+};
 
-GLfloat uv_data[] = {
+GLfloat uv_data[] =
+{
     1.0f, 1.0f, 0.0f, 0.0f,
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f,
@@ -74,7 +80,7 @@ void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord, GLuint& s
     GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(frag_shader, 1, &frag_shader_src, 0);
     glCompileShader(frag_shader);
- 
+
     program = glCreateProgram();
     glAttachShader(program, vtex_shader);
     glAttachShader(program, frag_shader);
@@ -100,11 +106,11 @@ void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord, GLuint& s
         GL_RGBA, GL_UNSIGNED_BYTE,
         mir_image.pixel_data);
 
-    slideUniform = glGetUniformLocation(program, "slide"); 
+    slideUniform = glGetUniformLocation(program, "slide");
 }
 
 void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
-                GLuint slideUniform, float slide)
+               GLuint slideUniform, float slide)
 {
     glUseProgram(program);
 
@@ -128,7 +134,7 @@ void adjust_vertices()
     {
         uv_data[i*4] *= x_scale;
         uv_data[i*4+1] *= y_scale;
-    } 
+    }
 }
 
 int main(int, char**)

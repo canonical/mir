@@ -28,7 +28,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidFramebufferWindowQuery 
+class AndroidFramebufferWindowQuery
 {
 public:
     virtual ~AndroidFramebufferWindowQuery() {}

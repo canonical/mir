@@ -28,8 +28,8 @@ static const EGLint attr [] =
 };
 
 mga::AndroidFramebufferWindow::AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw)
- :
-native_window(anw)
+    :
+    native_window(anw)
 {
 }
 
@@ -38,14 +38,14 @@ EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
     return (EGLNativeWindowType) native_window.get();
 }
 
-EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) 
+EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display)
 {
     EGLint num_match_configs;
     int num_potential_configs;
     EGLConfig* config_slots;
     EGLConfig egl_config;
     eglGetConfigs(egl_display, NULL, 0, &num_potential_configs);
-    config_slots = new EGLConfig[num_potential_configs]; 
+    config_slots = new EGLConfig[num_potential_configs];
 
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
     eglChooseConfig(egl_display, attr, config_slots, num_potential_configs, &num_match_configs );
@@ -56,7 +56,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
      * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
      * eglChooseConfig */
-    bool found=false; 
+    bool found=false;
     for(int i=0; i < num_match_configs; i++)
     {
         int visual_id;
@@ -66,7 +66,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
             egl_config = config_slots[i];
             found = true;
             break;
-        } 
+        }
     }
     delete config_slots;
 

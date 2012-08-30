@@ -38,6 +38,6 @@ TEST(EglMock, demo)
     EXPECT_CALL(mock, egl_mock_call).Times(Exactly(1));                \
     egl_call;                                                          \
     }                                                                  \
-
+ 
 EGL_MOCK_TEST(eglGetError, eglGetError(), eglGetError())
 EGL_MOCK_TEST(eglGetDisplay, eglGetDisplay(NULL), eglGetDisplay(NULL))

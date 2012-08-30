@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/display.h" 
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
- 
+
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -29,9 +29,10 @@ TEST(AndroidFramebufferIntegration, init_does_not_throw)
     using namespace testing;
     std::unique_ptr<mg::Display> display;
 
-    EXPECT_NO_THROW({
-    display = mg::create_display();
-    display->post_update();
+    EXPECT_NO_THROW(
+    {
+        display = mg::create_display();
+        display->post_update();
     });
 
 }
