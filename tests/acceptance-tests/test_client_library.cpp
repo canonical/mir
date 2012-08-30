@@ -130,15 +130,26 @@ struct ServerConfig : TestingServerConfiguration
 
     void on_exit(mir::DisplayServer* )
     {
+        check_sessions();
+        check_surfaces();
+    }
+
+    void check_sessions()
+    {
         std::unique_lock<std::mutex> lock(counter.guard);
         if (counter.session_count != session_count)
             counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
         EXPECT_EQ(session_count, counter.session_count);
+    }
 
+    void check_surfaces()
+    {
+        std::unique_lock<std::mutex> lock(counter.guard);
         if (counter.surface_count != surface_count)
             counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
         EXPECT_EQ(surface_count, counter.surface_count);
     }
+
     ActivityCounter counter;
     int session_count, surface_count;
 };
