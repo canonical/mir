@@ -389,3 +389,16 @@ TEST_F(AndroidTestFramebufferInit, eglSurface_resource_freed)
     });
     
 }
+
+TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglTerminate(mock_egl.fake_egl_display))
+        .Times(Exactly(1));
+
+    EXPECT_NO_THROW({
+    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    });
+    
+}
