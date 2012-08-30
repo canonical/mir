@@ -84,6 +84,8 @@ public:
         std::string const& endpoint,
         std::shared_ptr<Logger> const& log);
 
+    ~MirRpcChannel();
+
 private:
     virtual void CallMethod(
         const google::protobuf::MethodDescriptor* method,
@@ -96,9 +98,13 @@ private:
     std::atomic<int> next_message_id;
 
     detail::PendingCallCache pending_calls;
+    std::thread io_service_thread;
     boost::asio::io_service io_service;
+    boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
+
+    std::vector<char> message;
 
     mir::protobuf::wire::Invocation invocation_for(
         const google::protobuf::MethodDescriptor* method,
@@ -107,6 +113,7 @@ private:
     int next_id();
 
     void send_message(const std::string& body);
+    void on_message_sent(boost::system::error_code const& error);
 
     void read_message();
 
@@ -115,7 +122,6 @@ private:
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
 };
 
-void done();
 }
 }
 
