@@ -52,8 +52,8 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
     eglChooseConfig(egl_display, attr, config_slots, num_potential_configs, &num_match_configs );
 
-    //TODO
-    int android_native_id = 5;//native_window->android_visual_id();
+    int android_native_id;
+    native_window->query(native_window.get(), NATIVE_WINDOW_FORMAT, &android_native_id);
 
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl
      * specification does not list EGL_NATIVE_VISUAL_ID as something it will check for in
