@@ -29,52 +29,9 @@ namespace mgg = mir::graphics::gbm;
 namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
+mgg::GBMBufferAllocator::GBMBufferAllocator(const std::shared_ptr<gbm_device>& dev)
+        : dev(dev)
 {
-struct GbmDeviceDeleter
-{
-    void operator()(gbm_device* d) const
-    {
-        if (d)
-            gbm_device_destroy(d);
-    }
-};
-}
-
-std::shared_ptr<gbm_device> mgg::DrmDeviceFactory::create_device()
-{
-    /*
-     * TODO:
-     *  - We need an API to actually select the right driver here
-     *  - We need to fix libgbm to support out-of-tree backends, then write and use a software-only backend
-     *    that we can load for the tests.
-     *
-     * For the moment, just ignore the fact that we're not actually creating a usable device.
-     */
-
-    int drm_fd = drmOpen("i915", NULL);
-    
-    /* TODO: Enable error handling once we can load the correct backend.
-    if (drm_fd < 0) {
-        throw std::runtime_error("Failed to open drm device");
-    }
-    */
-    
-    gbm_device* dev = gbm_create_device(drm_fd);
-
-    /* TODO: Enable error handling once we can load the correct backend.    
-    if (!dev) {
-        throw std::runtime_error("Failed to create gbm device");
-    }
-    */
-
-    return std::shared_ptr<gbm_device>(dev, GbmDeviceDeleter());
-}
-
-mgg::GBMBufferAllocator::GBMBufferAllocator(const std::shared_ptr<mgg::DeviceFactory>& factory)
-        : dev(factory->create_device())
-{
-    
 }
 
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
@@ -93,8 +50,50 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     return std::unique_ptr<mc::Buffer>();
 }
 
+namespace
+{
+
+struct GbmDeviceDeleter
+{
+    void operator()(gbm_device* dev) const
+    {
+        if (dev)
+            gbm_device_destroy(dev);
+    }
+};
+
+std::shared_ptr<gbm_device> create_drm_device()
+{
+    /*
+     * TODO:
+     *  - We need an API to actually select the right driver here
+     *  - We need to fix libgbm to support out-of-tree backends, then write and use a software-only backend
+     *    that we can load for the tests.
+     *
+     * For the moment, just ignore the fact that we're not actually creating a usable device.
+     */
+
+    int drm_fd = drmOpen("radeon", NULL);
+    
+    /* TODO: Enable error handling once we can load the correct backend.
+    if (drm_fd < 0) {
+        throw std::runtime_error("Failed to open drm device");
+    }
+    */
+    
+    gbm_device* dev = gbm_create_device(drm_fd);
+
+    /* TODO: Enable error handling once we can load the correct backend.    
+    if (!dev) {
+        throw std::runtime_error("Failed to create gbm device");
+    }
+    */
+
+    return std::shared_ptr<gbm_device>(dev, GbmDeviceDeleter());
+}
+}
+
 std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
 {
-    std::shared_ptr<mgg::DeviceFactory> device_factory(new mgg::DrmDeviceFactory());
-    return std::unique_ptr<mgg::GBMBufferAllocator>(new mgg::GBMBufferAllocator(device_factory));
+    return std::unique_ptr<mgg::GBMBufferAllocator>(new mgg::GBMBufferAllocator(create_drm_device()));
 }

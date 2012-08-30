@@ -32,29 +32,10 @@ namespace graphics
 namespace gbm
 {
 
-class DeviceFactory
-{
-public:
-    virtual std::shared_ptr<gbm_device> create_device() = 0;
-
-protected:
-    DeviceFactory() = default;
-    DeviceFactory(const DeviceFactory&) = delete;
-    virtual ~DeviceFactory() {}
-    DeviceFactory& operator=(const DeviceFactory&) = delete;
-    
-};
-
-class DrmDeviceFactory : public DeviceFactory
-{
-public:
-    std::shared_ptr<gbm_device> create_device();
-};
-
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    GBMBufferAllocator(const std::shared_ptr<DeviceFactory>& factory);
+    explicit GBMBufferAllocator(const std::shared_ptr<gbm_device>& dev);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);

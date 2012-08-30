@@ -34,7 +34,7 @@ namespace graphics
 namespace gbm
 {
 
-class MockGBMDeviceCreator : public DeviceFactory
+class MockGBMDeviceCreator
 {
 public:
     MockGBMDeviceCreator();
@@ -44,9 +44,6 @@ public:
 
     std::unique_ptr<GBMBufferAllocator> create_gbm_allocator();
     std::shared_ptr<gbm_device> get_device();
-
-    // From DeviceFactory
-    std::shared_ptr<gbm_device> create_device();
 
 private:
     gbm_bo *bo_create_impl(gbm_device *dev, uint32_t w, uint32_t h, gbm_bo_format format, uint32_t usage);

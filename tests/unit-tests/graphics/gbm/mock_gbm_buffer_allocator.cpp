@@ -69,8 +69,7 @@ struct EmptyDeleter
 
 std::unique_ptr<mgg::GBMBufferAllocator> mgg::MockGBMDeviceCreator::create_gbm_allocator()
 {
-    return std::unique_ptr<mgg::GBMBufferAllocator>(
-        new GBMBufferAllocator(std::shared_ptr<mgg::DeviceFactory>(this, EmptyDeleter())));
+    return std::unique_ptr<mgg::GBMBufferAllocator>(new GBMBufferAllocator(fake_device));
 }
 
 gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
@@ -92,12 +91,6 @@ gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
     }
     return bo;
 }
-
-std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::create_device()
-{
-    return get_device();
-}
-
 
 std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::get_device()
 {
