@@ -41,35 +41,18 @@ namespace
 
 struct ActivityCounter : mir::protobuf::DisplayServer
 {
-    int session_count;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    ActivityCounter() : session_count(0), surface_count(0)
+    ActivityCounter() : surface_count(0)
     {
     }
 
     ActivityCounter(ActivityCounter const &) = delete;
 
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        response->set_width(request->width());
-        response->set_height(request->height());
-        response->set_pixel_format(request->pixel_format());
-
-        std::unique_lock<std::mutex> lock(guard);
-        ++session_count;
-        wait_condition.notify_one();
-
-        done->Run();
-    }
-
     void create_surface(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Surface* request,
+                 const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
@@ -101,7 +84,6 @@ struct ActivityCounter : mir::protobuf::DisplayServer
                  google::protobuf::Closure* done)
     {
         std::unique_lock<std::mutex> lock(guard);
-        --session_count;
         wait_condition.notify_one();
         done->Run();
     }
@@ -129,8 +111,8 @@ private:
 
 struct ServerConfig : TestingServerConfiguration
 {
-    ServerConfig(int session_count, int surface_count)
-        : session_count(session_count), surface_count(surface_count)
+    ServerConfig(int surface_count)
+        : surface_count(surface_count)
     {
     }
     std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
@@ -141,16 +123,7 @@ struct ServerConfig : TestingServerConfiguration
 
     void on_exit(mir::DisplayServer* )
     {
-        check_sessions();
         check_surfaces();
-    }
-
-    void check_sessions()
-    {
-        std::unique_lock<std::mutex> lock(counter.guard);
-        if (counter.session_count != session_count)
-            counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-        EXPECT_EQ(session_count, counter.session_count);
     }
 
     void check_surfaces()
@@ -169,7 +142,7 @@ struct ServerConfig : TestingServerConfiguration
 
 TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
 {
-    ServerConfig server_config(1, 0);
+    ServerConfig server_config(0);
 
     launch_server_process(server_config);
 
@@ -215,7 +188,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
 
 TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
 {
-    ServerConfig server_config(1, 1);
+    ServerConfig server_config(1);
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration

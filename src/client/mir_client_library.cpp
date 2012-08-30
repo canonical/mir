@@ -34,16 +34,9 @@ namespace mp = mir::protobuf;
 class MirClient
 {
 public:
-    MirClient(MirConnection * connection,
-              std::shared_ptr<mc::Logger> const & log,
-              mir_connected_callback callback,
-              void * context)
+    MirClient(std::shared_ptr<mc::Logger> const & log)
         : channel("./mir_socket_test", log)
         , server(&channel)
-        , connection(connection)
-        , is_connected(false)
-        , connection_callback(callback)
-        , connection_context(context)
         , surface_created_callback(0)
         , surface_context(0)
     {
@@ -51,18 +44,6 @@ public:
 
     MirClient(MirClient const &) = delete;
     MirClient& operator=(MirClient const &) = delete;
-
-    void connect()
-    {
-        mir::protobuf::ConnectMessage message;
-        message.set_width(0);
-        message.set_height(0);
-        message.set_pixel_format(0);
-
-        server.connect(
-            0, &message, &surface,
-            google::protobuf::NewCallback(this, &MirClient::connected));
-    }
 
     void create_surface(MirSurface * surface_,
                         MirSurfaceParameters const & params,
@@ -73,7 +54,7 @@ public:
         surface_created_callback = callback;
         surface_context = context;
 
-        mir::protobuf::Surface message;
+        mir::protobuf::SurfaceParameters message;
         message.set_width(params.width);
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
@@ -81,12 +62,6 @@ public:
         server.create_surface(
             0, &message, &surface,
             google::protobuf::NewCallback(this, &MirClient::surface_created));
-    }
-
-    bool is_valid()
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        return is_connected;
     }
 
     char const * get_error_message()
@@ -99,15 +74,6 @@ public:
         return surface;
     }
 private:
-    void connected()
-    {
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            is_connected = true;
-        }
-        connection_callback(connection, connection_context);
-    }
-
     void surface_created()
     {
         surface_created_callback(client_surface, surface_context);
@@ -117,11 +83,7 @@ private:
     mp::DisplayServer::Stub server;
     mp::Surface surface;
 
-    MirConnection * connection;
-    bool is_connected;
     std::string error_message;
-    mir_connected_callback connection_callback;
-    void * connection_context;
 
     MirSurface * client_surface;
     mir_surface_created_callback surface_created_callback;
@@ -145,16 +107,23 @@ struct MirSurface
 void mir_connect(mir_connected_callback callback, void * context)
 {
     MirConnection * connection = new MirConnection();
-    auto log = std::make_shared<mc::ConsoleLogger>();
-    MirClient * client = new MirClient(connection, log, callback, context);
 
-    connection->client = client;
-    client->connect();
+    try
+    {
+        auto log = std::make_shared<mc::ConsoleLogger>();
+        connection->client = new MirClient(log);
+    }
+    catch (std::exception const& /*x*/)
+    {
+        connection->client = 0; // or Some error object
+    }
+    
+    callback(connection, context);
 }
 
 int mir_connection_is_valid(MirConnection * connection)
 {
-    return connection->client->is_valid() ? 1 : 0;
+    return connection->client ? 1 : 0;
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
@@ -172,9 +141,9 @@ void mir_create_surface(MirConnection * connection,
     surface->client = connection->client;
 }
 
-int mir_surface_is_valid(MirSurface * surface)
+int mir_surface_is_valid(MirSurface *)
 {
-    return surface->client->is_valid() ? 1 : 0;
+    return 1;
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
