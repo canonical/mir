@@ -19,7 +19,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 
-#include <ui/FramebufferNativeWindow.h>
 #include <GLES2/gl2.h>
 
 #include "mir_image.h"
