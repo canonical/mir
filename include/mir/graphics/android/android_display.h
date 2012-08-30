@@ -40,6 +40,8 @@ class AndroidDisplay : public Display
 {
 public:
     explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
+    ~AndroidDisplay();
+
     geometry::Rectangle view_area();
     void notify_update();
 private:
