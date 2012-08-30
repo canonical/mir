@@ -348,14 +348,13 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_context)
 TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
 {
     using namespace testing;
-    EGLContext fake_context = (EGLContext) 0x432;
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, fake_context))
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, _))
         .Times(Exactly(1))
         .WillOnce(Return(EGL_FALSE));
 
-    EXPECT_NO_THROW({
+    EXPECT_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
-    });
+    }, std::runtime_error);
     
 }

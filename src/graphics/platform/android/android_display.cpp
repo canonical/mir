@@ -66,7 +66,10 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
         throw std::runtime_error("could not create egl context\n");
     }
 
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+    {
+        throw std::runtime_error("could not activate surface with eglMakeCurrent\n");
+    }
 }
     
 geom::Rectangle mga::AndroidDisplay::view_area()

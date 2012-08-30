@@ -76,6 +76,9 @@ mir::EglMock::EglMock()
 
     ON_CALL(*this, eglCreateContext(_,_,_,_))
         .WillByDefault(Return(fake_egl_context));
+
+    ON_CALL(*this, eglMakeCurrent(_,_,_,_))
+        .WillByDefault(Return(EGL_TRUE));
 }
 
 mir::EglMock::~EglMock()
