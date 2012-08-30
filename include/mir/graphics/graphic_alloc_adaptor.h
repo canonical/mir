@@ -50,10 +50,12 @@ public:
                               compositor::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
-    virtual ~GraphicAllocAdaptor() = default;
+    virtual ~GraphicAllocAdaptor();
     GraphicAllocAdaptor(const GraphicAllocAdaptor&) = delete;
     GraphicAllocAdaptor& operator=(const GraphicAllocAdaptor&) = delete;
 };
+
+GraphicAllocAdaptor::~GraphicAllocAdaptor() = default;
 
 }
 }

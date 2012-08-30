@@ -39,12 +39,12 @@ geom::Height mgg::GBMBuffer::height() const
 
 geom::Stride mgg::GBMBuffer::stride() const
 {
-    return geom::Stride(gbm_bo_get_stride(gbm_handle));
+    return geom::Stride(gbm_bo_get_pitch(gbm_handle));
 }
 
 mc::PixelFormat mgg::GBMBuffer::pixel_format() const
 {
-    return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle));
+    return gbm_format_to_mir_format(format);
 }
 
 void mgg::GBMBuffer::lock()
@@ -62,13 +62,13 @@ mg::Texture* mgg::GBMBuffer::bind_to_texture()
     return NULL;
 }
 
-mc::PixelFormat mgg::GBMBuffer::gbm_format_to_mir_format(uint32_t format)
+mc::PixelFormat mgg::GBMBuffer::gbm_format_to_mir_format(gbm_bo_format format)
 {
     (void)format;
     return mc::PixelFormat::rgba_8888;
 }
 
-uint32_t mgg::GBMBuffer::mir_format_to_gbm_format(mc::PixelFormat format)
+gbm_bo_format mgg::GBMBuffer::mir_format_to_gbm_format(mc::PixelFormat format)
 {
     (void)format;
     return GBM_BO_FORMAT_ARGB8888;

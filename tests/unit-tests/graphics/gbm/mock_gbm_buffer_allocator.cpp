@@ -33,7 +33,7 @@ static mgg::MockGBMDeviceCreator *thunk = NULL;
 extern "C" {
 static gbm_bo *mock_bo_create(gbm_device *gbm,
                             uint32_t width, uint32_t height,
-                            uint32_t format,
+                            gbm_bo_format format,
                             uint32_t usage);
 
 static void mock_bo_destroy(gbm_bo *bo);
@@ -56,13 +56,25 @@ mgg::MockGBMDeviceCreator::MockGBMDeviceCreator()
             .WillByDefault(Invoke(this, &MockGBMDeviceCreator::bo_create_impl));
 }
 
+namespace
+{
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T) const
+    {            
+    }
+};
+}
+
 std::unique_ptr<mgg::GBMBufferAllocator> mgg::MockGBMDeviceCreator::create_gbm_allocator()
 {
-    return std::unique_ptr<mgg::GBMBufferAllocator>(new GBMBufferAllocator(fake_device.get()));
+    return std::unique_ptr<mgg::GBMBufferAllocator>(
+        new GBMBufferAllocator(std::shared_ptr<mgg::DeviceFactory>(this, EmptyDeleter())));
 }
 
 gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
-                                                      uint32_t w, uint32_t h, uint32_t format, uint32_t usage)
+                                                      uint32_t w, uint32_t h, gbm_bo_format format, uint32_t usage)
 {
     gbm_bo *bo = new gbm_bo();
     (void)format;
@@ -73,13 +85,19 @@ gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
     bo->height = h;
     switch (format) {
     case GBM_BO_FORMAT_ARGB8888:
-        bo->stride = w * 4;
+        bo->pitch = w * 4;
         break;
     default:
         throw std::runtime_error("Attempted to create buffer with unknown format");
     }
     return bo;
 }
+
+std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::create_device()
+{
+    return get_device();
+}
+
 
 std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::get_device()
 {
@@ -89,7 +107,7 @@ std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::get_device()
 extern "C" {
 static gbm_bo *mock_bo_create(gbm_device *gbm,
                             uint32_t width, uint32_t height,
-                            uint32_t format,
+                            gbm_bo_format format,
                             uint32_t usage)
 {
     return thunk->bo_create(gbm, width, height, format, usage);

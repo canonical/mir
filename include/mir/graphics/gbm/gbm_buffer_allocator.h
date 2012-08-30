@@ -21,8 +21,9 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 
-#include <memory>
 #include <gbm.h>
+
+#include <memory>
 
 namespace mir
 {
@@ -31,21 +32,36 @@ namespace graphics
 namespace gbm
 {
 
+class DeviceFactory
+{
+public:
+    virtual std::shared_ptr<gbm_device> create_device() = 0;
+
+protected:
+    DeviceFactory() = default;
+    DeviceFactory(const DeviceFactory&) = delete;
+    virtual ~DeviceFactory() {}
+    DeviceFactory& operator=(const DeviceFactory&) = delete;
+    
+};
+
+class DrmDeviceFactory : public DeviceFactory
+{
+public:
+    std::shared_ptr<gbm_device> create_device();
+};
+
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    GBMBufferAllocator();
+    GBMBufferAllocator(const std::shared_ptr<DeviceFactory>& factory);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
 
 
 private:
-    gbm_device *dev;
-
-    // For the purposes of testing
-    explicit GBMBufferAllocator(gbm_device *device);
-    friend class MockGBMDeviceCreator;
+    std::shared_ptr<gbm_device> dev;
 };
 
 }

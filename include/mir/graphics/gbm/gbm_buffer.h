@@ -40,6 +40,7 @@ public:
     GBMBuffer(gbm_bo *handle)
         : gbm_handle(handle)
     {
+        format = GBM_BO_FORMAT_ARGB8888;
     }
 
     virtual ~GBMBuffer()
@@ -61,11 +62,12 @@ public:
 
     virtual Texture* bind_to_texture();
 
-    static compositor::PixelFormat gbm_format_to_mir_format(uint32_t format);
-    static uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
+    static compositor::PixelFormat gbm_format_to_mir_format(gbm_bo_format format);
+    static gbm_bo_format mir_format_to_gbm_format(compositor::PixelFormat format);
 
 private:
     gbm_bo *gbm_handle;
+    gbm_bo_format format;
 };
 
 }
