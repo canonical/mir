@@ -87,5 +87,4 @@ geom::Rectangle mga::AndroidDisplay::view_area()
 
 void mga::AndroidDisplay::notify_update()
 {
-
 }
