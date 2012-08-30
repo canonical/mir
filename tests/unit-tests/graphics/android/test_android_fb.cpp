@@ -220,7 +220,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
         .Times(Exactly(1))
         .WillOnce(DoAll(
             SaveArg<1>(&cfg),
-            Return((EGLContext)NULL)));
+            Return((EGLContext)mock_egl.fake_egl_context)));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -234,8 +234,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_ensure_no_share)
     using namespace testing;
 
     EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, EGL_NO_CONTEXT,_))
-        .Times(Exactly(1))
-        .WillOnce(Return((EGLContext)NULL));
+        .Times(Exactly(1));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -252,7 +251,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
         .Times(Exactly(1))
         .WillOnce(DoAll(
             SaveArg<3>(&context_attr),
-            Return((EGLContext)NULL)));
+            Return((EGLContext)mock_egl.fake_egl_context)));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -276,7 +275,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
         .Times(Exactly(1))
         .WillOnce(DoAll(
             SaveArg<3>(&context_attr),
-            Return((EGLContext)NULL)));
+            Return((EGLContext)mock_egl.fake_egl_context)));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -295,6 +294,20 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
     };
 
     EXPECT_TRUE(validated);
+}
+
+TEST_F(AndroidTestFramebufferInit, CreateContext_failure)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+        .Times(Exactly(1))
+        .WillOnce(Return((EGLContext)EGL_NO_CONTEXT));
+
+    EXPECT_THROW(
+    {
+       std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    }, std::runtime_error   );    
 }
 
 TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_surface)
