@@ -74,8 +74,8 @@ mir::EglMock::EglMock()
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Return(fake_egl_surface));
 
-    ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .WillByDefault(Return(fake_egl_surface));
+    ON_CALL(*this, eglCreateContext(_,_,_,_))
+        .WillByDefault(Return(fake_egl_context));
 }
 
 mir::EglMock::~EglMock()

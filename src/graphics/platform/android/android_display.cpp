@@ -61,6 +61,11 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
         throw std::runtime_error("could not create egl surface\n");
     }
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
+    if (egl_context == EGL_NO_CONTEXT)
+    {
+        throw std::runtime_error("could not create egl context\n");
+    }
+
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
 }
     
