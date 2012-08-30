@@ -256,6 +256,9 @@ void mfd::Session::send_response(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
+    static std::mutex mutex;
+    std::unique_lock<std::mutex> lock(mutex);
+
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
@@ -267,9 +270,6 @@ void mfd::Session::send_response(
 //            boost::asio::placeholders::error,
 //            boost::asio::placeholders::bytes_transferred));
     bs::error_code error;
-
-    static std::mutex mutex;
-    std::unique_lock<std::mutex> lock(mutex);
 
     ba::write(
         socket,
