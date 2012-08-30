@@ -16,11 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform.h"
 #include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
 #include "system/window.h"
 
+#include <ui/FramebufferNativeWindow.h>
 #include <stdexcept>
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
@@ -93,6 +95,9 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
-std::unique_ptr<mg::Display> create_display()
-{ 
+std::unique_ptr<mg::Display> mg::create_display()
+{
+    std::shared_ptr<ANativeWindow> android_window ((ANativeWindow*) new ::android::FramebufferNativeWindow);
+    std::shared_ptr<mga::AndroidFramebufferWindow> window (new mga::AndroidFramebufferWindow(android_window));
+    return std::unique_ptr<mga::AndroidDisplay>(new mga::AndroidDisplay(window));
 }

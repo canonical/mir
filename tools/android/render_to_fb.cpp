@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_framebuffer_window.h" 
-#include "mir/graphics/android/android_display.h"
+#include "mir/graphics/platform.h" 
+#include "mir/graphics/display.h"
 
 #include <ui/FramebufferNativeWindow.h>
 #include <GLES2/gl2.h>
@@ -27,7 +27,7 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
 
 static const GLchar *vtex_shader_src = { 
 "attribute vec4 vPosition;\n"
@@ -133,10 +133,7 @@ void adjust_vertices()
 
 int main(int, char**)
 {
-    std::shared_ptr<ANativeWindow> android_window((ANativeWindow*) new android::FramebufferNativeWindow);
-    std::shared_ptr<mga::AndroidFramebufferWindow> window (new mga::AndroidFramebufferWindow(android_window));
-    std::shared_ptr<mga::AndroidDisplay> display(new mga::AndroidDisplay(window));
-
+    auto display = mg::create_display();
 
     GLuint program, vPosition, uvCoord, slideUniform;
     setup_gl(program, vPosition, uvCoord, slideUniform);

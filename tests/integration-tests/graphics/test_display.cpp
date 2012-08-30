@@ -17,18 +17,17 @@
  */
 
 #include "mir/graphics/display.h" 
-#include <ui/FramebufferNativeWindow.h>
-
-
-#include <GLES2/gl2.h>
+#include "mir/graphics/platform.h"
+ 
 #include <gtest/gtest.h>
+#include <memory>
 
-namespace mga=mir::graphics;
+namespace mg=mir::graphics;
 
 TEST(AndroidFramebufferIntegration, init_does_not_throw)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display;
+    std::unique_ptr<mg::Display> display;
 
     EXPECT_NO_THROW({
     display = mg::create_display();
