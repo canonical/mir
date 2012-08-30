@@ -100,8 +100,7 @@ void mir_connect(mir_connected_callback callback, void * context)
     catch (std::exception const& /*x*/)
     {
         connection->client = 0; // or Some error object
-    }
-    
+    }    
     callback(connection, context);
 }
 
@@ -121,13 +120,21 @@ void mir_create_surface(MirConnection * connection,
                         void * context)
 {
     MirSurface * surface = new MirSurface();
-    connection->client->create_surface(surface, *params, callback, context);
-    surface->client = connection->client;
+    try
+    {
+        connection->client->create_surface(surface, *params, callback, context);
+        surface->client = connection->client;
+    }
+    catch (std::exception const& /*x*/)
+    {
+        surface->client = 0;
+        callback(surface, context);
+    }
 }
 
-int mir_surface_is_valid(MirSurface *)
+int mir_surface_is_valid(MirSurface * surface)
 {
-    return 1;
+    return surface->client ? 1 : 0;
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
