@@ -56,6 +56,10 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     egl_config = native_window->android_display_egl_config(egl_display);
     EGLNativeWindowType native_win_type = native_window->android_native_window_type();
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
+    if(egl_surface == EGL_NO_SURFACE)
+    {
+        throw std::runtime_error("could not create egl surface\n");
+    }
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
 }

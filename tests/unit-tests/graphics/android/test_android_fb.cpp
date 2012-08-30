@@ -169,8 +169,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
     using namespace testing;
   
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, NULL))
-        .Times(Exactly(1))
-        .WillOnce(Return((EGLSurface)NULL));
+        .Times(Exactly(1));
 
     EXPECT_NO_THROW({
     std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
@@ -214,7 +213,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
         .Times(Exactly(1))
         .WillOnce(DoAll(
             SaveArg<1>(&chosen_cfg),
-            Return((EGLSurface)NULL)));
+            Return((EGLSurface)mock_egl.fake_egl_surface)));
 
     EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _,_))
         .Times(Exactly(1))
