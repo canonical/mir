@@ -37,9 +37,16 @@ class MockANativeWindow : public ANativeWindowInterface,
                           public ANativeWindow
 {
 public:
-    MockANativeWindow()
+    MockANativeWindow(int fake_visual_id)
     {
+        using namespace testing;
+
         query = hook_query;
+    
+        ON_CALL(*this, query_interface(_,_,_))
+            .WillByDefault(DoAll(
+                SetArgPointee<2>(fake_visual_id),
+                Return(0)));
     }
 
     static int hook_query(const ANativeWindow* anw, int code, int *ret)
@@ -49,7 +56,8 @@ public:
     }
     
     MOCK_CONST_METHOD3(query_interface,int(const ANativeWindow*,int,int*));
-
+    
+    int fake_visual_id;
 };
 
 class AndroidFramebufferWindowConfigSelection : public ::testing::Test
@@ -63,15 +71,24 @@ protected:
         mock_egl.silence_uninteresting();
 
         fake_visual_id = 5;
-        mock_anw = std::shared_ptr<ANativeWindow>(new MockANativeWindow);
+        mock_anw = std::shared_ptr<MockANativeWindow>(new MockANativeWindow(fake_visual_id));
         fb_win = std::shared_ptr<mga::AndroidFramebufferWindow> (new mga::AndroidFramebufferWindow(mock_anw));
     }
 
     int fake_visual_id;
-    std::shared_ptr<ANativeWindow> mock_anw;
+    std::shared_ptr<MockANativeWindow> mock_anw;
     std::shared_ptr<mga::AndroidFramebufferWindow> fb_win; 
     mir::EglMock mock_egl;
 };
+
+TEST_F(AndroidFramebufferWindowConfigSelection, queries_for_native_visual_id)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_anw, query_interface(_,NATIVE_WINDOW_FORMAT,_))
+        .Times(AtLeast(1));
+ 
+    fb_win->android_display_egl_config(mock_egl.fake_egl_display);
+}
 
 TEST_F(AndroidFramebufferWindowConfigSelection, eglChooseConfig_attr_is_terminated_by_null)
 {
