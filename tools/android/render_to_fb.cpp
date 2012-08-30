@@ -22,7 +22,125 @@
 #include <ui/FramebufferNativeWindow.h>
 #include <GLES2/gl2.h>
 
+#include "mir_image.h"
+
+#define WIDTH 1280
+#define HEIGHT 720
+
 namespace mga=mir::graphics::android;
+
+static const GLchar *vtex_shader_src = { 
+"attribute vec4 vPosition;\n"
+"attribute vec4 uvCoord;\n"
+"varying vec2 texcoord;\n" 
+"void main() {\n"
+"   gl_Position = vPosition;\n"
+"   texcoord = uvCoord.xy;\n" 
+"}\n"};
+
+static const GLchar *frag_shader_src = {
+"precision mediump float;\n"
+"uniform sampler2D tex;\n"
+"varying vec2 texcoord;\n" 
+"void main() {\n"
+"   gl_FragColor = texture2D(tex, texcoord);\n"
+"}\n"};
+
+const GLint num_vertex = 4; 
+GLfloat vertex_data[] = {
+    -1.0f, -1.0f, 0.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f, 1.0f,
+     1.0f, -1.0f, 0.0f, 1.0f,
+     1.0f,  1.0f, 0.0f, 1.0f,
+}; 
+
+GLfloat uv_data[] = {
+    1.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 0.0f
+
+};
+
+void setup_gl(GLuint& program, GLuint& vPositionAttr, GLuint& uvCoord)
+{
+    glClearColor(0.0, 1.0, 0.0, 1.0);
+
+    GLuint vtex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vtex_shader, 1, &vtex_shader_src, 0);
+    glCompileShader(vtex_shader);
+
+    GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(frag_shader, 1, &frag_shader_src, 0);
+    glCompileShader(frag_shader); 
+ GLint compiled = 0;
+        glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &compiled);
+        if (!compiled) {
+            GLint infoLen = 0;
+            glGetShaderiv(frag_shader, GL_INFO_LOG_LENGTH, &infoLen);
+            if (infoLen) {
+                char* buf = (char*) malloc(infoLen);
+                if (buf) {
+                    glGetShaderInfoLog(frag_shader, infoLen, NULL, buf);
+                    fprintf(stderr, "Could not compile shader %d:\n%s\n",
+                            GL_VERTEX_SHADER, buf);
+                    free(buf);
+                }
+            }
+        } 
+
+    program = glCreateProgram();
+    glAttachShader(program, vtex_shader);
+    glAttachShader(program, frag_shader);
+    glLinkProgram(program);
+
+    vPositionAttr = glGetAttribLocation(program, "vPosition");
+    glVertexAttribPointer(vPositionAttr, num_vertex, GL_FLOAT, GL_FALSE, 0, vertex_data);
+    uvCoord = glGetAttribLocation(program, "uvCoord");
+    glVertexAttribPointer(uvCoord, num_vertex, GL_FLOAT, GL_FALSE, 0, uv_data);
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        mir_image.width, mir_image.height, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE,
+        mir_image.pixel_data);
+
+ 
+}
+
+void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord)
+{
+    glUseProgram(program);
+
+    glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+
+    glActiveTexture(GL_TEXTURE0);
+    glEnableVertexAttribArray(vPosition);
+    glEnableVertexAttribArray(uvCoord);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertex);
+    glDisableVertexAttribArray(uvCoord);
+    glDisableVertexAttribArray(vPosition);
+}
+
+void adjust_vertices()
+{
+    float x_scale = (float) HEIGHT/ (float) mir_image.width;
+    float y_scale = (float) WIDTH / (float) mir_image.height;
+    for(int i=0; i< num_vertex; i++)
+    {
+        uv_data[i*4] *= x_scale;
+        uv_data[i*4+1] *= y_scale;
+    } 
+}
 
 int main(int, char**)
 {
@@ -30,11 +148,14 @@ int main(int, char**)
     std::shared_ptr<mga::AndroidFramebufferWindow> window (new mga::AndroidFramebufferWindow(android_window));
     std::shared_ptr<mga::AndroidDisplay> display(new mga::AndroidDisplay(window));
 
-    glClearColor(0.0, 1.0, 0.0, 1.0);
+
+    GLuint program, vPosition, uvCoord;
+    setup_gl(program, vPosition, uvCoord);
+    adjust_vertices();
 
     for(;;)
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+        gl_render(program, vPosition, uvCoord);
         display->post_update();
     }
 
