@@ -35,6 +35,8 @@ EGLConfig configs[] =
 };
 EGLint config_size = 4;
 
+/* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever 
+   we want in them for testing */
 mir::EglMock::EglMock()
     : fake_egl_display((EGLDisplay) 0x0530),
       fake_configs(configs),
@@ -123,7 +125,7 @@ void mir::EglMock::silence_uninteresting()
     if (!global_mock)               \
     {                               \
         using namespace ::testing;  \
-        ADD_FAILURE_AT("__FILE__",__LINE__); \
+        ADD_FAILURE_AT(__FILE__,__LINE__); \
         rettype type = (rettype) 0;       \
         return type;        \
     }

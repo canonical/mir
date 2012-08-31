@@ -19,28 +19,22 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/graphics/android/android_framebuffer_window_query.h"
 #include "mir_test/egl_mock.h"
+
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 class MockAndroidFramebufferWindow : public mga::AndroidFramebufferWindowQuery
 {
 public:
-    MockAndroidFramebufferWindow()
-        :
-        fake_visual_id(5)
-    {
-        using namespace testing;
-
-    };
-    ~MockAndroidFramebufferWindow() {};
+    MockAndroidFramebufferWindow() {}
+    ~MockAndroidFramebufferWindow() {}
 
     MOCK_METHOD0(android_native_window_type, EGLNativeWindowType());
     MOCK_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
-
-    int fake_visual_id;
 };
 
 class AndroidTestFramebufferInit : public ::testing::Test
@@ -342,13 +336,12 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_surface)
 TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_context)
 {
     using namespace testing;
-    EGLContext fake_context = (EGLContext) 0x432;
 
     EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
     .Times(Exactly(1))
-    .WillOnce(Return(fake_context));
+    .WillOnce(Return(mock_egl.fake_egl_context));
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, fake_context))
+    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, mock_egl.fake_egl_context))
     .Times(Exactly(1));
 
     EXPECT_NO_THROW(

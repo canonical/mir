@@ -28,7 +28,6 @@ find_library(ANDROID_UI_LIBRARY
 find_package_handle_standard_args(ANDROID_UI DEFAULT_MSG
                                   ANDROID_UI_LIBRARY ANDROID_UI_INCLUDE_DIR)
 
-message("LIBRARY is ${ANDROID_UI_LIBRARY}")
 mark_as_advanced(ANDROID_UI_INCLUDE_DIR ANDROID_UI_LIBRARY )
 
 

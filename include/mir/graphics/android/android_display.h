@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/android/android_framebuffer_window.h"
@@ -55,4 +55,4 @@ private:
 }
 }
 }
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_ */
