@@ -127,6 +127,7 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
     EXPECT_CALL(egl_mock, eglDestroyImageKHR(second_fake_display, second_fake_egl_image))
         .Times(Exactly(1));
 
+    /* manipulate mock to return 1st set */
     EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
         .Times(Exactly(1))
         .WillOnce(Return(first_fake_display));
@@ -136,6 +137,7 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
 
     buffer->bind_to_texture();
 
+    /* manipulate mock to return 2nd set */
     EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
         .Times(Exactly(1))
         .WillOnce(Return(second_fake_display));
@@ -185,8 +187,21 @@ TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
     EXPECT_CALL(egl_mock, eglCreateImageKHR(egl_mock.fake_egl_display,_,_,_,_))
         .Times(Exactly(1))
         .WillOnce(Return((fake_egl_image)));
-    EXPECT_CALL(egl_mock, eglDestroyImageKHR(egl_mock.fake_egl_display, fake_egl_image));
+    EXPECT_CALL(egl_mock, eglDestroyImageKHR(egl_mock.fake_egl_display, fake_egl_image))
+        .Times(Exactly(1));
 
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
+{
+    using namespace testing;
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
+    EXPECT_CALL(egl_mock, eglDestroyImageKHR(_,_))
+        .Times(Exactly(0));
+
+    buffer->bind_to_texture();
+    buffer->bind_to_texture();
+}
