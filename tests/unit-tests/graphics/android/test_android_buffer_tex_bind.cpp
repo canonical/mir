@@ -16,16 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
 
 #include <gtest/gtest.h>
 
+namespace mg =mir::graphics;
+namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
+namespace mc=mir::compositor;
+
 class AndroidBufferBinding : public ::testing::Test
 {
-protected:
+public:
     virtual void SetUp()
     {
+        using namespace testing;
+        
+        std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_dev(new mg::MockAllocAdaptor);
+        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _, _, _))
+            .Times(AtLeast(0));
+
+        buffer = std::shared_ptr<mc::Buffer>(
+                            new mga::AndroidBuffer(mock_alloc_dev, geom::Width(300), geom::Height(200), mc::PixelFormat::rgba_8888));
     };
+
+    std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
 };
 
