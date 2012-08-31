@@ -10,7 +10,6 @@ find_path(ANDROID_UI_INCLUDE_DIR
                  pixelflinger/pixelflinger.h
                  pixelflinger/format.h
                  cutils/atomic.h
-                 ui/Rect.h
                  utils/threads.h
                  utils/String8.h
                  utils/Errors.h
@@ -19,6 +18,8 @@ find_path(ANDROID_UI_INCLUDE_DIR
                  utils/SharedBuffer.h
                  utils/Unicode.h
                  utils/TypeHelpers.h
+                 utils/StrongPointer.h
+                 ui/Rect.h
                  ui/Point.h
                  ui/egl/android_natives.h
    HINTS         ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot
