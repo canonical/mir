@@ -41,7 +41,7 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         dev.get(), 
         width.as_uint32_t(), 
         height.as_uint32_t(),
-        static_cast<gbm_bo_format>(mgg::mir_format_to_gbm_format(pf)), 
+        mgg::mir_format_to_gbm_format(pf), 
         GBM_BO_USE_RENDERING);
     
     if (handle != NULL)

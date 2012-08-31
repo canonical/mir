@@ -36,11 +36,7 @@ namespace gbm
 
 struct GBMBufferObjectDeleter
 {
-    void operator()(gbm_bo* handle) const
-    {
-        if (handle)
-            gbm_bo_destroy(handle);
-    }
+    void operator()(gbm_bo* handle) const;
 };
 
 compositor::PixelFormat gbm_format_to_mir_format(gbm_bo_format format);

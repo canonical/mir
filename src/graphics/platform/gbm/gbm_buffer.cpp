@@ -26,6 +26,12 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
+void mgg::GBMBufferObjectDeleter::operator()(gbm_bo* handle) const
+{
+    if (handle)
+        gbm_bo_destroy(handle);
+}
+
 mc::PixelFormat mgg::gbm_format_to_mir_format(gbm_bo_format format)
 {
     (void)format;
