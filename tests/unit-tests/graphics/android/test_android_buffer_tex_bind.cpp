@@ -112,6 +112,40 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
+{
+    using namespace testing;
+
+    EGLDisplay first_fake_display = egl_mock.fake_egl_display;
+    EGLImageKHR first_fake_egl_image = (EGLImageKHR) 0x84210;
+    EGLDisplay second_fake_display = (EGLDisplay) ((int)egl_mock.fake_egl_display +1);
+    EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
+
+    /* actual expectations */
+    EXPECT_CALL(egl_mock, eglDestroyImageKHR(first_fake_display, first_fake_egl_image))
+        .Times(Exactly(1));
+    EXPECT_CALL(egl_mock, eglDestroyImageKHR(second_fake_display, second_fake_egl_image))
+        .Times(Exactly(1));
+
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+        .Times(Exactly(1))
+        .WillOnce(Return(first_fake_display));
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(Return((first_fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(Return((second_fake_egl_image)));
+
+    buffer->bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_uses_current_display)
 {
     using namespace testing;
