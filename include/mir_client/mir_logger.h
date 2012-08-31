@@ -30,6 +30,7 @@ class Logger
 {
 public:
     virtual std::ostream& error() = 0;
+    virtual std::ostream& debug() = 0;
 protected:
     Logger() {}
     virtual ~Logger() {}
@@ -41,6 +42,7 @@ class ConsoleLogger : public Logger
 {
 public:
     virtual std::ostream& error();
+    virtual std::ostream& debug();
 };
 
 }
