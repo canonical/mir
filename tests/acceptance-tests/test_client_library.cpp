@@ -41,12 +41,12 @@ namespace
 
 struct ActivityCounter : mir::protobuf::DisplayServer
 {
-    int surface_count;
     bool disconnected;
+    int surfaces_created, surfaces_released;
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    ActivityCounter() : surface_count(0), disconnected(false)
+    ActivityCounter() : disconnected(0), surfaces_created(0), surfaces_released(0)
     {
     }
 
@@ -62,7 +62,7 @@ struct ActivityCounter : mir::protobuf::DisplayServer
         response->set_pixel_format(request->pixel_format());
 
         std::unique_lock<std::mutex> lock(guard);
-        ++surface_count;
+        ++surfaces_created;
         wait_condition.notify_one();
 
         done->Run();
@@ -74,7 +74,7 @@ struct ActivityCounter : mir::protobuf::DisplayServer
                          google::protobuf::Closure* done)
     {
         std::unique_lock<std::mutex> lock(guard);
-        --surface_count;
+        ++surfaces_released;
         wait_condition.notify_one();
         done->Run();
     }
@@ -115,8 +115,8 @@ private:
 // This is to allow server side activity checking on exit.
 struct ServerConfig : TestingServerConfiguration
 {
-    ServerConfig(int surface_count)
-        : surface_count(surface_count)
+    ServerConfig(int surfaces_created=0, int surfaces_released=0)
+        : surfaces_created(surfaces_created), surfaces_released(surfaces_released)
     {
     }
     std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
@@ -142,27 +142,27 @@ struct ServerConfig : TestingServerConfiguration
     void check_surfaces()
     {
         std::unique_lock<std::mutex> lock(counter.guard);
-        if (counter.surface_count != surface_count)
+        if (counter.surfaces_created != surfaces_created)
             counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-        EXPECT_EQ(surface_count, counter.surface_count);
+        EXPECT_EQ(surfaces_created, counter.surfaces_created);
+        EXPECT_EQ(surfaces_released, counter.surfaces_released);
     }
 
     ActivityCounter counter;
-    int session_count, surface_count;
+    int surfaces_created, surfaces_released;
 };
 
 }
 
 TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
 {
-    ServerConfig server_config(0);
+    ServerConfig server_config;
 
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
     {
-        ClientConfig()
-            : connection(NULL)
+        ClientConfig() : connection(NULL)
         {
         }
 
@@ -230,7 +230,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
 
 TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
 {
-    ServerConfig server_config(1);
+    ServerConfig server_config(1, 1);
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
@@ -348,7 +348,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
 TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
-    ServerConfig server_config(n_surfaces);
+    ServerConfig server_config(n_surfaces, n_surfaces);
 
     launch_server_process(server_config);
 

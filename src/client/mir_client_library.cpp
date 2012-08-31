@@ -61,7 +61,8 @@ public:
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
 
-        server.create_surface(0, &message, &surface, gp::NewCallback(callback, surface_, context));
+        server.create_surface(0, &message, &surface,
+                              gp::NewCallback(callback, surface_, context));
     }
 
     char const * get_error_message()
