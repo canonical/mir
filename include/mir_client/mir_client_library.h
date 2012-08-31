@@ -34,6 +34,7 @@ extern "C" {
 typedef struct MirConnection MirConnection;
 
 typedef void (* mir_connected_callback)(MirConnection * connection, void * client_context);
+typedef void (* mir_disconnected_callback)(void * client_context);
 
 /* Request a connection to the MIR server.
    The supplied callback is called when the connection is established, or fails.
@@ -47,8 +48,10 @@ int mir_connection_is_valid(MirConnection * connection);
    or the empty string "" if the connection is valid. */
 char const * mir_connection_get_error_message(MirConnection * connection);
 
-/* Release a connection to the MIR server. */
-void mir_connection_release(MirConnection * connection);
+/* Release a connection to the MIR server.
+   The supplied callback is called when the connection has been released.
+ */
+void mir_connection_release(MirConnection * connection, mir_disconnected_callback callback, void * context);
 
 /* Surface API */
 typedef enum MirPixelFormat

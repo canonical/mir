@@ -171,6 +171,11 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
             ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
             config->connected(connection);
         }
+        static void connection_release_callback(void * context)
+        {
+            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            config->disconnected();
+        }
 
         void connected(MirConnection * new_connection)
         {
@@ -179,7 +184,14 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
             wait_condition.notify_one();
         }
 
-        void exec()
+        void disconnected()
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            connection = NULL;
+            wait_condition.notify_one();
+        }
+
+        void connect()
         {
             mir_connect(connection_callback, this);
             std::unique_lock<std::mutex> lock(guard);
@@ -189,7 +201,22 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-            mir_connection_release(connection);
+        }
+
+        void disconnect()
+        {
+            mir_connection_release(connection, connection_release_callback, this);
+            std::unique_lock<std::mutex> lock(guard);
+            if (connection)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+
+            ASSERT_TRUE(connection == NULL);
+        }
+
+        void exec()
+        {
+            connect();
+            disconnect();
         }
 
         std::mutex guard;
@@ -225,10 +252,23 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
             config->surface_created(surface);
         }
 
+        static void connection_release_callback(void * context)
+        {
+            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            config->disconnected();
+        }
+
         void connected(MirConnection * new_connection)
         {
             std::unique_lock<std::mutex> lock(guard);
             connection = new_connection;
+            wait_condition.notify_one();
+        }
+
+        void disconnected()
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            connection = NULL;
             wait_condition.notify_one();
         }
 
@@ -278,7 +318,13 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
 
         void disconnect()
         {
-            mir_connection_release(connection);
+            mir_connection_release(connection, connection_release_callback, this);
+
+            std::unique_lock<std::mutex> lock(guard);
+            if (connection)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+
+            ASSERT_TRUE(connection == NULL);
         }
 
         void exec()
@@ -294,6 +340,127 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
         MirConnection * connection;
         MirSurface * surface;
     } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces)
+{
+    int const n_surfaces = 13;
+    ServerConfig server_config(n_surfaces);
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        ClientConfig(int n_surfaces) : n_surfaces(n_surfaces), connection(NULL)
+        {
+        }
+
+        static void connection_callback(MirConnection * connection, void * context)
+        {
+            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            config->connected(connection);
+        }
+
+        static void create_surface_callback(MirSurface * surface, void * context)
+        {
+            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            config->surface_created(surface);
+        }
+
+        static void connection_release_callback(void * context)
+        {
+            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            config->disconnected();
+        }
+
+        void connected(MirConnection * new_connection)
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            connection = new_connection;
+            wait_condition.notify_one();
+        }
+
+        void disconnected()
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            connection = NULL;
+            wait_condition.notify_one();
+        }
+
+        void surface_created(MirSurface * new_surface)
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            surfaces.push_back(new_surface);
+            wait_condition.notify_one();
+        }
+
+        void connect()
+        {
+            mir_connect(connection_callback, this);
+
+            std::unique_lock<std::mutex> lock(guard);
+            if (!connection)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+        }
+        
+        void create_surface()
+        {
+            size_t const current_surface_count = surfaces.size();
+            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+            mir_create_surface(connection, &request_params, create_surface_callback, this);
+
+            std::unique_lock<std::mutex> lock(guard);
+            if (surfaces.size() == current_surface_count)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(1000));
+
+            ASSERT_TRUE(surfaces.size() == current_surface_count + 1);
+            MirSurface * surface = surfaces.back();
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+        }
+
+        void release_surfaces()
+        {
+            for (auto sf = surfaces.begin(); sf != surfaces.end(); ++sf)
+                mir_surface_release(*sf);
+        }
+
+        void disconnect()
+        {
+            mir_connection_release(connection, connection_release_callback, this);
+            std::unique_lock<std::mutex> lock(guard);
+            if (connection)
+                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+
+            ASSERT_TRUE(connection == NULL);
+        }
+
+        void exec()
+        {
+            connect();
+            for (int i = 0; i != n_surfaces; ++i)
+                create_surface();
+            release_surfaces();
+            disconnect();
+        }
+
+        std::mutex guard;
+        std::condition_variable wait_condition;
+        int n_surfaces;
+        MirConnection * connection;
+        std::vector<MirSurface *> surfaces;
+    } client_config(n_surfaces);
 
     launch_client_process(client_config);
 }

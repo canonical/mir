@@ -44,16 +44,11 @@ public:
     MirClient(MirClient const &) = delete;
     MirClient& operator=(MirClient const &) = delete;
 
-    ~MirClient()
-    {
-        disconnect();
-    }
-
-    void disconnect()
+    void disconnect(mir_disconnected_callback callback, void * context)
     {
         mir::protobuf::Void message;
         mir::protobuf::Void ignored;
-        server.disconnect(0, &ignored, &ignored, gp::NewCallback(this, &MirClient::release));
+        server.disconnect(0, &ignored, &ignored, gp::NewCallback(this, &MirClient::release, callback, context));
     }
             
     void create_surface(MirSurface * surface_,
@@ -80,8 +75,9 @@ public:
     }
 
 private:
-    void release()
+    void release(mir_disconnected_callback callback, void * context)
     {
+        callback(context);
         delete this;
     }
     mc::MirRpcChannel channel;
@@ -130,9 +126,10 @@ char const * mir_connection_get_error_message(MirConnection * connection)
     return connection->client->get_error_message();
 }
 
-void mir_connection_release(MirConnection * connection)
+void mir_connection_release(MirConnection * connection,
+                            mir_disconnected_callback callback, void * context)
 {
-    connection->client->disconnect();
+    connection->client->disconnect(callback, context);
     delete connection;
 }
 
