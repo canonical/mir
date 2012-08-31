@@ -32,6 +32,10 @@ namespace gp = google::protobuf;
 
 // TODO surface implementation, multiple surfaces per client
 
+void null_callback()
+{
+}
+
 class MirClient
 {
 public:
@@ -63,6 +67,12 @@ public:
 
         server.create_surface(0, &message, &surface,
                               gp::NewCallback(callback, surface_, context));
+    }
+
+    void release_surface()
+    {
+        mir::protobuf::Void message;
+        server.release_surface(0, &message, &void_response, gp::NewCallback(null_callback));
     }
 
     char const * get_error_message()
@@ -170,8 +180,9 @@ MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
                                 static_cast<MirPixelFormat>(sf.pixel_format())};
 }
 
-void mir_surface_release(MirSurface *)
+void mir_surface_release(MirSurface * surface)
 {
+    surface->client->release_surface();
 }
 
 void mir_advance_buffer(MirSurface *,

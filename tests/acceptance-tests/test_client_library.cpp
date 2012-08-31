@@ -69,7 +69,7 @@ struct ActivityCounter : mir::protobuf::DisplayServer
     }
 
     void release_surface(google::protobuf::RpcController* /*controller*/,
-                         const mir::protobuf::Surface*,
+                         const mir::protobuf::Void*,
                          mir::protobuf::Void*,
                          google::protobuf::Closure* done)
     {
