@@ -23,9 +23,13 @@
 #include "mir/compositor/buffer.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
-#include <EGL/egl.h>
 #include <stdexcept>
 #include <memory>
+
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 namespace mir
 {

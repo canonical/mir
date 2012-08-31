@@ -81,6 +81,7 @@ void mga::AndroidBuffer::unlock()
 
 mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
-    eglGetCurrentDisplay();
+    auto disp = eglGetCurrentDisplay();
+    eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
     return NULL;
 }
