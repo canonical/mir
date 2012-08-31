@@ -22,7 +22,26 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/null.hpp>
+
 #include <iostream>
+
+namespace
+{
+// Too clever? The idea is to ensure protbuf version is verified once (on
+// the first google_protobuf_guard() call) and memory is released on exit.
+struct google_protobuf_guard_t
+{
+    google_protobuf_guard_t() { GOOGLE_PROTOBUF_VERIFY_VERSION; }
+    ~google_protobuf_guard_t() { google::protobuf::ShutdownProtobufLibrary(); }
+};
+
+void google_protobuf_guard()
+{
+    static google_protobuf_guard_t guard;
+}
+}
 
 namespace c = mir::client;
 namespace cd = mir::client::detail;
@@ -32,26 +51,31 @@ cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
 {
 }
 
-void cd::PendingCallCache::save_completion_details(
+cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    pending_calls[invoke.id()] = PendingCall(response, complete);
+
+    auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
+    log->debug() << "save_completion_details " << invoke.id() << " response " << response << " complete " << complete << std::endl;
+    return current.send_buffer;
 }
 
 void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
+    log->debug() << "complete_response for result " << result.id() << std::endl;
     auto call = pending_calls.find(result.id());
     if (call == pending_calls.end())
     {
-        log->error() << "ERROR orphaned result: " << result.ShortDebugString() << std::endl;
+        log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
     }
     else
     {
         auto& completion = call->second;
+        log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
         completion.response->ParseFromString(result.response());
         completion.complete->Run();
         pending_calls.erase(call);
@@ -62,19 +86,28 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
+    google_protobuf_guard();
     socket.connect(endpoint);
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
-    io_service_thread = std::move(std::thread(run_io_service));
+
+    for (int i = 0; i != threads; ++i)
+    {
+        io_service_thread[i] = std::move(std::thread(run_io_service));
+    }
 }
 
 c::MirRpcChannel::~MirRpcChannel()
 {
+    puts(__PRETTY_FUNCTION__);
     io_service.stop();
 
-    if (io_service_thread.joinable())
+    for (int i = 0; i != threads; ++i)
     {
-        io_service_thread.join();
+        if (io_service_thread[i].joinable())
+        {
+            io_service_thread[i].join();
+        }
     }
 }
 
@@ -91,10 +124,10 @@ void c::MirRpcChannel::CallMethod(
     invocation.SerializeToOstream(&buffer);
 
     // Only save details after serialization succeeds
-    pending_calls.save_completion_details(invocation, response, complete);
+    auto& send_buffer = pending_calls.save_completion_details(invocation, response, complete);
 
     // Only send message when details saved for handling response
-    send_message(buffer.str());
+    send_message(buffer.str(), send_buffer);
 }
 
 mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
@@ -121,7 +154,7 @@ int c::MirRpcChannel::next_id()
     return id;
 }
 
-void c::MirRpcChannel::send_message(const std::string& body)
+void c::MirRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -130,22 +163,23 @@ void c::MirRpcChannel::send_message(const std::string& body)
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    message.resize(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
-    std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
+    send_buffer.resize(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
+    std::copy(body.begin(), body.end(), send_buffer.begin() + sizeof header_bytes);
 
     boost::asio::async_write(
         socket,
-        boost::asio::buffer(message),
+        boost::asio::buffer(send_buffer),
         boost::bind(&MirRpcChannel::on_message_sent, this,
             boost::asio::placeholders::error));
 }
 
 void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
     if (error)
     {
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
         return;
     }
 
@@ -155,9 +189,14 @@ void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 
 void c::MirRpcChannel::read_message()
 {
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
     const size_t body_size = read_message_header();
 
+    log->debug() << __PRETTY_FUNCTION__ << " body_size:" << body_size << std::endl;
+
     mir::protobuf::wire::Result result = read_message_body(body_size);
+
+    log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
     pending_calls.complete_response(result);
 }
@@ -168,7 +207,7 @@ size_t c::MirRpcChannel::read_message_header()
     boost::system::error_code error;
     boost::asio::read(socket, boost::asio::buffer(header_bytes), boost::asio::transfer_exactly(sizeof header_bytes), error);
     if (error)
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
 
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
@@ -178,9 +217,9 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
 {
     boost::system::error_code error;
     boost::asio::streambuf message;
-    boost::asio::read(socket, message, boost::asio::transfer_at_least(body_size), error);
+    boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
     if (error)
-        log->error() << "ERROR: " << error.message() << std::endl;
+        log->error() << error.message() << std::endl;
 
     std::istream in(&message);
     mir::protobuf::wire::Result result;
@@ -188,8 +227,14 @@ mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t bod
     return result;
 }
 
-
 std::ostream& c::ConsoleLogger::error()
 {
-    return std::cerr;
+    return std::cerr  << "ERROR: ";
 }
+
+std::ostream& c::ConsoleLogger::debug()
+{
+    return std::cout << "DEBUG: ";
+}
+
+

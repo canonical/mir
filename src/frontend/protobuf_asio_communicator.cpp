@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/thread/all.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -43,7 +44,6 @@ public:
     {
         return id_;
     }
-
 private:
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
@@ -60,6 +60,7 @@ private:
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
+    std::vector<char> whole_message;
 };
 
 
@@ -245,6 +246,7 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
             // Careful about what you do after this - it deletes this
             connected_sessions->remove(id());
+            puts("connected_sessions->remove(id)");
             return;
         }
     }
@@ -280,13 +282,13 @@ void mfd::Session::send_response(
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    std::vector<char> message(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, message.begin());
-    std::copy(body.begin(), body.end(), message.begin() + sizeof header_bytes);
+    whole_message.resize(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
+    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
 
     ba::async_write(
         socket,
-        ba::buffer(message),
+        ba::buffer(whole_message),
         boost::bind(&Session::on_response_sent, this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));

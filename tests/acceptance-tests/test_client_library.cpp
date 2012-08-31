@@ -173,8 +173,11 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
         }
         static void connection_release_callback(void * context)
         {
+            puts("connection_release_callback 1");
             ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
+            puts("connection_release_callback 2");
             config->disconnected();
+            puts("connection_release_callback 3");
         }
 
         void connected(MirConnection * new_connection)
@@ -205,11 +208,16 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
 
         void disconnect()
         {
+            puts("disconnect 1");
             mir_connection_release(connection, connection_release_callback, this);
+            puts("disconnect 2");
             std::unique_lock<std::mutex> lock(guard);
             if (connection)
-                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-
+            {
+                puts("disconnect 3");
+                wait_condition.wait_for(lock, std::chrono::milliseconds(1000));
+            }
+            puts("disconnect 4");
             ASSERT_TRUE(connection == NULL);
         }
 
