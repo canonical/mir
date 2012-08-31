@@ -99,7 +99,6 @@ c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Log
 
 c::MirRpcChannel::~MirRpcChannel()
 {
-    puts(__PRETTY_FUNCTION__);
     io_service.stop();
 
     for (int i = 0; i != threads; ++i)
@@ -234,7 +233,8 @@ std::ostream& c::ConsoleLogger::error()
 
 std::ostream& c::ConsoleLogger::debug()
 {
-    return std::cout << "DEBUG: ";
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
 }
 
 

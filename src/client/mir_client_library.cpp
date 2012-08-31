@@ -47,10 +47,10 @@ public:
     void disconnect(mir_disconnected_callback callback, void * context)
     {
         mir::protobuf::Void message;
-        mir::protobuf::Void ignored;
-        server.disconnect(0, &ignored, &ignored, gp::NewCallback(this, &MirClient::release, callback, context));
+        server.disconnect(0, &message, &void_response,
+                          gp::NewCallback(this, &MirClient::release, callback, context));
     }
-            
+
     void create_surface(MirSurface * surface_,
                         MirSurfaceParameters const & params,
                         mir_surface_created_callback callback,
@@ -83,6 +83,7 @@ private:
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     mp::Surface surface;
+    mp::Void void_response;
 
     std::string error_message;
     std::mutex mutex;

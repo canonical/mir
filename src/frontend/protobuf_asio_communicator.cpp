@@ -246,7 +246,6 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
             // Careful about what you do after this - it deletes this
             connected_sessions->remove(id());
-            puts("connected_sessions->remove(id)");
             return;
         }
     }
