@@ -78,6 +78,23 @@ TEST_F(AndroidBufferBinding, buffer_only_makes_one_image_per_display)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
+{
+    using namespace testing;
+    EGLDisplay second_fake_display = (EGLDisplay) ((int)egl_mock.fake_egl_display +1);
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(2));
+
+    buffer->bind_to_texture();
+
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+            .Times(Exactly(1))
+            .WillOnce(Return(second_fake_display));
+
+    buffer->bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_uses_current_display)
 {
     using namespace testing;
