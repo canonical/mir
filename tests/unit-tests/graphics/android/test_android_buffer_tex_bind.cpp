@@ -18,6 +18,7 @@
 
 #include "mir_test/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
+#include "mir_test/egl_mock.h"
 
 #include <gtest/gtest.h>
 
@@ -43,9 +44,14 @@ public:
 
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
+    mir::EglMock egl_mock;
 };
 
-TEST_F(AndroidBufferBinding, successful_bind)
+TEST_F(AndroidBufferBinding, buffer_queries_for_display)
 {
+    using namespace testing;
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+            .Times(Exactly(1));
 
+    buffer->bind_to_texture();
 }
