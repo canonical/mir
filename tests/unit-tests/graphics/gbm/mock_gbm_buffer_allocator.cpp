@@ -54,6 +54,9 @@ mgg::MockGBMDeviceCreator::MockGBMDeviceCreator()
 
     ON_CALL(*this, bo_create(_,_,_,_,_))
             .WillByDefault(Invoke(this, &MockGBMDeviceCreator::bo_create_impl));
+    
+    ON_CALL(*this, bo_destroy(_))
+      .WillByDefault(Invoke(this, &MockGBMDeviceCreator::bo_destroy_impl));
 }
 
 namespace
@@ -75,7 +78,7 @@ std::unique_ptr<mgg::GBMBufferAllocator> mgg::MockGBMDeviceCreator::create_gbm_a
 gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
                                                       uint32_t w, uint32_t h, gbm_bo_format format, uint32_t usage)
 {
-    gbm_bo *bo = new gbm_bo();
+    gbm_bo* bo = new gbm_bo();
     (void)format;
     (void)usage;
     (void)dev;
@@ -91,6 +94,13 @@ gbm_bo *mgg::MockGBMDeviceCreator::bo_create_impl(gbm_device *dev,
     }
     return bo;
 }
+
+void mgg::MockGBMDeviceCreator::bo_destroy_impl(gbm_bo* bo)
+{
+    if (bo)
+        delete bo;
+}
+
 
 std::shared_ptr<gbm_device> mgg::MockGBMDeviceCreator::get_device()
 {

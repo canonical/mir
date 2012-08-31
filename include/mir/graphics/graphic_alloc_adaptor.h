@@ -36,7 +36,7 @@ enum class BufferUsage : uint32_t
 
 class BufferHandle 
 {
-    virtual ~BufferHandle() = default;
+    virtual ~BufferHandle() {}
 protected:
     BufferHandle() = default;
 
