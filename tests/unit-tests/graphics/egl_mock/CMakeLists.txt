@@ -24,4 +24,5 @@ add_library(
   mirtest_eglmock STATIC
 
   egl_mock.cpp
+  gl_mock.cpp
 )
