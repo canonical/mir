@@ -149,6 +149,7 @@ struct TestServer
              ntries-- != 0 && collector.session_count != expected_count; )
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+            std::this_thread::yield();
         }
         EXPECT_EQ(expected_count, collector.session_count);
     }
@@ -160,6 +161,7 @@ struct TestServer
              ntries-- != 0 && collector.connected_sessions != expected_count; )
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+            std::this_thread::yield();
         }
         EXPECT_EQ(expected_count, collector.connected_sessions);
     }
@@ -222,6 +224,7 @@ struct TestClient
         for (int i = 0; !connect_done_called.load() && i < 100; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
         }
         connect_done_called.store(false);
     }
@@ -230,6 +233,7 @@ struct TestClient
         for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
         }
         disconnect_done_called.store(false);
     }
@@ -239,6 +243,7 @@ struct TestClient
         for (int i = 0; count != connect_done_count.load() && i < 10000; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::yield();
         }
     }
     void wait_for_disconnect_count(int count)
@@ -246,6 +251,7 @@ struct TestClient
         for (int i = 0; count != disconnect_done_count.load() && i < 10000; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::yield();
         }
     }
 
@@ -399,11 +405,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_CALL(*client.logger, error()).Times(testing::AtLeast(1));
 
-    client.display_server.disconnect(
-        0,
-        &client.ignored,
-        &client.ignored,
-        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
+    // We don't expect this to be called, so it can't auto destruct
+    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(&client, &TestClient::disconnect_done));
+    client.display_server.disconnect(0, &client.ignored, &client.ignored, new_callback.get());
     client.wait_for_disconnect_done();
 
     server.expect_connected_session_count(0);

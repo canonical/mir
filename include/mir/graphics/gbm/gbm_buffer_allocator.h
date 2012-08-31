@@ -13,33 +13,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Thomas Guest  <thomas.guest@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/platform.h"
+#ifndef MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+
 #include "mir/compositor/graphic_buffer_allocator.h"
 
-namespace mg = mir::graphics;
-namespace mc = mir::compositor;
-namespace geom = mir::geometry;
+#include <gbm.h>
 
-namespace
+#include <memory>
+
+namespace mir
 {
-class LlvmBufferAllocator: public mc::GraphicBufferAllocator
+namespace graphics
+{
+namespace gbm
+{
+
+class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    LlvmBufferAllocator() = default;
+    explicit GBMBufferAllocator(const std::shared_ptr<gbm_device>& dev);
 
-    virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-        geom::Width, geom::Height, mc::PixelFormat)
-    {
-        return std::unique_ptr<mc::Buffer>();
-    }
+    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
+        geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
+
+
+private:
+    std::shared_ptr<gbm_device> dev;
 };
 
 }
-std::unique_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
-{
-    return std::unique_ptr<LlvmBufferAllocator>(new LlvmBufferAllocator());
 }
+}
+
+#endif // MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
