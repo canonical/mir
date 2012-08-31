@@ -369,13 +369,12 @@ TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
 TEST_F(AndroidTestFramebufferInit, eglContext_resource_freed)
 {
     using namespace testing;
-    EGLContext fake_context = (EGLContext) 0x432;
 
     EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
     .Times(Exactly(1))
-    .WillOnce(Return(fake_context));
+    .WillOnce(Return(mock_egl.fake_egl_context));
 
-    EXPECT_CALL(mock_egl, eglDestroyContext(mock_egl.fake_egl_display, fake_context))
+    EXPECT_CALL(mock_egl, eglDestroyContext(mock_egl.fake_egl_display, mock_egl.fake_egl_context))
     .Times(Exactly(1));
 
     EXPECT_NO_THROW(

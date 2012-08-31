@@ -37,7 +37,8 @@ class MockANativeWindow : public ANativeWindowInterface,
     public ANativeWindow
 {
 public:
-    MockANativeWindow(int fake_visual_id)
+    MockANativeWindow()
+     : fake_visual_id(5)
     {
         using namespace testing;
 
@@ -70,15 +71,13 @@ protected:
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
 
-        fake_visual_id = 5;
-        mock_anw = std::shared_ptr<MockANativeWindow>(new MockANativeWindow(fake_visual_id));
+        mock_anw = std::shared_ptr<MockANativeWindow>(new MockANativeWindow());
         fb_win = std::shared_ptr<mga::AndroidFramebufferWindow> (new mga::AndroidFramebufferWindow(mock_anw));
 
         EXPECT_CALL(*mock_anw, query_interface(_,_,_))
         .Times(AtLeast(0));
     }
 
-    int fake_visual_id;
     std::shared_ptr<MockANativeWindow> mock_anw;
     std::shared_ptr<mga::AndroidFramebufferWindow> fb_win;
     mir::EglMock mock_egl;
@@ -215,7 +214,7 @@ TEST_F(AndroidFramebufferWindowConfigSelection, creates_with_proper_visual_id)
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
     .Times(AtLeast(1))
     .WillRepeatedly(DoAll(
-                        SetArgPointee<3>(fake_visual_id),
+                        SetArgPointee<3>(mock_anw->fake_visual_id),
                         SaveArg<1>(&cfg),
                         Return(EGL_TRUE)));
 
@@ -230,7 +229,7 @@ TEST_F(AndroidFramebufferWindowConfigSelection, creates_with_proper_visual_id_mi
 
     EGLConfig cfg, chosen_cfg;
 
-    int bad_id = fake_visual_id + 1;
+    int bad_id = mock_anw->fake_visual_id + 1;
 
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
     .Times(AtLeast(1))
@@ -238,7 +237,7 @@ TEST_F(AndroidFramebufferWindowConfigSelection, creates_with_proper_visual_id_mi
                   SetArgPointee<3>(bad_id),
                   Return(EGL_TRUE)))
     .WillOnce(DoAll(
-                  SetArgPointee<3>(fake_visual_id),
+                  SetArgPointee<3>(mock_anw->fake_visual_id),
                   SaveArg<1>(&cfg),
                   Return(EGL_TRUE)))
     .WillRepeatedly(DoAll(
@@ -256,7 +255,7 @@ TEST_F(AndroidFramebufferWindowConfigSelection, without_proper_visual_id_throws)
 
     EGLConfig cfg;
 
-    int bad_id = fake_visual_id + 1;
+    int bad_id = mock_anw->fake_visual_id + 1;
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display, _, EGL_NATIVE_VISUAL_ID, _))
     .Times(AtLeast(1))
     .WillRepeatedly(DoAll(
