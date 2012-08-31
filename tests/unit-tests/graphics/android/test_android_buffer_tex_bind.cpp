@@ -67,6 +67,17 @@ TEST_F(AndroidBufferBinding, buffer_creates_image_on_first_bind)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_only_makes_one_image_per_display)
+{
+    using namespace testing;
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1));
+
+    buffer->bind_to_texture();
+    buffer->bind_to_texture();
+    buffer->bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_uses_current_display)
 {
     using namespace testing;
