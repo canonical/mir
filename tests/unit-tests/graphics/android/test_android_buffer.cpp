@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/android/android_buffer.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir_test/mock_alloc_adaptor.h"
 
 #include <hardware/gralloc.h> 
 #include <gtest/gtest.h>
@@ -28,29 +28,6 @@ namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
-
-namespace mir
-{
-namespace graphics
-{
-class MockAllocAdaptor : public GraphicAllocAdaptor,
-    public alloc_device_t
-{
-public:
-    MockAllocAdaptor()
-    {
-        using namespace testing;
-
-        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
-        .WillByDefault(Return(true));
-    }
-
-    MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferHandle>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
-    MOCK_METHOD2(inspect_buffer, bool(char*, int));
-
-};
-}
-}
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {

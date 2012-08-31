@@ -16,20 +16,25 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/gl_mock.h"
+#ifndef MIR_MIR_TEST_GL_MOCK_H_
+#define MIR_MIR_TEST_GL_MOCK_H_
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-class AndroidBufferBinding : public ::testing::Test
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+namespace mir
 {
-protected:
-    virtual void SetUp()
-    {
-    };
-    mir::GLMock gl_mock;
+class GLMock
+{
+public:
+    GLMock();
+    ~GLMock();
+
+    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
+
 };
-
-TEST_F(AndroidBufferBinding, successful_bind)
-{
-
 }
+
+#endif /* MIR_MIR_TEST_GL_MOCK_H_ */

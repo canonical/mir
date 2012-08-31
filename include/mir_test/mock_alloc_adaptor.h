@@ -16,20 +16,31 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/gl_mock.h"
+#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer.h"
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-class AndroidBufferBinding : public ::testing::Test
+namespace mir
 {
-protected:
-    virtual void SetUp()
+namespace graphics
+{
+
+class MockAllocAdaptor : public GraphicAllocAdaptor
+{
+public:
+    MockAllocAdaptor()
     {
-    };
-    mir::GLMock gl_mock;
+        using namespace testing;
+
+        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
+        .WillByDefault(Return(true));
+    }
+
+    MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferHandle>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
+    MOCK_METHOD2(inspect_buffer, bool(char*, int));
+
 };
 
-TEST_F(AndroidBufferBinding, successful_bind)
-{
-
+}
 }
