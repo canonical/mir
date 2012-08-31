@@ -49,6 +49,11 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
 
 mga::AndroidBuffer::~AndroidBuffer()
 {
+    std::map<EGLDisplay,EGLImageKHR>::iterator it;
+    for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
+    {
+        eglDestroyImageKHR(it->first, it->second); 
+    }
 }
 
 geom::Width mga::AndroidBuffer::width() const
@@ -82,6 +87,8 @@ void mga::AndroidBuffer::unlock()
 mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
     auto disp = eglGetCurrentDisplay();
-    eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
+    auto image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
+    egl_image_map[disp] = image;
+
     return NULL;
 }

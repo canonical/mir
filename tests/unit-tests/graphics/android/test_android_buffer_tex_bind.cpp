@@ -41,7 +41,10 @@ public:
         buffer = std::shared_ptr<mc::Buffer>(
                             new mga::AndroidBuffer(mock_alloc_dev, geom::Width(300), geom::Height(200), mc::PixelFormat::rgba_8888));
     };
-
+    virtual void TearDown()
+    {
+        buffer.reset();
+    };
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;

@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
+#include <map>
 #include <stdexcept>
 #include <memory>
 
@@ -67,6 +68,8 @@ private:
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
     std::shared_ptr<BufferHandle> android_handle;
+
+    std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 };
 
 }
