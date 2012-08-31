@@ -81,5 +81,6 @@ void mga::AndroidBuffer::unlock()
 
 mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
+    eglGetCurrentDisplay();
     return NULL;
 }

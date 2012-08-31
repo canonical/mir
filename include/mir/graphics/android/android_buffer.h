@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer.h"
 #include "mir/graphics/graphic_alloc_adaptor.h"
 
+#include <EGL/egl.h>
 #include <stdexcept>
 #include <memory>
 
