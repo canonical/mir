@@ -29,7 +29,7 @@ namespace geom = mir::geometry;
 TEST(GraphicsPlatform, buffer_allocator_creation)
 {
     using namespace testing;
-    std::unique_ptr<mc::GraphicBufferAllocator> allocator;
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator;
 
     EXPECT_NO_THROW (
         allocator = mg::create_buffer_allocator();
@@ -42,7 +42,7 @@ TEST(GraphicsPlatform, buffer_allocator_creation)
 #ifdef ANDROID
 TEST(GraphicsPlatform, buffer_creation)
 {
-    std::unique_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
     geom::Width w(320);
     geom::Height h(240);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
