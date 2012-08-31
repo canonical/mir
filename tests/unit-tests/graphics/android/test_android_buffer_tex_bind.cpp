@@ -64,6 +64,38 @@ TEST_F(AndroidBufferBinding, buffer_creates_image_on_first_bind)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_uses_current_display)
+{
+    using namespace testing;
+    EGLDisplay fake_display = (EGLDisplay) 0x32298;    
+
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+            .Times(Exactly(1))
+            .WillOnce(Return(fake_display));
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(fake_display,_,_,_,_))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
+TEST_F(AndroidBufferBinding, buffer_specifies_no_context)
+{
+    using namespace testing;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_, EGL_NO_CONTEXT,_,_,_))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
+TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
+{
+    using namespace testing;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,EGL_NATIVE_BUFFER_ANDROID,_,_))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
 {
     using namespace testing;
