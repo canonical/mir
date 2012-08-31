@@ -205,3 +205,24 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
     buffer->bind_to_texture();
     buffer->bind_to_texture();
 }
+
+
+TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
+{
+    using namespace testing;
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(_, _))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
+TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
+{
+    using namespace testing;
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(_, _))
+        .Times(Exactly(3));
+
+    buffer->bind_to_texture();
+    buffer->bind_to_texture();
+    buffer->bind_to_texture();
+
+}
