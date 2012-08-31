@@ -22,10 +22,10 @@
 
 #include "mir/compositor/buffer.h"
 
+#include <gbm.h>
+
 #include <stdexcept>
 #include <memory>
-
-#include <gbm.h>
 
 namespace mir
 {
@@ -34,19 +34,27 @@ namespace graphics
 namespace gbm
 {
 
+struct GBMBufferObjectDeleter
+{
+    void operator()(gbm_bo* handle) const
+    {
+        if (handle)
+            gbm_bo_destroy(handle);
+    }
+};
+
+compositor::PixelFormat gbm_format_to_mir_format(gbm_bo_format format);
+gbm_bo_format mir_format_to_gbm_format(compositor::PixelFormat format);
+
+
 class GBMBuffer: public compositor::Buffer
 {
 public:
-    GBMBuffer(gbm_bo *handle)
-        : gbm_handle(handle)
-    {
-        format = GBM_BO_FORMAT_ARGB8888;
-    }
+    GBMBuffer(std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> handle);
+    GBMBuffer(const GBMBuffer&) = delete;
+    virtual ~GBMBuffer();
 
-    virtual ~GBMBuffer()
-    {
-        gbm_bo_destroy(gbm_handle);
-    }
+    GBMBuffer& operator=(const GBMBuffer&) = delete;
 
     virtual geometry::Width width() const;
 
@@ -62,11 +70,8 @@ public:
 
     virtual Texture* bind_to_texture();
 
-    static compositor::PixelFormat gbm_format_to_mir_format(gbm_bo_format format);
-    static gbm_bo_format mir_format_to_gbm_format(compositor::PixelFormat format);
-
 private:
-    gbm_bo *gbm_handle;
+    std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
     gbm_bo_format format;
 };
 

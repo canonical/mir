@@ -26,20 +26,43 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
+mc::PixelFormat mgg::gbm_format_to_mir_format(gbm_bo_format format)
+{
+    (void)format;
+    return mc::PixelFormat::rgba_8888;
+}
+
+gbm_bo_format mgg::mir_format_to_gbm_format(mc::PixelFormat format)
+{
+    (void)format;
+    return GBM_BO_FORMAT_ARGB8888;
+}
+
+
+mgg::GBMBuffer::GBMBuffer(
+    std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
+        : gbm_handle(std::move(handle)),
+          format(GBM_BO_FORMAT_ARGB8888)
+{
+}
+
+mgg::GBMBuffer::~GBMBuffer()
+{
+}
 
 geom::Width mgg::GBMBuffer::width() const
 {
-    return geom::Width(gbm_bo_get_width(gbm_handle));
+    return geom::Width(gbm_bo_get_width(gbm_handle.get()));
 }
 
 geom::Height mgg::GBMBuffer::height() const
 {
-    return geom::Height(gbm_bo_get_height(gbm_handle));
+    return geom::Height(gbm_bo_get_height(gbm_handle.get()));
 }
 
 geom::Stride mgg::GBMBuffer::stride() const
 {
-    return geom::Stride(gbm_bo_get_pitch(gbm_handle));
+    return geom::Stride(gbm_bo_get_pitch(gbm_handle.get()));
 }
 
 mc::PixelFormat mgg::GBMBuffer::pixel_format() const
@@ -60,16 +83,4 @@ void mgg::GBMBuffer::unlock()
 mg::Texture* mgg::GBMBuffer::bind_to_texture()
 {
     return NULL;
-}
-
-mc::PixelFormat mgg::GBMBuffer::gbm_format_to_mir_format(gbm_bo_format format)
-{
-    (void)format;
-    return mc::PixelFormat::rgba_8888;
-}
-
-gbm_bo_format mgg::GBMBuffer::mir_format_to_gbm_format(mc::PixelFormat format)
-{
-    (void)format;
-    return GBM_BO_FORMAT_ARGB8888;
 }

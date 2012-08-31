@@ -41,11 +41,11 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         dev.get(), 
         width.as_uint32_t(), 
         height.as_uint32_t(),
-        static_cast<gbm_bo_format>(GBMBuffer::mir_format_to_gbm_format(pf)), 
+        static_cast<gbm_bo_format>(mgg::mir_format_to_gbm_format(pf)), 
         GBM_BO_USE_RENDERING);
     
     if (handle != NULL)
-        return std::unique_ptr<mc::Buffer>(new GBMBuffer(handle));
+        return std::unique_ptr<mc::Buffer>(new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
 
     return std::unique_ptr<mc::Buffer>();
 }
