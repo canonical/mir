@@ -47,6 +47,9 @@ int mir_connection_is_valid(MirConnection * connection);
    or the empty string "" if the connection is valid. */
 char const * mir_connection_get_error_message(MirConnection * connection);
 
+/* Release a connection to the MIR server. */
+void mir_connection_release(MirConnection * connection);
+
 /* Surface API */
 typedef enum MirPixelFormat
 {

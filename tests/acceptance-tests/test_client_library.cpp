@@ -42,10 +42,11 @@ namespace
 struct ActivityCounter : mir::protobuf::DisplayServer
 {
     int surface_count;
+    bool disconnected;
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    ActivityCounter() : surface_count(0)
+    ActivityCounter() : surface_count(0), disconnected(false)
     {
     }
 
@@ -84,6 +85,7 @@ struct ActivityCounter : mir::protobuf::DisplayServer
                  google::protobuf::Closure* done)
     {
         std::unique_lock<std::mutex> lock(guard);
+        disconnected = true;
         wait_condition.notify_one();
         done->Run();
     }
@@ -109,6 +111,8 @@ private:
     mir::protobuf::DisplayServer& server;
 };
 
+// Tests using this configuration must disconnect from the MIR server.
+// This is to allow server side activity checking on exit.
 struct ServerConfig : TestingServerConfiguration
 {
     ServerConfig(int surface_count)
@@ -121,8 +125,17 @@ struct ServerConfig : TestingServerConfiguration
         return std::make_shared<StubIpcFactory>(counter);
     }
 
+    void wait_for_disconnect()
+    {
+        std::unique_lock<std::mutex> lock(counter.guard);
+        if (!counter.disconnected)
+            counter.wait_condition.wait_for(lock, std::chrono::milliseconds(100));
+        EXPECT_TRUE(counter.disconnected);
+    }
+
     void on_exit(mir::DisplayServer* )
     {
+        wait_for_disconnect();
         check_surfaces();
     }
 
@@ -140,7 +153,7 @@ struct ServerConfig : TestingServerConfiguration
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
+TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
 {
     ServerConfig server_config(0);
 
@@ -176,6 +189,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects)
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+            mir_connection_release(connection);
         }
 
         std::mutex guard;
@@ -262,11 +276,17 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
             mir_surface_release(surface);
         }
 
+        void disconnect()
+        {
+            mir_connection_release(connection);
+        }
+
         void exec()
         {
             connect();
             create_surface();
             release_surface();
+            disconnect();
         }
 
         std::mutex guard;

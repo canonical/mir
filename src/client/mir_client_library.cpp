@@ -28,6 +28,7 @@ namespace
 
 namespace mc = mir::client;
 namespace mp = mir::protobuf;
+namespace gp = google::protobuf;
 
 // TODO surface implementation, multiple surfaces per client
 
@@ -43,6 +44,18 @@ public:
     MirClient(MirClient const &) = delete;
     MirClient& operator=(MirClient const &) = delete;
 
+    ~MirClient()
+    {
+        disconnect();
+    }
+
+    void disconnect()
+    {
+        mir::protobuf::Void message;
+        mir::protobuf::Void ignored;
+        server.disconnect(0, &ignored, &ignored, gp::NewCallback(this, &MirClient::release));
+    }
+            
     void create_surface(MirSurface * surface_,
                         MirSurfaceParameters const & params,
                         mir_surface_created_callback callback,
@@ -53,9 +66,7 @@ public:
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
 
-        server.create_surface(
-            0, &message, &surface,
-            google::protobuf::NewCallback(callback, surface_, context));
+        server.create_surface(0, &message, &surface, gp::NewCallback(callback, surface_, context));
     }
 
     char const * get_error_message()
@@ -67,7 +78,12 @@ public:
     {
         return surface;
     }
+
 private:
+    void release()
+    {
+        delete this;
+    }
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     mp::Surface surface;
@@ -112,6 +128,12 @@ int mir_connection_is_valid(MirConnection * connection)
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
     return connection->client->get_error_message();
+}
+
+void mir_connection_release(MirConnection * connection)
+{
+    connection->client->disconnect();
+    delete connection;
 }
 
 void mir_create_surface(MirConnection * connection,
