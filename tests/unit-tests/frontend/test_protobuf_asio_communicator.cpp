@@ -399,11 +399,14 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_CALL(*client.logger, error()).Times(testing::AtLeast(1));
 
+    // We don't expect this to be called, so it can't auto destruct
+    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(&client, &TestClient::disconnect_done));
+
     client.display_server.disconnect(
         0,
         &client.ignored,
         &client.ignored,
-        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
+        new_callback.get());
     client.wait_for_disconnect_done();
 
     server.expect_connected_session_count(0);
