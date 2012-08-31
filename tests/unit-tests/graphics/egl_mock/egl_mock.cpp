@@ -300,3 +300,16 @@ EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType 
     return global_egl_mock->eglCopyBuffers(dpy, surface, target);
 }
 
+/* extensions */
+EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+{
+    CHECK_GLOBAL_MOCK(EGLImageKHR)
+    return eglCreateImageKHR ( dpy, ctx, target, buffer, attrib_list);
+}
+
+EGLBoolean eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean)
+    return eglDestroyImageKHR ( dpy, image);
+}
+
