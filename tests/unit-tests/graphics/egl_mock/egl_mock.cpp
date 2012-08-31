@@ -43,6 +43,7 @@ mir::EglMock::EglMock()
       fake_configs_num(config_size),
       fake_egl_surface((EGLSurface) 0xa034),
       fake_egl_context((EGLContext) 0xbeef),
+      fake_egl_image((EGLImageKHR) 0x1234),
       fake_visual_id(5)
 {
     using namespace testing;
@@ -88,6 +89,9 @@ mir::EglMock::EglMock()
 
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));
+
+    ON_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
+    .WillByDefault(Return(fake_egl_image));
 }
 
 mir::EglMock::~EglMock()

@@ -92,6 +92,10 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end()) {
         auto image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
+        if (image == EGL_NO_IMAGE_KHR)
+        {
+            return NULL;
+        }
         egl_image_map[disp] = image;
     }
 

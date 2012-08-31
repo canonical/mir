@@ -197,7 +197,7 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
 {
     using namespace testing;
     EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
+        .Times(Exactly(2))
         .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
     EXPECT_CALL(egl_mock, eglDestroyImageKHR(_,_))
         .Times(Exactly(0));
