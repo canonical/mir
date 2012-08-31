@@ -85,17 +85,26 @@ class MockLogger : public mir::client::Logger
 {
     std::ostringstream out;
 
-    std::ostream& dummy_out() { return out; }
+    std::ostream& dummy_error() { return std::cerr << "ERROR: "; }
+//    std::ostream& dummy_error() { return out << "ERROR: "; }
+
+//    std::ostream& dummy_debug() { return std::cerr << "DEBUG: "; }
+    std::ostream& dummy_debug() { return out << "DEBUG: "; }
 
 public:
     MockLogger()
     {
         ON_CALL(*this, error())
-            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_out));
+            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_error));
         EXPECT_CALL(*this, error()).Times(0);
+
+        ON_CALL(*this, debug())
+            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_debug));
+        EXPECT_CALL(*this, debug()).Times(testing::AtLeast(0));
     }
 
     MOCK_METHOD0(error,std::ostream& ());
+    MOCK_METHOD0(debug,std::ostream& ());
 };
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
@@ -140,6 +149,7 @@ struct TestServer
              ntries-- != 0 && collector.session_count != expected_count; )
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+            std::this_thread::yield();
         }
         EXPECT_EQ(expected_count, collector.session_count);
     }
@@ -151,6 +161,7 @@ struct TestServer
              ntries-- != 0 && collector.connected_sessions != expected_count; )
         {
             collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
+            std::this_thread::yield();
         }
         EXPECT_EQ(expected_count, collector.connected_sessions);
     }
@@ -168,7 +179,9 @@ struct TestClient
         channel(TestServer::socket_name(), logger),
         display_server(&channel),
         connect_done_called(false),
-        disconnect_done_called(false)
+        disconnect_done_called(false),
+        connect_done_count(0),
+        disconnect_done_count(0)
     {
         connect_message.set_width(640);
         connect_message.set_height(480);
@@ -188,14 +201,30 @@ struct TestClient
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
 
-    void on_connect_done() { connect_done_called.store(true); }
-    void on_disconnect_done() { disconnect_done_called.store(true); }
+    void on_connect_done()
+    {
+        connect_done_called.store(true);
+
+        auto old = connect_done_count.load();
+
+        while (!connect_done_count.compare_exchange_weak(old, old+1));
+    }
+
+    void on_disconnect_done()
+    {
+        disconnect_done_called.store(true);
+
+        auto old = disconnect_done_count.load();
+
+        while (!disconnect_done_count.compare_exchange_weak(old, old+1));
+    }
 
     void wait_for_connect_done()
     {
         for (int i = 0; !connect_done_called.load() && i < 100; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
         }
         connect_done_called.store(false);
     }
@@ -204,12 +233,33 @@ struct TestClient
         for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
         }
         disconnect_done_called.store(false);
     }
 
+    void wait_for_connect_count(int count)
+    {
+        for (int i = 0; count != connect_done_count.load() && i < 10000; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::yield();
+        }
+    }
+    void wait_for_disconnect_count(int count)
+    {
+        for (int i = 0; count != disconnect_done_count.load() && i < 10000; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::yield();
+        }
+    }
+
     std::atomic<bool> connect_done_called;
     std::atomic<bool> disconnect_done_called;
+
+    std::atomic<int> connect_done_count;
+    std::atomic<int> disconnect_done_count;
 };
 
 struct BasicTestFixture : public ::testing::Test
@@ -355,11 +405,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_CALL(*client.logger, error()).Times(testing::AtLeast(1));
 
-    client.display_server.disconnect(
-        0,
-        &client.ignored,
-        &client.ignored,
-        google::protobuf::NewCallback(&client, &TestClient::disconnect_done));
+    // We don't expect this to be called, so it can't auto destruct
+    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(&client, &TestClient::disconnect_done));
+    client.display_server.disconnect(0, &client.ignored, &client.ignored, new_callback.get());
     client.wait_for_disconnect_done();
 
     server.expect_connected_session_count(0);
@@ -397,5 +445,71 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
 
     server.expect_session_count(connection_count);
     server.expect_connected_session_count(0);
+}
+
+TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
+       multiple_clients_can_connect_and_disconnect_asynchronously)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        EXPECT_CALL(client[i], connect_done()).Times(1);
+        client[i].display_server.connect(
+            0,
+            &client[i].connect_message,
+            &client[i].surface,
+            google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
+    }
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client[i].wait_for_connect_done();
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        EXPECT_CALL(client[i], disconnect_done()).Times(1);
+        client[i].display_server.disconnect(
+            0,
+            &client[i].ignored,
+            &client[i].ignored,
+            google::protobuf::NewCallback(&client[i], &TestClient::disconnect_done));
+    }
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client[i].wait_for_disconnect_done();
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(0);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture,
+       each_connection_attempt_results_in_a_new_session_being_created_asynchronously)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+
+    int const connection_count{5};
+
+    EXPECT_CALL(client, connect_done()).Times(connection_count);
+
+    for (int i = 0; i != connection_count; ++i)
+    {
+        client.display_server.connect(
+            0,
+            &client.connect_message,
+            &client.surface,
+            google::protobuf::NewCallback(&client, &TestClient::connect_done));
+    }
+
+    server.expect_session_count(connection_count);
+    server.expect_connected_session_count(connection_count);
+
+    client.wait_for_connect_count(connection_count);
 }
 }

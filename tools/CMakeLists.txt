@@ -15,7 +15,7 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-if(MIR_PLATFORM_ANDROID)
+if (MIR_PLATFORM STREQUAL "android")
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})

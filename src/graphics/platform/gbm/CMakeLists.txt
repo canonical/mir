@@ -12,36 +12,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
-add_subdirectory(frontend/)
-add_subdirectory(compositor/)
-add_subdirectory(input/)
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
+# gbm.h and drm.h have trailing commas at the end of enum definitions
+# This is valid C99, but g++ 4.4 flags it as an error with -pedantic
+string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
 
-target_link_libraries(
-  integration-tests
+add_library(
+  mirplatformgraphics STATIC
 
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${PLATFORM_LIBRARIES}
-  EGL
+  gbm_buffer_allocator.cpp
+  gbm_buffer.cpp
 )
-
-mir_discover_tests(integration-tests)
