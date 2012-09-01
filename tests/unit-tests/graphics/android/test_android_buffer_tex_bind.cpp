@@ -226,3 +226,19 @@ TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
     buffer->bind_to_texture();
 
 }
+
+TEST_F(AndroidBufferBinding, buffer_binding_specifies_gl_texture_2d)
+{
+    using namespace testing;
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
+TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image)
+{
+    using namespace testing;
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(_, egl_mock.fake_egl_image))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
