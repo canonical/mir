@@ -180,6 +180,15 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_sets_not_null_anw_buffer)
+{
+    using namespace testing;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,Ne((EGLClientBuffer)NULL),_))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+}
+
 TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
 {
     using namespace testing;
