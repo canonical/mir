@@ -242,3 +242,24 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image)
         .Times(Exactly(1));
     buffer->bind_to_texture();
 }
+
+TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
+{
+    using namespace testing;
+    EGLDisplay second_fake_display = (EGLDisplay) ((int)egl_mock.fake_egl_display +1);
+    EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
+
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(_, _))
+        .Times(Exactly(1));
+    buffer->bind_to_texture();
+
+    EXPECT_CALL(gl_mock, glEGLImageTargetTexture2DOES(_, second_fake_egl_image))
+        .Times(Exactly(1));
+    EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(Return((second_fake_egl_image)));
+    buffer->bind_to_texture();
+}
