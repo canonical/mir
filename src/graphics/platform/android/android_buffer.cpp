@@ -19,6 +19,9 @@
 
 #include "mir/graphics/android/android_buffer.h"
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -87,17 +90,24 @@ void mga::AndroidBuffer::unlock()
 mg::Texture* mga::AndroidBuffer::bind_to_texture()
 {
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
-    auto disp = eglGetCurrentDisplay();
+    EGLDisplay disp = eglGetCurrentDisplay();
 
+    EGLImageKHR image;
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end()) {
-        auto image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
+        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
         if (image == EGL_NO_IMAGE_KHR)
         {
             return NULL;
         }
         egl_image_map[disp] = image;
+    } 
+    else /* already had it in map */
+    {
+        image = it->second; 
     }
+
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image); 
 
     return NULL;
 }

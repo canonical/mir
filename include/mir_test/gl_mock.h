@@ -21,6 +21,8 @@
 
 #include <gmock/gmock.h>
 
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 

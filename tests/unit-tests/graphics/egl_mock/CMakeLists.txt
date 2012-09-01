@@ -23,6 +23,6 @@ set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 add_library( 
   mirtest_eglmock STATIC
 
-  egl_mock.cpp
   gl_mock.cpp
+  egl_mock.cpp
 )
