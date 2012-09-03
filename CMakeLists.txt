@@ -121,5 +121,6 @@ include_directories (
 add_subdirectory(tests/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
+add_subdirectory(3rd_party/)
 
 enable_coverage_report(mir)
