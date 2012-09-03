@@ -178,6 +178,13 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 {
     if (!ec)
     {
+        /* Parse the client's message and handle it in the server.
+
+           NOTE: the display_server member functions are synchronous, and
+           execute callbacks directly. This means it is valid to pass stack
+           variables into NewCallback() and (in the case of disconnect) to
+           delete this session instance once the function returns.
+        */
         std::istream in(&message);
         mir::protobuf::wire::Invocation invoke;
 
