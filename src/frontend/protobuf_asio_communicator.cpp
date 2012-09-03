@@ -22,6 +22,9 @@
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
+// FRIG
+#include "../3rd_party/libancillary/ancillary.h"
+
 #include <google/protobuf/descriptor.h>
 
 #include <map>
@@ -43,6 +46,12 @@ public:
     int id() const
     {
         return id_;
+    }
+
+    // TODO this is proof-of-concept
+    void send_file_descriptor(int file_descriptor)
+    {
+        ancil_send_fd(socket.native_handle(), file_descriptor);
     }
 
 private:
