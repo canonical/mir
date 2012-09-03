@@ -39,6 +39,7 @@ target_link_libraries(
   mirprocess
   mirsurfaces
   mirclient
+  mirplatformgraphics
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}

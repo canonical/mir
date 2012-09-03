@@ -35,7 +35,7 @@ namespace graphics
 {
 
 // Create and return a new graphics buffer allocator.
-std::unique_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
+std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
 
 }
 }
