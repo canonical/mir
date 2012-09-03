@@ -14,6 +14,7 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+list(APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libancillary)
 set(
   LIBANCILLARY_SOURCES
 
@@ -23,6 +24,8 @@ set(
 
 add_library( 
   3rd_party STATIC
-  
+
   ${LIBANCILLARY_SOURCES}
 )
+
+set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)

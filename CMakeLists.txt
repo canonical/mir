@@ -91,6 +91,10 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/protobuf)
 INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
+add_subdirectory(3rd_party/)
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+
 add_subdirectory(src/)
 
 # Pulling in local gmock version
@@ -121,6 +125,5 @@ include_directories (
 add_subdirectory(tests/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
-add_subdirectory(3rd_party/)
 
 enable_coverage_report(mir)
