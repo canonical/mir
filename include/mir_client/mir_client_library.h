@@ -71,7 +71,7 @@ typedef struct MirSurface MirSurface;
 typedef void (* mir_surface_created_callback)(MirSurface * surface, void * client_context);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
-void mir_create_surface(MirConnection * connection,
+void mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * surface_parameters,
                         mir_surface_created_callback callback,
                         void * client_context);
@@ -97,9 +97,9 @@ typedef void (* mir_buffer_advanced_callback)(MirBuffer * buffer, void * client_
 /* Advance the surface's buffer. Calling this function releases any current
    surface buffer and registers a callback for the next buffer, when available.
  */
-void mir_advance_buffer(MirSurface * surface,
-                        mir_buffer_advanced_callback callback,
-                        void * client_context);
+void mir_surface_advance_buffer(MirSurface * surface,
+                                mir_buffer_advanced_callback callback,
+                                void * client_context);
 
 int mir_buffer_is_valid(MirBuffer * buffer);
 

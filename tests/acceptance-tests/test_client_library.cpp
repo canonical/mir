@@ -296,7 +296,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
         void create_surface()
         {
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
-            mir_create_surface(connection, &request_params, create_surface_callback, this);
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             std::unique_lock<std::mutex> lock(guard);
             if (!surface)
@@ -414,7 +414,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces
         {
             size_t const current_surface_count = surfaces.size();
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
-            mir_create_surface(connection, &request_params, create_surface_callback, this);
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             std::unique_lock<std::mutex> lock(guard);
             if (surfaces.size() == current_surface_count)

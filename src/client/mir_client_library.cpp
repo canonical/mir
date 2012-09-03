@@ -145,7 +145,7 @@ void mir_connection_release(MirConnection * connection,
     delete connection;
 }
 
-void mir_create_surface(MirConnection * connection,
+void mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * params,
                         mir_surface_created_callback callback,
                         void * context)
@@ -185,9 +185,9 @@ void mir_surface_release(MirSurface * surface)
     surface->client->release_surface();
 }
 
-void mir_advance_buffer(MirSurface *,
-                        mir_buffer_advanced_callback callback,
-                        void * context)
+void mir_surface_advance_buffer(MirSurface *,
+                                mir_buffer_advanced_callback callback,
+                                void * context)
 {
     callback(NULL, context);
 }   
