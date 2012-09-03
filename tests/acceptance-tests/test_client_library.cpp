@@ -42,11 +42,12 @@ namespace
 struct ActivityCounter : mir::protobuf::DisplayServer
 {
     bool disconnected;
+    google::protobuf::int32 next_surface_id;
     int surfaces_created, surfaces_released;
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    ActivityCounter() : disconnected(0), surfaces_created(0), surfaces_released(0)
+    ActivityCounter() : disconnected(0), next_surface_id(0), surfaces_created(0), surfaces_released(0)
     {
     }
 
@@ -62,6 +63,7 @@ struct ActivityCounter : mir::protobuf::DisplayServer
         response->set_pixel_format(request->pixel_format());
 
         std::unique_lock<std::mutex> lock(guard);
+        response->mutable_id()->set_value(next_surface_id++);
         ++surfaces_created;
         wait_condition.notify_one();
 
@@ -69,10 +71,11 @@ struct ActivityCounter : mir::protobuf::DisplayServer
     }
 
     void release_surface(google::protobuf::RpcController* /*controller*/,
-                         const mir::protobuf::Void*,
+                         const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,
                          google::protobuf::Closure* done)
     {
+        // TODO track and check surface ids
         std::unique_lock<std::mutex> lock(guard);
         ++surfaces_released;
         wait_condition.notify_one();

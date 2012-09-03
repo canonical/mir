@@ -21,7 +21,20 @@
 
 #include "mir_protobuf.pb.h"
 
+#include <set>
 #include <cstddef>
+
+namespace
+{
+class MirClient;
+class MirClientSurface;
+}
+
+struct MirSurface
+{
+    MirClient * client_connection;
+    MirClientSurface * client_surface;
+};
 
 namespace
 {
@@ -30,11 +43,36 @@ namespace mc = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-// TODO surface implementation, multiple surfaces per client
-
-void null_callback()
+class MirClientSurface
 {
-}
+public:
+    MirClientSurface(mir_surface_created_callback callback, void * context)
+        : callback(callback), context(context)
+    {
+    }
+
+    void run_callback(MirSurface * surface)
+    {
+        callback(surface, context);
+    }
+    mp::Surface& surface()
+    {
+        return surface_;
+    }
+    int id() const
+    {
+        return surface_.id().value();
+    }
+    char const * get_error_message()
+    {
+        return error_message.c_str();
+    }
+private:
+    mir_surface_created_callback const callback;
+    void * const context;
+    mp::Surface surface_;
+    std::string error_message;
+};
 
 class MirClient
 {
@@ -42,6 +80,7 @@ public:
     MirClient(std::shared_ptr<mc::Logger> const & log)
         : channel("./mir_socket_test", log)
         , server(&channel)
+        , log(log)
     {
     }
 
@@ -52,27 +91,32 @@ public:
     {
         mir::protobuf::Void message;
         server.disconnect(0, &message, &void_response,
-                          gp::NewCallback(this, &MirClient::release, callback, context));
+                          gp::NewCallback(this, &MirClient::released, callback, context));
     }
 
-    void create_surface(MirSurface * surface_,
+    void create_surface(MirSurface * surface,
                         MirSurfaceParameters const & params,
                         mir_surface_created_callback callback,
                         void * context)
     {
+        surface->client_connection = this;
+        surface->client_surface = new MirClientSurface(callback, context);
+
         mir::protobuf::SurfaceParameters message;
         message.set_width(params.width);
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
 
-        server.create_surface(0, &message, &surface,
-                              gp::NewCallback(callback, surface_, context));
+        server.create_surface(0, &message, &surface->client_surface->surface(),
+                              gp::NewCallback(this, &MirClient::surface_created, surface));
     }
 
-    void release_surface()
+    void release_surface(MirSurface * surface)
     {
-        mir::protobuf::Void message;
-        server.release_surface(0, &message, &void_response, gp::NewCallback(null_callback));
+        mir::protobuf::SurfaceId message;
+        message.set_value(surface->client_surface->id());
+        server.release_surface(0, &message, &void_response,
+                               gp::NewCallback(this, &MirClient::surface_released, surface));
     }
 
     char const * get_error_message()
@@ -86,28 +130,44 @@ public:
     }
 
 private:
-    void release(mir_disconnected_callback callback, void * context)
+    void released(mir_disconnected_callback callback, void * context)
     {
         callback(context);
         delete this;
     }
+
+    void surface_created(MirSurface * surface)
+    {
+        surfaces.insert(surface);
+        surface->client_surface->run_callback(surface);
+    }
+
+    void surface_released(MirSurface * surface)
+    {
+        if (surfaces.erase(surface) == 1)
+        {
+            delete surface->client_surface;
+            delete surface;
+        }
+        else
+        {
+            log->error() << "failed to release surface " << surface << '\n';
+        }
+    }
+
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
+    std::shared_ptr<mc::Logger> log;
     mp::Surface surface;
     mp::Void void_response;
 
     std::string error_message;
-    std::mutex mutex;
+    std::set<MirSurface *> surfaces;
 };
 
 }
 
 struct MirConnection
-{
-    MirClient * client;
-};
-
-struct MirSurface
 {
     MirClient * client;
 };
@@ -154,35 +214,34 @@ void mir_surface_create(MirConnection * connection,
     try
     {
         connection->client->create_surface(surface, *params, callback, context);
-        surface->client = connection->client;
     }
     catch (std::exception const& /*x*/)
     {
-        surface->client = 0;
+        surface->client_connection = 0;
         callback(surface, context);
     }
 }
 
+void mir_surface_release(MirSurface * surface)
+{
+    surface->client_connection->release_surface(surface);
+}
+
 int mir_surface_is_valid(MirSurface * surface)
 {
-    return surface->client ? 1 : 0;
+    return surface->client_surface ? 1 : 0;
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
 {
-    return surface->client->get_error_message();
+    return surface->client_surface->get_error_message();
 }
 
 MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
 {
-    mp::Surface const & sf = surface->client->get_surface();
+    mp::Surface const & sf = surface->client_surface->surface();
     return MirSurfaceParameters{sf.width(), sf.height(),
                                 static_cast<MirPixelFormat>(sf.pixel_format())};
-}
-
-void mir_surface_release(MirSurface * surface)
-{
-    surface->client->release_surface();
 }
 
 void mir_surface_advance_buffer(MirSurface *,

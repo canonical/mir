@@ -223,12 +223,12 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         else if ("release_surface" == invoke.method_name())
         {
             mir::protobuf::Void ignored;
-            mir::protobuf::Void surface_message;
-            surface_message.ParseFromString(invoke.parameters());
+            mir::protobuf::SurfaceId message;
+            message.ParseFromString(invoke.parameters());
 
             display_server->release_surface(
                 0,
-                &surface_message,
+                &message,
                 &ignored,
                 google::protobuf::NewCallback(
                     this,
