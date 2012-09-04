@@ -50,6 +50,7 @@ struct SessionCounter : mir::protobuf::DisplayServer
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
+        response->mutable_id()->set_value(13);
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());

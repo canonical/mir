@@ -59,12 +59,14 @@ cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     std::unique_lock<std::mutex> lock(mutex);
 
     auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
+    log->debug() << "save_completion_details " << invoke.id() << " response " << response << " complete " << complete << std::endl;
     return current.send_buffer;
 }
 
 void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
+    log->debug() << "complete_response for result " << result.id() << std::endl;
     auto call = pending_calls.find(result.id());
     if (call == pending_calls.end())
     {
@@ -73,6 +75,7 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
     else
     {
         auto& completion = call->second;
+        log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
         completion.response->ParseFromString(result.response());
         completion.complete->Run();
         pending_calls.erase(call);

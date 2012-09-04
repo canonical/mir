@@ -8,11 +8,22 @@ message ConnectMessage {
   optional int32 pixel_format = 3;
 }
 
+message SurfaceParameters {
+  optional int32 width = 1;
+  optional int32 height = 2;
+  optional int32 pixel_format = 3;
+}
+
+message SurfaceId {
+  required int32 value = 1;
+};
+
 message Surface {
-  required int32 width = 1;
-  required int32 height = 2;
-  required int32 pixel_format = 3;
-  optional int32 native_buffer = 4;
+  required SurfaceId id = 1;
+  required int32 width = 2;
+  required int32 height = 3;
+  required int32 pixel_format = 4;
+  optional int32 native_buffer = 5;
 }
 
 message Void {
@@ -21,5 +32,7 @@ message Void {
 service DisplayServer {
   rpc connect(ConnectMessage) returns (Surface);
   rpc disconnect(Void) returns (Void);
+  rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc release_surface(SurfaceId) returns (Void);
 }
 
