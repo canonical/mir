@@ -327,11 +327,10 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
     launch_client_process(client_config);
 }
 
-#if 0
 TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
-    ServerConfig server_config(n_surfaces, n_surfaces);
+    ServerConfig server_config;
 
     launch_server_process(server_config);
 
@@ -359,38 +358,25 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces
             config->surface_released(surface);
         }
 
-        static void connection_release_callback(void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->disconnected();
-        }
-
         void connected(MirConnection * new_connection)
         {
             std::unique_lock<std::mutex> lock(guard);
             connection = new_connection;
-            wait_condition.notify_one();
-        }
-
-        void disconnected()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = NULL;
-            wait_condition.notify_one();
+            wait_condition.notify_all();
         }
 
         void surface_created(MirSurface * new_surface)
         {
             std::unique_lock<std::mutex> lock(guard);
             surfaces.insert(new_surface);
-            wait_condition.notify_one();
+            wait_condition.notify_all();
         }
 
         void surface_released(MirSurface * surface)
         {
             std::unique_lock<std::mutex> lock(guard);
-            EXPECT_EQ(1u, surfaces.erase(surface));
-            wait_condition.notify_one();
+            surfaces.erase(surface);
+            wait_condition.notify_all();
         }
 
         MirSurface * any_surface()
@@ -399,20 +385,14 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces
             return *surfaces.begin();
         }
 
-        void connect()
+        void wait_for_connect()
         {
-            mir_connect(connection_callback, this);
-
             std::unique_lock<std::mutex> lock(guard);
-            if (!connection)
-                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+            while (!connection)
+                wait_condition.wait(lock);
         }
-        
-        size_t current_size()
+
+        size_t current_surface_count()
         {
             std::unique_lock<std::mutex> lock(guard);
             return surfaces.size();
@@ -420,54 +400,55 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces
 
         void wait_for_surface_create()
         {
-            size_t const current_surface_count = current_size();
-
-            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
-
-            {
-                std::unique_lock<std::mutex> lock(guard);
-                if (surfaces.size() == current_surface_count)
-                    wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-            }
-            ASSERT_EQ(current_size(), current_surface_count + 1);
+            std::unique_lock<std::mutex> lock(guard);
+            while (surfaces.size() == old_surface_count)
+                wait_condition.wait(lock);
         }
 
         void wait_for_surface_release()
         {
-            size_t const current_surface_count = current_size();
-
-            ASSERT_NE(current_surface_count, 0u);
-
-            MirSurface * surface = any_surface();
-            mir_surface_release(surface, release_surface_callback, this);
-
-            {
-                std::unique_lock<std::mutex> lock(guard);
-                if (surfaces.size() == current_surface_count)
-                    wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-            }
-            ASSERT_EQ(current_size(), current_surface_count - 1);
-        }
-
-        void wait_for_mir_connection_release()
-        {
-            mir_connection_release(connection, connection_release_callback, this);
             std::unique_lock<std::mutex> lock(guard);
-            if (connection)
-                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-
-            ASSERT_TRUE(connection == NULL);
+            if (surfaces.size() == old_surface_count)
+                wait_condition.wait(lock);
         }
 
         void exec()
         {
-            connect();
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
             for (int i = 0; i != n_surfaces; ++i)
+            {
+                old_surface_count = current_surface_count();
+
+                MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+                mir_surface_create(connection, &request_params, create_surface_callback, this);
+
                 wait_for_surface_create();
+
+                ASSERT_EQ(old_surface_count + 1, current_surface_count());
+            }
+
             for (int i = 0; i != n_surfaces; ++i)
+            {
+                old_surface_count = current_surface_count();
+
+                ASSERT_NE(old_surface_count, 0u);
+
+                MirSurface * surface = any_surface();
+                mir_surface_release(surface, release_surface_callback, this);
+
                 wait_for_surface_release();
-            wait_for_mir_connection_release();
+
+                ASSERT_EQ(old_surface_count - 1, current_surface_count());
+            }
+
+            mir_connection_release(connection);
         }
 
         std::mutex guard;
@@ -475,9 +456,9 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces
         int n_surfaces;
         MirConnection * connection;
         std::set<MirSurface *> surfaces;
+        size_t old_surface_count;
     } client_config(n_surfaces);
 
     launch_client_process(client_config);
 }
-#endif
 }
