@@ -198,7 +198,6 @@ TEST_F(AdaptorICSTest, resource_type_test_proper_alloc_is_used)
     alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
 
-#if 0
 TEST_F(AdaptorICSTest, resource_type_test_deleter_deletes_correct_handle)
 {
     using namespace testing;
@@ -211,7 +210,7 @@ TEST_F(AdaptorICSTest, resource_type_test_deleter_deletes_correct_handle)
                   Return(0)));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, &test_native_handle) );
 
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+    alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888)
@@ -221,7 +220,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888)
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, HAL_PIXEL_FORMAT_RGBA_8888, _, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+    alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
@@ -232,7 +231,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, w, h, _, _, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+    alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
@@ -241,6 +240,6 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _,
                 (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
+    
+    alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
-#endif
