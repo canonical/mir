@@ -37,6 +37,7 @@ struct SignalCollector
 
     void operator()(int s)
     {
+        std::unique_lock<std::mutex> lock(mutex);
         signal = s;
         cv.notify_one();
     }
