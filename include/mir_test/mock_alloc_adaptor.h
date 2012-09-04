@@ -39,7 +39,7 @@ public:
     {
         using namespace testing;
 
-        BufferHandle* null_handle = NULL;
+        BufferHandle* null_handle = (BufferHandle*) 0x498a;
         BufferHandleEmptyDeleter del;
         ON_CALL(*this, alloc_buffer(_,_,_,_))
         .WillByDefault(Return(std::shared_ptr<BufferHandle>(null_handle, del)));
