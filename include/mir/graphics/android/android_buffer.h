@@ -32,6 +32,8 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
+#include <system/window.h>
+
 namespace mir
 {
 namespace graphics
@@ -70,6 +72,8 @@ private:
     std::shared_ptr<BufferHandle> android_handle;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
+
+    const ANativeWindowBuffer native_window_buffer;
 };
 
 }

@@ -44,10 +44,9 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
                                       buffer_width, buffer_height,
                                       buffer_format, usage);
-    if (ret)
-        return;
+    if (!ret)
+        throw std::runtime_error("Graphics buffer allocation failed");
 
-    throw std::runtime_error("Graphics buffer allocation failed");
 }
 
 mga::AndroidBuffer::~AndroidBuffer()
@@ -58,6 +57,7 @@ mga::AndroidBuffer::~AndroidBuffer()
         eglDestroyImageKHR(it->first, it->second); 
     }
 }
+
 
 geom::Width mga::AndroidBuffer::width() const
 {
@@ -95,7 +95,8 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
     EGLImageKHR image;
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end()) {
-        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, NULL, NULL);
+        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+                                  (EGLClientBuffer) &native_window_buffer, NULL);
         if (image == EGL_NO_IMAGE_KHR)
         {
             return NULL;
