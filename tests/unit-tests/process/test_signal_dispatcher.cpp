@@ -37,16 +37,17 @@ struct SignalCollector
 
     void operator()(int s)
     {
-        std::unique_lock<std::mutex> lock(mutex);
         signal = s;
         cv.notify_one();
     }
 
     int load()
-    {
+    {        
         std::unique_lock<std::mutex> lock(mutex);
-
-        while (signal == -1) cv.wait(lock);
+        while (signal == -1)
+        {
+            cv.wait_for(lock, std::chrono::milliseconds(10));
+        }        
         return signal;
     }
 
