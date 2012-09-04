@@ -24,48 +24,36 @@
 #include <set>
 #include <cstddef>
 
-namespace
-{
-class MirClientSurface;
-}
-
-struct MirSurface
-{
-    MirClientSurface * client_surface;
-};
-
-namespace
-{
 
 namespace mc = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-class MirClientSurface
+class MirSurface
 {
 public:
-    MirClientSurface(MirClientSurface const &) = delete;
-    MirClientSurface& operator=(MirClientSurface const &) = delete;
+    MirSurface(MirSurface const &) = delete;
+    MirSurface& operator=(MirSurface const &) = delete;
 
-    MirClientSurface(MirSurface * parent,
+    MirSurface(
                      mp::DisplayServer::Stub & server,
                      MirSurfaceParameters const & params,
                      mir_surface_lifecycle_callback callback, void * context)
-        : parent(parent), server(server)
+        : server(server)
     {
         mir::protobuf::SurfaceParameters message;
         message.set_width(params.width);
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
 
-        server.create_surface(0, &message, &surface, gp::NewCallback(callback, parent, context));
+        server.create_surface(0, &message, &surface, gp::NewCallback(callback, this, context));
     }
     void release(mir_surface_lifecycle_callback callback, void * context)
     {
         mir::protobuf::SurfaceId message;
         message.set_value(surface.id().value());
         server.release_surface(0, &message, &void_response,
-            gp::NewCallback(this, &MirClientSurface::released, callback, context));
+            gp::NewCallback(this, &MirSurface::released, callback, context));
     }
 
     MirSurfaceParameters get_parameters() const
@@ -82,17 +70,19 @@ private:
 
     void released(mir_surface_lifecycle_callback callback, void * context)
     {
-        callback(parent, context);
-        delete parent;
+        callback(this, context);
         delete this;
     }
 
-    MirSurface * parent;
     mp::DisplayServer::Stub & server;
     mp::Void void_response;
     mp::Surface surface;
     std::string error_message;
 };
+
+namespace
+{
+
 
 // TODO the connection should track all associated surfaces, and release them on
 // disconnection.
@@ -116,12 +106,12 @@ public:
                           gp::NewCallback(this, &MirClientConnection::released, callback, context));
     }
 
-    void create_surface(MirSurface * surface,
+    MirSurface* create_surface(
                         MirSurfaceParameters const & params,
                         mir_surface_lifecycle_callback callback,
                         void * context)
     {
-        surface->client_surface = new MirClientSurface(surface, server, params, callback, context);
+        return new MirSurface(server, params, callback, context);
     }
 
     char const * get_error_message()
@@ -190,36 +180,36 @@ void mir_surface_create(MirConnection * connection,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
-    MirSurface * surface = new MirSurface();
     try
     {
-        connection->client_connection->create_surface(surface, *params, callback, context);
+        connection->client_connection->create_surface(*params, callback, context);
     }
-    catch (std::exception const& /*x*/)
+    catch (std::exception const&)
     {
-        callback(surface, context);
+        // TODO callback with an error surface
     }
 }
 
 void mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    surface->client_surface->release(callback, context);
+    surface->release(callback, context);
 }
 
-int mir_surface_is_valid(MirSurface * surface)
+int mir_surface_is_valid(MirSurface * /*surface*/)
 {
-    return surface->client_surface ? 1 : 0;
+    // TODO surfaces in an error state
+    return 1;
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
 {
-    return surface->client_surface->get_error_message();
+    return surface->get_error_message();
 }
 
 MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
 {
-    return surface->client_surface->get_parameters();
+    return surface->get_parameters();
 }
 
 void mir_surface_advance_buffer(MirSurface *,
