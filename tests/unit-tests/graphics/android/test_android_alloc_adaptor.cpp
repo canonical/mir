@@ -243,3 +243,9 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
     
     alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
+
+
+
+
+
+

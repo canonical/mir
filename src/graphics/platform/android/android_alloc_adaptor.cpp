@@ -53,7 +53,7 @@ struct AndroidBufferHandleEmptyDeleter
     }
 };
 
-std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geometry::Width width, geometry::Height height,
+std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geometry::Width width, geometry::Height height,
                               compositor::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
@@ -67,10 +67,10 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *empt = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
-        return std::shared_ptr<mga::AndroidBufferHandle>(empt, empty_del);
+        return std::shared_ptr<mga::BufferHandle>(empt, empty_del);
 
     AndroidBufferHandleDeleter del(alloc_dev);
-    auto handle = std::shared_ptr<mga::AndroidBufferHandle>(new mga::AndroidBufferHandle(buf_handle), del);
+    auto handle = std::shared_ptr<mga::BufferHandle>(new mga::AndroidBufferHandle(buf_handle), del);
 //    stride = geom::Stride(stride_as_int);
 
     return handle;

@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_buffer_handle.h"
 
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t han)
         :handle(han)
@@ -29,4 +30,9 @@ mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t han)
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer()
 {
     return (EGLClientBuffer) NULL;
+}
+
+geom::Height mga::AndroidBufferHandle::height()
+{
+    return geom::Height(0);
 }

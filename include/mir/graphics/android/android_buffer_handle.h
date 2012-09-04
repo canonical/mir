@@ -20,6 +20,8 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
+#include "mir/geometry/dimensions.h"
+
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
@@ -39,6 +41,9 @@ class BufferHandle
 public:
     virtual ~BufferHandle() {}
 
+    virtual geometry::Height height() = 0;
+    virtual EGLClientBuffer get_egl_client_buffer() = 0;
+
 protected:
     BufferHandle() = default;
 };
@@ -48,6 +53,8 @@ class AndroidBufferHandle: public BufferHandle
 {
 public:
     explicit AndroidBufferHandle(buffer_handle_t han);
+
+    geometry::Height height();
     EGLClientBuffer get_egl_client_buffer();
 
     buffer_handle_t handle;

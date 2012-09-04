@@ -47,7 +47,7 @@ public:
         .WillByDefault(Return(std::shared_ptr<AndroidBufferHandle>(fake_handle, del)));
     }
 
-    MOCK_METHOD4(alloc_buffer, std::shared_ptr<AndroidBufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
+    MOCK_METHOD4(alloc_buffer, std::shared_ptr<BufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
     AndroidBufferHandle* fake_handle;
