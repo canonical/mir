@@ -38,13 +38,22 @@ public:
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _, _, _))
             .Times(AtLeast(0));
 
+        width = geom::Width(300);
+        height = geom::Height(220);
+        pf = mc::PixelFormat::rgba_8888;
         buffer = std::shared_ptr<mc::Buffer>(
-                            new mga::AndroidBuffer(mock_alloc_dev, geom::Width(300), geom::Height(200), mc::PixelFormat::rgba_8888));
+                            new mga::AndroidBuffer(mock_alloc_dev, width, height, pf));
     };
     virtual void TearDown()
     {
         buffer.reset();
     };
+
+
+    geom::Width width;
+    geom::Height height;
+    mc::PixelFormat pf;
+
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
@@ -189,6 +198,92 @@ TEST_F(AndroidBufferBinding, buffer_sets_not_null_anw_buffer)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_width)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
+    EXPECT_EQ(anwb->width, (int)width.as_uint32_t()); 
+}
+
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_height)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
+    EXPECT_EQ(anwb->height, (int)height.as_uint32_t()); 
+}
+
+/*
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_stride)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
+    EXPECT_EQ(anwb->stride, (int)stride.as_uint32_t()); 
+}
+
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_format)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
+//    EXPECT_EQ(anwb->width, (int).as_uint32_t()); 
+}
+
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_usage)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
+    EXPECT_EQ(anwb->width, (int)width.as_uint32_t()); 
+}
+*/
 TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
 {
     using namespace testing;
