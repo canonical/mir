@@ -26,6 +26,12 @@ namespace mir
 namespace graphics
 {
 
+struct BufferHandleEmptyDeleter
+{
+    void operator()(BufferHandle*)
+    {
+    }
+};
 class MockAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
@@ -33,11 +39,13 @@ public:
     {
         using namespace testing;
 
-        ON_CALL(*this, alloc_buffer(_,_,_,_,_,_))
-        .WillByDefault(Return(true));
+        BufferHandle* null_handle = NULL;
+        BufferHandleEmptyDeleter del;
+        ON_CALL(*this, alloc_buffer(_,_,_,_))
+        .WillByDefault(Return(std::shared_ptr<BufferHandle>(null_handle, del)));
     }
 
-    MOCK_METHOD6(alloc_buffer, bool(std::shared_ptr<BufferHandle>&, geometry::Stride&, geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
+    MOCK_METHOD4(alloc_buffer, std::shared_ptr<BufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
 };

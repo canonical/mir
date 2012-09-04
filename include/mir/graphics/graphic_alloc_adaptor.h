@@ -36,8 +36,9 @@ enum class BufferUsage : uint32_t
 
 class BufferHandle 
 {
-protected:
+public:
     virtual ~BufferHandle() {}
+protected:
     BufferHandle() = default;
 
 };
@@ -45,7 +46,7 @@ protected:
 class GraphicAllocAdaptor
 {
 public:
-    virtual BufferHandle alloc_buffer(geometry::Width, geometry::Height,
+    virtual std::shared_ptr<BufferHandle> alloc_buffer(geometry::Width, geometry::Height,
                               compositor::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;

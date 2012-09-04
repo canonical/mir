@@ -35,7 +35,7 @@ public:
         using namespace testing;
         
         std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_dev(new mg::MockAllocAdaptor);
-        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _, _, _))
+        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
             .Times(AtLeast(0));
 
         width = geom::Width(300);

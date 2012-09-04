@@ -133,7 +133,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
                   Return(-1)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), NULL);
+    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
@@ -146,7 +146,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
                   Return(0)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), NULL);
+    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
@@ -159,10 +159,9 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
                   Return(0)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), NULL);
+    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
 }
 
-#if 0
 TEST_F(AdaptorICSTest, resource_type_test_success_ret)
 {
     using namespace testing;
@@ -170,10 +169,11 @@ TEST_F(AdaptorICSTest, resource_type_test_success_ret)
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    bool ret = alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
-    EXPECT_TRUE(ret);
+    buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_NE(buffer_data.get(), (mg::BufferHandle*) NULL);
 }
 
+#if 0
 TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
 {
     using namespace testing;

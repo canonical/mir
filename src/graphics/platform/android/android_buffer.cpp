@@ -35,16 +35,14 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     buffer_format(pf),
     alloc_device(alloc_dev)
 {
-    bool ret;
     BufferUsage usage = mg::BufferUsage::use_hardware;
 
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
-                                      buffer_width, buffer_height,
+    android_handle = alloc_device->alloc_buffer(buffer_width, buffer_height,
                                       buffer_format, usage);
-    if (!ret)
+    if (!android_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
 
 }
