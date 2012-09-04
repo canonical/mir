@@ -71,8 +71,8 @@ protected:
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
 
-        mock_anw = std::shared_ptr<MockANativeWindow>(new MockANativeWindow());
-        fb_win = std::shared_ptr<mga::AndroidFramebufferWindow> (new mga::AndroidFramebufferWindow(mock_anw));
+        mock_anw = std::make_shared<MockANativeWindow>();
+        fb_win = std::make_shared<mga::AndroidFramebufferWindow>(mock_anw);
 
         EXPECT_CALL(*mock_anw, query_interface(_,_,_))
         .Times(AtLeast(0));

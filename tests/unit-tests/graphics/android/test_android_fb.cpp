@@ -44,7 +44,7 @@ protected:
     {
         using namespace testing;
 
-        native_win = std::shared_ptr<MockAndroidFramebufferWindow>(new MockAndroidFramebufferWindow);
+        native_win = std::make_shared<MockAndroidFramebufferWindow>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
@@ -68,7 +68,7 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -82,7 +82,7 @@ TEST_F(AndroidTestFramebufferInit, eglGetDisplay_failure)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error   );
 }
 
@@ -95,7 +95,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -109,7 +109,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error   );
 }
 
@@ -125,7 +125,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error   );
 }
 
@@ -141,7 +141,7 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error   );
 }
 
@@ -157,7 +157,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -170,7 +170,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -187,7 +187,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_typ
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -200,7 +200,7 @@ TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error);
 }
 
@@ -224,7 +224,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
     EXPECT_EQ(chosen_cfg, cfg);
@@ -239,7 +239,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_ensure_no_share)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 }
 
@@ -257,7 +257,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
     int i=0;
@@ -283,7 +283,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
     int i=0;
@@ -311,7 +311,7 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_failure)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error   );
 }
 
@@ -328,7 +328,7 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_surface)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
 }
@@ -346,7 +346,7 @@ TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_context)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
 }
@@ -361,7 +361,7 @@ TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     }, std::runtime_error);
 
 }
@@ -379,7 +379,7 @@ TEST_F(AndroidTestFramebufferInit, eglContext_resource_freed)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
 }
@@ -393,7 +393,7 @@ TEST_F(AndroidTestFramebufferInit, eglSurface_resource_freed)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
 }
@@ -407,7 +407,7 @@ TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
     });
 
 }
@@ -415,7 +415,7 @@ TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
     .Times(Exactly(1));
@@ -425,7 +425,7 @@ TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
 
 TEST_F(AndroidTestFramebufferInit, display_post_successful)
 {
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
     bool success = display->post_update();
     EXPECT_TRUE(success);
@@ -434,7 +434,7 @@ TEST_F(AndroidTestFramebufferInit, display_post_successful)
 TEST_F(AndroidTestFramebufferInit, display_post_failure)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display(new mga::AndroidDisplay(native_win));
+    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
     .Times(Exactly(1))

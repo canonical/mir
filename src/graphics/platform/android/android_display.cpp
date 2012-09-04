@@ -90,7 +90,8 @@ bool mga::AndroidDisplay::post_update()
 
 std::unique_ptr<mg::Display> mg::create_display()
 {
-    std::shared_ptr<ANativeWindow> android_window ((ANativeWindow*) new ::android::FramebufferNativeWindow);
-    std::shared_ptr<mga::AndroidFramebufferWindow> window (new mga::AndroidFramebufferWindow(android_window));
+    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) new ::android::FramebufferNativeWindow);
+    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
+
     return std::unique_ptr<mga::AndroidDisplay>(new mga::AndroidDisplay(window));
 }
