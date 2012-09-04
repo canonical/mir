@@ -202,6 +202,13 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 {
     if (!ec)
     {
+        /* Parse the client's message and handle it in the server.
+
+           NOTE: the display_server member functions are synchronous, and
+           execute callbacks directly. This means it is valid to pass stack
+           variables into NewCallback() and (in the case of disconnect) to
+           delete this session instance once the function returns.
+        */
         std::istream in(&message);
         mir::protobuf::wire::Invocation invoke;
 
@@ -221,6 +228,37 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
                     &Session::send_response,
                     invoke.id(),
                     static_cast<google::protobuf::Message*>(&surface)));
+        }
+        else if ("create_surface" == invoke.method_name())
+        {
+            mir::protobuf::SurfaceParameters surface_message;
+            surface_message.ParseFromString(invoke.parameters());
+
+            display_server->create_surface(
+                0,
+                &surface_message,
+                &surface,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invoke.id(),
+                    static_cast<google::protobuf::Message*>(&surface)));
+        }
+        else if ("release_surface" == invoke.method_name())
+        {
+            mir::protobuf::Void ignored;
+            mir::protobuf::SurfaceId message;
+            message.ParseFromString(invoke.parameters());
+
+            display_server->release_surface(
+                0,
+                &message,
+                &ignored,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invoke.id(),
+                    static_cast<google::protobuf::Message*>(&ignored)));
         }
         else if ("disconnect" == invoke.method_name())
         {

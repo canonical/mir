@@ -64,7 +64,7 @@ class ApplicationProxy : public mir::protobuf::DisplayServer
 public:
 
     ApplicationProxy(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
-    surface_organiser(surface_organiser)
+        surface_organiser(surface_organiser), next_surface_id(0)
     {
     }
 
@@ -81,6 +81,7 @@ private:
             );
 
         auto surface = tmp.lock();
+        response->mutable_id()->set_value(next_surface_id++);
         response->set_width(surface->width().as_uint32_t());
         response->set_height(surface->height().as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
@@ -97,6 +98,7 @@ private:
     }
 
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    int next_surface_id;
 };
 
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
