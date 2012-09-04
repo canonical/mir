@@ -52,11 +52,13 @@ protected:
 class AndroidBufferHandle: public BufferHandle
 {
 public:
-    explicit AndroidBufferHandle(buffer_handle_t han);
+    explicit AndroidBufferHandle(buffer_handle_t han, geometry::Height h);
 
     geometry::Height height();
     EGLClientBuffer get_egl_client_buffer();
 
+
+    ANativeWindowBuffer anw_buffer;
     buffer_handle_t handle;
 };
 

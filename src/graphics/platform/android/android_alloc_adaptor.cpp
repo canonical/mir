@@ -31,6 +31,7 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
+#include <iostream>
 struct AndroidBufferHandleDeleter
 {
     AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
@@ -39,7 +40,7 @@ struct AndroidBufferHandleDeleter
 
     void operator()(mga::AndroidBufferHandle* t)
     {
-        alloc_device->free(alloc_device.get(), t->handle);
+        alloc_device->free(alloc_device.get(), t->anw_buffer.handle);
         delete t;
     }
 private:
@@ -70,7 +71,7 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
         return std::shared_ptr<mga::BufferHandle>(empt, empty_del);
 
     AndroidBufferHandleDeleter del(alloc_dev);
-    auto handle = std::shared_ptr<mga::BufferHandle>(new mga::AndroidBufferHandle(buf_handle), del);
+    auto handle = std::shared_ptr<mga::BufferHandle>(new mga::AndroidBufferHandle(buf_handle, height), del);
 //    stride = geom::Stride(stride_as_int);
 
     return handle;
