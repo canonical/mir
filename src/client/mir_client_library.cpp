@@ -26,13 +26,11 @@
 
 namespace
 {
-class MirClientConnection;
 class MirClientSurface;
 }
 
 struct MirSurface
 {
-    MirClientConnection * client_connection;
     MirClientSurface * client_surface;
 };
 
@@ -46,34 +44,58 @@ namespace gp = google::protobuf;
 class MirClientSurface
 {
 public:
-    MirClientSurface(mir_surface_created_callback callback, void * context)
-        : callback(callback), context(context)
+    MirClientSurface(MirClientSurface const &) = delete;
+    MirClientSurface& operator=(MirClientSurface const &) = delete;
+
+    MirClientSurface(MirSurface * parent,
+                     mp::DisplayServer::Stub & server,
+                     MirSurfaceParameters const & params,
+                     mir_surface_lifecycle_callback callback, void * context)
+        : parent(parent), server(server)
     {
+        mir::protobuf::SurfaceParameters message;
+        message.set_width(params.width);
+        message.set_height(params.height);
+        message.set_pixel_format(params.pixel_format);
+
+        server.create_surface(0, &message, &surface, gp::NewCallback(callback, parent, context));
+    }
+    void release(mir_surface_lifecycle_callback callback, void * context)
+    {
+        mir::protobuf::SurfaceId message;
+        message.set_value(surface.id().value());
+        server.release_surface(0, &message, &void_response,
+            gp::NewCallback(this, &MirClientSurface::released, callback, context));
     }
 
-    void run_callback(MirSurface * surface)
+    MirSurfaceParameters get_parameters() const
     {
-        callback(surface, context);
+        return MirSurfaceParameters{surface.width(), surface.height(),
+                static_cast<MirPixelFormat>(surface.pixel_format())};
     }
-    mp::Surface& surface()
-    {
-        return surface_;
-    }
-    int id() const
-    {
-        return surface_.id().value();
-    }
+
     char const * get_error_message()
     {
         return error_message.c_str();
     }
 private:
-    mir_surface_created_callback const callback;
-    void * const context;
-    mp::Surface surface_;
+
+    void released(mir_surface_lifecycle_callback callback, void * context)
+    {
+        callback(parent, context);
+        delete parent;
+        delete this;
+    }
+
+    MirSurface * parent;
+    mp::DisplayServer::Stub & server;
+    mp::Void void_response;
+    mp::Surface surface;
     std::string error_message;
 };
 
+// TODO the connection should track all associated surfaces, and release them on
+// disconnection.
 class MirClientConnection
 {
 public:
@@ -96,27 +118,10 @@ public:
 
     void create_surface(MirSurface * surface,
                         MirSurfaceParameters const & params,
-                        mir_surface_created_callback callback,
+                        mir_surface_lifecycle_callback callback,
                         void * context)
     {
-        surface->client_connection = this;
-        surface->client_surface = new MirClientSurface(callback, context);
-
-        mir::protobuf::SurfaceParameters message;
-        message.set_width(params.width);
-        message.set_height(params.height);
-        message.set_pixel_format(params.pixel_format);
-
-        server.create_surface(0, &message, &surface->client_surface->surface(),
-                              gp::NewCallback(this, &MirClientConnection::surface_created, surface));
-    }
-
-    void release_surface(MirSurface * surface)
-    {
-        mir::protobuf::SurfaceId message;
-        message.set_value(surface->client_surface->id());
-        server.release_surface(0, &message, &void_response,
-                               gp::NewCallback(this, &MirClientConnection::surface_released, surface));
+        surface->client_surface = new MirClientSurface(surface, server, params, callback, context);
     }
 
     char const * get_error_message()
@@ -124,35 +129,11 @@ public:
         return error_message.c_str();
     }
 
-    mp::Surface const & get_surface() const
-    {
-        return surface;
-    }
-
 private:
     void released(mir_disconnected_callback callback, void * context)
     {
         callback(context);
         delete this;
-    }
-
-    void surface_created(MirSurface * surface)
-    {
-        surfaces.insert(surface);
-        surface->client_surface->run_callback(surface);
-    }
-
-    void surface_released(MirSurface * surface)
-    {
-        if (surfaces.erase(surface) == 1)
-        {
-            delete surface->client_surface;
-            delete surface;
-        }
-        else
-        {
-            log->error() << "failed to release surface " << surface << '\n';
-        }
     }
 
     mc::MirRpcChannel channel;
@@ -207,7 +188,7 @@ void mir_connection_release(MirConnection * connection,
 
 void mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * params,
-                        mir_surface_created_callback callback,
+                        mir_surface_lifecycle_callback callback,
                         void * context)
 {
     MirSurface * surface = new MirSurface();
@@ -217,14 +198,14 @@ void mir_surface_create(MirConnection * connection,
     }
     catch (std::exception const& /*x*/)
     {
-        surface->client_connection = 0;
         callback(surface, context);
     }
 }
 
-void mir_surface_release(MirSurface * surface)
+void mir_surface_release(MirSurface * surface,
+                         mir_surface_lifecycle_callback callback, void * context)
 {
-    surface->client_connection->release_surface(surface);
+    surface->client_surface->release(callback, context);
 }
 
 int mir_surface_is_valid(MirSurface * surface)
@@ -239,9 +220,7 @@ char const * mir_surface_get_error_message(MirSurface * surface)
 
 MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
 {
-    mp::Surface const & sf = surface->client_surface->surface();
-    return MirSurfaceParameters{sf.width(), sf.height(),
-                                static_cast<MirPixelFormat>(sf.pixel_format())};
+    return surface->client_surface->get_parameters();
 }
 
 void mir_surface_advance_buffer(MirSurface *,

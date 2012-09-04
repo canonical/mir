@@ -68,12 +68,12 @@ typedef struct MirSurfaceParameters
 
 typedef struct MirSurface MirSurface;
 
-typedef void (* mir_surface_created_callback)(MirSurface * surface, void * client_context);
+typedef void (* mir_surface_lifecycle_callback)(MirSurface * surface, void * client_context);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 void mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * surface_parameters,
-                        mir_surface_created_callback callback,
+                        mir_surface_lifecycle_callback callback,
                         void * client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
@@ -87,7 +87,7 @@ char const * mir_surface_get_error_message(MirSurface * surface);
 MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface);
 
 /* Release the supplied surface and any associated buffer. */
-void mir_surface_release(MirSurface * surface);
+void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
 
 /* Graphics buffer API */
 typedef struct MirBuffer MirBuffer;
