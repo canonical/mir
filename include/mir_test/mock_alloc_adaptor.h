@@ -39,15 +39,16 @@ public:
     {
         using namespace testing;
 
-        BufferHandle* null_handle = (BufferHandle*) 0x498a;
+        fake_handle = (BufferHandle*) 0x498a;
         BufferHandleEmptyDeleter del;
         ON_CALL(*this, alloc_buffer(_,_,_,_))
-        .WillByDefault(Return(std::shared_ptr<BufferHandle>(null_handle, del)));
+        .WillByDefault(Return(std::shared_ptr<BufferHandle>(fake_handle, del)));
     }
 
     MOCK_METHOD4(alloc_buffer, std::shared_ptr<BufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
+    BufferHandle* fake_handle;
 };
 
 }

@@ -34,7 +34,7 @@ public:
     {
         using namespace testing;
         
-        std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_dev(new mg::MockAllocAdaptor);
+        mock_alloc_dev = std::make_shared<mg::MockAllocAdaptor>();
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
             .Times(AtLeast(0));
 
@@ -57,6 +57,7 @@ public:
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
+    std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_dev;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)
@@ -198,6 +199,23 @@ TEST_F(AndroidBufferBinding, buffer_sets_not_null_anw_buffer)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
+{
+    using namespace testing;
+    EGLClientBuffer egl_client_buffer;
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillOnce(DoAll(
+                SaveArg<3>(&egl_client_buffer),
+                Return(egl_mock.fake_egl_image)));
+
+    buffer->bind_to_texture();
+
+    EXPECT_EQ((int) egl_client_buffer , (int) mock_alloc_dev->fake_handle); 
+}
+
+/*
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_width)
 {
     using namespace testing;
@@ -232,7 +250,6 @@ TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_height)
     EXPECT_EQ(anwb->height, (int)height.as_uint32_t()); 
 }
 
-/*
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_stride)
 {
     using namespace testing;
