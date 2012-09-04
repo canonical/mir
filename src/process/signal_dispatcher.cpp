@@ -149,6 +149,6 @@ void mp::SignalDispatcher::enable_for(int signal)
     ::sigemptyset(&action.sa_mask);
     ::sigaddset(&action.sa_mask, signal);
     action.sa_handler = global::signal_handler;
-
+    action.sa_flags = SA_RESTART | SA_NODEFER;
     ::sigaction(signal, &action, NULL);
 }
