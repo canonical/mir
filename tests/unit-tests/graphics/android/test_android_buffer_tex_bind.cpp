@@ -34,7 +34,7 @@ public:
     {
         using namespace testing;
         
-        mock_alloc_dev = std::make_shared<mg::MockAllocAdaptor>();
+        mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>();
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
             .Times(AtLeast(0));
 
@@ -57,7 +57,7 @@ public:
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
-    std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_dev;
+    std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_dev;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)

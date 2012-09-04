@@ -21,7 +21,8 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer_handle.h"
 
 #include <map>
 #include <stdexcept>
@@ -32,7 +33,6 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include <system/window.h>
 
 namespace mir
 {
@@ -69,11 +69,10 @@ private:
 
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
-    std::shared_ptr<BufferHandle> android_handle;
-
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
-    const ANativeWindowBuffer native_window_buffer;
+    /* should be const? */
+    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
 };
 
 }

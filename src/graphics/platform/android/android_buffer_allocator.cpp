@@ -56,7 +56,7 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
        that we can determine different courses of action based upon */
 
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev);
-    alloc_device = std::shared_ptr<mg::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
+    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
 std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(

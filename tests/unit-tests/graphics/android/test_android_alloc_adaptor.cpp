@@ -105,7 +105,7 @@ protected:
         pf = mc::PixelFormat::rgba_8888;
         width = geom::Width(300);
         height = geom::Height(200);
-        usage = mg::BufferUsage::use_hardware;
+        usage = mga::BufferUsage::use_hardware;
 
         stride = geom::Stride(300*4);
 
@@ -119,8 +119,8 @@ protected:
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    std::shared_ptr<mg::BufferHandle> buffer_data;
-    mg::BufferUsage usage;
+    std::shared_ptr<mga::BufferHandle> buffer_data;
+    mga::BufferUsage usage;
 };
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
@@ -133,7 +133,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
                   Return(-1)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
+    EXPECT_EQ(buffer_data.get(), (mga::BufferHandle*) NULL);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
@@ -146,7 +146,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
                   Return(0)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
+    EXPECT_EQ(buffer_data.get(), (mga::BufferHandle*) NULL);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
@@ -159,7 +159,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
                   Return(0)));
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mg::BufferHandle*) NULL);
+    EXPECT_EQ(buffer_data.get(), (mga::BufferHandle*) NULL);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_success_ret)
@@ -170,7 +170,7 @@ TEST_F(AdaptorICSTest, resource_type_test_success_ret)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     buffer_data = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_NE(buffer_data.get(), (mg::BufferHandle*) NULL);
+    EXPECT_NE(buffer_data.get(), (mga::BufferHandle*) NULL);
 }
 
 #if 0

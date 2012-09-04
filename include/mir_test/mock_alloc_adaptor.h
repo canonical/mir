@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/graphic_alloc_adaptor.h"
 #include "mir/graphics/android/android_buffer.h"
 
 #include <gmock/gmock.h>
@@ -25,10 +25,12 @@ namespace mir
 {
 namespace graphics
 {
-
-struct BufferHandleEmptyDeleter
+namespace android
 {
-    void operator()(BufferHandle*)
+
+struct AndroidBufferHandleEmptyDeleter
+{
+    void operator()(AndroidBufferHandle*)
     {
     }
 };
@@ -39,17 +41,18 @@ public:
     {
         using namespace testing;
 
-        fake_handle = (BufferHandle*) 0x498a;
-        BufferHandleEmptyDeleter del;
+        fake_handle = (AndroidBufferHandle*) 0x498a;
+        AndroidBufferHandleEmptyDeleter del;
         ON_CALL(*this, alloc_buffer(_,_,_,_))
-        .WillByDefault(Return(std::shared_ptr<BufferHandle>(fake_handle, del)));
+        .WillByDefault(Return(std::shared_ptr<AndroidBufferHandle>(fake_handle, del)));
     }
 
-    MOCK_METHOD4(alloc_buffer, std::shared_ptr<BufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
+    MOCK_METHOD4(alloc_buffer, std::shared_ptr<AndroidBufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
-    BufferHandle* fake_handle;
+    AndroidBufferHandle* fake_handle;
 };
 
+}
 }
 }

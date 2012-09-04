@@ -35,14 +35,14 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     buffer_format(pf),
     alloc_device(alloc_dev)
 {
-    BufferUsage usage = mg::BufferUsage::use_hardware;
+    BufferUsage usage = mga::BufferUsage::use_hardware;
 
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    android_handle = alloc_device->alloc_buffer(buffer_width, buffer_height,
+    native_window_buffer_handle = alloc_device->alloc_buffer(buffer_width, buffer_height,
                                       buffer_format, usage);
-    if (!android_handle.get())
+    if (!native_window_buffer_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
 
 }
@@ -94,7 +94,8 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end()) {
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  (EGLClientBuffer) &native_window_buffer, NULL);
+                                  native_window_buffer_handle->get_egl_client_buffer() , NULL);
+
         if (image == EGL_NO_IMAGE_KHR)
         {
             return NULL;

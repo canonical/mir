@@ -15,17 +15,22 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
-#define MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
+#define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/buffer.h"
 #include <memory>
 
+#include "mir/graphics/android/android_buffer_handle.h"
+
 namespace mir
 {
 
 namespace graphics
+{
+
+namespace android
 {
 
 enum class BufferUsage : uint32_t
@@ -34,19 +39,10 @@ enum class BufferUsage : uint32_t
     use_software
 };
 
-class BufferHandle 
-{
-public:
-    virtual ~BufferHandle() {}
-protected:
-    BufferHandle() = default;
-
-};
-
 class GraphicAllocAdaptor
 {
 public:
-    virtual std::shared_ptr<BufferHandle> alloc_buffer(geometry::Width, geometry::Height,
+    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
                               compositor::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
@@ -57,5 +53,6 @@ protected:
 
 }
 }
+}
 
-#endif /* MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_ */

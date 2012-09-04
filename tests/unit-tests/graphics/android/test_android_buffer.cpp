@@ -34,7 +34,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_alloc_device = std::shared_ptr<mg::MockAllocAdaptor> (new mg::MockAllocAdaptor);
+        mock_alloc_device = std::shared_ptr<mga::MockAllocAdaptor> (new mga::MockAllocAdaptor);
 
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
@@ -44,7 +44,7 @@ protected:
     }
 
     native_handle_t native_handle;
-    std::shared_ptr<mg::MockAllocAdaptor> mock_alloc_device;
+    std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
     mc::PixelFormat pf;
     geom::Width width;
     geom::Height height;
@@ -66,7 +66,7 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, mg::BufferUsage::use_hardware));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, mga::BufferUsage::use_hardware));
 
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 }
