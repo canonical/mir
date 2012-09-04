@@ -12,10 +12,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
-ADD_LIBRARY( 
-  mirplatformgraphics STATIC
-  
-  buffer_allocator.cpp
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm_buffer_allocator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer_allocator.cpp
 )
+
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

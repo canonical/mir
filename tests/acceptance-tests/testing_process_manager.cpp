@@ -48,7 +48,7 @@ namespace mir
 {
 void startup_pause()
 {
-    if (!detect_server(test_socket_file(), std::chrono::milliseconds(200)))
+    if (!detect_server(test_socket_file(), std::chrono::milliseconds(5000)))
         throw std::runtime_error("Failed to find server");
 }
 }

@@ -12,14 +12,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
-# By default, build for LLVM
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(platform/android/)
-endif()
+# gbm.h and drm.h have trailing commas at the end of enum definitions
+# This is valid C99, but g++ 4.4 flags it as an error with -pedantic
+string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-if (MIR_PLATFORM STREQUAL "gbm")
-  add_subdirectory(platform/gbm/)
-endif()
+
+add_library(
+  mirplatformgraphics STATIC
+
+  gbm_buffer_allocator.cpp
+  gbm_buffer.cpp
+)

@@ -22,9 +22,12 @@
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
+#include "ancillary.h"
+
 #include <google/protobuf/descriptor.h>
 
 #include <map>
+#include <exception>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
@@ -43,6 +46,26 @@ public:
     int id() const
     {
         return id_;
+    }
+
+    // TODO this is proof-of-concept
+    void send_file_descriptor(int file_descriptor)
+    {
+        ancil_send_fd(socket.native_handle(), file_descriptor);
+    }
+
+    // TODO this is proof-of-concept
+    int receive_file_descriptor()
+    {
+        int result;
+        auto error = ancil_recv_fd(socket.native_handle(), &result);
+
+        if (error)
+        {
+            throw std::runtime_error(strerror(errno));
+        }
+
+        return result;
     }
 
 private:
