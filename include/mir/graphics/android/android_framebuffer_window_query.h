@@ -33,8 +33,8 @@ class AndroidFramebufferWindowQuery
 public:
     virtual ~AndroidFramebufferWindowQuery() {}
 
-    virtual EGLNativeWindowType android_native_window_type() = 0;
-    virtual EGLConfig android_display_egl_config(EGLDisplay display) = 0;
+    virtual EGLNativeWindowType android_native_window_type() const = 0;
+    virtual EGLConfig android_display_egl_config(EGLDisplay display) const = 0;
 };
 
 }

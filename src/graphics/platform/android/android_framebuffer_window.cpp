@@ -35,12 +35,12 @@ mga::AndroidFramebufferWindow::AndroidFramebufferWindow(const std::shared_ptr<AN
 {
 }
 
-EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
+EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type() const
 {
     return (EGLNativeWindowType) native_window.get();
 }
 
-EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display)
+EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) const
 {
     EGLint num_match_configs;
     int num_potential_configs;

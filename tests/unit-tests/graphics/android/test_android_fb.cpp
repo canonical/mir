@@ -33,8 +33,8 @@ public:
     MockAndroidFramebufferWindow() {}
     ~MockAndroidFramebufferWindow() {}
 
-    MOCK_METHOD0(android_native_window_type, EGLNativeWindowType());
-    MOCK_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
+    MOCK_CONST_METHOD0(android_native_window_type, EGLNativeWindowType());
+    MOCK_CONST_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
 };
 
 class AndroidTestFramebufferInit : public ::testing::Test

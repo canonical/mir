@@ -36,11 +36,11 @@ public:
     AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw);
     virtual ~AndroidFramebufferWindow() {}
 
-    EGLNativeWindowType android_native_window_type();
-    EGLConfig android_display_egl_config(EGLDisplay);
+    EGLNativeWindowType android_native_window_type() const;
+    EGLConfig android_display_egl_config(EGLDisplay) const;
 
 private:
-    std::shared_ptr<ANativeWindow> native_window;
+    const std::shared_ptr<ANativeWindow> native_window;
 
 };
 
