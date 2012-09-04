@@ -179,10 +179,9 @@ char const * mir_connection_get_error_message(MirConnection * connection)
     return connection->client_connection->get_error_message();
 }
 
-void mir_connection_release(MirConnection * connection,
-                            mir_disconnected_callback callback, void * context)
+void mir_connection_release(MirConnection * connection)
 {
-    connection->client_connection->disconnect(callback, context);
+    delete connection->client_connection;
     delete connection;
 }
 

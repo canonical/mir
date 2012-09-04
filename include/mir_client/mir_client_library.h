@@ -49,9 +49,8 @@ int mir_connection_is_valid(MirConnection * connection);
 char const * mir_connection_get_error_message(MirConnection * connection);
 
 /* Release a connection to the MIR server.
-   The supplied callback is called when the connection has been released.
  */
-void mir_connection_release(MirConnection * connection, mir_disconnected_callback callback, void * context);
+void mir_connection_release(MirConnection * connection);
 
 /* Surface API */
 typedef enum MirPixelFormat
