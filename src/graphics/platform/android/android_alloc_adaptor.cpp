@@ -46,9 +46,8 @@ private:
     std::shared_ptr<alloc_device_t> alloc_device;
 };
 
-bool mga::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride,
-                                           geom::Width width, geom::Height height,
-                                           compositor::PixelFormat pf, BufferUsage usage)
+BufferHandle mga::AndroidAllocAdaptor::alloc_buffer(geometry::Width, geometry::Height,
+                              compositor::PixelFormat, BufferUsage usage);
 {
     buffer_handle_t buf_handle = NULL;
 
