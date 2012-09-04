@@ -27,11 +27,14 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-static const EGLint context_attr [] =
+namespace
+{
+static const EGLint default_egl_context_attr [] =
 {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
 };
+}
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
     : native_window(native_win)
@@ -54,7 +57,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if(egl_surface == EGL_NO_SURFACE)
         throw std::runtime_error("could not create egl surface\n");
 
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         throw std::runtime_error("could not create egl context\n");
 
