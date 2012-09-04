@@ -39,16 +39,18 @@ struct SignalCollector
     {
         std::unique_lock<std::mutex> lock(mutex);
         signal = s;
-        cv.notify_one();
+        cv.notify_all();
     }
 
     int load()
     {        
+        unsigned int counter = 0;
         std::unique_lock<std::mutex> lock(mutex);
-        while (signal == -1)
+        while (signal == -1 && counter < 100)
         {
             cv.wait_for(lock, std::chrono::milliseconds(10));
-        }        
+            counter++;
+        }
         return signal;
     }
 
