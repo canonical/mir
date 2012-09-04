@@ -36,9 +36,9 @@ public:
     MirSurface& operator=(MirSurface const &) = delete;
 
     MirSurface(
-                     mp::DisplayServer::Stub & server,
-                     MirSurfaceParameters const & params,
-                     mir_surface_lifecycle_callback callback, void * context)
+        mp::DisplayServer::Stub & server,
+        MirSurfaceParameters const & params,
+        mir_surface_lifecycle_callback callback, void * context)
         : server(server)
     {
         mir::protobuf::SurfaceParameters message;
@@ -53,13 +53,14 @@ public:
         mir::protobuf::SurfaceId message;
         message.set_value(surface.id().value());
         server.release_surface(0, &message, &void_response,
-            gp::NewCallback(this, &MirSurface::released, callback, context));
+                               gp::NewCallback(this, &MirSurface::released, callback, context));
     }
 
     MirSurfaceParameters get_parameters() const
     {
-        return MirSurfaceParameters{surface.width(), surface.height(),
-                static_cast<MirPixelFormat>(surface.pixel_format())};
+        return MirSurfaceParameters {surface.width(), surface.height(),
+                                     static_cast<MirPixelFormat>(surface.pixel_format())
+                                    };
     }
 
     char const * get_error_message()
@@ -107,9 +108,9 @@ public:
     }
 
     MirSurface* create_surface(
-                        MirSurfaceParameters const & params,
-                        mir_surface_lifecycle_callback callback,
-                        void * context)
+        MirSurfaceParameters const & params,
+        mir_surface_lifecycle_callback callback,
+        void * context)
     {
         return new MirSurface(server, params, callback, context);
     }
@@ -155,7 +156,7 @@ void mir_connect(mir_connected_callback callback, void * context)
     catch (std::exception const& /*x*/)
     {
         connection->client_connection = 0; // or Some error object
-    }    
+    }
     callback(connection, context);
 }
 
@@ -217,7 +218,7 @@ void mir_surface_advance_buffer(MirSurface *,
                                 void * context)
 {
     callback(NULL, context);
-}   
+}
 
 int mir_buffer_is_valid(MirBuffer *)
 {
