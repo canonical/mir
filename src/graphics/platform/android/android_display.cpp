@@ -72,7 +72,10 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglTerminate(egl_display);
 }
 
-geom::Rectangle mga::AndroidDisplay::view_area()
+/* todo: kdub: this will return some sort of information concerning the coordinate space 
+               of the displays. once we have a not-stubbed rect class and a coordinate 
+               space agreed upon, we can implement this */ 
+geom::Rectangle mga::AndroidDisplay::view_area() const
 {
     geom::Rectangle rect;
     return rect;

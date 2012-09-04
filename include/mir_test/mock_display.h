@@ -30,7 +30,7 @@ namespace graphics
 struct MockDisplay : public Display
 {
 public:
-    MOCK_METHOD0(view_area, geometry::Rectangle ());
+    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
     MOCK_METHOD0(post_update, bool ());
 };
 
