@@ -212,7 +212,7 @@ TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
 
     buffer->bind_to_texture();
 
-    EXPECT_EQ((int) egl_client_buffer , (int) mock_alloc_dev->fake_handle); 
+    EXPECT_EQ((int) egl_client_buffer , (int) mock_alloc_dev->mock_handle.get()); 
 }
 
 /*

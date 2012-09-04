@@ -30,10 +30,18 @@ namespace android
 
 struct AndroidBufferHandleEmptyDeleter
 {
-    void operator()(AndroidBufferHandle*)
+    void operator()(BufferHandle*)
     {
     }
 };
+
+class MockBufferHandle : public BufferHandle
+{
+public:
+    MOCK_METHOD0(height, geometry::Height());
+    MOCK_METHOD0(get_egl_client_buffer, EGLClientBuffer());
+};
+
 class MockAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
@@ -41,16 +49,15 @@ public:
     {
         using namespace testing;
 
-        fake_handle = (AndroidBufferHandle*) 0x498a;
-        AndroidBufferHandleEmptyDeleter del;
+        mock_handle = std::make_shared<MockBufferHandle>();
         ON_CALL(*this, alloc_buffer(_,_,_,_))
-        .WillByDefault(Return(std::shared_ptr<AndroidBufferHandle>(fake_handle, del)));
+        .WillByDefault(Return(mock_handle));
     }
 
     MOCK_METHOD4(alloc_buffer, std::shared_ptr<BufferHandle>(geometry::Width, geometry::Height, compositor::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
-    AndroidBufferHandle* fake_handle;
+    std::shared_ptr<BufferHandle> mock_handle;
 };
 
 }
