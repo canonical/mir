@@ -39,19 +39,16 @@ namespace mir
 namespace
 {
 
-struct ActivityCounter : mir::protobuf::DisplayServer
+struct StubServerImplementation : mir::protobuf::DisplayServer
 {
-    bool disconnected;
     google::protobuf::int32 next_surface_id;
-    int surfaces_created, surfaces_released;
     std::mutex guard;
-    std::condition_variable wait_condition;
 
-    ActivityCounter() : disconnected(0), next_surface_id(0), surfaces_created(0), surfaces_released(0)
+    StubServerImplementation() : next_surface_id(0)
     {
     }
 
-    ActivityCounter(ActivityCounter const &) = delete;
+    StubServerImplementation(StubServerImplementation const &) = delete;
 
     void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
@@ -64,8 +61,6 @@ struct ActivityCounter : mir::protobuf::DisplayServer
 
         std::unique_lock<std::mutex> lock(guard);
         response->mutable_id()->set_value(next_surface_id++);
-        ++surfaces_created;
-        wait_condition.notify_one();
 
         done->Run();
     }
@@ -77,19 +72,6 @@ struct ActivityCounter : mir::protobuf::DisplayServer
     {
         // TODO track and check surface ids
         std::unique_lock<std::mutex> lock(guard);
-        ++surfaces_released;
-        wait_condition.notify_one();
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        disconnected = true;
-        wait_condition.notify_one();
         done->Run();
     }
 };
@@ -124,7 +106,7 @@ struct ServerConfig : TestingServerConfiguration
         return std::make_shared<StubIpcFactory>(counter);
     }
 
-    ActivityCounter counter;
+    StubServerImplementation counter;
 };
 
 }
@@ -163,30 +145,27 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
         {
             std::unique_lock<std::mutex> lock(guard);
             connection = NULL;
-            wait_condition.notify_one();
+            wait_condition.notify_all();
         }
 
-        void connect()
+        void wait_for_connect()
         {
-            mir_connect(connection_callback, this);
             std::unique_lock<std::mutex> lock(guard);
-            if (!connection)
-                wait_condition.wait_for(lock, std::chrono::milliseconds(100));
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-        }
-
-        void disconnect()
-        {
-            mir_connection_release(connection);
+            while (!connection)
+                wait_condition.wait(lock);
         }
 
         void exec()
         {
-            connect();
-            disconnect();
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            mir_connection_release(connection);
         }
 
         std::mutex guard;
