@@ -100,13 +100,6 @@ public:
     MirClientConnection(MirClientConnection const &) = delete;
     MirClientConnection& operator=(MirClientConnection const &) = delete;
 
-    void disconnect(mir_disconnected_callback callback, void * context)
-    {
-        mir::protobuf::Void message;
-        server.disconnect(0, &message, &void_response,
-                          gp::NewCallback(this, &MirClientConnection::released, callback, context));
-    }
-
     MirSurface* create_surface(
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback,
@@ -121,12 +114,6 @@ public:
     }
 
 private:
-    void released(mir_disconnected_callback callback, void * context)
-    {
-        callback(context);
-        delete this;
-    }
-
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
