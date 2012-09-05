@@ -32,7 +32,7 @@ mga::AndroidBufferHandle::AndroidBufferHandle(ANativeWindowBuffer buf, mc::Pixel
 
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer() const
 {
-    return (EGLClientBuffer) NULL;
+    return (EGLClientBuffer) &anw_buffer;
 }
 
 geom::Height mga::AndroidBufferHandle::height() const
