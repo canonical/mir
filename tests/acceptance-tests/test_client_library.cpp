@@ -207,24 +207,11 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
             config->surface_released(surface);
         }
 
-        static void connection_release_callback(void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->disconnected();
-        }
-
         void connected(MirConnection * new_connection)
         {
             std::unique_lock<std::mutex> lock(guard);
             connection = new_connection;
             wait_condition.notify_all();
-        }
-
-        void disconnected()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = NULL;
-            wait_condition.notify_one();
         }
 
         void surface_created(MirSurface * new_surface)
