@@ -309,7 +309,7 @@ TEST_F(AdaptorICSTest, handle_buffer_is_correct)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
     
     auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle.get();
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
 
     EXPECT_EQ(buffer_cast->handle, mock_alloc_device->buffer_handle);
 }

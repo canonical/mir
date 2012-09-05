@@ -76,6 +76,7 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
     buffer.width = (int) width.as_uint32_t();
     buffer.height = (int) height.as_uint32_t();
     buffer.stride = stride_as_int;
+    buffer.handle = buf_handle;
 
     auto handle = std::shared_ptr<mga::BufferHandle>(
             new mga::AndroidBufferHandle(buffer, pf, usage), del);
