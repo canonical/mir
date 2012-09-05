@@ -13,35 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Thomas Guest  <thomas.guest@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PLATFORM_H_
-#define MIR_GRAPHICS_PLATFORM_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_
 
-#include <memory>
-
-// Interface to platform specific support for graphics operations.
+#include <EGL/egl.h>
 
 namespace mir
 {
-namespace compositor
-{
-class GraphicBufferAllocator;
-}
-
 namespace graphics
 {
+namespace android
+{
 
-class Display;
+class AndroidFramebufferWindowQuery
+{
+public:
+    virtual ~AndroidFramebufferWindowQuery() {}
 
-// Create and return a new graphics buffer allocator.
-std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
+    virtual EGLNativeWindowType android_native_window_type() const = 0;
+    virtual EGLConfig android_display_egl_config(EGLDisplay display) const = 0;
+};
 
-//Create and return a new graphics display
-std::shared_ptr<Display> create_display();
 }
 }
+}
 
-#endif // MIR_GRAPHICS_PLATFORM_H_
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_QUERY_H_ */

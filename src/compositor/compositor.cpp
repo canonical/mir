@@ -67,5 +67,5 @@ void mc::Compositor::render(graphics::Display* display)
     surfaces_in_view_area->invoke_for_each_surface(
         enumerator);
     
-    display->notify_update();
+    display->post_update();
 }

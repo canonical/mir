@@ -1,3 +1,4 @@
+
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,36 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
-
-add_subdirectory(frontend/)
-add_subdirectory(compositor/)
-add_subdirectory(input/)
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
 
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
-
+set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
+add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
 target_link_libraries(
-  integration-tests
+    render_to_fb
 
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${PLATFORM_LIBRARIES}
-  EGL
+    mirplatformgraphics
+    ui
+    EGL
+    GLESv2
 )
 
-mir_discover_tests(integration-tests)
+endif()

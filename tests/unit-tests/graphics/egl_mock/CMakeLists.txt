@@ -12,36 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
-
-add_subdirectory(frontend/)
-add_subdirectory(compositor/)
-add_subdirectory(input/)
-
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
-
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
-
-target_link_libraries(
-  integration-tests
-
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${PLATFORM_LIBRARIES}
-  EGL
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com> 
+    
+list(APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/egl_mock_test.cpp
 )
 
-mir_discover_tests(integration-tests)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+
+add_library( 
+  mirtest_eglmock STATIC
+
+  egl_mock.cpp
+)
