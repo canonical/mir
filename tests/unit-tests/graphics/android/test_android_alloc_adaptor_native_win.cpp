@@ -97,3 +97,32 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
     EXPECT_EQ(buffer_handle->usage(), usage);
 }
 
+TEST_F(AdaptorNativeWinProduction, returns_handle_non_null)
+{
+    buffer_handle = std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+    ASSERT_NE(handle, (ANativeWindowBuffer*) NULL);
+}
+
+TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
+{
+    using namespace testing;
+   
+    anwb.height = 11; 
+    anwb.width =  22; 
+    anwb.stride = 33; 
+    anwb.format = 44; 
+    anwb.usage =  55;
+    anwb.handle = (buffer_handle_t) 0x66;
+ 
+    buffer_handle = std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+   
+    EXPECT_EQ(handle->width, anwb.width); 
+    EXPECT_EQ(handle->height, anwb.height); 
+    EXPECT_EQ(handle->stride, anwb.stride); 
+    EXPECT_EQ(handle->usage, anwb.usage); 
+    EXPECT_EQ(handle->format, anwb.format); 
+    EXPECT_EQ(handle->handle, anwb.handle); 
+
+}
