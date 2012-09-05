@@ -51,13 +51,15 @@ public:
     {
         using namespace testing;
 
+        fake_stride = 300;
+
         alloc = hook_alloc;
         free = hook_free;
         dump = hook_dump;
         ON_CALL(*this, alloc_interface(_,_,_,_,_,_,_))
         .WillByDefault(DoAll(
                            SetArgPointee<5>(buffer_handle),
-                           SetArgPointee<6>(300),
+                           SetArgPointee<6>(fake_stride),
                            Return(0)));
         ON_CALL(*this, free_interface(_,_))
         .WillByDefault(Return(0));
@@ -89,6 +91,7 @@ public:
     MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
 
     buffer_handle_t buffer_handle;
+    int fake_stride;
 };
 }
 
@@ -287,4 +290,14 @@ TEST_F(AdaptorICSTest, handle_format_is_correct)
     
     auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
     EXPECT_EQ(handle->format(), pf);
+}
+
+TEST_F(AdaptorICSTest, handle_stride_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_EQ((int) handle->stride().as_uint32_t(), mock_alloc_device->fake_stride);
 }
