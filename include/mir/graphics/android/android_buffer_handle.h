@@ -64,8 +64,7 @@ protected:
 class AndroidBufferHandle: public BufferHandle
 {
 public:
-    explicit AndroidBufferHandle(buffer_handle_t han, geometry::Width w, geometry::Height h,
-                                              geometry::Stride s, int pf, int use);
+    explicit AndroidBufferHandle(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
 
     geometry::Width width();
     geometry::Height height();
@@ -77,6 +76,8 @@ public:
 
 
     ANativeWindowBuffer anw_buffer;
+    compositor::PixelFormat pixel_format;
+    BufferUsage buffer_usage;
     buffer_handle_t handle;
 };
 

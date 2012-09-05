@@ -58,7 +58,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_height)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, usage, pf );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->height(), height);
 }
 
@@ -66,7 +66,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_width)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, usage, pf );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->width(), width);
 }
 
@@ -74,7 +74,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)
 {
     using namespace testing;
    
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, usage, pf );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
 
     EXPECT_EQ(buffer_handle->stride(), stride);
 }
@@ -83,7 +83,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)
 {
     using namespace testing;
     
-    buffer_handle =  alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->format(), pf);
 }
 
@@ -91,7 +91,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
 {
     using namespace testing;
     
-    buffer_handle =  alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->usage(), usage);
 }
 
