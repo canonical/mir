@@ -48,13 +48,13 @@ class BufferHandle
 public:
     virtual ~BufferHandle() {}
 
-    virtual geometry::Width width() = 0;
-    virtual geometry::Height height() = 0;
-    virtual geometry::Stride stride() = 0;
-    virtual compositor::PixelFormat format() = 0;
-    virtual BufferUsage usage() = 0;
+    virtual geometry::Width width() const   = 0;
+    virtual geometry::Height height() const = 0;
+    virtual geometry::Stride stride() const = 0;
+    virtual compositor::PixelFormat format() const  = 0;
+    virtual BufferUsage usage() const = 0;
 
-    virtual EGLClientBuffer get_egl_client_buffer() = 0;
+    virtual EGLClientBuffer get_egl_client_buffer() const = 0;
 
 protected:
     BufferHandle() = default;
@@ -66,18 +66,18 @@ class AndroidBufferHandle: public BufferHandle
 public:
     explicit AndroidBufferHandle(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
 
-    geometry::Width width();
-    geometry::Height height();
-    geometry::Stride stride();
-    compositor::PixelFormat format();
-    BufferUsage usage();
+    geometry::Width width() const;
+    geometry::Height height() const;
+    geometry::Stride stride() const;
+    compositor::PixelFormat format() const;
+    BufferUsage usage() const;
 
-    EGLClientBuffer get_egl_client_buffer();
+    EGLClientBuffer get_egl_client_buffer() const;
 
 
-    ANativeWindowBuffer anw_buffer;
-    compositor::PixelFormat pixel_format;
-    BufferUsage buffer_usage;
+    const ANativeWindowBuffer anw_buffer;
+    const compositor::PixelFormat pixel_format;
+    const BufferUsage buffer_usage;
 };
 
 }

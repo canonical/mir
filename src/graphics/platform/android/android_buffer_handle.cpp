@@ -28,42 +28,34 @@ mga::AndroidBufferHandle::AndroidBufferHandle(ANativeWindowBuffer buf, mc::Pixel
    pixel_format(pf),
    buffer_usage(use)
 {
-/*
-    anw_buffer.height =(int) h.as_uint32_t();
-    anw_buffer.width = (int) w.as_uint32_t();
-    anw_buffer.handle = han;
-    anw_buffer.stride = (int) s.as_uint32_t();
-    anw_buffer.usage = use;
-    anw_buffer.format = pf;
-*/
 }
 
-EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer()
+EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer() const
 {
     return (EGLClientBuffer) NULL;
 }
 
-geom::Height mga::AndroidBufferHandle::height()
+geom::Height mga::AndroidBufferHandle::height() const
 {
     return geom::Height(anw_buffer.height);
 }
 
-geom::Width mga::AndroidBufferHandle::width()
+geom::Width mga::AndroidBufferHandle::width() const
 {
     return geom::Width(anw_buffer.width);
 }
 
-geom::Stride mga::AndroidBufferHandle::stride()
+geom::Stride mga::AndroidBufferHandle::stride() const
 {
     return geom::Stride(anw_buffer.stride);
 }
 
-mc::PixelFormat mga::AndroidBufferHandle::format()
+mc::PixelFormat mga::AndroidBufferHandle::format() const
 {
     return pixel_format; 
 }
 
-mga::BufferUsage mga::AndroidBufferHandle::usage()
+mga::BufferUsage mga::AndroidBufferHandle::usage() const
 {
     return buffer_usage;
 }
