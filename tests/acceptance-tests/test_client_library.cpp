@@ -36,95 +36,9 @@ namespace mc = mir::compositor;
 
 namespace mir
 {
-namespace
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
 {
-
-struct StubServerImplementation : mir::protobuf::DisplayServer
-{
-    google::protobuf::int32 next_surface_id;
-    std::mutex guard;
-
-    StubServerImplementation() : next_surface_id(0)
-    {
-    }
-
-    StubServerImplementation(StubServerImplementation const &) = delete;
-
-    void create_surface(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::SurfaceParameters* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        response->set_width(request->width());
-        response->set_height(request->height());
-        response->set_pixel_format(request->pixel_format());
-
-        std::unique_lock<std::mutex> lock(guard);
-        response->mutable_id()->set_value(next_surface_id++);
-
-        done->Run();
-    }
-
-    void release_surface(google::protobuf::RpcController* /*controller*/,
-                         const mir::protobuf::SurfaceId*,
-                         mir::protobuf::Void*,
-                         google::protobuf::Closure* done)
-    {
-        // TODO track and check surface ids
-        std::unique_lock<std::mutex> lock(guard);
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-};
-
-struct NullDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
-
-class StubIpcFactory : public mf::ProtobufIpcFactory
-{
-public:
-    StubIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(server) {}
-private:
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
-    {
-        return std::shared_ptr<mir::protobuf::DisplayServer>(&server, NullDeleter());
-    }
-    mir::protobuf::DisplayServer& server;
-};
-
-// Tests using this configuration must disconnect from the MIR server.
-// This is to allow server side activity checking on exit.
-struct ServerConfig : TestingServerConfiguration
-{
-    std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<mc::BufferAllocationStrategy> const& )
-    {
-        return std::make_shared<StubIpcFactory>(counter);
-    }
-
-    StubServerImplementation counter;
-};
-
-}
-
-TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
-{
-    ServerConfig server_config;
-
-    launch_server_process(server_config);
-
     struct ClientConfig : TestingClientConfiguration
     {
         ClientConfig() : connection(NULL)
@@ -184,11 +98,8 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_connects_and_disconnects)
     launch_client_process(client_config);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
+TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 {
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
     struct ClientConfig : TestingClientConfiguration
     {
         ClientConfig()
@@ -301,12 +212,9 @@ TEST_F(BespokeDisplayServerTestFixture, client_library_creates_surface)
     launch_client_process(client_config);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, client_library_creates_multiple_surfaces)
+TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;
-    ServerConfig server_config;
-
-    launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
     {

@@ -89,11 +89,42 @@ private:
         done->Run();
     }
 
+    void create_surface(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::SurfaceParameters* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        auto tmp = surface_organiser->create_surface(
+            ms::SurfaceCreationParameters()
+            .of_width(geom::Width(request->width()))
+            .of_height(geom::Height(request->height()))
+            );
+
+        auto surface = tmp.lock();
+        response->mutable_id()->set_value(next_surface_id++);
+        response->set_width(surface->width().as_uint32_t());
+        response->set_height(surface->height().as_uint32_t());
+        response->set_pixel_format((int)surface->pixel_format());
+
+        // TODO track server-side surface object
+        done->Run();
+    }
+
+    void release_surface(google::protobuf::RpcController* /*controller*/,
+                         const mir::protobuf::SurfaceId*,
+                         mir::protobuf::Void*,
+                         google::protobuf::Closure* done)
+    {
+        // TODO implement this
+        done->Run();
+    }
+
     void disconnect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::Void* /*request*/,
                  mir::protobuf::Void* /*response*/,
                  google::protobuf::Closure* done)
     {
+        // TODO implement this
         done->Run();
     }
 
