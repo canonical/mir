@@ -32,12 +32,6 @@ namespace graphics
 namespace android
 {
 
-enum class BufferUsage : uint32_t
-{
-    use_hardware,
-    use_software
-};
-
 class GraphicAllocAdaptor
 {
 public:

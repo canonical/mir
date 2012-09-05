@@ -159,10 +159,10 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)
     using namespace testing;
     
     buffer_handle =  alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_handle->format(), format);
+    EXPECT_EQ(buffer_handle->format(), pf);
 }
 
-TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)
+TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
 {
     using namespace testing;
     

@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
 #include "mir/geometry/dimensions.h"
+#include "mir/compositor/pixel_format.h"
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
@@ -36,12 +37,23 @@ namespace graphics
 namespace android
 {
 
+enum class BufferUsage : uint32_t
+{
+    use_hardware,
+    use_software
+};
+
 class BufferHandle 
 {
 public:
     virtual ~BufferHandle() {}
 
+    virtual geometry::Width width() = 0;
     virtual geometry::Height height() = 0;
+    virtual geometry::Stride stride() = 0;
+    virtual compositor::PixelFormat format() = 0;
+    virtual BufferUsage usage() = 0;
+
     virtual EGLClientBuffer get_egl_client_buffer() = 0;
 
 protected:
@@ -54,7 +66,12 @@ class AndroidBufferHandle: public BufferHandle
 public:
     explicit AndroidBufferHandle(buffer_handle_t han, geometry::Height h);
 
+    geometry::Width width();
     geometry::Height height();
+    geometry::Stride stride();
+    compositor::PixelFormat format();
+    BufferUsage usage();
+
     EGLClientBuffer get_egl_client_buffer();
 
 
