@@ -326,3 +326,15 @@ TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_rgba_8888)
     EXPECT_EQ(buffer_cast->format, HAL_PIXEL_FORMAT_RGBA_8888);
 }
 
+TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+
+    EXPECT_EQ((unsigned int) buffer_cast->usage, (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER));
+}
+
