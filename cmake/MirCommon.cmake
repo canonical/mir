@@ -35,6 +35,7 @@ if(ENABLE_MEMCHECK_OPTION)
     valgrind)
   
   if(VALGRIND_EXECUTABLE)
+    set(VALGRIND_ARGS "--trace-children=yes")
     set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
   else(VALGRIND_EXECUTABLE)
     message("Not enabling memcheck as valgrind is missing on your system")
@@ -44,7 +45,7 @@ endif(ENABLE_MEMCHECK_OPTION)
 function (mir_discover_tests EXECUTABLE)
 
   if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE}")
+    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE}")
   else()
     add_dependencies (
       ${EXECUTABLE}
