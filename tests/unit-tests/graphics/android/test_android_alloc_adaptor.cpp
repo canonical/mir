@@ -301,3 +301,15 @@ TEST_F(AdaptorICSTest, handle_stride_is_correct)
     auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
     EXPECT_EQ((int) handle->stride().as_uint32_t(), mock_alloc_device->fake_stride);
 }
+
+TEST_F(AdaptorICSTest, handle_buffer_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle.get();
+
+    EXPECT_EQ(buffer_cast->handle, mock_alloc_device->buffer_handle);
+}
