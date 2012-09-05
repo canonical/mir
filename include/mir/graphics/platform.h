@@ -40,7 +40,7 @@ class Display;
 std::unique_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
 
 //Create and return a new graphics display
-std::unique_ptr<Display> create_display();
+std::shared_ptr<Display> create_display();
 }
 }
 
