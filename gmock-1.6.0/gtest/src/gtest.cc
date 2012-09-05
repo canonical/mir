@@ -3224,6 +3224,9 @@ void XmlUnitTestResultPrinter::OutputXmlCDataSection(::std::ostream* stream,
 void XmlUnitTestResultPrinter::OutputXmlTestInfo(::std::ostream* stream,
                                                  const char* test_case_name,
                                                  const TestInfo& test_info) {
+  if (test_info.filtered_out ())
+    return;
+
   const TestResult& result = *test_info.result();
   *stream << "    <testcase name=\""
           << EscapeXmlAttribute(test_info.name()).c_str() << "\"";
@@ -3271,6 +3274,9 @@ void XmlUnitTestResultPrinter::OutputXmlTestInfo(::std::ostream* stream,
 // Prints an XML representation of a TestCase object
 void XmlUnitTestResultPrinter::PrintXmlTestCase(FILE* out,
                                                 const TestCase& test_case) {
+  if (test_case.should_skip_report ())
+    return;
+
   fprintf(out,
           "  <testsuite name=\"%s\" tests=\"%d\" failures=\"%d\" "
           "disabled=\"%d\" ",
@@ -4391,6 +4397,8 @@ int UnitTestImpl::FilterTests(ReactionToSharding shard_tests) {
     const String &test_case_name = test_case->name();
     test_case->set_should_run(false);
 
+    bool any_matched_filter = false;
+
     for (size_t j = 0; j < test_case->test_info_list().size(); j++) {
       TestInfo* const test_info = test_case->test_info_list()[j];
       const String test_name(test_info->name());
@@ -4407,6 +4415,7 @@ int UnitTestImpl::FilterTests(ReactionToSharding shard_tests) {
           internal::UnitTestOptions::FilterMatchesTest(test_case_name,
                                                        test_name);
       test_info->matches_filter_ = matches_filter;
+      any_matched_filter |= matches_filter;
 
       const bool is_runnable =
           (GTEST_FLAG(also_run_disabled_tests) || !is_disabled) &&
@@ -4423,6 +4432,8 @@ int UnitTestImpl::FilterTests(ReactionToSharding shard_tests) {
       test_info->should_run_ = is_selected;
       test_case->set_should_run(test_case->should_run() || is_selected);
     }
+
+    test_case->set_should_skip_report(!any_matched_filter);
   }
   return num_selected_tests;
 }

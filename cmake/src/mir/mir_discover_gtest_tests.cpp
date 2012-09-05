@@ -66,7 +66,9 @@ int main (int argc, char **argv)
                     testfilecmake
                             << "ADD_TEST ("
                             << "memcheck_" << test_suite << '.' << *test
-                            << " \"valgrind\"" << " \"" << argv[1] << "\""
+                            << " \"valgrind\"" 
+                            << "\"--trace-children=yes\""
+                            << " \"" << argv[1] << "\""
                             << "\"--gtest_death_test_use_fork\""
                             << "\"--gtest_filter=" << *test << "\")" << endl;
                 }
