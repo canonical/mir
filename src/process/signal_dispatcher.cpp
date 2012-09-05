@@ -51,7 +51,12 @@ struct EventSocketPair
     void write_signal_to(SocketIdentifier id, int signal)
     {
         if (::write(sockets[id], &signal, sizeof(signal)) < 0)
-            throw std::runtime_error("Problem writing to socket");
+        {
+            // TODO: We cannot throw an exception in code that is
+            // called from a signal handler. Reenable once we have
+            // signal-safe logging in place.
+            // throw std::runtime_error("Problem writing to socket");
+        }
     }
 
     int read_signal_from(SocketIdentifier id)
