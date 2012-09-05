@@ -72,13 +72,15 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
 
     AndroidBufferHandleDeleter del(alloc_dev);
     auto stride = geom::Stride(stride_as_int);
+
     ANativeWindowBuffer buffer;
-    buffer.width = 142234089;
+    buffer.width = (int) width.as_uint32_t();
     auto handle = std::shared_ptr<mga::BufferHandle>(
             new mga::AndroidBufferHandle(buffer, pf, usage), del);
 
     return handle;
 }
+
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
