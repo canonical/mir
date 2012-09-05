@@ -38,12 +38,12 @@ struct AndroidBufferHandleEmptyDeleter
 class MockBufferHandle : public BufferHandle
 {
 public:
-    MOCK_METHOD0(get_egl_client_buffer, EGLClientBuffer());
-    MOCK_METHOD0(height, geometry::Height());
-    MOCK_METHOD0(width,  geometry::Width()); 
-    MOCK_METHOD0(stride, geometry::Stride());
-    MOCK_METHOD0(format, compositor::PixelFormat());
-    MOCK_METHOD0(usage,  BufferUsage());
+    MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
+    MOCK_CONST_METHOD0(height, geometry::Height());
+    MOCK_CONST_METHOD0(width,  geometry::Width()); 
+    MOCK_CONST_METHOD0(stride, geometry::Stride());
+    MOCK_CONST_METHOD0(format, compositor::PixelFormat());
+    MOCK_CONST_METHOD0(usage,  BufferUsage());
 };
 
 class MockAllocAdaptor : public GraphicAllocAdaptor

@@ -28,6 +28,7 @@ mga::AndroidBufferHandle::AndroidBufferHandle(ANativeWindowBuffer buf, mc::Pixel
    pixel_format(pf),
    buffer_usage(use)
 {
+    printf("SAVED %i\n", anw_buffer.width);
 }
 
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer() const
@@ -42,6 +43,7 @@ geom::Height mga::AndroidBufferHandle::height() const
 
 geom::Width mga::AndroidBufferHandle::width() const
 {
+    printf("RETSAVED %i\n", anw_buffer.width);
     return geom::Width(anw_buffer.width);
 }
 

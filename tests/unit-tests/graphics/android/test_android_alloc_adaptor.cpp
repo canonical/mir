@@ -249,3 +249,12 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
 
 
 
+TEST_F(AdaptorICSTest, handle_width_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_EQ(handle->width(), width);
+}
