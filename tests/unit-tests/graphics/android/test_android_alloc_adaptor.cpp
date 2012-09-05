@@ -258,3 +258,33 @@ TEST_F(AdaptorICSTest, handle_width_is_correct)
     auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
     EXPECT_EQ(handle->width(), width);
 }
+
+TEST_F(AdaptorICSTest, handle_height_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_EQ(handle->height(), height);
+}
+
+TEST_F(AdaptorICSTest, handle_usage_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_EQ(handle->usage(), usage);
+}
+
+TEST_F(AdaptorICSTest, handle_format_is_correct)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+    
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    EXPECT_EQ(handle->format(), pf);
+}

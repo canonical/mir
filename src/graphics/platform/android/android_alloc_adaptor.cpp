@@ -75,6 +75,8 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
 
     ANativeWindowBuffer buffer;
     buffer.width = (int) width.as_uint32_t();
+    buffer.height = (int) height.as_uint32_t();
+
     auto handle = std::shared_ptr<mga::BufferHandle>(
             new mga::AndroidBufferHandle(buffer, pf, usage), del);
 
