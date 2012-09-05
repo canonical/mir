@@ -74,6 +74,14 @@ struct StubServerImplementation : mir::protobuf::DisplayServer
         std::unique_lock<std::mutex> lock(guard);
         done->Run();
     }
+
+    void disconnect(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::Void* /*request*/,
+                 mir::protobuf::Void* /*response*/,
+                 google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
 };
 
 struct NullDeleter

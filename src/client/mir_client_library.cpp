@@ -87,7 +87,8 @@ class MirConnection
 {
 public:
     MirConnection(std::shared_ptr<mc::Logger> const & log)
-        : channel("./mir_socket_test", log)
+        : created(true),
+          channel("./mir_socket_test", log)
         , server(&channel)
         , log(log)
     {
@@ -109,7 +110,32 @@ public:
         return error_message.c_str();
     }
 
+    void disconnect()
+    {
+        mir::protobuf::Void ignored;
+
+        server.disconnect(
+            0,
+            &ignored,
+            &ignored,
+            google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+
+        std::unique_lock<std::mutex> lock(mutex);
+        while (created) cv.wait(lock);
+    }
+
 private:
+    void done_disconnect()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        created = false;
+        cv.notify_one();
+    }
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool created;
+
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
@@ -147,6 +173,7 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
+    connection->disconnect();
     delete connection;
 }
 
