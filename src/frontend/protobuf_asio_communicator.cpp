@@ -34,9 +34,8 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
-class mfd::Session
+struct mfd::Session
 {
-public:
     Session(
         boost::asio::io_service& io_service,
         int id_,
@@ -68,7 +67,6 @@ public:
         return result;
     }
 
-private:
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
@@ -99,8 +97,6 @@ private:
                 static_cast<google::protobuf::Message*>(&result_message)));
     }
 
-    friend class ::mir::frontend::ProtobufAsioCommunicator;
-
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     int const id_;
@@ -112,7 +108,6 @@ private:
 };
 
 
-// TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
