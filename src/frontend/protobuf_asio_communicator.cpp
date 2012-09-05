@@ -231,6 +231,8 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
         invocation.ParseFromIstream(&in);
 
+        // TODO comparing strings in an if-else chain isn't efficient.
+        // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::connect, invocation);
