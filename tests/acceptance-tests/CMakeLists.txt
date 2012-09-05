@@ -18,6 +18,7 @@
 add_executable(
   acceptance-tests
   
+  test_client_library.cpp
   test_connect_disconnect.cpp
   display_server_test_fixture.cpp
   test_renderloop.cpp
@@ -38,6 +39,7 @@ target_link_libraries(
   mirprocess
   mirsurfaces
   mirclient
+  mirplatformgraphics
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}

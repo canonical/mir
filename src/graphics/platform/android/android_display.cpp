@@ -27,11 +27,14 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-static const EGLint context_attr [] =
+namespace
+{
+static const EGLint default_egl_context_attr [] =
 {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
 };
+}
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
     : native_window(native_win)
@@ -54,7 +57,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if(egl_surface == EGL_NO_SURFACE)
         throw std::runtime_error("could not create egl surface\n");
 
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         throw std::runtime_error("could not create egl context\n");
 
@@ -69,7 +72,10 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglTerminate(egl_display);
 }
 
-geom::Rectangle mga::AndroidDisplay::view_area()
+/* todo: kdub: this will return some sort of information concerning the coordinate space 
+               of the displays. once we have a not-stubbed rect class and a coordinate 
+               space agreed upon, we can implement this */ 
+geom::Rectangle mga::AndroidDisplay::view_area() const
 {
     geom::Rectangle rect;
     return rect;
@@ -82,9 +88,10 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
-std::unique_ptr<mg::Display> mg::create_display()
+std::shared_ptr<mg::Display> mg::create_display()
 {
-    std::shared_ptr<ANativeWindow> android_window ((ANativeWindow*) new ::android::FramebufferNativeWindow);
-    std::shared_ptr<mga::AndroidFramebufferWindow> window (new mga::AndroidFramebufferWindow(android_window));
-    return std::unique_ptr<mga::AndroidDisplay>(new mga::AndroidDisplay(window));
+    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) new ::android::FramebufferNativeWindow);
+    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
+
+    return std::make_shared<mga::AndroidDisplay>(window);
 }

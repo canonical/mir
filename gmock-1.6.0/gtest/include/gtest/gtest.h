@@ -668,6 +668,9 @@ class GTEST_API_ TestInfo {
   // contains the character 'A' or starts with "Foo.".
   bool should_run() const { return should_run_; }
 
+  // Returns true if the test was filtered out by --gtest_filter
+  bool filtered_out() const { return !matches_filter_; }
+
   // Returns the result of the test.
   const TestResult* result() const { return &result_; }
 
@@ -772,6 +775,9 @@ class GTEST_API_ TestCase {
   // Returns true if any test in this test case should run.
   bool should_run() const { return should_run_; }
 
+  // Returns true if this test case should be skipped in the report.
+  bool should_skip_report() const { return should_skip_report_; }
+
   // Gets the number of successful tests in this test case.
   int successful_test_count() const;
 
@@ -818,6 +824,7 @@ class GTEST_API_ TestCase {
 
   // Sets the should_run member.
   void set_should_run(bool should) { should_run_ = should; }
+  void set_should_skip_report(bool should) { should_skip_report_ = should; }
 
   // Adds a TestInfo to this test case.  Will delete the TestInfo upon
   // destruction of the TestCase object.
@@ -886,6 +893,8 @@ class GTEST_API_ TestCase {
   Test::TearDownTestCaseFunc tear_down_tc_;
   // True iff any test in this test case should run.
   bool should_run_;
+  // True if this test case should not be reported
+  bool should_skip_report_;
   // Elapsed time, in milliseconds.
   TimeInMillis elapsed_time_;
 

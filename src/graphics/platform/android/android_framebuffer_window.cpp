@@ -20,25 +20,27 @@
 #include <stdexcept>
 namespace mga = mir::graphics::android;
 
-static const EGLint attr [] =
+namespace
+{
+static const EGLint default_egl_config_attr [] =
 {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_NONE
 };
-
+}
 mga::AndroidFramebufferWindow::AndroidFramebufferWindow(const std::shared_ptr<ANativeWindow>& anw)
     :
     native_window(anw)
 {
 }
 
-EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type()
+EGLNativeWindowType mga::AndroidFramebufferWindow::android_native_window_type() const
 {
     return (EGLNativeWindowType) native_window.get();
 }
 
-EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display)
+EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay egl_display) const
 {
     EGLint num_match_configs;
     int num_potential_configs;
@@ -48,7 +50,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     config_slots = new EGLConfig[num_potential_configs];
 
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
-    eglChooseConfig(egl_display, attr, config_slots, num_potential_configs, &num_match_configs );
+    eglChooseConfig(egl_display, default_egl_config_attr, config_slots, num_potential_configs, &num_match_configs );
 
     int android_native_id;
     native_window->query(native_window.get(), NATIVE_WINDOW_FORMAT, &android_native_id);

@@ -14,25 +14,18 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-IF(PROTOBUF_FOUND)
-
-INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
-
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-
-ENDIF()
-
+list(APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libancillary)
 set(
-  CLIENT_SOURCES
+  LIBANCILLARY_SOURCES
 
-  mir_client_library.cpp
-  mir_rpc_channel.cpp
-  mir_surface.cpp
-  ${PROTO_HDRS}
+  libancillary/fd_send.c
+  libancillary/fd_recv.c
 )
 
 add_library( 
-  mirclient STATIC
-  
-  ${CLIENT_SOURCES}
+  3rd_party STATIC
+
+  ${LIBANCILLARY_SOURCES}
 )
+
+set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)

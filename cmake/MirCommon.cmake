@@ -18,30 +18,37 @@ cmake_minimum_required (VERSION 2.6)
 # Create target to discover tests
 
 option(
+  DISABLE_GTEST_TEST_DISCOVERY
+  "If set to ON, disables fancy test autodiscovery and switches back to classic add_test behavior"
+  OFF
+)
+
+option(
   ENABLE_MEMCHECK_OPTION
   "If set to ON, enables automatic creation of memcheck targets"
   OFF
 )
 
+if(ENABLE_MEMCHECK_OPTION)
+  find_program(
+    VALGRIND_EXECUTABLE
+    valgrind)
+  
+  if(VALGRIND_EXECUTABLE)
+    set(VALGRIND_ARGS "--trace-children=yes")
+    set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
+  else(VALGRIND_EXECUTABLE)
+    message("Not enabling memcheck as valgrind is missing on your system")
+  endif(VALGRIND_EXECUTABLE)
+endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
 
-  if(BUILD_ANDROID)
-    add_test(${EXECUTABLE} ${EXECUTABLE})
+  if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
+    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE}")
   else()
-    if(ENABLE_MEMCHECK_OPTION)
-      find_program(
-	VALGRIND_EXECUTABLE
-	valgrind)
-      
-      if(VALGRIND_EXECUTABLE)
-	set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
-      else(VALGRIND_EXECUTABLE)
-	message("Not enabling memcheck as valgrind is missing on your system")
-      endif(VALGRIND_EXECUTABLE)
-    endif(ENABLE_MEMCHECK_OPTION)
-    
-    add_dependencies (${EXECUTABLE}
+    add_dependencies (
+      ${EXECUTABLE}
       mir_discover_gtest_tests)
     
     add_custom_command (TARGET ${EXECUTABLE}
