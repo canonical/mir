@@ -33,8 +33,9 @@ public:
     virtual void SetUp()
     {
         using namespace testing;
-        
-        mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>();
+       
+        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>(); 
+        mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
             .Times(AtLeast(0));
 
@@ -58,6 +59,7 @@ public:
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_dev;
+    std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)
@@ -190,30 +192,20 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
     buffer->bind_to_texture();
 }
 
-TEST_F(AndroidBufferBinding, buffer_sets_not_null_anw_buffer)
+TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
 {
     using namespace testing;
+    EGLClientBuffer fake_egl_image = (EGLClientBuffer) 0x777;
 
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,Ne((EGLClientBuffer)NULL),_))
+    EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
+        .Times(Exactly(1))
+        .WillOnce(Return(fake_egl_image)); 
+
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,fake_egl_image,_))
         .Times(Exactly(1));
     buffer->bind_to_texture();
 }
 
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
-{
-    using namespace testing;
-    EGLClientBuffer egl_client_buffer;
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
-    buffer->bind_to_texture();
-
-    EXPECT_EQ((int) egl_client_buffer , (int) mock_alloc_dev->mock_handle.get()); 
-}
 
 /*
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_width)

@@ -28,13 +28,6 @@ namespace graphics
 namespace android
 {
 
-struct AndroidBufferHandleEmptyDeleter
-{
-    void operator()(BufferHandle*)
-    {
-    }
-};
-
 class MockBufferHandle : public BufferHandle
 {
 public:
@@ -49,11 +42,12 @@ public:
 class MockAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
-    MockAllocAdaptor()
+    MockAllocAdaptor(std::shared_ptr<MockBufferHandle> mock)
+     :
+    mock_handle(mock)
     {
         using namespace testing;
 
-        mock_handle = std::make_shared<MockBufferHandle>();
         ON_CALL(*this, alloc_buffer(_,_,_,_))
         .WillByDefault(Return(mock_handle));
     }

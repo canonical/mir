@@ -42,6 +42,7 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
 
     native_window_buffer_handle = alloc_device->alloc_buffer(buffer_width, buffer_height,
                                       buffer_format, usage);
+    
     if (!native_window_buffer_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
 
