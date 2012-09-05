@@ -78,7 +78,6 @@ public:
     ANativeWindowBuffer anw_buffer;
     compositor::PixelFormat pixel_format;
     BufferUsage buffer_usage;
-    buffer_handle_t handle;
 };
 
 }
