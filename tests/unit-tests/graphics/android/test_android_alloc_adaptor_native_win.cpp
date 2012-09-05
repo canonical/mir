@@ -149,9 +149,19 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_width)
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)
 {
     using namespace testing;
-    
+   
+    unsigned int example_stride = 48948; 
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _))
+        .Times(AtLeast(1))
+        .WillOnce(DoAll(
+            SetArgPointee<5>(mock_alloc_device->buffer_handle),
+            SetArgPointee<6>(example_stride),
+            Return(0)
+            ));
     buffer_handle =  alloc_adaptor->alloc_buffer(width, height, pf, usage );
-    EXPECT_EQ(buffer_handle->stride(), stride);
+
+    geom::Stride stride = buffer_handle->stride();
+    EXPECT_EQ(stride.as_uint32_t(), example_stride);
 }
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)

@@ -64,7 +64,8 @@ protected:
 class AndroidBufferHandle: public BufferHandle
 {
 public:
-    explicit AndroidBufferHandle(buffer_handle_t han, geometry::Height h);
+    explicit AndroidBufferHandle(buffer_handle_t han, geometry::Width w, geometry::Height h,
+                                              geometry::Stride s, int pf, int use);
 
     geometry::Width width();
     geometry::Height height();

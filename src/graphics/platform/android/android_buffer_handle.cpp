@@ -23,10 +23,15 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t han, geom::Height h)
+mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t han, geom::Width w, geom::Height h,
+                                              geom::Stride s, int pf, int use)
 {
-    anw_buffer.height = h.as_uint32_t();
+    anw_buffer.height =(int) h.as_uint32_t();
+    anw_buffer.width = (int) w.as_uint32_t();
     anw_buffer.handle = han;
+    anw_buffer.stride = (int) s.as_uint32_t();
+    anw_buffer.usage = use;
+    anw_buffer.format = pf;
 }
 
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer()
@@ -41,13 +46,12 @@ geom::Height mga::AndroidBufferHandle::height()
 
 geom::Width mga::AndroidBufferHandle::width()
 {
-    return geom::Width(0);
+    return geom::Width(anw_buffer.width);
 }
-
 
 geom::Stride mga::AndroidBufferHandle::stride()
 {
-    return geom::Stride(0);
+    return geom::Stride(anw_buffer.stride);
 }
 
 mc::PixelFormat mga::AndroidBufferHandle::format()
