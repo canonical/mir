@@ -206,93 +206,26 @@ TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
     buffer->bind_to_texture();
 }
 
-
-/*
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_width)
+TEST_F(AndroidBufferBinding, buffer_sets_proper_attributes)
 {
     using namespace testing;
-    EGLClientBuffer egl_client_buffer;
+
+    const EGLint* attrs;
 
     EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
         .Times(Exactly(1))
         .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
+            SaveArg<4>(&attrs),
+            Return(egl_mock.fake_egl_image)));
     buffer->bind_to_texture();
 
-    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
-    EXPECT_EQ(anwb->width, (int)width.as_uint32_t()); 
+    /* note: this should not segfault. if it does, the attributes were set wrong */
+    EXPECT_EQ(attrs[0],    EGL_IMAGE_PRESERVED_KHR);
+    EXPECT_EQ(attrs[1],    EGL_TRUE);
+    EXPECT_EQ(attrs[2],    EGL_NONE);
+
 }
 
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_height)
-{
-    using namespace testing;
-    EGLClientBuffer egl_client_buffer;
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
-    buffer->bind_to_texture();
-
-    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
-    EXPECT_EQ(anwb->height, (int)height.as_uint32_t()); 
-}
-
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_stride)
-{
-    using namespace testing;
-    EGLClientBuffer egl_client_buffer;
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
-    buffer->bind_to_texture();
-
-    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
-    EXPECT_EQ(anwb->stride, (int)stride.as_uint32_t()); 
-}
-
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_format)
-{
-    using namespace testing;
-    EGLClientBuffer egl_client_buffer;
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
-    buffer->bind_to_texture();
-
-    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
-//    EXPECT_EQ(anwb->width, (int).as_uint32_t()); 
-}
-
-TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_with_correct_usage)
-{
-    using namespace testing;
-    EGLClientBuffer egl_client_buffer;
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
-        .Times(Exactly(1))
-        .WillOnce(DoAll(
-                SaveArg<3>(&egl_client_buffer),
-                Return(egl_mock.fake_egl_image)));
-
-    buffer->bind_to_texture();
-
-    ANativeWindowBuffer *anwb = (ANativeWindowBuffer*) egl_client_buffer;
-    EXPECT_EQ(anwb->width, (int)width.as_uint32_t()); 
-}
-*/
 TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
 {
     using namespace testing;
