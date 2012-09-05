@@ -91,11 +91,16 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
 
+    static const EGLint image_attrs[] = {
+        EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
+        EGL_NONE
+    };
+
     EGLImageKHR image;
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end()) {
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_window_buffer_handle->get_egl_client_buffer() , NULL);
+                                  native_window_buffer_handle->get_egl_client_buffer() , image_attrs);
 
         if (image == EGL_NO_IMAGE_KHR)
         {
