@@ -39,6 +39,8 @@ protected:
         stride = geom::Stride(300*4);
 
         anwb.height = (int) height.as_uint32_t();
+        anwb.width = (int) width.as_uint32_t();
+        anwb.stride = (int) stride.as_uint32_t();
 
     }
 
