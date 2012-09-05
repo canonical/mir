@@ -22,10 +22,10 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t han, geom::Height h)
+mga::AndroidBufferHandle::AndroidBufferHandle(buffer_handle_t handle, geom::Height h)
 {
     anw_buffer.height = h.as_uint32_t();
-    anw_buffer.handle = han;
+    anw_buffer.handle = handle;
 }
 
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer()
