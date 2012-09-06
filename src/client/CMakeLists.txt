@@ -27,7 +27,6 @@ set(
 
   mir_client_library.cpp
   mir_rpc_channel.cpp
-  mir_surface.cpp
   ${PROTO_HDRS}
 )
 
