@@ -36,46 +36,88 @@ namespace mc = mir::compositor;
 namespace mir
 {
 
+namespace
+{
+struct ClientConfigCommon : TestingClientConfiguration
+{
+    ClientConfigCommon()
+        : connection(0)
+        , surface(0)
+    {
+    }
+
+    static void connection_callback(MirConnection * connection, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->connected(connection);
+    }
+
+    static void create_surface_callback(MirSurface * surface, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_created(surface);
+    }
+
+    static void release_surface_callback(MirSurface * surface, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_released(surface);
+    }
+
+    virtual void connected(MirConnection * new_connection)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        connection = new_connection;
+        wait_condition.notify_all();
+    }
+
+    virtual void surface_created(MirSurface * new_surface)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        surface = new_surface;
+        wait_condition.notify_all();
+    }
+
+    virtual void surface_released(MirSurface * /*released_surface*/)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        surface = NULL;
+        wait_condition.notify_all();
+    }
+
+    void wait_for_connect()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!connection)
+            wait_condition.wait(lock);
+    }
+
+    void wait_for_surface_create()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!surface)
+            wait_condition.wait(lock);
+    }
+
+    void wait_for_surface_release()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (surface)
+            wait_condition.wait(lock);
+    }
+
+
+    std::mutex guard;
+    std::condition_variable wait_condition;
+    MirConnection* connection;
+    MirSurface* surface;
+};
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
 {
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
-        ClientConfig() : connection(NULL)
-        {
-        }
-
-        static void connection_callback(MirConnection * connection, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->connected(connection);
-        }
-        static void connection_release_callback(void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->disconnected();
-        }
-
-        void connected(MirConnection * new_connection)
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = new_connection;
-            wait_condition.notify_one();
-        }
-
-        void disconnected()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = NULL;
-            wait_condition.notify_all();
-        }
-
-        void wait_for_connect()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            while (!connection)
-                wait_condition.wait(lock);
-        }
-
         void exec()
         {
             mir_connect(connection_callback, this);
@@ -88,10 +130,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
 
             mir_connection_release(connection);
         }
-
-        std::mutex guard;
-        std::condition_variable wait_condition;
-        MirConnection * connection;
     } client_config;
 
     launch_client_process(client_config);
@@ -99,74 +137,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 {
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
-        ClientConfig()
-            : connection(NULL)
-            , surface(NULL)
-        {
-        }
-
-        static void connection_callback(MirConnection * connection, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->connected(connection);
-        }
-
-        static void create_surface_callback(MirSurface * surface, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->surface_created(surface);
-        }
-
-        static void release_surface_callback(MirSurface * surface, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->surface_released(surface);
-        }
-
-        void connected(MirConnection * new_connection)
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = new_connection;
-            wait_condition.notify_all();
-        }
-
-        void surface_created(MirSurface * new_surface)
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            surface = new_surface;
-            wait_condition.notify_all();
-        }
-
-        void surface_released(MirSurface * /*released_surface*/)
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            surface = NULL;
-            wait_condition.notify_all();
-        }
-
-        void wait_for_connect()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            while (!connection)
-                wait_condition.wait(lock);
-        }
-
-        void wait_for_surface_create()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            while (!surface)
-                wait_condition.wait(lock);
-        }
-
-        void wait_for_surface_release()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            while (surface)
-                wait_condition.wait(lock);
-        }
-
         void exec()
         {
 
@@ -201,11 +173,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 
             mir_connection_release(connection);
         }
-
-        std::mutex guard;
-        std::condition_variable wait_condition;
-        MirConnection * connection;
-        MirSurface * surface;
     } client_config;
 
     launch_client_process(client_config);
@@ -215,35 +182,10 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
 {
     int const n_surfaces = 13;
 
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
-        ClientConfig(int n_surfaces) : n_surfaces(n_surfaces), connection(NULL)
+        ClientConfig(int n_surfaces) : n_surfaces(n_surfaces)
         {
-        }
-
-        static void connection_callback(MirConnection * connection, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->connected(connection);
-        }
-
-        static void create_surface_callback(MirSurface * surface, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->surface_created(surface);
-        }
-
-        static void release_surface_callback(MirSurface * surface, void * context)
-        {
-            ClientConfig * config = reinterpret_cast<ClientConfig *>(context);
-            config->surface_released(surface);
-        }
-
-        void connected(MirConnection * new_connection)
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            connection = new_connection;
-            wait_condition.notify_all();
         }
 
         void surface_created(MirSurface * new_surface)
@@ -264,13 +206,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
         {
             std::unique_lock<std::mutex> lock(guard);
             return *surfaces.begin();
-        }
-
-        void wait_for_connect()
-        {
-            std::unique_lock<std::mutex> lock(guard);
-            while (!connection)
-                wait_condition.wait(lock);
         }
 
         size_t current_surface_count()
@@ -332,10 +267,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
             mir_connection_release(connection);
         }
 
-        std::mutex guard;
-        std::condition_variable wait_condition;
         int n_surfaces;
-        MirConnection * connection;
         std::set<MirSurface *> surfaces;
         size_t old_surface_count;
     } client_config(n_surfaces);
