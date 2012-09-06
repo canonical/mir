@@ -13,35 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Thomas Guest  <thomas.guest@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PLATFORM_H_
-#define MIR_GRAPHICS_PLATFORM_H_
+#include "mir/graphics/display.h"
+#include "mir/graphics/platform.h"
 
+#include <gtest/gtest.h>
 #include <memory>
 
-// Interface to platform specific support for graphics operations.
+namespace mg=mir::graphics;
 
-namespace mir
+TEST(AndroidFramebufferIntegration, init_does_not_throw)
 {
-namespace compositor
-{
-class GraphicBufferAllocator;
+    using namespace testing;
+    std::shared_ptr<mg::Display> display;
+
+    EXPECT_NO_THROW(
+    {
+        display = mg::create_display();
+        display->post_update();
+    });
+
 }
-
-namespace graphics
-{
-
-class Display;
-
-// Create and return a new graphics buffer allocator.
-std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
-
-//Create and return a new graphics display
-std::shared_ptr<Display> create_display();
-}
-}
-
-#endif // MIR_GRAPHICS_PLATFORM_H_

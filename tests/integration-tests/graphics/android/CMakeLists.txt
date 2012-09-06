@@ -12,20 +12,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>,
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
 )
 
-add_subdirectory(egl_mock/)
-if (MIR_PLATFORM STREQUAL "android")
-add_subdirectory(android/)
-endif()
+set(
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE)
 
-if (MIR_PLATFORM STREQUAL "gbm")
-add_subdirectory(gbm/)
-endif()
-
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
-
+list (
+  APPEND PLATFORM_LIBRARIES
+  ui
+)
+set (PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} PARENT_SCOPE)

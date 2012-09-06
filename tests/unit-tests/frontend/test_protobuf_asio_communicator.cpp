@@ -146,24 +146,18 @@ struct TestServer
     void expect_session_count(int expected_count)
     {
         std::unique_lock<std::mutex> ul(collector.guard);
-        for (int ntries = 20;
-             ntries-- != 0 && collector.session_count != expected_count; )
-        {
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-            std::this_thread::yield();
-        }
+        while (collector.session_count != expected_count)
+            collector.wait_condition.wait(ul);
+
         EXPECT_EQ(expected_count, collector.session_count);
     }
 
     void expect_connected_session_count(int expected_count)
     {
         std::unique_lock<std::mutex> ul(collector.guard);
-        for (int ntries = 20;
-             ntries-- != 0 && collector.connected_sessions != expected_count; )
-        {
-            collector.wait_condition.wait_for(ul, std::chrono::milliseconds(50));
-            std::this_thread::yield();
-        }
+        while (collector.connected_sessions != expected_count)
+            collector.wait_condition.wait(ul);
+
         EXPECT_EQ(expected_count, collector.connected_sessions);
     }
 
@@ -268,7 +262,6 @@ struct BasicTestFixture : public ::testing::Test
     void SetUp()
     {
         ::testing::Mock::VerifyAndClearExpectations(server.factory.get());
-        server.comm.start();
     }
 
     void TearDown()
@@ -297,6 +290,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public BasicTestFixture
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
 
     EXPECT_CALL(client, connect_done()).Times(1);
 
@@ -315,6 +309,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         a_connection_attempt_results_in_a_session_being_connected)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
+
     EXPECT_CALL(client, connect_done()).Times(1);
 
     client.display_server.connect(
@@ -332,6 +328,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
        each_connection_attempt_results_in_a_new_session_being_created)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
 
     int const connection_count{5};
 
@@ -356,6 +353,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_then_disconnect_a_session)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
 
     EXPECT_CALL(client, connect_done()).Times(1);
     client.display_server.connect(
@@ -383,6 +381,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
        double_disconnection_attempt_has_no_effect)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
 
     EXPECT_CALL(client, connect_done()).Times(1);
     client.display_server.connect(
@@ -418,6 +417,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
        multiple_clients_can_connect_and_disconnect)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+    server.comm.start();
 
     for (int i = 0; i != connection_count; ++i)
     {
@@ -452,6 +452,7 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
        multiple_clients_can_connect_and_disconnect_asynchronously)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+    server.comm.start();
 
     for (int i = 0; i != connection_count; ++i)
     {
@@ -494,6 +495,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
        each_connection_attempt_results_in_a_new_session_being_created_asynchronously)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
 
     int const connection_count{5};
 

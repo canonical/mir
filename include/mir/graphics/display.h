@@ -30,8 +30,8 @@ namespace graphics
 class Display
 {
 public:
-    virtual geometry::Rectangle view_area() = 0;
-    virtual void notify_update() = 0;
+    virtual geometry::Rectangle view_area() const = 0;
+    virtual bool post_update() = 0;
 
 protected:
     Display() = default;

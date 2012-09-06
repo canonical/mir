@@ -77,6 +77,11 @@ if (MIR_PLATFORM STREQUAL "android")
   if (LIBHARDWARE_FOUND)
     include_directories(${LIBHARDWARE_INCLUDE_DIR})
   endif()
+ 
+  find_package( AndroidUI REQUIRED )
+  if(ANDROID_UI_FOUND)
+    include_directories(${ANDROID_UI_INCLUDE_DIR})
+  endif()
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm )
@@ -123,6 +128,7 @@ include_directories (
 )
 
 add_subdirectory(tests/)
+add_subdirectory(tools/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 

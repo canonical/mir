@@ -13,35 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Thomas Guest  <thomas.guest@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PLATFORM_H_
-#define MIR_GRAPHICS_PLATFORM_H_
+#ifndef MIR_COMPOSITOR_MOCK_DISPLAY_H_
+#define MIR_COMPOSITOR_MOCK_DISPLAY_H_
 
-#include <memory>
-
-// Interface to platform specific support for graphics operations.
+#include "mir/graphics/display.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace compositor
-{
-class GraphicBufferAllocator;
-}
-
 namespace graphics
 {
 
-class Display;
+struct MockDisplay : public Display
+{
+public:
+    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
+    MOCK_METHOD0(post_update, bool ());
+};
 
-// Create and return a new graphics buffer allocator.
-std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
-
-//Create and return a new graphics display
-std::shared_ptr<Display> create_display();
 }
 }
-
-#endif // MIR_GRAPHICS_PLATFORM_H_
+#endif /* MIR_COMPOSITOR_MOCK_DISPLAY_H_ */
