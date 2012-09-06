@@ -23,14 +23,13 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
+#include "mir_test/gmock_fixes.h"
+#include "mir/thread/all.h"
+
 #include "display_server_test_fixture.h"
-
-
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
-#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -61,8 +60,8 @@ mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
-        : connection(NULL)
-        , surface(NULL)
+        : connection(0)
+        , surface(0)
     {
     }
 
@@ -129,8 +128,8 @@ struct ClientConfigCommon : TestingClientConfiguration
 
     std::mutex guard;
     std::condition_variable wait_condition;
-    MirConnection * connection;
-    MirSurface * surface;
+    MirConnection* connection;
+    MirSurface* surface;
 };
 
 }
@@ -227,30 +226,14 @@ TEST_F(BespokeDisplayServerTestFixture,
 
             wait_for_connect();
 
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
             mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             wait_for_surface_create();
 
-            ASSERT_TRUE(surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(surface));
-            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
-
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
-            EXPECT_EQ(request_params.width, response_params.width);
-            EXPECT_EQ(request_params.height, response_params.height);
-            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-
-
             mir_surface_release(surface, release_surface_callback, this);
 
             wait_for_surface_release();
-
-            ASSERT_TRUE(surface == NULL);
 
             mir_connection_release(connection);
         }
@@ -258,33 +241,3 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_client_process(client_config);
 }
-
-#if 0
-TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
-{
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            using ::mir::client::Surface;
-            using ::mir::client::ConsoleLogger;
-
-            auto const logger = std::make_shared<ConsoleLogger>();
-
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0, logger);
-
-            EXPECT_EQ(640, mysurface.width());
-            EXPECT_EQ(480, mysurface.height());
-            EXPECT_EQ(0, mysurface.pixel_format());
-
-            mysurface = Surface(mir::test_socket_file(), 1600, 1200, 0, logger);
-
-            EXPECT_EQ(1600, mysurface.width());
-            EXPECT_EQ(1200, mysurface.height());
-            EXPECT_EQ(0, mysurface.pixel_format());
-        }
-    } client_creates_surfaces;
-
-    launch_client_process(client_creates_surfaces);
-}
-#endif
