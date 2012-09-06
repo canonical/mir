@@ -81,24 +81,21 @@ private:
     std::string error_message;
 };
 
-namespace
-{
-
-
 // TODO the connection should track all associated surfaces, and release them on
 // disconnection.
-class MirClientConnection
+class MirConnection
 {
 public:
-    MirClientConnection(std::shared_ptr<mc::Logger> const & log)
-        : channel("./mir_socket_test", log)
+    MirConnection(std::shared_ptr<mc::Logger> const & log)
+        : created(true),
+          channel("./mir_socket_test", log)
         , server(&channel)
         , log(log)
     {
     }
 
-    MirClientConnection(MirClientConnection const &) = delete;
-    MirClientConnection& operator=(MirClientConnection const &) = delete;
+    MirConnection(MirConnection const &) = delete;
+    MirConnection& operator=(MirConnection const &) = delete;
 
     MirSurface* create_surface(
         MirSurfaceParameters const & params,
@@ -113,7 +110,32 @@ public:
         return error_message.c_str();
     }
 
+    void disconnect()
+    {
+        mir::protobuf::Void ignored;
+
+        server.disconnect(
+            0,
+            &ignored,
+            &ignored,
+            google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+
+        std::unique_lock<std::mutex> lock(mutex);
+        while (created) cv.wait(lock);
+    }
+
 private:
+    void done_disconnect()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        created = false;
+        cv.notify_one();
+    }
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool created;
+
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
@@ -124,42 +146,34 @@ private:
     std::set<MirSurface *> surfaces;
 };
 
-}
-
-struct MirConnection
-{
-    MirClientConnection * client_connection;
-};
-
 void mir_connect(mir_connected_callback callback, void * context)
 {
-    MirConnection * connection = new MirConnection();
 
     try
     {
         auto log = std::make_shared<mc::ConsoleLogger>();
-        connection->client_connection = new MirClientConnection(log);
+        MirConnection * connection = new MirConnection(log);
+        callback(connection, context);
     }
     catch (std::exception const& /*x*/)
     {
-        connection->client_connection = 0; // or Some error object
+        // TODO callback with an error connection
     }
-    callback(connection, context);
 }
 
-int mir_connection_is_valid(MirConnection * connection)
+int mir_connection_is_valid(MirConnection * /*connection*/)
 {
-    return connection->client_connection ? 1 : 0;
+    return 1;
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
-    return connection->client_connection->get_error_message();
+    return connection->get_error_message();
 }
 
 void mir_connection_release(MirConnection * connection)
 {
-    delete connection->client_connection;
+    connection->disconnect();
     delete connection;
 }
 
@@ -170,7 +184,7 @@ void mir_surface_create(MirConnection * connection,
 {
     try
     {
-        connection->client_connection->create_surface(*params, callback, context);
+        connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
