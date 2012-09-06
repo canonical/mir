@@ -33,33 +33,42 @@ namespace mir
 {
 namespace
 {
-struct SessionCounter : mir::protobuf::DisplayServer
+struct SurfaceCounter : mir::protobuf::DisplayServer
 {
-    int session_count;
+    int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    SessionCounter() : session_count(0)
+    SurfaceCounter() : surface_count(0)
     {
     }
 
-    SessionCounter(SessionCounter const &) = delete;
+    SurfaceCounter(SurfaceCounter const &) = delete;
     void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        response->mutable_id()->set_value(13);
+        response->mutable_id()->set_value(13); // TODO distinct numbers & tracking
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());
 
         std::unique_lock<std::mutex> lock(guard);
-        ++session_count;
+        ++surface_count;
         wait_condition.notify_one();
 
         done->Run();
     }
+
+    void release_surface(::google::protobuf::RpcController* /*controller*/,
+                         const ::mir::protobuf::SurfaceId* /*request*/,
+                         ::mir::protobuf::Void* /*response*/,
+                         ::google::protobuf::Closure* /*done*/)
+    {
+        // TODO need some tests for releasing surfaces
+    }
+
 
     void disconnect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::Void* /*request*/,
@@ -143,14 +152,14 @@ struct TestServer
     void expect_surface_count(int expected_count)
     {
         std::unique_lock<std::mutex> ul(collector.guard);
-        while (collector.session_count != expected_count)
+        while (collector.surface_count != expected_count)
             collector.wait_condition.wait(ul);
 
-        EXPECT_EQ(expected_count, collector.session_count);
+        EXPECT_EQ(expected_count, collector.surface_count);
     }
 
     // "Server" side
-    SessionCounter collector;
+    SurfaceCounter collector;
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
@@ -170,7 +179,7 @@ struct TestClient
         surface_parameters.set_height(480);
         surface_parameters.set_pixel_format(0);
 
-        ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
+        ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
     }
 
@@ -181,7 +190,7 @@ struct TestClient
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
 
-    MOCK_METHOD0(connect_done, void ());
+    MOCK_METHOD0(create_surface_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
 
     void on_create_surface_done()
@@ -280,13 +289,13 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
 
     client.display_server.create_surface(
         0,
         &client.surface_parameters,
         &client.surface,
-        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
 
     client.wait_for_create_surface();
 
@@ -294,31 +303,31 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-        a_connection_attempt_results_in_a_session_being_connected)
+        create_surface_results_in_a_surface_being_created)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
 
     client.display_server.create_surface(
         0,
         &client.surface_parameters,
         &client.surface,
-        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
 
     client.wait_for_create_surface();
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-       each_connection_attempt_results_in_a_new_session_being_created)
+       each_create_surface_results_in_a_new_surface_being_created)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
     int const window_count{5};
 
-    EXPECT_CALL(client, connect_done()).Times(window_count);
+    EXPECT_CALL(client, create_surface_done()).Times(window_count);
 
     for (int i = 0; i != window_count; ++i)
     {
@@ -326,7 +335,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             0,
             &client.surface_parameters,
             &client.surface,
-            google::protobuf::NewCallback(&client, &TestClient::connect_done));
+            google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
 
         client.wait_for_create_surface();
     }
@@ -335,17 +344,17 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-       connect_then_disconnect_a_session)
+       connect_create_surface_then_disconnect_a_session)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
     client.display_server.create_surface(
         0,
         &client.surface_parameters,
         &client.surface,
-        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
 
     client.wait_for_create_surface();
 
@@ -365,12 +374,12 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
     client.display_server.create_surface(
         0,
         &client.surface_parameters,
         &client.surface,
-        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
 
     client.wait_for_create_surface();
 
@@ -392,19 +401,19 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 }
 
 TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
-       multiple_clients_can_connect_and_disconnect)
+       multiple_clients_can_connect_create_surface_and_disconnect)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(number_of_clients);
     server.comm.start();
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(client[i], connect_done()).Times(1);
+        EXPECT_CALL(client[i], create_surface_done()).Times(1);
         client[i].display_server.create_surface(
             0,
             &client[i].surface_parameters,
             &client[i].surface,
-            google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
+            google::protobuf::NewCallback(&client[i], &TestClient::create_surface_done));
         client[i].wait_for_create_surface();
     }
 
@@ -432,12 +441,12 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(client[i], connect_done()).Times(1);
+        EXPECT_CALL(client[i], create_surface_done()).Times(1);
         client[i].display_server.create_surface(
             0,
             &client[i].surface_parameters,
             &client[i].surface,
-            google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
+            google::protobuf::NewCallback(&client[i], &TestClient::create_surface_done));
     }
 
     for (int i = 0; i != number_of_clients; ++i)
@@ -466,14 +475,14 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
-       each_connection_attempt_results_in_a_new_session_being_created_asynchronously)
+       each_create_surface_results_in_a_new_surface_being_created_asynchronously)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
     int const surface_count{5};
 
-    EXPECT_CALL(client, connect_done()).Times(surface_count);
+    EXPECT_CALL(client, create_surface_done()).Times(surface_count);
 
     for (int i = 0; i != surface_count; ++i)
     {
@@ -481,7 +490,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
             0,
             &client.surface_parameters,
             &client.surface,
-            google::protobuf::NewCallback(&client, &TestClient::connect_done));
+            google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
     }
 
     server.expect_surface_count(surface_count);
