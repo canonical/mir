@@ -2,12 +2,6 @@ option cc_generic_services = true;
 
 package mir.protobuf;
 
-message ConnectMessage {
-  optional int32 width = 1;
-  optional int32 height = 2;
-  optional int32 pixel_format = 3;
-}
-
 message SurfaceParameters {
   optional int32 width = 1;
   optional int32 height = 2;
@@ -30,7 +24,6 @@ message Void {
 }
 
 service DisplayServer {
-  rpc connect(ConnectMessage) returns (Surface);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc release_surface(SurfaceId) returns (Void);

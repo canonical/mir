@@ -71,12 +71,12 @@ struct ValidSurfaceState : public SurfaceState
         display_server(&channel),
         created(false)
     {
-        mir::protobuf::ConnectMessage connect_message;
+        mir::protobuf::SurfaceParameters connect_message;
         connect_message.set_width(width);
         connect_message.set_height(height);
         connect_message.set_pixel_format(pix_format);
 
-        display_server.connect(
+        display_server.create_surface(
             0,
             &connect_message,
             &surface,

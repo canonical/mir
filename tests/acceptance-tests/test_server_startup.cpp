@@ -52,8 +52,8 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 
     SessionCounter(SessionCounter const &) = delete;
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
+    void create_surface(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {

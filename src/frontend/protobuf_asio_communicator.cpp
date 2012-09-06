@@ -34,9 +34,8 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
-class mfd::Session
+struct mfd::Session
 {
-public:
     Session(
         boost::asio::io_service& io_service,
         int id_,
@@ -68,14 +67,35 @@ public:
         return result;
     }
 
-private:
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
-    friend class ::mir::frontend::ProtobufAsioCommunicator;
+    template<class ParameterMessage, class ResultMessage>
+    void invoke(
+        void (protobuf::DisplayServer::*function)(
+            ::google::protobuf::RpcController* controller,
+            const ParameterMessage* request,
+            ResultMessage* response,
+            ::google::protobuf::Closure* done),
+        mir::protobuf::wire::Invocation const& invocation)
+    {
+        ParameterMessage parameter_message;
+        parameter_message.ParseFromString(invocation.parameters());
+        ResultMessage result_message;
+
+        (display_server.get()->*function)(
+            0,
+            &parameter_message,
+            &result_message,
+            google::protobuf::NewCallback(
+                this,
+                &Session::send_response,
+                invocation.id(),
+                static_cast<google::protobuf::Message*>(&result_message)));
+    }
 
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
@@ -88,7 +108,6 @@ private:
 };
 
 
-// TODO: Switch to std::bind for launching the thread.
 mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
@@ -202,79 +221,24 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 {
     if (!ec)
     {
-        /* Parse the client's message and handle it in the server.
-
-           NOTE: the display_server member functions are synchronous, and
-           execute callbacks directly. This means it is valid to pass stack
-           variables into NewCallback() and (in the case of disconnect) to
-           delete this session instance once the function returns.
-        */
         std::istream in(&message);
-        mir::protobuf::wire::Invocation invoke;
+        mir::protobuf::wire::Invocation invocation;
 
-        invoke.ParseFromIstream(&in);
+        invocation.ParseFromIstream(&in);
 
-        if ("connect" == invoke.method_name())
+        // TODO comparing strings in an if-else chain isn't efficient.
+        // It is probably possible to generate a Trie at compile time.
+        if ("create_surface" == invocation.method_name())
         {
-            mir::protobuf::ConnectMessage connect_message;
-            connect_message.ParseFromString(invoke.parameters());
-
-            display_server->connect(
-                0,
-                &connect_message,
-                &surface,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invoke.id(),
-                    static_cast<google::protobuf::Message*>(&surface)));
+            invoke(&protobuf::DisplayServer::create_surface, invocation);
         }
-        else if ("create_surface" == invoke.method_name())
+        else if ("release_surface" == invocation.method_name())
         {
-            mir::protobuf::SurfaceParameters surface_message;
-            surface_message.ParseFromString(invoke.parameters());
-
-            display_server->create_surface(
-                0,
-                &surface_message,
-                &surface,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invoke.id(),
-                    static_cast<google::protobuf::Message*>(&surface)));
+            invoke(&protobuf::DisplayServer::release_surface, invocation);
         }
-        else if ("release_surface" == invoke.method_name())
+        else if ("disconnect" == invocation.method_name())
         {
-            mir::protobuf::Void ignored;
-            mir::protobuf::SurfaceId message;
-            message.ParseFromString(invoke.parameters());
-
-            display_server->release_surface(
-                0,
-                &message,
-                &ignored,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invoke.id(),
-                    static_cast<google::protobuf::Message*>(&ignored)));
-        }
-        else if ("disconnect" == invoke.method_name())
-        {
-            mir::protobuf::Void ignored;
-            ignored.ParseFromString(invoke.parameters());
-
-            display_server->disconnect(
-                0,
-                &ignored,
-                &ignored,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invoke.id(),
-                    static_cast<google::protobuf::Message*>(&ignored)));
-
+            invoke(&protobuf::DisplayServer::disconnect, invocation);
             // Careful about what you do after this - it deletes this
             connected_sessions->remove(id());
             return;

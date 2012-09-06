@@ -45,8 +45,8 @@ struct SessionCounter : mir::protobuf::DisplayServer
     }
 
     SessionCounter(SessionCounter const &) = delete;
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
+    void create_surface(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
@@ -178,9 +178,9 @@ struct TestClient
         connect_done_count(0),
         disconnect_done_count(0)
     {
-        connect_message.set_width(640);
-        connect_message.set_height(480);
-        connect_message.set_pixel_format(0);
+        surface_parameters.set_width(640);
+        surface_parameters.set_height(480);
+        surface_parameters.set_pixel_format(0);
 
         ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
@@ -189,7 +189,7 @@ struct TestClient
     std::shared_ptr<MockLogger> logger;
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
-    mir::protobuf::ConnectMessage connect_message;
+    mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
 
@@ -281,9 +281,9 @@ struct ProtobufAsioCommunicatorTestFixture : public BasicTestFixture
 
 struct ProtobufAsioMultiClientCommunicatorTestFixture : public BasicTestFixture
 {
-    static int const connection_count = 10;
+    static int const number_of_clients = 10;
 
-    TestClient client[connection_count];
+    TestClient client[number_of_clients];
 };
 }
 
@@ -294,9 +294,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
 
     EXPECT_CALL(client, connect_done()).Times(1);
 
-    client.display_server.connect(
+    client.display_server.create_surface(
         0,
-        &client.connect_message,
+        &client.surface_parameters,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
@@ -313,9 +313,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_CALL(client, connect_done()).Times(1);
 
-    client.display_server.connect(
+    client.display_server.create_surface(
         0,
-        &client.connect_message,
+        &client.surface_parameters,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
@@ -336,9 +336,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
-        client.display_server.connect(
+        client.display_server.create_surface(
             0,
-            &client.connect_message,
+            &client.surface_parameters,
             &client.surface,
             google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
@@ -356,9 +356,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     server.comm.start();
 
     EXPECT_CALL(client, connect_done()).Times(1);
-    client.display_server.connect(
+    client.display_server.create_surface(
         0,
-        &client.connect_message,
+        &client.surface_parameters,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
@@ -384,9 +384,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     server.comm.start();
 
     EXPECT_CALL(client, connect_done()).Times(1);
-    client.display_server.connect(
+    client.display_server.create_surface(
         0,
-        &client.connect_message,
+        &client.surface_parameters,
         &client.surface,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
@@ -416,24 +416,24 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
        multiple_clients_can_connect_and_disconnect)
 {
-    EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(number_of_clients);
     server.comm.start();
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         EXPECT_CALL(client[i], connect_done()).Times(1);
-        client[i].display_server.connect(
+        client[i].display_server.create_surface(
             0,
-            &client[i].connect_message,
+            &client[i].surface_parameters,
             &client[i].surface,
             google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
         client[i].wait_for_connect_done();
     }
 
-    server.expect_session_count(connection_count);
-    server.expect_connected_session_count(connection_count);
+    server.expect_session_count(number_of_clients);
+    server.expect_connected_session_count(number_of_clients);
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         EXPECT_CALL(client[i], disconnect_done()).Times(1);
         client[i].display_server.disconnect(
@@ -444,35 +444,35 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
         client[i].wait_for_disconnect_done();
     }
 
-    server.expect_session_count(connection_count);
+    server.expect_session_count(number_of_clients);
     server.expect_connected_session_count(0);
 }
 
 TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
        multiple_clients_can_connect_and_disconnect_asynchronously)
 {
-    EXPECT_CALL(*server.factory, make_ipc_server()).Times(connection_count);
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(number_of_clients);
     server.comm.start();
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         EXPECT_CALL(client[i], connect_done()).Times(1);
-        client[i].display_server.connect(
+        client[i].display_server.create_surface(
             0,
-            &client[i].connect_message,
+            &client[i].surface_parameters,
             &client[i].surface,
             google::protobuf::NewCallback(&client[i], &TestClient::connect_done));
     }
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         client[i].wait_for_connect_done();
     }
 
-    server.expect_session_count(connection_count);
-    server.expect_connected_session_count(connection_count);
+    server.expect_session_count(number_of_clients);
+    server.expect_connected_session_count(number_of_clients);
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         EXPECT_CALL(client[i], disconnect_done()).Times(1);
         client[i].display_server.disconnect(
@@ -482,12 +482,12 @@ TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
             google::protobuf::NewCallback(&client[i], &TestClient::disconnect_done));
     }
 
-    for (int i = 0; i != connection_count; ++i)
+    for (int i = 0; i != number_of_clients; ++i)
     {
         client[i].wait_for_disconnect_done();
     }
 
-    server.expect_session_count(connection_count);
+    server.expect_session_count(number_of_clients);
     server.expect_connected_session_count(0);
 }
 
@@ -503,9 +503,9 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     for (int i = 0; i != connection_count; ++i)
     {
-        client.display_server.connect(
+        client.display_server.create_surface(
             0,
-            &client.connect_message,
+            &client.surface_parameters,
             &client.surface,
             google::protobuf::NewCallback(&client, &TestClient::connect_done));
     }

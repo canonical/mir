@@ -69,8 +69,8 @@ public:
     }
 
 private:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
+    void create_surface(google::protobuf::RpcController* /*controller*/,
+                 const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
@@ -86,6 +86,16 @@ private:
         response->set_height(surface->height().as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
 
+        // TODO track server-side surface object
+        done->Run();
+    }
+
+    void release_surface(google::protobuf::RpcController* /*controller*/,
+                         const mir::protobuf::SurfaceId*,
+                         mir::protobuf::Void*,
+                         google::protobuf::Closure* done)
+    {
+        // TODO implement this
         done->Run();
     }
 
@@ -94,6 +104,7 @@ private:
                  mir::protobuf::Void* /*response*/,
                  google::protobuf::Closure* done)
     {
+        // TODO implement this
         done->Run();
     }
 
