@@ -20,7 +20,7 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 
-#include "mir_client/mir_surface.h"
+#include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
 #include "display_server_test_fixture.h"
@@ -30,6 +30,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -56,6 +57,82 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 geom::Width const width{640};
 geom::Height const height{480};
 mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
+
+struct ClientConfigCommon : TestingClientConfiguration
+{
+    ClientConfigCommon()
+        : connection(NULL)
+        , surface(NULL)
+    {
+    }
+
+    static void connection_callback(MirConnection * connection, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->connected(connection);
+    }
+
+    static void create_surface_callback(MirSurface * surface, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_created(surface);
+    }
+
+    static void release_surface_callback(MirSurface * surface, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_released(surface);
+    }
+
+    void connected(MirConnection * new_connection)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        connection = new_connection;
+        wait_condition.notify_all();
+    }
+
+    void surface_created(MirSurface * new_surface)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        surface = new_surface;
+        wait_condition.notify_all();
+    }
+
+    void surface_released(MirSurface * /*released_surface*/)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        surface = NULL;
+        wait_condition.notify_all();
+    }
+
+    void wait_for_connect()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!connection)
+            wait_condition.wait(lock);
+    }
+
+    void wait_for_surface_create()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!surface)
+            wait_condition.wait(lock);
+    }
+
+    void wait_for_surface_release()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (surface)
+            wait_condition.wait(lock);
+    }
+
+
+    std::mutex guard;
+    std::condition_variable wait_condition;
+    MirConnection * connection;
+    MirSurface * surface;
+};
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -79,15 +156,40 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_server_process(server_config);
 
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
         void exec()
         {
-            using ::mir::client::Surface;
-            using ::mir::client::ConsoleLogger;
+            mir_connect(connection_callback, this);
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
-            EXPECT_TRUE(mysurface.is_valid());
+            wait_for_connect();
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+
+            wait_for_surface_create();
+
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+
+
+            mir_surface_release(surface, release_surface_callback, this);
+
+            wait_for_surface_release();
+
+            ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
         }
     } client_config;
 
@@ -117,21 +219,47 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_server_process(server_config);
 
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
         void exec()
         {
-            using ::mir::client::Surface;
-            using ::mir::client::ConsoleLogger;
+            mir_connect(connection_callback, this);
 
-            Surface mysurface(mir::test_socket_file(), 640, 480, 0, std::make_shared<ConsoleLogger>());
-            EXPECT_TRUE(mysurface.is_valid());
+            wait_for_connect();
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+
+            wait_for_surface_create();
+
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+
+
+            mir_surface_release(surface, release_surface_callback, this);
+
+            wait_for_surface_release();
+
+            ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
         }
     } client_config;
 
     launch_client_process(client_config);
 }
 
+#if 0
 TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 {
     struct Client : TestingClientConfiguration
@@ -159,3 +287,4 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 
     launch_client_process(client_creates_surfaces);
 }
+#endif

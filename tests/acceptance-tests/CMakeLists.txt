@@ -19,7 +19,6 @@ add_executable(
   acceptance-tests
   
   test_client_library.cpp
-  test_connect_disconnect.cpp
   display_server_test_fixture.cpp
   test_renderloop.cpp
   test_surfaceloop.cpp

@@ -24,7 +24,6 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/thread/all.h"
 
-#include "mir_client/mir_surface.h"
 #include "mir_client/mir_logger.h"
 
 #include "mir_protobuf.pb.h"
