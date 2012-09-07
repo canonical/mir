@@ -62,8 +62,6 @@ public:
     Texture* bind_to_texture();
 
 private:
-    const geometry::Width  buffer_width;
-    const geometry::Height buffer_height;
     const compositor::PixelFormat buffer_format;
     geometry::Stride buffer_stride;
 
