@@ -58,37 +58,11 @@ geom::Width const width{640};
 geom::Height const height{480};
 mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
 
-struct ClientConfigCommon : TestingClientConfiguration
+struct SurfaceSync
 {
-    ClientConfigCommon()
-        : connection(NULL)
-        , surface(NULL)
+    SurfaceSync() :
+        surface(0)
     {
-    }
-
-    static void connection_callback(MirConnection * connection, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connected(connection);
-    }
-
-    static void create_surface_callback(MirSurface * surface, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_created(surface);
-    }
-
-    static void release_surface_callback(MirSurface * surface, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_released(surface);
-    }
-
-    void connected(MirConnection * new_connection)
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        connection = new_connection;
-        wait_condition.notify_all();
     }
 
     void surface_created(MirSurface * new_surface)
@@ -103,13 +77,6 @@ struct ClientConfigCommon : TestingClientConfiguration
         std::unique_lock<std::mutex> lock(guard);
         surface = NULL;
         wait_condition.notify_all();
-    }
-
-    void wait_for_connect()
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        while (!connection)
-            wait_condition.wait(lock);
     }
 
     void wait_for_surface_create()
@@ -129,9 +96,65 @@ struct ClientConfigCommon : TestingClientConfiguration
 
     std::mutex guard;
     std::condition_variable wait_condition;
-    MirConnection * connection;
     MirSurface * surface;
 };
+
+void create_surface_callback(MirSurface* surface, void * context)
+{
+    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
+    config->surface_created(surface);
+}
+
+void release_surface_callback(MirSurface* surface, void * context)
+{
+    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
+    config->surface_released(surface);
+}
+
+void wait_for_surface_create(SurfaceSync* context)
+{
+    context->wait_for_surface_create();
+}
+
+void wait_for_surface_release(SurfaceSync* context)
+{
+    context->wait_for_surface_release();
+}
+
+struct ClientConfigCommon : TestingClientConfiguration
+{
+    ClientConfigCommon()
+        : connection(NULL)
+    {
+    }
+
+    static void connection_callback(MirConnection * connection, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->connected(connection);
+    }
+
+    void connected(MirConnection * new_connection)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        connection = new_connection;
+        wait_condition.notify_all();
+    }
+
+    void wait_for_connect()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!connection)
+            wait_condition.wait(lock);
+    }
+
+    std::mutex guard;
+    std::condition_variable wait_condition;
+    MirConnection * connection;
+    SurfaceSync ssync0;
+};
+
+
 
 }
 
@@ -169,25 +192,25 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params = {640, 480, mir_pixel_format_rgba_8888};
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
 
-            wait_for_surface_create();
+            wait_for_surface_create(&ssync0);
 
-            ASSERT_TRUE(surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(surface));
-            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+            ASSERT_TRUE(ssync0.surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(ssync0.surface));
+            EXPECT_STREQ(mir_surface_get_error_message(ssync0.surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync0.surface);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(surface, release_surface_callback, this);
+            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
 
-            wait_for_surface_release();
+            wait_for_surface_release(&ssync0);
 
-            ASSERT_TRUE(surface == NULL);
+            ASSERT_TRUE(ssync0.surface == NULL);
 
             mir_connection_release(connection);
         }
@@ -232,25 +255,25 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
 
-            wait_for_surface_create();
+            wait_for_surface_create(&ssync0);
 
-            ASSERT_TRUE(surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(surface));
-            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+            ASSERT_TRUE(ssync0.surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(ssync0.surface));
+            EXPECT_STREQ(mir_surface_get_error_message(ssync0.surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync0.surface);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(surface, release_surface_callback, this);
+            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
 
-            wait_for_surface_release();
+            wait_for_surface_release(&ssync0);
 
-            ASSERT_TRUE(surface == NULL);
+            ASSERT_TRUE(ssync0.surface == NULL);
 
             mir_connection_release(connection);
         }
@@ -271,37 +294,32 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 
             MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
 
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
-            wait_for_surface_create();
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
+            wait_for_surface_create(&ssync0);
 
-            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
-            MirSurface* surface1 = surface;
-            surface = 0;
+            SurfaceSync ssync1;
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
-            wait_for_surface_create();
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync1);
+            wait_for_surface_create(&ssync1);
 
-            MirSurfaceParameters response_params = mir_surface_get_parameters(surface1);
+            MirSurfaceParameters response_params = mir_surface_get_parameters(ssync0.surface);
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            response_params = mir_surface_get_parameters(surface);
+            response_params = mir_surface_get_parameters(ssync1.surface);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            mir_surface_release(surface, release_surface_callback, this);
-            wait_for_surface_release();
+            mir_surface_release(ssync1.surface, release_surface_callback, &ssync1);
+            wait_for_surface_release(&ssync1);
 
-            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
-            surface = surface1;
-
-            mir_surface_release(surface1, release_surface_callback, this);
-            wait_for_surface_release();
+            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
+            wait_for_surface_release(&ssync0);
 
             mir_connection_release(connection);
         }
@@ -322,29 +340,24 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
 
             MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
 
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
-            wait_for_surface_create();
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
+            wait_for_surface_create(&ssync0);
 
-            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
-            MirSurface* surface1 = surface;
-            surface = 0;
+            SurfaceSync ssync1;
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, this);
-            wait_for_surface_create();
+            mir_surface_create(connection, &request_params, create_surface_callback, &ssync1);
+            wait_for_surface_create(&ssync1);
 
-            EXPECT_NE(mir_debug_surface_id(surface), mir_debug_surface_id(surface1));
+            EXPECT_NE(mir_debug_surface_id(ssync0.surface), mir_debug_surface_id(ssync1.surface));
 
-            mir_surface_release(surface, release_surface_callback, this);
-            wait_for_surface_release();
+            mir_surface_release(ssync1.surface, release_surface_callback, &ssync1);
+            wait_for_surface_release(&ssync1);
 
-            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
-            surface = surface1;
-
-            mir_surface_release(surface1, release_surface_callback, this);
-            wait_for_surface_release();
+            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
+            wait_for_surface_release(&ssync0);
 
             mir_connection_release(connection);
         }
