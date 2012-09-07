@@ -31,13 +31,13 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-struct AndroidBufferHandleDeleter
+struct AndroidBufferHandleDefaultDeleter
 {
-    AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
+    AndroidBufferHandleDefaultDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(mga::AndroidBufferHandle* t)
+    void operator()(mga::AndroidBufferHandleDefault* t)
     {
         alloc_device->free(alloc_device.get(), t->anw_buffer.handle);
         delete t;
@@ -53,7 +53,8 @@ struct AndroidBufferHandleEmptyDeleter
     }
 };
 
-std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geometry::Width width, geometry::Height height,
+std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
+                              geometry::Width width, geometry::Height height,
                               compositor::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
@@ -67,10 +68,10 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *empt = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
-        return std::shared_ptr<mga::BufferHandle>(empt, empty_del);
+        return std::shared_ptr<mga::AndroidBufferHandle>(empt, empty_del);
 
-    AndroidBufferHandleDeleter del(alloc_dev);
 
+    /* pack ANativeWindow buffer for the handle */
     ANativeWindowBuffer buffer;
     buffer.width = (int) width.as_uint32_t();
     buffer.height = (int) height.as_uint32_t();
@@ -79,8 +80,9 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
     buffer.format = format;
     buffer.usage = usage_flag;
 
-    auto handle = std::shared_ptr<mga::BufferHandle>(
-            new mga::AndroidBufferHandle(buffer, pf, usage), del);
+    AndroidBufferHandleDefaultDeleter del(alloc_dev);
+    auto handle = std::shared_ptr<mga::AndroidBufferHandle>(
+            new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
 
     return handle;
 }

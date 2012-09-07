@@ -46,7 +46,7 @@ protected:
 
     ANativeWindowBuffer anwb;
 
-    std::shared_ptr<mga::AndroidBufferHandle> buffer_handle;
+    std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
 
     native_handle_t native_handle;
     geom::Width width;
@@ -60,7 +60,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_height)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->height(), height);
 }
 
@@ -68,7 +68,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_width)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->width(), width);
 }
 
@@ -76,7 +76,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)
 {
     using namespace testing;
    
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
 
     EXPECT_EQ(buffer_handle->stride(), stride);
 }
@@ -85,7 +85,7 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->format(), pf);
 }
 
@@ -93,13 +93,13 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
 {
     using namespace testing;
     
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->usage(), usage);
 }
 
 TEST_F(AdaptorNativeWinProduction, returns_handle_non_null)
 {
-    buffer_handle = std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
     ASSERT_NE(handle, (ANativeWindowBuffer*) NULL);
 }
@@ -115,7 +115,7 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
     anwb.usage =  55;
     anwb.handle = (buffer_handle_t) 0x66;
  
-    buffer_handle = std::make_shared<mga::AndroidBufferHandle>(anwb, pf, usage );
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
    
     EXPECT_EQ(handle->width, anwb.width); 

@@ -43,10 +43,10 @@ enum class BufferUsage : uint32_t
     use_software
 };
 
-class BufferHandle 
+class AndroidBufferHandle 
 {
 public:
-    virtual ~BufferHandle() {}
+    virtual ~AndroidBufferHandle() {}
 
     virtual geometry::Width width() const   = 0;
     virtual geometry::Height height() const = 0;
@@ -57,14 +57,13 @@ public:
     virtual EGLClientBuffer get_egl_client_buffer() const = 0;
 
 protected:
-    BufferHandle() = default;
+    AndroidBufferHandle() = default;
 };
 
-
-class AndroidBufferHandle: public BufferHandle
+class AndroidBufferHandleDefault: public AndroidBufferHandle
 {
 public:
-    explicit AndroidBufferHandle(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
+    explicit AndroidBufferHandleDefault(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
 
     geometry::Width width() const;
     geometry::Height height() const;
@@ -76,6 +75,9 @@ public:
 
 
     const ANativeWindowBuffer anw_buffer;
+
+    /* we save these so that when other parts of the system query for the mir
+       types, we don't have to convert back */
     const compositor::PixelFormat pixel_format;
     const BufferUsage buffer_usage;
 };

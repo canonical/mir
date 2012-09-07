@@ -23,39 +23,39 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mga::AndroidBufferHandle::AndroidBufferHandle(ANativeWindowBuffer buf, mc::PixelFormat pf, BufferUsage use)
+mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(ANativeWindowBuffer buf, mc::PixelFormat pf, BufferUsage use)
  : anw_buffer(buf), 
    pixel_format(pf),
    buffer_usage(use)
 {
 }
 
-EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer() const
+EGLClientBuffer mga::AndroidBufferHandleDefault::get_egl_client_buffer() const
 {
     return (EGLClientBuffer) &anw_buffer;
 }
 
-geom::Height mga::AndroidBufferHandle::height() const
+geom::Height mga::AndroidBufferHandleDefault::height() const
 {
     return geom::Height(anw_buffer.height);
 }
 
-geom::Width mga::AndroidBufferHandle::width() const
+geom::Width mga::AndroidBufferHandleDefault::width() const
 {
     return geom::Width(anw_buffer.width);
 }
 
-geom::Stride mga::AndroidBufferHandle::stride() const
+geom::Stride mga::AndroidBufferHandleDefault::stride() const
 {
     return geom::Stride(anw_buffer.stride);
 }
 
-mc::PixelFormat mga::AndroidBufferHandle::format() const
+mc::PixelFormat mga::AndroidBufferHandleDefault::format() const
 {
     return pixel_format; 
 }
 
-mga::BufferUsage mga::AndroidBufferHandle::usage() const
+mga::BufferUsage mga::AndroidBufferHandleDefault::usage() const
 {
     return buffer_usage;
 }
