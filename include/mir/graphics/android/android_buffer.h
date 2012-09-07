@@ -66,7 +66,6 @@ private:
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
-    /* should be const? */
     std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
 };
 

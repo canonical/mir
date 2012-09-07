@@ -15,23 +15,22 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+
 #ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "mir/compositor/buffer.h"
-#include <memory>
-
 #include "mir/graphics/android/android_buffer_handle.h"
+
+#include <memory>
 
 namespace mir
 {
-
 namespace graphics
 {
-
 namespace android
 {
 
+/* note: this will need a new interface whenever gralloc interface changes (or for hw specific quirks) */
 class GraphicAllocAdaptor
 {
 public:
