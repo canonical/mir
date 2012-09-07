@@ -365,3 +365,49 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
 
     launch_client_process(client_creates_surfaces);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
+{
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            const int surface_count = 5;
+
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
+
+            SurfaceSync ssync[surface_count];
+
+            for (int i = 0; i != surface_count; ++i)
+                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+
+            for (int i = 0; i != surface_count; ++i)
+                wait_for_surface_create(ssync+i);
+
+            for (int i = 0; i != surface_count; ++i)
+            {
+                for (int j = 0; j != surface_count; ++j)
+                {
+                    if (i == j)
+                        EXPECT_EQ(mir_debug_surface_id(ssync[i].surface), mir_debug_surface_id(ssync[j].surface));
+                    else
+                        EXPECT_NE(mir_debug_surface_id(ssync[i].surface), mir_debug_surface_id(ssync[j].surface));
+                }
+            }
+
+            for (int i = 0; i != surface_count; ++i)
+                mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
+
+            for (int i = 0; i != surface_count; ++i)
+                wait_for_surface_release(ssync+i);
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}
