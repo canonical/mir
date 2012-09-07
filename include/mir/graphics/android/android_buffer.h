@@ -62,7 +62,6 @@ public:
     Texture* bind_to_texture();
 
 private:
-    const compositor::PixelFormat buffer_format;
     geometry::Stride buffer_stride;
 
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
