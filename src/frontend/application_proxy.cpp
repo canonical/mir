@@ -23,18 +23,17 @@
 #include "mir/surfaces/surface.h"
 
 
-
-
 mir::frontend::ApplicationProxy::ApplicationProxy(
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
     surface_organiser(surface_organiser), next_surface_id(0)
 {
 }
 
-void mir::frontend::ApplicationProxy::create_surface(google::protobuf::RpcController* /*controller*/,
-             const mir::protobuf::SurfaceParameters* request,
-             mir::protobuf::Surface* response,
-             google::protobuf::Closure* done)
+void mir::frontend::ApplicationProxy::create_surface(
+    google::protobuf::RpcController* /*controller*/,
+    const mir::protobuf::SurfaceParameters* request,
+    mir::protobuf::Surface* response,
+    google::protobuf::Closure* done)
 {
     auto tmp = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
@@ -60,19 +59,21 @@ int mir::frontend::ApplicationProxy::next_id()
 }
 
 
-void mir::frontend::ApplicationProxy::release_surface(google::protobuf::RpcController* /*controller*/,
-                     const mir::protobuf::SurfaceId*,
-                     mir::protobuf::Void*,
-                     google::protobuf::Closure* done)
+void mir::frontend::ApplicationProxy::release_surface(
+    google::protobuf::RpcController* /*controller*/,
+    const mir::protobuf::SurfaceId*,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
 {
     // TODO implement this
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::disconnect(google::protobuf::RpcController* /*controller*/,
-             const mir::protobuf::Void* /*request*/,
-             mir::protobuf::Void* /*response*/,
-             google::protobuf::Closure* done)
+void mir::frontend::ApplicationProxy::disconnect(
+    google::protobuf::RpcController* /*controller*/,
+    const mir::protobuf::Void* /*request*/,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
 {
     // TODO implement this
     done->Run();

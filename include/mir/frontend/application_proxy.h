@@ -22,6 +22,8 @@
 
 #include "mir/thread/all.h"
 #include "mir_protobuf.pb.h"
+
+#include <map>
 #include <memory>
 
 namespace mir
@@ -29,6 +31,7 @@ namespace mir
 namespace surfaces
 {
 class ApplicationSurfaceOrganiser;
+class Surface;
 }
 namespace frontend
 {
@@ -59,6 +62,9 @@ private:
 
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
     std::atomic<int> next_surface_id;
+
+    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
+    Surfaces surfaces;
 };
 
 }

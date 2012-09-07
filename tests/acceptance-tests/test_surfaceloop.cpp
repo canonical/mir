@@ -154,6 +154,7 @@ struct ClientConfigCommon : TestingClientConfiguration
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
 };
+const int ClientConfigCommon::max_surface_count;
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
@@ -220,7 +221,6 @@ TEST_F(BespokeDisplayServerTestFixture,
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffers_on_server)
 {
-
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mc::GraphicBufferAllocator> make_graphic_buffer_allocator()
@@ -407,3 +407,111 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
 
     launch_client_process(client_creates_surfaces);
 }
+
+namespace
+{
+struct BufferCounterConfig : TestingServerConfiguration
+{
+    class StubBuffer : public mc::Buffer
+    {
+    public:
+
+        StubBuffer()
+        {
+            int created = buffers_created.load();
+            while (!buffers_created.compare_exchange_weak(created, created + 1));
+        }
+        ~StubBuffer()
+        {
+            int destroyed = buffers_destroyed.load();
+            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1));
+        }
+
+        virtual geom::Width width() const { return geom::Width(); }
+
+        virtual geom::Height height() const { return geom::Height(); }
+
+        virtual geom::Stride stride() const { return geom::Stride(); }
+
+        virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
+
+        virtual void lock() {}
+
+        virtual void unlock() {}
+
+        virtual mg::Texture* bind_to_texture() { return 0; }
+
+        static std::atomic<int> buffers_created;
+        static std::atomic<int> buffers_destroyed;
+    };
+
+    class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+    {
+     public:
+        virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+            geom::Width /*width*/,
+            geom::Height /*height*/,
+            mc::PixelFormat /*pf*/)
+        {
+            return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        }
+    };
+
+    std::shared_ptr<mc::GraphicBufferAllocator> make_graphic_buffer_allocator()
+    {
+        if (!buffer_allocator)
+            buffer_allocator = std::make_shared<StubGraphicBufferAllocator>();
+
+        return buffer_allocator;
+    }
+
+    std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
+};
+
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
+}
+
+TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
+{
+    struct ServerConfig : BufferCounterConfig
+    {
+        void on_exit(mir::DisplayServer*)
+        {
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+        }
+
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_create(ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_release(ssync+i);
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}
+
