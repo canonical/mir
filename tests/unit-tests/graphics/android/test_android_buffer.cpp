@@ -111,14 +111,19 @@ TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
 
 }
 
-TEST_F(AndroidGraphicBufferBasic, format_echo_test)
+TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 {
     using namespace testing;
 
+    mc::PixelFormat pf2 = mc::PixelFormat::rgba_5658;
+
+    EXPECT_CALL(*mock_buffer_handle, format())
+        .Times(Exactly(1))
+        .WillOnce(Return(pf2)); 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _ , _, _ ));
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
-    EXPECT_EQ(buffer->pixel_format(), pf);
+    EXPECT_EQ(buffer->pixel_format(), pf2);
 
 }
 

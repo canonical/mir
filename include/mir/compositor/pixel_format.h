@@ -27,7 +27,8 @@ namespace compositor
 {
 enum class PixelFormat : uint32_t
 {
-    rgba_8888
+    rgba_8888,
+    rgba_5658
 };
 }
 }
