@@ -51,7 +51,7 @@ public:
 
     virtual void unlock() = 0;
 
-    virtual graphics::Texture* bind_to_texture() = 0;
+    virtual void bind_to_texture() = 0;
 
 protected:
     Buffer() = default;

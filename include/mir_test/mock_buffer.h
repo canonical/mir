@@ -58,7 +58,7 @@ struct MockBuffer : public Buffer
 
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
-    MOCK_METHOD0(bind_to_texture, graphics::Texture*());
+    MOCK_METHOD0(bind_to_texture, void());
 
 };
 

@@ -59,7 +59,7 @@ public:
 
     void unlock();
 
-    Texture* bind_to_texture();
+    void bind_to_texture();
 
 private:
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;

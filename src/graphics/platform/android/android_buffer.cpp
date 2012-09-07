@@ -83,7 +83,7 @@ void mga::AndroidBuffer::unlock()
 {
 }
 
-mg::Texture* mga::AndroidBuffer::bind_to_texture()
+void mga::AndroidBuffer::bind_to_texture()
 {
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -101,7 +101,6 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
 
         if (image == EGL_NO_IMAGE_KHR)
         {
-            return NULL;
         }
         egl_image_map[disp] = image;
     } 
@@ -112,5 +111,5 @@ mg::Texture* mga::AndroidBuffer::bind_to_texture()
 
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image); 
 
-    return NULL;
+    return;
 }

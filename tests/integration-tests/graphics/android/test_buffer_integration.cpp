@@ -19,8 +19,24 @@
 #include "mir/graphics/android/android_buffer.h"
 #include "mir/graphics/android/android_alloc_adaptor.h"
 
-#include "mir_test/mock_android_alloc_adaptor.h"
+#include "mir_test/mock_android_alloc_device.h"
 
 #include <gtest/gtest.h>
 
+class AndroidBufferIntegration : public ::testing::Test
+{
+public:
+    virtual void SetUp()
+    {
 
+    }
+};
+
+
+TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
+{
+
+
+
+
+}
