@@ -28,7 +28,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
-                                 geom::Width w, geom::Height h, mc::PixelFormat pf)
+                                  geom::Width w, geom::Height h, mc::PixelFormat pf)
     :
     alloc_device(alloc_dev)
 {
@@ -38,8 +38,8 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
         throw std::runtime_error("No allocation device for graphics buffer");
 
     native_window_buffer_handle = alloc_device->alloc_buffer(w, h,
-                                      pf, usage);
-    
+                                  pf, usage);
+
     if (!native_window_buffer_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
 
@@ -50,7 +50,7 @@ mga::AndroidBuffer::~AndroidBuffer()
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
     {
-        eglDestroyImageKHR(it->first, it->second); 
+        eglDestroyImageKHR(it->first, it->second);
     }
 }
 
@@ -88,14 +88,16 @@ void mga::AndroidBuffer::bind_to_texture()
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
 
-    static const EGLint image_attrs[] = {
+    static const EGLint image_attrs[] =
+    {
         EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
         EGL_NONE
     };
 
     EGLImageKHR image;
     it = egl_image_map.find(disp);
-    if (it == egl_image_map.end()) {
+    if (it == egl_image_map.end())
+    {
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   native_window_buffer_handle->get_egl_client_buffer() , image_attrs);
 
@@ -104,13 +106,13 @@ void mga::AndroidBuffer::bind_to_texture()
             throw std::runtime_error("error binding buffer to texture\n");
         }
         egl_image_map[disp] = image;
-    } 
+    }
     else /* already had it in map */
     {
-        image = it->second; 
+        image = it->second;
     }
 
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image); 
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
     return;
 }

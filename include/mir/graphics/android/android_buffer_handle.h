@@ -39,7 +39,7 @@ enum class BufferUsage : uint32_t
 };
 
 /* note: this interface will need a new implementation whenever the struct for ANativeWindowBuffer changes */
-class AndroidBufferHandle 
+class AndroidBufferHandle
 {
 public:
     virtual ~AndroidBufferHandle() {}

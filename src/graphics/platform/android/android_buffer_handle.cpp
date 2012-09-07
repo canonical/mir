@@ -24,9 +24,9 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(ANativeWindowBuffer buf, mc::PixelFormat pf, BufferUsage use)
- : anw_buffer(buf), 
-   pixel_format(pf),
-   buffer_usage(use)
+    : anw_buffer(buf),
+      pixel_format(pf),
+      buffer_usage(use)
 {
 }
 
@@ -52,7 +52,7 @@ geom::Stride mga::AndroidBufferHandleDefault::stride() const
 
 mc::PixelFormat mga::AndroidBufferHandleDefault::format() const
 {
-    return pixel_format; 
+    return pixel_format;
 }
 
 mga::BufferUsage mga::AndroidBufferHandleDefault::usage() const

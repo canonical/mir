@@ -35,7 +35,7 @@ class GraphicAllocAdaptor
 {
 public:
     virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
-                              compositor::PixelFormat, BufferUsage usage) = 0;
+            compositor::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
     virtual ~GraphicAllocAdaptor() {}

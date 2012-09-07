@@ -55,8 +55,8 @@ struct AndroidBufferHandleEmptyDeleter
 };
 
 std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
-                              geometry::Width width, geometry::Height height,
-                              compositor::PixelFormat pf, BufferUsage usage)
+    geometry::Width width, geometry::Height height,
+    compositor::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
 
@@ -64,7 +64,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     int format = convert_to_android_format(pf);
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),
-                            format, usage_flag, &buf_handle, &stride_as_int);
+                           format, usage_flag, &buf_handle, &stride_as_int);
 
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *empt = NULL;
@@ -83,7 +83,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
 
     AndroidBufferHandleDefaultDeleter del(alloc_dev);
     auto handle = std::shared_ptr<mga::AndroidBufferHandle>(
-            new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
+                      new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
 
     return handle;
 }

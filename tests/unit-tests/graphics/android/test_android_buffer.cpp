@@ -19,7 +19,7 @@
 #include "mir/graphics/android/android_buffer.h"
 #include "mir_test/mock_alloc_adaptor.h"
 
-#include <hardware/gralloc.h> 
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <memory>
@@ -34,7 +34,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>(); 
+        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
         mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
 
         /* set up common defaults */
@@ -80,8 +80,8 @@ TEST_F(AndroidGraphicBufferBasic, width_query_test)
     geom::Width test_width(443);
 
     EXPECT_CALL(*mock_buffer_handle, width())
-        .Times(Exactly(1))
-        .WillOnce(Return(test_width)); 
+    .Times(Exactly(1))
+    .WillOnce(Return(test_width));
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
     EXPECT_EQ(test_width, buffer->width());
@@ -94,8 +94,8 @@ TEST_F(AndroidGraphicBufferBasic, height_query_test)
     geom::Height test_height(431);
 
     EXPECT_CALL(*mock_buffer_handle, height())
-        .Times(Exactly(1))
-        .WillOnce(Return(test_height)); 
+    .Times(Exactly(1))
+    .WillOnce(Return(test_height));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, height, _, _ ));
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
@@ -118,8 +118,8 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
     mc::PixelFormat pf2 = mc::PixelFormat::rgba_5658;
 
     EXPECT_CALL(*mock_buffer_handle, format())
-        .Times(Exactly(1))
-        .WillOnce(Return(pf2)); 
+    .Times(Exactly(1))
+    .WillOnce(Return(pf2));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _ , _, _ ));
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 

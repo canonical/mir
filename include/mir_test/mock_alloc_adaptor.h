@@ -33,7 +33,7 @@ class MockBufferHandle : public AndroidBufferHandle
 public:
     MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
     MOCK_CONST_METHOD0(height, geometry::Height());
-    MOCK_CONST_METHOD0(width,  geometry::Width()); 
+    MOCK_CONST_METHOD0(width,  geometry::Width());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, compositor::PixelFormat());
     MOCK_CONST_METHOD0(usage,  BufferUsage());
@@ -43,8 +43,8 @@ class MockAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     MockAllocAdaptor(std::shared_ptr<MockBufferHandle> mock)
-     :
-    mock_handle(mock)
+        :
+        mock_handle(mock)
     {
         using namespace testing;
 
