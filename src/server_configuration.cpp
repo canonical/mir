@@ -28,9 +28,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/surfaces/surface_stack.h"
 
-#include "mir_protobuf.pb.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
