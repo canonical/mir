@@ -32,7 +32,6 @@ mga::AndroidBufferHandle::AndroidBufferHandle(ANativeWindowBuffer buf, mc::Pixel
 
 EGLClientBuffer mga::AndroidBufferHandle::get_egl_client_buffer() const
 {
-    printf("calling here\n");
     return (EGLClientBuffer) &anw_buffer;
 }
 

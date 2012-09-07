@@ -31,7 +31,6 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-#include <iostream>
 struct AndroidBufferHandleDeleter
 {
     AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
@@ -67,11 +66,9 @@ std::shared_ptr<mga::BufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(geomet
 
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *empt = NULL;
-    printf("HERERE\n");
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
         return std::shared_ptr<mga::BufferHandle>(empt, empty_del);
 
-    printf("DONE HERERE\n");
     AndroidBufferHandleDeleter del(alloc_dev);
 
     ANativeWindowBuffer buffer;
