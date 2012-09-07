@@ -39,19 +39,19 @@ public:
     ApplicationProxy(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
 
 private:
-    void create_surface(google::protobuf::RpcController* /*controller*/,
+    void create_surface(google::protobuf::RpcController* controller,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done);
 
-    void release_surface(google::protobuf::RpcController* /*controller*/,
+    void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,
                          google::protobuf::Closure* done);
 
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
+    void disconnect(google::protobuf::RpcController* controller,
+                 const mir::protobuf::Void* request,
+                 mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
