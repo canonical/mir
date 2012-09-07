@@ -309,3 +309,46 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 
     launch_client_process(client_creates_surfaces);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
+{
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
+
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            wait_for_surface_create();
+
+            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
+            MirSurface* surface1 = surface;
+            surface = 0;
+
+            request_params.width = 1600;
+            request_params.height = 1200;
+
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            wait_for_surface_create();
+
+            EXPECT_NE(mir_debug_surface_id(surface), mir_debug_surface_id(surface1));
+
+            mir_surface_release(surface, release_surface_callback, this);
+            wait_for_surface_release();
+
+            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
+            surface = surface1;
+
+            mir_surface_release(surface1, release_surface_callback, this);
+            wait_for_surface_release();
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}

@@ -67,6 +67,11 @@ public:
     {
         return error_message.c_str();
     }
+
+    int id() const
+    {
+        return surface.id().value();
+    }
 private:
 
     void released(mir_surface_lifecycle_callback callback, void * context)
@@ -196,6 +201,11 @@ void mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
     surface->release(callback, context);
+}
+
+int mir_debug_surface_id(MirSurface * surface)
+{
+    return surface->id();
 }
 
 int mir_surface_is_valid(MirSurface * /*surface*/)

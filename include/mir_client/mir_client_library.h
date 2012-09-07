@@ -110,6 +110,10 @@ char const * mir_buffer_get_error_message(MirBuffer * buffer);
    event. */
 int mir_buffer_get_next_vblank_microseconds(MirBuffer * buffer);
 
+/* Return the id of the surface. (Only useful for debug output.) */
+int mir_debug_surface_id(MirSurface * surface);
+
+
 #ifdef __cplusplus
 }
 #endif
