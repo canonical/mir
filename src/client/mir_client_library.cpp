@@ -151,7 +151,7 @@ private:
     std::set<MirSurface *> surfaces;
 };
 
-void mir_connect(mir_connected_callback callback, void * context)
+void mir_connect(char const* /*name*/, mir_connected_callback callback, void * context)
 {
 
     try
