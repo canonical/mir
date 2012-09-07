@@ -325,11 +325,11 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    int const window_count{5};
+    int const surface_count{5};
 
-    EXPECT_CALL(client, create_surface_done()).Times(window_count);
+    EXPECT_CALL(client, create_surface_done()).Times(surface_count);
 
-    for (int i = 0; i != window_count; ++i)
+    for (int i = 0; i != surface_count; ++i)
     {
         client.display_server.create_surface(
             0,
@@ -340,7 +340,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
         client.wait_for_create_surface();
     }
 
-    server.expect_surface_count(window_count);
+    server.expect_surface_count(surface_count);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
