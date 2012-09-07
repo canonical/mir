@@ -62,8 +62,6 @@ int mir::frontend::ApplicationProxy::next_id()
     return id;
 }
 
-#include <iostream> // DEBUG
-
 void mir::frontend::ApplicationProxy::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
@@ -76,7 +74,6 @@ void mir::frontend::ApplicationProxy::release_surface(
 
     if (p != surfaces.end())
     {
-        std::cerr << "DEBUG destroying surface " << id << std::endl;
         surface_organiser->destroy_surface(p->second);
     }
     else

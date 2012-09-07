@@ -100,7 +100,10 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> /*surface*/)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
 {
+    auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+    if (p != surfaces.end()) surfaces.erase(p);
+    // else; TODO error logging
 }
 
