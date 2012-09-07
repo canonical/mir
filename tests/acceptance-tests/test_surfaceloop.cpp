@@ -151,7 +151,8 @@ struct ClientConfigCommon : TestingClientConfiguration
     std::mutex guard;
     std::condition_variable wait_condition;
     MirConnection * connection;
-    SurfaceSync ssync0;
+    static const int max_surface_count = 5;
+    SurfaceSync ssync[max_surface_count];
 };
 
 
@@ -192,25 +193,25 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params = {640, 480, mir_pixel_format_rgba_8888};
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
-            wait_for_surface_create(&ssync0);
+            wait_for_surface_create(ssync);
 
-            ASSERT_TRUE(ssync0.surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(ssync0.surface));
-            EXPECT_STREQ(mir_surface_get_error_message(ssync0.surface), "");
+            ASSERT_TRUE(ssync->surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
+            EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync0.surface);
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync->surface);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
 
-            wait_for_surface_release(&ssync0);
+            wait_for_surface_release(ssync);
 
-            ASSERT_TRUE(ssync0.surface == NULL);
+            ASSERT_TRUE(ssync->surface == NULL);
 
             mir_connection_release(connection);
         }
@@ -255,25 +256,25 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
-            wait_for_surface_create(&ssync0);
+            wait_for_surface_create(ssync);
 
-            ASSERT_TRUE(ssync0.surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(ssync0.surface));
-            EXPECT_STREQ(mir_surface_get_error_message(ssync0.surface), "");
+            ASSERT_TRUE(ssync->surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
+            EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync0.surface);
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync->surface);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
 
-            wait_for_surface_release(&ssync0);
+            wait_for_surface_release(ssync);
 
-            ASSERT_TRUE(ssync0.surface == NULL);
+            ASSERT_TRUE(ssync->surface == NULL);
 
             mir_connection_release(connection);
         }
@@ -294,32 +295,30 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 
             MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
 
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
-            wait_for_surface_create(&ssync0);
-
-            SurfaceSync ssync1;
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            wait_for_surface_create(ssync);
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync1);
-            wait_for_surface_create(&ssync1);
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync+1);
+            wait_for_surface_create(ssync+1);
 
-            MirSurfaceParameters response_params = mir_surface_get_parameters(ssync0.surface);
+            MirSurfaceParameters response_params = mir_surface_get_parameters(ssync->surface);
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            response_params = mir_surface_get_parameters(ssync1.surface);
+            response_params = mir_surface_get_parameters(ssync[1].surface);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            mir_surface_release(ssync1.surface, release_surface_callback, &ssync1);
-            wait_for_surface_release(&ssync1);
+            mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
+            wait_for_surface_release(ssync+1);
 
-            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
-            wait_for_surface_release(&ssync0);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
+            wait_for_surface_release(ssync);
 
             mir_connection_release(connection);
         }
@@ -340,24 +339,22 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
 
             MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
 
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync0);
-            wait_for_surface_create(&ssync0);
-
-            SurfaceSync ssync1;
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            wait_for_surface_create(ssync);
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, &ssync1);
-            wait_for_surface_create(&ssync1);
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync+1);
+            wait_for_surface_create(ssync+1);
 
-            EXPECT_NE(mir_debug_surface_id(ssync0.surface), mir_debug_surface_id(ssync1.surface));
+            EXPECT_NE(mir_debug_surface_id(ssync->surface), mir_debug_surface_id(ssync[1].surface));
 
-            mir_surface_release(ssync1.surface, release_surface_callback, &ssync1);
-            wait_for_surface_release(&ssync1);
+            mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
+            wait_for_surface_release(ssync+1);
 
-            mir_surface_release(ssync0.surface, release_surface_callback, &ssync0);
-            wait_for_surface_release(&ssync0);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
+            wait_for_surface_release(ssync);
 
             mir_connection_release(connection);
         }
@@ -372,25 +369,21 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     {
         void exec()
         {
-            const int surface_count = 5;
-
             mir_connect(connection_callback, this);
 
             wait_for_connect();
 
             MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
 
-            SurfaceSync ssync[surface_count];
-
-            for (int i = 0; i != surface_count; ++i)
+            for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
 
-            for (int i = 0; i != surface_count; ++i)
+            for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_create(ssync+i);
 
-            for (int i = 0; i != surface_count; ++i)
+            for (int i = 0; i != max_surface_count; ++i)
             {
-                for (int j = 0; j != surface_count; ++j)
+                for (int j = 0; j != max_surface_count; ++j)
                 {
                     if (i == j)
                         EXPECT_EQ(mir_debug_surface_id(ssync[i].surface), mir_debug_surface_id(ssync[j].surface));
@@ -399,10 +392,10 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
                 }
             }
 
-            for (int i = 0; i != surface_count; ++i)
+            for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
 
-            for (int i = 0; i != surface_count; ++i)
+            for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_release(ssync+i);
 
             mir_connection_release(connection);
