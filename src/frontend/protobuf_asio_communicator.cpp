@@ -228,11 +228,7 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
 
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
-        if ("connect" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::connect, invocation);
-        }
-        else if ("create_surface" == invocation.method_name())
+        if ("create_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::create_surface, invocation);
         }

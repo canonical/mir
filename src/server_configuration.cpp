@@ -69,26 +69,6 @@ public:
     }
 
 private:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        auto tmp = surface_organiser->create_surface(
-            ms::SurfaceCreationParameters()
-            .of_width(geom::Width(request->width()))
-            .of_height(geom::Height(request->height()))
-            );
-
-        auto surface = tmp.lock();
-        response->mutable_id()->set_value(next_surface_id++);
-        response->set_width(surface->width().as_uint32_t());
-        response->set_height(surface->height().as_uint32_t());
-        response->set_pixel_format((int)surface->pixel_format());
-
-        done->Run();
-    }
-
     void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
