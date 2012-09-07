@@ -20,6 +20,7 @@
 #ifndef MIR_FRONTEND_APPLICATION_PROXY_H_
 #define MIR_FRONTEND_APPLICATION_PROXY_H_
 
+#include "mir/thread/all.h"
 #include "mir_protobuf.pb.h"
 #include <memory>
 
@@ -54,8 +55,10 @@ private:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
+    int next_id();
+
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
-    int next_surface_id;
+    std::atomic<int> next_surface_id;
 };
 
 }

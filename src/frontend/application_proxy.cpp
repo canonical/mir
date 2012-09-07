@@ -43,7 +43,7 @@ void mir::frontend::ApplicationProxy::create_surface(google::protobuf::RpcContro
         );
 
     auto surface = tmp.lock();
-    response->mutable_id()->set_value(next_surface_id++);
+    response->mutable_id()->set_value(next_id());
     response->set_width(surface->width().as_uint32_t());
     response->set_height(surface->height().as_uint32_t());
     response->set_pixel_format((int)surface->pixel_format());
@@ -51,6 +51,14 @@ void mir::frontend::ApplicationProxy::create_surface(google::protobuf::RpcContro
     // TODO track server-side surface object
     done->Run();
 }
+
+int mir::frontend::ApplicationProxy::next_id()
+{
+    int id = next_surface_id.load();
+    while (!next_surface_id.compare_exchange_weak(id, id + 1));
+    return id;
+}
+
 
 void mir::frontend::ApplicationProxy::release_surface(google::protobuf::RpcController* /*controller*/,
                      const mir::protobuf::SurfaceId*,

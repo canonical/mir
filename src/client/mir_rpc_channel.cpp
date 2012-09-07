@@ -148,8 +148,7 @@ mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
 int c::MirRpcChannel::next_id()
 {
     int id = next_message_id.load();
-    while (!next_message_id.compare_exchange_weak(id, id + 1))
-        id = next_message_id.load();
+    while (!next_message_id.compare_exchange_weak(id, id + 1));
     return id;
 }
 
