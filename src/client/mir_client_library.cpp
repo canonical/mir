@@ -115,10 +115,21 @@ public:
         return error_message.c_str();
     }
 
+    void connect(
+        const char* app_name,
+        mir_connected_callback callback,
+        void * context)
+    {
+        connect_parameters.set_name(app_name);
+        server.connect(
+            0,
+            &connect_parameters,
+            &ignored,
+            google::protobuf::NewCallback(callback, this, context));
+    }
+
     void disconnect()
     {
-        mir::protobuf::Void ignored;
-
         server.disconnect(
             0,
             &ignored,
@@ -144,21 +155,22 @@ private:
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
-    mp::Surface surface;
     mp::Void void_response;
+    mir::protobuf::Void ignored;
+    mir::protobuf::ConnectParameters connect_parameters;
 
     std::string error_message;
     std::set<MirSurface *> surfaces;
 };
 
-void mir_connect(char const* /*name*/, mir_connected_callback callback, void * context)
+void mir_connect(char const* name, mir_connected_callback callback, void * context)
 {
 
     try
     {
         auto log = std::make_shared<mc::ConsoleLogger>();
         MirConnection * connection = new MirConnection(log);
-        callback(connection, context);
+        connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)
     {

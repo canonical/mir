@@ -42,7 +42,14 @@ public:
 
     ApplicationProxy(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
 
+    std::string name() { return app_name; }
+
 private:
+    virtual void connect(::google::protobuf::RpcController* controller,
+                         const ::mir::protobuf::ConnectParameters* request,
+                         ::mir::protobuf::Void* response,
+                         ::google::protobuf::Closure* done);
+
     void create_surface(google::protobuf::RpcController* controller,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
@@ -60,6 +67,7 @@ private:
 
     int next_id();
 
+    std::string app_name;
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
     std::atomic<int> next_surface_id;
 
