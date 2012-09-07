@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_buffer_handle.h"
+#include "mir/graphics/android/android_buffer_handle_default.h"
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;

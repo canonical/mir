@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_buffer_handle.h"
+#include "mir/graphics/android/android_buffer_handle_default.h"
 #include <memory>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

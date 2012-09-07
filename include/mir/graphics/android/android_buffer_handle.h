@@ -23,12 +23,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/pixel_format.h"
 
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-#include <system/window.h>
 
 namespace mir
 {
@@ -43,6 +38,7 @@ enum class BufferUsage : uint32_t
     use_software
 };
 
+/* note: this interface will need a new implementation whenever the struct for ANativeWindowBuffer changes */
 class AndroidBufferHandle 
 {
 public:
@@ -58,28 +54,6 @@ public:
 
 protected:
     AndroidBufferHandle() = default;
-};
-
-class AndroidBufferHandleDefault: public AndroidBufferHandle
-{
-public:
-    explicit AndroidBufferHandleDefault(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
-
-    geometry::Width width() const;
-    geometry::Height height() const;
-    geometry::Stride stride() const;
-    compositor::PixelFormat format() const;
-    BufferUsage usage() const;
-
-    EGLClientBuffer get_egl_client_buffer() const;
-
-
-    const ANativeWindowBuffer anw_buffer;
-
-    /* we save these so that when other parts of the system query for the mir
-       types, we don't have to convert back */
-    const compositor::PixelFormat pixel_format;
-    const BufferUsage buffer_usage;
 };
 
 }

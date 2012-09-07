@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer_handle_default.h"
 #include <stdexcept>
 
 namespace mg=mir::graphics;
