@@ -91,10 +91,10 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params,
-            std::dynamic_pointer_cast<mc::BufferTextureBinder>(buffer_bundle_factory->create_buffer_bundle(
+            buffer_bundle_factory->create_buffer_bundle(
                 params.width,
                 params.height,
-                mc::PixelFormat::rgba_8888))));
+                mc::PixelFormat::rgba_8888)));
 
     surfaces.insert(surface);
     return surface;
