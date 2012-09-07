@@ -22,15 +22,13 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
+#include "mir/thread/all.h"
 
 #include "display_server_test_fixture.h"
-
-
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
-#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -515,3 +513,39 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     launch_client_process(client_creates_surfaces);
 }
 
+TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
+{
+    struct ServerConfig : BufferCounterConfig
+    {
+        void on_exit(mir::DisplayServer*)
+        {
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+        }
+
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_create(ssync+i);
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}

@@ -91,6 +91,10 @@ void mir::frontend::ApplicationProxy::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    // TODO implement this
+    for (auto p = surfaces.begin(); p != surfaces.end(); ++p)
+    {
+        surface_organiser->destroy_surface(p->second);
+    }
+
     done->Run();
 }
