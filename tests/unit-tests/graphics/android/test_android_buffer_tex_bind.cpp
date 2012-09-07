@@ -260,6 +260,18 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
     buffer->bind_to_texture();
 }
 
+TEST_F(AndroidBufferBinding, buffer_image_creation_failure_throws)
+{
+    using namespace testing;
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
+        .Times(Exactly(1))
+        .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
+
+    EXPECT_THROW({
+    buffer->bind_to_texture();
+    }, std::runtime_error);
+}
+
 
 /* binding tests */
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
