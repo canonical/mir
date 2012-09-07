@@ -101,6 +101,7 @@ void mga::AndroidBuffer::bind_to_texture()
 
         if (image == EGL_NO_IMAGE_KHR)
         {
+            throw std::runtime_error("error binding buffer to texture\n");
         }
         egl_image_map[disp] = image;
     } 

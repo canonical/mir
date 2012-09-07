@@ -256,8 +256,13 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
     EXPECT_CALL(egl_mock, eglDestroyImageKHR(_,_))
         .Times(Exactly(0));
 
+    EXPECT_THROW({
     buffer->bind_to_texture();
+    }, std::runtime_error);
+
+    EXPECT_THROW({
     buffer->bind_to_texture();
+    }, std::runtime_error);
 }
 
 TEST_F(AndroidBufferBinding, buffer_image_creation_failure_throws)
