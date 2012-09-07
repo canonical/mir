@@ -23,13 +23,14 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
-#include "mir_test/gmock_fixes.h"
-#include "mir/thread/all.h"
-
 #include "display_server_test_fixture.h"
+
+
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir_test/gmock_fixes.h"
+#include "mir/thread/all.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -60,8 +61,8 @@ mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
-        : connection(0)
-        , surface(0)
+        : connection(NULL)
+        , surface(NULL)
     {
     }
 
@@ -128,8 +129,8 @@ struct ClientConfigCommon : TestingClientConfiguration
 
     std::mutex guard;
     std::condition_variable wait_condition;
-    MirConnection* connection;
-    MirSurface* surface;
+    MirConnection * connection;
+    MirSurface * surface;
 };
 
 }
@@ -226,18 +227,85 @@ TEST_F(BespokeDisplayServerTestFixture,
 
             wait_for_connect();
 
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
             MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
             mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             wait_for_surface_create();
 
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+
+
             mir_surface_release(surface, release_surface_callback, this);
 
             wait_for_surface_release();
+
+            ASSERT_TRUE(surface == NULL);
 
             mir_connection_release(connection);
         }
     } client_config;
 
     launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
+{
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params = {640, 480, mir_pixel_format_rgba_8888};
+
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            wait_for_surface_create();
+
+            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
+            MirSurface* surface1 = surface;
+            surface = 0;
+
+            request_params.width = 1600;
+            request_params.height = 1200;
+
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+            wait_for_surface_create();
+
+            MirSurfaceParameters response_params = mir_surface_get_parameters(surface1);
+            EXPECT_EQ(640, response_params.width);
+            EXPECT_EQ(480, response_params.height);
+            EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+
+            response_params = mir_surface_get_parameters(surface);
+            EXPECT_EQ(1600, response_params.width);
+            EXPECT_EQ(1200, response_params.height);
+            EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+
+            mir_surface_release(surface, release_surface_callback, this);
+            wait_for_surface_release();
+
+            // A bit inelegant as ClientConfigCommon only "knows" one surface variable.
+            surface = surface1;
+
+            mir_surface_release(surface1, release_surface_callback, this);
+            wait_for_surface_release();
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
 }
