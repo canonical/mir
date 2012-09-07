@@ -38,12 +38,17 @@ public:
         mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
             .Times(AtLeast(0));
+        EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
+            .Times(AtLeast(0));
 
         width = geom::Width(300);
         height = geom::Height(220);
         pf = mc::PixelFormat::rgba_8888;
         buffer = std::shared_ptr<mc::Buffer>(
                             new mga::AndroidBuffer(mock_alloc_dev, width, height, pf));
+
+        egl_mock.silence_uninteresting();
+        gl_mock.silence_uninteresting();
     };
     virtual void TearDown()
     {

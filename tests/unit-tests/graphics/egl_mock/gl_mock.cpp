@@ -61,3 +61,10 @@ void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
     CHECK_GLOBAL_VOID_MOCK();
     global_gl_mock->glEGLImageTargetTexture2DOES(target, image);
 }
+
+void mir::GLMock::silence_uninteresting()
+{
+    using namespace testing;
+    EXPECT_CALL(*this, glEGLImageTargetTexture2DOES(_,_))
+        .Times(AtLeast(0));
+}

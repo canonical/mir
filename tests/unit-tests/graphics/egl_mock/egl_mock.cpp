@@ -102,6 +102,10 @@ mir::EglMock::~EglMock()
 void mir::EglMock::silence_uninteresting()
 {
     using namespace testing;
+    EXPECT_CALL(*this, eglGetCurrentDisplay())
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglGetDisplay(_))
+        .Times(AtLeast(0));
     EXPECT_CALL(*this, eglGetDisplay(_))
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglInitialize(_,_,_))
@@ -125,6 +129,10 @@ void mir::EglMock::silence_uninteresting()
     EXPECT_CALL(*this, eglTerminate(_))
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglSwapBuffers(_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglDestroyImageKHR(_,_))
         .Times(AtLeast(0));
 }
 

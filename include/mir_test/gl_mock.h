@@ -33,6 +33,7 @@ class GLMock
 public:
     GLMock();
     ~GLMock();
+    void silence_uninteresting();
 
     MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
 
