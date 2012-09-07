@@ -168,7 +168,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
-            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+            MirSurfaceParameters const request_params = {640, 480, mir_pixel_format_rgba_8888};
             mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             wait_for_surface_create();
