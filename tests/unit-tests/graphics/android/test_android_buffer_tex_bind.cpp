@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ t* Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -76,6 +76,7 @@ TEST_F(AndroidBufferBinding, buffer_creates_image_on_first_bind)
     using namespace testing;
     EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
         .Times(Exactly(1));
+
     buffer->bind_to_texture();
 }
 
@@ -95,11 +96,13 @@ TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
     using namespace testing;
     EGLDisplay second_fake_display = (EGLDisplay) ((int)egl_mock.fake_egl_display +1);
 
+    /* return 1st fake display */
     EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,_,_))
         .Times(Exactly(2));
 
     buffer->bind_to_texture();
 
+    /* return 2nd fake display */
     EXPECT_CALL(egl_mock, eglGetCurrentDisplay())
             .Times(Exactly(1))
             .WillOnce(Return(second_fake_display));
@@ -253,6 +256,7 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
 }
 
 
+/* binding tests */
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
 {
     using namespace testing;

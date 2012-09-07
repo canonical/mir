@@ -73,15 +73,33 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 }
 
-TEST_F(AndroidGraphicBufferBasic, dimensions_test)
+TEST_F(AndroidGraphicBufferBasic, width_query_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( width, height, _, _ ));
+    geom::Width test_width(443);
+
+    EXPECT_CALL(*mock_buffer_handle, width())
+        .Times(Exactly(1))
+        .WillOnce(Return(test_width)); 
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
 
-    EXPECT_EQ(width, buffer->width());
-    EXPECT_EQ(height, buffer->height());
+    EXPECT_EQ(test_width, buffer->width());
+}
+
+TEST_F(AndroidGraphicBufferBasic, height_query_test)
+{
+    using namespace testing;
+
+    geom::Height test_height(431);
+
+    EXPECT_CALL(*mock_buffer_handle, height())
+        .Times(Exactly(1))
+        .WillOnce(Return(test_height)); 
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, height, _, _ ));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
+
+    EXPECT_EQ(test_height, buffer->height());
 }
 
 TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
