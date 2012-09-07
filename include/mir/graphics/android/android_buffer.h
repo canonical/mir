@@ -62,8 +62,6 @@ public:
     Texture* bind_to_texture();
 
 private:
-    geometry::Stride buffer_stride;
-
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
