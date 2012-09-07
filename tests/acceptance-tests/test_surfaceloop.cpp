@@ -154,9 +154,6 @@ struct ClientConfigCommon : TestingClientConfiguration
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
 };
-
-
-
 }
 
 TEST_F(BespokeDisplayServerTestFixture,
