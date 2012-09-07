@@ -35,19 +35,23 @@ void mir::frontend::ApplicationProxy::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    auto tmp = surface_organiser->create_surface(
+    auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_width(geometry::Width(request->width()))
         .of_height(geometry::Height(request->height()))
         );
 
-    auto surface = tmp.lock();
-    response->mutable_id()->set_value(next_id());
-    response->set_width(surface->width().as_uint32_t());
-    response->set_height(surface->height().as_uint32_t());
-    response->set_pixel_format((int)surface->pixel_format());
+    auto const id = next_id();
+    {
+        auto surface = handle.lock();
+        response->mutable_id()->set_value(id);
+        response->set_width(surface->width().as_uint32_t());
+        response->set_height(surface->height().as_uint32_t());
+        response->set_pixel_format((int)surface->pixel_format());
+    }
 
-    // TODO track server-side surface object
+    surfaces[id] = handle;
+
     done->Run();
 }
 
@@ -58,14 +62,29 @@ int mir::frontend::ApplicationProxy::next_id()
     return id;
 }
 
+#include <iostream> // DEBUG
 
 void mir::frontend::ApplicationProxy::release_surface(
     google::protobuf::RpcController* /*controller*/,
-    const mir::protobuf::SurfaceId*,
+    const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    // TODO implement this
+    auto const id = request->value();
+
+    auto p = surfaces.find(id);
+
+    if (p != surfaces.end())
+    {
+        std::cerr << "DEBUG destroying surface " << id << std::endl;
+        surface_organiser->destroy_surface(p->second);
+    }
+    else
+    {
+        //TODO proper error logging
+        // std::cerr << "ERROR trying to destroy unknown surface" << std::endl;
+    }
+
     done->Run();
 }
 
