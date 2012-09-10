@@ -35,6 +35,7 @@ namespace
 {
 struct SurfaceCounter : mir::protobuf::DisplayServer
 {
+    std::string app_name;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
@@ -69,6 +70,16 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
         // TODO need some tests for releasing surfaces
     }
 
+
+    void connect(
+        ::google::protobuf::RpcController*,
+                         const ::mir::protobuf::ConnectParameters* request,
+                         ::mir::protobuf::Void*,
+                         ::google::protobuf::Closure* done)
+    {
+        app_name = request->application_name();
+        done->Run();
+    }
 
     void disconnect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::Void* /*request*/,
@@ -170,8 +181,10 @@ struct TestClient
         logger(std::make_shared<MockLogger>()),
         channel(TestServer::socket_name(), logger),
         display_server(&channel),
+        connect_done_called(false),
         create_surface_called(false),
         disconnect_done_called(false),
+        connect_done_count(0),
         create_surface_done_count(0),
         disconnect_done_count(0)
     {
@@ -179,6 +192,7 @@ struct TestClient
         surface_parameters.set_height(480);
         surface_parameters.set_pixel_format(0);
 
+        ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
         ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
     }
@@ -186,12 +200,23 @@ struct TestClient
     std::shared_ptr<MockLogger> logger;
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
+    mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
 
+    MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(create_surface_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
+
+    void on_connect_done()
+    {
+        connect_done_called.store(true);
+
+        auto old = connect_done_count.load();
+
+        while (!connect_done_count.compare_exchange_weak(old, old+1));
+    }
 
     void on_create_surface_done()
     {
@@ -209,6 +234,16 @@ struct TestClient
         auto old = disconnect_done_count.load();
 
         while (!disconnect_done_count.compare_exchange_weak(old, old+1));
+    }
+
+    void wait_for_connect_done()
+    {
+        for (int i = 0; !connect_done_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
+        }
+        connect_done_called.store(false);
     }
 
     void wait_for_create_surface()
@@ -247,9 +282,11 @@ struct TestClient
         }
     }
 
+    std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
     std::atomic<bool> disconnect_done_called;
 
+    std::atomic<int> connect_done_count;
     std::atomic<int> create_surface_done_count;
     std::atomic<int> disconnect_done_count;
 };
@@ -300,6 +337,28 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
     client.wait_for_create_surface();
 
     server.expect_surface_count(1);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
+
+    EXPECT_CALL(client, connect_done()).Times(1);
+
+    client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+
+    client.display_server.connect(
+        0,
+        &client.connect_parameters,
+        &client.ignored,
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+    client.wait_for_connect_done();
+
+    server.expect_surface_count(0);
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, server.collector.app_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,

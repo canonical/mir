@@ -29,6 +29,16 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 {
 }
 
+void mir::frontend::ApplicationProxy::connect(
+    ::google::protobuf::RpcController*,
+                     const ::mir::protobuf::ConnectParameters* request,
+                     ::mir::protobuf::Void*,
+                     ::google::protobuf::Closure* done)
+{
+    app_name = request->application_name();
+    done->Run();
+}
+
 void mir::frontend::ApplicationProxy::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,

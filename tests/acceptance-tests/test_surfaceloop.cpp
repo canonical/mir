@@ -55,7 +55,12 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 geom::Width const width{640};
 geom::Height const height{480};
 mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
+}
 
+namespace mir
+{
+namespace
+{
 struct SurfaceSync
 {
     SurfaceSync() :
@@ -97,28 +102,6 @@ struct SurfaceSync
     MirSurface * surface;
 };
 
-void create_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_created(surface);
-}
-
-void release_surface_callback(MirSurface* surface, void * context)
-{
-    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
-    config->surface_released(surface);
-}
-
-void wait_for_surface_create(SurfaceSync* context)
-{
-    context->wait_for_surface_create();
-}
-
-void wait_for_surface_release(SurfaceSync* context)
-{
-    context->wait_for_surface_release();
-}
-
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
@@ -154,6 +137,36 @@ struct ClientConfigCommon : TestingClientConfiguration
 };
 const int ClientConfigCommon::max_surface_count;
 }
+}
+
+using mir::SurfaceSync;
+using mir::TestingClientConfiguration;
+using mir::ClientConfigCommon;
+
+namespace
+{
+void create_surface_callback(MirSurface* surface, void * context)
+{
+    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
+    config->surface_created(surface);
+}
+
+void release_surface_callback(MirSurface* surface, void * context)
+{
+    SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
+    config->surface_released(surface);
+}
+
+void wait_for_surface_create(SurfaceSync* context)
+{
+    context->wait_for_surface_create();
+}
+
+void wait_for_surface_release(SurfaceSync* context)
+{
+    context->wait_for_surface_release();
+}
+}
 
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffer_swapper_on_server)
@@ -180,7 +193,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -242,7 +255,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -284,7 +297,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -328,7 +341,7 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -366,7 +379,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -488,7 +501,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -531,7 +544,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
     {
         void exec()
         {
-            mir_connect(connection_callback, this);
+            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
