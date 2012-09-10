@@ -39,8 +39,8 @@ struct GBMBufferObjectDeleter
     void operator()(gbm_bo* handle) const;
 };
 
-compositor::PixelFormat gbm_format_to_mir_format(gbm_bo_format format);
-gbm_bo_format mir_format_to_gbm_format(compositor::PixelFormat format);
+compositor::PixelFormat gbm_format_to_mir_format(uint32_t format);
+uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
 
 
 class GBMBuffer: public compositor::Buffer
@@ -68,7 +68,6 @@ public:
 
 private:
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
-    gbm_bo_format format;
 };
 
 }

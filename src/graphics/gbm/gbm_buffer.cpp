@@ -32,13 +32,13 @@ void mgg::GBMBufferObjectDeleter::operator()(gbm_bo* handle) const
         gbm_bo_destroy(handle);
 }
 
-mc::PixelFormat mgg::gbm_format_to_mir_format(gbm_bo_format format)
+mc::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
     (void)format;
     return mc::PixelFormat::rgba_8888;
 }
 
-gbm_bo_format mgg::mir_format_to_gbm_format(mc::PixelFormat format)
+uint32_t mgg::mir_format_to_gbm_format(mc::PixelFormat format)
 {
     (void)format;
     return GBM_BO_FORMAT_ARGB8888;
@@ -47,8 +47,7 @@ gbm_bo_format mgg::mir_format_to_gbm_format(mc::PixelFormat format)
 
 mgg::GBMBuffer::GBMBuffer(
     std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
-        : gbm_handle(std::move(handle)),
-          format(GBM_BO_FORMAT_ARGB8888)
+        : gbm_handle(std::move(handle))
 {
 }
 
@@ -68,12 +67,12 @@ geom::Height mgg::GBMBuffer::height() const
 
 geom::Stride mgg::GBMBuffer::stride() const
 {
-    return geom::Stride(gbm_bo_get_pitch(gbm_handle.get()));
+    return geom::Stride(gbm_bo_get_stride(gbm_handle.get()));
 }
 
 mc::PixelFormat mgg::GBMBuffer::pixel_format() const
 {
-    return gbm_format_to_mir_format(format);
+    return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }
 
 void mgg::GBMBuffer::lock()

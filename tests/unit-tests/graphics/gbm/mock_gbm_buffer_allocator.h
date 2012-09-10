@@ -39,14 +39,14 @@ class MockGBMDeviceCreator
 public:
     MockGBMDeviceCreator();
 
-    MOCK_METHOD5(bo_create, gbm_bo *(gbm_device *, uint32_t, uint32_t, gbm_bo_format, uint32_t));
+    MOCK_METHOD5(bo_create, gbm_bo *(gbm_device *, uint32_t, uint32_t, uint32_t, uint32_t));
     MOCK_METHOD1(bo_destroy, void(gbm_bo *));
 
     std::unique_ptr<GBMBufferAllocator> create_gbm_allocator();
     std::shared_ptr<gbm_device> get_device();
 
 private:
-    gbm_bo *bo_create_impl(gbm_device *dev, uint32_t w, uint32_t h, gbm_bo_format format, uint32_t usage);
+    gbm_bo *bo_create_impl(gbm_device *dev, uint32_t w, uint32_t h, uint32_t format, uint32_t usage);
     void bo_destroy_impl(gbm_bo* bo);
 
     std::shared_ptr<gbm_device> fake_device;

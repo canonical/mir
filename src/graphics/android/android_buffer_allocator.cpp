@@ -34,8 +34,9 @@ struct AllocDevDeleter
 {
     void operator()(alloc_device_t* t)
     {
+    printf("here in del\n");
+        /* android takes care of delete for us */
         t->common.close((hw_device_t*)t);
-        delete t;
     }
 };
 
@@ -55,7 +56,8 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
     /* note for future use: at this point, the hardware module should be filled with vendor information
        that we can determine different courses of action based upon */
 
-    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev);
+    AllocDevDeleter del;
+    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 

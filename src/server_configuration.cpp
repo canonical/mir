@@ -20,6 +20,7 @@
 
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/application_proxy.h"
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
@@ -27,9 +28,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/surfaces/surface.h"
 
-#include "mir_protobuf.pb.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -59,48 +58,6 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class ApplicationProxy : public mir::protobuf::DisplayServer
-{
-public:
-
-    ApplicationProxy(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
-        surface_organiser(surface_organiser), next_surface_id(0)
-    {
-    }
-
-private:
-    void connect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::ConnectMessage* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
-    {
-        auto tmp = surface_organiser->create_surface(
-            ms::SurfaceCreationParameters()
-            .of_width(geom::Width(request->width()))
-            .of_height(geom::Height(request->height()))
-            );
-
-        auto surface = tmp.lock();
-        response->mutable_id()->set_value(next_surface_id++);
-        response->set_width(surface->width().as_uint32_t());
-        response->set_height(surface->height().as_uint32_t());
-        response->set_pixel_format((int)surface->pixel_format());
-
-        done->Run();
-    }
-
-    void disconnect(google::protobuf::RpcController* /*controller*/,
-                 const mir::protobuf::Void* /*request*/,
-                 mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
-    {
-        done->Run();
-    }
-
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
-    int next_surface_id;
-};
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
@@ -115,7 +72,7 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<ApplicationProxy>(surface_organiser);
+        return std::make_shared<mf::ApplicationProxy>(surface_organiser);
     }
 };
 
