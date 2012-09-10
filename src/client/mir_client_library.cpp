@@ -24,10 +24,15 @@
 #include <set>
 #include <cstddef>
 
-
 namespace mc = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+
+#ifdef MIR_USING_BOOST_THREADS
+    using namespace mir::std;
+#else
+    using namespace std;
+#endif
 
 class MirSurface
 {
@@ -83,7 +88,7 @@ private:
     mp::DisplayServer::Stub & server;
     mp::Void void_response;
     mp::Surface surface;
-    std::string error_message;
+    string error_message;
 };
 
 // TODO the connection should track all associated surfaces, and release them on
@@ -91,7 +96,7 @@ private:
 class MirConnection
 {
 public:
-    MirConnection(std::shared_ptr<mc::Logger> const & log)
+    MirConnection(shared_ptr<mc::Logger> const & log)
         : created(true),
           channel("./mir_socket_test", log)
         , server(&channel)
@@ -136,31 +141,31 @@ public:
             &ignored,
             google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-        std::unique_lock<std::mutex> lock(mutex);
+        unique_lock<mutex> lock(guard);
         while (created) cv.wait(lock);
     }
 
 private:
     void done_disconnect()
     {
-        std::unique_lock<std::mutex> lock(mutex);
+        unique_lock<mutex> lock(guard);
         created = false;
         cv.notify_one();
     }
 
-    std::mutex mutex;
-    std::condition_variable cv;
+    mutex guard;
+    condition_variable cv;
     bool created;
 
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
-    std::shared_ptr<mc::Logger> log;
+    shared_ptr<mc::Logger> log;
     mp::Void void_response;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    std::string error_message;
-    std::set<MirSurface *> surfaces;
+    string error_message;
+    set<MirSurface *> surfaces;
 };
 
 void mir_connect(char const* name, mir_connected_callback callback, void * context)
@@ -168,11 +173,11 @@ void mir_connect(char const* name, mir_connected_callback callback, void * conte
 
     try
     {
-        auto log = std::make_shared<mc::ConsoleLogger>();
+        auto log = make_shared<mc::ConsoleLogger>();
         MirConnection * connection = new MirConnection(log);
         connection->connect(name, callback, context);
     }
-    catch (std::exception const& /*x*/)
+    catch (exception const& /*x*/)
     {
         // TODO callback with an error connection
     }
@@ -203,7 +208,7 @@ void mir_surface_create(MirConnection * connection,
     {
         connection->create_surface(*params, callback, context);
     }
-    catch (std::exception const&)
+    catch (exception const&)
     {
         // TODO callback with an error surface
     }
