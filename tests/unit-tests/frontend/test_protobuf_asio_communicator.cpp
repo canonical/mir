@@ -181,8 +181,10 @@ struct TestClient
         logger(std::make_shared<MockLogger>()),
         channel(TestServer::socket_name(), logger),
         display_server(&channel),
+        connect_done_called(false),
         create_surface_called(false),
         disconnect_done_called(false),
+        connect_done_count(0),
         create_surface_done_count(0),
         disconnect_done_count(0)
     {
