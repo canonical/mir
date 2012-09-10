@@ -35,7 +35,7 @@ void mir::frontend::ApplicationProxy::connect(
                      ::mir::protobuf::Void*,
                      ::google::protobuf::Closure* done)
 {
-    app_name = request->name();
+    app_name = request->application_name();
     done->Run();
 }
 

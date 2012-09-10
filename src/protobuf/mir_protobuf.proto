@@ -3,7 +3,7 @@ option cc_generic_services = true;
 package mir.protobuf;
 
 message ConnectParameters {
-  required string name = 1;
+  required string application_name = 1;
 }
 
 message SurfaceParameters {

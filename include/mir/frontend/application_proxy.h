@@ -42,7 +42,7 @@ public:
 
     ApplicationProxy(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
 
-    std::string name() { return app_name; }
+    std::string const& name() const { return app_name; }
 
 private:
     virtual void connect(::google::protobuf::RpcController* controller,

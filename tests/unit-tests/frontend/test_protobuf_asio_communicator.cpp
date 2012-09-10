@@ -77,7 +77,7 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
                          ::mir::protobuf::Void*,
                          ::google::protobuf::Closure* done)
     {
-        app_name = request->name();
+        app_name = request->application_name();
         done->Run();
     }
 
@@ -346,7 +346,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
 
     EXPECT_CALL(client, connect_done()).Times(1);
 
-    client.connect_parameters.set_name(__PRETTY_FUNCTION__);
+    client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
     client.display_server.connect(
         0,

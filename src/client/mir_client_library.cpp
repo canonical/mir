@@ -129,7 +129,7 @@ public:
         mir_connected_callback callback,
         void * context)
     {
-        connect_parameters.set_name(app_name);
+        connect_parameters.set_application_name(app_name);
         server.connect(
             0,
             &connect_parameters,
