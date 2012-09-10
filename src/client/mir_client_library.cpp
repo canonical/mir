@@ -29,7 +29,11 @@ namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 #ifdef MIR_USING_BOOST_THREADS
-    using namespace mir::std;
+    using ::mir::std::condition_variable;
+    using ::boost::unique_lock;
+    using ::boost::lock_guard;
+    using ::boost::thread;
+    using ::boost::mutex;
 #else
     using namespace std;
 #endif
@@ -88,7 +92,7 @@ private:
     mp::DisplayServer::Stub & server;
     mp::Void void_response;
     mp::Surface surface;
-    string error_message;
+    std::string error_message;
 };
 
 // TODO the connection should track all associated surfaces, and release them on
@@ -96,7 +100,7 @@ private:
 class MirConnection
 {
 public:
-    MirConnection(shared_ptr<mc::Logger> const & log)
+    MirConnection(std::shared_ptr<mc::Logger> const & log)
         : created(true),
           channel("./mir_socket_test", log)
         , server(&channel)
@@ -159,13 +163,13 @@ private:
 
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
-    shared_ptr<mc::Logger> log;
+    std::shared_ptr<mc::Logger> log;
     mp::Void void_response;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    string error_message;
-    set<MirSurface *> surfaces;
+    std::string error_message;
+    std::set<MirSurface *> surfaces;
 };
 
 void mir_connect(char const* name, mir_connected_callback callback, void * context)
@@ -173,11 +177,11 @@ void mir_connect(char const* name, mir_connected_callback callback, void * conte
 
     try
     {
-        auto log = make_shared<mc::ConsoleLogger>();
+        auto log = std::make_shared<mc::ConsoleLogger>();
         MirConnection * connection = new MirConnection(log);
         connection->connect(name, callback, context);
     }
-    catch (exception const& /*x*/)
+    catch (std::exception const& /*x*/)
     {
         // TODO callback with an error connection
     }
@@ -208,7 +212,7 @@ void mir_surface_create(MirConnection * connection,
     {
         connection->create_surface(*params, callback, context);
     }
-    catch (exception const&)
+    catch (std::exception const&)
     {
         // TODO callback with an error surface
     }
