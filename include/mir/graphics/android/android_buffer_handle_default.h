@@ -43,7 +43,7 @@ public:
 
     EGLClientBuffer get_egl_client_buffer() const;
 
-
+private:
     const ANativeWindowBuffer anw_buffer;
 
     /* we save these so that when other parts of the system query for the mir

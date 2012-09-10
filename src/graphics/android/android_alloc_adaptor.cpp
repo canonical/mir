@@ -40,7 +40,8 @@ struct AndroidBufferHandleDefaultDeleter
 
     void operator()(mga::AndroidBufferHandleDefault* t)
     {
-        alloc_device->free(alloc_device.get(), t->anw_buffer.handle);
+        ANativeWindowBuffer *anw_buffer = (ANativeWindowBuffer*) t->get_egl_client_buffer();
+        alloc_device->free(alloc_device.get(), anw_buffer->handle);
         delete t;
     }
 private:
