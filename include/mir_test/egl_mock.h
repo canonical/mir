@@ -38,6 +38,7 @@ public:
     MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
     MOCK_METHOD1(eglTerminate, EGLBoolean(EGLDisplay));
     MOCK_METHOD2(eglQueryString,const char*(EGLDisplay, EGLint));
+    MOCK_METHOD1(eglBindApi, EGLBoolean(EGLenum));
 
     // Config management
     MOCK_METHOD4(eglGetConfigs, EGLBoolean(EGLDisplay,EGLConfig*,EGLint,EGLint*));
