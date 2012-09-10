@@ -21,6 +21,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
+#include "gbm/mock_gbm.h"
 #endif
 
 #include <gtest/gtest.h>
@@ -35,6 +36,7 @@ class GraphicsPlatform : public ::testing::Test
 public:
 #ifndef ANDROID
     mgg::MockDRM mock_drm;
+    mgg::MockGBM mock_gbm;
 #endif
 };
 

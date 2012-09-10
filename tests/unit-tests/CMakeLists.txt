@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
-include_directories(${DRM_INCLUDE_DIRS})
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
 
 set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 
@@ -49,7 +49,6 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
-  ${GBM_LDFLAGS}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
