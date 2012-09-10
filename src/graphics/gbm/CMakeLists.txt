@@ -26,4 +26,6 @@ add_library(
 
   gbm_buffer_allocator.cpp
   gbm_buffer.cpp
+  gbm_display_helpers.cpp
+  gbm_display.cpp
 )
