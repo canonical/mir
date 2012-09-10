@@ -34,7 +34,6 @@ struct AllocDevDeleter
 {
     void operator()(alloc_device_t* t)
     {
-    printf("here in del\n");
         /* android takes care of delete for us */
         t->common.close((hw_device_t*)t);
     }
