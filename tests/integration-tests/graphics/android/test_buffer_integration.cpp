@@ -18,10 +18,15 @@
 
 #include "mir/graphics/android/android_buffer.h"
 #include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
 
 #include "mir_test/mock_android_alloc_device.h"
 
 #include <gtest/gtest.h>
+
+namespace mc=mir::compositor;
+namespace geom=mir::geometry; 
+namespace mga=mir::graphics::android; 
 
 class AndroidBufferIntegration : public ::testing::Test
 {
@@ -35,13 +40,14 @@ public:
 
 TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
 {
-    pf = mc::PixelFormat::rgba_8888;
-    width = geom::Width(300);
-    usage = mga::BufferUsage::use_hardware;
-    height = geom::Height(200);
-    
+    auto pf = mc::PixelFormat::rgba_8888;
+    auto width = geom::Width(300);
+    auto usage = mga::BufferUsage::use_hardware;
+    auto height = geom::Height(200);
+    native_handle_t native_handle;   
+ 
     auto mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(&native_handle));
     auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
 
-    mc::BufferAllocationStrategy = std::make_shared<mc::DoubleBufferAllocationStrategy(alloc_adaptor);
+    mc::BufferAllocationStrategy strategy = std::make_shared<mc::DoubleBufferAllocationStrategy(alloc_adaptor);
 }
