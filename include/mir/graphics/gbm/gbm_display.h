@@ -21,8 +21,6 @@
 
 #include "mir/graphics/display.h"
 
-#define __GBM__
-#include <EGL/egl.h>
 #include <memory>
 
 struct gbm_device;
