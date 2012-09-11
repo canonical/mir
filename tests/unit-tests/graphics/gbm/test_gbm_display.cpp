@@ -287,7 +287,7 @@ TEST_F(GBMDisplayTest, post_update)
     EXPECT_NO_THROW(
     {
         std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
-        ASSERT_EQ(true, display->post_update());
+        EXPECT_TRUE(display->post_update());
     });
 }
 
@@ -320,6 +320,6 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
     EXPECT_NO_THROW(
     {
         std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
-        ASSERT_EQ(false, display->post_update());
+        EXPECT_FALSE(display->post_update());
     });
 }
