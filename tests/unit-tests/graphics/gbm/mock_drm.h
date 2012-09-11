@@ -35,7 +35,6 @@ class FakeDRMResources
 {
 public:
     FakeDRMResources();
-    ~FakeDRMResources() = default;
 
     int fd;
     drmModeRes resources;
