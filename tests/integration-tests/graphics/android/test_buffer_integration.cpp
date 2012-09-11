@@ -40,14 +40,12 @@ public:
 
 TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
 {
-    auto pf = mc::PixelFormat::rgba_8888;
     auto width = geom::Width(300);
-    auto usage = mga::BufferUsage::use_hardware;
     auto height = geom::Height(200);
     native_handle_t native_handle;   
  
     auto mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(&native_handle));
     auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
 
-    mc::BufferAllocationStrategy strategy = std::make_shared<mc::DoubleBufferAllocationStrategy(alloc_adaptor);
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(alloc_adaptor);
 }
