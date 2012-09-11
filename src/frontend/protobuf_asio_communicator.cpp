@@ -47,26 +47,6 @@ struct mfd::Session
         return id_;
     }
 
-    // TODO this is proof-of-concept
-    void send_file_descriptor(int file_descriptor)
-    {
-        ancil_send_fd(socket.native_handle(), file_descriptor);
-    }
-
-    // TODO this is proof-of-concept
-    int receive_file_descriptor()
-    {
-        int result;
-        auto error = ancil_recv_fd(socket.native_handle(), &result);
-
-        if (error)
-        {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        return result;
-    }
-
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
