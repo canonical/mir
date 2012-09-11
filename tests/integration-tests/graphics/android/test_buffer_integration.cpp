@@ -37,9 +37,10 @@ public:
 
 TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
 {
-    auto width = geom::Width(300);
-    auto height = geom::Height(200);
- 
+    using namespace testing;
+
+    EXPECT_NO_THROW({ 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+    });
 }
