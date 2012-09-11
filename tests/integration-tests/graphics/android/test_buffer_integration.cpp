@@ -18,6 +18,7 @@
 
 #include "mir/graphics/android/android_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_swapper.h"
 
 #include <gtest/gtest.h>
 
@@ -43,4 +44,23 @@ TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
     });
+
 }
+
+TEST_F(AndroidBufferIntegration, swapper_creation_ok)
+{
+    using namespace testing;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+
+
+    geom::Width  w(200);
+    geom::Height h(400);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    EXPECT_NO_THROW({ 
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf); 
+    });
+}
+
+
