@@ -39,6 +39,7 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
+    int file_descriptor;
 
     SurfaceCounter() : surface_count(0)
     {
@@ -88,6 +89,20 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
     {
         std::unique_lock<std::mutex> lock(guard);
         wait_condition.notify_one();
+        done->Run();
+    }
+
+    virtual void test_file_descriptors(::google::protobuf::RpcController* ,
+                         const ::mir::protobuf::Void* ,
+                         ::mir::protobuf::TestFileDescriptors* fds,
+                         ::google::protobuf::Closure* done)
+    {
+        char const* test_file = "fd_test_file";
+        remove(test_file);
+        file_descriptor = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
+
+        fds->add_fd(file_descriptor);
+
         done->Run();
     }
 };
@@ -184,6 +199,7 @@ struct TestClient
         connect_done_called(false),
         create_surface_called(false),
         disconnect_done_called(false),
+        tfd_done_called(false),
         connect_done_count(0),
         create_surface_done_count(0),
         disconnect_done_count(0)
@@ -282,9 +298,24 @@ struct TestClient
         }
     }
 
+    void tfd_done()
+    {
+        tfd_done_called.store(true);
+    }
+
+    void wait_for_tfd_done()
+    {
+        for (int i = 0; !tfd_done_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        tfd_done_called.store(false);
+    }
+
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
     std::atomic<bool> disconnect_done_called;
+    std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;
     std::atomic<int> create_surface_done_count;
@@ -554,5 +585,24 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     server.expect_surface_count(surface_count);
     client.wait_for_surface_count(surface_count);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server());
+    server.comm.start();
+
+    mir::protobuf::TestFileDescriptors fds;
+
+    client.display_server.test_file_descriptors(0, &client.ignored, &fds,
+        google::protobuf::NewCallback(&client, &TestClient::tfd_done));
+
+    client.wait_for_tfd_done();
+
+    ASSERT_EQ(1, fds.fd_size());
+
+    int fd = fds.fd(0);
+
+    EXPECT_NE(server.collector.file_descriptor, fd);
 }
 }

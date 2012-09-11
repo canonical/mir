@@ -19,13 +19,15 @@
 
 #include "mir_client/mir_rpc_channel.h"
 
+#include "mir_protobuf.pb.h"  // For TestFileDescriptors frig
 #include "mir_protobuf_wire.pb.h"
+
+#include "ancillary.h"
 
 #include <boost/bind.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/null.hpp>
 
-#include <iostream>
 
 namespace
 {
@@ -111,6 +113,25 @@ c::MirRpcChannel::~MirRpcChannel()
 }
 
 
+void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
+    google::protobuf::Closure* complete)
+{
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
+
+    int result;
+    while (ancil_recv_fd(socket.native_handle(), &result))
+        ;
+
+    log->debug() << __PRETTY_FUNCTION__ << " fd=" << result << std::endl;
+
+    if (auto tfd = dynamic_cast<mir::protobuf::TestFileDescriptors*>(response))
+    {
+        tfd->clear_fd();
+        tfd->add_fd(result);
+    }
+    complete->Run();
+}
+
 void c::MirRpcChannel::CallMethod(
     const google::protobuf::MethodDescriptor* method,
     google::protobuf::RpcController*,
@@ -122,6 +143,10 @@ void c::MirRpcChannel::CallMethod(
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
+    if (method->name() == "test_file_descriptors")
+    {
+        complete = google::protobuf::NewCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete);
+    }
     // Only save details after serialization succeeds
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, complete);
 

@@ -73,6 +73,22 @@ struct mfd::Session
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
+    template<class ResultMessage>
+    void send_response(::google::protobuf::uint32 id, ResultMessage* response)
+    {
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+    }
+
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::TestFileDescriptors* response)
+    {
+        auto fd = response->fd(0);
+        response->clear_fd();
+
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+
+        send_file_descriptor(fd);
+    }
+
     template<class ParameterMessage, class ResultMessage>
     void invoke(
         void (protobuf::DisplayServer::*function)(
@@ -94,7 +110,7 @@ struct mfd::Session
                 this,
                 &Session::send_response,
                 invocation.id(),
-                static_cast<google::protobuf::Message*>(&result_message)));
+                &result_message));
     }
 
     boost::asio::local::stream_protocol::socket socket;
@@ -239,6 +255,10 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         else if ("release_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::release_surface, invocation);
+        }
+        else if ("test_file_descriptors" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {
