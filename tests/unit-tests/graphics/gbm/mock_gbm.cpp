@@ -51,6 +51,9 @@ mgg::MockGBM::MockGBM()
     ON_CALL(*this, gbm_surface_lock_front_buffer(fake_gbm.surface))
     .WillByDefault(Return(fake_gbm.bo));
 
+    ON_CALL(*this, gbm_bo_create(fake_gbm.device,_,_,_,_))
+    .WillByDefault(Return(fake_gbm.bo));
+
     ON_CALL(*this, gbm_bo_get_device(_))
     .WillByDefault(Return(fake_gbm.device));
 
