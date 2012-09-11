@@ -42,6 +42,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${PLATFORM_LIBRARIES}
   EGL
+  GLESv2
 )
 
 mir_discover_tests(integration-tests)
