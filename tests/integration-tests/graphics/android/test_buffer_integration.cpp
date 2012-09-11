@@ -63,4 +63,27 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
     });
 }
 
+TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
+{
+    using namespace testing;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+
+
+    geom::Width  w(200);
+    geom::Height h(400);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+
+    EXPECT_NE((int)swapper->client_acquire(), NULL);
+}
+
+
+
+
+
+
+
+
 
