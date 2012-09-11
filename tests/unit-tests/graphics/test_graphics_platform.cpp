@@ -35,8 +35,8 @@ class GraphicsPlatform : public ::testing::Test
 {
 public:
 #ifndef ANDROID
-    mgg::MockDRM mock_drm;
-    mgg::MockGBM mock_gbm;
+    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
 #endif
 };
 
