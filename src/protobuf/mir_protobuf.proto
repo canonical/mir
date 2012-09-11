@@ -28,7 +28,7 @@ message Void {
 }
 
 message TestFileDescriptors {
-  repeated sint64 fd = 1;
+  repeated sint32 fd = 1;
   repeated int32  stuff = 2;
 }
 

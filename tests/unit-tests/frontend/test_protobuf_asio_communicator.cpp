@@ -39,7 +39,8 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
-    int file_descriptor;
+    int file_descriptor1;
+    int file_descriptor2;
 
     SurfaceCounter() : surface_count(0)
     {
@@ -97,11 +98,17 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
                          ::mir::protobuf::TestFileDescriptors* fds,
                          ::google::protobuf::Closure* done)
     {
-        char const* test_file = "fd_test_file";
-        remove(test_file);
-        file_descriptor = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
+        char const* test_file1 = "fd_test_file1";
+        remove(test_file1);
+        file_descriptor1 = open(test_file1, O_CREAT, S_IWUSR|S_IRUSR);
 
-        fds->add_fd(file_descriptor);
+        fds->add_fd(file_descriptor1);
+
+        char const* test_file2 = "fd_test_file2";
+        remove(test_file2);
+        file_descriptor2 = open(test_file2, O_CREAT, S_IWUSR|S_IRUSR);
+
+        fds->add_fd(file_descriptor2);
 
         done->Run();
     }
@@ -599,10 +606,15 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
 
     client.wait_for_tfd_done();
 
-    ASSERT_EQ(1, fds.fd_size());
+    ASSERT_EQ(2, fds.fd_size());
 
-    int fd = fds.fd(0);
+    for (int i  = 0; i != 2; ++ i)
+    {
+        int fd = fds.fd(i);
 
-    EXPECT_NE(server.collector.file_descriptor, fd);
+        EXPECT_NE(-1, fd);
+        EXPECT_NE(server.collector.file_descriptor1, fd);
+        EXPECT_NE(server.collector.file_descriptor2, fd);
+    }
 }
 }

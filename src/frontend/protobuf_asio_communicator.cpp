@@ -81,12 +81,12 @@ struct mfd::Session
 
     void send_response(::google::protobuf::uint32 id, mir::protobuf::TestFileDescriptors* response)
     {
-        auto fd = response->fd(0);
+        std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
         response->clear_fd();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
 
-        send_file_descriptor(fd);
+        ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
     }
 
     template<class ParameterMessage, class ResultMessage>

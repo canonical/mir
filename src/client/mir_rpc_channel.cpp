@@ -118,16 +118,19 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
-    int result;
-    while (ancil_recv_fd(socket.native_handle(), &result))
-        ;
+    static const int size = 8;
+    int32_t buffer[size];
 
-    log->debug() << __PRETTY_FUNCTION__ << " fd=" << result << std::endl;
+    int received = 0;
+    while ((received = ancil_recv_fds(socket.native_handle(), buffer, size)) == -1)
+        /* TODO avoid spinning forever */;
 
     if (auto tfd = dynamic_cast<mir::protobuf::TestFileDescriptors*>(response))
     {
         tfd->clear_fd();
-        tfd->add_fd(result);
+
+        for (int i = 0; i != received; ++i)
+            tfd->add_fd(buffer[i]);
     }
     complete->Run();
 }
