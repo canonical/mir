@@ -59,6 +59,8 @@ struct mfd::Session
         send_response(id, static_cast<google::protobuf::Message*>(response));
     }
 
+    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
+    // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::TestFileDescriptors* response)
     {
         std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
