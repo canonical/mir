@@ -35,12 +35,13 @@ namespace
 {
 struct SurfaceCounter : mir::protobuf::DisplayServer
 {
+    static const int file_descriptors = 2;
+
     std::string app_name;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
-    int file_descriptor1;
-    int file_descriptor2;
+    int file_descriptor[file_descriptors];
 
     SurfaceCounter() : surface_count(0)
     {
@@ -98,21 +99,22 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
                          ::mir::protobuf::TestFileDescriptors* fds,
                          ::google::protobuf::Closure* done)
     {
-        char const* test_file1 = "fd_test_file1";
-        remove(test_file1);
-        file_descriptor1 = open(test_file1, O_CREAT, S_IWUSR|S_IRUSR);
+        for (int i = 0; i != file_descriptors; ++i)
+        {
+            static char const test_file_fmt[] = "fd_test_file%d";
+            char test_file[sizeof test_file_fmt];
+            sprintf(test_file, test_file_fmt, i);
+            remove(test_file);
+            file_descriptor[i] = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
 
-        fds->add_fd(file_descriptor1);
-
-        char const* test_file2 = "fd_test_file2";
-        remove(test_file2);
-        file_descriptor2 = open(test_file2, O_CREAT, S_IWUSR|S_IRUSR);
-
-        fds->add_fd(file_descriptor2);
+            fds->add_fd(file_descriptor[i]);
+        }
 
         done->Run();
     }
 };
+
+const int SurfaceCounter::file_descriptors;
 
 struct NullDeleter
 {
@@ -606,15 +608,18 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
 
     client.wait_for_tfd_done();
 
-    ASSERT_EQ(2, fds.fd_size());
+    ASSERT_EQ(server.collector.file_descriptors, fds.fd_size());
 
-    for (int i  = 0; i != 2; ++ i)
+    for (int i  = 0; i != server.collector.file_descriptors; ++i)
     {
-        int fd = fds.fd(i);
-
+        int const fd = fds.fd(i);
         EXPECT_NE(-1, fd);
-        EXPECT_NE(server.collector.file_descriptor1, fd);
-        EXPECT_NE(server.collector.file_descriptor2, fd);
+
+        for (int j  = 0; j != server.collector.file_descriptors; ++j)
+        {
+            EXPECT_NE(server.collector.file_descriptor[j], fd);
+        }
+
     }
 }
 }
