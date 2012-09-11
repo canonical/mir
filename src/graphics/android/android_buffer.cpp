@@ -83,23 +83,51 @@ void mga::AndroidBuffer::unlock()
 {
 }
 
+#include <system/window.h>
+static void inc(struct android_native_base_t*)
+{
+    printf("INCREF\n");
+}
+static void dec(struct android_native_base_t*)
+{
+    printf("DECREF\n");
+}
+
 void mga::AndroidBuffer::bind_to_texture()
 {
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
-
+    if (disp == EGL_NO_DISPLAY) {
+        printf("BAD!\n");
+        return;
+    }
     static const EGLint image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
         EGL_NONE
     };
-
     EGLImageKHR image;
     it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
+printf("throw BIND new im\n");
+        ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
+        printf("width is %i\n", buf->width);
+        printf("incref is %i\n", (int) buf->common.incRef);
+        buf->common.incRef = &inc;
+        buf->common.decRef = &dec;
+        printf("handle is %X\n", (int) buf->handle);
+        printf("handle data is %X\n", (int) buf->handle->numFds);
+        printf("handle data is %X\n", (int) buf->handle->numInts);
+        printf("handle data is %X\n", (int) buf->handle->data);
+    for(int i=0; i< buf->handle->numFds + buf->handle->numInts; i++)
+    {
+        printf("[%i]: %i\n",i, (int) buf->handle->data[i]);
+    }
+    
+printf("submitting...\n");
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_window_buffer_handle->get_egl_client_buffer() , image_attrs);
+                                  buf, image_attrs);
 
         if (image == EGL_NO_IMAGE_KHR)
         {

@@ -16,15 +16,19 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/platform.h"
 #include "mir/graphics/android/android_buffer_allocator.h"
+#include "mir/graphics/android/android_display.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 
+#include <stdexcept>
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry; 
 namespace mga=mir::graphics::android; 
+namespace mg=mir::graphics; 
 
 class AndroidBufferIntegration : public ::testing::Test
 {
@@ -79,11 +83,54 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
 
+TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
+{
+    using namespace testing;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
 
+    geom::Width  w(200);
+    geom::Height h(400);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+
+    auto buffer = swapper->compositor_acquire();
+    EXPECT_THROW({
+    buffer->bind_to_texture();
+    }, std::runtime_error);
+
+}
+
+TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
+{
+    using namespace testing;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
 
+    geom::Width  w(200);
+    geom::Height h(400);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
 
+    std::shared_ptr<mg::Display> display;
+    display = mg::create_display();
+
+    printf("HERE\n"); 
+    /* add to swapper to surface */
+    /* add to surface to surface stack */
+
+    /* add swapper to ipc mechanism thing */
+
+    auto buffer = swapper->compositor_acquire();
+    EXPECT_NO_THROW({
+    buffer->bind_to_texture();
+    });
+    display->post_update();
+}
 
 
 
