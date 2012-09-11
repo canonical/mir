@@ -16,11 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_buffer.h"
-#include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-
-#include "mir_test/mock_android_alloc_device.h"
 
 #include <gtest/gtest.h>
 
@@ -42,10 +39,7 @@ TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
 {
     auto width = geom::Width(300);
     auto height = geom::Height(200);
-    native_handle_t native_handle;   
  
-    auto mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(&native_handle));
-    auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
-
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(alloc_adaptor);
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 }
