@@ -19,7 +19,8 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
-#include "mock_gbm_buffer_allocator.h"
+
+#include "mock_gbm.h"
 
 #include <memory>
 #include <gtest/gtest.h>
@@ -32,13 +33,25 @@ namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+namespace
+{
+struct GBMDeviceDeleter
+{
+    void operator()(gbm_device* d) const
+    {            
+        if (d)
+            gbm_device_destroy(d);
+    }
+};
+}
+
 class GBMBufferAllocatorTest  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        mocker = std::shared_ptr<mgg::MockGBMDeviceCreator>(new mgg::MockGBMDeviceCreator);
-        allocator = mocker->create_gbm_allocator();
+        std::shared_ptr<gbm_device> fake_device{gbm_create_device(1), GBMDeviceDeleter()};
+        allocator.reset(new mgg::GBMBufferAllocator(fake_device));
 
         w = geom::Width(300);
         h = geom::Height(200);
@@ -50,15 +63,15 @@ protected:
     geom::Height h;
     mc::PixelFormat pf;
 
-    std::shared_ptr<mgg::MockGBMDeviceCreator> mocker;
+    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 };
 
 TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
 {
     using namespace testing;
-    EXPECT_CALL(*mocker, bo_create(_,_,_,_,_));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     EXPECT_TRUE(allocator->alloc_buffer(w, h, pf).get() != NULL);
 }
@@ -67,8 +80,8 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(w, h, mc::PixelFormat::rgba_8888);
 }
@@ -81,8 +94,8 @@ TEST_F(GBMBufferAllocatorTest, creates_hw_rendering_buffer_by_default)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_,_,_,_,Truly(has_hardware_rendering_flag_set)));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,Truly(has_hardware_rendering_flag_set)));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(w, h, pf);
 }
@@ -91,8 +104,8 @@ TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_,w.as_uint32_t(),h.as_uint32_t(),_,_));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,w.as_uint32_t(),h.as_uint32_t(),_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(w, h, pf);
 }
@@ -100,13 +113,11 @@ TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
 TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
 {
     using namespace testing;
+    gbm_bo* bo{reinterpret_cast<gbm_bo*>(0xabcd)};
 
-    gbm_bo* bo = new gbm_bo();
-    bo->gbm = mocker->get_device().get();
-
-    EXPECT_CALL(*mocker, bo_create(_,_,_,_,_))
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_))
     .WillOnce(Return(bo));
-    EXPECT_CALL(*mocker, bo_destroy(bo));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(bo));
 
     allocator->alloc_buffer(w, h, pf);
 }
