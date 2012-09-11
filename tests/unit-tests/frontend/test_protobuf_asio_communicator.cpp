@@ -35,7 +35,7 @@ namespace
 {
 struct SurfaceCounter : mir::protobuf::DisplayServer
 {
-    static const int file_descriptors = 2;
+    static const int file_descriptors = 5;
 
     std::string app_name;
     int surface_count;

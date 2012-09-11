@@ -118,7 +118,7 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
-    static const int size = 8;
+    static const int size = 32; // TODO - validate this magic hard limit is enough
     int32_t buffer[size];
 
     int received = 0;
