@@ -20,6 +20,7 @@
 #include "mock_drm.h"
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <unistd.h>
 
 namespace mgg=mir::graphics::gbm;
@@ -35,9 +36,10 @@ mgg::FakeDRMResources::FakeDRMResources()
       pipe_fds({-1, -1})
 {
     /* Use the read end of a pipe as the fake DRM fd */
-    pipe(pipe_fds);
+    if (pipe(pipe_fds) < 0 || pipe_fds[0] < 0)
+        throw std::runtime_error("Failed to create fake DRM fd");
+
     fd = pipe_fds[0];
-    assert(fd >= 0 && "Fake DRM fd creation failed");
 
     resources.count_crtcs = 2;
     resources.crtcs = crtc_ids;
