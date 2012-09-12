@@ -40,6 +40,7 @@ public:
 
 private:
     std::vector<int> ipc_data;
+    std::vector<int> ipc_fds;
 };
 
 }
