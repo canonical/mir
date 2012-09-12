@@ -38,8 +38,7 @@ public:
     std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
             compositor::PixelFormat, BufferUsage usage);
 
-    /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used
-             to check buffer contents */
+    /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used to check buffer contents */
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;

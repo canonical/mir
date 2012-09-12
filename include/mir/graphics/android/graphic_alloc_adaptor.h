@@ -30,7 +30,7 @@ namespace graphics
 namespace android
 {
 
-/* note: this will need a new interface whenever gralloc interface changes (or for hw specific quirks) */
+/* note: we will need a new concrete class implementing this interface whenever gralloc interface changes (or for hw specific quirks) */
 class GraphicAllocAdaptor
 {
 public:
