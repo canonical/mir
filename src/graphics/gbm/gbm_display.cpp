@@ -184,7 +184,6 @@ bool mgg::GBMDisplay::Private::schedule_and_wait_for_page_flip(BufferObject* buf
         struct timeval tv{0, page_flip_max_wait_usec};
         fd_set fds;
         FD_ZERO(&fds);
-        FD_SET(0, &fds);
         FD_SET(drm.fd, &fds);
 
         /* Wait for an event from the DRM device */
