@@ -39,7 +39,7 @@ class DRMHelper
 {
 public:
     DRMHelper() : fd{-1} {}
-    ~DRMHelper() { cleanup(); }
+    ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
@@ -47,9 +47,6 @@ public:
     void setup();
 
     int fd;
-
-private:
-    void cleanup();
 };
 
 class KMSHelper {
@@ -60,7 +57,7 @@ public:
     {
     }
 
-    ~KMSHelper() { cleanup(); }
+    ~KMSHelper();
 
     KMSHelper(const KMSHelper&) = delete;
     KMSHelper& operator=(const KMSHelper&) = delete;
@@ -75,15 +72,13 @@ public:
 private:
     int drm_fd;
     drmModeCrtc *saved_crtc;
-
-    void cleanup();
 };
 
 class GBMHelper
 {
 public:
     GBMHelper() : device{0}, surface{0} {}
-    ~GBMHelper() { cleanup(); }
+    ~GBMHelper();
 
     GBMHelper(const GBMHelper&) = delete;
     GBMHelper& operator=(const GBMHelper&) = delete;
@@ -92,9 +87,6 @@ public:
 
     gbm_device* device;
     gbm_surface* surface;
-
-private:
-    void cleanup();
 };
 
 class EGLHelper
@@ -104,7 +96,7 @@ public:
         : display(EGL_NO_DISPLAY), config(0),
           context(EGL_NO_CONTEXT), surface(EGL_NO_SURFACE) {}
 
-    ~EGLHelper() { cleanup(); }
+    ~EGLHelper();
 
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
@@ -115,9 +107,6 @@ public:
     EGLConfig config;
     EGLContext context;
     EGLSurface surface;
-
-private:
-    void cleanup();
 };
 
 }

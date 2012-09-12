@@ -34,7 +34,7 @@ void mggh::DRMHelper::setup()
         throw std::runtime_error("Failed to open DRM device\n");
 }
 
-void mggh::DRMHelper::cleanup()
+mggh::DRMHelper::~DRMHelper()
 {
     if (fd >= 0)
         drmClose(fd);
@@ -96,7 +96,7 @@ void mggh::KMSHelper::setup(const DRMHelper& drm)
     saved_crtc = drmModeGetCrtc(drm.fd, encoder->crtc_id);
 }
 
-void mggh::KMSHelper::cleanup()
+mggh::KMSHelper::~KMSHelper()
 {
     if (saved_crtc)
     {
@@ -131,7 +131,7 @@ void mggh::GBMHelper::setup(const DRMHelper& drm, uint32_t width, uint32_t heigh
         throw std::runtime_error("Failed to create GBM scanout surface");
 }
 
-void mggh::GBMHelper::cleanup()
+mggh::GBMHelper::~GBMHelper()
 {
     if (surface)
         gbm_surface_destroy(surface);
@@ -191,7 +191,7 @@ void mggh::EGLHelper::setup(const GBMHelper& gbm)
         throw std::runtime_error("Failed to create EGL context");
 }
 
-void mggh::EGLHelper::cleanup()
+mggh::EGLHelper::~EGLHelper()
 {
     if (display != EGL_NO_DISPLAY) {
         eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
