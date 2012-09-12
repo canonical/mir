@@ -13,52 +13,51 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/pixel_format.h"
 
+#include <EGL/egl.h>
+
 namespace mir
 {
-
 namespace graphics
 {
-class Texture;
-}
-
-namespace compositor
+namespace android
 {
 
-class Buffer
+enum class BufferUsage : uint32_t
+{
+    use_hardware,
+    use_software
+};
+
+/* note: this interface will need a new concrete class implementing it when the struct for ANativeWindowBuffer changes */
+class AndroidBufferHandle
 {
 public:
+    virtual ~AndroidBufferHandle() {}
 
-    virtual ~Buffer() {}
-
-    virtual geometry::Width width() const = 0;
-
+    virtual geometry::Width width() const   = 0;
     virtual geometry::Height height() const = 0;
-
     virtual geometry::Stride stride() const = 0;
+    virtual compositor::PixelFormat format() const  = 0;
+    virtual BufferUsage usage() const = 0;
 
-    virtual PixelFormat pixel_format() const = 0;
-
-    virtual void lock() = 0;
-
-    virtual void unlock() = 0;
-
-    virtual void bind_to_texture() = 0;
+    virtual EGLClientBuffer get_egl_client_buffer() const = 0;
 
 protected:
-    Buffer() = default;
-    Buffer(Buffer const&) = delete;
-    Buffer& operator=(Buffer const&) = delete;
+    AndroidBufferHandle() = default;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+}
+
+#endif /*MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_ */

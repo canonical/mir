@@ -20,11 +20,10 @@
 #ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
 #define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
 
-/* from android */
 #include <hardware/hardware.h>
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/graphic_alloc_adaptor.h"
 
 namespace mir
 {

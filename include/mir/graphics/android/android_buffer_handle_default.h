@@ -16,23 +16,12 @@
  * Authored by:
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
-
-#include "mir/compositor/buffer.h"
-#include "mir/graphics/android/graphic_alloc_adaptor.h"
 #include "mir/graphics/android/android_buffer_handle.h"
 
-#include <map>
-#include <stdexcept>
-#include <memory>
-
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
+#include <system/window.h>
 
 namespace mir
 {
@@ -41,36 +30,30 @@ namespace graphics
 namespace android
 {
 
-class AndroidBuffer: public compositor::Buffer
+class AndroidBufferHandleDefault: public AndroidBufferHandle
 {
 public:
-    AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
-    ~AndroidBuffer();
+    explicit AndroidBufferHandleDefault(ANativeWindowBuffer buf, compositor::PixelFormat pf, BufferUsage use);
 
     geometry::Width width() const;
-
     geometry::Height height() const;
-
     geometry::Stride stride() const;
+    compositor::PixelFormat format() const;
+    BufferUsage usage() const;
 
-    compositor::PixelFormat pixel_format() const;
-
-    void lock();
-
-    void unlock();
-
-    void bind_to_texture();
+    EGLClientBuffer get_egl_client_buffer() const;
 
 private:
-    const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
+    const ANativeWindowBuffer anw_buffer;
 
-    std::map<EGLDisplay,EGLImageKHR> egl_image_map;
-
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
+    /* we save these so that when other parts of the system query for the mir
+       types, we don't have to convert back */
+    const compositor::PixelFormat pixel_format;
+    const BufferUsage buffer_usage;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_ */
+#endif /*MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_ */

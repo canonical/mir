@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/graphics/android/android_buffer_handle_default.h"
 #include <stdexcept>
 
 namespace mg=mir::graphics;
@@ -31,24 +32,32 @@ mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc
 {
 }
 
-struct BufferHandleDeleter
+struct AndroidBufferHandleDefaultDeleter
 {
-    BufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
+    AndroidBufferHandleDefaultDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(mga::AndroidBufferHandle* t)
+    void operator()(mga::AndroidBufferHandleDefault* t)
     {
-        alloc_device->free(alloc_device.get(), t->handle);
+        ANativeWindowBuffer *anw_buffer = (ANativeWindowBuffer*) t->get_egl_client_buffer();
+        alloc_device->free(alloc_device.get(), anw_buffer->handle);
         delete t;
     }
 private:
     std::shared_ptr<alloc_device_t> alloc_device;
 };
 
-bool mga::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handle, geom::Stride& stride,
-                                           geom::Width width, geom::Height height,
-                                           compositor::PixelFormat pf, BufferUsage usage)
+struct AndroidBufferHandleEmptyDeleter
+{
+    void operator()(mga::AndroidBufferHandle*)
+    {
+    }
+};
+
+std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
+    geometry::Width width, geometry::Height height,
+    compositor::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
 
@@ -56,25 +65,38 @@ bool mga::AndroidAllocAdaptor::alloc_buffer(std::shared_ptr<BufferHandle>& handl
     int format = convert_to_android_format(pf);
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),
-                            format, usage_flag, &buf_handle, &stride_as_int);
+                           format, usage_flag, &buf_handle, &stride_as_int);
 
+    AndroidBufferHandleEmptyDeleter empty_del;
+    AndroidBufferHandle *null_handle = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
-        return false;
+        return std::shared_ptr<mga::AndroidBufferHandle>(null_handle, empty_del);
 
-    BufferHandleDeleter del(alloc_dev);
-    handle = std::shared_ptr<mg::BufferHandle>(new mga::AndroidBufferHandle(buf_handle), del);
-    stride = geom::Stride(stride_as_int);
 
-    return true;
+    /* pack ANativeWindow buffer for the handle */
+    ANativeWindowBuffer buffer;
+    buffer.width = (int) width.as_uint32_t();
+    buffer.height = (int) height.as_uint32_t();
+    buffer.stride = stride_as_int;
+    buffer.handle = buf_handle;
+    buffer.format = format;
+    buffer.usage = usage_flag;
+
+    AndroidBufferHandleDefaultDeleter del(alloc_dev);
+    auto handle = std::shared_ptr<mga::AndroidBufferHandle>(
+                      new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
+
+    return handle;
 }
+
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
     switch (usage)
     {
-    case mg::BufferUsage::use_hardware:
+    case mga::BufferUsage::use_hardware:
         return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
-    case mg::BufferUsage::use_software:
+    case mga::BufferUsage::use_software:
     default:
         return -1;
     }
