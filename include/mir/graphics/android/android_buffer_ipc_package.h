@@ -36,6 +36,7 @@ public:
     AndroidBufferIPCPackage(const AndroidBufferHandle*);
 
     std::vector<int> get_ipc_data();
+    std::vector<int> get_ipc_fds();
 
 private:
     std::vector<int> ipc_data;

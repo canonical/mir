@@ -33,6 +33,7 @@ public:
     virtual ~BufferIPCPackage() {}
 
     virtual std::vector<int> get_ipc_data() = 0;
+    virtual std::vector<int> get_ipc_fds() = 0;
 
     BufferIPCPackage(BufferIPCPackage const&) = delete;
     BufferIPCPackage& operator=(BufferIPCPackage const&) = delete;
