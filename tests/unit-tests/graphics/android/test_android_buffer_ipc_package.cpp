@@ -72,3 +72,16 @@ TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_size)
     EXPECT_EQ(native_handle->numInts, (int) test_vector.size()); 
 }
 
+TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_data)
+{
+    using namespace testing;
+
+    mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
+    auto test_vector = package.get_ipc_data();
+
+    int fd_offset = native_handle->numFds; 
+    for(auto it= test_vector.begin(); it != test_vector.end(); it++)
+    { 
+        EXPECT_EQ(native_handle->data[fd_offset++], *it);
+    } 
+}
