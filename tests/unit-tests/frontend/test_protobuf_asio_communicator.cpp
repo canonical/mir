@@ -33,7 +33,7 @@ namespace mir
 {
 namespace
 {
-struct SurfaceCounter : mir::protobuf::DisplayServer
+struct StubServer : mir::protobuf::DisplayServer
 {
     static const int file_descriptors = 5;
 
@@ -43,13 +43,13 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
     std::condition_variable wait_condition;
     int file_descriptor[file_descriptors];
 
-    SurfaceCounter() : surface_count(0)
+    StubServer() : surface_count(0)
     {
         for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
             *i = 0;
     }
 
-    SurfaceCounter(SurfaceCounter const &) = delete;
+    StubServer(StubServer const &) = delete;
     void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
@@ -96,7 +96,7 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
         done->Run();
     }
 
-    virtual void test_file_descriptors(::google::protobuf::RpcController* ,
+    void test_file_descriptors(::google::protobuf::RpcController* ,
                          const ::mir::protobuf::Void* ,
                          ::mir::protobuf::TestFileDescriptors* fds,
                          ::google::protobuf::Closure* done)
@@ -122,7 +122,7 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
     }
 };
 
-const int SurfaceCounter::file_descriptors;
+const int StubServer::file_descriptors;
 
 struct NullDeleter
 {
@@ -187,22 +187,22 @@ struct TestServer
     }
 
     TestServer() :
-        factory(std::make_shared<MockIpcFactory>(collector)),
+        factory(std::make_shared<MockIpcFactory>(stub_services)),
         comm(socket_name(), factory)
     {
     }
 
     void expect_surface_count(int expected_count)
     {
-        std::unique_lock<std::mutex> ul(collector.guard);
-        while (collector.surface_count != expected_count)
-            collector.wait_condition.wait(ul);
+        std::unique_lock<std::mutex> ul(stub_services.guard);
+        while (stub_services.surface_count != expected_count)
+            stub_services.wait_condition.wait(ul);
 
-        EXPECT_EQ(expected_count, collector.surface_count);
+        EXPECT_EQ(expected_count, stub_services.surface_count);
     }
 
     // "Server" side
-    SurfaceCounter collector;
+    StubServer stub_services;
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
@@ -406,7 +406,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
 
     server.expect_surface_count(0);
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, server.collector.app_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.app_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
@@ -616,21 +616,21 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
 
     client.wait_for_tfd_done();
 
-    ASSERT_EQ(server.collector.file_descriptors, fds.fd_size());
+    ASSERT_EQ(server.stub_services.file_descriptors, fds.fd_size());
 
-    for (int i  = 0; i != server.collector.file_descriptors; ++i)
+    for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
     {
         int const fd = fds.fd(i);
         EXPECT_NE(-1, fd);
 
-        for (int j  = 0; j != server.collector.file_descriptors; ++j)
+        for (int j  = 0; j != server.stub_services.file_descriptors; ++j)
         {
-            EXPECT_NE(server.collector.file_descriptor[j], fd);
+            EXPECT_NE(server.stub_services.file_descriptor[j], fd);
         }
     }
 
-    server.collector.close_files();
-    for (int i  = 0; i != server.collector.file_descriptors; ++i)
+    server.stub_services.close_files();
+    for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
         close(fds.fd(i));
 }
 }
