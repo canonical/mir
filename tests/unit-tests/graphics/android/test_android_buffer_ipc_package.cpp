@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/android_buffer_ipc_package.h"
+#include "mir_test/mock_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -33,13 +34,14 @@ protected:
 
 public:
     std::vector<int> data;
+    mga::MockBufferHandle mock_buffer_handle;
 };
 
 TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
 {
     using namespace testing;
 
-    mga::AndroidBufferIPCPackage package(data);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_data();
   
     EXPECT_EQ(data.size(), test_vector.size()); 
@@ -47,7 +49,7 @@ TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
 
 TEST_F(BufferIPCPackageTest, test_int_ipc_values)
 {
-    mga::AndroidBufferIPCPackage package(data);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_data();
 
     /* above test tests that they're the same size */
