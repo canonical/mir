@@ -25,3 +25,8 @@ mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(std::vector<int>)
 {
 }
 
+std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()
+{
+    std::vector<int> dummy;
+    return dummy;
+}

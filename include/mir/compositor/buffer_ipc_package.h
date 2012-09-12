@@ -38,7 +38,7 @@ public:
     BufferIPCPackage& operator=(BufferIPCPackage const&) = delete;
 
 protected:
-    BufferIPCPackage();
+    BufferIPCPackage() {}
 
 };
 
