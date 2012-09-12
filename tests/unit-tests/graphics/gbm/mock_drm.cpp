@@ -28,7 +28,7 @@ mgg::MockDRM* global_mock = NULL;
 }
 
 mgg::FakeDRMResources::FakeDRMResources()
-    : fd(66), resources(), crtcs(), encoders(), connectors(), mode_info(),
+    : fd(6666), resources(), crtcs(), encoders(), connectors(), mode_info(),
       crtc_ids({10, 11}), encoder_ids({20,21}), connector_ids({30, 31})
 {
     resources.count_crtcs = 2;
