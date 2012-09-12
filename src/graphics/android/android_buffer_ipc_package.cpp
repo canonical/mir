@@ -45,3 +45,8 @@ std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()
 {
     return ipc_data;
 }
+
+std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_fds()
+{
+    return ipc_data;
+}
