@@ -40,6 +40,11 @@ mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(const AndroidBufferHandle*
 
     /* pack fd data */
     ipc_fds.resize(native_handle->numFds);
+    int offset = 0;
+    for(auto it=ipc_fds.begin(); it != ipc_fds.end(); it++)
+    {
+        *it = native_handle->data[offset++];
+    }
 }
 
 std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()
