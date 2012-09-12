@@ -48,10 +48,11 @@ protected:
         for (int i=0; i<total; i++)
         {
             native_handle->data[i] = i*3;
-        } 
-        
+        }
+
+        anwb.handle = native_handle; 
         ON_CALL(mock_buffer_handle, get_egl_client_buffer())
-            .WillByDefault(Return((EGLClientBuffer) native_handle)); 
+            .WillByDefault(Return((EGLClientBuffer) &anwb)); 
     }
 
     virtual void TearDown()
@@ -64,12 +65,12 @@ public:
     mga::MockBufferHandle mock_buffer_handle;
 
     native_handle_t* native_handle;
+    ANativeWindowBuffer anwb;
 };
 
 TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_size)
 {
     using namespace testing;
-
     mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
     auto test_vector = package.get_ipc_data();
   
