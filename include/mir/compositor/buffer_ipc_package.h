@@ -20,6 +20,8 @@
 #ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
 #define MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
 
+#include <vector>
+
 namespace mir
 {
 namespace compositor
@@ -28,11 +30,16 @@ namespace compositor
 class BufferIPCPackage
 {
 public:
-    BufferIPCPackage() {}
     virtual ~BufferIPCPackage() {}
+
+    virtual std::vector<int> get_ipc_data() = 0;
 
     BufferIPCPackage(BufferIPCPackage const&) = delete;
     BufferIPCPackage& operator=(BufferIPCPackage const&) = delete;
+
+protected:
+    BufferIPCPackage();
+
 };
 
 }
