@@ -33,8 +33,8 @@ class AndroidBufferIPCPackage : public compositor::BufferIPCPackage
 {
 public:
     AndroidBufferIPCPackage(std::vector<int> data);
-    virtual std::vector<int> get_ipc_data();
 
+    std::vector<int> get_ipc_data();
 };
 
 }

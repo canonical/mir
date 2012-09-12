@@ -13,35 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/graphics/android/android_buffer_ipc_package.h"
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 namespace mga=mir::graphics::android;
 
-class BufferIPCPackageTest : public ::testing::Test
+mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(std::vector<int>)
 {
-protected:
-    virtual void SetUp()
-    {
-        std::vector<int> data = {443, 421, 493};
-    }
-
-public:
-    std::vector<int> data;
-};
-
-TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
-{
-    using namespace testing;
-
-    mga::AndroidBufferIPCPackage package(data);
-    auto test_vector = package.get_ipc_data();
-   
-    EXPECT_EQ(data.size(), test_vector.size()); 
 }
 

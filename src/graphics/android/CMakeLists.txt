@@ -19,6 +19,7 @@ add_library(
   
   android_buffer_allocator.cpp
   android_buffer.cpp
+  android_buffer_ipc_package.cpp
   android_buffer_handle.cpp
   android_display.cpp
   android_framebuffer_window.cpp
