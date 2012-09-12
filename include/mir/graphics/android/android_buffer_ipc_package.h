@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_IPC_PACKAGE_H_
 
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/graphics/android/android_buffer_handle.h"
 
 namespace mir
 {
@@ -32,7 +33,7 @@ namespace android
 class AndroidBufferIPCPackage : public compositor::BufferIPCPackage
 {
 public:
-    AndroidBufferIPCPackage(std::vector<int> data);
+    AndroidBufferIPCPackage(const AndroidBufferHandle*);
 
     std::vector<int> get_ipc_data();
 
