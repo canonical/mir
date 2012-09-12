@@ -21,12 +21,12 @@
 
 namespace mga=mir::graphics::android;
 
-mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(std::vector<int>)
+mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(std::vector<int> data)
+ : ipc_data(data)
 {
 }
 
 std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()
 {
-    std::vector<int> dummy;
-    return dummy;
+    return ipc_data;
 }
