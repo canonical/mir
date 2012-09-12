@@ -146,6 +146,9 @@ BufferObject* mgg::GBMDisplay::Private::get_front_buffer_object()
 
 void mgg::GBMDisplay::Private::wait_for_page_flip()
 {
+    /* Maximum time to wait for the page flip event in microseconds */
+    static const long page_flip_max_wait_usec{100000};
+
     static drmEventContext evctx = {
         DRM_EVENT_CONTEXT_VERSION,  /* .version */
         0,  /* .vblank_handler */
@@ -153,23 +156,27 @@ void mgg::GBMDisplay::Private::wait_for_page_flip()
     };
 
     /*
-     * Wait 100ms for the page flip. If we don't get the page flip event within
-     * that time, or we can't read from the DRM fd, act as if the page flip has
-     * occured.
+     * Wait $page_flip_max_wait_usec for the page flip event. If we get the
+     * page flip event, page_flip_handler(), called through drmHandleEvent(),
+     * will reset the page_flip_pending flag. If we don't get the page flip
+     * event within that time, or we can't read from the DRM fd, act as if the
+     * page flip has occured anyway.
      *
-     * The rationale is that if we don't get page flip events something is
-     * severely broken at the driver level. In that case, acting as if the page
-     * flip has occured will not cause any worse harm anyway (just some tearing),
-     * and will allow us to continue processing instead of just hang.
+     * The rationale is that if we don't get a page flip event "soon" after
+     * scheduling a page flip, something is severely broken at the driver
+     * level. In that case, acting as if the page flip has occured will not
+     * cause any worse harm anyway (perhaps some tearing), and will allow us to
+     * continue processing instead of just hanging.
      */
     while (page_flip_pending)
     {
-        struct timeval tv{0, 100000};
+        struct timeval tv{0, page_flip_max_wait_usec};
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(0, &fds);
         FD_SET(drm.fd, &fds);
 
+        /* Wait for an event from the DRM device */
         auto ret = select(drm.fd + 1, &fds, NULL, NULL, &tv);
 
         if (ret > 0)
@@ -228,7 +235,9 @@ bool mgg::GBMDisplay::post_update()
 
     /*
      * Schedule the current front buffer object for display. Note that
-     * drmModePageFlip is asynchronous.
+     * drmModePageFlip is asynchronous and synchronized with vertical refresh,
+     * so we tell DRM to emit a a page flip event with &page_flip_pending as
+     * its user data when done.
      */
     auto ret = drmModePageFlip(priv->drm.fd, priv->kms.encoder->crtc_id,
                                bufobj->get_drm_fb_id(), DRM_MODE_PAGE_FLIP_EVENT,
