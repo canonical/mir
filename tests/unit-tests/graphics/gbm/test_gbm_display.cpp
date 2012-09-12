@@ -172,8 +172,13 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
             .Times(Exactly(1))
             .WillOnce(Return(&fake.crtc));
 
+        /* 
+         * Workaround: We use _ for the bufferId, instead of the more strict
+         * Ne(fake.crtc.buffer_id), because using the latter causes valgrind
+         * to report inexplicable uninitialized value errors.
+         */
         EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd, 
-                                             _, Ne(fake.crtc.buffer_id),
+                                             _, _, /* Ne(fake.crtc.buffer_id), */
                                              _, _,
                                              &mock_drm.fake_drm.connectors[1].connector_id,
                                              _, _))
