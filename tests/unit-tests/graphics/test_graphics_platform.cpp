@@ -28,15 +28,14 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
 class GraphicsPlatform : public ::testing::Test
 {
 public:
 #ifndef ANDROID
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
-    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
+    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
 };
 
