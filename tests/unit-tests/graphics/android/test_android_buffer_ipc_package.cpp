@@ -28,7 +28,7 @@ class BufferIPCPackageTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        std::vector<int> data = {443, 421, 493};
+        data = {443, 421, 493};
     }
 
 public:
@@ -41,7 +41,7 @@ TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
 
     mga::AndroidBufferIPCPackage package(data);
     auto test_vector = package.get_ipc_data();
-   
+  
     EXPECT_EQ(data.size(), test_vector.size()); 
 }
 
