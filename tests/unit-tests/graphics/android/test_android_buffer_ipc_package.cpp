@@ -45,3 +45,14 @@ TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
     EXPECT_EQ(data.size(), test_vector.size()); 
 }
 
+TEST_F(BufferIPCPackageTest, test_int_ipc_values)
+{
+    mga::AndroidBufferIPCPackage package(data);
+    auto test_vector = package.get_ipc_data();
+
+    /* above test tests that they're the same size */
+    for(unsigned int i=0; i < test_vector.size(); i++)
+    {
+        EXPECT_EQ(test_vector[i], data[i]);
+    } 
+}
