@@ -84,7 +84,7 @@ class mgg::GBMDisplay::Private
 {
 public:
     Private()
-        : last_flipped_bufobj{0}, page_flip_pending{false}
+        : last_flipped_bufobj{0}
     {
     }
 
@@ -98,10 +98,9 @@ public:
     Private& operator=(const Private&) = delete;
 
     BufferObject* get_front_buffer_object();
-    void wait_for_page_flip();
+    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
-    bool page_flip_pending;
 
     /* Order is important for construction/destruction */
     mggh::DRMHelper drm;
@@ -144,16 +143,28 @@ BufferObject* mgg::GBMDisplay::Private::get_front_buffer_object()
     return bufobj;
 }
 
-void mgg::GBMDisplay::Private::wait_for_page_flip()
+bool mgg::GBMDisplay::Private::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 {
     /* Maximum time to wait for the page flip event in microseconds */
     static const long page_flip_max_wait_usec{100000};
-
     static drmEventContext evctx = {
         DRM_EVENT_CONTEXT_VERSION,  /* .version */
         0,  /* .vblank_handler */
         page_flip_handler  /* .page_flip_handler */
     };
+    bool page_flip_pending{true};
+
+    /*
+     * Schedule the current front buffer object for display. Note that
+     * drmModePageFlip is asynchronous and synchronized with vertical refresh,
+     * so we tell DRM to emit a a page flip event with &page_flip_pending as
+     * its user data when done.
+     */
+    auto ret = drmModePageFlip(drm.fd, kms.encoder->crtc_id,
+                               bufobj->get_drm_fb_id(), DRM_MODE_PAGE_FLIP_EVENT,
+                               &page_flip_pending);
+    if (ret)
+        return false;
 
     /*
      * Wait $page_flip_max_wait_usec for the page flip event. If we get the
@@ -184,6 +195,8 @@ void mgg::GBMDisplay::Private::wait_for_page_flip()
         else
             page_flip_pending = false;
     }
+
+    return true;
 }
 
 mgg::GBMDisplay::GBMDisplay()
@@ -234,31 +247,22 @@ bool mgg::GBMDisplay::post_update()
         return false;
 
     /*
-     * Schedule the current front buffer object for display. Note that
-     * drmModePageFlip is asynchronous and synchronized with vertical refresh,
-     * so we tell DRM to emit a a page flip event with &page_flip_pending as
-     * its user data when done.
+     * Schedule the current front buffer object for display, and wait
+     * for it to be actually displayed (flipped).
+     *
+     * If the flip fails, release the buffer object to make it available
+     * for future rendering.
      */
-    auto ret = drmModePageFlip(priv->drm.fd, priv->kms.encoder->crtc_id,
-                               bufobj->get_drm_fb_id(), DRM_MODE_PAGE_FLIP_EVENT,
-                               &priv->page_flip_pending);
-    if (ret)
+    if (!priv->schedule_and_wait_for_page_flip(bufobj))
     {
-        /*
-         * The buffer object won't be displayed. Release it to make
-         * it available for future rendering.
-         */
         bufobj->release();
         return false;
     }
 
-    priv->page_flip_pending = true;
-
     /*
-     * Wait for the current buffer object to be displayed/flipped, then release
-     * the last flipped buffer object to make it available for future rendering.
+     * Release the last flipped buffer object (which is not displayed anymore)
+     * to make it available for future rendering.
      */
-    priv->wait_for_page_flip();
     if (priv->last_flipped_bufobj)
         priv->last_flipped_bufobj->release();
 
