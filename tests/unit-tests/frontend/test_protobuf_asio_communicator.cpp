@@ -45,6 +45,8 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
 
     SurfaceCounter() : surface_count(0)
     {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            *i = 0;
     }
 
     SurfaceCounter(SurfaceCounter const &) = delete;
@@ -111,6 +113,12 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
         }
 
         done->Run();
+    }
+
+    void close_files()
+    {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            close(*i), *i = 0;
     }
 };
 
@@ -619,7 +627,10 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
         {
             EXPECT_NE(server.collector.file_descriptor[j], fd);
         }
-
     }
+
+    server.collector.close_files();
+    for (int i  = 0; i != server.collector.file_descriptors; ++i)
+        close(fds.fd(i));
 }
 }
