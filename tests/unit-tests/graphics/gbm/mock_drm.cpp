@@ -20,6 +20,8 @@
 #include "mock_drm.h"
 #include <gtest/gtest.h>
 
+#include <unistd.h>
+
 namespace mgg=mir::graphics::gbm;
 
 namespace
@@ -28,9 +30,15 @@ mgg::MockDRM* global_mock = NULL;
 }
 
 mgg::FakeDRMResources::FakeDRMResources()
-    : fd(6666), resources(), crtcs(), encoders(), connectors(), mode_info(),
-      crtc_ids({10, 11}), encoder_ids({20,21}), connector_ids({30, 31})
+    : fd(-1), resources(), crtcs(), encoders(), connectors(), mode_info(),
+      crtc_ids({10, 11}), encoder_ids({20,21}), connector_ids({30, 31}),
+      pipe_fds({-1, -1})
 {
+    /* Use the read end of a pipe as the fake DRM fd */
+    pipe(pipe_fds);
+    fd = pipe_fds[0];
+    assert(fd >= 0 && "Fake DRM fd creation failed");
+
     resources.count_crtcs = 2;
     resources.crtcs = crtc_ids;
     resources.count_connectors = 2;
@@ -54,6 +62,15 @@ mgg::FakeDRMResources::FakeDRMResources()
     connectors[1].subpixel = DRM_MODE_SUBPIXEL_UNKNOWN;
     connectors[1].count_modes = 1;
     connectors[1].modes = &mode_info;
+}
+
+mgg::FakeDRMResources::~FakeDRMResources()
+{
+    if (pipe_fds[0] >= 0)
+        close(pipe_fds[0]);
+
+    if (pipe_fds[1] >= 0)
+        close(pipe_fds[1]);
 }
 
 mgg::MockDRM::MockDRM()

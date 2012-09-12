@@ -35,6 +35,7 @@ class FakeDRMResources
 {
 public:
     FakeDRMResources();
+    ~FakeDRMResources();
 
     int fd;
     drmModeRes resources;
@@ -45,6 +46,9 @@ public:
     uint32_t crtc_ids[2];
     uint32_t encoder_ids[2];
     uint32_t connector_ids[2];
+
+private:
+    int pipe_fds[2];
 };
 
 class MockDRM
