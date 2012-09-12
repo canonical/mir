@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_ipc_package.h"
+#include "mir/graphics/android/android_buffer_ipc_package.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,7 +39,7 @@ TEST_F(BufferIPCPackageTest, test_int_acquisiton_length)
 {
     using namespace testing;
 
-    mc::BufferIPCPackage package(data);
+    mc::AndroidBufferIPCPackage package(data);
     auto test_vector = package.get_ipc_data();
    
     EXPECT_EQ(data.length(), test_vector.length()); 
