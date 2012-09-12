@@ -32,5 +32,6 @@ service DisplayServer {
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc release_surface(SurfaceId) returns (Void);
+  rpc test_exception(Void) returns (Void);
 }
 
