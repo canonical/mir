@@ -85,7 +85,6 @@ void mga::AndroidBuffer::unlock()
 
 void mga::AndroidBuffer::bind_to_texture()
 {
-    std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
 
     static const EGLint image_attrs[] =
@@ -95,7 +94,7 @@ void mga::AndroidBuffer::bind_to_texture()
     };
 
     EGLImageKHR image;
-    it = egl_image_map.find(disp);
+    auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
