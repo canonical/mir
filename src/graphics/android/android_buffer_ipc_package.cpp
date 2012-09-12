@@ -19,10 +19,18 @@
 
 #include "mir/graphics/android/android_buffer_ipc_package.h"
 
+#include <system/window.h>
+
 namespace mga=mir::graphics::android;
 
-mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(const AndroidBufferHandle*)
+mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(const AndroidBufferHandle* handle)
 {
+    ANativeWindowBuffer *buffer = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    const native_handle_t *native_handle = buffer->handle;
+
+    /* todo: check version */
+
+    ipc_data.resize(native_handle->numInts); 
 }
 
 std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()

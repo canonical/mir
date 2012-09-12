@@ -31,6 +31,8 @@ class BufferIPCPackageTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
         int num_ints = 41, num_fds = 11;
         int total = num_ints + num_fds;
 
@@ -47,7 +49,9 @@ protected:
         {
             native_handle->data[i] = i*3;
         } 
-         
+        
+        ON_CALL(mock_buffer_handle, get_egl_client_buffer())
+            .WillByDefault(Return((EGLClientBuffer) native_handle)); 
     }
 
     virtual void TearDown()
