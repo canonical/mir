@@ -38,7 +38,7 @@ enum class BufferUsage : uint32_t
     use_software
 };
 
-/* note: this interface will need a new concrete class implenting it when the struct for ANativeWindowBuffer changes */
+/* note: this interface will need a new concrete class implementing it when the struct for ANativeWindowBuffer changes */
 class AndroidBufferHandle
 {
 public:

@@ -58,24 +58,18 @@ protected:
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_height)
 {
-    using namespace testing;
-
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->height(), height);
 }
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_width)
 {
-    using namespace testing;
-
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->width(), width);
 }
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)
 {
-    using namespace testing;
-
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
 
     EXPECT_EQ(buffer_handle->stride(), stride);
@@ -83,16 +77,12 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_format)
 {
-    using namespace testing;
-
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->format(), pf);
 }
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
 {
-    using namespace testing;
-
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     EXPECT_EQ(buffer_handle->usage(), usage);
 }
@@ -106,8 +96,6 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_non_null)
 
 TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
 {
-    using namespace testing;
-
     anwb.height = 11;
     anwb.width =  22;
     anwb.stride = 33;
