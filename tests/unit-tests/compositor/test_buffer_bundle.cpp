@@ -32,12 +32,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-const geom::Width width {1024};
-const geom::Height height {768};
-const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
-const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
-
-
 struct MockSwapper : public mc::BufferSwapper
 {
 public:
@@ -63,31 +57,54 @@ private:
 };
 }
 
-
-TEST(buffer_bundle, get_buffer_for_compositor)
+class BufferBundleTest : public ::testing::Test
 {
-    using namespace testing;
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+protected:
+    virtual void SetUp()
+    {
+        width = geom::Width{1024};
+        height =geom::Height{768};
+        stride = geom::Stride{1024};
+        pixel_format = mc::PixelFormat{mc::PixelFormat::rgba_8888};
 
+        mock_buffer = std::make_shared<mc::MockBuffer>(width, height, stride, pixel_format);
+        mock_swapper = std::unique_ptr<MockSwapper>(new MockSwapper(mock_buffer));
+    }
+
+    std::shared_ptr<mc::MockBuffer> mock_buffer;
+    std::unique_ptr<MockSwapper> mock_swapper;
+    geom::Width width;
+    geom::Height height;
+    geom::Stride stride;
+    mc::PixelFormat pixel_format;
+};
+
+TEST_F(BufferBundleTest, get_buffer_for_compositor_binds)
+{
     EXPECT_CALL(*mock_buffer, bind_to_texture())
     .Times(1);
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+
+    auto texture = buffer_bundle.lock_and_bind_back_buffer();
+}
+
+TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+{
+    using namespace testing;
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
     .Times(1);
-
-    EXPECT_CALL(*mock_swapper, compositor_release(_));
+    EXPECT_CALL(*mock_swapper, compositor_release(_))
+    .Times(1);
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     auto texture = buffer_bundle.lock_and_bind_back_buffer();
 }
 
-TEST(buffer_bundle, get_buffer_for_client_releases_resources)
+TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_swapper, client_acquire())
     .Times(1);
@@ -98,12 +115,8 @@ TEST(buffer_bundle, get_buffer_for_client_releases_resources)
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
 
-TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
+TEST_F(BufferBundleTest, client_requesting_resource_queries_for_ipc_package)
 {
-    using namespace testing;
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
-
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1);
 
@@ -112,17 +125,14 @@ TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
     auto buffer_package = buffer_bundle.secure_client_buffer();
 }
 
-TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
+TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 {
     using namespace testing;
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     std::shared_ptr<mc::BufferIPCPackage> dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
-
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
