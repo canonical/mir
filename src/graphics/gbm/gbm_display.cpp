@@ -64,7 +64,7 @@ namespace
 
 void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 {
-    auto bufobj = reinterpret_cast<mgg::BufferObject*>(data);
+    auto bufobj = static_cast<mgg::BufferObject*>(data);
     delete bufobj;
 }
 
@@ -72,7 +72,7 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
                        void* data)
 {
-    bool* page_flip_pending{static_cast<bool*>(data)};
+    auto page_flip_pending = static_cast<bool*>(data);
     *page_flip_pending = false;
 }
 
@@ -164,7 +164,7 @@ mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
      * Check if we have already set up this gbm_bo (the gbm implementation is
      * free to reuse gbm_bos). If so, return the associated BufferObject.
      */
-    auto bufobj = reinterpret_cast<BufferObject*>(gbm_bo_get_user_data(bo));
+    auto bufobj = static_cast<BufferObject*>(gbm_bo_get_user_data(bo));
     if (bufobj)
         return bufobj;
 
