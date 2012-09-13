@@ -17,6 +17,8 @@
  */
 
 #include "mir/graphics/android/android_buffer_handle_default.h"
+#include "mir_test/mock_alloc_adaptor.h"
+
 #include <memory>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,7 +43,13 @@ protected:
         anwb.height = (int) height.as_uint32_t();
         anwb.width = (int) width.as_uint32_t();
         anwb.stride = (int) stride.as_uint32_t();
+        anwb.handle  = mga::mock_generate_sane_android_handle();
 
+    }
+
+    virtual void TearDown()
+    {
+        free((void*)anwb.handle);
     }
 
     ANativeWindowBuffer anwb;
@@ -101,7 +109,6 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
     anwb.stride = 33;
     anwb.format = 44;
     anwb.usage =  55;
-    anwb.handle = (buffer_handle_t) 0x66;
 
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
