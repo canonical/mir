@@ -98,7 +98,7 @@ struct EmptyDeleter
     {
     }
 };
-std::shared_ptr<mc::BufferResource> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
 {
 //    auto client_buffer = swapper->client_acquire();
 

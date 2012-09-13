@@ -37,6 +37,12 @@ const geom::Height height {768};
 const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
+struct MockIPCPackage : public mc::BufferIPCPackage
+{
+    MOCK_METHOD0(get_ipc_data, std::vector<int>());
+    MOCK_METHOD0(get_ipc_fds , std::vector<int>());
+};
+
 struct MockSwapper : public mc::BufferSwapper
 {
 public:
@@ -96,7 +102,7 @@ TEST(buffer_bundle, get_buffer_for_client_releases_resources)
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
 
-TEST(buffer_bundle, client_requesting_resource_does_not_up_refcount_of_ipc_package)
+TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
@@ -107,7 +113,33 @@ TEST(buffer_bundle, client_requesting_resource_does_not_up_refcount_of_ipc_packa
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::BufferIPCPackage> buffer_resource = buffer_bundle.secure_client_buffer();
+    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_bundle.secure_client_buffer();
+}
 
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+
+TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
+{
+    using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+
+    EmptyDeleter del;
+    MockIPCPackage* mock_value = (MockIPCPackage*) 0x44282;
+    std::shared_ptr<MockIPCPackage> mock_ipc_package = std::shared_ptr<MockIPCPackage>(mock_value,del);
+    EXPECT_CALL(*mock_buffer, get_ipc_package())
+    .Times(0)
+    .WillOnce(Return(mock_ipc_package));
+
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+
+    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_bundle.secure_client_buffer();
+    EXPECT_EQ(buffer_package.get(), mock_value);
 }
 

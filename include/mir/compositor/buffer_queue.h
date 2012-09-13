@@ -28,17 +28,11 @@ namespace mir
 {
 namespace compositor
 {
-
-class BufferResource
-{
-};
-
 class BufferQueue
 {
 public:
     virtual ~BufferQueue() {};
-    virtual std::shared_ptr<BufferResource> secure_client_buffer() = 0;
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package(std::shared_ptr<BufferResource>) = 0; 
+    virtual std::shared_ptr<BufferIPCPackage> secure_client_buffer() = 0;
 
 };
 
