@@ -55,9 +55,8 @@ struct MockBuffer : public Buffer
     MOCK_CONST_METHOD0(height, geom::Height());
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, PixelFormat());
+    MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<BufferIPCPackage>());
 
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
     MOCK_METHOD0(bind_to_texture, void());
 
 };
