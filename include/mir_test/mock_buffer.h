@@ -32,7 +32,7 @@ namespace compositor
 
 namespace geom = mir::geometry;
 
-struct MockIPCPackage : public mc::BufferIPCPackage
+struct MockIPCPackage : public BufferIPCPackage
 {
     MOCK_METHOD0(get_ipc_data, std::vector<int>());
     MOCK_METHOD0(get_ipc_fds , std::vector<int>());

@@ -127,9 +127,26 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 
 }
 
-TEST_F(AndroidGraphicBufferBasic, non_null_ipc)
+struct EmptyDeleter
 {
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
+{
+    using namespace testing;
+
+    EmptyDeleter del;
+    mc::BufferIPCPackage *package = NULL;
+    auto ipc_package = std::shared_ptr<mc::BufferIPCPackage> (package, del);
+ 
+    EXPECT_CALL(*mock_buffer_handle, get_ipc_package())
+        .Times(Exactly(1))
+        .WillOnce(Return(ipc_package));
+
     std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
-    std::shared_ptr<mc::BufferIPCPackage> ipc_package = buffer->get_ipc_package();
-    EXPECT_NE((int) ipc_package.get(), NULL);
+    buffer->get_ipc_package();
 }
+

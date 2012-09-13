@@ -59,3 +59,17 @@ mga::BufferUsage mga::AndroidBufferHandleDefault::usage() const
 {
     return buffer_usage;
 }
+    
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBufferHandleDefault::get_ipc_package() const
+{
+    EmptyDeleter del;
+    mc::BufferIPCPackage* mock_value = NULL;
+    return std::shared_ptr<mc::BufferIPCPackage>(mock_value,del);
+}

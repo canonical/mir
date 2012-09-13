@@ -126,8 +126,8 @@ TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EmptyDeleter del;
-    MockIPCPackage* mock_value = (MockIPCPackage*) 0x44282;
-    std::shared_ptr<MockIPCPackage> mock_ipc_package = std::shared_ptr<MockIPCPackage>(mock_value,del);
+    mc::MockIPCPackage* mock_value = (mc::MockIPCPackage*) 0x44282;
+    std::shared_ptr<mc::MockIPCPackage> mock_ipc_package = std::shared_ptr<mc::MockIPCPackage>(mock_value,del);
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(0)
     .WillOnce(Return(mock_ipc_package));

@@ -42,6 +42,7 @@ public:
     BufferUsage usage() const;
 
     EGLClientBuffer get_egl_client_buffer() const;
+    std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 
 private:
     const ANativeWindowBuffer anw_buffer;

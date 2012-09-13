@@ -18,7 +18,6 @@
  */
 
 #include "mir/graphics/android/android_buffer.h"
-#include "mir/graphics/android/android_buffer_ipc_package.h"
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -44,7 +43,6 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     if (!native_window_buffer_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
 
-    ipc_package = std::make_shared<AndroidBufferIPCPackage>(native_window_buffer_handle.get());
 }
 
 mga::AndroidBuffer::~AndroidBuffer()
@@ -110,7 +108,18 @@ void mga::AndroidBuffer::bind_to_texture()
     return;
 }
 
+
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() const
 {
-    return ipc_package;
+    mc::BufferIPCPackage *null_ptr = NULL;
+    EmptyDeleter del;
+    return std::shared_ptr<mc::BufferIPCPackage>(null_ptr, del);
 }

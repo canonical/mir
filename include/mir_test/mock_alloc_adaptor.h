@@ -37,6 +37,7 @@ public:
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, compositor::PixelFormat());
     MOCK_CONST_METHOD0(usage,  BufferUsage());
+    MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
 };
 
 class MockAllocAdaptor : public GraphicAllocAdaptor
