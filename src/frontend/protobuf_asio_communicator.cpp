@@ -47,31 +47,29 @@ struct mfd::Session
         return id_;
     }
 
-    // TODO this is proof-of-concept
-    void send_file_descriptor(int file_descriptor)
-    {
-        ancil_send_fd(socket.native_handle(), file_descriptor);
-    }
-
-    // TODO this is proof-of-concept
-    int receive_file_descriptor()
-    {
-        int result;
-        auto error = ancil_recv_fd(socket.native_handle(), &result);
-
-        if (error)
-        {
-            throw std::runtime_error(strerror(errno));
-        }
-
-        return result;
-    }
-
     void read_next_message();
     void on_response_sent(boost::system::error_code const& error, std::size_t);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
+
+    template<class ResultMessage>
+    void send_response(::google::protobuf::uint32 id, ResultMessage* response)
+    {
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+    }
+
+    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
+    // OTOH until we have a real requirement it is hard to see how best to generalise.
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::TestFileDescriptors* response)
+    {
+        std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
+        response->clear_fd();
+
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+
+        ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+    }
 
     template<class ParameterMessage, class ResultMessage>
     void invoke(
@@ -94,7 +92,7 @@ struct mfd::Session
                 this,
                 &Session::send_response,
                 invocation.id(),
-                static_cast<google::protobuf::Message*>(&result_message)));
+                &result_message));
     }
 
     boost::asio::local::stream_protocol::socket socket;
@@ -239,6 +237,10 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         else if ("release_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::release_surface, invocation);
+        }
+        else if ("test_file_descriptors" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {

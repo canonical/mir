@@ -83,23 +83,15 @@ private:
 class MirRpcChannel : public google::protobuf::RpcChannel
 {
 public:
-    MirRpcChannel(
-        std::string const& endpoint,
-        std::shared_ptr<Logger> const& log);
-
+    MirRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
     ~MirRpcChannel();
 
 private:
-    virtual void CallMethod(
-        const google::protobuf::MethodDescriptor* method,
-        google::protobuf::RpcController*,
-        const google::protobuf::Message* parameters,
-        google::protobuf::Message* response,
+    virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
+        const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
-
     std::shared_ptr<Logger> log;
     std::atomic<int> next_message_id;
-
     detail::PendingCallCache pending_calls;
     static const int threads = 1;
     std::thread io_service_thread[threads];
@@ -107,15 +99,12 @@ private:
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
-
-    mir::protobuf::wire::Invocation invocation_for(
-        const google::protobuf::MethodDescriptor* method,
+    void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
+    mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,
         const google::protobuf::Message* request);
-
     int next_id();
-
     void send_message(const std::string& body, detail::SendBuffer& buffer);
-    void on_message_sent(boost::system::error_code const& error);
+    void on_message_sent(const boost::system::error_code& error);
 
     void read_message();
 
