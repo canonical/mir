@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/android_buffer_handle_default.h"
+#include "mir/graphics/android/android_buffer_ipc_package.h"
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -28,6 +29,8 @@ mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(ANativeWindowBuffer 
       pixel_format(pf),
       buffer_usage(use)
 {
+    printf("Here\n");
+    ipc_package = std::make_shared<AndroidBufferIPCPackage>(this);
 }
 
 EGLClientBuffer mga::AndroidBufferHandleDefault::get_egl_client_buffer() const
@@ -60,16 +63,7 @@ mga::BufferUsage mga::AndroidBufferHandleDefault::usage() const
     return buffer_usage;
 }
     
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBufferHandleDefault::get_ipc_package() const
 {
-    EmptyDeleter del;
-    mc::BufferIPCPackage* mock_value = NULL;
-    return std::shared_ptr<mc::BufferIPCPackage>(mock_value,del);
+    return ipc_package; 
 }

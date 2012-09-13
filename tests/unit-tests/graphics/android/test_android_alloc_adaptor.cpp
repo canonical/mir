@@ -19,6 +19,7 @@
 #include "mir/graphics/android/android_alloc_adaptor.h"
 
 #include "mir_test/mock_android_alloc_device.h"
+#include "mir_test/mock_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -34,7 +35,8 @@ class AdaptorICSTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(&native_handle));
+        native_handle = mga::mock_generate_sane_android_handle();
+        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(native_handle));
 
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
@@ -48,7 +50,12 @@ protected:
 
     }
 
-    native_handle_t native_handle;
+    virtual void TearDown()
+    {
+        free(native_handle);
+    }
+
+    native_handle_t* native_handle;
     std::shared_ptr<MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 

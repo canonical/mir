@@ -36,6 +36,7 @@ protected:
         int num_ints = 41, num_fds = 11;
         int total = num_ints + num_fds;
 
+        mga::mock_generate_sane_android_handle();
         /* c tricks for android header */
         int * data_handle = (int*) malloc( 3 * sizeof(int) + /* version, numFds, numInts */
                                            total * sizeof(int));
@@ -50,9 +51,11 @@ protected:
             native_handle->data[i] = i*3;
         }
 
+        mock_buffer_handle = new mga::MockBufferHandle(native_handle);
+
         anwb.handle = native_handle; 
-        ON_CALL(mock_buffer_handle, get_egl_client_buffer())
-            .WillByDefault(Return((EGLClientBuffer) &anwb)); 
+//        ON_CALL(mock_buffer_handle, get_egl_client_buffer())
+//            .WillByDefault(Return((EGLClientBuffer) &anwb)); 
     }
 
     virtual void TearDown()
@@ -62,7 +65,7 @@ protected:
 
 public:
 
-    mga::MockBufferHandle mock_buffer_handle;
+    mga::MockBufferHandle* mock_buffer_handle;
 
     native_handle_t* native_handle;
     ANativeWindowBuffer anwb;
@@ -71,7 +74,7 @@ public:
 TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_size)
 {
     using namespace testing;
-    mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_data();
   
     EXPECT_EQ(native_handle->numInts, (int) test_vector.size()); 
@@ -81,7 +84,7 @@ TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_data)
 {
     using namespace testing;
 
-    mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_data();
 
     int fd_offset = native_handle->numFds; 
@@ -94,7 +97,7 @@ TEST_F(BufferIPCPackageTest, test_data_packed_with_correct_data)
 TEST_F(BufferIPCPackageTest, test_fd_packed_with_correct_size)
 {
     using namespace testing;
-    mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_fds();
   
     EXPECT_EQ(native_handle->numFds, (int) test_vector.size()); 
@@ -103,7 +106,7 @@ TEST_F(BufferIPCPackageTest, test_fd_packed_with_correct_size)
 TEST_F(BufferIPCPackageTest, test_fd_packed_with_correct_fds)
 {
     using namespace testing;
-    mga::AndroidBufferIPCPackage package(&mock_buffer_handle);
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
     auto test_vector = package.get_ipc_fds();
   
     int offset = 0; 

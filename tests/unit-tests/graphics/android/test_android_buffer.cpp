@@ -34,7 +34,8 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
+        handle = mga::mock_generate_sane_android_handle();
+        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>(handle);
         mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
 
         /* set up common defaults */
@@ -43,8 +44,12 @@ protected:
         height = geom::Height(200);
 
     }
+    virtual void TearDown()
+    {
+        free(handle);
+    }
 
-    native_handle_t native_handle;
+    native_handle_t* handle;
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
     std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
     mc::PixelFormat pf;
