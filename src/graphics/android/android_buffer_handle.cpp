@@ -33,11 +33,10 @@ mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(ANativeWindowBuffer 
 
 void mga::AndroidBufferHandleDefault::pack_ipc_package()
 {
-    ipc_package = make_shared<mc::BufferIPCPackage>();
+    ipc_package = std::make_shared<mc::BufferIPCPackage>();
 
-    const native_handle_t *native_handle = anw_buffer->handle;
+    const native_handle_t *native_handle = anw_buffer.handle;
     
-
     /* pack int data */
     ipc_package->ipc_data.resize(native_handle->numInts); 
     int fd_offset = native_handle->numFds;
