@@ -37,6 +37,7 @@ namespace
 struct StubServer : mir::protobuf::DisplayServer
 {
     static const int file_descriptors = 5;
+    static std::string const test_exception_text;
 
     std::string app_name;
     int surface_count;
@@ -103,7 +104,7 @@ struct StubServer : mir::protobuf::DisplayServer
         protobuf::Void*,
         google::protobuf::Closure*)
     {
-        throw std::runtime_error("test exception");
+        throw std::runtime_error(test_exception_text);
     }
 
     void test_file_descriptors(::google::protobuf::RpcController* ,
@@ -133,6 +134,7 @@ struct StubServer : mir::protobuf::DisplayServer
 };
 
 const int StubServer::file_descriptors;
+std::string const StubServer::test_exception_text{"test exception text"};
 
 struct NullDeleter
 {
@@ -672,13 +674,17 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_CALL(client, test_exception_done()).Times(1);
 
+    mir::protobuf::Void result;
     client.display_server.test_exception(
         0,
         &client.ignored,
-        &client.ignored,
+        &result,
         google::protobuf::NewCallback(&client, &TestClient::test_exception_done));
 
     client.wait_for_test_exception_done();
+
+    EXPECT_TRUE(result.has_error());
+    EXPECT_EQ(server.stub_services.test_exception_text, result.error());
 }
 
 }
