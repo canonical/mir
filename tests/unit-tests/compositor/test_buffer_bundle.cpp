@@ -37,11 +37,6 @@ const geom::Height height {768};
 const geom::Stride stride {geom::dim_cast<geom::Stride>(width)};
 const mc::PixelFormat pixel_format {mc::PixelFormat::rgba_8888};
 
-struct MockIPCPackage : public mc::BufferIPCPackage
-{
-    MOCK_METHOD0(get_ipc_data, std::vector<int>());
-    MOCK_METHOD0(get_ipc_fds , std::vector<int>());
-};
 
 struct MockSwapper : public mc::BufferSwapper
 {

@@ -106,17 +106,9 @@ std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
 //    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
 //    BufDeleter deleter(swapper.get(), client_buffer);
 //    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
-    BufferResource* tmp = NULL;
-    EmptyDeleter del;
-    std::shared_ptr<mc::BufferResource> ret(tmp, del);
-    return ret;
-}
-
-std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::get_ipc_package(std::shared_ptr<BufferResource>)
-{
-
     BufferIPCPackage* tmp = NULL;
     EmptyDeleter del;
     std::shared_ptr<mc::BufferIPCPackage> ret(tmp, del);
     return ret;
-} 
+}
+
