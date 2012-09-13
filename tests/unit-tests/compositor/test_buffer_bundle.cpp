@@ -92,9 +92,6 @@ TEST(buffer_bundle, get_buffer_for_client)
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    EXPECT_CALL(*mock_buffer, lock())
-    .Times(1);
-
     EXPECT_CALL(*mock_swapper, client_acquire())
     .Times(1);
 

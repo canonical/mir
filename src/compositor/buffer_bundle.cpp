@@ -94,9 +94,8 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
 std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
-    client_buffer->lock();
 
-    mc::BufferIPCPackage* buf = new mc::BufferIPCPackage;
+    mc::BufferIPCPackage* buf = NULL;//new mga::AndroidBufferIPCPackage;
     BufDeleter deleter(swapper.get(), client_buffer);
     return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
 }

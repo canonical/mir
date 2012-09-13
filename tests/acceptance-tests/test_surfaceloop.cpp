@@ -421,6 +421,14 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
 
 namespace
 {
+struct EmptyDeleter
+{
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+
 struct BufferCounterConfig : TestingServerConfiguration
 {
     class StubBuffer : public mc::Buffer
@@ -446,9 +454,12 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
 
-        virtual void lock() {}
-
-        virtual void unlock() {}
+        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
+        {
+            mc::BufferIPCPackage *null_package = NULL;
+            EmptyDeleter empty_deleter;
+            return std::shared_ptr<mc::BufferIPCPackage>(null_package, empty_deleter) ;
+        }
 
         virtual void bind_to_texture() {}
 

@@ -75,14 +75,6 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
     return native_window_buffer_handle->format();
 }
 
-void mga::AndroidBuffer::lock()
-{
-}
-
-void mga::AndroidBuffer::unlock()
-{
-}
-
 void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
