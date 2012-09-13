@@ -46,6 +46,8 @@ public:
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 
 private:
+    void pack_ipc_package();
+
     const ANativeWindowBuffer anw_buffer;
     std::shared_ptr<compositor::BufferIPCPackage> ipc_package;
 

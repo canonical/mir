@@ -18,7 +18,6 @@
  */
 
 #include "mir/graphics/android/android_buffer_handle_default.h"
-#include "mir/graphics/android/android_buffer_ipc_package.h"
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -29,8 +28,31 @@ mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(ANativeWindowBuffer 
       pixel_format(pf),
       buffer_usage(use)
 {
-    printf("Here\n");
-    ipc_package = std::make_shared<AndroidBufferIPCPackage>(this);
+    pack_ipc_package();
+}
+
+void mga::AndroidBufferHandleDefault::pack_ipc_package()
+{
+    ipc_package = make_shared<mc::BufferIPCPackage>();
+
+    const native_handle_t *native_handle = anw_buffer->handle;
+    
+
+    /* pack int data */
+    ipc_package->ipc_data.resize(native_handle->numInts); 
+    int fd_offset = native_handle->numFds;
+    for(auto it=ipc_package->ipc_data.begin(); it != ipc_package->ipc_data.end(); it++)
+    {
+        *it = native_handle->data[fd_offset++];
+    }
+
+    /* pack fd data */
+    ipc_package->ipc_fds.resize(native_handle->numFds);
+    int offset = 0;
+    for(auto it=ipc_package->ipc_fds.begin(); it != ipc_package->ipc_fds.end(); it++)
+    {
+        *it = native_handle->data[offset++];
+    }
 }
 
 EGLClientBuffer mga::AndroidBufferHandleDefault::get_egl_client_buffer() const

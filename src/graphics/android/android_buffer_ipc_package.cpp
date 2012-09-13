@@ -25,26 +25,6 @@ namespace mga=mir::graphics::android;
 
 mga::AndroidBufferIPCPackage::AndroidBufferIPCPackage(const AndroidBufferHandle* handle)
 {
-    ANativeWindowBuffer *buffer = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
-    const native_handle_t *native_handle = buffer->handle;
-
-    /* todo: check version */
-
-    /* pack int data */
-    ipc_data.resize(native_handle->numInts); 
-    int fd_offset = native_handle->numFds;
-    for(auto it=ipc_data.begin(); it != ipc_data.end(); it++)
-    {
-        *it = native_handle->data[fd_offset++];
-    }
-
-    /* pack fd data */
-    ipc_fds.resize(native_handle->numFds);
-    int offset = 0;
-    for(auto it=ipc_fds.begin(); it != ipc_fds.end(); it++)
-    {
-        *it = native_handle->data[offset++];
-    }
 }
 
 std::vector<int> mga::AndroidBufferIPCPackage::get_ipc_data()
