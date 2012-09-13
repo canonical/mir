@@ -91,13 +91,6 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
@@ -105,12 +98,7 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client
     BufDeleter deleter(swapper.get(), client_buffer);
     GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
     graphics_resource->ipc_package = client_buffer->get_ipc_package();
+
     return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
-
-    /* todo: splicing ownership is bad */
-//    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
-
-     
-
 }
 
