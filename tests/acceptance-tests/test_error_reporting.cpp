@@ -199,11 +199,21 @@ void wait_for_surface_release(SurfaceSync* context)
     context->wait_for_surface_release();
 }
 
-struct NullDeleter
+class StubIpcFactory : public mf::ProtobufIpcFactory
 {
-    void operator()(void* )
+public:
+    StubIpcFactory() :
+        server(std::make_shared<ErrorServer>())
     {
     }
+
+    std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return server;
+    }
+
+private:
+    std::shared_ptr<mir::protobuf::DisplayServer> server;
 };
 }
 
@@ -215,26 +225,8 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
             std::shared_ptr<mc::BufferAllocationStrategy> const&)
         {
-            class MockIpcFactory : public mf::ProtobufIpcFactory
-            {
-            public:
-                MockIpcFactory(mir::protobuf::DisplayServer& server) :
-                    server(&server, NullDeleter())
-                {
-                }
-
-                std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
-                {
-                    return server;
-                }
-
-            private:
-                std::shared_ptr<mir::protobuf::DisplayServer> server;
-            };
-
-            return std::make_shared<MockIpcFactory>(server);
+            return std::make_shared<StubIpcFactory>();
         }
-        ErrorServer server;
     } server_config;
 
     launch_server_process(server_config);
