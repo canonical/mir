@@ -20,11 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-
-#include <memory>
-
-struct gbm_device;
-struct gbm_surface;
+#include "gbm_display_helpers.h"
 
 namespace mir
 {
@@ -37,6 +33,8 @@ namespace graphics
 namespace gbm
 {
 
+class BufferObject;
+
 class GBMDisplay : public Display
 {
 public:
@@ -47,8 +45,15 @@ public:
     bool post_update();
 
 private:
-    class Private;
-    std::unique_ptr<Private> priv;
+    BufferObject* get_front_buffer_object();
+    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
+
+    BufferObject* last_flipped_bufobj;
+    /* Order is important for construction/destruction */
+    helpers::DRMHelper drm;
+    helpers::KMSHelper kms;
+    helpers::GBMHelper gbm;
+    helpers::EGLHelper egl;
 };
 
 }

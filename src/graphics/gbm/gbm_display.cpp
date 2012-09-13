@@ -18,21 +18,16 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
-#include "mir/graphics/gbm/gbm_display_helpers.h"
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>
 #include <xf86drm.h>
 
 namespace mgg=mir::graphics::gbm;
-namespace mggh=mir::graphics::gbm::helpers;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-namespace
-{
-
-class BufferObject {
+class mgg::BufferObject {
 public:
     BufferObject(gbm_surface* surface, gbm_bo* bo, uint32_t drm_fb_id)
         : surface{surface}, bo{bo}, drm_fb_id{drm_fb_id}
@@ -64,9 +59,12 @@ private:
     uint32_t drm_fb_id;
 };
 
+namespace
+{
+
 void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 {
-    auto bufobj = reinterpret_cast<BufferObject*>(data);
+    auto bufobj = reinterpret_cast<mgg::BufferObject*>(data);
     delete bufobj;
 }
 
@@ -80,36 +78,83 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-class mgg::GBMDisplay::Private
+mgg::GBMDisplay::GBMDisplay()
+    : last_flipped_bufobj{0}
 {
-public:
-    Private()
-        : last_flipped_bufobj{0}
+    /* Set up all native resources */
+    drm.setup();
+    kms.setup(drm);
+    gbm.setup(drm, kms.mode.hdisplay, kms.mode.vdisplay);
+    egl.setup(gbm);
+
+    if (eglMakeCurrent(egl.display, egl.surface,
+                       egl.surface, egl.context) == EGL_FALSE)
     {
+        throw std::runtime_error("Failed to make EGL surface current");
     }
 
-    ~Private()
+    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+        throw std::runtime_error("Failed to perform initial surface buffer swap");
+
+    last_flipped_bufobj = get_front_buffer_object();
+    auto ret = drmModeSetCrtc(drm.fd, kms.encoder->crtc_id,
+                              last_flipped_bufobj->get_drm_fb_id(), 0, 0,
+                              &kms.connector->connector_id, 1, &kms.mode);
+    if (ret)
+        throw std::runtime_error("Failed to set DRM crtc");
+}
+
+mgg::GBMDisplay::~GBMDisplay()
+{
+    if (last_flipped_bufobj)
+        last_flipped_bufobj->release();
+}
+
+geom::Rectangle mgg::GBMDisplay::view_area() const
+{
+    geom::Rectangle rect;
+    return rect;
+}
+
+bool mgg::GBMDisplay::post_update()
+{
+    /*
+     * Bring the back buffer to the front and get the buffer object
+     * corresponding to the front buffer.
+     */
+    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+        return false;
+
+    auto bufobj = get_front_buffer_object();
+    if (!bufobj)
+        return false;
+
+    /*
+     * Schedule the current front buffer object for display, and wait
+     * for it to be actually displayed (flipped).
+     *
+     * If the flip fails, release the buffer object to make it available
+     * for future rendering.
+     */
+    if (!schedule_and_wait_for_page_flip(bufobj))
     {
-        if (last_flipped_bufobj)
-            last_flipped_bufobj->release();
+        bufobj->release();
+        return false;
     }
 
-    Private(const Private&) = delete;
-    Private& operator=(const Private&) = delete;
+    /*
+     * Release the last flipped buffer object (which is not displayed anymore)
+     * to make it available for future rendering.
+     */
+    if (last_flipped_bufobj)
+        last_flipped_bufobj->release();
 
-    BufferObject* get_front_buffer_object();
-    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
+    last_flipped_bufobj = bufobj;
 
-    BufferObject* last_flipped_bufobj;
+    return true;
+}
 
-    /* Order is important for construction/destruction */
-    mggh::DRMHelper drm;
-    mggh::KMSHelper kms;
-    mggh::GBMHelper gbm;
-    mggh::EGLHelper egl;
-};
-
-BufferObject* mgg::GBMDisplay::Private::get_front_buffer_object()
+mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
 {
     auto bo = gbm_surface_lock_front_buffer(gbm.surface);
     if (!bo)
@@ -143,7 +188,8 @@ BufferObject* mgg::GBMDisplay::Private::get_front_buffer_object()
     return bufobj;
 }
 
-bool mgg::GBMDisplay::Private::schedule_and_wait_for_page_flip(BufferObject* bufobj)
+
+bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 {
     /* Maximum time to wait for the page flip event in microseconds */
     static const long page_flip_max_wait_usec{100000};
@@ -194,78 +240,6 @@ bool mgg::GBMDisplay::Private::schedule_and_wait_for_page_flip(BufferObject* buf
         else
             page_flip_pending = false;
     }
-
-    return true;
-}
-
-mgg::GBMDisplay::GBMDisplay()
-    : priv{new Private{}}
-{
-    /* Set up all native resources */
-    priv->drm.setup();
-    priv->kms.setup(priv->drm);
-    priv->gbm.setup(priv->drm, priv->kms.mode.hdisplay, priv->kms.mode.vdisplay);
-    priv->egl.setup(priv->gbm);
-
-    if (eglMakeCurrent(priv->egl.display, priv->egl.surface,
-                       priv->egl.surface, priv->egl.context) == EGL_FALSE)
-    {
-        throw std::runtime_error("Failed to make EGL surface current");
-    }
-
-    if (eglSwapBuffers(priv->egl.display, priv->egl.surface) == EGL_FALSE)
-        throw std::runtime_error("Failed to perform initial surface buffer swap");
-
-    priv->last_flipped_bufobj = priv->get_front_buffer_object();
-    auto ret = drmModeSetCrtc(priv->drm.fd, priv->kms.encoder->crtc_id,
-                              priv->last_flipped_bufobj->get_drm_fb_id(), 0, 0,
-                              &priv->kms.connector->connector_id, 1, &priv->kms.mode);
-    if (ret)
-        throw std::runtime_error("Failed to set DRM crtc");
-}
-
-mgg::GBMDisplay::~GBMDisplay() = default;
-
-geom::Rectangle mgg::GBMDisplay::view_area() const
-{
-    geom::Rectangle rect;
-    return rect;
-}
-
-bool mgg::GBMDisplay::post_update()
-{
-    /*
-     * Bring the back buffer to the front and get the buffer object
-     * corresponding to the front buffer.
-     */
-    if (eglSwapBuffers(priv->egl.display, priv->egl.surface) == EGL_FALSE)
-        return false;
-
-    auto bufobj = priv->get_front_buffer_object();
-    if (!bufobj)
-        return false;
-
-    /*
-     * Schedule the current front buffer object for display, and wait
-     * for it to be actually displayed (flipped).
-     *
-     * If the flip fails, release the buffer object to make it available
-     * for future rendering.
-     */
-    if (!priv->schedule_and_wait_for_page_flip(bufobj))
-    {
-        bufobj->release();
-        return false;
-    }
-
-    /*
-     * Release the last flipped buffer object (which is not displayed anymore)
-     * to make it available for future rendering.
-     */
-    if (priv->last_flipped_bufobj)
-        priv->last_flipped_bufobj->release();
-
-    priv->last_flipped_bufobj = bufobj;
 
     return true;
 }
