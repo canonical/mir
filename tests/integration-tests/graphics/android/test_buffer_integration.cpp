@@ -21,6 +21,7 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_bundle.h"
 
 #include "../tools/mir_image.h"
 #include <GLES2/gl2.h>
@@ -202,6 +203,13 @@ void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
     glDisableVertexAttribArray(vPosition);
 }
 
+static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResource>)
+{
+
+
+}
+
+
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
@@ -214,6 +222,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     geom::Height h(400);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
 
     std::shared_ptr<mg::Display> display;
     display = mg::create_display();
@@ -225,10 +234,16 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     /* add swapper to ipc mechanism thing */
 
+
+    auto client_buffer = bundle->secure_client_buffer();
+    test_fill_cpu_pattern(client_buffer);
+
+    /* client_buffer released here */
+
     float slide =1.0;
-    auto buffer = swapper->compositor_acquire();
+    std::shared_ptr<mg::Texture> texture_res;
     EXPECT_NO_THROW({
-        buffer->bind_to_texture();
+        texture_res = bundle->lock_and_bind_back_buffer();
     });
 
     for(;;)
@@ -236,6 +251,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
         gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);
         display->post_update();
     }
+
+    texture_res.reset();
 }
 
 
