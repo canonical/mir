@@ -24,10 +24,19 @@
 #include <set>
 #include <cstddef>
 
-
 namespace mc = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+
+#ifdef MIR_USING_BOOST_THREADS
+    using ::mir::std::condition_variable;
+    using ::boost::unique_lock;
+    using ::boost::lock_guard;
+    using ::boost::thread;
+    using ::boost::mutex;
+#else
+    using namespace std;
+#endif
 
 class MirSurface
 {
@@ -66,6 +75,11 @@ public:
     char const * get_error_message()
     {
         return error_message.c_str();
+    }
+
+    int id() const
+    {
+        return surface.id().value();
     }
 private:
 
@@ -110,50 +124,62 @@ public:
         return error_message.c_str();
     }
 
+    void connect(
+        const char* app_name,
+        mir_connected_callback callback,
+        void * context)
+    {
+        connect_parameters.set_application_name(app_name);
+        server.connect(
+            0,
+            &connect_parameters,
+            &ignored,
+            google::protobuf::NewCallback(callback, this, context));
+    }
+
     void disconnect()
     {
-        mir::protobuf::Void ignored;
-
         server.disconnect(
             0,
             &ignored,
             &ignored,
             google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-        std::unique_lock<std::mutex> lock(mutex);
+        unique_lock<mutex> lock(guard);
         while (created) cv.wait(lock);
     }
 
 private:
     void done_disconnect()
     {
-        std::unique_lock<std::mutex> lock(mutex);
+        unique_lock<mutex> lock(guard);
         created = false;
         cv.notify_one();
     }
 
-    std::mutex mutex;
-    std::condition_variable cv;
+    mutex guard;
+    condition_variable cv;
     bool created;
 
     mc::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
-    mp::Surface surface;
     mp::Void void_response;
+    mir::protobuf::Void ignored;
+    mir::protobuf::ConnectParameters connect_parameters;
 
     std::string error_message;
     std::set<MirSurface *> surfaces;
 };
 
-void mir_connect(mir_connected_callback callback, void * context)
+void mir_connect(char const* name, mir_connected_callback callback, void * context)
 {
 
     try
     {
         auto log = std::make_shared<mc::ConsoleLogger>();
         MirConnection * connection = new MirConnection(log);
-        callback(connection, context);
+        connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)
     {
@@ -196,6 +222,11 @@ void mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
     surface->release(callback, context);
+}
+
+int mir_debug_surface_id(MirSurface * surface)
+{
+    return surface->id();
 }
 
 int mir_surface_is_valid(MirSurface * /*surface*/)

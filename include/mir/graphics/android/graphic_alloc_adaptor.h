@@ -15,39 +15,27 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
-#define MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "mir/geometry/dimensions.h"
-#include "mir/compositor/buffer.h"
+#ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
+#define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
+
+#include "mir/graphics/android/android_buffer_handle.h"
+
 #include <memory>
 
 namespace mir
 {
-
 namespace graphics
 {
-
-enum class BufferUsage : uint32_t
+namespace android
 {
-    use_hardware,
-    use_software
-};
 
-class BufferHandle 
-{
-protected:
-    virtual ~BufferHandle() {}
-    BufferHandle() = default;
-
-};
-
+/* note: we will need a new concrete class implementing this interface whenever gralloc interface changes (or for hw specific quirks) */
 class GraphicAllocAdaptor
 {
 public:
-    virtual bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
-                              geometry::Width, geometry::Height,
-                              compositor::PixelFormat, BufferUsage usage) = 0;
+    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
+            compositor::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
     virtual ~GraphicAllocAdaptor() {}
@@ -57,5 +45,6 @@ protected:
 
 }
 }
+}
 
-#endif /* MIR_GRAPHICS_GRAPHIC_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_ */

@@ -18,7 +18,6 @@
 
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/graphics/graphic_alloc_adaptor.h"
 
 #include "mock_gbm.h"
 

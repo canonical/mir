@@ -18,10 +18,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
 
-#include "mir/graphics/graphic_alloc_adaptor.h"
+#include "mir/graphics/android/graphic_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
 #include <memory>
+
 
 namespace mir
 {
@@ -30,25 +31,14 @@ namespace graphics
 namespace android
 {
 
-class AndroidBufferHandle: public BufferHandle
-{
-public:
-    explicit AndroidBufferHandle(buffer_handle_t han)
-        :handle(han)
-    {}
-    buffer_handle_t handle;
-};
-
 class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     explicit AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device);
-    bool alloc_buffer(std::shared_ptr<BufferHandle>&, geometry::Stride&,
-                      geometry::Width, geometry::Height,
-                      compositor::PixelFormat, BufferUsage usage);
+    std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
+            compositor::PixelFormat, BufferUsage usage);
 
-    /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used
-             to check buffer contents */  
+    /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used to check buffer contents */
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;

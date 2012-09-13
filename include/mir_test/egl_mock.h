@@ -21,7 +21,10 @@
 
 #include <gmock/gmock.h>
 
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 namespace mir
 {
@@ -31,8 +34,6 @@ public:
     EglMock();
     ~EglMock();
     void silence_uninteresting();
-
-    MOCK_METHOD0(eglGetError, EGLint (void));
 
     MOCK_METHOD1(eglGetDisplay, EGLDisplay(NativeDisplayType));
     MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
@@ -73,11 +74,18 @@ public:
     MOCK_METHOD2(eglSwapBuffers, EGLBoolean(EGLDisplay,EGLSurface));
     MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,NativePixmapType));
 
+    MOCK_METHOD0(eglGetError, EGLint (void));
+
+    /* extensions */
+    MOCK_METHOD5(eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
+    MOCK_METHOD2(eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
+
     EGLDisplay fake_egl_display;
     EGLConfig* fake_configs;
     EGLint fake_configs_num;
     EGLSurface fake_egl_surface;
     EGLContext fake_egl_context;
+    EGLImageKHR fake_egl_image;
     int fake_visual_id;
 };
 }

@@ -13,24 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/android_buffer.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
 
-#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
-#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#include "mir_test/mock_android_alloc_device.h"
 
+#include <gtest/gtest.h>
 
-namespace mir
+class AndroidBufferIntegration : public ::testing::Test
 {
-namespace compositor
-{
-enum class PixelFormat : uint32_t
-{
-    rgba_8888,
-    rgba_5658
+public:
+    virtual void SetUp()
+    {
+
+    }
 };
-}
-}
 
-#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
+
+TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
+{
+
+
+
+
+}

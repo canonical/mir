@@ -64,7 +64,7 @@ public:
 
     virtual void unlock();
 
-    virtual Texture* bind_to_texture();
+    virtual void bind_to_texture();
 
 private:
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;

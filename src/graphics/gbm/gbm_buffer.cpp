@@ -85,7 +85,6 @@ void mgg::GBMBuffer::unlock()
 
 }
 
-mg::Texture* mgg::GBMBuffer::bind_to_texture()
+void mgg::GBMBuffer::bind_to_texture()
 {
-    return NULL;
 }
