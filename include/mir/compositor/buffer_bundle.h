@@ -38,7 +38,7 @@ public:
     ~BufferBundle();
 
     /* from BufferQueue */
-    std::shared_ptr<BufferIPCPackage> secure_client_buffer();
+    std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();

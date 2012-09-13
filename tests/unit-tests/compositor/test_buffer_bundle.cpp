@@ -109,7 +109,7 @@ TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_bundle.secure_client_buffer();
+    auto buffer_package = buffer_bundle.secure_client_buffer();
 }
 
 struct EmptyDeleter
@@ -135,8 +135,8 @@ TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicsBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
-    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource.ipc_package;
+    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
+    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
     EXPECT_EQ(buffer_package.get(), mock_value);
 }
 

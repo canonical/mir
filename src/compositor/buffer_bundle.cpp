@@ -59,10 +59,10 @@ public:
     {
     };
 
-    void operator()(mc::BufferIPCPackage* package)
+    void operator()(mc::GraphicBufferClientResource* resource)
     {
         swapper->client_release(buffer_ptr);
-        delete package;
+        delete resource;
     }
 
 private:
@@ -98,14 +98,19 @@ struct EmptyDeleter
     {
     }
 };
-std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
 
-    /* todo: splicing ownership is bad */
-    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
     BufDeleter deleter(swapper.get(), client_buffer);
+    GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
+    graphics_resource->ipc_package = client_buffer->get_ipc_package();
+    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
 
-    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
+    /* todo: splicing ownership is bad */
+//    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
+
+     
+
 }
 
