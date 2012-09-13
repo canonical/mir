@@ -56,7 +56,6 @@ protected:
 
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
 
-    native_handle_t native_handle;
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
@@ -128,3 +127,52 @@ TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
     auto ipc_package = buffer_handle->get_ipc_package();
     ASSERT_NE((int)ipc_package.get(), NULL);
 }
+
+
+
+/* ipc packaging tests */
+TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
+{
+    using namespace testing;
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    auto package = buffer_handle->get_ipc_package();
+  
+    EXPECT_EQ(anwb.handle->numInts, (int) package.ipc_data.size()); 
+}
+#if 0
+TEST_F(BufferIPCPackageTest, test_ipc_data_packed_with_correct_data)
+{
+    using namespace testing;
+
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
+    auto test_vector = package.get_ipc_data();
+
+    int fd_offset = native_handle->numFds; 
+    for(auto it= test_vector.begin(); it != test_vector.end(); it++)
+    { 
+        EXPECT_EQ(native_handle->data[fd_offset++], *it);
+    } 
+}
+
+TEST_F(BufferIPCPackageTest, test_ipc_fd_packed_with_correct_size)
+{
+    using namespace testing;
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
+    auto test_vector = package.get_ipc_fds();
+  
+    EXPECT_EQ(native_handle->numFds, (int) test_vector.size()); 
+}
+
+TEST_F(BufferIPCPackageTest, test_ipc_fd_packed_with_correct_fds)
+{
+    using namespace testing;
+    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
+    auto test_vector = package.get_ipc_fds();
+  
+    int offset = 0; 
+    for(auto it= test_vector.begin(); it != test_vector.end(); it++)
+    { 
+        EXPECT_EQ(native_handle->data[offset++], *it);
+    } 
+}
+#endif
