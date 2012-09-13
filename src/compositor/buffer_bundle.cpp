@@ -105,10 +105,7 @@ std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
     /* todo: splicing ownership is bad */
     mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
     BufDeleter deleter(swapper.get(), client_buffer);
-//    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
-//    BufferIPCPackage* tmp = NULL;
-    EmptyDeleter del;
-    std::shared_ptr<mc::BufferIPCPackage> ret(buf, del);
-    return ret;
+
+    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
 }
 

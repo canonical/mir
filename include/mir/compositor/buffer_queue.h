@@ -28,6 +28,7 @@ namespace mir
 {
 namespace compositor
 {
+
 class BufferQueue
 {
 public:
