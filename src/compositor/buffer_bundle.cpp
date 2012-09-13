@@ -91,12 +91,32 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
+struct EmptyDeleter
 {
-    auto client_buffer = swapper->client_acquire();
+    template<typename T>
+    void operator()(T* )
+    {
+    }
+};
+std::shared_ptr<mc::BufferResource> mc::BufferBundle::secure_client_buffer()
+{
+//    auto client_buffer = swapper->client_acquire();
 
     /* todo: splicing ownership is bad */
-    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
-    BufDeleter deleter(swapper.get(), client_buffer);
-    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
+//    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
+//    BufDeleter deleter(swapper.get(), client_buffer);
+//    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
+    BufferResource* tmp = NULL;
+    EmptyDeleter del;
+    std::shared_ptr<mc::BufferResource> ret(tmp, del);
+    return ret;
 }
+
+std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::get_ipc_package(std::shared_ptr<BufferResource>)
+{
+
+    BufferIPCPackage* tmp = NULL;
+    EmptyDeleter del;
+    std::shared_ptr<mc::BufferIPCPackage> ret(tmp, del);
+    return ret;
+} 

@@ -107,22 +107,7 @@ TEST(buffer_bundle, client_requesting_resource_does_not_up_refcount_of_ipc_packa
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    auto buffer_resource = buffer_bundle.secure_client_buffer();
+    std::shared_ptr<mc::BufferIPCPackage> buffer_resource = buffer_bundle.secure_client_buffer();
 
 }
 
-TEST(buffer_bundle, client_requesting_ipc_package_gets_buffers_package)
-{
-    using namespace testing;
-    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
-    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
-
-    EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(1);
-
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
-
-    auto buffer_resource = buffer_bundle.secure_client_buffer();
-    auto buffer_package = buffer_bundle.get_ipc_packge(buffer_resource);
-
-}
