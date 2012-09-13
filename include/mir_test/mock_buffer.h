@@ -32,12 +32,6 @@ namespace compositor
 
 namespace geom = mir::geometry;
 
-struct MockIPCPackage : public BufferIPCPackage
-{
-    MOCK_METHOD0(get_ipc_data, std::vector<int>());
-    MOCK_METHOD0(get_ipc_fds , std::vector<int>());
-};
-
 struct MockBuffer : public Buffer
 {
  public:
@@ -46,7 +40,7 @@ struct MockBuffer : public Buffer
                geom::Stride s,
                PixelFormat pf)
 	{
-        mock_ipc_package = std::make_shared<MockIPCPackage>();
+        empty_package = std::make_shared<BufferIPCPackage>();
 
 	    using namespace testing;
         ON_CALL(*this, width())
@@ -59,7 +53,7 @@ struct MockBuffer : public Buffer
                 .WillByDefault(Return(pf));
 
         ON_CALL(*this, get_ipc_package())
-                .WillByDefault(Return(mock_ipc_package));
+                .WillByDefault(Return(empty_package));
 	}
 
     MOCK_CONST_METHOD0(width, geom::Width());
@@ -70,7 +64,7 @@ struct MockBuffer : public Buffer
 
     MOCK_METHOD0(bind_to_texture, void());
 
-    std::shared_ptr<MockIPCPackage> mock_ipc_package;
+    std::shared_ptr<BufferIPCPackage> empty_package;
 };
 
 }

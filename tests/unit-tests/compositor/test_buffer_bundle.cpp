@@ -112,31 +112,21 @@ TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
     auto buffer_package = buffer_bundle.secure_client_buffer();
 }
 
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
-
 TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
-    EmptyDeleter del;
-    mc::MockIPCPackage* mock_value = (mc::MockIPCPackage*) 0x44282;
-    std::shared_ptr<mc::MockIPCPackage> mock_ipc_package = std::shared_ptr<mc::MockIPCPackage>(mock_value,del);
+    std::shared_ptr<mc::BufferIPCPackage> dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
-    .WillOnce(Return(mock_ipc_package));
+    .WillOnce(Return(dummy_ipc_package));
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
     std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
-    EXPECT_EQ(buffer_package.get(), mock_value);
+    EXPECT_EQ(buffer_package, dummy_ipc_package);
 }
 
