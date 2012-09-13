@@ -36,7 +36,8 @@ protected:
         int num_ints = 41, num_fds = 11;
         int total = num_ints + num_fds;
 
-        mga::mock_generate_sane_android_handle();
+        auto test  = mga::mock_generate_sane_android_handle();
+        free(test);
         /* c tricks for android header */
         int * data_handle = (int*) malloc( 3 * sizeof(int) + /* version, numFds, numInts */
                                            total * sizeof(int));
@@ -61,6 +62,7 @@ protected:
     virtual void TearDown()
     {
         delete native_handle;
+        delete mock_buffer_handle;
     }
 
 public:
