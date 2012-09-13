@@ -79,11 +79,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    /* if binding doesn't work, this is a case where we may have an exception */
-    ASSERT_NO_THROW(
-    {
-        auto texture = buffer_bundle.lock_and_bind_back_buffer();
-    });
+    auto texture = buffer_bundle.lock_and_bind_back_buffer();
 }
 
 TEST(buffer_bundle, get_buffer_for_client)
@@ -99,9 +95,19 @@ TEST(buffer_bundle, get_buffer_for_client)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    /* if dequeue doesn't work, this is a case where we may have an exception */
-    ASSERT_NO_THROW(
-    {
-        auto buffer_package = buffer_bundle.secure_client_buffer();
-    });
+    auto buffer_package = buffer_bundle.secure_client_buffer();
+}
+
+TEST(buffer_bundle, get_buffer_for_client_queries_ipc)
+{
+    using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+
+    EXPECT_CALL(*mock_buffer, get_ipc_package())
+    .Times(1);
+
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+
+    auto buffer_package = buffer_bundle.secure_client_buffer();
 }
