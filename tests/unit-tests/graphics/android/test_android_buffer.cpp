@@ -127,3 +127,9 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 
 }
 
+TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
+{
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, width, height, pf));
+    std::shared_ptr<mc::BufferIPCPackage> ipc_package = buffer.get_ipc_package();
+    EXPECT_NE(ipc_package.get(), (int)NULL);
+}
