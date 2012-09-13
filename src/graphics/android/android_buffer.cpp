@@ -108,18 +108,7 @@ void mga::AndroidBuffer::bind_to_texture()
     return;
 }
 
-
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
-
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() const
 {
-    mc::BufferIPCPackage *null_ptr = NULL;
-    EmptyDeleter del;
-    return std::shared_ptr<mc::BufferIPCPackage>(null_ptr, del);
+    return native_window_buffer_handle->get_ipc_package();
 }
