@@ -54,8 +54,8 @@ protected:
         mock_buffer_handle = new mga::MockBufferHandle(native_handle);
 
         anwb.handle = native_handle; 
-//        ON_CALL(mock_buffer_handle, get_egl_client_buffer())
-//            .WillByDefault(Return((EGLClientBuffer) &anwb)); 
+        ON_CALL(*mock_buffer_handle, get_egl_client_buffer())
+            .WillByDefault(Return((EGLClientBuffer) &anwb)); 
     }
 
     virtual void TearDown()
