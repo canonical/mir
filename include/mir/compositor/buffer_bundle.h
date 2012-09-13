@@ -39,9 +39,11 @@ public:
 
     /* from BufferQueue */
     std::shared_ptr<BufferIPCPackage> secure_client_buffer();
+    std::shared_ptr<BufferIPCPackage> get_ipc_package(BufferResource); 
 
     /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
+
 
 protected:
     BufferBundle(const BufferBundle&) = delete;
