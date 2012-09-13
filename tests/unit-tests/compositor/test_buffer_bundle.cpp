@@ -82,7 +82,7 @@ TEST(buffer_bundle, get_buffer_for_compositor)
     auto texture = buffer_bundle.lock_and_bind_back_buffer();
 }
 
-TEST(buffer_bundle, get_buffer_for_client)
+TEST(buffer_bundle, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
@@ -90,15 +90,28 @@ TEST(buffer_bundle, get_buffer_for_client)
 
     EXPECT_CALL(*mock_swapper, client_acquire())
     .Times(1);
-
     EXPECT_CALL(*mock_swapper, client_release(_));
+    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+
+    auto buffer_resource = buffer_bundle.secure_client_buffer();
+}
+
+TEST(buffer_bundle, client_requesting_resource_does_not_up_refcount_of_ipc_package)
+{
+    using namespace testing;
+    std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
+    std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
+
+    EXPECT_CALL(*mock_buffer, get_ipc_package())
+    .Times(0);
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    auto buffer_package = buffer_bundle.secure_client_buffer();
+    auto buffer_resource = buffer_bundle.secure_client_buffer();
+
 }
 
-TEST(buffer_bundle, get_buffer_for_client_queries_ipc)
+TEST(buffer_bundle, client_requesting_ipc_package_gets_buffers_package)
 {
     using namespace testing;
     std::shared_ptr<mc::MockBuffer> mock_buffer(new mc::MockBuffer {width, height, stride, pixel_format});
@@ -109,5 +122,7 @@ TEST(buffer_bundle, get_buffer_for_client_queries_ipc)
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
-    auto buffer_package = buffer_bundle.secure_client_buffer();
+    auto buffer_resource = buffer_bundle.secure_client_buffer();
+    auto buffer_package = buffer_bundle.get_ipc_packge(buffer_resource);
+
 }
