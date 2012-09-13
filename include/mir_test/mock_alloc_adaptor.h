@@ -19,6 +19,7 @@
 #include "mir/graphics/android/graphic_alloc_adaptor.h"
 #include "mir/graphics/android/android_buffer.h"
 
+#include <system/window.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -31,12 +32,15 @@ namespace android
 class MockBufferHandle : public AndroidBufferHandle
 {
 public:
+
     MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
     MOCK_CONST_METHOD0(height, geometry::Height());
     MOCK_CONST_METHOD0(width,  geometry::Width());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, compositor::PixelFormat());
     MOCK_CONST_METHOD0(usage,  BufferUsage());
+    MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
+    
 };
 
 class MockAllocAdaptor : public GraphicAllocAdaptor
@@ -56,6 +60,7 @@ public:
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
     std::shared_ptr<AndroidBufferHandle> mock_handle;
+
 };
 
 }

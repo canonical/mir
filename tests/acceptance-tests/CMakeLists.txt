@@ -40,6 +40,8 @@ target_link_libraries(
   mirclient
   mirplatformgraphics
   mirprotobuf
+  
+  3rd_party
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

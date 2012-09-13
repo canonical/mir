@@ -75,13 +75,6 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
     return native_window_buffer_handle->format();
 }
 
-void mga::AndroidBuffer::lock()
-{
-}
-
-void mga::AndroidBuffer::unlock()
-{
-}
 
 #include <system/window.h>
 static void inc(struct android_native_base_t*)
@@ -93,7 +86,6 @@ static void dec(struct android_native_base_t*)
 
 void mga::AndroidBuffer::bind_to_texture()
 {
-    std::map<EGLDisplay,EGLImageKHR>::iterator it;
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
         printf("BAD!\n");
@@ -105,7 +97,7 @@ void mga::AndroidBuffer::bind_to_texture()
         EGL_NONE
     };
     EGLImageKHR image;
-    it = egl_image_map.find(disp);
+    auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
         ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
@@ -128,4 +120,9 @@ void mga::AndroidBuffer::bind_to_texture()
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
     return;
+}
+
+std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() const
+{
+    return native_window_buffer_handle->get_ipc_package();
 }

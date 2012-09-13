@@ -21,6 +21,9 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/pixel_format.h"
+#include "mir/compositor/buffer_ipc_package.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -47,9 +50,7 @@ public:
 
     virtual PixelFormat pixel_format() const = 0;
 
-    virtual void lock() = 0;
-
-    virtual void unlock() = 0;
+    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
 
     virtual void bind_to_texture() = 0;
 

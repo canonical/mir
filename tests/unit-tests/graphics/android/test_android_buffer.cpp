@@ -44,7 +44,6 @@ protected:
 
     }
 
-    native_handle_t native_handle;
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
     std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
     mc::PixelFormat pf;
@@ -125,5 +124,21 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 
     EXPECT_EQ(buffer->pixel_format(), pf2);
 
+}
+
+TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
+{
+    using namespace testing;
+
+    auto dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
+ 
+    EXPECT_CALL(*mock_buffer_handle, get_ipc_package())
+        .Times(Exactly(1))
+        .WillOnce(Return(dummy_ipc_package));
+
+    auto buffer = std::make_shared<mga::AndroidBuffer>(mock_alloc_device, width, height, pf);
+    auto returned_package = buffer->get_ipc_package();
+
+    EXPECT_EQ(returned_package, dummy_ipc_package);
 }
 

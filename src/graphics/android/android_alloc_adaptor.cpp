@@ -68,9 +68,9 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
                            format, usage_flag, &buf_handle, &stride_as_int);
 
     AndroidBufferHandleEmptyDeleter empty_del;
-    AndroidBufferHandle *empt = NULL;
+    AndroidBufferHandle *null_handle = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
-        return std::shared_ptr<mga::AndroidBufferHandle>(empt, empty_del);
+        return std::shared_ptr<mga::AndroidBufferHandle>(null_handle, empty_del);
 
 
     /* pack ANativeWindow buffer for the handle */

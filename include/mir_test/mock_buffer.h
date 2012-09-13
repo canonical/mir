@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_MOCK_BUFFER_H_
-#define MIR_COMPOSITOR_MOCK_BUFFER_H_
+#ifndef MIR_TEST_MOCK_BUFFER_H_
+#define MIR_TEST_MOCK_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
 #include "mir/geometry/dimensions.h"
@@ -40,6 +40,8 @@ struct MockBuffer : public Buffer
                geom::Stride s,
                PixelFormat pf)
 	{
+        empty_package = std::make_shared<BufferIPCPackage>();
+
 	    using namespace testing;
         ON_CALL(*this, width())
                 .WillByDefault(Return(w));
@@ -49,20 +51,23 @@ struct MockBuffer : public Buffer
                 .WillByDefault(Return(s));
         ON_CALL(*this, pixel_format())
                 .WillByDefault(Return(pf));
+
+        ON_CALL(*this, get_ipc_package())
+                .WillByDefault(Return(empty_package));
 	}
 
     MOCK_CONST_METHOD0(width, geom::Width());
     MOCK_CONST_METHOD0(height, geom::Height());
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, PixelFormat());
+    MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<BufferIPCPackage>());
 
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
     MOCK_METHOD0(bind_to_texture, void());
 
+    std::shared_ptr<BufferIPCPackage> empty_package;
 };
 
 }
 }
 
-#endif // MIR_COMPOSITOR_MOCK_BUFFER_H_
+#endif // MIR_TEST_MOCK_BUFFER_H_

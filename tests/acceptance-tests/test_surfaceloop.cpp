@@ -446,9 +446,10 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
 
-        virtual void lock() {}
-
-        virtual void unlock() {}
+        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
+        {
+            return std::make_shared<mc::BufferIPCPackage>();
+        }
 
         virtual void bind_to_texture() {}
 
