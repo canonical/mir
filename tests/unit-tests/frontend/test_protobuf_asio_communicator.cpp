@@ -33,18 +33,23 @@ namespace mir
 {
 namespace
 {
-struct SurfaceCounter : mir::protobuf::DisplayServer
+struct StubServer : mir::protobuf::DisplayServer
 {
+    static const int file_descriptors = 5;
+
     std::string app_name;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
+    int file_descriptor[file_descriptors];
 
-    SurfaceCounter() : surface_count(0)
+    StubServer() : surface_count(0)
     {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            *i = 0;
     }
 
-    SurfaceCounter(SurfaceCounter const &) = delete;
+    StubServer(StubServer const &) = delete;
     void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
@@ -90,7 +95,34 @@ struct SurfaceCounter : mir::protobuf::DisplayServer
         wait_condition.notify_one();
         done->Run();
     }
+
+    void test_file_descriptors(::google::protobuf::RpcController* ,
+                         const ::mir::protobuf::Void* ,
+                         ::mir::protobuf::TestFileDescriptors* fds,
+                         ::google::protobuf::Closure* done)
+    {
+        for (int i = 0; i != file_descriptors; ++i)
+        {
+            static char const test_file_fmt[] = "fd_test_file%d";
+            char test_file[sizeof test_file_fmt];
+            sprintf(test_file, test_file_fmt, i);
+            remove(test_file);
+            file_descriptor[i] = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
+
+            fds->add_fd(file_descriptor[i]);
+        }
+
+        done->Run();
+    }
+
+    void close_files()
+    {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            close(*i), *i = 0;
+    }
 };
+
+const int StubServer::file_descriptors;
 
 struct NullDeleter
 {
@@ -155,22 +187,22 @@ struct TestServer
     }
 
     TestServer() :
-        factory(std::make_shared<MockIpcFactory>(collector)),
+        factory(std::make_shared<MockIpcFactory>(stub_services)),
         comm(socket_name(), factory)
     {
     }
 
     void expect_surface_count(int expected_count)
     {
-        std::unique_lock<std::mutex> ul(collector.guard);
-        while (collector.surface_count != expected_count)
-            collector.wait_condition.wait(ul);
+        std::unique_lock<std::mutex> ul(stub_services.guard);
+        while (stub_services.surface_count != expected_count)
+            stub_services.wait_condition.wait(ul);
 
-        EXPECT_EQ(expected_count, collector.surface_count);
+        EXPECT_EQ(expected_count, stub_services.surface_count);
     }
 
     // "Server" side
-    SurfaceCounter collector;
+    StubServer stub_services;
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
@@ -184,6 +216,7 @@ struct TestClient
         connect_done_called(false),
         create_surface_called(false),
         disconnect_done_called(false),
+        tfd_done_called(false),
         connect_done_count(0),
         create_surface_done_count(0),
         disconnect_done_count(0)
@@ -282,9 +315,24 @@ struct TestClient
         }
     }
 
+    void tfd_done()
+    {
+        tfd_done_called.store(true);
+    }
+
+    void wait_for_tfd_done()
+    {
+        for (int i = 0; !tfd_done_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        tfd_done_called.store(false);
+    }
+
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
     std::atomic<bool> disconnect_done_called;
+    std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;
     std::atomic<int> create_surface_done_count;
@@ -358,7 +406,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
 
     server.expect_surface_count(0);
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, server.collector.app_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.app_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
@@ -554,5 +602,35 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     server.expect_surface_count(surface_count);
     client.wait_for_surface_count(surface_count);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server());
+    server.comm.start();
+
+    mir::protobuf::TestFileDescriptors fds;
+
+    client.display_server.test_file_descriptors(0, &client.ignored, &fds,
+        google::protobuf::NewCallback(&client, &TestClient::tfd_done));
+
+    client.wait_for_tfd_done();
+
+    ASSERT_EQ(server.stub_services.file_descriptors, fds.fd_size());
+
+    for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
+    {
+        int const fd = fds.fd(i);
+        EXPECT_NE(-1, fd);
+
+        for (int j  = 0; j != server.stub_services.file_descriptors; ++j)
+        {
+            EXPECT_NE(server.stub_services.file_descriptor[j], fd);
+        }
+    }
+
+    server.stub_services.close_files();
+    for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
+        close(fds.fd(i));
 }
 }
