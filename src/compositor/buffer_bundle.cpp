@@ -100,15 +100,15 @@ struct EmptyDeleter
 };
 std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
 {
-//    auto client_buffer = swapper->client_acquire();
+    auto client_buffer = swapper->client_acquire();
 
     /* todo: splicing ownership is bad */
-//    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
-//    BufDeleter deleter(swapper.get(), client_buffer);
+    mc::BufferIPCPackage* buf = client_buffer->get_ipc_package().get();
+    BufDeleter deleter(swapper.get(), client_buffer);
 //    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
-    BufferIPCPackage* tmp = NULL;
+//    BufferIPCPackage* tmp = NULL;
     EmptyDeleter del;
-    std::shared_ptr<mc::BufferIPCPackage> ret(tmp, del);
+    std::shared_ptr<mc::BufferIPCPackage> ret(buf, del);
     return ret;
 }
 

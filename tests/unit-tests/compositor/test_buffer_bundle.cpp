@@ -91,7 +91,8 @@ TEST(buffer_bundle, get_buffer_for_client_releases_resources)
 
     EXPECT_CALL(*mock_swapper, client_acquire())
     .Times(1);
-    EXPECT_CALL(*mock_swapper, client_release(_));
+    EXPECT_CALL(*mock_swapper, client_release(_))
+    .Times(1);
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
     auto buffer_resource = buffer_bundle.secure_client_buffer();
@@ -104,7 +105,7 @@ TEST(buffer_bundle, client_requesting_resource_queries_for_ipc_package)
     std::unique_ptr<MockSwapper> mock_swapper(new MockSwapper(mock_buffer));
 
     EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(0);
+    .Times(1);
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
 
@@ -129,7 +130,7 @@ TEST(buffer_bundle, client_requesting_package_gets_buffers_package)
     mc::MockIPCPackage* mock_value = (mc::MockIPCPackage*) 0x44282;
     std::shared_ptr<mc::MockIPCPackage> mock_ipc_package = std::shared_ptr<mc::MockIPCPackage>(mock_value,del);
     EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(0)
+    .Times(1)
     .WillOnce(Return(mock_ipc_package));
 
     mc::BufferBundle buffer_bundle(std::move(mock_swapper));
