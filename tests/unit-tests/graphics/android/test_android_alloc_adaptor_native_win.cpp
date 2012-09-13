@@ -114,3 +114,10 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
     EXPECT_EQ(handle->handle, anwb.handle);
 
 }
+
+TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
+{
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    auto ipc_package = buffer_handle->get_ipc_package();
+    ASSERT_NE((int)ipc_package.get(), NULL);
+}
