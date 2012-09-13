@@ -60,9 +60,7 @@ public:
 
     virtual compositor::PixelFormat pixel_format() const;
 
-    virtual void lock();
-
-    virtual void unlock();
+    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 
     virtual void bind_to_texture();
 
