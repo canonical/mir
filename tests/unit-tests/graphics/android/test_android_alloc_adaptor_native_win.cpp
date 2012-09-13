@@ -18,6 +18,7 @@
 
 #include "mir/graphics/android/android_buffer_handle_default.h"
 #include "mir_test/mock_alloc_adaptor.h"
+#include "mir_test/mock_android_alloc_device.h"
 
 #include <memory>
 #include <gtest/gtest.h>
@@ -33,6 +34,8 @@ class AdaptorNativeWinProduction : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        mock_alloc_device = std::make_shared<MockAllocDevice>();
+
         /* set up common defaults */
         pf = mc::PixelFormat::rgba_8888;
         width = geom::Width(110);
@@ -43,18 +46,14 @@ protected:
         anwb.height = (int) height.as_uint32_t();
         anwb.width = (int) width.as_uint32_t();
         anwb.stride = (int) stride.as_uint32_t();
-        anwb.handle  = mga::mock_generate_sane_android_handle();
+        anwb.handle  = mock_alloc_device->buffer_handle;
 
-    }
-
-    virtual void TearDown()
-    {
-        free((void*)anwb.handle);
     }
 
     ANativeWindowBuffer anwb;
 
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
+    std::shared_ptr<MockAllocDevice> mock_alloc_device;
 
     geom::Width width;
     geom::Height height;

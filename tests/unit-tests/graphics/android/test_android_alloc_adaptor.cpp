@@ -35,8 +35,8 @@ class AdaptorICSTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        native_handle = mga::mock_generate_sane_android_handle();
-        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice(native_handle));
+        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice());
+        native_handle = mock_alloc_device->buffer_handle; 
 
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
@@ -48,11 +48,6 @@ protected:
 
         stride = geom::Stride(300*4);
 
-    }
-
-    virtual void TearDown()
-    {
-        free(native_handle);
     }
 
     native_handle_t* native_handle;
@@ -72,7 +67,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _))
     .WillOnce(DoAll(
-                  SetArgPointee<5>((native_handle_t*) &native_handle),
+                  SetArgPointee<5>(mock_alloc_device->buffer_handle),
                   SetArgPointee<6>(width.as_uint32_t()*4),
                   Return(-1)));
 

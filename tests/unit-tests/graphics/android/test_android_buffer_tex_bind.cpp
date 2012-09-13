@@ -34,8 +34,7 @@ public:
     {
         using namespace testing;
 
-        handle = mga::mock_generate_sane_android_handle(); 
-        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>(handle);
+        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
         mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
         .Times(AtLeast(0));
@@ -54,7 +53,6 @@ public:
     virtual void TearDown()
     {
         buffer.reset();
-        free(handle);
     };
 
 
@@ -67,7 +65,6 @@ public:
     mir::EglMock egl_mock;
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_dev;
     std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
-    native_handle_t *handle;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)
