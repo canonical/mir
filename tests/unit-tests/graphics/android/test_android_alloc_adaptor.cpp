@@ -146,13 +146,12 @@ TEST_F(AdaptorICSTest, resource_type_test_deleter_deletes_correct_handle)
 {
     using namespace testing;
 
-    native_handle_t test_native_handle;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _))
     .WillOnce(DoAll(
-                  SetArgPointee<5>((native_handle_t*)&test_native_handle),
+                  SetArgPointee<5>(native_handle),
                   SetArgPointee<6>(width.as_uint32_t()*4),
                   Return(0)));
-    EXPECT_CALL(*mock_alloc_device, free_interface( _, &test_native_handle) );
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, native_handle) );
 
     alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
