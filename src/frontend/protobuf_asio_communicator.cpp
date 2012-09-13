@@ -246,10 +246,6 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         {
             invoke(&protobuf::DisplayServer::release_surface, invocation);
         }
-        else if ("test_exception" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::test_exception, invocation);
-        }
         else if ("test_file_descriptors" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);

@@ -166,15 +166,6 @@ struct ErrorServer : mir::protobuf::DisplayServer
         throw std::runtime_error(test_exception_text);
     }
 
-    void test_exception(
-        google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Void*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
     void test_file_descriptors(
         google::protobuf::RpcController*,
         const protobuf::Void*,
@@ -299,7 +290,6 @@ struct TestClient
         connect_done_called(false),
         create_surface_called(false),
         disconnect_done_called(false),
-        test_exception_done_called(false),
         tfd_done_called(false),
         connect_done_count(0),
         create_surface_done_count(0),
@@ -312,8 +302,6 @@ struct TestClient
         ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
         ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
-        ON_CALL(*this, test_exception_done()).WillByDefault(testing::Invoke(this, &TestClient::on_test_exception_done));
-
     }
 
     std::shared_ptr<MockLogger> logger;
@@ -327,7 +315,6 @@ struct TestClient
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(create_surface_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
-    MOCK_METHOD0(test_exception_done, void ());
 
     void on_connect_done()
     {
@@ -364,21 +351,6 @@ struct TestClient
             std::this_thread::yield();
         }
         connect_done_called.store(false);
-    }
-
-    void on_test_exception_done()
-    {
-        test_exception_done_called.store(true);
-    }
-
-    void wait_for_test_exception_done()
-    {
-        for (int i = 0; !test_exception_done_called.load() && i < 100; ++i)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            std::this_thread::yield();
-        }
-        test_exception_done_called.store(false);
     }
 
     void wait_for_create_surface()
@@ -434,7 +406,6 @@ struct TestClient
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
     std::atomic<bool> disconnect_done_called;
-    std::atomic<bool> test_exception_done_called;
     std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;
@@ -750,27 +721,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
     server.stub_services.close_files();
     for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
         close(fds.fd(i));
-}
-
-TEST_F(ErrorTestFixture,
-       test_exceptions)
-{
-    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
-    server.comm.start();
-
-    EXPECT_CALL(client, test_exception_done()).Times(1);
-
-    mir::protobuf::Void result;
-    client.display_server.test_exception(
-        0,
-        &client.ignored,
-        &result,
-        google::protobuf::NewCallback(&client, &TestClient::test_exception_done));
-
-    client.wait_for_test_exception_done();
-
-    EXPECT_TRUE(result.has_error());
-    EXPECT_EQ(server.stub_services.test_exception_text, result.error());
 }
 
 TEST_F(ErrorTestFixture, connect_exception)

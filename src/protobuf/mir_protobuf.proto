@@ -43,6 +43,5 @@ service DisplayServer {
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc release_surface(SurfaceId) returns (Void);
   rpc test_file_descriptors(Void) returns (TestFileDescriptors);
-  rpc test_exception(Void) returns (Void);
 }
 
