@@ -128,50 +128,47 @@ TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
     ASSERT_NE((int)ipc_package.get(), NULL);
 }
 
-
 /* ipc packaging tests */
 TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
 {
-    using namespace testing;
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
   
     EXPECT_EQ(anwb.handle->numInts, (int) package->ipc_data.size()); 
 }
-#if 0
-TEST_F(BufferIPCPackageTest, test_ipc_data_packed_with_correct_data)
+
+TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
 {
     using namespace testing;
 
-    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
-    auto test_vector = package.get_ipc_data();
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    auto package = buffer_handle->get_ipc_package();
 
-    int fd_offset = native_handle->numFds; 
-    for(auto it= test_vector.begin(); it != test_vector.end(); it++)
+    int fd_offset = anwb.handle->numFds; 
+    for(auto it= package->ipc_data.begin(); it != package->ipc_data.end(); it++)
     { 
-        EXPECT_EQ(native_handle->data[fd_offset++], *it);
+        EXPECT_EQ(anwb.handle->data[fd_offset++], *it);
     } 
 }
 
-TEST_F(BufferIPCPackageTest, test_ipc_fd_packed_with_correct_size)
+TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_size)
 {
     using namespace testing;
-    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
-    auto test_vector = package.get_ipc_fds();
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    auto package = buffer_handle->get_ipc_package();
   
-    EXPECT_EQ(native_handle->numFds, (int) test_vector.size()); 
+    EXPECT_EQ(anwb.handle->numFds, (int) package->ipc_fds.size()); 
 }
 
-TEST_F(BufferIPCPackageTest, test_ipc_fd_packed_with_correct_fds)
+TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
 {
     using namespace testing;
-    mga::AndroidBufferIPCPackage package(mock_buffer_handle);
-    auto test_vector = package.get_ipc_fds();
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    auto package = buffer_handle->get_ipc_package();
   
     int offset = 0; 
-    for(auto it= test_vector.begin(); it != test_vector.end(); it++)
+    for(auto it=package->ipc_fds.begin(); it != package->ipc_fds.end(); it++)
     { 
-        EXPECT_EQ(native_handle->data[offset++], *it);
+        EXPECT_EQ(anwb.handle->data[offset++], *it);
     } 
 }
-#endif
