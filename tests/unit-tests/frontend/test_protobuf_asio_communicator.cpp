@@ -428,7 +428,7 @@ struct BasicTestFixture : public ::testing::Test
     TestServer server;
 };
 
-struct ErrorTestFixture : public ::testing::Test
+struct ProtobufErrorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
@@ -723,7 +723,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
         close(fds.fd(i));
 }
 
-TEST_F(ErrorTestFixture, connect_exception)
+TEST_F(ProtobufErrorTestFixture, connect_exception)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
@@ -744,7 +744,7 @@ TEST_F(ErrorTestFixture, connect_exception)
     EXPECT_EQ(server.stub_services.test_exception_text, result.error());
 }
 
-TEST_F(ErrorTestFixture, create_surface_exception)
+TEST_F(ProtobufErrorTestFixture, create_surface_exception)
 {
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
