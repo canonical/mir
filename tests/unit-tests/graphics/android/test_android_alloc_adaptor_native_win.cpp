@@ -129,7 +129,6 @@ TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
 }
 
 
-
 /* ipc packaging tests */
 TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
 {
@@ -137,7 +136,7 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
   
-    EXPECT_EQ(anwb.handle->numInts, (int) package.ipc_data.size()); 
+    EXPECT_EQ(anwb.handle->numInts, (int) package->ipc_data.size()); 
 }
 #if 0
 TEST_F(BufferIPCPackageTest, test_ipc_data_packed_with_correct_data)
