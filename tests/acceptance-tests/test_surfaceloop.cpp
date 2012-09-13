@@ -450,7 +450,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual void unlock() {}
 
-        virtual mg::Texture* bind_to_texture() { return 0; }
+        virtual void bind_to_texture() {}
 
         static std::atomic<int> buffers_created;
         static std::atomic<int> buffers_destroyed;

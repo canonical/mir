@@ -27,11 +27,17 @@ message Surface {
 message Void {
 }
 
+message TestFileDescriptors {
+  repeated sint32 fd = 1;
+  repeated int32  stuff = 2;
+}
+
 service DisplayServer {
   rpc connect(ConnectParameters) returns (Void);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc release_surface(SurfaceId) returns (Void);
+  rpc test_file_descriptors(Void) returns (TestFileDescriptors);
   rpc test_exception(Void) returns (Void);
 }
 

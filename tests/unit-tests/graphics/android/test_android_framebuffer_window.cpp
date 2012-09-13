@@ -38,7 +38,7 @@ class MockANativeWindow : public ANativeWindowInterface,
 {
 public:
     MockANativeWindow()
-     : fake_visual_id(5)
+        : fake_visual_id(5)
     {
         using namespace testing;
 

@@ -19,46 +19,50 @@
 
 #include "mir/graphics/android/android_buffer.h"
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
-                                 geom::Width w, geom::Height h, mc::PixelFormat pf)
+                                  geom::Width w, geom::Height h, mc::PixelFormat pf)
     :
-    buffer_width(w),
-    buffer_height(h),
-    buffer_format(pf),
     alloc_device(alloc_dev)
 {
-    bool ret;
-    BufferUsage usage = mg::BufferUsage::use_hardware;
+    BufferUsage usage = mga::BufferUsage::use_hardware;
 
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    ret = alloc_device->alloc_buffer( android_handle, buffer_stride,
-                                      buffer_width, buffer_height,
-                                      buffer_format, usage);
-    if (ret)
-        return;
+    native_window_buffer_handle = alloc_device->alloc_buffer(w, h,
+                                  pf, usage);
 
-    throw std::runtime_error("Graphics buffer allocation failed");
+    if (!native_window_buffer_handle.get())
+        throw std::runtime_error("Graphics buffer allocation failed");
+
 }
 
 mga::AndroidBuffer::~AndroidBuffer()
 {
+    std::map<EGLDisplay,EGLImageKHR>::iterator it;
+    for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
+    {
+        eglDestroyImageKHR(it->first, it->second);
+    }
 }
+
 
 geom::Width mga::AndroidBuffer::width() const
 {
-    return buffer_width;
+    return native_window_buffer_handle->width();
 }
 
 geom::Height mga::AndroidBuffer::height() const
 {
-    return buffer_height;
+    return native_window_buffer_handle->height();
 }
 
 geom::Stride mga::AndroidBuffer::stride() const
@@ -68,7 +72,7 @@ geom::Stride mga::AndroidBuffer::stride() const
 
 mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 {
-    return buffer_format;
+    return native_window_buffer_handle->format();
 }
 
 void mga::AndroidBuffer::lock()
@@ -79,7 +83,35 @@ void mga::AndroidBuffer::unlock()
 {
 }
 
-mg::Texture* mga::AndroidBuffer::bind_to_texture()
+void mga::AndroidBuffer::bind_to_texture()
 {
-    return NULL;
+    EGLDisplay disp = eglGetCurrentDisplay();
+
+    static const EGLint image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
+        EGL_NONE
+    };
+
+    EGLImageKHR image;
+    auto it = egl_image_map.find(disp);
+    if (it == egl_image_map.end())
+    {
+        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+                                  native_window_buffer_handle->get_egl_client_buffer() , image_attrs);
+
+        if (image == EGL_NO_IMAGE_KHR)
+        {
+            throw std::runtime_error("error binding buffer to texture\n");
+        }
+        egl_image_map[disp] = image;
+    }
+    else /* already had it in map */
+    {
+        image = it->second;
+    }
+
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+    return;
 }

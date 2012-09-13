@@ -13,24 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_MIR_TEST_GL_MOCK_H_
+#define MIR_MIR_TEST_GL_MOCK_H_
 
-#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
-#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#include <gmock/gmock.h>
 
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 namespace mir
 {
-namespace compositor
+class GLMock
 {
-enum class PixelFormat : uint32_t
-{
-    rgba_8888,
-    rgba_5658
+public:
+    GLMock();
+    ~GLMock();
+    void silence_uninteresting();
+
+    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
+
 };
 }
-}
 
-#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
+#endif /* MIR_MIR_TEST_GL_MOCK_H_ */
