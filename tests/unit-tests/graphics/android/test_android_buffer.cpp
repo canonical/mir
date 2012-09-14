@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/android_buffer.h"
+#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test/mock_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
@@ -34,6 +35,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
         mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
 
@@ -42,9 +44,10 @@ protected:
         width = geom::Width(300);
         height = geom::Height(200);
 
+        EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _))
+            .Times(AtLeast(0));
     }
 
-    native_handle_t native_handle;
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
     std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
     mc::PixelFormat pf;
@@ -125,5 +128,21 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 
     EXPECT_EQ(buffer->pixel_format(), pf2);
 
+}
+
+TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
+{
+    using namespace testing;
+
+    auto dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
+ 
+    EXPECT_CALL(*mock_buffer_handle, get_ipc_package())
+        .Times(Exactly(1))
+        .WillOnce(Return(dummy_ipc_package));
+
+    auto buffer = std::make_shared<mga::AndroidBuffer>(mock_alloc_device, width, height, pf);
+    auto returned_package = buffer->get_ipc_package();
+
+    EXPECT_EQ(returned_package, dummy_ipc_package);
 }
 

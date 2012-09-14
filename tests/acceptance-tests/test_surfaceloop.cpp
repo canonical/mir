@@ -19,6 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
@@ -454,9 +455,10 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
 
-        virtual void lock() {}
-
-        virtual void unlock() {}
+        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
+        {
+            return std::make_shared<mc::BufferIPCPackage>();
+        }
 
         virtual void bind_to_texture() {}
 

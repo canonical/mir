@@ -19,7 +19,7 @@
 #define MIR_TEST_MOCK_ANDROID_ALLOC_DEVICE_H_
 
 #include <gmock/gmock.h>
-#include <hardware/hardware.h>
+#include <hardware/gralloc.h>
 
 namespace
 {
@@ -39,12 +39,11 @@ class MockAllocDevice : public ICSAllocInterface,
 {
 public:
 
-    MockAllocDevice(buffer_handle_t handle)
-        :
-        buffer_handle(handle)
+    MockAllocDevice()
     {
         using namespace testing;
 
+        buffer_handle = mock_generate_sane_android_handle();
         fake_stride = 300;
 
         alloc = hook_alloc;
@@ -58,6 +57,11 @@ public:
         ON_CALL(*this, free_interface(_,_))
         .WillByDefault(Return(0));
 
+    }
+
+    ~MockAllocDevice()
+    {
+        ::free((void*)buffer_handle);
     }
 
     static int hook_alloc(alloc_device_t* mock_alloc,
@@ -84,8 +88,30 @@ public:
     MOCK_METHOD2(free_interface, int(alloc_device_t*, buffer_handle_t));
     MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
 
-    buffer_handle_t buffer_handle;
+    native_handle_t* buffer_handle;
     int fake_stride;
+
+private:
+    native_handle_t* mock_generate_sane_android_handle()
+    {
+        native_handle_t *handle;
+        int numFd=34;
+        int numInt=41;
+        int total=numFd + numInt;
+        int header_offset=3; 
+
+        handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
+        handle->version = 0x389;
+        handle->numFds = numFd;
+        handle->numInts = numInt;
+        for(int i=0; i<total; i++)
+        {
+            handle->data[i] = i*3;
+        }
+
+        return handle;
+    }
+
 };
 }
 
