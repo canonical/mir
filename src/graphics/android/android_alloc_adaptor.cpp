@@ -102,7 +102,7 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     switch (usage)
     {
     case mga::BufferUsage::use_hardware:
-        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);
+        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER );
     case mga::BufferUsage::use_software:
     default:
         return -1;
