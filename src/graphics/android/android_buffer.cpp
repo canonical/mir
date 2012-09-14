@@ -79,7 +79,7 @@ void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
-        return;
+        throw std::runtime_error("cannot bind buffer to texture without EGL context\n");
     }
     static const EGLint image_attrs[] =
     {
