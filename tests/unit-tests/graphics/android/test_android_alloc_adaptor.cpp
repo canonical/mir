@@ -301,3 +301,24 @@ TEST_F(AdaptorICSTest, handle_has_reffable_decref)
     }); 
 }
 
+TEST_F(AdaptorICSTest, handle_has_right_magic)
+{
+    using namespace testing;
+    int magic = ANDROID_NATIVE_MAKE_CONSTANT('_','b','f','r');  /* magic value shared by JB and ICS */
+
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    EXPECT_EQ( buffer_cast->common.magic, magic);
+}
+
+TEST_F(AdaptorICSTest, handle_has_version)
+{
+    using namespace testing;
+    int version = 0x68;  /* version value shared by JB and ICS */
+
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    EXPECT_EQ( buffer_cast->common.version, version);
+}
