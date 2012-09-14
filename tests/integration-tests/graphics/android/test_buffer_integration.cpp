@@ -206,14 +206,6 @@ void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
     glDisableVertexAttribArray(vPosition);
 }
 
-#if 0
-static void inc(struct android_native_base_t*)
-{
-}
-static void dec(struct android_native_base_t*)
-{
-}
-#endif
 static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res)
 {
     auto ipc_pack = res->ipc_package;
@@ -223,22 +215,9 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     int num_fd = ipc_pack->ipc_fds.size(); 
     int num_data = ipc_pack->ipc_data.size(); 
     native_handle = (native_handle_t*) malloc(sizeof(int) * (3+num_fd+num_data));
-
     native_handle->numFds = num_fd;
     native_handle->numInts = num_data;
 
-#if 0
-//    native_handle->common.magic   = ANDROID_NATIVE_BUFFER_MAGIC;
-//    native_handle->common.version = 0x68;
-    native_handle->common.incRef = &inc;
-    native_handle->common.decRef = &dec;
-    native_handle->common.magic   = ANDROID_NATIVE_BUFFER_MAGIC;
-    native_handle->common.version = 0x68;
-    native_handle->common.reserved[0] = 0;
-    native_handle->common.reserved[1] = 0;
-    native_handle->common.reserved[2] = 0;
-    native_handle->common.reserved[3] = 0;
-#endif
     int i=0;
     for(auto it=ipc_pack->ipc_fds.begin(); it != ipc_pack->ipc_fds.end(); it++)
     {
@@ -250,9 +229,7 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     {
         native_handle->data[i++] = *it;
     }
-
     /* handle reconstructed */
-
 
     /* fire up gralloc */
     const hw_module_t* hw_module;
@@ -264,21 +241,17 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     int *buffer_vaddr;
     
     int ret;
-    ret = module->registerBuffer(module, native_handle);
     ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
                 0, 0, 64, 64, (void**) &buffer_vaddr);
     int j;
     for(i=0; i<64; i++)
     {
         for(j=0; j<64; j++)
-        {
-        
+        {        
             buffer_vaddr[64*i + j] = 0xFFFFFFFF;
         }
     }
     module->unlock(module, native_handle);
-
-    ret = module->unregisterBuffer(module, native_handle);
 }
 
 
@@ -310,26 +283,15 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     auto client_buffer = bundle->secure_client_buffer();
     test_fill_cpu_pattern(client_buffer);
     client_buffer.reset();
-
-
-    texture_res = bundle->lock_and_bind_back_buffer();
     /* client_buffer released here */
 
+    texture_res = bundle->lock_and_bind_back_buffer();
+
     float slide =1.0;
-//    EXPECT_NO_THROW({
-//        texture_res = bundle->lock_and_bind_back_buffer();
-//    });
+    gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
+    display->post_update();
 
-    for(;;)
-    {
-
-        gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);
-        
-        display->post_update();
- //       texture_res.reset();
-    }
-
-//    texture_res.reset();
+    texture_res.reset();
 }
 
 
