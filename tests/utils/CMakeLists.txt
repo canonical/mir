@@ -12,39 +12,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
-
-#add_subdirectory(frontend/)
-#add_subdirectory(compositor/)
-#add_subdirectory(input/)
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
 
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
+set(
+  TEST_UTILS_SRCS
 
-target_link_libraries(
-  integration-tests
-
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-
-  test-utils
-
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${PLATFORM_LIBRARIES}
-  GLESv2
-  EGL
+  android_graphics.cpp 
 )
 
-mir_discover_tests(integration-tests)
+add_library(
+  test-utils STATIC 
+  ${TEST_UTILS_SRCS})
+
+target_link_libraries(
+  test-utils 
+
+  GLESv2
+)
+
+endif()
