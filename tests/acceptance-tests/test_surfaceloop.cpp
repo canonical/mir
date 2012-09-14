@@ -36,6 +36,8 @@ namespace geom = mir::geometry;
 
 namespace
 {
+char const* const mir_test_socket = "./mir_socket_test";
+
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MOCK_METHOD3(
@@ -193,7 +195,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -257,7 +259,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -301,7 +303,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -347,7 +349,7 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -386,7 +388,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -509,7 +511,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -553,7 +555,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 

@@ -35,6 +35,11 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
+namespace
+{
+    char const* const mir_test_socket = "./mir_socket_test";
+}
+
 namespace mir
 {
 namespace
@@ -235,7 +240,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     {
         void exec()
         {
-            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
