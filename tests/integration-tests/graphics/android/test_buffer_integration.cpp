@@ -98,51 +98,6 @@ TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
 
 }
 
-static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
-{
-    auto ipc_pack = res->ipc_package;
-
-    /* reconstruct the native_window_t */
-    native_handle_t* native_handle;
-    int num_fd = ipc_pack->ipc_fds.size(); 
-    int num_data = ipc_pack->ipc_data.size(); 
-    native_handle = (native_handle_t*) malloc(sizeof(int) * (3+num_fd+num_data));
-    native_handle->numFds = num_fd;
-    native_handle->numInts = num_data;
-
-    int i=0;
-    for(auto it=ipc_pack->ipc_fds.begin(); it != ipc_pack->ipc_fds.end(); it++)
-    {
-        native_handle->data[i++] = *it;
-    }
-
-    i=num_fd;
-    for(auto it=ipc_pack->ipc_data.begin(); it != ipc_pack->ipc_data.end(); it++)
-    {
-        native_handle->data[i++] = *it;
-    }
-    
-    const hw_module_t* hw_module;
-    int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
-    if (err != 0)
-        printf("error, hw open\n");
-    gralloc_module_t* module = (gralloc_module_t*) hw_module;
-
-    int *buffer_vaddr;
-    
-    int ret;
-    ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
-                0, 0, 64, 64, (void**) &buffer_vaddr);
-    int j;
-    for(i=0; i<64; i++)
-    {
-        for(j=0; j<64; j++)
-        {        
-            buffer_vaddr[64*i + j] = val;
-        }
-    }
-    module->unlock(module, native_handle);
-}
 
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
@@ -151,6 +106,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     std::shared_ptr<mg::Display> display;
     display = mg::create_display();
     mt::glAnimationBasic gl_animation;
+    mt::grallocRenderSW sw_renderer;
 
     geom::Width  w(64);
     geom::Height h(64);
@@ -164,7 +120,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     for(;;)
     {
         auto client_buffer = bundle->secure_client_buffer();
-        test_fill_cpu_pattern(client_buffer, 0xFF00FFFF);
+        sw_renderer.render_pattern(client_buffer, 0xFF0000FF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
@@ -174,7 +130,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
         sleep(1);
 
         client_buffer = bundle->secure_client_buffer();
-        test_fill_cpu_pattern(client_buffer, 0xFF0000FF);
+        sw_renderer.render_pattern(client_buffer, 0x0000FFFF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
@@ -195,6 +151,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
     std::shared_ptr<mg::Display> display;
     display = mg::create_display();
     mt::glAnimationBasic gl_animation;
+    mt::grallocRenderSW sw_renderer;
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -223,7 +180,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 #endif
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        test_fill_cpu_pattern(client_buffer, 0xFF00FFFF);
+        sw_renderer.render_pattern(client_buffer, 0xFF0000FF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
@@ -234,7 +191,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        test_fill_cpu_pattern(client_buffer, 0xFF0000FF);
+        sw_renderer.render_pattern(client_buffer, 0x0000FFFF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();

@@ -18,12 +18,26 @@
 #ifndef MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 #define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 
+#include "mir/compositor/buffer_queue.h"
+
 #include <GLES2/gl2.h>
+#include <hardware/gralloc.h>
+#include <memory>
 
 namespace mir
 {
 namespace test
 {
+
+class grallocRenderSW
+{
+public:
+    grallocRenderSW(); 
+    bool render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, int val );
+ 
+private:
+    gralloc_module_t* module;
+};
 
 class glAnimationBasic
 {
