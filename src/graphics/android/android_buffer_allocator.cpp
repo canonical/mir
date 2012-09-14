@@ -63,23 +63,7 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
 std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     geom::Width width, geom::Height height, mc::PixelFormat pf)
 {
-    auto handle = new AndroidBuffer(alloc_device, width, height, pf);
-#if 0
-    auto tmp =  handle->native_window_buffer_handle->get_egl_client_buffer();
-    ANativeWindowBuffer* tmp2 = (ANativeWindowBuffer*) tmp;
-    const native_handle_t* nathand = tmp2->handle;
-
-    const gralloc_module_t *module = (const gralloc_module_t*) hw_module;
-    int* addr;
-
-
-    module->lock(module, nathand, 0x030, 0, 0, 200, 400, (void **) &addr);
-    for(int i=0; i < 200*400; i++)
-        addr[i] = 0xFFFFFFFF;
-    module->unlock(module, nathand);
-    printf("0x%X\n", (int)addr);
-#endif
-    return std::unique_ptr<mc::Buffer>(handle); 
+    return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
 }
 
 std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()

@@ -72,7 +72,6 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
         return std::shared_ptr<mga::AndroidBufferHandle>(null_handle, empty_del);
 
-
     /* pack ANativeWindow buffer for the handle */
     ANativeWindowBuffer buffer;
     buffer.width = (int) width.as_uint32_t();
@@ -81,11 +80,6 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     buffer.handle = buf_handle;
     buffer.format = format;
     buffer.usage = usage_flag;
-
-
-    int i;
-    for(i=0; i<buf_handle->numInts+buf_handle->numFds; i++)
-        printf("AT ALLOC: %i, %i\n", i, buf_handle->data[i]); 
 
     AndroidBufferHandleDefaultDeleter del(alloc_dev);
     auto handle = std::shared_ptr<mga::AndroidBufferHandle>(

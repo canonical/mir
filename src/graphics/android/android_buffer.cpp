@@ -79,18 +79,15 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 #include <system/window.h>
 static void inc(struct android_native_base_t*)
 {
-    printf("INC\n");
 }
 static void dec(struct android_native_base_t*)
 {
-    printf("DEC\n");
 }
 
 void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
-        printf("BAD!\n");
         return;
     }
     static const EGLint image_attrs[] =
@@ -115,7 +112,6 @@ void mga::AndroidBuffer::bind_to_texture()
 
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   buf, image_attrs);
-printf("BIND\n");
         if (image == EGL_NO_IMAGE_KHR)
         {
             throw std::runtime_error("error binding buffer to texture\n");
@@ -127,9 +123,7 @@ printf("BIND\n");
         image = it->second;
     }
 
-    printf("bound.\n");
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-    printf("BINDING RET: %X %X\n", glGetError(), eglGetError());
 
     return;
 }
