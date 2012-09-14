@@ -51,6 +51,7 @@ public:
         : server(server)
     {
         mir::protobuf::SurfaceParameters message;
+        message.set_surface_name(params.name ? params.name : std::string());
         message.set_width(params.width);
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
@@ -67,9 +68,11 @@ public:
 
     MirSurfaceParameters get_parameters() const
     {
-        return MirSurfaceParameters {surface.width(), surface.height(),
-                                     static_cast<MirPixelFormat>(surface.pixel_format())
-                                    };
+        return MirSurfaceParameters {
+            0,
+            surface.width(),
+            surface.height(),
+            static_cast<MirPixelFormat>(surface.pixel_format())};
     }
 
     char const * get_error_message()
@@ -262,9 +265,9 @@ char const * mir_surface_get_error_message(MirSurface * surface)
     return surface->get_error_message();
 }
 
-MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
+void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
-    return surface->get_parameters();
+    *parameters = surface->get_parameters();
 }
 
 void mir_surface_advance_buffer(MirSurface *,

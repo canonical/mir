@@ -150,7 +150,9 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
-            MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+            MirSurfaceParameters const request_params =
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
             mir_surface_create(connection, &request_params, create_surface_callback, this);
 
             wait_for_surface_create();
@@ -159,7 +161,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            MirSurfaceParameters response_params;
+            mir_surface_get_parameters(surface, &response_params);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
@@ -242,7 +245,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
             {
                 old_surface_count = current_surface_count();
 
-                MirSurfaceParameters const request_params{640, 480, mir_pixel_format_rgba_8888};
+                MirSurfaceParameters const request_params =
+                    {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
                 mir_surface_create(connection, &request_params, create_surface_callback, this);
 
                 wait_for_surface_create();

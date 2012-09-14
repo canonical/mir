@@ -35,6 +35,11 @@ ms::Surface::Surface(
     assert(buffer_texture_binder);
 }
 
+std::string const& ms::Surface::name() const
+{
+    return params.name;
+}
+
 mir::geometry::Width ms::Surface::width() const
 {
     return params.width;
@@ -50,6 +55,13 @@ mc::PixelFormat ms::Surface::pixel_format() const
     // TODO This should actually be supplied from somewhere (where?)
     return mc::PixelFormat();
 }
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
+{
+    name = new_name;
+    return *this;
+}
+
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_width(geometry::Width new_width)
 {

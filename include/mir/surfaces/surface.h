@@ -24,6 +24,7 @@
 #include "mir/compositor/pixel_format.h"
 
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -37,12 +38,15 @@ namespace surfaces
 
 struct SurfaceCreationParameters
 {
+    SurfaceCreationParameters& of_name(std::string const& new_name);
+
     SurfaceCreationParameters& of_width(geometry::Width new_width);
 
     SurfaceCreationParameters& of_height(geometry::Height new_height);
 
     SurfaceCreationParameters& of_size(geometry::Width new_width, geometry::Height new_height);
 
+    std::string name;
     geometry::Width width;
     geometry::Height height;
 };
@@ -59,6 +63,7 @@ class Surface : public graphics::Renderable
     Surface(const SurfaceCreationParameters& params,
             std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
 
+    std::string const& name() const;
     geometry::Width width() const;
     geometry::Height height() const;
     compositor::PixelFormat pixel_format() const;

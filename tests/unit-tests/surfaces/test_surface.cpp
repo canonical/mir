@@ -42,7 +42,7 @@ TEST(surface, builder_mutators)
     ASSERT_EQ(w, ms::a_surface().of_width(w).width);
     ASSERT_EQ(h, ms::a_surface().of_height(h).height);
     auto params = ms::a_surface().of_size(w, h); 
-    ms::SurfaceCreationParameters reference{w, h};
+    ms::SurfaceCreationParameters reference{std::string(), w, h};
     ASSERT_EQ(
         reference,
         params
