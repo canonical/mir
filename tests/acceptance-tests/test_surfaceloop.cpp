@@ -36,7 +36,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-char const* const mir_test_socket = "./mir_socket_test";
+char const* const mir_test_socket = mir::test_socket_file().c_str();
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
