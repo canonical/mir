@@ -44,7 +44,6 @@ public:
     }
 };
 
-#if 0
 TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
 {
     using namespace testing;
@@ -107,7 +106,7 @@ TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
     }, std::runtime_error);
 
 }
-#endif
+
 namespace mg=mir::graphics;
 
 static const GLchar *vtex_shader_src =
@@ -229,9 +228,7 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     {
         native_handle->data[i++] = *it;
     }
-    /* handle reconstructed */
-
-    /* fire up gralloc */
+    
     const hw_module_t* hw_module;
     int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (err != 0)
@@ -277,7 +274,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     /* add swapper to ipc mechanism thing */
 
-    setup_gl(program, vPositionAttr, uvCoord, slideUniform);
 
     std::shared_ptr<mg::Texture> texture_res;
     auto client_buffer = bundle->secure_client_buffer();
@@ -285,7 +281,9 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     client_buffer.reset();
     /* client_buffer released here */
 
+    setup_gl(program, vPositionAttr, uvCoord, slideUniform);
     texture_res = bundle->lock_and_bind_back_buffer();
+
 
     float slide =1.0;
     gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
