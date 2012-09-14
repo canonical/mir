@@ -75,15 +75,6 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
     return native_window_buffer_handle->format();
 }
 
-
-#include <system/window.h>
-static void inc(struct android_native_base_t*)
-{
-}
-static void dec(struct android_native_base_t*)
-{
-}
-
 void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -100,16 +91,6 @@ void mga::AndroidBuffer::bind_to_texture()
     if (it == egl_image_map.end())
     {
         ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
-        buf->common.incRef = &inc;
-        buf->common.decRef = &dec;
-        buf->common.magic   = ANDROID_NATIVE_BUFFER_MAGIC;
-        buf->common.version = 0x68;
-        buf->common.reserved[0] = 0;
-        buf->common.reserved[1] = 0;
-        buf->common.reserved[2] = 0;
-        buf->common.reserved[3] = 0;
-
-
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   buf, image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
