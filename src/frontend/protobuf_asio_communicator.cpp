@@ -84,15 +84,23 @@ struct mfd::Session
         parameter_message.ParseFromString(invocation.parameters());
         ResultMessage result_message;
 
-        (display_server.get()->*function)(
-            0,
-            &parameter_message,
-            &result_message,
-            google::protobuf::NewCallback(
-                this,
-                &Session::send_response,
-                invocation.id(),
-                &result_message));
+        try
+        {
+            (display_server.get()->*function)(
+                0,
+                &parameter_message,
+                &result_message,
+                google::protobuf::NewCallback(
+                    this,
+                    &Session::send_response,
+                    invocation.id(),
+                    &result_message));
+        }
+        catch (std::exception const& x)
+        {
+            result_message.set_error(x.what());
+            send_response(invocation.id(), &result_message);
+        }
     }
 
     boost::asio::local::stream_protocol::socket socket;
@@ -248,6 +256,11 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
             // Careful about what you do after this - it deletes this
             connected_sessions->remove(id());
             return;
+        }
+        else
+        {
+            /*log->error()*/
+            std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
         }
     }
 

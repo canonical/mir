@@ -8,5 +8,5 @@ message Invocation {
 
 message Result {
   required uint32 id = 1;
-  required bytes response = 2;
+  optional bytes response = 2;
 }
