@@ -39,6 +39,7 @@ struct StubServer : mir::protobuf::DisplayServer
     static const int file_descriptors = 5;
 
     std::string app_name;
+    std::string surface_name;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
@@ -62,6 +63,7 @@ struct StubServer : mir::protobuf::DisplayServer
         response->set_pixel_format(request->pixel_format());
 
         std::unique_lock<std::mutex> lock(guard);
+        surface_name = request->surface_name();
         ++surface_count;
         wait_condition.notify_one();
 
@@ -498,6 +500,36 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
     server.expect_surface_count(0);
 
     EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.app_name);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture, create_surface_sets_surface_name)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
+    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
+
+    client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+
+    client.display_server.connect(
+        0,
+        &client.connect_parameters,
+        &client.ignored,
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+    client.wait_for_connect_done();
+
+    client.surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
+
+    client.display_server.create_surface(
+        0,
+        &client.surface_parameters,
+        &client.surface,
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
+
+    client.wait_for_create_surface();
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.surface_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
