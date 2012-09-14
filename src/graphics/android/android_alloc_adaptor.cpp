@@ -84,10 +84,13 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     buffer.handle = buf_handle;
     buffer.format = format;
     buffer.usage = usage_flag;
+
     /* we don't use these for refcounting buffers. however, drivers still expect to be
        able to call them */
     buffer.common.incRef = &incRef;
     buffer.common.decRef = &incRef;
+    buffer.common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
+    buffer.common.version = sizeof(ANativeWindowBuffer);
 
     AndroidBufferHandleDefaultDeleter del(alloc_dev);
     auto handle = std::shared_ptr<mga::AndroidBufferHandle>(

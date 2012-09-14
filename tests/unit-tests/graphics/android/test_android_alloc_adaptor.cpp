@@ -315,7 +315,7 @@ TEST_F(AdaptorICSTest, handle_has_right_magic)
 TEST_F(AdaptorICSTest, handle_has_version)
 {
     using namespace testing;
-    int version = 0x68;  /* version value shared by JB and ICS */
+    int version = 96;  /* version value shared by JB and ICS */
 
     auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
