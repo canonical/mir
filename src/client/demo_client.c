@@ -18,6 +18,8 @@
 
 #include "mir_client/mir_client_library.h"
 
+#include <assert.h>
+#include <string.h>
 #include <unistd.h>
 
 static MirConnection *connection = 0;
@@ -71,9 +73,9 @@ int main()
     wait_for_connect();
     puts("Connected");
 
-//    ASSERT_TRUE(connection != NULL);
-//    EXPECT_TRUE(mir_connection_is_valid(connection));
-//    EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+    assert(connection != NULL);
+    assert(mir_connection_is_valid(connection));
+    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
@@ -81,22 +83,20 @@ int main()
     wait_for_surface_create();
     puts("Surface created");
 
-//    ASSERT_TRUE(ssync->surface != NULL);
-//    EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
-//    EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
+    assert(surface != NULL);
+    assert(mir_surface_is_valid(surface));
+    assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
     MirSurfaceParameters response_params;
     mir_surface_get_parameters(surface, &response_params);
-//    EXPECT_EQ(request_params.width, response_params.width);
-//    EXPECT_EQ(request_params.height, response_params.height);
-//    EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+    assert(request_params.width == response_params.width);
+    assert(request_params.height ==  response_params.height);
+    assert(request_params.pixel_format == response_params.pixel_format);
 
 
     mir_surface_release(surface, surface_release_callback, (void*)&surface_release_context);
     wait_for_surface_release();
     puts("Surface released");
-
-//    ASSERT_TRUE(ssync->surface == NULL);
 
     mir_connection_release(connection);
     puts("Connection released");
