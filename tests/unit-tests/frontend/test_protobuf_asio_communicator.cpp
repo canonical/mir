@@ -433,6 +433,8 @@ struct ProtobufErrorTestFixture : public ::testing::Test
     void SetUp()
     {
         ::testing::Mock::VerifyAndClearExpectations(server.factory.get());
+        EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+        server.comm.start();
     }
 
     void TearDown()
@@ -725,9 +727,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
 
 TEST_F(ProtobufErrorTestFixture, connect_exception)
 {
-    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
-    server.comm.start();
-
     client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     EXPECT_CALL(client, connect_done()).Times(1);
 
@@ -746,9 +745,6 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
 
 TEST_F(ProtobufErrorTestFixture, create_surface_exception)
 {
-    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
-    server.comm.start();
-
     EXPECT_CALL(client, create_surface_done()).Times(1);
 
     client.display_server.create_surface(
