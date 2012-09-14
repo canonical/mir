@@ -40,11 +40,15 @@ class AndroidBufferIntegration : public ::testing::Test
 public:
     virtual void SetUp()
     {
-
+        allocator = std::make_shared<mga::AndroidBufferAllocator>();
+        strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
     }
+ 
+    std::shared_ptr<mga::AndroidBufferAllocator> allocator;
+    std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
 };
 
-TEST_F(AndroidBufferIntegration, alloc_does_not_throw)
+TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 {
     using namespace testing;
 
@@ -59,10 +63,6 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
 {
     using namespace testing;
 
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
-
-
     geom::Width  w(200);
     geom::Height h(400);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
@@ -74,9 +74,6 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
 TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 {
     using namespace testing;
-
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
 
     geom::Width  w(200);
@@ -90,10 +87,6 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
 {
     using namespace testing;
-
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
-
 
     geom::Width  w(200);
     geom::Height h(400);
@@ -205,7 +198,7 @@ void gl_render(GLuint program, GLuint vPosition, GLuint uvCoord,
     glDisableVertexAttribArray(vPosition);
 }
 
-static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res)
+static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
 {
     auto ipc_pack = res->ipc_package;
 
@@ -245,7 +238,7 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     {
         for(j=0; j<64; j++)
         {        
-            buffer_vaddr[64*i + j] = 0xFFFFFFFF;
+            buffer_vaddr[64*i + j] = val;
         }
     }
     module->unlock(module, native_handle);
@@ -253,6 +246,57 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
 
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
+{
+    using namespace testing;
+    std::shared_ptr<mg::Display> display;
+    display = mg::create_display();
+
+    geom::Width  w(64);
+    geom::Height h(64);
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+
+    GLuint program, vPositionAttr, uvCoord, slideUniform;
+    /* add to swapper to surface */
+    /* add to surface to surface stack */
+
+    /* add swapper to ipc mechanism thing */
+
+
+    setup_gl(program, vPositionAttr, uvCoord, slideUniform);
+
+    std::shared_ptr<mg::Texture> texture_res;
+    float slide =1.0;
+    for(;;)
+    {
+        auto client_buffer = bundle->secure_client_buffer();
+        test_fill_cpu_pattern(client_buffer, 0xFF00FFFF);
+        client_buffer.reset();
+
+    texture_res = bundle->lock_and_bind_back_buffer();
+        gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
+        display->post_update();
+        sleep(1);
+    texture_res.reset();
+
+        client_buffer = bundle->secure_client_buffer();
+        test_fill_cpu_pattern(client_buffer, 0xFF0000FF);
+        client_buffer.reset();
+
+    texture_res = bundle->lock_and_bind_back_buffer();
+        gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
+        display->post_update();
+        sleep(1);
+    texture_res.reset();
+
+
+    }
+
+}
+
+
+TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
     std::shared_ptr<mg::Display> display;
@@ -275,22 +319,43 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     /* add swapper to ipc mechanism thing */
 
 
-    std::shared_ptr<mg::Texture> texture_res;
-    auto client_buffer = bundle->secure_client_buffer();
-    test_fill_cpu_pattern(client_buffer);
-    client_buffer.reset();
-    /* client_buffer released here */
-
     setup_gl(program, vPositionAttr, uvCoord, slideUniform);
-    texture_res = bundle->lock_and_bind_back_buffer();
 
-
+    std::shared_ptr<mg::Texture> texture_res;
     float slide =1.0;
-    gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
-    display->post_update();
 
-    texture_res.reset();
+#define REPEAT 0
+#if REPEAT
+    for(;;)
+    {
+#endif
+        /* buffer 0 */
+        auto client_buffer = bundle->secure_client_buffer();
+        test_fill_cpu_pattern(client_buffer, 0xFF00FFFF);
+        client_buffer.reset();
+
+        texture_res = bundle->lock_and_bind_back_buffer();
+        gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
+        display->post_update();
+        texture_res.reset();
+        sleep(1);
+
+        /* buffer 1 */
+        client_buffer = bundle->secure_client_buffer();
+        test_fill_cpu_pattern(client_buffer, 0xFF0000FF);
+        client_buffer.reset();
+
+        texture_res = bundle->lock_and_bind_back_buffer();
+        gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);    
+        display->post_update();
+        texture_res.reset();
+        sleep(1);
+#if REPEAT
+    }
+#endif
+
 }
+
 
 
 
