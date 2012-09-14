@@ -120,6 +120,34 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
 
 }
 
+TEST_F(AdaptorNativeWinProduction, handle_has_reffable_incref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, handle->common.incRef);
+    EXPECT_NO_THROW({
+        handle->common.incRef(native_base);
+    }); 
+}
+
+TEST_F(AdaptorNativeWinProduction, handle_has_reffable_decref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
+    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+  
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, handle->common.decRef);
+    EXPECT_NO_THROW({
+        handle->common.decRef(native_base);
+    }); 
+}
+
 TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
 {
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
