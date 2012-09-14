@@ -273,3 +273,31 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
     EXPECT_EQ((unsigned int) buffer_cast->usage, (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER));
 }
 
+TEST_F(AdaptorICSTest, handle_has_reffable_incref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.incRef);
+    EXPECT_NO_THROW({
+        buffer_cast->common.incRef(native_base);
+    }); 
+}
+
+TEST_F(AdaptorICSTest, handle_has_reffable_decref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.decRef);
+    EXPECT_NO_THROW({
+        buffer_cast->common.decRef(native_base);
+    }); 
+}
+
