@@ -74,12 +74,21 @@ public:
 
     char const * get_error_message()
     {
+        if (surface.has_error())
+        {
+            return surface.error().c_str();
+        }
         return error_message.c_str();
     }
 
     int id() const
     {
         return surface.id().value();
+    }
+
+    bool is_valid() const
+    {
+        return !surface.has_error();
     }
 private:
 
@@ -106,6 +115,7 @@ public:
         , server(&channel)
         , log(log)
     {
+        connect_result.set_error("connect not called");
     }
 
     MirConnection(MirConnection const &) = delete;
@@ -121,7 +131,14 @@ public:
 
     char const * get_error_message()
     {
+        if (connect_result.has_error())
+        {
+            return connect_result.error().c_str();
+        }
+        else
+        {
         return error_message.c_str();
+        }
     }
 
     void connect(
@@ -133,7 +150,7 @@ public:
         server.connect(
             0,
             &connect_parameters,
-            &ignored,
+            &connect_result,
             google::protobuf::NewCallback(callback, this, context));
     }
 
@@ -147,6 +164,11 @@ public:
 
         unique_lock<mutex> lock(guard);
         while (created) cv.wait(lock);
+    }
+
+    bool is_valid()
+    {
+        return connect_result.has_error();
     }
 
 private:
@@ -165,6 +187,7 @@ private:
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
     mp::Void void_response;
+    mir::protobuf::Void connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
@@ -187,9 +210,9 @@ void mir_connect(char const* name, mir_connected_callback callback, void * conte
     }
 }
 
-int mir_connection_is_valid(MirConnection * /*connection*/)
+int mir_connection_is_valid(MirConnection * connection)
 {
-    return 1;
+    return !connection->is_valid();
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
@@ -229,10 +252,9 @@ int mir_debug_surface_id(MirSurface * surface)
     return surface->id();
 }
 
-int mir_surface_is_valid(MirSurface * /*surface*/)
+int mir_surface_is_valid(MirSurface* surface)
 {
-    // TODO surfaces in an error state
-    return 1;
+    return surface->is_valid();
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)

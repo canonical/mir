@@ -26,6 +26,7 @@ add_executable(
   testing_process_manager.cpp
   testing_server_options.cpp
   test_server_startup.cpp
+  test_error_reporting.cpp
 )
 
 target_link_libraries(
