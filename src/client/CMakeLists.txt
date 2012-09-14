@@ -35,3 +35,22 @@ add_library(
   
   ${CLIENT_SOURCES}
 )
+
+add_executable(
+  demo_client
+  
+  demo_client.c
+)
+
+target_link_libraries(
+  demo_client
+  
+  mirclient
+  mirprotobuf
+ 
+  3rd_party
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
