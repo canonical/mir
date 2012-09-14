@@ -34,6 +34,7 @@ class AndroidGraphicBufferBasic : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
         mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
 
@@ -42,6 +43,8 @@ protected:
         width = geom::Width(300);
         height = geom::Height(200);
 
+        EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _, _))
+            .Times(AtLeast(0));
     }
 
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
