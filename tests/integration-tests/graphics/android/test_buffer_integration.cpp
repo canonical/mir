@@ -243,14 +243,12 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     for(auto it=ipc_pack->ipc_fds.begin(); it != ipc_pack->ipc_fds.end(); it++)
     {
         native_handle->data[i++] = *it;
-        printf("FD IS: %i\n", *it);
     }
 
     i=num_fd;
     for(auto it=ipc_pack->ipc_data.begin(); it != ipc_pack->ipc_data.end(); it++)
     {
         native_handle->data[i++] = *it;
-        printf("DATA : %i\n", *it); 
     }
 
     /* handle reconstructed */
@@ -267,21 +265,9 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     
     int ret;
     ret = module->registerBuffer(module, native_handle);
-    printf("REGISTER IS %i\n", ret);
     ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
                 0, 0, 64, 64, (void**) &buffer_vaddr);
-    printf("LOCK IS %i\n", ret);
     int j;
-#if 0
-    for(i=0; i<200; i++)
-    {
-        for(j=0; j<200; j++)
-        {
-        
-            printf("READBACK %i, %i:\t0x%X\n", i, j, buffer_vaddr[200*i + j]);
-        }
-    }
-#endif
     for(i=0; i<64; i++)
     {
         for(j=0; j<64; j++)
@@ -293,8 +279,6 @@ static void test_fill_cpu_pattern(std::shared_ptr<mc::GraphicBufferClientResourc
     module->unlock(module, native_handle);
 
     ret = module->unregisterBuffer(module, native_handle);
-    printf("UNREGISTER IS %i\n", ret);
- 
 }
 
 
@@ -313,7 +297,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
     auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
-    printf("here\n");
 
     GLuint program, vPositionAttr, uvCoord, slideUniform;
     /* add to swapper to surface */
@@ -342,7 +325,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
         gl_render(program, vPositionAttr, uvCoord, slideUniform, slide);
         
-//        printf("hit update\n");
         display->post_update();
  //       texture_res.reset();
     }
