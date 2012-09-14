@@ -265,9 +265,9 @@ char const * mir_surface_get_error_message(MirSurface * surface)
     return surface->get_error_message();
 }
 
-MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface)
+void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
-    return surface->get_parameters();
+    *parameters = surface->get_parameters();
 }
 
 void mir_surface_advance_buffer(MirSurface *,

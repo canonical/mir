@@ -253,7 +253,10 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
             EXPECT_FALSE(mir_surface_is_valid(ssync->surface));
             EXPECT_EQ(ErrorServer::test_exception_text, mir_surface_get_error_message(ssync->surface));
 
-            EXPECT_NO_THROW(mir_surface_get_parameters(ssync->surface));
+            EXPECT_NO_THROW({
+                MirSurfaceParameters response_params;
+                mir_surface_get_parameters(ssync->surface, &response_params);
+            });
 
             mir_surface_release(ssync->surface, release_surface_callback, ssync);
 

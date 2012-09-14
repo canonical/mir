@@ -161,7 +161,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(surface);
+            MirSurfaceParameters response_params;
+            mir_surface_get_parameters(surface, &response_params);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);

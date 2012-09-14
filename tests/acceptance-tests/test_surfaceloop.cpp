@@ -211,7 +211,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
             EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync->surface);
+            MirSurfaceParameters response_params;
+            mir_surface_get_parameters(ssync->surface, &response_params);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
@@ -274,7 +275,8 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
             EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
 
-            MirSurfaceParameters const response_params = mir_surface_get_parameters(ssync->surface);
+            MirSurfaceParameters response_params;
+            mir_surface_get_parameters(ssync->surface, &response_params);
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
@@ -315,12 +317,13 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             mir_surface_create(connection, &request_params, create_surface_callback, ssync+1);
             wait_for_surface_create(ssync+1);
 
-            MirSurfaceParameters response_params = mir_surface_get_parameters(ssync->surface);
+            MirSurfaceParameters response_params;
+            mir_surface_get_parameters(ssync->surface, &response_params);
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            response_params = mir_surface_get_parameters(ssync[1].surface);
+            mir_surface_get_parameters(ssync[1].surface, &response_params);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);

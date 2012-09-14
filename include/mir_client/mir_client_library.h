@@ -84,7 +84,7 @@ int mir_surface_is_valid(MirSurface * surface);
 char const * mir_surface_get_error_message(MirSurface * surface);
 
 /* Get a valid surface's parameters. */
-MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface);
+void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters);
 
 /* Release the supplied surface and any associated buffer. */
 void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
