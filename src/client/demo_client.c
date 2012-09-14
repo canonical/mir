@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <signal.h>
 #include <string.h>
+#include <stdio.h>
 #include <unistd.h>
 
 static MirConnection *connection = 0;
@@ -55,6 +56,7 @@ static void wait_for_surface_create()
 
 static void surface_release_callback(MirSurface *old_surface, void *context)
 {
+    (void)old_surface;
     surface = 0;
     *((sig_atomic_t*)context) = 1;
 }
