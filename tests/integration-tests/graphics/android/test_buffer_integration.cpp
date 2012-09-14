@@ -98,53 +98,6 @@ TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
 
 }
 
-
-
-TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
-{
-    using namespace testing;
-    std::shared_ptr<mg::Display> display;
-    display = mg::create_display();
-    mt::glAnimationBasic gl_animation;
-    mt::grallocRenderSW sw_renderer;
-
-    geom::Width  w(64);
-    geom::Height h(64);
-    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
-
-    gl_animation.init_gl();
-
-    std::shared_ptr<mg::Texture> texture_res;
-    for(;;)
-    {
-        auto client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, 0xFF0000FF);
-        client_buffer.reset();
-
-        texture_res = bundle->lock_and_bind_back_buffer();
-        gl_animation.render_gl();
-        display->post_update();
-        texture_res.reset();
-        sleep(1);
-
-        client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, 0x0000FFFF);
-        client_buffer.reset();
-
-        texture_res = bundle->lock_and_bind_back_buffer();
-        gl_animation.render_gl();
-        display->post_update();
-        texture_res.reset();
-        sleep(1);
-
-
-    }
-
-}
-
-
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
@@ -162,12 +115,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
     auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
-
-    /* add to swapper to surface */
-    /* add to surface to surface stack */
-
-    /* add swapper to ipc mechanism thing */
-
 
     gl_animation.init_gl();
 
@@ -187,6 +134,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
+#if REPEAT
         sleep(1);
 
         /* buffer 1 */
@@ -199,12 +147,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
         display->post_update();
         texture_res.reset();
         sleep(1);
-#if REPEAT
     }
 #endif
 
 }
-
-
-
 

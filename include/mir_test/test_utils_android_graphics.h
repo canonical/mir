@@ -33,10 +33,12 @@ class grallocRenderSW
 {
 public:
     grallocRenderSW(); 
+    ~grallocRenderSW(); 
     bool render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, int val );
  
 private:
     gralloc_module_t* module;
+    alloc_device_t* alloc_dev;
 };
 
 class glAnimationBasic

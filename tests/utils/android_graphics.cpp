@@ -29,8 +29,13 @@ mt::grallocRenderSW::grallocRenderSW()
     const hw_module_t *hw_module;
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module) != 0)
         throw std::runtime_error("error, hw module not available!\n");
-
+    gralloc_open(hw_module, &alloc_dev);
     module = (gralloc_module_t*) hw_module;
+}
+
+mt::grallocRenderSW::~grallocRenderSW()
+{
+    gralloc_close(alloc_dev);
 }
 
 bool mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
