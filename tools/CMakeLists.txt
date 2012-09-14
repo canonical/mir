@@ -23,6 +23,7 @@ target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
+    test-utils
     ui
     EGL
     GLESv2
