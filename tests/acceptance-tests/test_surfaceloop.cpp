@@ -19,6 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"

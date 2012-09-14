@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/android_buffer_handle_default.h"
+#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test/mock_alloc_adaptor.h"
 #include "mir_test/mock_android_alloc_device.h"
 
