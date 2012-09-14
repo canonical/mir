@@ -45,10 +45,10 @@ public:
     EGLClientBuffer get_egl_client_buffer() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 
+    const ANativeWindowBuffer anw_buffer;
 private:
     void pack_ipc_package();
 
-    const ANativeWindowBuffer anw_buffer;
     std::shared_ptr<compositor::BufferIPCPackage> ipc_package;
 
     /* we save these so that when other parts of the system query for the mir

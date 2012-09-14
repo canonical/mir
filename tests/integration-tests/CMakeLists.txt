@@ -14,9 +14,9 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(frontend/)
-add_subdirectory(compositor/)
-add_subdirectory(input/)
+#add_subdirectory(frontend/)
+#add_subdirectory(compositor/)
+#add_subdirectory(input/)
 
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
@@ -41,8 +41,8 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${PLATFORM_LIBRARIES}
-  EGL
   GLESv2
+  EGL
 )
 
 mir_discover_tests(integration-tests)

@@ -82,6 +82,11 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     buffer.format = format;
     buffer.usage = usage_flag;
 
+
+    int i;
+    for(i=0; i<buf_handle->numInts+buf_handle->numFds; i++)
+        printf("AT ALLOC: %i, %i\n", i, buf_handle->data[i]); 
+
     AndroidBufferHandleDefaultDeleter del(alloc_dev);
     auto handle = std::shared_ptr<mga::AndroidBufferHandle>(
                       new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
@@ -95,7 +100,7 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     switch (usage)
     {
     case mga::BufferUsage::use_hardware:
-        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+        return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);
     case mga::BufferUsage::use_software:
     default:
         return -1;

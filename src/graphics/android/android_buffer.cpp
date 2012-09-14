@@ -79,9 +79,11 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 #include <system/window.h>
 static void inc(struct android_native_base_t*)
 {
+    printf("INC\n");
 }
 static void dec(struct android_native_base_t*)
 {
+    printf("DEC\n");
 }
 
 void mga::AndroidBuffer::bind_to_texture()
@@ -103,9 +105,17 @@ void mga::AndroidBuffer::bind_to_texture()
         ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
         buf->common.incRef = &inc;
         buf->common.decRef = &dec;
+        buf->common.magic   = ANDROID_NATIVE_BUFFER_MAGIC;
+        buf->common.version = 0x68;
+        buf->common.reserved[0] = 0;
+        buf->common.reserved[1] = 0;
+        buf->common.reserved[2] = 0;
+        buf->common.reserved[3] = 0;
+
+
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   buf, image_attrs);
-
+printf("BIND\n");
         if (image == EGL_NO_IMAGE_KHR)
         {
             throw std::runtime_error("error binding buffer to texture\n");
@@ -117,7 +127,9 @@ void mga::AndroidBuffer::bind_to_texture()
         image = it->second;
     }
 
+    printf("bound.\n");
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+    printf("BINDING RET: %X %X\n", glGetError(), eglGetError());
 
     return;
 }
