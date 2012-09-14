@@ -120,7 +120,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -142,7 +142,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
         void exec()
         {
 
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -233,7 +233,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
 
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 

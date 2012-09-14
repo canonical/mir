@@ -193,7 +193,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -257,7 +257,7 @@ TEST_F(BespokeDisplayServerTestFixture,
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -301,7 +301,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -347,7 +347,7 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -386,7 +386,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -509,7 +509,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -553,7 +553,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 

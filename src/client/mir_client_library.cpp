@@ -112,9 +112,10 @@ private:
 class MirConnection
 {
 public:
-    MirConnection(std::shared_ptr<mc::Logger> const & log)
+    MirConnection(const std::string& socket_file,
+        std::shared_ptr<mc::Logger> const & log)
         : created(true),
-          channel("./mir_socket_test", log)
+          channel(socket_file, log)
         , server(&channel)
         , log(log)
     {
@@ -198,13 +199,13 @@ private:
     std::set<MirSurface *> surfaces;
 };
 
-void mir_connect(char const* name, mir_connected_callback callback, void * context)
+void mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
     {
         auto log = std::make_shared<mc::ConsoleLogger>();
-        MirConnection * connection = new MirConnection(log);
+        MirConnection * connection = new MirConnection(socket_file, log);
         connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)

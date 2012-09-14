@@ -235,7 +235,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect("./mir_socket_test", __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
