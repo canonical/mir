@@ -505,6 +505,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, create_surface_sets_surface_name)
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
     EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
 
     client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
