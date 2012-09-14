@@ -17,19 +17,24 @@ message SurfaceId {
 };
 
 message Surface {
-  required SurfaceId id = 1;
-  required int32 width = 2;
-  required int32 height = 3;
-  required int32 pixel_format = 4;
+  optional SurfaceId id = 1;
+  optional int32 width = 2;
+  optional int32 height = 3;
+  optional int32 pixel_format = 4;
   optional int32 native_buffer = 5;
+  
+  optional string error = 127;
 }
 
 message Void {
+  optional string error = 127;
 }
 
 message TestFileDescriptors {
   repeated sint32 fd = 1;
   repeated int32  stuff = 2;
+
+  optional string error = 127;
 }
 
 service DisplayServer {
