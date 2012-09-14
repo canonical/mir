@@ -19,6 +19,10 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#ifndef ANDROID
+#include "gbm/mock_drm.h"
+#include "gbm/mock_gbm.h"
+#endif
 
 #include <gtest/gtest.h>
 
@@ -26,7 +30,16 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-TEST(GraphicsPlatform, buffer_allocator_creation)
+class GraphicsPlatform : public ::testing::Test
+{
+public:
+#ifndef ANDROID
+    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
+    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+#endif
+};
+
+TEST_F(GraphicsPlatform, buffer_allocator_creation)
 {
     using namespace testing;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
@@ -40,7 +53,7 @@ TEST(GraphicsPlatform, buffer_allocator_creation)
 
 /* note: llvm platform is not implemented. once llvm is implemented, it needs to pass this test */
 #ifdef ANDROID
-TEST(GraphicsPlatform, buffer_creation)
+TEST_F(GraphicsPlatform, buffer_creation)
 {
     std::shared_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
     geom::Width w(320);

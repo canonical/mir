@@ -15,9 +15,11 @@
 # Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
 list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm_buffer_allocator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer_allocator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_display.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
