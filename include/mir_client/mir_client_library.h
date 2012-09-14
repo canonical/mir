@@ -60,6 +60,7 @@ typedef enum MirPixelFormat
 
 typedef struct MirSurfaceParameters
 {
+    char const* name;
     int width;
     int height;
     MirPixelFormat pixel_format;
