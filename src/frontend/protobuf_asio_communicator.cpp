@@ -43,6 +43,7 @@ void google_protobuf_guard()
 {
     static google_protobuf_guard_t guard;
 }
+bool force_init{(google_protobuf_guard(), true)};
 }
 
 
@@ -139,7 +140,6 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     ipc_factory(ipc_factory),
     next_session_id(0)
 {
-    google_protobuf_guard();
     start_accept();
 }
 

@@ -80,6 +80,8 @@ try
         case 'f':
             socket_file = optarg;
             break;
+
+        case '?':
         case 'h':
         default:
             puts(argv[0]);
