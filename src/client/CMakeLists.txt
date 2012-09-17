@@ -14,8 +14,7 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c1x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
 IF(PROTOBUF_FOUND)
 
