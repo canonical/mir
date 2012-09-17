@@ -62,6 +62,8 @@ protected:
 class DefaultServerConfiguration : public ServerConfiguration
 {
 public:
+    DefaultServerConfiguration(std::string const& socket_file);
+
     // the communicator to use
     virtual std::shared_ptr<frontend::Communicator>
     make_communicator(std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
@@ -73,7 +75,7 @@ public:
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 
 private:
-    virtual std::string const& socket_file();
+    std::string socket_file;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(

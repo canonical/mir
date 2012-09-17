@@ -33,9 +33,13 @@
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
+namespace
+{
+    char const* const mir_test_socket = mir::test_socket_file().c_str();
+}
+
 namespace mir
 {
-
 namespace
 {
 struct ClientConfigCommon : TestingClientConfiguration
@@ -120,7 +124,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     {
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -142,7 +146,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
         void exec()
         {
 
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 
@@ -233,7 +237,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
 
         void exec()
         {
-            mir_connect(__PRETTY_FUNCTION__, connection_callback, this);
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
             wait_for_connect();
 

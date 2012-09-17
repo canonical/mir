@@ -26,7 +26,7 @@ void mir::TestingServerConfiguration::on_exit(DisplayServer* )
 {
 }
 
-std::string const& mir::TestingServerConfiguration::socket_file()
+mir::TestingServerConfiguration::TestingServerConfiguration() :
+    DefaultServerConfiguration(test_socket_file())
 {
-    return test_socket_file();
 }

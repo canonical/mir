@@ -14,6 +14,8 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
+
 IF(PROTOBUF_FOUND)
 
 INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
@@ -35,3 +37,22 @@ add_library(
   
   ${CLIENT_SOURCES}
 )
+
+add_executable(
+  demo_client
+  
+  demo_client.c
+)
+
+target_link_libraries(
+  demo_client
+  
+  mirclient
+  mirprotobuf
+ 
+  3rd_party
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
