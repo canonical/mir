@@ -34,3 +34,32 @@ add_library(
 
   ${SRCS}
 )
+
+add_executable(
+  ubuntu_display_server
+  
+  main.cpp
+)
+
+target_link_libraries(
+  ubuntu_display_server
+  
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirprocess
+  mirsurfaces
+  mirplatformgraphics
+  mirprotobuf
+ 
+  3rd_party
+
+  ${PROTOBUF_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+

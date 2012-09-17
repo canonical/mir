@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/gbm/gbm_buffer.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include <gbm.h>
 

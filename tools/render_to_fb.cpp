@@ -19,7 +19,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 
-#include "mir_test/test_utils_android_graphics.h"
+#include "mir_test/test_utils_graphics.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -33,7 +33,6 @@ int main(int, char**)
 
     mt::glAnimationBasic gl_animation;
     gl_animation.init_gl();
-    //adjust_vertices();
 
     for(;;)
     {

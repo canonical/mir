@@ -43,6 +43,8 @@ void google_protobuf_guard()
 {
     static google_protobuf_guard_t guard;
 }
+
+bool force_init{(google_protobuf_guard(), true)};
 }
 
 namespace c = mir::client;
@@ -88,7 +90,6 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
-    google_protobuf_guard();
     socket.connect(endpoint);
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);

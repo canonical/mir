@@ -47,6 +47,7 @@ void mir::frontend::ApplicationProxy::create_surface(
 {
     auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
+        .of_name(request->surface_name())
         .of_width(geometry::Width(request->width()))
         .of_height(geometry::Height(request->height()))
         );

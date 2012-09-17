@@ -19,7 +19,7 @@
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 
-#include "mock_gbm_buffer_allocator.h"
+#include "mock_gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -31,20 +31,46 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
+namespace
+{
+struct GBMDeviceDeleter
+{
+    void operator()(gbm_device* d) const
+    {            
+        if (d)
+            gbm_device_destroy(d);
+    }
+};
+}
+
 class GBMGraphicBufferBasic : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        mocker = std::shared_ptr<mgg::MockGBMDeviceCreator>(new mgg::MockGBMDeviceCreator);
-        allocator = mocker->create_gbm_allocator();
+        using namespace testing;
+
+        std::shared_ptr<gbm_device> fake_device{gbm_create_device(1), GBMDeviceDeleter()};
+        allocator.reset(new mgg::GBMBufferAllocator(fake_device));
 
         width = geom::Width(300);
         height = geom::Height(200);
         pf = mc::PixelFormat::rgba_8888;
+
+        ON_CALL(mock_gbm, gbm_bo_get_width(_))
+        .WillByDefault(Return(width.as_uint32_t()));
+
+        ON_CALL(mock_gbm, gbm_bo_get_height(_))
+        .WillByDefault(Return(height.as_uint32_t()));
+
+        ON_CALL(mock_gbm, gbm_bo_get_format(_))
+        .WillByDefault(Return(GBM_BO_FORMAT_ARGB8888));
+
+        ON_CALL(mock_gbm, gbm_bo_get_stride(_))
+        .WillByDefault(Return(4 * width.as_uint32_t()));
     }
 
-    std::shared_ptr<mgg::MockGBMDeviceCreator> mocker;
+    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
@@ -57,8 +83,8 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(width, height, pf);
     ASSERT_EQ(width, buffer->width());
@@ -69,8 +95,8 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
     ASSERT_EQ(pf, buffer->pixel_format());
@@ -80,8 +106,8 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mocker, bo_create(_, _, _, _, _));
-    EXPECT_CALL(*mocker, bo_destroy(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     // RGBA 8888 cannot take less than 4 bytes
     // TODO: is there a *maximum* sane value for stride?

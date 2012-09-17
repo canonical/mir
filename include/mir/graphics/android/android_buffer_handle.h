@@ -22,13 +22,17 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/pixel_format.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <EGL/egl.h>
 #include <memory>
 
 namespace mir
 {
+namespace compositor
+{
+class BufferIPCPackage;
+}
+
 namespace graphics
 {
 namespace android

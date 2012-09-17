@@ -21,6 +21,7 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/geometry/dimensions.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

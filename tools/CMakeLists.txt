@@ -16,6 +16,12 @@
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 if (MIR_PLATFORM STREQUAL "android")
+    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES ui)
+endif()
+
+if (MIR_PLATFORM STREQUAL "gbm")
+    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES gbm drm)
+endif()
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
@@ -24,9 +30,7 @@ target_link_libraries(
 
     mirplatformgraphics
     test-utils
-    ui
+    ${RENDER_TO_FB_EXTRA_LINK_LIBRARIES}
     EGL
     GLESv2
 )
-
-endif()

@@ -25,6 +25,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <stdexcept>
 #include <memory>
 
 namespace mf = mir::frontend;
@@ -38,6 +39,7 @@ struct StubServer : mir::protobuf::DisplayServer
     static const int file_descriptors = 5;
 
     std::string app_name;
+    std::string surface_name;
     int surface_count;
     std::mutex guard;
     std::condition_variable wait_condition;
@@ -61,6 +63,7 @@ struct StubServer : mir::protobuf::DisplayServer
         response->set_pixel_format(request->pixel_format());
 
         std::unique_lock<std::mutex> lock(guard);
+        surface_name = request->surface_name();
         ++surface_count;
         wait_condition.notify_one();
 
@@ -123,6 +126,59 @@ struct StubServer : mir::protobuf::DisplayServer
 };
 
 const int StubServer::file_descriptors;
+
+struct ErrorServer : mir::protobuf::DisplayServer
+{
+    static std::string const test_exception_text;
+
+    void create_surface(
+        google::protobuf::RpcController*,
+        const protobuf::SurfaceParameters*,
+        protobuf::Surface*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void release_surface(
+        google::protobuf::RpcController*,
+        const protobuf::SurfaceId*,
+        protobuf::Void*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+
+    void connect(
+        ::google::protobuf::RpcController*,
+        const ::mir::protobuf::ConnectParameters*,
+        ::mir::protobuf::Void*,
+        ::google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void disconnect(
+        google::protobuf::RpcController*,
+        const protobuf::Void*,
+        protobuf::Void*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void test_file_descriptors(
+        google::protobuf::RpcController*,
+        const protobuf::Void*,
+        protobuf::TestFileDescriptors*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+};
+
+std::string const ErrorServer::test_exception_text{"test exception text"};
 
 struct NullDeleter
 {
@@ -203,6 +259,26 @@ struct TestServer
 
     // "Server" side
     StubServer stub_services;
+    std::shared_ptr<MockIpcFactory> factory;
+    mf::ProtobufAsioCommunicator comm;
+};
+
+struct TestErrorServer
+{
+    static std::string const & socket_name()
+    {
+        static std::string socket_name("./mir_test_pb_asio_socket");
+        return socket_name;
+    }
+
+    TestErrorServer() :
+        factory(std::make_shared<MockIpcFactory>(stub_services)),
+        comm(socket_name(), factory)
+    {
+    }
+
+    // "Server" side
+    ErrorServer stub_services;
     std::shared_ptr<MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
@@ -354,6 +430,23 @@ struct BasicTestFixture : public ::testing::Test
     TestServer server;
 };
 
+struct ProtobufErrorTestFixture : public ::testing::Test
+{
+    void SetUp()
+    {
+        ::testing::Mock::VerifyAndClearExpectations(server.factory.get());
+        EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+        server.comm.start();
+    }
+
+    void TearDown()
+    {
+        server.comm.stop();
+    }
+
+    TestErrorServer server;
+    TestClient client;
+};
 
 struct ProtobufAsioCommunicatorTestFixture : public BasicTestFixture
 {
@@ -407,6 +500,36 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
     server.expect_surface_count(0);
 
     EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.app_name);
+}
+
+TEST_F(ProtobufAsioCommunicatorTestFixture, create_surface_sets_surface_name)
+{
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
+    server.comm.start();
+    EXPECT_CALL(client, connect_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(1);
+
+    client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+
+    client.display_server.connect(
+        0,
+        &client.connect_parameters,
+        &client.ignored,
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+    client.wait_for_connect_done();
+
+    client.surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
+
+    client.display_server.create_surface(
+        0,
+        &client.surface_parameters,
+        &client.surface,
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
+
+    client.wait_for_create_surface();
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, server.stub_services.surface_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
@@ -606,7 +729,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
 {
-    EXPECT_CALL(*server.factory, make_ipc_server());
+    EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
     mir::protobuf::TestFileDescriptors fds;
@@ -632,5 +755,39 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
     server.stub_services.close_files();
     for (int i  = 0; i != server.stub_services.file_descriptors; ++i)
         close(fds.fd(i));
+}
+
+TEST_F(ProtobufErrorTestFixture, connect_exception)
+{
+    client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+    EXPECT_CALL(client, connect_done()).Times(1);
+
+    mir::protobuf::Void result;
+    client.display_server.connect(
+        0,
+        &client.connect_parameters,
+        &result,
+        google::protobuf::NewCallback(&client, &TestClient::connect_done));
+
+    client.wait_for_connect_done();
+
+    EXPECT_TRUE(result.has_error());
+    EXPECT_EQ(server.stub_services.test_exception_text, result.error());
+}
+
+TEST_F(ProtobufErrorTestFixture, create_surface_exception)
+{
+    EXPECT_CALL(client, create_surface_done()).Times(1);
+
+    client.display_server.create_surface(
+        0,
+        &client.surface_parameters,
+        &client.surface,
+        google::protobuf::NewCallback(&client, &TestClient::create_surface_done));
+
+    client.wait_for_create_surface();
+
+    EXPECT_TRUE(client.surface.has_error());
+    EXPECT_EQ(server.stub_services.test_exception_text, client.surface.error());
 }
 }

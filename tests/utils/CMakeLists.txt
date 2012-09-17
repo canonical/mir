@@ -14,13 +14,20 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-if (MIR_PLATFORM STREQUAL "android")
-
 set(
   TEST_UTILS_SRCS
 
-  android_graphics.cpp 
+  graphics_utils.cpp 
 )
+
+if (MIR_PLATFORM STREQUAL "android")
+  set(
+    TEST_UTILS_SRCS
+
+    android_graphics.cpp
+    ${TEST_UTILS_SRCS} 
+)
+endif()
 
 add_library(
   test-utils STATIC 
@@ -32,4 +39,3 @@ target_link_libraries(
   GLESv2
 )
 
-endif()

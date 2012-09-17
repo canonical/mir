@@ -20,12 +20,17 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
 
 #include "mir/graphics/android/android_buffer_handle.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <system/window.h>
 
 namespace mir
 {
+
+namespace compositor
+{
+class BufferIPCData;
+}
+
 namespace graphics
 {
 namespace android

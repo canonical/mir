@@ -34,6 +34,7 @@ class BufferBundleTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         width = geom::Width{1024};
         height =geom::Height{768};
         stride = geom::Stride{1024};
@@ -41,6 +42,20 @@ protected:
 
         mock_buffer = std::make_shared<mc::MockBuffer>(width, height, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
+        
+        EXPECT_CALL(*mock_buffer, bind_to_texture())
+            .Times(AtLeast(0)); 
+        EXPECT_CALL(*mock_buffer, get_ipc_package())
+            .Times(AtLeast(0)); 
+
+        EXPECT_CALL(*mock_swapper, client_acquire())
+            .Times(AtLeast(0)); 
+        EXPECT_CALL(*mock_swapper, client_release(_))
+            .Times(AtLeast(0)); 
+        EXPECT_CALL(*mock_swapper, compositor_acquire())
+            .Times(AtLeast(0)); 
+        EXPECT_CALL(*mock_swapper, compositor_release(_))
+            .Times(AtLeast(0)); 
     }
 
     std::shared_ptr<mc::MockBuffer> mock_buffer;

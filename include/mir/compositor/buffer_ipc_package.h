@@ -29,8 +29,8 @@ namespace compositor
 
 struct BufferIPCPackage
 {
-    std::vector<int> ipc_data;
-    std::vector<int> ipc_fds;
+    std::vector<int32_t> ipc_data;
+    std::vector<int32_t> ipc_fds;
 };
 
 }

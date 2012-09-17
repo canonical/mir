@@ -58,6 +58,8 @@ mir::EglMock::EglMock()
                        SetArgPointee<1>(1),
                        SetArgPointee<2>(4),
                        Return(EGL_TRUE)));
+    ON_CALL(*this, eglBindApi(EGL_OPENGL_ES_API))
+    .WillByDefault(Return(EGL_TRUE));
 
     ON_CALL(*this, eglGetConfigs(_,NULL, 0, _))
     .WillByDefault(DoAll(
@@ -173,6 +175,12 @@ const char * eglQueryString (EGLDisplay dpy, EGLint name)
 {
     CHECK_GLOBAL_MOCK(const char *)
     return global_egl_mock->eglQueryString(dpy, name);
+}
+
+EGLBoolean eglBindAPI (EGLenum api)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean)
+    return global_egl_mock->eglBindApi(api);
 }
 
 EGLBoolean eglGetConfigs (EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config)

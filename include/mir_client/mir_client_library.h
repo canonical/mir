@@ -39,7 +39,7 @@ typedef void (* mir_disconnected_callback)(void * client_context);
 /* Request a connection to the MIR server.
    The supplied callback is called when the connection is established, or fails.
 */
-void mir_connect(char const* app_name, mir_connected_callback callback, void * client_context);
+void mir_connect(char const* socket_file, char const* app_name, mir_connected_callback callback, void * client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_connection_is_valid(MirConnection * connection);
@@ -60,6 +60,7 @@ typedef enum MirPixelFormat
 
 typedef struct MirSurfaceParameters
 {
+    char const* name;
     int width;
     int height;
     MirPixelFormat pixel_format;
@@ -83,7 +84,7 @@ int mir_surface_is_valid(MirSurface * surface);
 char const * mir_surface_get_error_message(MirSurface * surface);
 
 /* Get a valid surface's parameters. */
-MirSurfaceParameters mir_surface_get_parameters(MirSurface * surface);
+void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters);
 
 /* Release the supplied surface and any associated buffer. */
 void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);

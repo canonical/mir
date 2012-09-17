@@ -90,6 +90,12 @@ struct Surfaces :
 };
 }
 
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
+socket_file(socket_file)
+{
+}
+
+
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
     return std::make_shared<StubGraphicBufferAllocator>();
@@ -120,11 +126,5 @@ mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(
-        socket_file(), make_ipc_factory(buffer_allocation_strategy));
-}
-
-std::string const& mir::DefaultServerConfiguration::socket_file()
-{
-    static const std::string socket_file{"/tmp/mir_socket"};
-    return socket_file;
+        socket_file, make_ipc_factory(buffer_allocation_strategy));
 }
