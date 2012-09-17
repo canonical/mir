@@ -33,19 +33,19 @@ set(
 )
 
 add_library( 
-  mirclient STATIC
+  mirclient SHARED
   
   ${CLIENT_SOURCES}
 )
 
 add_executable(
-  demo_client
+  ubuntu_ds_demo_client
   
   demo_client.c
 )
 
 target_link_libraries(
-  demo_client
+  ubuntu_ds_demo_client
   
   mirclient
   mirprotobuf
@@ -55,4 +55,19 @@ target_link_libraries(
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
+
+install(
+  TARGETS ubuntu_ds_demo_client
+  RUNTIME DESTINATION bin)
+
+set_target_properties(
+  mirclient
+  PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
+)
+
+install(
+  TARGETS mirclient
+  LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION include/mir/client)
+
 

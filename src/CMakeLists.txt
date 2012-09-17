@@ -63,3 +63,8 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+install(
+  TARGETS ubuntu_display_server
+  RUNTIME DESTINATION bin)
+  
+
