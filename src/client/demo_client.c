@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 
 static char const *socket_file = "/tmp/mir_socket";
 static MirConnection *connection = 0;
@@ -57,11 +58,25 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
     *((sig_atomic_t*)context) = 1;
 }
 
-int main(int argc, char const* argv[])
+int main(int argc, char* argv[])
 {
-    if (argc > 1)
+    int arg;
+    opterr = 0;
+    while ((arg = getopt (argc, argv, "hf:")) != -1)
     {
-        socket_file = argv[1];
+        switch (arg)
+        {
+        case 'f':
+            socket_file = optarg;
+            break;
+        case 'h':
+        default:
+            puts(argv[0]);
+            puts("Usage:");
+            puts("    -f <socket filename>");
+            puts("    -h: this help text");
+            return -1;
+        }
     }
 
     puts("Starting");
