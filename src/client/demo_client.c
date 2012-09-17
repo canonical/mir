@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static char const *socket_file = "/tmp/mir_socket";
 static MirConnection *connection = 0;
 static MirSurface *surface = 0;
 
@@ -56,11 +57,16 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
     *((sig_atomic_t*)context) = 1;
 }
 
-int main()
+int main(int argc, char const* argv[])
 {
+    if (argc > 1)
+    {
+        socket_file = argv[1];
+    }
+
     puts("Starting");
 
-    mir_connect("/tmp/mir_socket", __PRETTY_FUNCTION__, set_flag, &connection_flag);
+    mir_connect(socket_file, __PRETTY_FUNCTION__, set_flag, &connection_flag);
     wait_for(&connection_flag);
     puts("Connected");
 
@@ -83,7 +89,6 @@ int main()
     assert(request_params.width == response_params.width);
     assert(request_params.height ==  response_params.height);
     assert(request_params.pixel_format == response_params.pixel_format);
-
 
     mir_surface_release(surface, surface_release_callback, &surface_release_flag);
     wait_for(&surface_release_flag);
