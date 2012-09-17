@@ -84,7 +84,8 @@ mgg::GBMDisplay::GBMDisplay()
     /* Set up all native resources */
     drm.setup();
     kms.setup(drm);
-    gbm.setup(drm, kms.mode.hdisplay, kms.mode.vdisplay);
+    gbm.setup(drm);
+    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
     egl.setup(gbm);
 
     if (eglMakeCurrent(egl.display, egl.surface,
