@@ -66,7 +66,8 @@ std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, width, height, pf));
 }
 
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
+std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
+        const std::shared_ptr<Platform>& /*platform*/)
 {
     return std::make_shared<mga::AndroidBufferAllocator>();
 }

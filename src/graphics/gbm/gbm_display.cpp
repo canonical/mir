@@ -244,7 +244,8 @@ bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
     return true;
 }
 
-std::shared_ptr<mg::Display> mg::create_display()
+std::shared_ptr<mg::Display> mg::create_display(
+        const std::shared_ptr<Platform>& /*platform*/)
 {
     return std::make_shared<mgg::GBMDisplay>();
 }

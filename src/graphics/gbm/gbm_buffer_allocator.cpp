@@ -93,7 +93,8 @@ std::shared_ptr<gbm_device> create_drm_device()
 }
 }
 
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator()
+std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
+        const std::shared_ptr<mg::Platform>& /*platform*/)
 {
     return std::make_shared<mgg::GBMBufferAllocator>(create_drm_device());
 }
