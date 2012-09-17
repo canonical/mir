@@ -206,8 +206,8 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmOpen(_,_))
-        .Times(Exactly(1))
-        .WillOnce(Return(-1));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(-1));
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(0));

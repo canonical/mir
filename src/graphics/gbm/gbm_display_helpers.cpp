@@ -29,7 +29,18 @@ namespace mggh=mir::graphics::gbm::helpers;
 
 void mggh::DRMHelper::setup()
 {
-    fd = drmOpen("i915", NULL);
+    static const char *drivers[] = {
+        "i915", "radeon", "nouveau", 0
+    };
+
+    const char** driver{drivers};
+
+    while (fd < 0 && *driver)
+    {
+        fd = drmOpen(*driver, NULL);
+        ++driver;
+    }
+
     if (fd < 0)
         throw std::runtime_error("Failed to open DRM device\n");
 }
