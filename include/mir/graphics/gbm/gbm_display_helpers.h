@@ -21,9 +21,8 @@
 
 #include <cstddef>
 
-#define __GBM__
-#include <EGL/egl.h>
 #include <gbm.h>
+#include <EGL/egl.h>
 #include <xf86drmMode.h>
 
 namespace mir
