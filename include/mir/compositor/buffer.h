@@ -22,6 +22,8 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/compositor/pixel_format.h"
 
+#include <memory>
+
 namespace mir
 {
 
@@ -32,7 +34,7 @@ class Texture;
 
 namespace compositor
 {
-
+class BufferIPCPackage;
 class Buffer
 {
 public:
@@ -47,9 +49,7 @@ public:
 
     virtual PixelFormat pixel_format() const = 0;
 
-    virtual void lock() = 0;
-
-    virtual void unlock() = 0;
+    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
 
     virtual void bind_to_texture() = 0;
 

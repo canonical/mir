@@ -24,9 +24,15 @@
 #include "mir/compositor/pixel_format.h"
 
 #include <EGL/egl.h>
+#include <memory>
 
 namespace mir
 {
+namespace compositor
+{
+class BufferIPCPackage;
+}
+
 namespace graphics
 {
 namespace android
@@ -51,6 +57,7 @@ public:
     virtual BufferUsage usage() const = 0;
 
     virtual EGLClientBuffer get_egl_client_buffer() const = 0;
+    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const = 0;
 
 protected:
     AndroidBufferHandle() = default;

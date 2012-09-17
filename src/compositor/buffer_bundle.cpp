@@ -59,10 +59,10 @@ public:
     {
     };
 
-    void operator()(mc::BufferIPCPackage* package)
+    void operator()(mc::GraphicBufferClientResource* resource)
     {
         swapper->client_release(buffer_ptr);
-        delete package;
+        delete resource;
     }
 
 private:
@@ -91,12 +91,14 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
-    client_buffer->lock();
 
-    mc::BufferIPCPackage* buf = new mc::BufferIPCPackage;
     BufDeleter deleter(swapper.get(), client_buffer);
-    return std::shared_ptr<mc::BufferIPCPackage>(buf, deleter);
+    GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
+    graphics_resource->ipc_package = client_buffer->get_ipc_package();
+
+    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
 }
+

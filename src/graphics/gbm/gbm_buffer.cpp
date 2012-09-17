@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/gbm/gbm_buffer.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include <gbm.h>
 
@@ -75,14 +76,10 @@ mc::PixelFormat mgg::GBMBuffer::pixel_format() const
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }
 
-void mgg::GBMBuffer::lock()
+std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 {
-
-}
-
-void mgg::GBMBuffer::unlock()
-{
-
+    /* todo: return real IPC package */
+    return std::make_shared<mc::BufferIPCPackage>(); 
 }
 
 void mgg::GBMBuffer::bind_to_texture()

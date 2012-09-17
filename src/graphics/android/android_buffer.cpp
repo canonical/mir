@@ -75,14 +75,6 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
     return native_window_buffer_handle->format();
 }
 
-void mga::AndroidBuffer::lock()
-{
-}
-
-void mga::AndroidBuffer::unlock()
-{
-}
-
 void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -114,4 +106,9 @@ void mga::AndroidBuffer::bind_to_texture()
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
     return;
+}
+
+std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() const
+{
+    return native_window_buffer_handle->get_ipc_package();
 }

@@ -29,12 +29,16 @@ namespace mir
 namespace compositor
 {
 
+struct GraphicBufferClientResource
+{
+    std::shared_ptr<BufferIPCPackage> ipc_package;
+};
+
 class BufferQueue
 {
 public:
     virtual ~BufferQueue() {};
-    virtual std::shared_ptr<BufferIPCPackage> secure_client_buffer() = 0;
-
+    virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
 };
 
 }
