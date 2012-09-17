@@ -23,9 +23,12 @@
 #include <csignal>
 #include <iostream>
 #include <stdexcept>
+#include <getopt.h>
 
 namespace
 {
+std::string socket_file{"/tmp/mir_socket"};
+
 // TODO: Get rid of the volatile-hack here and replace it with
 // some sane atomic-pointer once we have left GCC 4.4 behind.
 mir::DisplayServer* volatile signal_display_server;
@@ -52,7 +55,7 @@ void run_mir()
     // TODO SIGTERM makes better long term sense - but Ctrl-C will do for now.
     signal_prev_fn = signal(SIGINT, signal_terminate);
 
-    DefaultServerConfiguration config;
+    DefaultServerConfiguration config(socket_file);
     DisplayServer server(config);
 
     signal_display_server = &server;
@@ -65,9 +68,28 @@ void run_mir()
 }
 }
 
-int main()
+int main(int argc, char* argv[])
 try
 {
+    int arg;
+    opterr = 0;
+    while ((arg = getopt (argc, argv, "hf:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'f':
+            socket_file = optarg;
+            break;
+        case 'h':
+        default:
+            puts(argv[0]);
+            puts("Usage:");
+            puts("    -f <socket filename>");
+            puts("    -h: this help text");
+            return -1;
+        }
+    }
+
     mir::run_mir();
     return 0;
 }
