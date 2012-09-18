@@ -29,7 +29,6 @@ message Surface {
   optional int32 width = 2;
   optional int32 height = 3;
   optional int32 pixel_format = 4;
-  optional int32 native_buffer = 5;
   optional Buffer buffer = 6;
 
   optional string error = 127;

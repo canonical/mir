@@ -61,6 +61,7 @@ struct StubServer : mir::protobuf::DisplayServer
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());
+        response->mutable_buffer();
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
@@ -69,6 +70,16 @@ struct StubServer : mir::protobuf::DisplayServer
 
         done->Run();
     }
+
+    void next_buffer(
+        ::google::protobuf::RpcController* /*controller*/,
+        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::Buffer* /*response*/,
+        ::google::protobuf::Closure* /*done*/)
+    {
+        // TODO
+    }
+
 
     void release_surface(::google::protobuf::RpcController* /*controller*/,
                          const ::mir::protobuf::SurfaceId* /*request*/,
