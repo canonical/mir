@@ -31,6 +31,7 @@ namespace mir
 namespace compositor
 {
 class BufferTextureBinder;
+struct BufferIPCPackage;
 }
 
 namespace surfaces
@@ -67,6 +68,8 @@ class Surface : public graphics::Renderable
     geometry::Width width() const;
     geometry::Height height() const;
     compositor::PixelFormat pixel_format() const;
+    std::shared_ptr<compositor::BufferIPCPackage> get_current_buffer_ipc_package() const;
+    std::shared_ptr<compositor::BufferIPCPackage> get_next_buffer_ipc_package() const;
 
  private:
     SurfaceCreationParameters params;

@@ -19,6 +19,7 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include <cassert>
 
@@ -55,6 +56,21 @@ mc::PixelFormat ms::Surface::pixel_format() const
     // TODO This should actually be supplied from somewhere (where?)
     return mc::PixelFormat();
 }
+
+std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_current_buffer_ipc_package() const
+{
+    // TODO This should actually be supplied from somewhere (where?)
+    return std::make_shared<mc::BufferIPCPackage>();
+}
+
+
+std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_next_buffer_ipc_package() const
+{
+    // TODO Should advance the buffer
+    // TODO This should actually be supplied from somewhere (where?)
+    return std::make_shared<mc::BufferIPCPackage>();
+}
+
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
