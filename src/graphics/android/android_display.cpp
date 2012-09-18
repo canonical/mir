@@ -88,11 +88,10 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
+/* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
 std::shared_ptr<mg::Display> mg::create_display()
 {
     auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) android_createDisplaySurface());
-    //note: known bug on OMAP4 hardware that pops up in test suite. framebuffer_open()/close()/open() 
-    // causes segfault
     if (!android_window.get())
         throw std::runtime_error("could not open FB window");
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);

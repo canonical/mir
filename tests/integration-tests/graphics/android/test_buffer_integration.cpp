@@ -37,6 +37,7 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics; 
 namespace mt=mir::test;
 
+/* note about display: android drivers seem to only be able to open fb once per process (gralloc's framebuffer_close() doesn't seem to work). once we figure out why, we can put display in the test fixture */
 std::shared_ptr<mg::Display> display;
 
 class AndroidBufferIntegration : public ::testing::Test
