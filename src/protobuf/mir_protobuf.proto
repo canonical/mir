@@ -17,12 +17,20 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+message Buffer {
+  repeated sint32 fd = 1;
+  repeated int32  data = 2;
+
+  optional string error = 127;
+}
+
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
   optional int32 height = 3;
   optional int32 pixel_format = 4;
   optional int32 native_buffer = 5;
+  optional Buffer buffer = 6;
 
   optional string error = 127;
 }
@@ -31,18 +39,13 @@ message Void {
   optional string error = 127;
 }
 
-message Buffer {
-  repeated sint32 fd = 1;
-  repeated int32  data = 2;
-
-  optional string error = 127;
-}
-
 service DisplayServer {
   rpc connect(ConnectParameters) returns (Void);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
+  
   rpc test_file_descriptors(Void) returns (Buffer);
 }
 
