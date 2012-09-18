@@ -17,11 +17,13 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir_test/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace ms = mir::surfaces;
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 TEST(surface, default_creation_parameters)
@@ -52,4 +54,34 @@ TEST(surface, builder_mutators)
         ms::a_surface().of_width(w).of_height(h));
 }
 
+namespace
+{
+struct SurfaceCreation : public ::testing::Test
+{
+    virtual void SetUp()
+    {
+        pf = mc::PixelFormat::rgba_8888;
+        mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
+    }
+
+    ms::SurfaceCreationParameters creation_params;
+    std::shared_ptr<mc::BufferBundle> mock_buffer_bundle;
+    mc::PixelFormat pf;
+};
+}
+
+TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
+{
+    using namespace testing;
+
+    ms::Surface surf(creation_params, mock_buffer_bundle );
+
+    EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
+        .Times(1)
+        .WillOnce(Return(pf));
+
+    auto ret_pf = surface->pixel_format();
+
+    EXPECT_EQ(ret_pf, pf); 
+}
 
