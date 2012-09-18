@@ -302,6 +302,7 @@ struct TestClient
         display_server(&channel),
         connect_done_called(false),
         create_surface_called(false),
+        next_buffer_called(false),
         disconnect_done_called(false),
         tfd_done_called(false),
         connect_done_count(0),
@@ -314,6 +315,7 @@ struct TestClient
 
         ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
         ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
+        ON_CALL(*this, next_buffer_done()).WillByDefault(testing::Invoke(this, &TestClient::on_next_buffer_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
     }
 
@@ -327,6 +329,7 @@ struct TestClient
 
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(create_surface_done, void ());
+    MOCK_METHOD0(next_buffer_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
 
     void on_connect_done()
@@ -345,6 +348,11 @@ struct TestClient
         auto old = create_surface_done_count.load();
 
         while (!create_surface_done_count.compare_exchange_weak(old, old+1));
+    }
+
+    void on_next_buffer_done()
+    {
+        next_buffer_called.store(true);
     }
 
     void on_disconnect_done()
@@ -375,6 +383,17 @@ struct TestClient
         }
         create_surface_called.store(false);
     }
+
+    void wait_for_next_buffer()
+    {
+        for (int i = 0; !next_buffer_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
+        }
+        connect_done_called.store(false);
+    }
+
     void wait_for_disconnect_done()
     {
         for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
@@ -418,6 +437,7 @@ struct TestClient
 
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
+    std::atomic<bool> next_buffer_called;
     std::atomic<bool> disconnect_done_called;
     std::atomic<bool> tfd_done_called;
 
@@ -799,6 +819,14 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     client.wait_for_create_surface();
 
     EXPECT_TRUE(client.surface.has_buffer());
+
+    client.display_server.next_buffer(
+        0,
+        &client.surface.id(),
+        client.surface.mutable_buffer(),
+        google::protobuf::NewCallback(&client, &TestClient::next_buffer_done));
+
+    client.wait_for_next_buffer();
 
     client.display_server.disconnect(
         0,
