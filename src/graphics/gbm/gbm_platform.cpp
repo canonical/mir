@@ -17,9 +17,12 @@
  */
 
 #include "mir/graphics/gbm/gbm_platform.h"
+#include "mir/graphics/gbm/gbm_buffer_allocator.h"
+#include "mir/graphics/gbm/gbm_display.h"
 
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
+namespace mc=mir::compositor;
 
 mgg::GBMPlatform::GBMPlatform()
 {
@@ -30,4 +33,18 @@ mgg::GBMPlatform::GBMPlatform()
 std::shared_ptr<mg::Platform> mg::create_platform()
 {
     return std::make_shared<mgg::GBMPlatform>();
+}
+
+std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
+        const std::shared_ptr<mg::Platform>& platform)
+{
+    return std::make_shared<mgg::GBMBufferAllocator>(
+            std::static_pointer_cast<mgg::GBMPlatform>(platform));
+}
+
+std::shared_ptr<mg::Display> mg::create_display(
+        const std::shared_ptr<Platform>& platform)
+{
+    return std::make_shared<mgg::GBMDisplay>(
+            std::static_pointer_cast<mgg::GBMPlatform>(platform));
 }

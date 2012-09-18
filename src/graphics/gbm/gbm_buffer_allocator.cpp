@@ -50,10 +50,3 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
 
     return std::unique_ptr<mc::Buffer>();
 }
-
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
-        const std::shared_ptr<mg::Platform>& platform)
-{
-    return std::make_shared<mgg::GBMBufferAllocator>(
-            std::static_pointer_cast<mgg::GBMPlatform>(platform));
-}
