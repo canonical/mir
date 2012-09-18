@@ -68,7 +68,7 @@ private:
     void test_file_descriptors(
         google::protobuf::RpcController* controller,
         const mir::protobuf::Void* request,
-        ::mir::protobuf::TestFileDescriptors* response,
+        ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done);
 
     int next_id();

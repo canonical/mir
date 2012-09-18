@@ -31,9 +31,9 @@ message Void {
   optional string error = 127;
 }
 
-message TestFileDescriptors {
+message Buffer {
   repeated sint32 fd = 1;
-  repeated int32  stuff = 2;
+  repeated int32  data = 2;
 
   optional string error = 127;
 }
@@ -43,6 +43,6 @@ service DisplayServer {
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc release_surface(SurfaceId) returns (Void);
-  rpc test_file_descriptors(Void) returns (TestFileDescriptors);
+  rpc test_file_descriptors(Void) returns (Buffer);
 }
 

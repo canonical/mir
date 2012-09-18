@@ -113,7 +113,7 @@ void mir::frontend::ApplicationProxy::disconnect(
 void mir::frontend::ApplicationProxy::test_file_descriptors(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::Void*,
-    ::mir::protobuf::TestFileDescriptors*,
+    ::mir::protobuf::Buffer*,
     ::google::protobuf::Closure* done)
 {
   // TODO

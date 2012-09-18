@@ -101,7 +101,7 @@ struct StubServer : mir::protobuf::DisplayServer
 
     void test_file_descriptors(::google::protobuf::RpcController* ,
                          const ::mir::protobuf::Void* ,
-                         ::mir::protobuf::TestFileDescriptors* fds,
+                         ::mir::protobuf::Buffer* fds,
                          ::google::protobuf::Closure* done)
     {
         for (int i = 0; i != file_descriptors; ++i)
@@ -171,7 +171,7 @@ struct ErrorServer : mir::protobuf::DisplayServer
     void test_file_descriptors(
         google::protobuf::RpcController*,
         const protobuf::Void*,
-        protobuf::TestFileDescriptors*,
+        protobuf::Buffer*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -732,7 +732,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, test_file_descriptors)
     EXPECT_CALL(*server.factory, make_ipc_server()).Times(1);
     server.comm.start();
 
-    mir::protobuf::TestFileDescriptors fds;
+    mir::protobuf::Buffer fds;
 
     client.display_server.test_file_descriptors(0, &client.ignored, &fds,
         google::protobuf::NewCallback(&client, &TestClient::tfd_done));
