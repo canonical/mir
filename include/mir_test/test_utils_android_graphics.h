@@ -34,7 +34,7 @@ class grallocRenderSW
 public:
     grallocRenderSW(); 
     ~grallocRenderSW(); 
-    bool render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, int val );
+    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, int val );
  
 private:
     gralloc_module_t* module;
@@ -46,9 +46,9 @@ class glAnimationBasic
 public:
     glAnimationBasic();
 
-    bool init_gl();    
-    bool render_gl();
-    bool step();
+    void init_gl();    
+    void render_gl();
+    void step();
 
 private:
     GLuint program, vPositionAttr, uvCoord, slideUniform;

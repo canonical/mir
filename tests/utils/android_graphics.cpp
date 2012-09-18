@@ -37,7 +37,7 @@ mt::grallocRenderSW::~grallocRenderSW()
     gralloc_close(alloc_dev);
 }
 
-bool mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
+void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
 {
     auto ipc_pack = res->ipc_package;
 
@@ -77,5 +77,4 @@ bool mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClient
     }
     module->unlock(module, native_handle);
 
-    return true;
 }

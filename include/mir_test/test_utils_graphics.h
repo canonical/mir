@@ -1,4 +1,5 @@
 /*
+    return true;
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,9 +31,9 @@ class glAnimationBasic
 public:
     glAnimationBasic();
 
-    bool init_gl();    
-    bool render_gl();
-    bool step();
+    void init_gl();    
+    void render_gl();
+    void step();
 
 private:
     GLuint program, vPositionAttr, uvCoord, slideUniform;

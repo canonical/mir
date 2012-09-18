@@ -70,7 +70,7 @@ mt::glAnimationBasic::glAnimationBasic()
 {
 }
 
-bool mt::glAnimationBasic::init_gl()
+void mt::glAnimationBasic::init_gl()
 {
     glClearColor(0.0, 1.0, 0.0, 1.0);
 
@@ -106,11 +106,9 @@ bool mt::glAnimationBasic::init_gl()
         GL_RGBA, GL_UNSIGNED_BYTE,
         mir_image.pixel_data);
     slideUniform = glGetUniformLocation(program, "slide");
-    
-    return true;
 }
 
-bool mt::glAnimationBasic::render_gl()
+void mt::glAnimationBasic::render_gl()
 {
     glUseProgram(program);
 
@@ -124,13 +122,11 @@ bool mt::glAnimationBasic::render_gl()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertex);
     glDisableVertexAttribArray(uvCoord);
     glDisableVertexAttribArray(vPositionAttr);
-    return true;
 }
  
-bool mt::glAnimationBasic::step()
+void mt::glAnimationBasic::step()
 {
     slide += 0.01f;
     if (slide > 1.0f)
         slide = 0.0f;
-    return true;
 }
