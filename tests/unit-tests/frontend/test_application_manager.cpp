@@ -33,10 +33,10 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct MockBufferTextureBinder : mc::BufferTextureBinder
+struct MockBufferBundle : mc::BufferBundle
 {
-    MOCK_METHOD0 (lock_and_bind_back_buffer, std::shared_ptr<mg::Texture>(void));
-    MOCK_METHOD0 (unlock_back_buffer, void(void));
+    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
+    MOCK_METHOD0(lock_and_bind_back_buffer, std::shared_ptr<graphics::Texture> ());
 };
 
 struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
