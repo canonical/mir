@@ -75,9 +75,11 @@ struct StubServer : mir::protobuf::DisplayServer
         ::google::protobuf::RpcController* /*controller*/,
         ::mir::protobuf::SurfaceId const* /*request*/,
         ::mir::protobuf::Buffer* /*response*/,
-        ::google::protobuf::Closure* /*done*/)
+        ::google::protobuf::Closure* done)
     {
-        // TODO
+        std::unique_lock<std::mutex> lock(guard);
+        wait_condition.notify_one();
+        done->Run();
     }
 
 
@@ -391,7 +393,7 @@ struct TestClient
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
         }
-        connect_done_called.store(false);
+        next_buffer_called.store(false);
     }
 
     void wait_for_disconnect_done()
@@ -820,13 +822,18 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     EXPECT_TRUE(client.surface.has_buffer());
 
-    client.display_server.next_buffer(
-        0,
-        &client.surface.id(),
-        client.surface.mutable_buffer(),
-        google::protobuf::NewCallback(&client, &TestClient::next_buffer_done));
+    for (int i = 0; i != 8; ++i)
+    {
+        EXPECT_CALL(client, next_buffer_done()).Times(1);
+        client.display_server.next_buffer(
+            0,
+            &client.surface.id(),
+            client.surface.mutable_buffer(),
+            google::protobuf::NewCallback(&client, &TestClient::next_buffer_done));
 
-    client.wait_for_next_buffer();
+        client.wait_for_next_buffer();
+        EXPECT_TRUE(client.surface.has_buffer());
+    }
 
     client.display_server.disconnect(
         0,

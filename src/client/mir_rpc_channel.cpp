@@ -147,7 +147,8 @@ void c::MirRpcChannel::CallMethod(
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
-    if (method->name() == "test_file_descriptors")
+    if (method->name() == "test_file_descriptors"
+        || method->name() == "next_buffer")
     {
         complete = google::protobuf::NewCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete);
     }

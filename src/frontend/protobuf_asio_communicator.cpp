@@ -260,6 +260,10 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         {
             invoke(&protobuf::DisplayServer::create_surface, invocation);
         }
+        else if ("next_buffer" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::next_buffer, invocation);
+        }
         else if ("release_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::release_surface, invocation);
