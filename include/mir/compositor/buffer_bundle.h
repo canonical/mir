@@ -20,8 +20,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
-#include "buffer_texture_binder.h"
-#include "buffer_queue.h"
 #include "buffer.h"
 
 namespace mir
