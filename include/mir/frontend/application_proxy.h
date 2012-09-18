@@ -55,6 +55,12 @@ private:
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done);
 
+    void next_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::SurfaceId const* request,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done);
+
     void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,

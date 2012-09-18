@@ -59,12 +59,30 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_width(surface->width().as_uint32_t());
         response->set_height(surface->height().as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
+
+        auto buffer = response->mutable_buffer();
+        // TODO get current BufferIPCPackage and populate buffer
+        (void)buffer;
     }
 
     surfaces[id] = handle;
 
     done->Run();
 }
+
+void mir::frontend::ApplicationProxy::next_buffer(
+    ::google::protobuf::RpcController* /*controller*/,
+    ::mir::protobuf::SurfaceId const* request,
+    ::mir::protobuf::Buffer* response,
+    ::google::protobuf::Closure* done)
+{
+    auto handle = surfaces[request->value()].lock();
+    // TODO get next BufferIPCPackage and populate response
+    (void)response;
+
+    done->Run();
+}
+
 
 int mir::frontend::ApplicationProxy::next_id()
 {
