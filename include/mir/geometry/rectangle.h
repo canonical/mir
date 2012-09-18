@@ -14,16 +14,44 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_GEOMETRY_RECTANGLE_H_
 #define MIR_GEOMETRY_RECTANGLE_H_
 
+#include "point.h"
+#include "size.h"
+
+#include <ostream>
+
 namespace mir
 {
 namespace geometry
 {
-class Rectangle {/*TODO*/};
+
+struct Rectangle
+{
+    Point top_left;
+    Size size;
+};
+
+inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)
+{
+    return lhs.top_left == rhs.top_left && lhs.size == rhs.size;
+}
+
+inline bool operator != (Rectangle const& lhs, Rectangle const& rhs)
+{
+    return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
+}
+
+inline std::ostream& operator<<(std::ostream& out, Rectangle const& value)
+{
+    out << '(' << value.top_left << ", " << value.size << ')';
+    return out;
+}
+
 }
 }
 
