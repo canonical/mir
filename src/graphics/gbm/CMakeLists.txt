@@ -14,7 +14,11 @@
 #
 # Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
 
-include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
+include_directories(
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+)
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
@@ -29,4 +33,12 @@ add_library(
   gbm_buffer.cpp
   gbm_display_helpers.cpp
   gbm_display.cpp
+)
+
+target_link_libraries(
+  mirplatformgraphics
+
+  ${DRM_LIBRARIES}
+  ${GBM_LIBRARIES}
+  ${EGL_LIBRARIES}
 )

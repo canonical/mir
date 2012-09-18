@@ -15,9 +15,7 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-if (MIR_PLATFORM STREQUAL "android")
-    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES ${ANDROID_UI_LIBRARIES})
-endif()
+include_directories(${GLESv2_INCLUDE_DIRS})
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
@@ -25,7 +23,5 @@ target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
-    ${RENDER_TO_FB_EXTRA_LINK_LIBRARIES}
-    ${EGL_LIBRARIES}
     ${GLESv2_LIBRARIES}
 )
