@@ -43,7 +43,7 @@ inline bool operator != (Size const& lhs, Size const& rhs)
     return lhs.width != rhs.width || lhs.height != rhs.height;
 }
 
-std::ostream& operator<<(std::ostream& out, Size const& value)
+inline std::ostream& operator<<(std::ostream& out, Size const& value)
 {
     out << '(' << value.width << ", " << value.height << ')';
     return out;
