@@ -24,7 +24,9 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle.h"
+
 #include "mir_test/test_utils_android_graphics.h"
+#include "mir_test/test_utils_graphics.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -42,11 +44,12 @@ public:
     {
         allocator = std::make_shared<mga::AndroidBufferAllocator>();
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
-        w = geom::Width(200);
-        h = geom::Height(400);
+        w = geom::Width(gl_animation.texture_width());
+        h = geom::Height(gl_animation.texture_height());
         pf  = mc::PixelFormat::rgba_8888;
     }
  
+    mt::glAnimationBasic gl_animation;
     std::shared_ptr<mga::AndroidBufferAllocator> allocator;
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
     geom::Width  w;
@@ -101,15 +104,11 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
     using namespace testing;
     std::shared_ptr<mg::Display> display;
     display = mg::create_display();
-    mt::glAnimationBasic gl_animation;
     mt::grallocRenderSW sw_renderer;
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
-
-    geom::Width  w(64);
-    geom::Height h(64);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
     auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));

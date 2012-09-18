@@ -34,6 +34,8 @@ public:
     void init_gl();    
     void render_gl();
     void step();
+    int texture_width();
+    int texture_height();
 
 private:
     GLuint program, vPositionAttr, uvCoord, slideUniform;

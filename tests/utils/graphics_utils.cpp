@@ -69,6 +69,15 @@ mt::glAnimationBasic::glAnimationBasic()
    slide(0.0)
 {
 }
+int mt::glAnimationBasic::texture_width()
+{
+    return mir_image.width;
+}
+
+int mt::glAnimationBasic::texture_height()
+{
+    return mir_image.height;
+}
 
 void mt::glAnimationBasic::init_gl()
 {

@@ -41,20 +41,6 @@ private:
     alloc_device_t* alloc_dev;
 };
 
-class glAnimationBasic
-{
-public:
-    glAnimationBasic();
-
-    void init_gl();    
-    void render_gl();
-    void step();
-
-private:
-    GLuint program, vPositionAttr, uvCoord, slideUniform;
-    float slide;
-};
-
 }
 }
 
