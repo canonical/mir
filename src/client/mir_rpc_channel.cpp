@@ -19,7 +19,7 @@
 
 #include "mir_client/mir_rpc_channel.h"
 
-#include "mir_protobuf.pb.h"  // For TestFileDescriptors frig
+#include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
 #include "ancillary.h"
@@ -126,7 +126,7 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
     while ((received = ancil_recv_fds(socket.native_handle(), buffer, size)) == -1)
         /* TODO avoid spinning forever */;
 
-    if (auto tfd = dynamic_cast<mir::protobuf::TestFileDescriptors*>(response))
+    if (auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response))
     {
         tfd->clear_fd();
 
@@ -147,7 +147,8 @@ void c::MirRpcChannel::CallMethod(
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
-    if (method->name() == "test_file_descriptors")
+    if (method->name() == "test_file_descriptors"
+        || method->name() == "next_buffer")
     {
         complete = google::protobuf::NewCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete);
     }

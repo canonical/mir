@@ -88,7 +88,7 @@ struct ErrorServer : mir::protobuf::DisplayServer
     void test_file_descriptors(
         google::protobuf::RpcController*,
         const protobuf::Void*,
-        protobuf::TestFileDescriptors*,
+        protobuf::Buffer*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
