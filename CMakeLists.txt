@@ -72,6 +72,9 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
+find_package(EGL REQUIRED)
+find_package(GLESv2 REQUIRED)
+
 if (MIR_PLATFORM STREQUAL "android")
   find_package( LibHardware REQUIRED )
   if (LIBHARDWARE_FOUND)
