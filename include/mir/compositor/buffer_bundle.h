@@ -20,25 +20,26 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
-#include "buffer.h"
-
 namespace mir
 {
 namespace compositor
 {
 class BufferSwapper;
+class BufferIPCPackage;
 
-class BufferBundle : public BufferTextureBinder,
-    public BufferQueue
+struct GraphicBufferClientResource
+{
+    std::shared_ptr<BufferIPCPackage> ipc_package;
+};
+
+class BufferBundle
 {
 public:
     explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
     ~BufferBundle();
 
-    /* from BufferQueue */
     std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
 
-    /* from BufferTextureBinder */
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
 
