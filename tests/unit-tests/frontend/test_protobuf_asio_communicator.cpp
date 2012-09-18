@@ -776,7 +776,9 @@ TEST_F(ProtobufErrorTestFixture, create_surface_exception)
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        getting_and_advancing_buffers)
 {
-    EXPECT_CALL(client, create_surface_done()).Times(1);
+    EXPECT_CALL(client, create_surface_done()).Times(testing::AtLeast(0));
+    EXPECT_CALL(client, disconnect_done()).Times(testing::AtLeast(0));
+
     client.display_server.create_surface(
         0,
         &client.surface_parameters,
@@ -785,7 +787,8 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     client.wait_for_create_surface();
 
-    EXPECT_CALL(client, disconnect_done()).Times(1);
+    EXPECT_TRUE(client.surface.has_buffer());
+
     client.display_server.disconnect(
         0,
         &client.ignored,
