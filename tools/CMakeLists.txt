@@ -16,7 +16,7 @@
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 if (MIR_PLATFORM STREQUAL "android")
-    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES ui)
+    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES ${ANDROID_UI_LIBRARIES})
 endif()
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
@@ -26,6 +26,6 @@ target_link_libraries(
 
     mirplatformgraphics
     ${RENDER_TO_FB_EXTRA_LINK_LIBRARIES}
-    EGL
-    GLESv2
+    ${EGL_LIBRARIES}
+    ${GLESv2_LIBRARIES}
 )

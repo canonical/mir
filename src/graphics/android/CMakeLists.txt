@@ -29,5 +29,5 @@ add_library(
 target_link_libraries(
   mirplatformgraphics
 
-  hardware
+  ${LIBHARDWARE_LIBRARIES}
 )
