@@ -1,7 +1,4 @@
 /*
-    display.reset();
-
-    auto d2 = mg::create_display();
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify

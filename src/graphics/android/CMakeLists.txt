@@ -29,5 +29,4 @@ target_link_libraries(
   mirplatformgraphics
 
   hardware
-  GLESv2
 )

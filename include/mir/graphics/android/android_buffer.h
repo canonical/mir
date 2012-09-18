@@ -61,10 +61,10 @@ public:
 
 private:
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
+    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
 };
 
 }

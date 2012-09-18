@@ -1,4 +1,6 @@
 /*
+#include <system/window.h>
+#include <hardware/gralloc.h>
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,12 +26,8 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir_test/test_utils_android_graphics.h"
 
-#include "../tools/mir_image.h"
-#include <GLES2/gl2.h>
-#include <stdexcept>
 #include <gtest/gtest.h>
-#include <system/window.h>
-#include <hardware/gralloc.h>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry; 

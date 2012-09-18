@@ -44,14 +44,12 @@ mc::Buffer* mc::BufferSwapperDouble::client_acquire()
     Buffer* dequeued_buffer = client_queue.front();
     client_queue.pop();
 
-    //printf("CLIENT GOT 0x%X\n", (int)dequeued_buffer);
     return dequeued_buffer;
 }
 
 void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    //printf("CLIENT RELEASE 0x%X\n", (int) queued_buffer);
 
     while (!compositor_has_consumed)
     {
@@ -79,7 +77,6 @@ mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
 
     compositor_has_consumed = true;
     consumed_cv.notify_one();
-    //printf("COMPGOT 0x%X\n", (int)last_posted);
     return last_posted;
 }
 
