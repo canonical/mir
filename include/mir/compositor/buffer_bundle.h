@@ -43,21 +43,12 @@ struct GraphicBufferClientResource
 class BufferBundle
 {
 public:
-    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
-    ~BufferBundle();
-
-    std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
-
-    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
-
+    virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
+    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
 
 protected:
     BufferBundle(const BufferBundle&) = delete;
     BufferBundle& operator=(const BufferBundle&) = delete;
-
-private:
-    std::unique_ptr<BufferSwapper> swapper;
-
 };
 
 }
