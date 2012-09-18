@@ -28,12 +28,12 @@ namespace ms = mir::surfaces;
 
 ms::Surface::Surface(
     const ms::SurfaceCreationParameters& params,
-    std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder) :
+    std::shared_ptr<mc::BufferBundle> buffer_bundle) :
     params(params),
-    buffer_texture_binder(buffer_texture_binder)
+    buffer_bundle(buffer_bundle)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
-    assert(buffer_texture_binder);
+    assert(buffer_bundle);
 }
 
 std::string const& ms::Surface::name() const

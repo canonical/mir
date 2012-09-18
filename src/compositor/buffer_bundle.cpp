@@ -16,6 +16,8 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
+
+#include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"

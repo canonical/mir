@@ -20,8 +20,16 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
+#include <memory>
+
 namespace mir
 {
+
+namespace graphics
+{
+class Texture;
+}
+
 namespace compositor
 {
 class BufferSwapper;

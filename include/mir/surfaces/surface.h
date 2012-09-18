@@ -30,7 +30,7 @@ namespace mir
 {
 namespace compositor
 {
-class BufferTextureBinder;
+class BufferBundle;
 struct BufferIPCPackage;
 }
 
@@ -62,7 +62,7 @@ class Surface : public graphics::Renderable
 {
  public:
     Surface(const SurfaceCreationParameters& params,
-            std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
+            std::shared_ptr<compositor::BufferBundle> buffer_bundle);
 
     std::string const& name() const;
     geometry::Width width() const;
@@ -73,7 +73,7 @@ class Surface : public graphics::Renderable
 
  private:
     SurfaceCreationParameters params;
-    std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
+    std::shared_ptr<compositor::BufferBundle> buffer_bundle;
 };
 
 }
