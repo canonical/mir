@@ -1,4 +1,7 @@
 /*
+    display.reset();
+
+    auto d2 = mg::create_display();
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -90,7 +93,11 @@ bool mga::AndroidDisplay::post_update()
 
 std::shared_ptr<mg::Display> mg::create_display()
 {
-    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) new ::android::FramebufferNativeWindow);
+    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) android_createDisplaySurface());
+    //note: known bug on OMAP4 hardware that pops up in test suite. framebuffer_open()/close()/open() 
+    // causes segfault
+    if (!android_window.get())
+        throw std::runtime_error("could not open FB window");
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);
