@@ -17,7 +17,7 @@
  */
 
 #include "mir/surfaces/surface_stack.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/geometry/rectangle.h"
@@ -70,7 +70,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                 .WillByDefault(
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
-                                new mc::BufferBundle(
+                                new mc::BufferBundleSurfaces(
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
@@ -104,7 +104,7 @@ TEST(
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundle buffer_bundle(std::move(swapper_handle));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
     MockBufferBundleFactory buffer_bundle_factory;
 
     EXPECT_CALL(

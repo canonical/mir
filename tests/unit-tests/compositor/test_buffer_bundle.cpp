@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 
 #include "mir_test/mock_swapper.h"
