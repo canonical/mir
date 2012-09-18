@@ -22,6 +22,7 @@
 #include <stdexcept>
 namespace mt=mir::test;
 namespace mc=mir::compositor;
+namespace geom=mir::geometry;
 
 mt::grallocRenderSW::grallocRenderSW()
 {
@@ -37,9 +38,12 @@ mt::grallocRenderSW::~grallocRenderSW()
     gralloc_close(alloc_dev);
 }
 
-void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, int val)
+void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Width w, geom::Height h, int val)
 {
     auto ipc_pack = res->ipc_package;
+
+    int width =  w.as_uint32_t(); 
+    int height = h.as_uint32_t();
 
     /* reconstruct the native_window_t */
     native_handle_t* native_handle;
@@ -66,13 +70,13 @@ void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClient
     
     int ret;
     ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
-                0, 0, 64, 64, (void**) &buffer_vaddr);
+                0, 0, width, height, (void**) &buffer_vaddr);
     int j;
-    for(i=0; i<64; i++)
+    for(i=0; i<width; i++)
     {
-        for(j=0; j<64; j++)
+        for(j=0; j<height; j++)
         {        
-            buffer_vaddr[64*i + j] = val;
+            buffer_vaddr[width*i + j] = val;
         }
     }
     module->unlock(module, native_handle);

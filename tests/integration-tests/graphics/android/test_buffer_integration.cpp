@@ -37,6 +37,8 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics; 
 namespace mt=mir::test;
 
+std::shared_ptr<mg::Display> display;
+
 class AndroidBufferIntegration : public ::testing::Test
 {
 public:
@@ -56,6 +58,37 @@ public:
     geom::Height h;
     mc::PixelFormat pf;
 };
+
+TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
+{
+    using namespace testing;
+
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+
+    auto buffer = swapper->compositor_acquire();
+    EXPECT_THROW({
+    buffer->bind_to_texture();
+    }, std::runtime_error);
+
+}
+
+TEST_F(AndroidBufferIntegration, init_does_not_throw)
+{
+    EXPECT_NO_THROW(
+    {
+        display = mg::create_display();
+    });
+}
+
+TEST_F(AndroidBufferIntegration, post_does_not_throw)
+{
+    using namespace testing;
+
+    EXPECT_NO_THROW(
+    {
+        display->post_update();
+    });
+}
 
 TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 {
@@ -86,24 +119,9 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
 
-TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
-{
-    using namespace testing;
-
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-
-    auto buffer = swapper->compositor_acquire();
-    EXPECT_THROW({
-    buffer->bind_to_texture();
-    }, std::runtime_error);
-
-}
-
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display;
-    display = mg::create_display();
     mt::grallocRenderSW sw_renderer;
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
@@ -124,7 +142,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 #endif
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, 0xFF0000FF);
+        sw_renderer.render_pattern(client_buffer, w, h, 0xFF0000FF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
@@ -136,7 +154,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, 0x0000FFFF);
+        sw_renderer.render_pattern(client_buffer, w, h, 0x0000FFFF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
