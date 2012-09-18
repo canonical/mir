@@ -93,6 +93,38 @@ public:
     {
         return !surface.has_error();
     }
+
+    void populate(MirBufferPackage& buffer_package)
+    {
+        if (is_valid() && surface.has_buffer())
+        {
+            auto const& buffer = surface.buffer();
+
+            buffer_package.data_items = buffer.data_size();
+            for (int i = 0; i != buffer.data_size(); ++i)
+                buffer_package.data[i] = buffer.data(i);
+
+            buffer_package.fd_items = buffer.fd_size();
+            for (int i = 0; i != buffer.fd_size(); ++i)
+                buffer_package.fd[i] = buffer.fd(i);
+        }
+        else
+        {
+            buffer_package.data_items = 0;
+            buffer_package.fd_items = 0;
+        }
+    }
+
+    void next_buffer(mir_surface_lifecycle_callback callback, void * context)
+    {
+        server.next_buffer(
+            0,
+            &surface.id(),
+            surface.mutable_buffer(),
+            google::protobuf::NewCallback(callback, this, context));
+    }
+
+
 private:
 
     void released(mir_surface_lifecycle_callback callback, void * context)
@@ -271,24 +303,13 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_advance_buffer(MirSurface *,
-                                mir_buffer_advanced_callback callback,
-                                void * context)
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
 {
-    callback(NULL, context);
+    surface->populate(*buffer_package);
 }
 
-int mir_buffer_is_valid(MirBuffer *)
+void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
-    return 0;
+    surface->next_buffer(callback, context);
 }
 
-char const * mir_buffer_get_error_message(MirBuffer *)
-{
-    return "not yet implemented!";
-}
-
-int mir_buffer_get_next_vblank_microseconds(MirBuffer *)
-{
-    return -1;
-}
