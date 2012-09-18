@@ -31,8 +31,8 @@ namespace compositor
 class BufferBundleSurfaces : public BufferBundle
 {
 public:
-    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
-    ~BufferBundle();
+    explicit BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper);
+    ~BufferBundleSurfaces();
 
     std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
 
@@ -40,8 +40,8 @@ public:
 
 
 protected:
-    BufferBundle(const BufferBundle&) = delete;
-    BufferBundle& operator=(const BufferBundle&) = delete;
+    BufferBundleSurfaces(const BufferBundleSurfaces&) = delete;
+    BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
 
 private:
     std::unique_ptr<BufferSwapper> swapper;

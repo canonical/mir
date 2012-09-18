@@ -18,7 +18,7 @@
  */
 
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/graphics/texture.h"
@@ -73,17 +73,17 @@ private:
 };
 }
 
-mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
     :
     swapper(std::move(swapper))
 {
 }
 
-mc::BufferBundle::~BufferBundle()
+mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
+std::shared_ptr<mir::graphics::Texture> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
 {
     auto compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->bind_to_texture();
@@ -93,7 +93,7 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
 
