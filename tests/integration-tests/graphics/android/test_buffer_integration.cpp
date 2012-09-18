@@ -167,3 +167,10 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 
 }
 
+TEST_F(AndroidBufferIntegration, display_cleanup_ok)
+{
+    EXPECT_NO_THROW(
+    {
+        display.reset();
+    });
+}
