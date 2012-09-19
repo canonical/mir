@@ -17,10 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_
-#define MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_
-
-#include "mir_client/client_buffer.h"
+#ifndef MIR_CLIENT_CLIENT_BUFFER_H_
+#define MIR_CLIENT_CLIENT_BUFFER_H_
 
 
-#endif /* MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_ */
+#endif /* MIR_CLIENT_CLIENT_BUFFER_H_ */
