@@ -22,16 +22,40 @@ namespace mcl=mir::client;
 
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
                                               std::shared_ptr<MirBufferPackage> && package )
- : buffer_registrar(registrar),
-   buffer_package(std::move(package))
+ : buffer_registrar(registrar)
 {
-    native_handle = 0x0;
+    auto buffer_package = std::move(package);
+    native_handle = convert_to_native_handle(buffer_package);
+
     buffer_registrar->register_buffer(native_handle);
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
 {
     buffer_registrar->unregister_buffer(native_handle);
+    free(native_handle);
+}
+
+native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)
+{
+    int native_handle_header_size = 3;
+    int total = package->fd.size() + package->data.size() + native_handle_header_size;
+    native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
+
+    handle->numFds  = package->fd.size();
+    handle->numInts = package->data.size();
+
+    int i=0;
+    for(auto it= package->fd.begin(); it != package->fd.end(); it++)
+    {
+        handle->data[i++] = *it;
+    } 
+    for(auto it= package->fd.begin(); it != package->fd.end(); it++)
+    {
+        handle->data[i++] = *it;
+    } 
+
+    return handle;
 }
 
 struct MemoryRegionDeleter
