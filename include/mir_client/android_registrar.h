@@ -30,9 +30,8 @@ namespace client
 class AndroidRegistrar
 {
 public:
-    AndroidRegistrar() {}
     /* todo, should be weak_ptr? */
-    void register_buffer(std::shared_ptr<MirBufferPackage> package);
+    virtual void register_buffer(std::shared_ptr<MirBufferPackage> package) = 0;
 };
 
 }
