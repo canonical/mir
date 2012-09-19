@@ -60,12 +60,18 @@ mc::PixelFormat ms::Surface::pixel_format() const
     return buffer_bundle->get_bundle_pixel_format();
 }
 
-std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() const
+std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package()
 {
-    auto graphics_resource = buffer_bundle->secure_client_buffer();
+    graphics_resource = buffer_bundle->secure_client_buffer();
+
+    /* at this point, the ipc code sends the data outside of the server.
+       we must hold a reference (graphics_resource) to the resource on behalf
+       of the client until it is returned to us */
     return graphics_resource->ipc_package;
 }
 
+
+/* todo: kdub: split into different file */
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
     name = new_name;

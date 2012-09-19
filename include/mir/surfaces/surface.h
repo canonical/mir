@@ -31,6 +31,7 @@ namespace mir
 namespace compositor
 {
 class BufferBundle;
+class GraphicBufferClientResource;
 struct BufferIPCPackage;
 }
 
@@ -68,11 +69,12 @@ class Surface : public graphics::Renderable
     geometry::Width width() const;
     geometry::Height height() const;
     compositor::PixelFormat pixel_format() const;
-    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package() const;
+    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 
  private:
     std::string surface_name;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
+    std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;
 };
 
 }
