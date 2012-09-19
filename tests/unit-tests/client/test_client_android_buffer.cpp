@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 
+namespace mcl=mir::client;
+
 class ClientAndroidBufferTest : public ::testing::Test
 {
 protected:
@@ -30,5 +32,7 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
+    std::shared_ptr<mcl::ClientBuffer> buffer = std::make_shared<mcl::AndroidClientBuffer>();
+    EXPECT_NE((int) buffer.get(), NULL);
 }
 
