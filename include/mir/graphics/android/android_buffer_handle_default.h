@@ -1,5 +1,4 @@
 /*
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,6 +16,7 @@
  * Authored by:
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
+
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
 

@@ -1,6 +1,4 @@
 /*
-#include <system/window.h>
-#include <hardware/gralloc.h>
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -120,7 +118,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
 
-TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
+TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
     mt::grallocRenderSW sw_renderer;
@@ -136,11 +134,34 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
 
     std::shared_ptr<mg::Texture> texture_res;
 
-#define REPEAT 0
-#if REPEAT
+    auto client_buffer = bundle->secure_client_buffer();
+    sw_renderer.render_pattern(client_buffer, w, h, 0xFF0000FF);
+    client_buffer.reset();
+
+    texture_res = bundle->lock_and_bind_back_buffer();
+    gl_animation.render_gl();
+    display->post_update();
+    texture_res.reset();
+}
+
+TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
+{
+    using namespace testing;
+    mt::grallocRenderSW sw_renderer;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+
+    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+
+    gl_animation.init_gl();
+
+    std::shared_ptr<mg::Texture> texture_res;
+
     for(;;)
     {
-#endif
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
         sw_renderer.render_pattern(client_buffer, w, h, 0xFF0000FF);
@@ -150,7 +171,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
-#if REPEAT
         sleep(1);
 
         /* buffer 1 */
@@ -164,7 +184,6 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context_repeat)
         texture_res.reset();
         sleep(1);
     }
-#endif
 
 }
 
