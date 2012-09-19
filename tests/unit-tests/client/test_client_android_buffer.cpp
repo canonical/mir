@@ -69,7 +69,7 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
 }
 
-TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
+TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
 {
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
 
@@ -78,3 +78,19 @@ TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
 
     buffer->secure_for_cpu_write();
 }
+
+TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
+{
+    using namespace testing;
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    char * vaddr = (char*) 0x8534;
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
+        .Times(1)
+        .WillOnce(Return(vaddr));
+
+    auto region = buffer->secure_for_cpu_write();
+    EXPECT_EQ(vaddr, region.vaddr);
+}
+
