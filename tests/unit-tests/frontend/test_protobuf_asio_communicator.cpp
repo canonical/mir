@@ -821,10 +821,10 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     client.wait_for_create_surface();
 
     EXPECT_TRUE(client.surface.has_buffer());
+    EXPECT_CALL(client, next_buffer_done()).Times(8);
 
     for (int i = 0; i != 8; ++i)
     {
-        EXPECT_CALL(client, next_buffer_done()).Times(1);
         client.display_server.next_buffer(
             0,
             &client.surface.id(),
