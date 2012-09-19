@@ -67,3 +67,13 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
  
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
 }
+
+TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
+{
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+
+    EXPECT_CALL(*mock_android_registrar, registrar_get_vaddr(package))
+        .Times(1);
+
+    buffer.secure_for_write();
+}
