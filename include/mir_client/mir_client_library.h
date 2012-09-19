@@ -66,9 +66,20 @@ typedef struct MirSurfaceParameters
     MirPixelFormat pixel_format;
 } MirSurfaceParameters;
 
+enum { mir_buffer_package_max = 32 };
+
+typedef struct MirBufferPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_buffer_package_max];
+    int fd[mir_buffer_package_max];
+} MirBufferPackage;
+
 typedef struct MirSurface MirSurface;
 
-typedef void (* mir_surface_lifecycle_callback)(MirSurface * surface, void * client_context);
+typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 void mir_surface_create(MirConnection * connection,
@@ -86,30 +97,15 @@ char const * mir_surface_get_error_message(MirSurface * surface);
 /* Get a valid surface's parameters. */
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters);
 
+/* Get a surface's buffer. */
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+
+/* Advance a surface's buffer. */
+void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context);
+
 /* Release the supplied surface and any associated buffer. */
 void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
 
-/* Graphics buffer API */
-typedef struct MirBuffer MirBuffer;
-
-typedef void (* mir_buffer_advanced_callback)(MirBuffer * buffer, void * client_context);
-
-/* Advance the surface's buffer. Calling this function releases any current
-   surface buffer and registers a callback for the next buffer, when available.
- */
-void mir_surface_advance_buffer(MirSurface * surface,
-                                mir_buffer_advanced_callback callback,
-                                void * client_context);
-
-int mir_buffer_is_valid(MirBuffer * buffer);
-
-/* Returns a text description of any error resulting in an invalid buffer,
-   or the empty string "" if the buffer is valid. */
-char const * mir_buffer_get_error_message(MirBuffer * buffer);
-
-/* Returns the number of microseconds, from now, before the next vblank
-   event. */
-int mir_buffer_get_next_vblank_microseconds(MirBuffer * buffer);
 
 /* Return the id of the surface. (Only useful for debug output.) */
 int mir_debug_surface_id(MirSurface * surface);
