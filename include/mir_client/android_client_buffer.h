@@ -34,6 +34,7 @@ class AndroidClientBuffer : public ClientBuffer
 {
 public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> );
+    ~AndroidClientBuffer();
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
