@@ -33,7 +33,8 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
-    auto buffer = std::make_shared<mcl::AndroidClientBuffer>();
+    mcl::MirBufferPackage package ;
+    auto buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
     EXPECT_NE((int) buffer.get(), NULL);
 }
 
