@@ -121,8 +121,8 @@ public:
         , log(log)
     {
         {
-            unique_lock<mutex> lock(connection_guard);
-            valid_connections.insert(static_cast<void *>(this));
+            lock_guard<mutex> lock(connection_guard);
+            valid_connections.insert(this);
         }
         connect_result.set_error("connect not called");
     }
@@ -130,8 +130,8 @@ public:
     ~MirConnection()
     {
         {
-            unique_lock<mutex> lock(connection_guard);
-            valid_connections.erase(static_cast<void *>(this));
+            lock_guard<mutex> lock(connection_guard);
+            valid_connections.erase(this);
         }
     }
 
@@ -185,8 +185,11 @@ public:
 
     static bool is_valid(MirConnection *connection)
     {
-        if (valid_connections.count(static_cast<void *>(connection)) != 1)
-            return false;
+        {
+            lock_guard<mutex> lock(connection_guard);
+            if (valid_connections.count(connection) == 0)
+               return false;
+        }
 
         return !connection->connect_result.has_error();
     }
@@ -214,11 +217,11 @@ private:
     std::set<MirSurface *> surfaces;
 
     static mutex connection_guard;
-    static std::unordered_set<void *> valid_connections;
+    static std::unordered_set<MirConnection *> valid_connections;
 };
 
 mutex MirConnection::connection_guard;
-std::unordered_set<void *> MirConnection::valid_connections;
+std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
 void mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
