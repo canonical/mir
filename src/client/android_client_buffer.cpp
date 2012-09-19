@@ -33,10 +33,11 @@ mcl::AndroidClientBuffer::~AndroidClientBuffer()
     buffer_registrar->unregister_buffer(buffer_package);
 }
 
-mcl::MemoryRegion mcl::AndroidClientBuffer::secure_for_cpu_write()
+std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
-    MemoryRegion region;
-    region.vaddr = buffer_registrar->secure_for_cpu(buffer_package);
+    char* vaddr = buffer_registrar->secure_for_cpu(buffer_package);
+    auto region = std::make_shared<mcl::MemoryRegion>();
+    region->vaddr = vaddr;
 
     return region;
 }

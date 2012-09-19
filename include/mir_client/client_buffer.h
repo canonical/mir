@@ -38,7 +38,7 @@ struct MemoryRegion
 
 class ClientBuffer
 {
-    virtual MemoryRegion secure_for_cpu_write() = 0;
+    virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
 };
 
 }

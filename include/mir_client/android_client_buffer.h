@@ -36,7 +36,7 @@ public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> );
     ~AndroidClientBuffer();
     
-    MemoryRegion secure_for_cpu_write();
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
