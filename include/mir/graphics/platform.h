@@ -50,13 +50,6 @@ public:
 // Create and return a new graphics platform.
 std::shared_ptr<Platform> create_platform();
 
-// Create and return a new graphics buffer allocator.
-std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<Platform>& platform);
-
-//Create and return a new graphics display
-std::shared_ptr<Display> create_display(
-        const std::shared_ptr<Platform>& platform);
 }
 }
 

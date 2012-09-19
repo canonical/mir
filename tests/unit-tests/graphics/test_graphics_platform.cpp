@@ -56,7 +56,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
     EXPECT_NO_THROW (
         auto platform = mg::create_platform();
-        auto allocator = mg::create_buffer_allocator(platform);
+        auto allocator = platform->create_buffer_allocator();
 
         EXPECT_TRUE(allocator.get());
     );
@@ -66,7 +66,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = mg::create_platform();
-    auto allocator = mg::create_buffer_allocator(platform);
+    auto allocator = platform->create_buffer_allocator();
     geom::Width w(320);
     geom::Height h(240);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);

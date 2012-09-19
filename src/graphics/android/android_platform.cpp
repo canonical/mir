@@ -45,15 +45,3 @@ std::shared_ptr<mg::Platform> mg::create_platform()
 {
     return std::make_shared<mga::AndroidPlatform>();
 }
-
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
-        const std::shared_ptr<Platform>& platform)
-{
-    return platform->create_buffer_allocator();
-}
-
-std::shared_ptr<mg::Display> mg::create_display(
-        const std::shared_ptr<Platform>& platform)
-{
-    return platform->create_display();
-}
