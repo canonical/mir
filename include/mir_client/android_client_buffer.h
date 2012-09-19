@@ -13,22 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android_client_buffer.h"
+#ifndef MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_
+#define MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_
 
-#include <gtest/gtest.h>
 
-class ClientAndroidBufferTest : public ::testing::Test
-{
-protected:
-    virtual void SetUp()
-    {
-    }
-};
 
-TEST_F(ClientAndroidBufferTest, client_init)
-{
-}
-
+#endif /* MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_ */
