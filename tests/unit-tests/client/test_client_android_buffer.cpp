@@ -45,7 +45,7 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
     EXPECT_NE((int) buffer.get(), NULL);
 }
 
@@ -54,5 +54,5 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle)
     EXPECT_CALL(*mock_android_registrar, register_buffer(package))
         .Times(1);
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
 }

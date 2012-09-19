@@ -28,6 +28,7 @@ set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
+  android_client_buffer.cpp
   mir_rpc_channel.cpp
   ${PROTO_HDRS}
 )
