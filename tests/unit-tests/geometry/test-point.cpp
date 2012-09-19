@@ -13,31 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace geom = mir::geometry;
 
-TEST(geometry, size)
+TEST(geometry, point)
 {
     using namespace geom;
-    Size const size2x4{Width(2), Height(4)};
+    Point const pointx2y4{X(2), Y(4)};
 
-    EXPECT_EQ(Width(2), size2x4.width);
-    EXPECT_EQ(Height(4), size2x4.height);
+    EXPECT_EQ(X(2), pointx2y4.x);
+    EXPECT_EQ(Y(4), pointx2y4.y);
 
-    Size const copy = size2x4;
-    EXPECT_EQ(Width(2), copy.width);
-    EXPECT_EQ(Height(4), copy.height);
-    EXPECT_EQ(size2x4, copy);
+    Point const copy = pointx2y4;
+    EXPECT_EQ(X(2), copy.x);
+    EXPECT_EQ(Y(4), copy.y);
+    EXPECT_EQ(pointx2y4, copy);
 
-    Size const defaultValue;
-    EXPECT_EQ(Width(0), defaultValue.width);
-    EXPECT_EQ(Height(0), defaultValue.height);
-    EXPECT_NE(size2x4, defaultValue);
+    Point const defaultValue;
+    EXPECT_EQ(X(0), defaultValue.x);
+    EXPECT_EQ(Y(0), defaultValue.y);
+    EXPECT_NE(pointx2y4, defaultValue);
 }
