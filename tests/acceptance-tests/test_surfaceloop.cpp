@@ -19,6 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
@@ -41,9 +42,22 @@ char const* const mir_test_socket = mir::test_socket_file().c_str();
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
+    MockBufferAllocationStrategy()
+    {
+        using testing::_;
+        ON_CALL(*this, create_swapper(_,_,_))
+            .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
+    }
+
     MOCK_METHOD3(
         create_swapper,
         std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
+
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Width, geom::Height, mc::PixelFormat)
+    {
+        return std::unique_ptr<mc::BufferSwapper>(
+            new mc::BufferSwapperDouble(std::unique_ptr<mc::Buffer>(), std::unique_ptr<mc::Buffer>()));
+    }
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
