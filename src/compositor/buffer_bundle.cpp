@@ -71,24 +71,16 @@ mc::BufferBundle::~BufferBundle()
 
 std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
 {
-    auto compositor_buffer = swapper->compositor_acquire();
-    compositor_buffer->bind_to_texture();
-
-    std::shared_ptr<Buffer> bptr{compositor_buffer, CompositorReleaseDeleter(swapper.get())};
+    std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
+    bptr->bind_to_texture();
 
     return std::make_shared<mg::Texture>(bptr);
 }
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
 {
-    auto client_buffer = swapper->client_acquire();
+    std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
 
-    std::shared_ptr<Buffer> bptr{client_buffer, ClientReleaseDeleter(swapper.get())};
-
-    GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
-    graphics_resource->ipc_package = client_buffer->get_ipc_package();
-    graphics_resource->buffer = bptr;
-
-    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource);
+    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr);
 }
 
