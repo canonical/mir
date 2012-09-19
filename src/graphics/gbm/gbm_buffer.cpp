@@ -78,8 +78,9 @@ mc::PixelFormat mgg::GBMBuffer::pixel_format() const
 
 std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 {
-    /* todo: return real IPC package */
-    return std::make_shared<mc::BufferIPCPackage>(); 
+    auto temp = std::make_shared<mc::BufferIPCPackage>();
+    temp->ipc_data.push_back(gbm_bo_get_handle(gbm_handle.get()).u32);
+    return temp;
 }
 
 void mgg::GBMBuffer::bind_to_texture()

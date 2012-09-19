@@ -18,8 +18,11 @@
 
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mock_gbm.h"
+
+#include <gbm.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -116,4 +119,33 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
 
     ASSERT_LE(minimum, buffer->stride());
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_handle(_))
+            .Times(Exactly(1));
+
+    auto buffer = allocator->alloc_buffer(width, height, pf);
+    auto ipc_package = buffer->get_ipc_package();
+    ASSERT_TRUE(ipc_package->ipc_fds.empty());
+    ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
+{
+    using namespace testing;
+
+    gbm_bo_handle mock_handle;
+    mock_handle.u32 = 0xdeadbeef;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_handle(_))
+            .Times(Exactly(1))
+            .WillOnce(Return(mock_handle));
+
+    auto buffer = allocator->alloc_buffer(width, height, pf);
+    auto ipc_package = buffer->get_ipc_package();
+    ASSERT_EQ(mock_handle.u32, static_cast<uint32_t>(ipc_package->ipc_data[0]));
 }
