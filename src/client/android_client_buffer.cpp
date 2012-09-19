@@ -33,11 +33,33 @@ mcl::AndroidClientBuffer::~AndroidClientBuffer()
     buffer_registrar->unregister_buffer(buffer_package);
 }
 
+
+struct MemoryRegionDeleter
+{
+    MemoryRegionDeleter(std::shared_ptr<mcl::AndroidRegistrar> reg,
+                       std::shared_ptr<mcl::MirBufferPackage> pack)
+     : package(pack),
+       registrar(reg)
+    {}
+
+    void operator()(mcl::MemoryRegion *reg)
+    {
+        registrar->release_from_cpu(package);
+        delete reg;
+    }
+private:
+    const std::shared_ptr<mcl::MirBufferPackage> package;
+    const std::shared_ptr<mcl::AndroidRegistrar> registrar;
+};
+
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
     char* vaddr = buffer_registrar->secure_for_cpu(buffer_package);
-    auto region = std::make_shared<mcl::MemoryRegion>();
-    region->vaddr = vaddr;
+
+    MemoryRegion *region_raw = new mcl::MemoryRegion{0, 0, vaddr, 0};
+
+    MemoryRegionDeleter del(buffer_registrar, buffer_package);
+    std::shared_ptr<mcl::MemoryRegion> region(region_raw, del);
 
     return region;
 }
