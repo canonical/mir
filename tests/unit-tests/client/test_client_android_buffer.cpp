@@ -94,3 +94,16 @@ TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
     EXPECT_EQ(vaddr, region.vaddr);
 }
 
+TEST_F(ClientAndroidBufferTest, region_is_released)
+{
+    using namespace testing;
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
+        .Times(1);
+
+    auto region = buffer->secure_for_cpu_write();
+    EXPECT_NE((int) region.get(), NULL);
+
+}
