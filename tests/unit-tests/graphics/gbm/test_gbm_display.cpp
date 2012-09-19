@@ -15,6 +15,7 @@
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
+#include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
 #include "mir_test/egl_mock.h"
 #include "mock_drm.h"
@@ -157,7 +158,8 @@ TEST_F(GBMDisplayTest, create_display)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
     });
 }
 
@@ -194,7 +196,8 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
     });
 }
 
@@ -203,15 +206,16 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmOpen(_,_))
-        .Times(Exactly(1))
-        .WillOnce(Return(-1));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(-1));
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(0));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
     }, std::runtime_error);
 }
 
@@ -231,7 +235,8 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
     }, std::runtime_error);
 }
 
@@ -246,19 +251,13 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
     EXPECT_CALL(mock_gbm, gbm_device_destroy(_))
         .Times(Exactly(0));
 
-    {
-        InSequence s;
-
-        EXPECT_CALL(mock_drm, drmModeFreeResources(_))
-            .Times(Exactly(1));
-
-        EXPECT_CALL(mock_drm, drmClose(_))
-            .Times(Exactly(1));
-    }
+    EXPECT_CALL(mock_drm, drmClose(_))
+        .Times(Exactly(1));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
     }, std::runtime_error);
 }
 
@@ -291,7 +290,8 @@ TEST_F(GBMDisplayTest, post_update)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
         EXPECT_TRUE(display->post_update());
     });
 }
@@ -324,7 +324,8 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
 
     EXPECT_NO_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mgg::GBMDisplay>();
+        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto display = std::make_shared<mgg::GBMDisplay>(platform);
         EXPECT_FALSE(display->post_update());
     });
 }

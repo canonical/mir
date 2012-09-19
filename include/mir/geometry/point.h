@@ -13,11 +13,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GEOMETRY_SIZE_H_
-#define MIR_GEOMETRY_SIZE_H_
+#ifndef MIR_GEOMETRY_POINT_H_
+#define MIR_GEOMETRY_POINT_H_
 
 #include "dimensions.h"
 #include <ostream>
@@ -27,29 +27,29 @@ namespace mir
 namespace geometry
 {
 
-struct Size
+struct Point
 {
-    Width width;
-    Height height;
+    X x;
+    Y y;
 };
 
-inline bool operator == (Size const& lhs, Size const& rhs)
+inline bool operator == (Point const& lhs, Point const& rhs)
 {
-    return lhs.width == rhs.width && lhs.height == rhs.height;
+    return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
-inline bool operator != (Size const& lhs, Size const& rhs)
+inline bool operator != (Point const& lhs, Point const& rhs)
 {
-    return lhs.width != rhs.width || lhs.height != rhs.height;
+    return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
-inline std::ostream& operator<<(std::ostream& out, Size const& value)
+inline std::ostream& operator<<(std::ostream& out, Point const& value)
 {
-    out << '(' << value.width << ", " << value.height << ')';
+    out << '(' << value.x << ", " << value.y << ')';
     return out;
 }
 
 }
 }
 
-#endif /* MIR_GEOMETRY_SIZE_H_ */
+#endif /* MIR_GEOMETRY_POINT_H_ */

@@ -72,16 +72,12 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
+find_package(EGL REQUIRED)
+find_package(GLESv2 REQUIRED)
+
 if (MIR_PLATFORM STREQUAL "android")
   find_package( LibHardware REQUIRED )
-  if (LIBHARDWARE_FOUND)
-    include_directories(${LIBHARDWARE_INCLUDE_DIR})
-  endif()
- 
   find_package( AndroidUI REQUIRED )
-  if(ANDROID_UI_FOUND)
-    include_directories(${ANDROID_UI_INCLUDE_DIR})
-  endif()
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)

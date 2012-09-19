@@ -14,9 +14,15 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+include_directories(
+    ${LIBHARDWARE_INCLUDE_DIRS}
+    ${ANDROID_UI_INCLUDE_DIRS}
+)
+
 add_library( 
   mirplatformgraphics STATIC
   
+  android_platform.cpp
   android_buffer_allocator.cpp
   android_buffer.cpp
   android_buffer_handle.cpp
@@ -28,5 +34,6 @@ add_library(
 target_link_libraries(
   mirplatformgraphics
 
-  hardware
+  ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_UI_LIBRARIES}
 )
