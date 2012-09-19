@@ -38,6 +38,7 @@ public:
 
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
+    PixelFormat get_bundle_pixel_format();
 
 protected:
     BufferBundleSurfaces(const BufferBundleSurfaces&) = delete;

@@ -20,6 +20,9 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
+#include "mir/geometry/dimensions.h"
+#include "mir/compositor/pixel_format.h"
+
 #include <memory>
 
 namespace mir
@@ -45,6 +48,7 @@ class BufferBundle
 public:
     virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
     virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    virtual PixelFormat get_bundle_pixel_format() = 0;
 };
 
 }

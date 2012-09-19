@@ -65,7 +65,7 @@ struct SurfaceCreation : public ::testing::Test
     }
 
     ms::SurfaceCreationParameters creation_params;
-    std::shared_ptr<mc::BufferBundle> mock_buffer_bundle;
+    std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
     mc::PixelFormat pf;
 };
 }
@@ -80,7 +80,7 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
         .Times(1)
         .WillOnce(Return(pf));
 
-    auto ret_pf = surface->pixel_format();
+    auto ret_pf = surf.pixel_format();
 
     EXPECT_EQ(ret_pf, pf); 
 }

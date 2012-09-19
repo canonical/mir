@@ -104,3 +104,7 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
     return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
 }
 
+mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
+{
+    return mc::PixelFormat::rgba_5658;
+}
