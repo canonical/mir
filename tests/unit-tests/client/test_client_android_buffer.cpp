@@ -81,11 +81,11 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
     EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
+ 
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
 
     EXPECT_CALL(*mock_android_registrar, unregister_buffer(buffer_handle))
         .Times(1);
- 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
@@ -126,9 +126,10 @@ TEST_F(ClientAndroidBufferTest, region_is_released)
         .WillOnce(DoAll(
             SaveArg<0>(&buffer_handle),
             Return((char*)0x0)));
-    EXPECT_CALL(*mock_android_registrar, release_from_cpu(buffer_handle))
-        .Times(1);
 
     auto region = buffer->secure_for_cpu_write();
     EXPECT_NE((int) region.get(), NULL);
+
+    EXPECT_CALL(*mock_android_registrar, release_from_cpu(buffer_handle))
+        .Times(1);
 }

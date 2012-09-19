@@ -25,6 +25,7 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
  : buffer_registrar(registrar),
    buffer_package(std::move(package))
 {
+    native_handle = 0x0;
     buffer_registrar->register_buffer(native_handle);
 }
 
