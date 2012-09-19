@@ -71,6 +71,14 @@ struct SurfaceCreation : public ::testing::Test
 };
 }
 
+TEST_F(SurfaceCreation, test_surface_gets_right_name)
+{
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+
+    auto str = surf.name();
+    EXPECT_EQ(str, surface_name);
+
+}
 TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
 {
     using namespace testing;
