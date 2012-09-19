@@ -33,7 +33,7 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
-    std::shared_ptr<mcl::ClientBuffer> buffer = std::make_shared<mcl::AndroidClientBuffer>();
+    auto buffer = std::make_shared<mcl::AndroidClientBuffer>();
     EXPECT_NE((int) buffer.get(), NULL);
 }
 
