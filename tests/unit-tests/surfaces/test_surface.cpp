@@ -129,3 +129,19 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_heigt)
     EXPECT_EQ(ret_h, height); 
 }
 
+TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
+{
+    using namespace testing;
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>();
+
+    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+        .Times(1)
+        .WillOnce(Return(graphics_resource));
+
+    auto ret_ipc = surf.get_buffer_ipc_package();
+
+    EXPECT_EQ(ret_ipc, graphics_resource); 
+
+}
