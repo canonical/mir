@@ -42,6 +42,7 @@ public:
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 private:
 
+    native_handle_t* native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
     std::shared_ptr<MirBufferPackage> buffer_package;
 };

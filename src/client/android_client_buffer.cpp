@@ -25,18 +25,18 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
  : buffer_registrar(registrar),
    buffer_package(std::move(package))
 {
-    buffer_registrar->register_buffer(buffer_package);
+    buffer_registrar->register_buffer(native_handle);
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
 {
-    buffer_registrar->unregister_buffer(buffer_package);
+    buffer_registrar->unregister_buffer(native_handle);
 }
 
 struct MemoryRegionDeleter
 {
-    MemoryRegionDeleter(std::shared_ptr<mcl::AndroidRegistrar> reg,
-                       std::shared_ptr<mcl::MirBufferPackage> pack)
+    MemoryRegionDeleter(const std::shared_ptr<mcl::AndroidRegistrar> reg,
+                        const native_handle_t* pack)
      : package(pack),
        registrar(reg)
     {}
@@ -47,17 +47,17 @@ struct MemoryRegionDeleter
         delete reg;
     }
 private:
-    const std::shared_ptr<mcl::MirBufferPackage> package;
+    const native_handle_t* package;
     const std::shared_ptr<mcl::AndroidRegistrar> registrar;
 };
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
-    char* vaddr = buffer_registrar->secure_for_cpu(buffer_package);
+    char* vaddr = buffer_registrar->secure_for_cpu(native_handle);
 
     MemoryRegion *region_raw = new mcl::MemoryRegion{0, 0, vaddr, 0};
 
-    MemoryRegionDeleter del(buffer_registrar, buffer_package);
+    MemoryRegionDeleter del(buffer_registrar, native_handle);
     std::shared_ptr<mcl::MemoryRegion> region(region_raw, del);
 
     return region;
