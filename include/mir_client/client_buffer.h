@@ -20,5 +20,16 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+namespace mir
+{
+namespace client
+{
+
+class ClientBuffer
+{
+};
+
+}
+}
 
 #endif /* MIR_CLIENT_CLIENT_BUFFER_H_ */

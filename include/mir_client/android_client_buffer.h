@@ -22,5 +22,15 @@
 
 #include "mir_client/client_buffer.h"
 
+namespace mir
+{
+namespace client
+{
 
+class AndroidClientBuffer : public ClientBuffer
+{
+};
+
+}
+}
 #endif /* MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_ */

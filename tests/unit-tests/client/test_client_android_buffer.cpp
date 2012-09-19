@@ -18,6 +18,7 @@
 
 #include "mir_client/android_client_buffer.h"
 
+#include <memory>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
