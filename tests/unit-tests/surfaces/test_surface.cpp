@@ -62,12 +62,16 @@ struct SurfaceCreation : public ::testing::Test
     {
         surface_name = "test_surfaceA";
         pf = mc::PixelFormat::rgba_8888;
+        width = geom::Width(43);
+        height = geom::Height(420);
         mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
     }
 
     std::string surface_name;
     std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
     mc::PixelFormat pf;
+    geom::Width width;
+    geom::Height height;
 };
 }
 
@@ -79,6 +83,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
     EXPECT_EQ(str, surface_name);
 
 }
+
 TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
 {
     using namespace testing;
@@ -92,5 +97,35 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
     auto ret_pf = surf.pixel_format();
 
     EXPECT_EQ(ret_pf, pf); 
+}
+
+TEST_F(SurfaceCreation, test_surface_queries_bundle_for_width)
+{
+    using namespace testing;
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+
+    EXPECT_CALL(*mock_buffer_bundle, get_bundle_width())
+        .Times(1)
+        .WillOnce(Return(pf));
+
+    auto ret_w = surf.pixel_width();
+
+    EXPECT_EQ(ret_w, pf); 
+}
+
+TEST_F(SurfaceCreation, test_surface_queries_bundle_for_heigt)
+{
+    using namespace testing;
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+
+    EXPECT_CALL(*mock_buffer_bundle, get_bundle_height())
+        .Times(1)
+        .WillOnce(Return(pf));
+
+    auto ret_h = surf.height();
+
+    EXPECT_EQ(ret_h, pf); 
 }
 
