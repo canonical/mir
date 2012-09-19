@@ -20,6 +20,7 @@
 #include "mir_client/mir_buffer_package.h"
 
 #include <memory>
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -40,8 +41,10 @@ protected:
     {
         package = std::make_shared<mcl::MirBufferPackage>();
         mock_android_registrar = std::make_shared<MockAndroidRegistrar>();
+        package_copy = std::make_shared<mcl::MirBufferPackage>(*package.get());
     }
     std::shared_ptr<mcl::MirBufferPackage> package;
+    std::shared_ptr<mcl::MirBufferPackage> package_copy;
     std::shared_ptr<mcl::AndroidClientBuffer> buffer;
     std::shared_ptr<MockAndroidRegistrar> mock_android_registrar;
 };
@@ -58,11 +61,12 @@ TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
     EXPECT_EQ((int) package.get(), NULL);
 }
 
-TEST_F(ClientAndroidBufferTest, client_buffer_converts_package)
+TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 {
     using namespace testing;
-
     const native_handle_t *handle;
+    int i=0;
+
     EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
         .WillOnce(SaveArg<0>(&handle));
@@ -70,7 +74,27 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package)
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
 
     ASSERT_NE((int)handle, NULL);
-    /* check assembled contents here */
+    ASSERT_EQ(handle->numFds, (int) package_copy->fd.size());
+    for(auto it = package_copy->fd.begin(); it != package_copy->fd.end(); it++)
+        EXPECT_EQ(*it, handle->data[i++]); 
+}
+
+TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
+{
+    using namespace testing;
+    const native_handle_t *handle;
+    int i=0;
+
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&handle));
+ 
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
+
+    ASSERT_NE((int)handle, NULL);
+    ASSERT_EQ(handle->numInts, (int) package_copy->data.size());
+    for(auto it = package_copy->fd.begin(); it != package_copy->fd.end(); it++)
+        EXPECT_EQ(*it, handle->data[i++]); 
 }
 
 TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
