@@ -32,6 +32,7 @@ class AndroidRegistrar
 public:
     virtual void register_buffer(std::shared_ptr<MirBufferPackage> package) = 0;
     virtual void unregister_buffer(std::shared_ptr<MirBufferPackage> package) = 0;
+    virtual char* secure_for_cpu(std::shared_ptr<MirBufferPackage> package) = 0;
 };
 
 }

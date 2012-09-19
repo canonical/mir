@@ -29,6 +29,7 @@ struct MockAndroidRegistrar : public mcl::AndroidRegistrar
 {
     MOCK_METHOD1(register_buffer, void(std::shared_ptr<mcl::MirBufferPackage>));
     MOCK_METHOD1(unregister_buffer, void(std::shared_ptr<mcl::MirBufferPackage>));
+    MOCK_METHOD1(secure_for_cpu, char*(std::shared_ptr<mcl::MirBufferPackage>));
 };
 
 class ClientAndroidBufferTest : public ::testing::Test
@@ -72,8 +73,8 @@ TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
 {
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
 
-    EXPECT_CALL(*mock_android_registrar, registrar_get_vaddr(package))
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
         .Times(1);
 
-    buffer.secure_for_write();
+    buffer->secure_for_cpu_write();
 }

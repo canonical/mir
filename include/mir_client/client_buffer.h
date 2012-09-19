@@ -20,13 +20,25 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace client
 {
+class MirBufferPackage;
+
+struct MemoryRegion
+{
+    int   width;
+    int   height;
+    char *vaddr; /* valid upto vaddr[width*height - 1] */
+    int format;
+};
 
 class ClientBuffer
 {
+    virtual MemoryRegion secure_for_cpu_write() = 0;
 };
 
 }
