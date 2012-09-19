@@ -25,6 +25,16 @@ namespace mir
 namespace client
 {
 
+enum { mir_buffer_package_max = 32 };
+typedef struct MirBufferPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_buffer_package_max];
+    int fd[mir_buffer_package_max];
+} MirBufferPackage;
+
 class ClientBuffer
 {
 };

@@ -18,13 +18,14 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_rpc_channel.h"
+#include "mir_client/android_client_buffer.h" 
 
 #include "mir_protobuf.pb.h"
 
 #include <set>
 #include <cstddef>
 
-namespace mc = mir::client;
+namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -94,7 +95,7 @@ public:
         return !surface.has_error();
     }
 
-    void populate(MirBufferPackage& buffer_package)
+    void populate(mcl::MirBufferPackage& buffer_package)
     {
         if (is_valid() && surface.has_buffer())
         {
@@ -145,7 +146,7 @@ class MirConnection
 {
 public:
     MirConnection(const std::string& socket_file,
-        std::shared_ptr<mc::Logger> const & log)
+        std::shared_ptr<mcl::Logger> const & log)
         : created(true),
           channel(socket_file, log)
         , server(&channel)
@@ -219,9 +220,9 @@ private:
     condition_variable cv;
     bool created;
 
-    mc::MirRpcChannel channel;
+    mcl::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
-    std::shared_ptr<mc::Logger> log;
+    std::shared_ptr<mcl::Logger> log;
     mp::Void void_response;
     mir::protobuf::Void connect_result;
     mir::protobuf::Void ignored;
@@ -236,7 +237,7 @@ void mir_connect(char const* socket_file, char const* name, mir_connected_callba
 
     try
     {
-        auto log = std::make_shared<mc::ConsoleLogger>();
+        auto log = std::make_shared<mcl::ConsoleLogger>();
         MirConnection * connection = new MirConnection(socket_file, log);
         connection->connect(name, callback, context);
     }
@@ -303,11 +304,12 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
+#if 0
 void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
 {
     surface->populate(*buffer_package);
 }
-
+#endif
 void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     surface->next_buffer(callback, context);
