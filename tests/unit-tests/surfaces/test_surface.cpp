@@ -142,6 +142,6 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 
     auto ret_ipc = surf.get_buffer_ipc_package();
 
-    EXPECT_EQ(ret_ipc, graphics_resource); 
+    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
 
 }

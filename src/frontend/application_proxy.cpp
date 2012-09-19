@@ -61,7 +61,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_height(surface->height().as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
 
-        auto const& ipc_package = surface->get_current_buffer_ipc_package();
+        auto const& ipc_package = surface->get_buffer_ipc_package();
         auto buffer = response->mutable_buffer();
 
         for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
@@ -84,7 +84,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
 {
     auto surface = surfaces[request->value()].lock();
 
-    auto const& ipc_package = surface->get_next_buffer_ipc_package();
+    auto const& ipc_package = surface->get_buffer_ipc_package();
 
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
         response->add_data(*p);
