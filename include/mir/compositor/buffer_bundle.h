@@ -20,37 +20,47 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
-#include "buffer_texture_binder.h"
-#include "buffer_queue.h"
-#include "buffer.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/compositor/pixel_format.h"
+
+#include <memory>
 
 namespace mir
 {
+
+namespace graphics
+{
+class Texture;
+}
+
 namespace compositor
 {
 class BufferSwapper;
+class BufferIPCPackage;
+class Buffer;
 
-class BufferBundle : public BufferTextureBinder,
-    public BufferQueue
+struct GraphicBufferClientResource
+{
+    GraphicBufferClientResource() {}
+    GraphicBufferClientResource(
+        std::shared_ptr<BufferIPCPackage> const& ipc_package,
+        std::shared_ptr<Buffer> const& buffer) :
+            ipc_package(ipc_package), buffer(buffer)
+    {
+    }
+
+    std::shared_ptr<BufferIPCPackage> const ipc_package;
+    std::shared_ptr<Buffer> const buffer;
+};
+
+class BufferBundle
 {
 public:
-    explicit BufferBundle(std::unique_ptr<BufferSwapper>&& swapper);
-    ~BufferBundle();
-
-    /* from BufferQueue */
-    std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
-
-    /* from BufferTextureBinder */
-    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
-
-
-protected:
-    BufferBundle(const BufferBundle&) = delete;
-    BufferBundle& operator=(const BufferBundle&) = delete;
-
-private:
-    std::unique_ptr<BufferSwapper> swapper;
-
+    virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
+    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    virtual PixelFormat get_bundle_pixel_format() = 0;
+    virtual geometry::Height bundle_height() = 0;
+    virtual geometry::Width bundle_width() = 0;
 };
 
 }

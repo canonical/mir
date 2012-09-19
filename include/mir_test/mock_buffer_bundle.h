@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
-#define MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_
+#ifndef MIR_TEST_MOCK_BUFFER_BUNDLE_H_
+#define MIR_TEST_MOCK_BUFFER_BUNDLE_H_
 
-#include <memory>
+#include "mir/compositor/buffer_bundle.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -27,25 +29,19 @@ namespace graphics
 {
 class Texture;
 }
-
 namespace compositor
 {
-class Buffer;
 
-class BufferTextureBinder
+struct MockBufferBundle : public BufferBundle
 {
-public:
-    virtual ~BufferTextureBinder() {}
-    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
+    MOCK_METHOD0(lock_and_bind_back_buffer, std::shared_ptr<graphics::Texture>());
 
-protected:
-    BufferTextureBinder() = default;
-
-    BufferTextureBinder(BufferTextureBinder const&) = delete;
-    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+    MOCK_METHOD0(get_bundle_pixel_format, PixelFormat());
+    MOCK_METHOD0(bundle_height, geometry::Height());
+    MOCK_METHOD0(bundle_width, geometry::Width());
 };
+
 }
 }
-
-
-#endif /* MIR_COMPOSITOR_BUFFER_TEXTURE_BINDER_H_ */
+#endif /* MIR_TEST_MOCK_BUFFER_BUNDLE_H_ */

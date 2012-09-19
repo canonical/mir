@@ -20,7 +20,7 @@
 
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -50,8 +50,5 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
             height,
             pf));
 
-    BufferBundle* new_bundle_raw = new mc::BufferBundle(std::move(swapper));
-    std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
-
-    return bundle;
+    return std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 }

@@ -16,7 +16,9 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include "mir/compositor/buffer_bundle.h"
+
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/graphics/texture.h"
@@ -25,6 +27,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -59,17 +62,17 @@ struct ClientReleaseDeleter
 };
 }
 
-mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
     :
     swapper(std::move(swapper))
 {
 }
 
-mc::BufferBundle::~BufferBundle()
+mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
+std::shared_ptr<mir::graphics::Texture> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
 {
     std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
     bptr->bind_to_texture();
@@ -77,10 +80,24 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     return std::make_shared<mg::Texture>(bptr);
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
     std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
 
     return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr);
 }
 
+mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
+{
+    return mc::PixelFormat::rgba_5658;
+}
+
+geom::Height mc::BufferBundleSurfaces::bundle_height()
+{
+    return geom::Height(0);
+}
+
+geom::Width mc::BufferBundleSurfaces::bundle_width()
+{
+    return geom::Width(0);
+}
