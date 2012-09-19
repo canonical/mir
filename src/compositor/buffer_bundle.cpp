@@ -27,6 +27,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -107,4 +108,14 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
 mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
 {
     return mc::PixelFormat::rgba_5658;
+}
+
+geom::Height mc::BufferBundleSurfaces::bundle_height()
+{
+    return geom::Height(0);
+}
+
+geom::Width mc::BufferBundleSurfaces::bundle_width()
+{
+    return geom::Width(0);
 }

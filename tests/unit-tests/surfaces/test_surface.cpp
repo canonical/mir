@@ -105,13 +105,13 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_width)
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
 
-    EXPECT_CALL(*mock_buffer_bundle, get_bundle_width())
+    EXPECT_CALL(*mock_buffer_bundle, bundle_width())
         .Times(1)
-        .WillOnce(Return(pf));
+        .WillOnce(Return(width));
 
-    auto ret_w = surf.pixel_width();
+    auto ret_w = surf.width();
 
-    EXPECT_EQ(ret_w, pf); 
+    EXPECT_EQ(ret_w, width); 
 }
 
 TEST_F(SurfaceCreation, test_surface_queries_bundle_for_heigt)
@@ -120,12 +120,12 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_heigt)
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
 
-    EXPECT_CALL(*mock_buffer_bundle, get_bundle_height())
+    EXPECT_CALL(*mock_buffer_bundle, bundle_height())
         .Times(1)
-        .WillOnce(Return(pf));
+        .WillOnce(Return(height));
 
     auto ret_h = surf.height();
 
-    EXPECT_EQ(ret_h, pf); 
+    EXPECT_EQ(ret_h, height); 
 }
 
