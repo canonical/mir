@@ -14,12 +14,14 @@ find_path(LIBHARDWARE_INCLUDE_DIR
    HINTS         ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot
    )
 
-find_path(LIBHARDWARE_LIBRARY
+find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so 
    HINTS         ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot/usr/lib
                  ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot/lib
    )
 
+set(LIBHARDWARE_LIBRARIES ${LIBHARDWARE_LIBRARY})
+set(LIBHARDWARE_INCLUDE_DIRS ${LIBHARDWARE_INCLUDE_DIR})
 
 # handle the QUIETLY and REQUIRED arguments and set LIBHARDWARE_FOUND to TRUE
 # if all listed variables are TRUE
@@ -27,5 +29,3 @@ find_package_handle_standard_args(LIBHARDWARE DEFAULT_MSG
                                   LIBHARDWARE_LIBRARY LIBHARDWARE_INCLUDE_DIR)
 
 mark_as_advanced(LIBHARDWARE_INCLUDE_DIR LIBHARDWARE_LIBRARY )
-
-

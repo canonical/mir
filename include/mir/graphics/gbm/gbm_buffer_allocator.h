@@ -21,8 +21,6 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 
-#include <gbm.h>
-
 #include <memory>
 
 namespace mir
@@ -32,17 +30,19 @@ namespace graphics
 namespace gbm
 {
 
+class GBMPlatform;
+
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    explicit GBMBufferAllocator(const std::shared_ptr<gbm_device>& dev);
+    explicit GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
         geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
 
 
 private:
-    std::shared_ptr<gbm_device> dev;
+    std::shared_ptr<GBMPlatform> platform;
 };
 
 }

@@ -21,9 +21,8 @@
 
 #include <cstddef>
 
-#define __GBM__
-#include <EGL/egl.h>
 #include <gbm.h>
+#include <EGL/egl.h>
 #include <xf86drmMode.h>
 
 namespace mir
@@ -83,7 +82,8 @@ public:
     GBMHelper(const GBMHelper&) = delete;
     GBMHelper& operator=(const GBMHelper&) = delete;
 
-    void setup(const DRMHelper& drm, uint32_t width, uint32_t height);
+    void setup(const DRMHelper& drm);
+    void create_scanout_surface(uint32_t width, uint32_t height);
 
     gbm_device* device;
     gbm_surface* surface;

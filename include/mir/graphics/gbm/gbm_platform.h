@@ -13,31 +13,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/geometry/size.h"
+#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "mir/graphics/platform.h"
+#include "mir/graphics/gbm/gbm_display_helpers.h"
 
-namespace geom = mir::geometry;
-
-TEST(geometry, size)
+namespace mir
 {
-    using namespace geom;
-    Size const size2x4{Width(2), Height(4)};
+namespace graphics
+{
+namespace gbm
+{
 
-    EXPECT_EQ(Width(2), size2x4.width);
-    EXPECT_EQ(Height(4), size2x4.height);
+class GBMPlatform : public Platform
+{
+public:
+    GBMPlatform();
 
-    Size const copy = size2x4;
-    EXPECT_EQ(Width(2), copy.width);
-    EXPECT_EQ(Height(4), copy.height);
-    EXPECT_EQ(size2x4, copy);
+    helpers::DRMHelper drm;
+    helpers::GBMHelper gbm;
+};
 
-    Size const defaultValue;
-    EXPECT_EQ(Width(0), defaultValue.width);
-    EXPECT_EQ(Height(0), defaultValue.height);
-    EXPECT_NE(size2x4, defaultValue);
 }
+}
+}
+#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
+

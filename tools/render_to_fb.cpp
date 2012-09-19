@@ -29,7 +29,8 @@ namespace mt=mir::test;
 
 int main(int, char**)
 {
-    auto display = mg::create_display();
+    auto platform = mg::create_platform();
+    auto display = mg::create_display(platform);
 
     mt::glAnimationBasic gl_animation;
     gl_animation.init_gl();

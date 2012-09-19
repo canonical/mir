@@ -20,7 +20,6 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
-#include <ui/FramebufferNativeWindow.h>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
@@ -70,7 +69,6 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglTerminate(egl_display);
-    printf("DISPLAY TORN DOWN\n");
 }
 
 /* todo: kdub: this will return some sort of information concerning the coordinate space
@@ -89,13 +87,3 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
-/* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
-std::shared_ptr<mg::Display> mg::create_display()
-{
-    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) android_createDisplaySurface());
-    if (!android_window.get())
-        throw std::runtime_error("could not open FB window");
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-
-    return std::make_shared<mga::AndroidDisplay>(window);
-}

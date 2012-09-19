@@ -13,31 +13,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace geom = mir::geometry;
 
-TEST(geometry, size)
+TEST(geometry, rectangle)
 {
     using namespace geom;
-    Size const size2x4{Width(2), Height(4)};
+    Point const x3y9{X(3), Y(9)};
+    Size const w2h4{Width(2), Height(4)};
+    Rectangle const rect{x3y9, w2h4};
 
-    EXPECT_EQ(Width(2), size2x4.width);
-    EXPECT_EQ(Height(4), size2x4.height);
+    EXPECT_EQ(x3y9, rect.top_left);
+    EXPECT_EQ(w2h4, rect.size);
 
-    Size const copy = size2x4;
-    EXPECT_EQ(Width(2), copy.width);
-    EXPECT_EQ(Height(4), copy.height);
-    EXPECT_EQ(size2x4, copy);
+    Rectangle const copy = rect;
+    EXPECT_EQ(x3y9, copy.top_left);
+    EXPECT_EQ(w2h4, copy.size);
+    EXPECT_EQ(rect, copy);
 
-    Size const defaultValue;
-    EXPECT_EQ(Width(0), defaultValue.width);
-    EXPECT_EQ(Height(0), defaultValue.height);
-    EXPECT_NE(size2x4, defaultValue);
+    Rectangle const default_rect;
+    EXPECT_EQ(Point(), default_rect.top_left);
+    EXPECT_EQ(Size(), default_rect.size);
+    EXPECT_NE(rect, default_rect);
 }

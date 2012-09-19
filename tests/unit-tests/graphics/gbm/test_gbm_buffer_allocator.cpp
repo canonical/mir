@@ -17,9 +17,11 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 
+#include "mock_drm.h"
 #include "mock_gbm.h"
 
 #include <memory>
@@ -33,25 +35,13 @@ namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
-{
-struct GBMDeviceDeleter
-{
-    void operator()(gbm_device* d) const
-    {            
-        if (d)
-            gbm_device_destroy(d);
-    }
-};
-}
-
 class GBMBufferAllocatorTest  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        std::shared_ptr<gbm_device> fake_device{gbm_create_device(1), GBMDeviceDeleter()};
-        allocator.reset(new mgg::GBMBufferAllocator(fake_device));
+        auto platform = std::make_shared<mgg::GBMPlatform>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform));
 
         w = geom::Width(300);
         h = geom::Height(200);
@@ -63,6 +53,7 @@ protected:
     geom::Height h;
     mc::PixelFormat pf;
 
+    ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 };

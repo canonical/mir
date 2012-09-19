@@ -40,10 +40,10 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
-        printf("setuptestcase\n");
         ASSERT_NO_THROW(
         {
-            display = mg::create_display();
+            std::shared_ptr<mg::Platform> platform;
+            display = mg::create_display(platform);
         }); 
     }
 

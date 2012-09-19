@@ -15,9 +15,7 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-if (MIR_PLATFORM STREQUAL "android")
-    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES ui)
-endif()
+include_directories(${GLESv2_INCLUDE_DIRS})
 
 if (MIR_PLATFORM STREQUAL "gbm")
     set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES gbm drm)
@@ -30,7 +28,5 @@ target_link_libraries(
 
     mirplatformgraphics
     test-utils
-    ${RENDER_TO_FB_EXTRA_LINK_LIBRARIES}
-    EGL
-    GLESv2
+    ${GLESv2_LIBRARIES}
 )
