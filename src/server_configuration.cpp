@@ -22,10 +22,10 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -45,16 +45,6 @@ class StubRenderer : public mg::Renderer
 public:
     virtual void render(mg::Renderable&)
     {
-    }
-};
-
-// TODO replace with a real buffer allocator appropriate to the platform default
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
- public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Width, geom::Height, mc::PixelFormat)
-    {
-        return std::unique_ptr<mc::Buffer>();
     }
 };
 
@@ -98,7 +88,8 @@ socket_file(socket_file)
 
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
-    return std::make_shared<StubGraphicBufferAllocator>();
+    static std::shared_ptr<mg::Platform> platform = mg::create_platform();
+    return mg::create_buffer_allocator(platform);
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
