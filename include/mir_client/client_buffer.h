@@ -20,20 +20,20 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include <vector>
+
 namespace mir
 {
 namespace client
 {
 
-enum { mir_buffer_package_max = 32 };
-typedef struct MirBufferPackage
+/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
+               maintain divide between client/server headers */
+struct MirBufferPackage
 {
-    int data_items;
-    int fd_items;
-
-    int data[mir_buffer_package_max];
-    int fd[mir_buffer_package_max];
-} MirBufferPackage;
+    std::vector<int> data;
+    std::vector<int> fd;
+};
 
 class ClientBuffer
 {

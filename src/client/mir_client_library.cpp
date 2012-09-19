@@ -101,18 +101,13 @@ public:
         {
             auto const& buffer = surface.buffer();
 
-            buffer_package.data_items = buffer.data_size();
+            buffer_package.data.resize(buffer.data_size());
             for (int i = 0; i != buffer.data_size(); ++i)
                 buffer_package.data[i] = buffer.data(i);
 
-            buffer_package.fd_items = buffer.fd_size();
+            buffer_package.fd.resize(buffer.fd_size());
             for (int i = 0; i != buffer.fd_size(); ++i)
                 buffer_package.fd[i] = buffer.fd(i);
-        }
-        else
-        {
-            buffer_package.data_items = 0;
-            buffer_package.fd_items = 0;
         }
     }
 
