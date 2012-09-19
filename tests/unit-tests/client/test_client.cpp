@@ -26,7 +26,7 @@ TEST(MirClientTest, mir_connection_is_valid_handles_invalid_pointers)
 {
     using namespace testing;
 
-    MirConnection *null_pointer = nullptr;
+    MirConnection *null_pointer = NULL;
     double stack_variable;
     MirConnection *not_a_mir_connection_on_the_stack = reinterpret_cast<MirConnection *>(&stack_variable);
     auto heap_variable = std::make_shared<int>();
