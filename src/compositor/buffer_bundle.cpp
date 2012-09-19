@@ -62,9 +62,18 @@ struct ClientReleaseDeleter
 };
 }
 
-mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
-    :
-    swapper(std::move(swapper))
+mc::BufferBundleSurfaces::BufferBundleSurfaces(
+    std::unique_ptr<BufferSwapper>&& swapper,
+    geometry::Width width,
+    geometry::Height height,
+    PixelFormat pixel_format) :
+    swapper(std::move(swapper)), width(width), height(height), pixel_format(pixel_format)
+{
+}
+
+mc::BufferBundleSurfaces::BufferBundleSurfaces(
+    std::unique_ptr<BufferSwapper>&& swapper) :
+    swapper(std::move(swapper)), width(), height(), pixel_format(PixelFormat::rgba_5658)
 {
 }
 
@@ -96,15 +105,15 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
 
 mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
 {
-    return mc::PixelFormat::rgba_5658;
+    return pixel_format;
 }
 
 geom::Height mc::BufferBundleSurfaces::bundle_height()
 {
-    return geom::Height(0);
+    return height;
 }
 
 geom::Width mc::BufferBundleSurfaces::bundle_width()
 {
-    return geom::Width(0);
+    return width;
 }

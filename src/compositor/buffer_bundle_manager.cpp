@@ -50,5 +50,9 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
             height,
             pf));
 
-    return std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
+    return std::make_shared<mc::BufferBundleSurfaces>(
+        std::move(swapper),
+        width,
+        height,
+        pf);
 }
