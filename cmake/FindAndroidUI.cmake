@@ -42,8 +42,10 @@ find_library(ANDROID_UI_LIBRARY
                  ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot/lib
    )
 
+set(ANDROID_UI_LIBRARIES ${ANDROID_UI_LIBRARY})
+set(ANDROID_UI_INCLUDE_DIRS ${ANDROID_UI_INCLUDE_DIR})
 
-# handle the QUIETLY and REQUIRED arguments and set LIBHARDWARE_FOUND to TRUE
+# handle the QUIETLY and REQUIRED arguments and set ANDROID_UI_FOUND to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(ANDROID_UI DEFAULT_MSG
                                   ANDROID_UI_LIBRARY ANDROID_UI_INCLUDE_DIR)

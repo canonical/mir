@@ -14,6 +14,11 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+include_directories(
+    ${LIBHARDWARE_INCLUDE_DIRS}
+    ${ANDROID_UI_INCLUDE_DIRS}
+)
+
 add_library( 
   mirplatformgraphics STATIC
   
@@ -29,5 +34,6 @@ add_library(
 target_link_libraries(
   mirplatformgraphics
 
-  hardware
+  ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_UI_LIBRARIES}
 )
