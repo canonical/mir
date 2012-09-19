@@ -20,6 +20,7 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_bundle.h"
 
 #include <cassert>
 
@@ -51,10 +52,11 @@ mir::geometry::Height ms::Surface::height() const
     return params.height;
 }
 
+//note: not sure the surface should be aware of pixel format. might be something that the 
+//texture (which goes to compositor should be aware of though 
 mc::PixelFormat ms::Surface::pixel_format() const
 {
-    // TODO This should actually be supplied from somewhere (where?)
-    return mc::PixelFormat();
+    return buffer_bundle->get_bundle_pixel_format();
 }
 
 std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_current_buffer_ipc_package() const
