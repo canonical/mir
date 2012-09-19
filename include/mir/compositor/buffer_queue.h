@@ -32,6 +32,7 @@ namespace compositor
 struct GraphicBufferClientResource
 {
     std::shared_ptr<BufferIPCPackage> ipc_package;
+    std::shared_ptr<compositor::Buffer> buffer;
 };
 
 class BufferQueue

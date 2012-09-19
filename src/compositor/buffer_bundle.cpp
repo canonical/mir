@@ -28,46 +28,34 @@ namespace mg = mir::graphics;
 
 namespace
 {
-class TexDeleter
+struct CompositorReleaseDeleter
 {
-
-public:
-    TexDeleter(mc::BufferSwapper* sw, mc::Buffer* buf)
-        : swapper(std::move(sw)),
-          buffer_ptr(buf)
+    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw) :
+        swapper(sw)
     {
-    };
-
-    void operator()(mg::Texture* texture)
-    {
-        swapper->compositor_release(buffer_ptr);
-        delete texture;
     }
 
-private:
+    void operator()(mc::Buffer* buffer)
+    {
+        swapper->compositor_release(buffer);
+    }
+
     mc::BufferSwapper* const swapper;
-    mc::Buffer* const buffer_ptr;
 };
 
-
-class BufDeleter
+struct ClientReleaseDeleter
 {
-public:
-    BufDeleter(mc::BufferSwapper* sw, mc::Buffer* buf)
-        : swapper(sw),
-          buffer_ptr(buf)
+    ClientReleaseDeleter(mc::BufferSwapper* sw) :
+        swapper(sw)
     {
-    };
-
-    void operator()(mc::GraphicBufferClientResource* resource)
-    {
-        swapper->client_release(buffer_ptr);
-        delete resource;
     }
 
-private:
+    void operator()(mc::Buffer* buffer)
+    {
+        swapper->client_release(buffer);
+    }
+
     mc::BufferSwapper* const swapper;
-    mc::Buffer* const buffer_ptr;
 };
 }
 
@@ -86,19 +74,21 @@ std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buf
     auto compositor_buffer = swapper->compositor_acquire();
     compositor_buffer->bind_to_texture();
 
-    mg::Texture* tex = new mg::Texture;
-    TexDeleter deleter(swapper.get(), compositor_buffer);
-    return std::shared_ptr<mg::Texture>(tex, deleter);
+    std::shared_ptr<Buffer> bptr{compositor_buffer, CompositorReleaseDeleter(swapper.get())};
+
+    return std::make_shared<mg::Texture>(bptr);
 }
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
 {
     auto client_buffer = swapper->client_acquire();
 
-    BufDeleter deleter(swapper.get(), client_buffer);
+    std::shared_ptr<Buffer> bptr{client_buffer, ClientReleaseDeleter(swapper.get())};
+
     GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
     graphics_resource->ipc_package = client_buffer->get_ipc_package();
+    graphics_resource->buffer = bptr;
 
-    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
+    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource);
 }
 
