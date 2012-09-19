@@ -44,12 +44,12 @@ std::string const& ms::Surface::name() const
 
 mir::geometry::Width ms::Surface::width() const
 {
-    return params.width;
+    return buffer_bundle->bundle_width();
 }
 
 mir::geometry::Height ms::Surface::height() const
 {
-    return params.height;
+    return buffer_bundle->bundle_height();
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 
