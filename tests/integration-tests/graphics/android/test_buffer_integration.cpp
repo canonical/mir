@@ -35,12 +35,18 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics; 
 namespace mt=mir::test;
 
-/* note about display: android drivers seem to only be able to open fb once per process (gralloc's framebuffer_close() doesn't seem to work). once we figure out why, we can put display in the test fixture */
-std::shared_ptr<mg::Display> display;
-
 class AndroidBufferIntegration : public ::testing::Test
 {
-public:
+protected:
+    static void SetUpTestCase()
+    {
+        printf("setuptestcase\n");
+        ASSERT_NO_THROW(
+        {
+            display = mg::create_display();
+        }); 
+    }
+
     virtual void SetUp()
     {
         allocator = std::make_shared<mga::AndroidBufferAllocator>();
@@ -56,28 +62,14 @@ public:
     geom::Width  w;
     geom::Height h;
     mc::PixelFormat pf;
+
+    /* note about display: android drivers seem to only be able to open fb once
+       per process (gralloc's framebuffer_close() doesn't seem to work). once we
+       figure out why, we can put display in the test fixture */
+    static std::shared_ptr<mg::Display> display;
 };
 
-TEST_F(AndroidBufferIntegration, buffer_throws_with_no_egl_context)
-{
-    using namespace testing;
-
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-
-    auto buffer = swapper->compositor_acquire();
-    EXPECT_THROW({
-    buffer->bind_to_texture();
-    }, std::runtime_error);
-
-}
-
-TEST_F(AndroidBufferIntegration, init_does_not_throw)
-{
-    EXPECT_NO_THROW(
-    {
-        display = mg::create_display();
-    });
-}
+std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
 
 TEST_F(AndroidBufferIntegration, post_does_not_throw)
 {

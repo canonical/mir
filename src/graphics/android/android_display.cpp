@@ -70,6 +70,7 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglTerminate(egl_display);
+    printf("DISPLAY TORN DOWN\n");
 }
 
 /* todo: kdub: this will return some sort of information concerning the coordinate space
