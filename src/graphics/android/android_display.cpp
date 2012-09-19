@@ -86,4 +86,3 @@ bool mga::AndroidDisplay::post_update()
         return false;
     return true;
 }
-

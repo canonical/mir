@@ -21,7 +21,6 @@
 #include "mir/compositor/buffer_queue.h"
 #include "mir/geometry/dimensions.h"
 
-#include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
 #include <memory>
 

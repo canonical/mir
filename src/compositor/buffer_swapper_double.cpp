@@ -43,7 +43,6 @@ mc::Buffer* mc::BufferSwapperDouble::client_acquire()
 
     Buffer* dequeued_buffer = client_queue.front();
     client_queue.pop();
-
     return dequeued_buffer;
 }
 
