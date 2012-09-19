@@ -79,7 +79,7 @@ struct mfd::Session
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::TestFileDescriptors* response)
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
     {
         std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
         response->clear_fd();
@@ -259,6 +259,10 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
         else if ("create_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::create_surface, invocation);
+        }
+        else if ("next_buffer" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::next_buffer, invocation);
         }
         else if ("release_surface" == invocation.method_name())
         {
