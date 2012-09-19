@@ -26,6 +26,7 @@ set(
 
 list (
   APPEND PLATFORM_LIBRARIES
+  #todo ui should be found in CMake files
   ui
 )
 set (PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} PARENT_SCOPE)
