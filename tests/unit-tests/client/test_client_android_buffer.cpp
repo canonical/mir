@@ -27,10 +27,10 @@ namespace mcl=mir::client;
 
 struct MockAndroidRegistrar : public mcl::AndroidRegistrar
 {
-    MOCK_METHOD1(register_buffer, void(std::shared_ptr<mcl::MirBufferPackage>));
-    MOCK_METHOD1(unregister_buffer, void(std::shared_ptr<mcl::MirBufferPackage>));
-    MOCK_METHOD1(secure_for_cpu, char*(std::shared_ptr<mcl::MirBufferPackage>));
-    MOCK_METHOD1(release_from_cpu, void(std::shared_ptr<mcl::MirBufferPackage>));
+    MOCK_METHOD1(register_buffer,   void(native_handle_t*));
+    MOCK_METHOD1(unregister_buffer, void(native_handle_t*));
+    MOCK_METHOD1(secure_for_cpu,   char*(native_handle_t*));
+    MOCK_METHOD1(release_from_cpu,  void(native_handle_t*));
 };
 
 class ClientAndroidBufferTest : public ::testing::Test
@@ -48,33 +48,50 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
     EXPECT_NE((int) buffer.get(), NULL);
 }
 
-TEST_F(ClientAndroidBufferTest, client_registers_right_handle)
+TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
 {
-    EXPECT_CALL(*mock_android_registrar, register_buffer(package))
-        .Times(1);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
+    EXPECT_EQ((int) package.get(), NULL);
+}
+
+TEST_F(ClientAndroidBufferTest, client_buffer_converts_package)
+{
+    native_handle_t *handle
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&handle));
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
+
+    ASSERT_NE(handle, NULL);
+    /* check assembled contents here */
 }
 
 TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
 {
-    EXPECT_CALL(*mock_android_registrar, register_buffer(package))
-        .Times(1);
-    EXPECT_CALL(*mock_android_registrar, unregister_buffer(package))
+    using namespace testing;
+
+    native_handle_t* buffer_handle;
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&buffer_handle));
+
+    EXPECT_CALL(*mock_android_registrar, unregister_buffer(buffer_handle))
         .Times(1);
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    using namespace testing;
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
 
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
         .Times(1);
 
     buffer->secure_for_cpu_write();
@@ -84,10 +101,10 @@ TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
 {
     using namespace testing;
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
     char * vaddr = (char*) 0x8534;
 
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
         .Times(1)
         .WillOnce(Return(vaddr));
 
@@ -99,11 +116,14 @@ TEST_F(ClientAndroidBufferTest, region_is_released)
 {
     using namespace testing;
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, package);
-
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(package))
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
+    
+    native_handle_t* buffer_handle;
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
         .Times(1);
-    EXPECT_CALL(*mock_android_registrar, release_from_cpu(package))
+        .WillOnce(DoAll(
+            SaveArg<0>(&buffer_handle)));
+    EXPECT_CALL(*mock_android_registrar, release_from_cpu(buffer_handle))
         .Times(1);
 
     auto region = buffer->secure_for_cpu_write();

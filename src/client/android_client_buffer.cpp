@@ -21,9 +21,9 @@
 namespace mcl=mir::client;
 
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                                              std::shared_ptr<MirBufferPackage> package )
+                                              std::shared_ptr<MirBufferPackage> && package )
  : buffer_registrar(registrar),
-   buffer_package(package)
+   buffer_package(std::move(package))
 {
     buffer_registrar->register_buffer(buffer_package);
 }
@@ -32,7 +32,6 @@ mcl::AndroidClientBuffer::~AndroidClientBuffer()
 {
     buffer_registrar->unregister_buffer(buffer_package);
 }
-
 
 struct MemoryRegionDeleter
 {

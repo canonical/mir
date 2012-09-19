@@ -20,7 +20,9 @@
 #ifndef MIR_CLIENT_ANDROID_REGISTRAR_H_
 #define MIR_CLIENT_ANDROID_REGISTRAR_H_
 
-#include <mir_client/mir_buffer_package.h>
+#include "mir_client/mir_buffer_package.h"
+#include <cutils/native_handle.h>
+
 #include <memory>
 namespace mir
 {
@@ -30,10 +32,10 @@ namespace client
 class AndroidRegistrar
 {
 public:
-    virtual void register_buffer(std::shared_ptr<MirBufferPackage> package) = 0;
-    virtual void unregister_buffer(std::shared_ptr<MirBufferPackage> package) = 0;
-    virtual char* secure_for_cpu(std::shared_ptr<MirBufferPackage> package) = 0;
-    virtual void release_from_cpu(std::shared_ptr<MirBufferPackage> package) = 0;
+    virtual void register_buffer(native_handle_t *handle) = 0;
+    virtual void unregister_buffer(native_handle_t *handle) = 0;
+    virtual char* secure_for_cpu(native_handle_t *handle) = 0;
+    virtual void release_from_cpu(native_handle_t *handle) = 0;
 };
 
 }
