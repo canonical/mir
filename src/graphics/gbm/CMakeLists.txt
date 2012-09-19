@@ -24,6 +24,7 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 add_library(
   mirplatformgraphics STATIC
 
+  gbm_platform.cpp
   gbm_buffer_allocator.cpp
   gbm_buffer.cpp
   gbm_display_helpers.cpp

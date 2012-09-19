@@ -20,7 +20,6 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/geometry/rectangle.h"
 
-#include <ui/FramebufferNativeWindow.h>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
@@ -86,12 +85,4 @@ bool mga::AndroidDisplay::post_update()
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
         return false;
     return true;
-}
-
-std::shared_ptr<mg::Display> mg::create_display()
-{
-    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) new ::android::FramebufferNativeWindow);
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-
-    return std::make_shared<mga::AndroidDisplay>(window);
 }

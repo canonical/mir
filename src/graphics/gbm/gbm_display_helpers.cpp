@@ -29,7 +29,18 @@ namespace mggh=mir::graphics::gbm::helpers;
 
 void mggh::DRMHelper::setup()
 {
-    fd = drmOpen("i915", NULL);
+    static const char *drivers[] = {
+        "i915", "radeon", "nouveau", 0
+    };
+
+    const char** driver{drivers};
+
+    while (fd < 0 && *driver)
+    {
+        fd = drmOpen(*driver, NULL);
+        ++driver;
+    }
+
     if (fd < 0)
         throw std::runtime_error("Failed to open DRM device\n");
 }
@@ -118,12 +129,15 @@ mggh::KMSHelper::~KMSHelper()
  * GBMHelper *
  *************/
 
-void mggh::GBMHelper::setup(const DRMHelper& drm, uint32_t width, uint32_t height)
+void mggh::GBMHelper::setup(const DRMHelper& drm)
 {
     device = gbm_create_device(drm.fd);
     if (!device)
         throw std::runtime_error("Failed to create GBM device");
+}
 
+void mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
+{
     surface = gbm_surface_create(device, width, height,
                                  GBM_BO_FORMAT_XRGB8888,
                                  GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);

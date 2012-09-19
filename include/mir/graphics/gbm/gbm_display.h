@@ -20,7 +20,9 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "gbm_display_helpers.h"
+#include "mir/graphics/gbm/gbm_display_helpers.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -33,12 +35,13 @@ namespace graphics
 namespace gbm
 {
 
+class GBMPlatform;
 class BufferObject;
 
 class GBMDisplay : public Display
 {
 public:
-    GBMDisplay();
+    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform);
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
@@ -49,11 +52,13 @@ private:
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
+    std::shared_ptr<GBMPlatform> platform;
+    /* DRM and GBM helpers from GBMPlatform */
+    helpers::DRMHelper& drm;
+    helpers::GBMHelper& gbm;
     /* Order is important for construction/destruction */
-    helpers::DRMHelper drm;
-    helpers::KMSHelper kms;
-    helpers::GBMHelper gbm;
-    helpers::EGLHelper egl;
+    helpers::KMSHelper  kms;
+    helpers::EGLHelper  egl;
 };
 
 }

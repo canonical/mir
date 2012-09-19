@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/platform.h"
+#include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -78,13 +78,12 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgg::GBMDisplay::GBMDisplay()
-    : last_flipped_bufobj{0}
+mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform)
+    : last_flipped_bufobj{0}, platform(platform), drm(platform->drm), gbm(platform->gbm)
 {
     /* Set up all native resources */
-    drm.setup();
     kms.setup(drm);
-    gbm.setup(drm, kms.mode.hdisplay, kms.mode.vdisplay);
+    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
     egl.setup(gbm);
 
     if (eglMakeCurrent(egl.display, egl.surface,
@@ -242,9 +241,4 @@ bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
     }
 
     return true;
-}
-
-std::shared_ptr<mg::Display> mg::create_display()
-{
-    return std::make_shared<mgg::GBMDisplay>();
 }

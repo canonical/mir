@@ -27,11 +27,11 @@ namespace mg=mir::graphics;
 TEST(AndroidFramebufferIntegration, init_does_not_throw)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display;
 
     EXPECT_NO_THROW(
     {
-        display = mg::create_display();
+        auto platform = mg::create_platform();
+        auto display = mg::create_display(platform);
         display->post_update();
     });
 

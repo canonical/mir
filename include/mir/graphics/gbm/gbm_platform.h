@@ -13,15 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
+#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-
-#include <memory>
+#include "mir/graphics/platform.h"
+#include "mir/graphics/gbm/gbm_display_helpers.h"
 
 namespace mir
 {
@@ -30,23 +29,17 @@ namespace graphics
 namespace gbm
 {
 
-class GBMPlatform;
-
-class GBMBufferAllocator: public compositor::GraphicBufferAllocator
+class GBMPlatform : public Platform
 {
 public:
-    explicit GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform);
+    GBMPlatform();
 
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
-
-
-private:
-    std::shared_ptr<GBMPlatform> platform;
+    helpers::DRMHelper drm;
+    helpers::GBMHelper gbm;
 };
 
 }
 }
 }
+#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
 
-#endif // MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
