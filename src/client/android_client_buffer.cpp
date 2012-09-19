@@ -68,7 +68,7 @@ struct MemoryRegionDeleter
 
     void operator()(mcl::MemoryRegion *reg)
     {
-        registrar->release_from_cpu(package);
+        //registrar->release_from_cpu(package);
         delete reg;
     }
 private:
