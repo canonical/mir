@@ -36,6 +36,6 @@ add_library(
 target_link_libraries(
   test-utils 
 
-  GLESv2
+  ${GLESv2_LIBRARIES}
 )
 
