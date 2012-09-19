@@ -36,4 +36,5 @@ target_link_libraries(
 
   ${LIBHARDWARE_LIBRARIES}
   ${ANDROID_UI_LIBRARIES}
+  ${GLESv2_LIBRARIES}
 )
