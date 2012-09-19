@@ -88,7 +88,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
 
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
-            params,
+            params.name,
             buffer_bundle_factory->create_buffer_bundle(
                 params.width,
                 params.height,

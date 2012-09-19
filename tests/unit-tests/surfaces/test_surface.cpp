@@ -60,11 +60,12 @@ struct SurfaceCreation : public ::testing::Test
 {
     virtual void SetUp()
     {
+        surface_name = "test_surfaceA";
         pf = mc::PixelFormat::rgba_8888;
         mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
     }
 
-    ms::SurfaceCreationParameters creation_params;
+    std::string surface_name;
     std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
     mc::PixelFormat pf;
 };
@@ -74,7 +75,7 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
 {
     using namespace testing;
 
-    ms::Surface surf(creation_params, mock_buffer_bundle );
+    ms::Surface surf(surface_name, mock_buffer_bundle );
 
     EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
         .Times(1)

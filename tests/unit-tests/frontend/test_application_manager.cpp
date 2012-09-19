@@ -65,7 +65,7 @@ TEST(ApplicationManager, create_and_destroy_surface)
         new mc::MockBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
-            ms::a_surface(),
+            ms::a_surface().name,
             buffer_bundle));
 
     MockApplicationSurfaceOrganiser organizer;

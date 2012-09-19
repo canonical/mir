@@ -28,9 +28,9 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 
 ms::Surface::Surface(
-    const ms::SurfaceCreationParameters& params,
+    const std::string& name,
     std::shared_ptr<mc::BufferBundle> buffer_bundle) :
-    params(params),
+    surface_name(name),
     buffer_bundle(buffer_bundle)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
@@ -39,7 +39,7 @@ ms::Surface::Surface(
 
 std::string const& ms::Surface::name() const
 {
-    return params.name;
+    return surface_name;
 }
 
 mir::geometry::Width ms::Surface::width() const

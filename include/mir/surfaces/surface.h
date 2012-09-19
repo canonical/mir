@@ -61,7 +61,7 @@ SurfaceCreationParameters a_surface();
 class Surface : public graphics::Renderable
 {
  public:
-    Surface(const SurfaceCreationParameters& params,
+    Surface(const std::string& name,
             std::shared_ptr<compositor::BufferBundle> buffer_bundle);
 
     std::string const& name() const;
@@ -72,6 +72,7 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::BufferIPCPackage> get_next_buffer_ipc_package() const;
 
  private:
+    std::string surface_name;
     SurfaceCreationParameters params;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
 };
