@@ -21,7 +21,10 @@
 #define MIR_CLIENT_ANDROID_CLIENT_BUFFER_H_
 
 #include "mir_client/client_buffer.h"
+#include "mir_client/mir_buffer_package.h"
+#include "mir_client/android_registrar.h"
 
+#include <memory>
 namespace mir
 {
 namespace client
@@ -30,8 +33,7 @@ namespace client
 class AndroidClientBuffer : public ClientBuffer
 {
 public:
-    AndroidClientBuffer(const MirBufferPackage&) {}
-
+    AndroidClientBuffer(std::shared_ptr<MirBufferPackage> ) {}
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 

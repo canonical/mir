@@ -20,20 +20,10 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
-#include <vector>
-
 namespace mir
 {
 namespace client
 {
-
-/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
-               maintain divide between client/server headers */
-struct MirBufferPackage
-{
-    std::vector<int> data;
-    std::vector<int> fd;
-};
 
 class ClientBuffer
 {

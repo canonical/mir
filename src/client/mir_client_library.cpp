@@ -18,7 +18,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_rpc_channel.h"
-#include "mir_client/android_client_buffer.h" 
+#include "mir_client/mir_buffer_package.h" 
 
 #include "mir_protobuf.pb.h"
 

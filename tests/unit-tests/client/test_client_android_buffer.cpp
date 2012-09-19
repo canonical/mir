@@ -17,24 +17,42 @@
  */
 
 #include "mir_client/android_client_buffer.h"
+#include "mir_client/mir_buffer_package.h"
 
 #include <memory>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mcl=mir::client;
+
+struct MockAndroidRegistrar : public mcl::AndroidRegistrar
+{
+    MOCK_METHOD1(register_buffer, void(std::shared_ptr<mcl::MirBufferPackage>));
+};
 
 class ClientAndroidBufferTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
+        package = std::make_shared<mcl::MirBufferPackage>();
+        mock_android_registrar = std::make_shared<MockAndroidRegistrar>();
     }
+    std::shared_ptr<mcl::MirBufferPackage> package;
+    std::shared_ptr<mcl::AndroidClientBuffer> buffer;
+    std::shared_ptr<MockAndroidRegistrar> mock_android_registrar;
 };
 
 TEST_F(ClientAndroidBufferTest, client_init)
 {
-    mcl::MirBufferPackage package;
-    auto buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
     EXPECT_NE((int) buffer.get(), NULL);
 }
 
+TEST_F(ClientAndroidBufferTest, client_registers_right_handle)
+{
+    EXPECT_CALL(*mock_android_registrar, register_buffer(package))
+        .Times(1);
+ 
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(package);
+}
