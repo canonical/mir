@@ -35,6 +35,7 @@ class AdaptorICSTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice());
         native_handle = mock_alloc_device->buffer_handle; 
 
@@ -48,6 +49,10 @@ protected:
 
         stride = geom::Stride(300*4);
 
+        EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,_,_,_))
+            .Times(AtLeast(0));
+        EXPECT_CALL(*mock_alloc_device, free_interface(_,_))
+            .Times(AtLeast(0));
     }
 
     native_handle_t* native_handle;
@@ -112,21 +117,6 @@ TEST_F(AdaptorICSTest, resource_type_test_success_ret)
     EXPECT_NE(buffer_data.get(), (mga::AndroidBufferHandle*) NULL);
 }
 
-#if 0
-TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
-    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
-
-    geom::Stride saved_stride(0);
-    stride = geom::Stride(0);
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
-    EXPECT_NE(saved_stride, stride );
-}
-#endif
-
 TEST_F(AdaptorICSTest, resource_type_test_proper_alloc_is_used)
 {
     using namespace testing;
@@ -181,11 +171,6 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
 
     alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
-
-
-
-
-
 
 TEST_F(AdaptorICSTest, handle_width_is_correct)
 {
