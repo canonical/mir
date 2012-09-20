@@ -19,6 +19,7 @@
 #include "mir_client/android_client_buffer.h"
 #include "mir_client/mir_buffer_package.h"
 
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -27,17 +28,17 @@ namespace mcl=mir::client;
 class ICSRegistrarInterface
 {
 public:
-    virtual int registerBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) = 0;
-    virtual int unregisterBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) = 0;
+    virtual int registerBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
+    virtual int unregisterBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
     virtual int lock_interface(struct gralloc_module_t const* module, buffer_handle_t handle,
-                     int usage, int l, int t, int w, int h, void** vaddr) = 0;
-    virtual int unlock_interface(struct gralloc_module_t const* module, buffer_handle_t handle) = 0;
+                     int usage, int l, int t, int w, int h, void** vaddr) const = 0;
+    virtual int unlock_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
 };
 
 class MockRegistrarDevice : public ICSRegistrarInterface, 
                             public gralloc_module_t
 {
-public
+public:
     MockRegistrarDevice()
     {
         registerBuffer = hook_registerBuffer;
@@ -46,29 +47,33 @@ public
         unlock = hook_unlock;
     }
 
-    MOCK_METHOD2(registerBuffer_interface, int (struct gralloc_module_t const*, buffer_handle_t));
-    MOCK_METHOD2(unregisterBuffer_interface, int (struct gralloc_module_t const*, buffer_handle_t));
-    MOCK_METHOD8(lock_interface, int(struct gralloc_module_t const*, buffer_handle_t,
+    MOCK_CONST_METHOD2(registerBuffer_interface, int (struct gralloc_module_t const*, buffer_handle_t));
+    MOCK_CONST_METHOD2(unregisterBuffer_interface, int (struct gralloc_module_t const*, buffer_handle_t));
+    MOCK_CONST_METHOD8(lock_interface, int(struct gralloc_module_t const*, buffer_handle_t,
                                      int, int, int, int, int, void**));
-    MOCK_METHOD2(unlock_interface, int(struct gralloc_module_t const* module, buffer_handle_t handle));
+    MOCK_CONST_METHOD2(unlock_interface, int(struct gralloc_module_t const* module, buffer_handle_t handle));
 
     static int hook_registerBuffer(struct gralloc_module_t const* module, buffer_handle_t handle)
     {
-        MockRegistrarDevice *registrar = static_cast<MockRegistrarDevice*>(module);
-        return registrar->registerBufferInterface(module, handle);
+        const MockRegistrarDevice *registrar = static_cast<const MockRegistrarDevice*>(module);
+        return registrar->registerBuffer_interface(module, handle);
     }
     static int hook_unregisterBuffer(struct gralloc_module_t const* module, buffer_handle_t handle)
     {
-
+        const MockRegistrarDevice *registrar = static_cast<const MockRegistrarDevice*>(module);
+        return registrar->unregisterBuffer_interface(module, handle);
     }
     static int hook_lock(struct gralloc_module_t const* module, buffer_handle_t handle,
                      int usage, int l, int t, int w, int h, void** vaddr)
     {
+        const MockRegistrarDevice *registrar = static_cast<const MockRegistrarDevice*>(module);
+        return registrar->lock_interface(module, handle, usage, l, t, w, h, vaddr);
 
     }
     static int hook_unlock(struct gralloc_module_t const* module, buffer_handle_t handle)
     {
-
+        const MockRegistrarDevice *registrar = static_cast<const MockRegistrarDevice*>(module);
+        return registrar->unlock_interface(module, handle);
     }
 };
 
