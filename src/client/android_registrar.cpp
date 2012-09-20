@@ -21,13 +21,14 @@
 
 namespace mcl=mir::client;
 
-mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(gralloc_module_t*)
+mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const gralloc_module_t* gr_module)
+: gralloc_module(gr_module)
 {
-
 }
 
-void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t *)
+void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t * handle)
 {
+    gralloc_module->registerBuffer(gralloc_module, handle);
 }
 
 void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t *)
