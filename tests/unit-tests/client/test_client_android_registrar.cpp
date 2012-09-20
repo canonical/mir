@@ -214,12 +214,23 @@ TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
 
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_left_corner)
+TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_corner)
 {
     using namespace testing;
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
-    EXPECT_CALL(*mock_module, lock_interface(_,_,_,0,0,_,_,_))
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,top,_,_,_,_))
+        .Times(1);
+
+    registrar.secure_for_cpu(fake_handle, rect );
+}
+
+TEST_F(ClientAndroidRegistrarTest, region_locks_from_left_corner)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,left,_,_,_))
         .Times(1);
 
     registrar.secure_for_cpu(fake_handle, rect );
