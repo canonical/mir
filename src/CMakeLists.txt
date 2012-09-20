@@ -46,6 +46,7 @@ add_executable(
   ubuntu_display_server
   
   main.cpp
+  ${MIR_3RD_PARTY_SOURCES}
 )
 
 target_link_libraries(
@@ -60,8 +61,6 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
  
-  3rd_party
-
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

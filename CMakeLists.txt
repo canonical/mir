@@ -92,6 +92,7 @@ else ()
 endif()
 
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
+set(MIR_3RD_PARTY_SOURCES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 

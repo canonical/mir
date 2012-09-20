@@ -26,7 +26,7 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 if(PROTOBUF_FOUND)
 
@@ -49,6 +49,7 @@ add_library(
   mirclient SHARED
   
   ${CLIENT_SOURCES}
+  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set_target_properties(
@@ -66,6 +67,7 @@ target_link_libraries(
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 add_executable(
@@ -80,7 +82,6 @@ target_link_libraries(
   mirclient
   mirprotobuf
   
-  3rd_party
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
