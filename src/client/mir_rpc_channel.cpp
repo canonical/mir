@@ -28,6 +28,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/null.hpp>
 
+#include <cstdlib>
 
 namespace
 {
@@ -125,6 +126,8 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
     int received = 0;
     while ((received = ancil_recv_fds(socket.native_handle(), buffer, size)) == -1)
         /* TODO avoid spinning forever */;
+
+    log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
 
     if (auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response))
     {
@@ -262,6 +265,10 @@ std::ostream& c::ConsoleLogger::error()
 
 std::ostream& c::ConsoleLogger::debug()
 {
+    static char const* const debug = getenv("MIR_CLIENT_DEBUG");
+
+    if (debug) return std::cerr  << "DEBUG: ";
+
     static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
     return null;
 }
