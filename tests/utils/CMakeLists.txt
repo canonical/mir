@@ -14,6 +14,8 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+include_directories(${GLESv2_INCLUDE_DIRS})
+
 set(
   TEST_UTILS_SRCS
 

@@ -15,18 +15,12 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-include_directories(${GLESv2_INCLUDE_DIRS})
-
-if (MIR_PLATFORM STREQUAL "gbm")
-    set(RENDER_TO_FB_EXTRA_LINK_LIBRARIES gbm drm)
-endif()
-
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
+
 target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
     test-utils
-    ${GLESv2_LIBRARIES}
 )
