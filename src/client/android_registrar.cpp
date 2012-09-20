@@ -75,10 +75,12 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(
 
     int width = extract_width_from_handle(handle);
     int height = extract_height_from_handle(handle);
-    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, 0);
+    void* vaddr;
+    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr);
 
     MemoryRegionDeleter del(gralloc_module, handle);
-    auto region = new mcl::MemoryRegion; 
+    auto region = new mcl::MemoryRegion;
+    region->vaddr = (char*) vaddr; 
     return std::shared_ptr<mcl::MemoryRegion>(region, del);
 }
 

@@ -32,8 +32,10 @@ struct MemoryRegion
 {
     int   width;
     int   height;
-    char *vaddr; /* valid upto vaddr[width*height - 1] */
-    int format;
+    int   bytes_per_pixel; 
+    char *vaddr; /* valid from vaddr[0] to vaddr[width*height*bytes_per_pixel] */
+
+    int   format;
 };
 
 class ClientBuffer
