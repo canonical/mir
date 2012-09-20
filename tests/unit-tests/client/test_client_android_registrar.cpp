@@ -135,3 +135,29 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
     registrar.unregister_buffer(fake_handle);
 }
 
+TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    const gralloc_module_t *gralloc_dev_alloc, *gralloc_dev_freed;
+    const native_handle_t *handle_alloc, *handle_freed;
+
+    EXPECT_CALL(mock_reg_device, lock_interface(_,_,_,_,_,_,_,_))
+        .Times(1)
+        .WillOnce(DoAll(
+        SaveArg<0>(&gralloc_dev_alloc),
+        SaveArg<1>(&handle_alloc),
+        Return(0)));
+    EXPECT_CALL(mock_reg_device, unlock_interface(_,_))
+        .Times(1)
+        .WillOnce(DoAll(
+        SaveArg<0>(&gralloc_dev_freed),
+        SaveArg<1>(&handle_freed),
+        Return(0)));
+
+    registrar.secure_for_cpu(fake_handle);
+
+    EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
+    EXPECT_EQ(handle_alloc, handle_freed);
+}
