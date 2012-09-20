@@ -82,12 +82,12 @@ class ClientAndroidRegistrarTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_module = &mock_reg_device;
+        mock_module = std::shared_ptr<gralloc_module_t>( &mock_reg_device );
         fake_handle = (native_handle_t*) 0x482;
     }
 
     native_handle_t * fake_handle;
-    gralloc_module_t * mock_module;
+    std::shared_ptr<gralloc_module_t> mock_module;
     MockRegistrarDevice mock_reg_device;
 };
 
@@ -96,7 +96,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
     using namespace testing;
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
-    EXPECT_CALL(mock_reg_device, registerBuffer_interface(mock_module, _))
+    EXPECT_CALL(mock_reg_device, registerBuffer_interface(mock_module.get(), _))
         .Times(1);
 
     registrar.register_buffer(fake_handle);
@@ -118,7 +118,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
     using namespace testing;
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
-    EXPECT_CALL(mock_reg_device, unregisterBuffer_interface(mock_module, _))
+    EXPECT_CALL(mock_reg_device, unregisterBuffer_interface(mock_module.get(), _))
         .Times(1);
 
     registrar.unregister_buffer(fake_handle);
