@@ -37,6 +37,10 @@ ms::Surface::Surface(
     assert(buffer_bundle);
 }
 
+ms::Surface::~Surface()
+{
+}
+
 std::string const& ms::Surface::name() const
 {
     return surface_name;
