@@ -42,18 +42,14 @@ public:
     Platform() = default;
     Platform(const Platform& p) = delete;
     Platform& operator=(const Platform& p) = delete;
+
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator() = 0;
+    virtual std::shared_ptr<Display> create_display() = 0;
 };
 
 // Create and return a new graphics platform.
 std::shared_ptr<Platform> create_platform();
 
-// Create and return a new graphics buffer allocator.
-std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<Platform>& platform);
-
-//Create and return a new graphics display
-std::shared_ptr<Display> create_display(
-        const std::shared_ptr<Platform>& platform);
 }
 }
 

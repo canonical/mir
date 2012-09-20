@@ -31,7 +31,7 @@ TEST(AndroidFramebufferIntegration, init_does_not_throw)
     EXPECT_NO_THROW(
     {
         auto platform = mg::create_platform();
-        auto display = mg::create_display(platform);
+        auto display = platform->create_display();
         display->post_update();
     });
 
