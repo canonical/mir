@@ -19,6 +19,8 @@
 #include "mir_client/android_registrar_gralloc.h"
 #include "mir_client/client_buffer.h"
 
+#include <stdexcept>
+
 namespace mcl=mir::client;
 
 mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
@@ -28,7 +30,8 @@ mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<cons
 
 void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t * handle)
 {
-    gralloc_module->registerBuffer(gralloc_module.get(), handle);
+    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+        throw std::runtime_error("error registering graphics buffer for client use\n");
 }
 
 void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t * handle)
@@ -73,7 +76,8 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(
     int width = extract_width_from_handle(handle);
     int height = extract_height_from_handle(handle);
 
-    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr);
+    if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr) )
+        throw std::runtime_error("error securing buffer for client cpu use");
 
     auto region = new mcl::MemoryRegion;
     region->vaddr = (char*) vaddr;  
