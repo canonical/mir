@@ -59,7 +59,7 @@ cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
 cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
-    google::protobuf::Closure* complete)
+    std::shared_ptr<google::protobuf::Closure> const& complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -154,10 +154,11 @@ void c::MirRpcChannel::CallMethod(
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
-    complete = google::protobuf::NewCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete);
+    std::shared_ptr<google::protobuf::Closure> callback(
+        google::protobuf::NewPermanentCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete));
 
     // Only save details after serialization succeeds
-    auto& send_buffer = pending_calls.save_completion_details(invocation, response, complete);
+    auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
     send_message(buffer.str(), send_buffer);
