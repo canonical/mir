@@ -18,10 +18,12 @@
 
 #include "mir_client/android_registrar_gralloc.h"
 #include "mir_client/client_buffer.h"
+#include "mir/geometry/android_pixel_format.h"
 
 #include <stdexcept>
 
 namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
 mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
 : gralloc_module(gr_module)
@@ -69,20 +71,28 @@ int mcl::AndroidRegistrarGralloc::extract_height_from_handle(const std::shared_p
     return handle->data[offset];
 }
 
+geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std::shared_ptr<const native_handle_t>& handle)
+{
+    int offset = handle->numFds + pf_offset_from_fd; 
+    return geom::android::convert_from_android_pixel_code(handle->data[offset]);
+}
+
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
 {
     void* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     int width = extract_width_from_handle(handle);
     int height = extract_height_from_handle(handle);
+    geom::PixelFormat pf = extract_pf_from_handle(handle);
 
     if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr) )
         throw std::runtime_error("error securing buffer for client cpu use");
 
     auto region = new mcl::MemoryRegion;
     region->vaddr = (char*) vaddr;  
-    region->width = geometry::Width(width);
-    region->height = geometry::Height(height); 
+    region->width = geom::Width(width);
+    region->height = geom::Height(height);
+    region->format = pf; 
     MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<mcl::MemoryRegion>(region, del);
 }

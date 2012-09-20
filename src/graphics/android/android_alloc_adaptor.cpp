@@ -19,7 +19,6 @@
 
 #include "mir/graphics/android/android_alloc_adaptor.h"
 #include "mir/graphics/android/android_buffer_handle_default.h"
-#include "mir/geometry/android_pixel_format.h"
 
 #include <stdexcept>
 
@@ -64,7 +63,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     buffer_handle_t buf_handle = NULL;
 
     int ret, stride_as_int = 0;
-    int format = geom::android::convert_to_android_pixel_code(pf);
+    int format = convert_to_android_pixel_code(pf);
     int usage_flag = convert_to_android_usage(usage);
     ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),
                            format, usage_flag, &buf_handle, &stride_as_int);
@@ -104,4 +103,16 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     }
 }
 
+int mga::AndroidAllocAdaptor::convert_to_android_pixel_code(geom::PixelFormat mir_pixel_format)
+{
+    switch(mir_pixel_format)
+    {
+        case geom::PixelFormat::rgba_8888:
+            return HAL_PIXEL_FORMAT_RGBA_8888;
+        case geom::PixelFormat::rgb_888:
+            return HAL_PIXEL_FORMAT_RGB_888;
+        default:
+            return 0;
+    }
+}
 
