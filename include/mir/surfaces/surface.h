@@ -20,8 +20,8 @@
 #define MIR_SURFACES_SURFACE_H_
 
 #include "mir/geometry/dimensions.h"
+#include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/pixel_format.h"
 
 #include <memory>
 #include <string>

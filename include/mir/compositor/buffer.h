@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_BUFFER_H_
 
 #include "mir/geometry/dimensions.h"
-#include "mir/compositor/pixel_format.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <memory>
 

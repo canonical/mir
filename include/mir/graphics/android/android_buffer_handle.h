@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
 #include "mir/geometry/dimensions.h"
-#include "mir/compositor/pixel_format.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <EGL/egl.h>
 #include <memory>
