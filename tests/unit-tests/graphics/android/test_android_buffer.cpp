@@ -118,7 +118,7 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 {
     using namespace testing;
 
-    geom::PixelFormat pf2 = geom::PixelFormat::rgba_5658;
+    geom::PixelFormat pf2 = geom::PixelFormat::rgb_888;
 
     EXPECT_CALL(*mock_buffer_handle, format())
     .Times(Exactly(1))

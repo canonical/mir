@@ -21,12 +21,14 @@
 #include "mir_client/android_registrar_gralloc.h"
 #include "mir_test/mock_android_alloc_device.h"
 
+#include <system/graphics.h>
 #include <stdexcept>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
 class ICSRegistrarInterface
 {
@@ -94,12 +96,14 @@ protected:
         height = 43;
         int numDataICS = 8; /* typical ICS/JB number of ints */
         numFd = 4; /*example value */
-        width_position_in_handle = numFd + ics_width_offset;
-        height_position_in_handle = numFd + ics_height_offset;
+        int width_position_in_handle = numFd + ics_width_offset;
+        int height_position_in_handle = numFd + ics_height_offset;
+        int format_position_in_handle = numFd + ics_format_offset;
 
         auto handle_raw = mock_generate_sane_android_handle(numFd, numDataICS);
         handle_raw->data[width_position_in_handle] = width;
         handle_raw->data[height_position_in_handle] = height;
+        handle_raw->data[format_position_in_handle] = HAL_PIXEL_FORMAT_RGBA_8888;
         fake_handle = std::shared_ptr<native_handle_t>(handle_raw);
     }
    
@@ -107,6 +111,7 @@ protected:
     int numFd;
     static const int ics_width_offset = 5;
     static const int ics_height_offset = 6;
+    static const int ics_format_offset = 7;
     int width_position_in_handle;
     int height_position_in_handle;
 
@@ -267,6 +272,14 @@ TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_heigh
     EXPECT_EQ(height, region->height.as_uint32_t());
 }
 
+TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_format)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+    EXPECT_EQ(geom::PixelFormat::rgba_8888, region->format);
+}
 
 TEST_F(ClientAndroidRegistrarTest, register_failure)
 {

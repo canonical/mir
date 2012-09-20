@@ -29,9 +29,9 @@ namespace geometry
 enum class PixelFormat : uint32_t
 {
     rgba_8888,
-    rgba_5658
+    rgb_888,
+    pixel_format_invalid
 };
-
 
 class PixelOperation
 {
@@ -44,7 +44,7 @@ public:
         {
             case PixelFormat::rgba_8888:
                 return 4;
-            case PixelFormat::rgba_5658:
+            case PixelFormat::rgb_888:
                 return 3;
             default:
                 return 0;

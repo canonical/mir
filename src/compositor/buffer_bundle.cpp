@@ -73,7 +73,7 @@ mc::BufferBundleSurfaces::BufferBundleSurfaces(
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper) :
-    swapper(std::move(swapper)), width(), height(), pixel_format(geom::PixelFormat::rgba_5658)
+    swapper(std::move(swapper)), width(), height(), pixel_format(geom::PixelFormat::rgba_8888)
 {
 }
 

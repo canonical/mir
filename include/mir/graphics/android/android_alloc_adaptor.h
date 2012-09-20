@@ -42,7 +42,6 @@ public:
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;
-    int convert_to_android_format(geometry::PixelFormat pf);
     int convert_to_android_usage(BufferUsage usage);
 
 };
