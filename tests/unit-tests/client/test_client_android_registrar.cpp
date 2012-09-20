@@ -83,12 +83,32 @@ protected:
     virtual void SetUp()
     {
         mock_module = &mock_reg_device;
+        fake_handle = (native_handle_t*) 0x482;
     }
+
+    native_handle_t * fake_handle;
     gralloc_module_t * mock_module;
     MockRegistrarDevice mock_reg_device;
 };
 
-TEST_F(ClientAndroidRegistrarTest, registrar_init)
+TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 {
+    using namespace testing;
     mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(mock_reg_device, registerBuffer_interface(mock_module, _))
+        .Times(1);
+
+    registrar.register_buffer(fake_handle);
+}
+
+TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(mock_reg_device, registerBuffer_interface(_, fake_handle))
+        .Times(1);
+
+    registrar.register_buffer(fake_handle);
 }
