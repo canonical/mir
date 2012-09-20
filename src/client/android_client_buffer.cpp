@@ -19,9 +19,11 @@
 #include "mir_client/android_client_buffer.h"
 
 namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                                              std::shared_ptr<MirBufferPackage> && package )
+                         std::shared_ptr<MirBufferPackage> && package, geom::Width && w,
+                         geom::Height && h, geom::PixelFormat && pf)
  : buffer_registrar(registrar)
 {
     auto buffer_package = std::move(package);

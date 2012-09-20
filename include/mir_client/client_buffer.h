@@ -42,6 +42,9 @@ struct MemoryRegion
 class ClientBuffer
 {
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
+    virtual geometry::Width width() const = 0;
+    virtual geometry::Height height() const = 0;
+    virtual geometry::PixelFormat pixel_format() const = 0;
 };
 
 }

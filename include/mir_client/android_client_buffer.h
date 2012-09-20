@@ -33,10 +33,14 @@ namespace client
 class AndroidClientBuffer : public ClientBuffer
 {
 public:
-    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> && );
+    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> &&,
+                        geometry::Width && width,  geometry::Height && height, geometry::PixelFormat && pf );
     ~AndroidClientBuffer();
     
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
+    geometry::Width width() const;
+    geometry::Height height() const;
+    geometry::PixelFormat pixel_format() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
@@ -46,6 +50,9 @@ private:
     std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
 
+    const geometry::Height buffer_height;
+    const geometry::Width buffer_width;
+    const geometry::PixelFormat buffer_pf;
 };
 
 }
