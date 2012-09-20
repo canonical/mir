@@ -71,18 +71,18 @@ int mcl::AndroidRegistrarGralloc::extract_height_from_handle(const std::shared_p
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
 {
+    void* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-
     int width = extract_width_from_handle(handle);
     int height = extract_height_from_handle(handle);
-    void* vaddr;
+
     gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr);
 
-    MemoryRegionDeleter del(gralloc_module, handle);
     auto region = new mcl::MemoryRegion;
     region->vaddr = (char*) vaddr;  
     region->width = width;
     region->height = height; 
+    MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<mcl::MemoryRegion>(region, del);
 }
 
