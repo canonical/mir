@@ -16,34 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/gbm/gbm_display_helpers.h"
 
 namespace mir
 {
 namespace graphics
 {
-namespace gbm
+namespace android
 {
 
-class GBMPlatform : public Platform, public std::enable_shared_from_this<GBMPlatform>
+class AndroidPlatform : public Platform
 {
 public:
-    GBMPlatform();
-
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
     std::shared_ptr<Display> create_display();
-
-    helpers::DRMHelper drm;
-    helpers::GBMHelper gbm;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
-
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */

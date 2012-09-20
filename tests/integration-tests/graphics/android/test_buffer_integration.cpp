@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/platform.h"
+#include "mir/graphics/android/android_platform.h"
 #include "mir/graphics/android/android_buffer_allocator.h"
 #include "mir/graphics/android/android_display.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
@@ -42,22 +42,22 @@ protected:
     {
         ASSERT_NO_THROW(
         {
-            std::shared_ptr<mg::Platform> platform;
-            display = mg::create_display(platform);
+            platform = std::make_shared<mga::AndroidPlatform>();
+            display = platform->create_display();
         }); 
     }
 
     virtual void SetUp()
     {
-        allocator = std::make_shared<mga::AndroidBufferAllocator>();
+        allocator = platform->create_buffer_allocator();
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
         w = geom::Width(gl_animation.texture_width());
         h = geom::Height(gl_animation.texture_height());
         pf  = mc::PixelFormat::rgba_8888;
     }
- 
+
     mt::glAnimationBasic gl_animation;
-    std::shared_ptr<mga::AndroidBufferAllocator> allocator;
+    std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
     geom::Width  w;
     geom::Height h;
@@ -66,10 +66,12 @@ protected:
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
        figure out why, we can put display in the test fixture */
+    static std::shared_ptr<mg::Platform> platform; 
     static std::shared_ptr<mg::Display> display;
 };
 
 std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
+std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform; 
 
 TEST_F(AndroidBufferIntegration, post_does_not_throw)
 {
