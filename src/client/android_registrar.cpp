@@ -16,8 +16,25 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android_registrar.h"
+#include "mir_client/android_registrar_gralloc.h"
+#include "mir_client/client_buffer.h"
 
 namespace mcl=mir::client;
 
-mcl::
+mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(gralloc_module_t*)
+{
+
+}
+
+void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t *)
+{
+}
+
+void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t *)
+{
+}
+
+std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(const native_handle_t *)
+{
+    return std::make_shared<mcl::MemoryRegion>();
+}

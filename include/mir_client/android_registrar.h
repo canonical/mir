@@ -28,6 +28,7 @@ namespace mir
 {
 namespace client
 {
+class MemoryRegion;
 
 class AndroidRegistrar
 {
