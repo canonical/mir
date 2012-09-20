@@ -31,8 +31,9 @@ void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t * handl
     gralloc_module->registerBuffer(gralloc_module, handle);
 }
 
-void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t *)
+void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t * handle)
 {
+    gralloc_module->unregisterBuffer(gralloc_module, handle);
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(const native_handle_t *)
