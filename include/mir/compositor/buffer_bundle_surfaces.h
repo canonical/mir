@@ -38,7 +38,7 @@ public:
         std::unique_ptr<BufferSwapper>&& swapper,
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pixel_format);
+        geometry::PixelFormat pixel_format);
 
     ~BufferBundleSurfaces();
 
@@ -46,7 +46,7 @@ public:
 
     std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
 
-    PixelFormat get_bundle_pixel_format();
+    geometry::PixelFormat get_bundle_pixel_format();
     geometry::Height bundle_height();
     geometry::Width bundle_width();
 
@@ -58,7 +58,7 @@ private:
     std::unique_ptr<BufferSwapper> swapper;
     geometry::Width width;
     geometry::Height height;
-    PixelFormat pixel_format;
+    geometry::PixelFormat pixel_format;
 };
 
 }

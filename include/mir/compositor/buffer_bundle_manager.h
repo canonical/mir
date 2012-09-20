@@ -49,7 +49,7 @@ public:
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pf);
+        geometry::PixelFormat pf);
 
 private:
     std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;

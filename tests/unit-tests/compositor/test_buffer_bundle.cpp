@@ -38,7 +38,7 @@ protected:
         width = geom::Width{1024};
         height =geom::Height{768};
         stride = geom::Stride{1024};
-        pixel_format = mc::PixelFormat{mc::PixelFormat::rgba_8888};
+        pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
 
         mock_buffer = std::make_shared<mc::MockBuffer>(width, height, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
@@ -63,7 +63,7 @@ protected:
     geom::Width width;
     geom::Height height;
     geom::Stride stride;
-    mc::PixelFormat pixel_format;
+    geom::PixelFormat pixel_format;
 };
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_binds)

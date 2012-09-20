@@ -45,13 +45,13 @@ protected:
 
         w = geom::Width(300);
         h = geom::Height(200);
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
     }
 
     // Defaults
     geom::Width w;
     geom::Height h;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
@@ -74,7 +74,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(w, h, mc::PixelFormat::rgba_8888);
+    allocator->alloc_buffer(w, h, geom::PixelFormat::rgba_8888);
 }
 
 static bool has_hardware_rendering_flag_set(uint32_t flags) {

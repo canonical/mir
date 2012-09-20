@@ -58,7 +58,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     std::shared_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
     geom::Width w(320);
     geom::Height h(240);
-    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     auto buffer = allocator->alloc_buffer(w, h, pf);
 
     ASSERT_TRUE(buffer.get() != NULL); 

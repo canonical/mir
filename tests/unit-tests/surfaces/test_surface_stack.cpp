@@ -79,7 +79,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
         std::shared_ptr<mc::BufferBundle>(
             geom::Width width,
             geom::Height height,
-            mc::PixelFormat pf));
+            geom::PixelFormat pf));
 
 };
 

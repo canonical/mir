@@ -38,7 +38,7 @@ public:
     explicit GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Width w, geometry::Height h, compositor::PixelFormat pf);
+        geometry::Width w, geometry::Height h, geometry::PixelFormat pf);
 
 
 private:

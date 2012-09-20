@@ -41,7 +41,7 @@ public:
     virtual std::unique_ptr<BufferSwapper> create_swapper(
         geometry::Width width,
         geometry::Height height,
-        PixelFormat pf) = 0;
+        geometry::PixelFormat pf) = 0;
 
 protected:
     ~BufferAllocationStrategy() {}

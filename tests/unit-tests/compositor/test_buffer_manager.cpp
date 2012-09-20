@@ -47,13 +47,13 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MOCK_METHOD3(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, geom::PixelFormat));
 };
 
 const geom::Width width{1024};
 const geom::Height height{768};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
-const mc::PixelFormat pixel_format{mc::PixelFormat::rgba_8888};
+const geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
 
 }
 

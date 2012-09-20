@@ -61,7 +61,7 @@ struct SurfaceCreation : public ::testing::Test
     virtual void SetUp()
     {
         surface_name = "test_surfaceA";
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
         width = geom::Width(43);
         height = geom::Height(420);
         mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
@@ -69,7 +69,7 @@ struct SurfaceCreation : public ::testing::Test
 
     std::string surface_name;
     std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
     geom::Width width;
     geom::Height height;
 };

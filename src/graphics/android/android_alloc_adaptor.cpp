@@ -56,8 +56,8 @@ struct AndroidBufferHandleEmptyDeleter
 };
 
 std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
-    geometry::Width width, geometry::Height height,
-    compositor::PixelFormat pf, BufferUsage usage)
+    geom::Width width, geom::Height height,
+    geom::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
 
@@ -102,11 +102,11 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     }
 }
 
-int mga::AndroidAllocAdaptor::convert_to_android_format(mc::PixelFormat pf)
+int mga::AndroidAllocAdaptor::convert_to_android_format(geom::PixelFormat pf)
 {
     switch (pf)
     {
-    case mc::PixelFormat::rgba_8888:
+    case geom::PixelFormat::rgba_8888:
         return HAL_PIXEL_FORMAT_RGBA_8888;
     default:
         return -1;

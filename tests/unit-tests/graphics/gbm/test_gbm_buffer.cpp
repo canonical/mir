@@ -48,7 +48,7 @@ protected:
 
         width = geom::Width(300);
         height = geom::Height(200);
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(width.as_uint32_t()));
@@ -68,7 +68,7 @@ protected:
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
     geom::Width width;
     geom::Height height;
 };

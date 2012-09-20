@@ -47,7 +47,7 @@ public:
 
     virtual geometry::Stride stride() const = 0;
 
-    virtual PixelFormat pixel_format() const = 0;
+    virtual geometry::PixelFormat pixel_format() const = 0;
 
     virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
 

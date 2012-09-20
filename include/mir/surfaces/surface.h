@@ -68,7 +68,7 @@ class Surface : public graphics::Renderable
     std::string const& name() const;
     geometry::Width width() const;
     geometry::Height height() const;
-    compositor::PixelFormat pixel_format() const;
+    geometry::PixelFormat pixel_format() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 
  private:

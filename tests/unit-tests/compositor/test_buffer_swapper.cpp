@@ -32,7 +32,7 @@ namespace
 geom::Width w {1024};
 geom::Height h {768};
 geom::Stride s {1024};
-mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
+geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
 struct BufferSwapper : testing::Test
 {

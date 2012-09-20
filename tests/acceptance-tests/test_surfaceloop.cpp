@@ -51,9 +51,9 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 
     MOCK_METHOD3(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, mc::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, geom::PixelFormat));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Width, geom::Height, mc::PixelFormat)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Width, geom::Height, geom::PixelFormat)
     {
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(std::unique_ptr<mc::Buffer>(), std::unique_ptr<mc::Buffer>()));
@@ -65,13 +65,13 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
  public:
     MOCK_METHOD3(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (geom::Width, geom::Height, mc::PixelFormat));
+        std::unique_ptr<mc::Buffer> (geom::Width, geom::Height, geom::PixelFormat));
 };
 
 
 geom::Width const width{640};
 geom::Height const height{480};
-mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
+geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 }
 
 namespace mir
@@ -469,7 +469,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual geom::Stride stride() const { return geom::Stride(); }
 
-        virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
+        virtual geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
 
         virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
         {
@@ -488,7 +488,7 @@ struct BufferCounterConfig : TestingServerConfiguration
         virtual std::unique_ptr<mc::Buffer> alloc_buffer(
             geom::Width /*width*/,
             geom::Height /*height*/,
-            mc::PixelFormat /*pf*/)
+            geom::PixelFormat /*pf*/)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());
         }

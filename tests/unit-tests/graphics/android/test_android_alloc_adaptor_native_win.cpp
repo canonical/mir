@@ -38,7 +38,7 @@ protected:
         mock_alloc_device = std::make_shared<MockAllocDevice>();
 
         /* set up common defaults */
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
         width = geom::Width(110);
         height = geom::Height(230);
         usage = mga::BufferUsage::use_hardware;
@@ -60,7 +60,7 @@ protected:
     geom::Height height;
     geom::Stride stride;
     mga::BufferUsage usage;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
 };
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_height)

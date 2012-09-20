@@ -41,7 +41,7 @@ protected:
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
         /* set up common defaults */
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
         width = geom::Width(300);
         height = geom::Height(200);
         usage = mga::BufferUsage::use_hardware;
@@ -54,7 +54,7 @@ protected:
     std::shared_ptr<MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
     geom::Width width;
     geom::Height height;
     geom::Stride stride;

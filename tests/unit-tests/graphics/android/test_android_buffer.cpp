@@ -40,7 +40,7 @@ protected:
         mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
 
         /* set up common defaults */
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
         width = geom::Width(300);
         height = geom::Height(200);
 
@@ -50,7 +50,7 @@ protected:
 
     std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
     std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
     geom::Width width;
     geom::Height height;
 };
@@ -118,7 +118,7 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 {
     using namespace testing;
 
-    mc::PixelFormat pf2 = mc::PixelFormat::rgba_5658;
+    geom::PixelFormat pf2 = geom::PixelFormat::rgba_5658;
 
     EXPECT_CALL(*mock_buffer_handle, format())
     .Times(Exactly(1))

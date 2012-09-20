@@ -43,7 +43,7 @@ public:
 
         width = geom::Width(300);
         height = geom::Height(220);
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
         buffer = std::shared_ptr<mc::Buffer>(
                      new mga::AndroidBuffer(mock_alloc_dev, width, height, pf));
 
@@ -58,7 +58,7 @@ public:
 
     geom::Width width;
     geom::Height height;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
 
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;

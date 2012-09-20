@@ -53,7 +53,7 @@ public:
     virtual geometry::Width width() const   = 0;
     virtual geometry::Height height() const = 0;
     virtual geometry::Stride stride() const = 0;
-    virtual compositor::PixelFormat format() const  = 0;
+    virtual geometry::PixelFormat format() const  = 0;
     virtual BufferUsage usage() const = 0;
 
     virtual EGLClientBuffer get_egl_client_buffer() const = 0;

@@ -26,6 +26,7 @@
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     const std::string& name,
@@ -55,7 +56,7 @@ mir::geometry::Height ms::Surface::height() const
 //note: not sure the surface should be aware of pixel format. might be something that the 
 //texture (which goes to compositor should be aware of though
 //todo: kdub remove 
-mc::PixelFormat ms::Surface::pixel_format() const
+geom::PixelFormat ms::Surface::pixel_format() const
 {
     return buffer_bundle->get_bundle_pixel_format();
 }
