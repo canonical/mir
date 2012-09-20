@@ -97,9 +97,9 @@ void mt::glAnimationBasic::init_gl()
     glLinkProgram(program);
 
     vPositionAttr = glGetAttribLocation(program, "vPosition");
-    glVertexAttribPointer(vPositionAttr, num_vertex, GL_FLOAT, GL_FALSE, 0, vertex_data);
+    glVertexAttribPointer(vPositionAttr, 4, GL_FLOAT, GL_FALSE, 0, vertex_data);
     uvCoord = glGetAttribLocation(program, "uvCoord");
-    glVertexAttribPointer(uvCoord, num_vertex, GL_FLOAT, GL_FALSE, 0, uv_data);
+    glVertexAttribPointer(uvCoord, 4, GL_FLOAT, GL_FALSE, 0, uv_data);
 
     GLuint texture;
     glGenTextures(1, &texture);
