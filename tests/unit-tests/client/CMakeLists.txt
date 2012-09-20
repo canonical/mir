@@ -16,6 +16,7 @@
 
 list(APPEND UNIT_TEST_SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_registrar.cpp
 )
 
 set(

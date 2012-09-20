@@ -30,7 +30,7 @@ struct MockAndroidRegistrar : public mcl::AndroidRegistrar
 {
     MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
     MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
-    MOCK_METHOD1(secure_for_cpu,   MemoryRegion(const native_handle_t*));
+    MOCK_METHOD1(secure_for_cpu, std::shared_ptr<mcl::MemoryRegion>(const native_handle_t*));
 };
 
 class ClientAndroidBufferTest : public ::testing::Test
@@ -122,19 +122,21 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
     buffer->secure_for_cpu_write();
 }
 
-TEST_F(ClientAndroidBufferTest, buffer_acquires_vaddr_for_write)
+TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
 {
     using namespace testing;
+    const native_handle_t* buffer_handle;
 
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
-    char * vaddr = (char*) 0x8534;
 
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
-        .WillOnce(Return(vaddr));
+        .WillOnce(SaveArg<0>(&buffer_handle));
 
     auto region = buffer->secure_for_cpu_write();
-    EXPECT_EQ(vaddr, region->vaddr);
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(buffer_handle))
+        .Times(1);
 }
 
 #if 0
