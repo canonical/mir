@@ -275,8 +275,9 @@ TEST_F(ClientAndroidRegistrarTest, register_failure)
         .Times(1)
         .WillOnce(Return(-1));
     
-    EXPECT_THROW({
     mcl::AndroidRegistrarGralloc registrar(mock_module);
+    EXPECT_THROW({
+        registrar.register_buffer(fake_handle.get());
     }, std::runtime_error);
 
 }
@@ -303,10 +304,10 @@ TEST_F(ClientAndroidRegistrarTest, unregister_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(mock_module);
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_NO_THROW({
-        registrar.reset();
+        registrar.unregister_buffer(fake_handle.get());
     });
 }
 
