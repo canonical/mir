@@ -66,3 +66,16 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
 {
     return buffer_registrar->secure_for_cpu(native_handle);
 }
+
+geom::Width mcl::AndroidClientBuffer::width() const
+{
+    return buffer_width;
+}
+geom::Height mcl::AndroidClientBuffer::height() const
+{
+    return buffer_height;
+}
+geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
+{
+    return buffer_pf;
+}
