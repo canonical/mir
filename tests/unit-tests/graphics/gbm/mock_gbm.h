@@ -79,10 +79,10 @@ private:
     void on_gbm_bo_set_user_data(struct gbm_bo *bo, void *data,
                                             void (*destroy_user_data)(struct gbm_bo *, void *))
     {
-        deleters.push_back(Deleter{bo, data, destroy_user_data});
+        destroyers.push_back(Destroyer{bo, data, destroy_user_data});
     }
 
-    struct Deleter
+    struct Destroyer
     {
         struct gbm_bo *bo;
         void *data;
@@ -91,7 +91,7 @@ private:
         void operator()() const { destroy_user_data(bo, data); }
     };
 
-    std::vector<Deleter> deleters;
+    std::vector<Destroyer> destroyers;
 };
 
 }

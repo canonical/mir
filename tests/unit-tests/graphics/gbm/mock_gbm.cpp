@@ -67,7 +67,7 @@ mgg::MockGBM::MockGBM()
 mgg::MockGBM::~MockGBM()
 {
     // this is probably later than optimal, but at least ensures memory freed
-    for (auto i = deleters.begin(); i != deleters.end(); ++i) (*i)();
+    for (auto i = destroyers.begin(); i != destroyers.end(); ++i) (*i)();
     global_mock = NULL;
 }
 
