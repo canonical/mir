@@ -112,3 +112,26 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
 
     registrar.register_buffer(fake_handle);
 }
+
+TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(mock_reg_device, unregisterBuffer_interface(mock_module, _))
+        .Times(1);
+
+    registrar.unregister_buffer(fake_handle);
+}
+
+TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(mock_reg_device, unregisterBuffer_interface(_, fake_handle))
+        .Times(1);
+
+    registrar.unregister_buffer(fake_handle);
+}
+
