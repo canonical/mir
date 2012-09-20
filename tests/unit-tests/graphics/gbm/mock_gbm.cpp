@@ -59,10 +59,15 @@ mgg::MockGBM::MockGBM()
 
     ON_CALL(*this, gbm_bo_get_handle(fake_gbm.bo))
     .WillByDefault(Return(fake_gbm.bo_handle));
+
+    ON_CALL(*this, gbm_bo_set_user_data(_,_,_))
+    .WillByDefault(Invoke(this, &MockGBM::on_gbm_bo_set_user_data));
 }
 
 mgg::MockGBM::~MockGBM()
 {
+    // this is probably later than optimal, but at least ensures memory freed
+    for (auto i = deleters.begin(); i != deleters.end(); ++i) (*i)();
     global_mock = NULL;
 }
 

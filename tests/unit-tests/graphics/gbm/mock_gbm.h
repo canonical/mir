@@ -74,6 +74,24 @@ public:
     MOCK_METHOD1(gbm_bo_destroy, void(struct gbm_bo *bo));
 
     FakeGBMResources fake_gbm;
+
+private:
+    void on_gbm_bo_set_user_data(struct gbm_bo *bo, void *data,
+                                            void (*destroy_user_data)(struct gbm_bo *, void *))
+    {
+        deleters.push_back(Deleter{bo, data, destroy_user_data});
+    }
+
+    struct Deleter
+    {
+        struct gbm_bo *bo;
+        void *data;
+        void (*destroy_user_data)(struct gbm_bo *, void *);
+
+        void operator()() const { destroy_user_data(bo, data); }
+    };
+
+    std::vector<Deleter> deleters;
 };
 
 }
