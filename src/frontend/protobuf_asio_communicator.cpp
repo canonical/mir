@@ -108,15 +108,17 @@ struct mfd::Session
 
         try
         {
+            std::unique_ptr<google::protobuf::Closure> callback(
+                google::protobuf::NewPermanentCallback(this,
+                    &Session::send_response,
+                    invocation.id(),
+                    &result_message));
+
             (display_server.get()->*function)(
                 0,
                 &parameter_message,
                 &result_message,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invocation.id(),
-                    &result_message));
+                callback.get());
         }
         catch (std::exception const& x)
         {
