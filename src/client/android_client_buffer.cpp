@@ -64,7 +64,10 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
-    return buffer_registrar->secure_for_cpu(native_handle);
+    auto vaddr = buffer_registrar->secure_for_cpu(native_handle);
+    auto region =  std::make_shared<mcl::MemoryRegion>();
+    region->vaddr = vaddr;
+    return region;
 }
 
 geom::Width mcl::AndroidClientBuffer::width() const

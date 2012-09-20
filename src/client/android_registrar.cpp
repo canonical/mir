@@ -48,10 +48,10 @@ struct MemoryRegionDeleter
        module(mod)
     {}
 
-    void operator()(mcl::MemoryRegion *reg)
+    void operator()(char *)
     {
         module->unlock(module.get(), handle.get());
-        delete reg;
+        //we didn't alloc region(just mapped it), so we don't delete
     }
 private:
     const std::shared_ptr<const native_handle_t>  handle;
@@ -75,24 +75,18 @@ geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std
     return geom::PixelFormat::rgba_8888;//geom::android::convert_from_android_pixel_code(handle->data[offset]);
 }
 
-std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
+std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
 {
-    void* vaddr;
+    char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     int width = extract_width_from_handle(handle);
     int height = extract_height_from_handle(handle);
-    geom::PixelFormat pf = extract_pf_from_handle(handle);
 
-    if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, &vaddr) )
+    if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, (void**) &vaddr) )
         throw std::runtime_error("error securing buffer for client cpu use");
 
-    auto region = new mcl::MemoryRegion;
-    region->vaddr = (char*) vaddr;  
-    region->width = geom::Width(width);
-    region->height = geom::Height(height);
-    region->format = pf; 
     MemoryRegionDeleter del(gralloc_module, handle);
-    return std::shared_ptr<mcl::MemoryRegion>(region, del);
+    return std::shared_ptr<char>(vaddr, del);
 }
 
 
