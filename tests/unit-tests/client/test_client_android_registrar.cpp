@@ -18,8 +18,8 @@
 
 #include "mir_client/android_client_buffer.h"
 #include "mir_client/mir_buffer_package.h"
+#include "mir_client/android_registrar_gralloc.h"
 
-#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -82,11 +82,13 @@ class ClientAndroidRegistrarTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        mock_module = &mock_reg_device;
     }
-    MockRegistrarDevice mock_device;
+    gralloc_module_t * mock_module;
+    MockRegistrarDevice mock_reg_device;
 };
 
 TEST_F(ClientAndroidRegistrarTest, registrar_init)
 {
-    AndroidRegistrar registrar(mock_alloc_device);
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
 }
