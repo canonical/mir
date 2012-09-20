@@ -185,7 +185,7 @@ TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
         SaveArg<1>(&handle_freed),
         Return(0)));
 
-    registrar.secure_for_cpu(fake_handle);
+    registrar.secure_for_cpu(fake_handle, rectangle );
 
     EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
     EXPECT_EQ(handle_alloc, handle_freed);
@@ -201,7 +201,7 @@ TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
     EXPECT_CALL(*mock_module, lock_interface(_,_,usage,_,_,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle);
+    registrar.secure_for_cpu(fake_handle, rectangle );
 
 }
 
@@ -213,7 +213,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_left_corner)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,0,0,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle);
+    registrar.secure_for_cpu(fake_handle, rectangle );
 }
 
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
@@ -224,7 +224,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,width,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle);
+    registrar.secure_for_cpu(fake_handle, rectangle );
 }
 
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
@@ -235,7 +235,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,height,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle);
+    registrar.secure_for_cpu(fake_handle, rectangle );
 }
 
 #if 0
@@ -308,7 +308,7 @@ TEST_F(ClientAndroidRegistrarTest, lock_failure)
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_THROW({
-        registrar.secure_for_cpu(fake_handle);
+        registrar.secure_for_cpu(fake_handle, rectangle );
     }, std::runtime_error);
 }
 
@@ -337,7 +337,7 @@ TEST_F(ClientAndroidRegistrarTest, unlock_failure)
 
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
-    auto region = registrar.secure_for_cpu(fake_handle);
+    auto region = registrar.secure_for_cpu(fake_handle, rectangle );
 
     EXPECT_NO_THROW({
         region.reset();
