@@ -17,7 +17,7 @@
 
 set(
   MIR_GCC_VERSION
-  4.4
+  4.6
   CACHE
   STRING
   "Version of gcc/g++"
@@ -26,17 +26,18 @@ set(
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
 
-project(
-  Mir
-  CXX
-  C)
+project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+
+set(MIR_VERSION_MAJOR 0)
+set(MIR_VERSION_MINOR 0)
+set(MIR_VERSION_PATCH 1)
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
@@ -90,17 +91,13 @@ else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
-# Check for google protocol buffers and generate code
-find_package( Protobuf REQUIRED )
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-add_subdirectory(src/protobuf)
-INCLUDE_DIRECTORIES(${MIR_GENERATED_INCLUDE_DIRECTORIES})
-
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 
+set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 # Pulling in local gmock version
 # While this seems evil, we are doing

@@ -14,28 +14,58 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+set(MIR_CLIENT_INCLUDE_DIR_SUFFIX "mir/client/")
+
+set(PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
+)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
-IF(PROTOBUF_FOUND)
+if(PROTOBUF_FOUND)
 
-INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
+include_directories(
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-
-ENDIF()
+endif()
 
 set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
   mir_rpc_channel.cpp
-  ${PROTO_HDRS}
+  ${PROTO_SRCS}
 )
 
 add_library( 
   mirclient SHARED
   
   ${CLIENT_SOURCES}
+)
+
+set_target_properties(
+  mirclient 
+
+  PROPERTIES
+  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+  SOVERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+)
+
+target_link_libraries(
+  mirclient
+
+  mirprotobuf
+
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
 )
 
 add_executable(
@@ -49,7 +79,7 @@ target_link_libraries(
   
   mirclient
   mirprotobuf
- 
+  
   3rd_party
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -62,12 +92,17 @@ install(
 
 set_target_properties(
   mirclient
-  PROPERTIES PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
+  PROPERTIES 
+  PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
 )
 
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib
-  PUBLIC_HEADER DESTINATION include/mir/client)
+  ARCHIVE DESTINATION lib
+  PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
 
-
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
+  DESTINATION lib/pkgconfig
+)
