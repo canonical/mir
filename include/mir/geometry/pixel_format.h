@@ -20,6 +20,7 @@
 #ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
 #define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
+#include <cstdint>
 
 namespace mir
 {
@@ -30,6 +31,29 @@ enum class PixelFormat : uint32_t
     rgba_8888,
     rgba_5658
 };
+
+
+class PixelOperation
+{
+public:
+    PixelOperation();
+
+    size_t bytes_per_pixel(PixelFormat pf)
+    {
+        switch(pf)
+        {
+            case PixelFormat::rgba_8888:
+                return 4;
+            case PixelFormat::rgba_5658:
+                return 3;
+            default:
+                return 0;
+        }
+    }
+
+
+};
+
 }
 }
 

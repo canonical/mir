@@ -103,7 +103,7 @@ protected:
         fake_handle = std::shared_ptr<native_handle_t>(handle_raw);
     }
    
-    int width, height; 
+    uint32_t width, height; 
     int numFd;
     static const int ics_width_offset = 5;
     static const int ics_height_offset = 6;
@@ -255,7 +255,7 @@ TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_width
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
     auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(width, region->width);
+    EXPECT_EQ(width, region->width.as_uint32_t());
 }
 
 TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_height)
@@ -264,7 +264,7 @@ TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_heigh
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
     auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(height, region->height);
+    EXPECT_EQ(height, region->height.as_uint32_t());
 }
 
 

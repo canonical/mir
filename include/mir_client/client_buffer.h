@@ -20,6 +20,9 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include "mir/geometry/pixel_format.h"
+#include "mir/geometry/dimensions.h"
+
 #include <memory>
 
 namespace mir
