@@ -70,7 +70,7 @@ private:
         : response(response), complete(target) {}
 
         PendingCall()
-        : response(0), complete(0) {}
+        : response(0), complete() {}
 
         SendBuffer send_buffer;
         google::protobuf::Message* response;
