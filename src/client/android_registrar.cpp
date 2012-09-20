@@ -62,7 +62,8 @@ private:
     MemoryRegionDeleter del(buffer_registrar, native_handle);
     std::shared_ptr<mcl::MemoryRegion> region(region_raw, del);
 #endif
-std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(const native_handle_t *)
+
+std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t>)
 {
 //    MemoryRegionDeleter(gralloc_module,  
     return std::make_shared<mcl::MemoryRegion>();

@@ -35,7 +35,7 @@ public:
 
     void register_buffer(const native_handle_t *handle);
     void unregister_buffer(const native_handle_t *handle);
-    std::shared_ptr<MemoryRegion> secure_for_cpu(const native_handle_t *handle);
+    std::shared_ptr<MemoryRegion> secure_for_cpu(std::shared_ptr<const native_handle_t> handle);
 
 private:
     std::shared_ptr<const gralloc_module_t> gralloc_module;

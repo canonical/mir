@@ -35,7 +35,7 @@ class AndroidRegistrar
 public:
     virtual void register_buffer(const native_handle_t *handle) = 0;
     virtual void unregister_buffer(const native_handle_t *handle) = 0;
-    virtual std::shared_ptr<MemoryRegion> secure_for_cpu(const native_handle_t *handle) = 0;
+    virtual std::shared_ptr<MemoryRegion> secure_for_cpu(std::shared_ptr<const native_handle_t> handle) = 0;
 };
 
 }

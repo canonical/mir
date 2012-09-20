@@ -25,18 +25,17 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
  : buffer_registrar(registrar)
 {
     auto buffer_package = std::move(package);
-    native_handle = convert_to_native_handle(buffer_package);
+    native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(buffer_package));
 
-    buffer_registrar->register_buffer(native_handle);
+    buffer_registrar->register_buffer(native_handle.get());
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
 {
-    buffer_registrar->unregister_buffer(native_handle);
-    free(native_handle);
+    buffer_registrar->unregister_buffer(native_handle.get());
 }
 
-native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)
+const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)
 {
     int native_handle_header_size = 3;
     int total = package->fd.size() + package->data.size() + native_handle_header_size;
