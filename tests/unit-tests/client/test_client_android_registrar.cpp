@@ -21,6 +21,8 @@
 #include "mir_client/android_registrar_gralloc.h"
 #include "mir_test/mock_android_alloc_device.h"
 
+#include <stdexcept>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -263,4 +265,65 @@ TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_heigh
 
     auto region = registrar.secure_for_cpu(fake_handle);
     EXPECT_EQ(height, region->height);
+}
+
+
+TEST_F(ClientAndroidRegistrarTest, register_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_module, registerBuffer_interface(_, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+    
+    EXPECT_THROW({
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    }, std::runtime_error);
+
+}
+
+TEST_F(ClientAndroidRegistrarTest, lock_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_THROW({
+        registrar.secure_for_cpu(fake_handle);
+    }, std::runtime_error);
+}
+
+/* unregister is called in destructor. should not throw */
+TEST_F(ClientAndroidRegistrarTest, unregister_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_module, unregisterBuffer_interface(_, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(mock_module);
+
+    EXPECT_NO_THROW({
+        registrar.reset();
+    });
+}
+
+/* unlock is called in destructor. should not throw */
+TEST_F(ClientAndroidRegistrarTest, unlock_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_module, unlock_interface(_,_))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+
+    EXPECT_NO_THROW({
+        region.reset();
+    });
+
 }
