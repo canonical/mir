@@ -238,6 +238,8 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
     registrar.secure_for_cpu(fake_handle);
 }
 
+#if 0
+move to buffer test
 TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_vaddr)
 {
     using namespace testing;
@@ -280,6 +282,7 @@ TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_forma
     auto region = registrar.secure_for_cpu(fake_handle);
     EXPECT_EQ(geom::PixelFormat::rgba_8888, region->format);
 }
+#endif
 
 TEST_F(ClientAndroidRegistrarTest, register_failure)
 {
