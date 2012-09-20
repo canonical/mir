@@ -83,8 +83,8 @@ std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_p
     int height = rect.size.height.as_uint32_t();
     int top = rect.top_left.x.as_uint32_t();
     int left = rect.top_left.y.as_uint32_t();
-
-    if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, top, left, width, height, (void**) &vaddr) )
+    if ( gralloc_module->lock(gralloc_module.get(), handle.get(), 
+                              usage, top, left, width, height, (void**) &vaddr) )
         throw std::runtime_error("error securing buffer for client cpu use");
 
     MemoryRegionDeleter del(gralloc_module, handle);

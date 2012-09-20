@@ -185,3 +185,49 @@ TEST_F(ClientAndroidBufferTest, buffer_returns_pf_without_modifying)
                                                         std::move(width), std::move(height), std::move(pf));
     EXPECT_EQ(buffer->pixel_format(), pf_copy);
 }
+
+#if 0
+move to buffer test
+TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_vaddr)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    void * vaddr_fake = (void*) 0x84982;
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,_,_))
+        .Times(1)
+        .WillOnce(DoAll(
+            SetArgPointee<7>(vaddr_fake),
+            Return(0)));
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+    EXPECT_EQ(vaddr_fake, region->vaddr);
+}
+
+TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_width)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+    EXPECT_EQ(width, region->width.as_uint32_t());
+}
+
+TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_height)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+    EXPECT_EQ(height, region->height.as_uint32_t());
+}
+
+TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_format)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    auto region = registrar.secure_for_cpu(fake_handle);
+    EXPECT_EQ(geom::PixelFormat::rgba_8888, region->format);
+}
+#endif
