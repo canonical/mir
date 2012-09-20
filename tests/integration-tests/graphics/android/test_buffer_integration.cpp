@@ -42,7 +42,7 @@ protected:
     {
         ASSERT_NO_THROW(
         {
-            platform = std::make_shared<mga::AndroidPlatform>();
+            platform = mg::create_platform();
             display = platform->create_display();
         }); 
     }
