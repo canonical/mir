@@ -75,12 +75,12 @@ geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std
     return geom::PixelFormat::rgba_8888;//geom::android::convert_from_android_pixel_code(handle->data[offset]);
 }
 
-std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
+std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
 {
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    int width = extract_width_from_handle(handle);
-    int height = extract_height_from_handle(handle);
+    int width = rect.size.width.as_uint32_t();
+    int height = rect.size.height.as_uint32_t();
 
     if ( gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, (void**) &vaddr) )
         throw std::runtime_error("error securing buffer for client cpu use");

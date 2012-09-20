@@ -94,6 +94,14 @@ protected:
         
         width = 41;
         height = 43;
+        top = 0;
+        left = 1;
+        auto t = geom::X(top);
+        auto l = geom::Y(left);
+        auto pt = geom::Point{t,l};
+        rect = geom::Rectangle{ pt,
+                               {geom::Width(width), geom::Height(height)}};
+
         int numDataICS = 8; /* typical ICS/JB number of ints */
         numFd = 4; /*example value */
         int width_position_in_handle = numFd + ics_width_offset;
@@ -107,7 +115,8 @@ protected:
         fake_handle = std::shared_ptr<native_handle_t>(handle_raw);
     }
    
-    uint32_t width, height; 
+    geom::Rectangle rect;
+    uint32_t width, height, top, left; 
     int numFd;
     static const int ics_width_offset = 5;
     static const int ics_height_offset = 6;
@@ -185,7 +194,7 @@ TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
         SaveArg<1>(&handle_freed),
         Return(0)));
 
-    registrar.secure_for_cpu(fake_handle, rectangle );
+    registrar.secure_for_cpu(fake_handle, rect );
 
     EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
     EXPECT_EQ(handle_alloc, handle_freed);
@@ -201,7 +210,7 @@ TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
     EXPECT_CALL(*mock_module, lock_interface(_,_,usage,_,_,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rectangle );
+    registrar.secure_for_cpu(fake_handle, rect );
 
 }
 
@@ -213,7 +222,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_left_corner)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,0,0,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rectangle );
+    registrar.secure_for_cpu(fake_handle, rect );
 }
 
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
@@ -224,7 +233,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,width,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rectangle );
+    registrar.secure_for_cpu(fake_handle, rect );
 }
 
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
@@ -235,7 +244,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,height,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rectangle );
+    registrar.secure_for_cpu(fake_handle, rect );
 }
 
 #if 0
@@ -308,7 +317,7 @@ TEST_F(ClientAndroidRegistrarTest, lock_failure)
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_THROW({
-        registrar.secure_for_cpu(fake_handle, rectangle );
+        registrar.secure_for_cpu(fake_handle, rect );
     }, std::runtime_error);
 }
 
@@ -337,7 +346,7 @@ TEST_F(ClientAndroidRegistrarTest, unlock_failure)
 
     mcl::AndroidRegistrarGralloc registrar(mock_module);
 
-    auto region = registrar.secure_for_cpu(fake_handle, rectangle );
+    auto region = registrar.secure_for_cpu(fake_handle, rect );
 
     EXPECT_NO_THROW({
         region.reset();

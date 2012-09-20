@@ -36,7 +36,7 @@ public:
 
     void register_buffer(const native_handle_t *handle);
     void unregister_buffer(const native_handle_t *handle);
-    std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle);
+    std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
 
 private:
     int extract_width_from_handle(const std::shared_ptr<const native_handle_t>& handle);

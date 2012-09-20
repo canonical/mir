@@ -31,7 +31,7 @@ struct MockAndroidRegistrar : public mcl::AndroidRegistrar
 {
     MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
     MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
-    MOCK_METHOD1(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>));
+    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geom::Rectangle));
 };
 
 class ClientAndroidBufferTest : public ::testing::Test
@@ -136,7 +136,7 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
                                                         std::move(width), std::move(height), std::move(pf));
 
     std::shared_ptr<char> empty_char = std::make_shared<char>();
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
         .WillOnce(Return(empty_char));
 
@@ -156,7 +156,7 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
                                                         std::move(width), std::move(height), std::move(pf));
 
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
         .WillOnce(DoAll(SaveArg<0>(&buffer_handle_sp),
             Return(empty_char)));
