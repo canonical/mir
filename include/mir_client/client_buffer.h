@@ -36,7 +36,7 @@ struct MemoryRegion
     geometry::Width width;
     geometry::Height height;
     geometry::PixelFormat format;
-    char *vaddr; /* valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * bytes_per_pixel] */
+    std::shared_ptr<char> vaddr; /* valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * bytes_per_pixel] */
 };
 
 class ClientBuffer
