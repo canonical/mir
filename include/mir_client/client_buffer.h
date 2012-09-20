@@ -33,12 +33,10 @@ class MirBufferPackage;
 
 struct MemoryRegion
 {
-    int   width;
-    int   height;
-    int   bytes_per_pixel; 
-    char *vaddr; /* valid from vaddr[0] to vaddr[width*height*bytes_per_pixel] */
-
-    int   format;
+    geometry::Width width;
+    geometry::Height height;
+    geometry::PixelFormat format;
+    char *vaddr; /* valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * bytes_per_pixel] */
 };
 
 class ClientBuffer
