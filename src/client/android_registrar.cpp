@@ -36,7 +36,36 @@ void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t * han
     gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
 }
 
+
+struct MemoryRegionDeleter
+{
+    MemoryRegionDeleter(const std::shared_ptr<const gralloc_module_t>& mod,
+                        const std::shared_ptr<const native_handle_t>&  han)
+     : handle(han),
+       module(mod)
+    {}
+
+    void operator()(mcl::MemoryRegion *reg)
+    {
+        module->unlock(module.get(), handle.get());
+        delete reg;
+    }
+private:
+    const std::shared_ptr<const native_handle_t>  handle;
+    const std::shared_ptr<const gralloc_module_t> module;
+};
+#if 0
+    char* vaddr = buffer_registrar->secure_for_cpu(native_handle);
+
+    MemoryRegion *region_raw = new mcl::MemoryRegion{0, 0, vaddr, 0};
+
+    MemoryRegionDeleter del(buffer_registrar, native_handle);
+    std::shared_ptr<mcl::MemoryRegion> region(region_raw, del);
+#endif
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(const native_handle_t *)
 {
+//    MemoryRegionDeleter(gralloc_module,  
     return std::make_shared<mcl::MemoryRegion>();
 }
+
+

@@ -58,32 +58,6 @@ native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::s
     return handle;
 }
 
-#if 0
-struct MemoryRegionDeleter
-{
-    MemoryRegionDeleter(const std::shared_ptr<mcl::AndroidRegistrar> reg,
-                        const native_handle_t* pack)
-     : package(pack),
-       registrar(reg)
-    {}
-
-    void operator()(mcl::MemoryRegion *reg)
-    {
-        //registrar->release_from_cpu(package);
-        delete reg;
-    }
-private:
-    const native_handle_t* package;
-    const std::shared_ptr<mcl::AndroidRegistrar> registrar;
-};
-
-    char* vaddr = buffer_registrar->secure_for_cpu(native_handle);
-
-    MemoryRegion *region_raw = new mcl::MemoryRegion{0, 0, vaddr, 0};
-
-    MemoryRegionDeleter del(buffer_registrar, native_handle);
-    std::shared_ptr<mcl::MemoryRegion> region(region_raw, del);
-#endif
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
     return buffer_registrar->secure_for_cpu(native_handle);

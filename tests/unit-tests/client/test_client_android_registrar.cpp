@@ -77,6 +77,8 @@ public:
     }
 };
 
+
+
 class ClientAndroidRegistrarTest : public ::testing::Test
 {
 protected:
@@ -84,10 +86,10 @@ protected:
     {
         mock_module = std::shared_ptr<MockRegistrarDevice>( new MockRegistrarDevice );
         mock_addr = (gralloc_module_t*) mock_module.get();
-        fake_handle = (native_handle_t*) 0x482;
+        fake_handle = std::make_shared<native_handle_t>();
     }
 
-    native_handle_t * fake_handle;
+    std::shared_ptr<const native_handle_t> fake_handle;
     std::shared_ptr<MockRegistrarDevice> mock_module;
     gralloc_module_t * mock_addr;
 };
@@ -100,7 +102,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
     EXPECT_CALL(*mock_module, registerBuffer_interface(mock_addr, _))
         .Times(1);
 
-    registrar.register_buffer(fake_handle);
+    registrar.register_buffer(fake_handle.get());
 }
 
 TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
@@ -111,7 +113,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
     EXPECT_CALL(*mock_module, registerBuffer_interface(_, fake_handle))
         .Times(1);
 
-    registrar.register_buffer(fake_handle);
+    registrar.register_buffer(fake_handle.get());
 }
 
 TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
@@ -122,7 +124,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
     EXPECT_CALL(*mock_module, unregisterBuffer_interface(mock_addr, _))
         .Times(1);
 
-    registrar.unregister_buffer(fake_handle);
+    registrar.unregister_buffer(fake_handle.get());
 }
 
 TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
@@ -133,7 +135,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
     EXPECT_CALL(*mock_module, unregisterBuffer_interface(_, fake_handle))
         .Times(1);
 
-    registrar.unregister_buffer(fake_handle);
+    registrar.unregister_buffer(fake_handle.get());
 }
 
 TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
