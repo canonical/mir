@@ -59,7 +59,9 @@ private:
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
 {
-    gralloc_module->lock(gralloc_module.get(), handle.get(), 0, 0, 0, 0, 0, 0);
+    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
+
+    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, 0, 0, 0);
 
     MemoryRegionDeleter del(gralloc_module, handle);
     auto region = new mcl::MemoryRegion; 
