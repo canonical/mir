@@ -98,7 +98,6 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     return surface;
 }
 
-// TOOD why is std::cerr visible?
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
 {
     std::lock_guard<std::mutex> lg(guard);
