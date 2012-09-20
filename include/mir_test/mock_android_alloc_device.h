@@ -33,6 +33,25 @@ public:
     virtual int dump_interface(alloc_device_t* dev, char *buf, int len) = 0;
 
 };
+    
+native_handle_t* mock_generate_sane_android_handle(int numFd, int numInt)
+{
+    native_handle_t *handle;
+    int total=numFd + numInt;
+    int header_offset=3; 
+
+    handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
+    handle->version = 0x389;
+    handle->numFds = numFd;
+    handle->numInts = numInt;
+    for(int i=0; i<total; i++)
+    {
+        handle->data[i] = i*3;
+    }
+
+    return handle;
+}
+
 
 class MockAllocDevice : public ICSAllocInterface,
     public alloc_device_t
@@ -43,7 +62,7 @@ public:
     {
         using namespace testing;
 
-        buffer_handle = mock_generate_sane_android_handle();
+        buffer_handle = mock_generate_sane_android_handle(43, 22);
         fake_stride = 300;
 
         alloc = hook_alloc;
@@ -90,28 +109,6 @@ public:
 
     native_handle_t* buffer_handle;
     int fake_stride;
-
-private:
-    native_handle_t* mock_generate_sane_android_handle()
-    {
-        native_handle_t *handle;
-        int numFd=34;
-        int numInt=41;
-        int total=numFd + numInt;
-        int header_offset=3; 
-
-        handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
-        handle->version = 0x389;
-        handle->numFds = numFd;
-        handle->numInts = numInt;
-        for(int i=0; i<total; i++)
-        {
-            handle->data[i] = i*3;
-        }
-
-        return handle;
-    }
-
 };
 }
 

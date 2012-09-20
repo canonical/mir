@@ -19,6 +19,7 @@
 #include "mir_client/android_client_buffer.h"
 #include "mir_client/mir_buffer_package.h"
 #include "mir_client/android_registrar_gralloc.h"
+#include "mir_test/mock_android_alloc_device.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -78,16 +79,34 @@ public:
 };
 
 
-
 class ClientAndroidRegistrarTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
+        
         mock_module = std::shared_ptr<MockRegistrarDevice>( new MockRegistrarDevice );
         mock_addr = (gralloc_module_t*) mock_module.get();
-        fake_handle = std::make_shared<native_handle_t>();
+        
+        width = 41;
+        height = 43;
+        int numDataICS = 8; /* typical ICS/JB number of ints */
+        numFd = 4; /*example value */
+        width_position_in_handle = numFd + ics_width_offset;
+        height_position_in_handle = numFd + ics_height_offset;
+
+        auto handle_raw = mock_generate_sane_android_handle(numFd, numDataICS);
+        handle_raw->data[width_position_in_handle] = width;
+        handle_raw->data[height_position_in_handle] = height;
+        fake_handle = std::shared_ptr<native_handle_t>(handle_raw);
     }
+   
+    int width, height; 
+    int numFd;
+    static const int ics_width_offset = 5;
+    static const int ics_height_offset = 6;
+    int width_position_in_handle;
+    int height_position_in_handle;
 
     std::shared_ptr<const native_handle_t> fake_handle;
     std::shared_ptr<MockRegistrarDevice> mock_module;
@@ -188,5 +207,26 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_left_corner)
         .Times(1);
 
     registrar.secure_for_cpu(fake_handle);
+}
 
+TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,width,_,_))
+        .Times(1);
+
+    registrar.secure_for_cpu(fake_handle);
+}
+
+TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,height,_))
+        .Times(1);
+
+    registrar.secure_for_cpu(fake_handle);
 }
