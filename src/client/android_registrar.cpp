@@ -18,7 +18,6 @@
 
 #include "mir_client/android_registrar_gralloc.h"
 #include "mir_client/client_buffer.h"
-#include "mir/geometry/android_pixel_format.h"
 
 #include <stdexcept>
 
@@ -71,10 +70,9 @@ int mcl::AndroidRegistrarGralloc::extract_height_from_handle(const std::shared_p
     return handle->data[offset];
 }
 
-geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std::shared_ptr<const native_handle_t>& handle)
+geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std::shared_ptr<const native_handle_t>&)
 {
-    int offset = handle->numFds + pf_offset_from_fd; 
-    return geom::android::convert_from_android_pixel_code(handle->data[offset]);
+    return geom::PixelFormat::rgba_8888;//geom::android::convert_from_android_pixel_code(handle->data[offset]);
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)

@@ -176,7 +176,7 @@ TEST_F(ClientAndroidBufferTest, buffer_returns_height_without_modifying)
 {
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
                                                         std::move(width), std::move(height), std::move(pf));
-    EXPECT_EQ(buffer->height(), width_height);
+    EXPECT_EQ(buffer->height(), height_copy);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_pf_without_modifying)

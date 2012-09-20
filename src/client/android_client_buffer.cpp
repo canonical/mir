@@ -24,7 +24,10 @@ namespace geom=mir::geometry;
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
                          std::shared_ptr<MirBufferPackage> && package, geom::Width && w,
                          geom::Height && h, geom::PixelFormat && pf)
- : buffer_registrar(registrar)
+ : buffer_registrar(registrar),
+   buffer_height(h),
+   buffer_width(w),
+   buffer_pf(pf)
 {
     auto buffer_package = std::move(package);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(buffer_package));
