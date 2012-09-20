@@ -57,11 +57,25 @@ private:
     const std::shared_ptr<const gralloc_module_t> module;
 };
 
+int mcl::AndroidRegistrarGralloc::extract_width_from_handle(const std::shared_ptr<const native_handle_t>& handle)
+{
+    int offset = handle->numFds + width_offset_from_fd; 
+    return handle->data[offset];
+}
+
+int mcl::AndroidRegistrarGralloc::extract_height_from_handle(const std::shared_ptr<const native_handle_t>& handle)
+{
+    int offset = handle->numFds + height_offset_from_fd; 
+    return handle->data[offset];
+}
+
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle)
 {
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
 
-    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, 0, 0, 0);
+    int width = extract_width_from_handle(handle);
+    int height = extract_height_from_handle(handle);
+    gralloc_module->lock(gralloc_module.get(), handle.get(), usage, 0, 0, width, height, 0);
 
     MemoryRegionDeleter del(gralloc_module, handle);
     auto region = new mcl::MemoryRegion; 

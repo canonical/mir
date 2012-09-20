@@ -38,7 +38,12 @@ public:
     std::shared_ptr<MemoryRegion> secure_for_cpu(std::shared_ptr<const native_handle_t> handle);
 
 private:
+    int extract_width_from_handle(const std::shared_ptr<const native_handle_t>& handle);
+    int extract_height_from_handle(const std::shared_ptr<const native_handle_t>& handle);
+
     std::shared_ptr<const gralloc_module_t> gralloc_module;
+    static const int width_offset_from_fd = 5;
+    static const int height_offset_from_fd = 6;
 };
 
 }
