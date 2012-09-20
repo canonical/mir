@@ -88,4 +88,5 @@ protected:
 
 TEST_F(ClientAndroidRegistrarTest, registrar_init)
 {
+    AndroidRegistrar registrar(mock_alloc_device);
 }
