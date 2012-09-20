@@ -147,24 +147,3 @@ TEST_F(ClientAndroidBufferTest, DISABLED_buffer_uses_right_handle_to_secure)
     EXPECT_EQ(buffer_handle_sp.get(), buffer_handle);
 }
 
-#if 0
-TEST_F(ClientAndroidBufferTest, DISABLED_region_is_released)
-{
-    using namespace testing;
-
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package));
-    
-    const native_handle_t* buffer_handle;
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_))
-        .Times(1)
-        .WillOnce(DoAll(
-            SaveArg<0>(&buffer_handle),
-            Return((char*)0x0)));
-
-    auto region = buffer->secure_for_cpu_write();
-    EXPECT_NE((int) region.get(), NULL);
-
-    EXPECT_CALL(*mock_android_registrar, release_from_cpu(buffer_handle))
-        .Times(1);
-}
-#endif

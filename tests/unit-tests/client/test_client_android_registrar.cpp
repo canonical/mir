@@ -164,3 +164,17 @@ TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
     EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
     EXPECT_EQ(handle_alloc, handle_freed);
 }
+
+TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
+{
+    using namespace testing;
+    mcl::AndroidRegistrarGralloc registrar(mock_module);
+
+    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
+
+    EXPECT_CALL(*mock_module, lock_interface(_,_,usage,_,_,_,_,_))
+        .Times(1);
+
+    registrar.secure_for_cpu(fake_handle);
+
+}
