@@ -83,10 +83,14 @@ struct mfd::Session
     {
         std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
         response->clear_fd();
+        response->set_fds_on_side_channel(fd.size());
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
 
-        ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        if (fd.size() > 0)
+        {
+            ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        }
     }
 
     template<class ParameterMessage, class ResultMessage>

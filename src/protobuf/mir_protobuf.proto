@@ -20,6 +20,7 @@ message SurfaceId {
 message Buffer {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
+  optional int32  fds_on_side_channel = 3;
 
   optional string error = 127;
 }
