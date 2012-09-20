@@ -46,7 +46,8 @@ struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
         : connection(0)
-        , surface(0)
+        , surface(0),
+        buffers(0)
     {
     }
 
@@ -60,6 +61,12 @@ struct ClientConfigCommon : TestingClientConfiguration
     {
         ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
         config->surface_created(surface);
+    }
+
+    static void next_buffer_callback(MirSurface * surface, void * context)
+    {
+        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->next_buffer(surface);
     }
 
     static void release_surface_callback(MirSurface * surface, void * context)
@@ -79,6 +86,13 @@ struct ClientConfigCommon : TestingClientConfiguration
     {
         std::unique_lock<std::mutex> lock(guard);
         surface = new_surface;
+        wait_condition.notify_all();
+    }
+
+    virtual void next_buffer(MirSurface*)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        ++buffers;
         wait_condition.notify_all();
     }
 
@@ -103,6 +117,13 @@ struct ClientConfigCommon : TestingClientConfiguration
             wait_condition.wait(lock);
     }
 
+    void wait_for_next_buffer()
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        while (!buffers)
+            wait_condition.wait(lock);
+    }
+
     void wait_for_surface_release()
     {
         std::unique_lock<std::mutex> lock(guard);
@@ -110,11 +131,11 @@ struct ClientConfigCommon : TestingClientConfiguration
             wait_condition.wait(lock);
     }
 
-
     std::mutex guard;
     std::condition_variable wait_condition;
     MirConnection* connection;
     MirSurface* surface;
+    int buffers;
 };
 }
 
@@ -279,6 +300,49 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
         std::set<MirSurface *> surfaces;
         size_t old_surface_count;
     } client_config(n_surfaces);
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buffers)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params =
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
+            mir_surface_create(connection, &request_params, create_surface_callback, this);
+
+            wait_for_surface_create();
+
+            ASSERT_TRUE(surface != NULL);
+
+            MirBufferPackage buffer_package;
+            mir_surface_get_current_buffer(surface, &buffer_package);
+
+            mir_surface_next_buffer(surface, next_buffer_callback, this);
+            wait_for_next_buffer();
+
+            mir_surface_release(surface, release_surface_callback, this);
+
+            wait_for_surface_release();
+
+            ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
 
     launch_client_process(client_config);
 }

@@ -32,8 +32,19 @@ namespace geom = mir::geometry;
 
 class GraphicsPlatform : public ::testing::Test
 {
-public:
 #ifndef ANDROID
+public:
+    GraphicsPlatform()
+    {
+        using namespace testing;
+
+        ON_CALL(mock_gbm, gbm_bo_get_width(_))
+        .WillByDefault(Return(320));
+
+        ON_CALL(mock_gbm, gbm_bo_get_height(_))
+        .WillByDefault(Return(240));
+    }
+
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
@@ -42,20 +53,20 @@ public:
 TEST_F(GraphicsPlatform, buffer_allocator_creation)
 {
     using namespace testing;
-    std::shared_ptr<mc::GraphicBufferAllocator> allocator;
 
     EXPECT_NO_THROW (
-        allocator = mg::create_buffer_allocator();
+        auto platform = mg::create_platform();
+        auto allocator = platform->create_buffer_allocator();
+
+        EXPECT_TRUE(allocator.get());
     );
 
-    EXPECT_TRUE(allocator.get());
 }
 
-/* note: llvm platform is not implemented. once llvm is implemented, it needs to pass this test */
-#ifdef ANDROID
 TEST_F(GraphicsPlatform, buffer_creation)
 {
-    std::shared_ptr<mc::GraphicBufferAllocator> allocator = mg::create_buffer_allocator();
+    auto platform = mg::create_platform();
+    auto allocator = platform->create_buffer_allocator();
     geom::Width w(320);
     geom::Height h(240);
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
@@ -68,4 +79,3 @@ TEST_F(GraphicsPlatform, buffer_creation)
     EXPECT_EQ(buffer->pixel_format(), pf );
  
 }
-#endif

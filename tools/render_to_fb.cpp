@@ -139,7 +139,7 @@ void adjust_vertices()
 int main(int, char**)
 {
     auto platform = mg::create_platform();
-    auto display = mg::create_display(platform);
+    auto display = platform->create_display();
 
     GLuint program, vPosition, uvCoord, slideUniform;
     setup_gl(program, vPosition, uvCoord, slideUniform);
