@@ -17,6 +17,8 @@
 include_directories(
     ${LIBHARDWARE_INCLUDE_DIRS}
     ${ANDROID_UI_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
 )
 
 add_library( 
@@ -36,5 +38,6 @@ target_link_libraries(
 
   ${LIBHARDWARE_LIBRARIES}
   ${ANDROID_UI_LIBRARIES}
+  ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )

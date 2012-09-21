@@ -17,33 +17,36 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include <mir/graphics/platform.h>
+#include <mir/graphics/android/android_platform.h>
 #include <mir/graphics/android/android_buffer_allocator.h>
 #include <mir/graphics/android/android_display.h>
 #include <mir/graphics/android/android_framebuffer_window.h>
 
 #include <ui/FramebufferNativeWindow.h>
 
+#include <stdexcept>
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-std::shared_ptr<mg::Platform> mg::create_platform()
-{
-    return std::make_shared<mg::Platform>();
-}
-
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
-        const std::shared_ptr<Platform>& /*platform*/)
+std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator()
 {
     return std::make_shared<mga::AndroidBufferAllocator>();
 }
 
-std::shared_ptr<mg::Display> mg::create_display(
-        const std::shared_ptr<Platform>& /*platform*/)
+/* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
+std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    auto android_window = std::shared_ptr<ANativeWindow>((ANativeWindow*) new ::android::FramebufferNativeWindow);
+    auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface());
+    if (!android_window.get())
+        throw std::runtime_error("could not open FB window");
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);
+}
+
+std::shared_ptr<mg::Platform> mg::create_platform()
+{
+    return std::make_shared<mga::AndroidPlatform>();
 }

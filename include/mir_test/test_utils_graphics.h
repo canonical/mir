@@ -15,24 +15,33 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_TEST_UTILS_GRAPHICS
+#define MIR_TEST_TEST_UTILS_GRAPHICS
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
+#include <GLES2/gl2.h>
 
-#include <gtest/gtest.h>
-#include <memory>
-
-namespace mg=mir::graphics;
-
-TEST(AndroidFramebufferIntegration, init_does_not_throw)
+namespace mir
 {
-    using namespace testing;
+namespace test
+{
 
-    EXPECT_NO_THROW(
-    {
-        auto platform = mg::create_platform();
-        auto display = mg::create_display(platform);
-        display->post_update();
-    });
+class glAnimationBasic
+{
+public:
+    glAnimationBasic();
+
+    void init_gl();    
+    void render_gl();
+    void step();
+    int texture_width();
+    int texture_height();
+
+private:
+    GLuint program, vPositionAttr, uvCoord, slideUniform;
+    float slide;
+};
 
 }
+}
+
+#endif /* MIR_TEST_TEST_UTILS_GRAPHICS */

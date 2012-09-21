@@ -30,21 +30,17 @@ mgg::GBMPlatform::GBMPlatform()
     gbm.setup(drm);
 }
 
+std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator()
+{
+    return std::make_shared<mgg::GBMBufferAllocator>(this->shared_from_this());
+}
+
+std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
+{
+    return std::make_shared<mgg::GBMDisplay>(this->shared_from_this());
+}
+
 std::shared_ptr<mg::Platform> mg::create_platform()
 {
     return std::make_shared<mgg::GBMPlatform>();
-}
-
-std::shared_ptr<mc::GraphicBufferAllocator> mg::create_buffer_allocator(
-        const std::shared_ptr<mg::Platform>& platform)
-{
-    return std::make_shared<mgg::GBMBufferAllocator>(
-            std::static_pointer_cast<mgg::GBMPlatform>(platform));
-}
-
-std::shared_ptr<mg::Display> mg::create_display(
-        const std::shared_ptr<Platform>& platform)
-{
-    return std::make_shared<mgg::GBMDisplay>(
-            std::static_pointer_cast<mgg::GBMPlatform>(platform));
 }
