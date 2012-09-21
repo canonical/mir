@@ -37,6 +37,8 @@ void mir::frontend::ApplicationProxy::connect(
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();
+    // TODO - get ConnectionIPCPackage
+    // (does this come via surface_organiser or from a NEW dependency on platform?)
     done->Run();
 }
 

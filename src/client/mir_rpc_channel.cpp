@@ -149,6 +149,28 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
         }
     }
 
+    if (auto connection = dynamic_cast<mir::protobuf::Connection*>(response))
+    {
+        connection->clear_fd();
+
+        if (connection->fds_on_side_channel() > 0)
+        {
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << connection->fds_on_side_channel() << " file descriptors" << std::endl;
+
+            std::vector<int32_t> buf(connection->fds_on_side_channel());
+
+            int received = 0;
+            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
+                /* TODO avoid spinning forever */;
+
+            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
+
+            for (int i = 0; i != received; ++i)
+                connection->add_fd(buf[i]);
+        }
+    }
+
+
     complete->Run();
 }
 

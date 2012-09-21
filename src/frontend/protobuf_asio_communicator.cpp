@@ -81,7 +81,16 @@ struct mfd::Session
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
     {
-        const auto& fd = extract_fds_from_buffer(response);
+        const auto& fd = extract_fds_from(response);
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+        send_fds(fd);
+    }
+
+    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
+    // OTOH until we have a real requirement it is hard to see how best to generalise.
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+    {
+        const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
     }
@@ -91,18 +100,19 @@ struct mfd::Session
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
     {
         const auto& fd = response->has_buffer() ?
-            extract_fds_from_buffer(response->mutable_buffer()) :
+            extract_fds_from(response->mutable_buffer()) :
             std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
     }
 
-    std::vector<int32_t> extract_fds_from_buffer(mir::protobuf::Buffer* buffer)
+    template<class Response>
+    std::vector<int32_t> extract_fds_from(Response* response)
     {
-        std::vector < int32_t > fd(buffer->fd().data(), buffer->fd().data() + buffer->fd().size());
-        buffer->clear_fd();
-        buffer->set_fds_on_side_channel(fd.size());
+        std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
+        response->clear_fd();
+        response->set_fds_on_side_channel(fd.size());
         return fd;
     }
 
