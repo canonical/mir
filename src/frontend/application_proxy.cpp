@@ -115,8 +115,8 @@ void mir::frontend::ApplicationProxy::release_surface(
 
     if (p != surfaces.end())
     {
-        surfaces.erase(p);
         surface_organiser->destroy_surface(p->second);
+        surfaces.erase(p);
     }
     else
     {
