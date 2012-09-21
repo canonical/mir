@@ -78,20 +78,21 @@ mc::PixelFormat mga::AndroidBuffer::pixel_format() const
 void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
-
+    if (disp == EGL_NO_DISPLAY) {
+        throw std::runtime_error("cannot bind buffer to texture without EGL context\n");
+    }
     static const EGLint image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
         EGL_NONE
     };
-
     EGLImageKHR image;
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
+        ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_window_buffer_handle->get_egl_client_buffer() , image_attrs);
-
+                                  buf, image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             throw std::runtime_error("error binding buffer to texture\n");

@@ -50,8 +50,6 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
             height,
             pf));
 
-    BufferBundle* new_bundle_raw = new mc::BufferBundle(std::move(swapper));
-    std::shared_ptr<mc::BufferBundle> bundle(new_bundle_raw);
+    return std::make_shared<mc::BufferBundle>(std::move(swapper));
 
-    return bundle;
 }

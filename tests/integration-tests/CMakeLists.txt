@@ -35,13 +35,13 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
 
+  test-utils
+
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${PLATFORM_LIBRARIES}
-  EGL
 )
 
 mir_discover_tests(integration-tests)

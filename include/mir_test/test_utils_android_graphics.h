@@ -15,36 +15,34 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
+#define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/compositor/buffer_queue.h"
+#include "mir/geometry/dimensions.h"
 
-#include "mir_test/test_utils_graphics.h"
+#include <hardware/gralloc.h>
+#include <memory>
 
-#define WIDTH 1280
-#define HEIGHT 720
-
-namespace mg=mir::graphics;
-namespace mt=mir::test;
-
-int main(int, char**)
+namespace mir
 {
-    auto platform = mg::create_platform();
-    auto display = platform->create_display();
+namespace test
+{
 
-    mt::glAnimationBasic gl_animation;
-    gl_animation.init_gl();
+class grallocRenderSW
+{
+public:
+    grallocRenderSW(); 
+    ~grallocRenderSW(); 
+    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
+                        geometry::Width w, geometry::Height h, int val );
+ 
+private:
+    gralloc_module_t* module;
+    alloc_device_t* alloc_dev;
+};
 
-    for(;;)
-    {
-        gl_animation.render_gl();
-        display->post_update();
-
-        usleep(167);//60fps
-
-        gl_animation.step();
-    }
-
-    return 0;
+}
 }
 
+#endif /* MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS */
