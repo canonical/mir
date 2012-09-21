@@ -127,11 +127,11 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
         if (tfd->fds_on_side_channel() > 0)
         {
             log->debug() << __PRETTY_FUNCTION__ << " expect " << tfd->fds_on_side_channel() << " file descriptors" << std::endl;
-            static const int size = 32; // TODO - validate this magic hard limit is enough
-            int32_t buffer[size];
+
+            std::vector<int32_t> buffer(tfd->fds_on_side_channel());
 
             int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buffer, tfd->fds_on_side_channel())) == -1)
+            while ((received = ancil_recv_fds(socket.native_handle(), buffer.data(), buffer.size())) == -1)
                 /* TODO avoid spinning forever */;
 
             log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
