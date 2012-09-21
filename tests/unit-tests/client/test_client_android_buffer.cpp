@@ -219,3 +219,51 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_vaddr)
 
     EXPECT_EQ(region->vaddr.get(), empty_char.get());
 }
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_width)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
+        .Times(1)
+        .WillOnce(Return(empty_char));
+    auto region = buffer->secure_for_cpu_write();
+
+    EXPECT_EQ(region->width, width_copy);
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_height)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
+        .Times(1)
+        .WillOnce(Return(empty_char));
+    auto region = buffer->secure_for_cpu_write();
+
+    EXPECT_EQ(region->height, height_copy);
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
+        .Times(1)
+        .WillOnce(Return(empty_char));
+    auto region = buffer->secure_for_cpu_write();
+
+    EXPECT_EQ(region->format, pf_copy);
+}

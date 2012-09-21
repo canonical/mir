@@ -66,6 +66,9 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
     auto vaddr = buffer_registrar->secure_for_cpu(native_handle, rect);
     auto region =  std::make_shared<mcl::MemoryRegion>();
     region->vaddr = vaddr;
+    region->width = rect.size.width;
+    region->height = rect.size.height;
+    region->format = buffer_pf;
     return region;
 }
 
