@@ -41,11 +41,19 @@ set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
-  android_client_buffer.cpp
-  android_registrar.cpp
   mir_rpc_channel.cpp
   ${PROTO_SRCS}
 )
+
+if( MIR_PLATFORM STREQUAL "android")
+set(
+  CLIENT_SOURCES
+
+  android_client_buffer.cpp
+  android_registrar.cpp
+  ${CLIENT_SOURCES}
+)
+endif()
 
 add_library( 
   mirclient SHARED
