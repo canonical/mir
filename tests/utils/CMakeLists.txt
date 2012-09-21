@@ -1,4 +1,3 @@
-
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,12 +14,30 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
+include_directories(${GLESv2_INCLUDE_DIRS})
+
+set(
+  TEST_UTILS_SRCS
+
+  graphics_utils.cpp 
+)
+
+if (MIR_PLATFORM STREQUAL "android")
+  set(
+    TEST_UTILS_SRCS
+
+    android_graphics.cpp
+    ${TEST_UTILS_SRCS} 
+)
+endif()
+
+add_library(
+  test-utils STATIC 
+  ${TEST_UTILS_SRCS})
 
 target_link_libraries(
-    render_to_fb
+  test-utils 
 
-    mirplatformgraphics
-    test-utils
+  ${GLESv2_LIBRARIES}
 )
+

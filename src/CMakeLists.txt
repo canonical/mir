@@ -15,13 +15,18 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
+set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+add_subdirectory(protobuf/)
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
 add_subdirectory(compositor/)
-add_subdirectory(frontend/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(process/)
 add_subdirectory(surfaces/)
 add_subdirectory(client/)
+add_subdirectory(frontend/)
+
 
 set(
   SRCS
@@ -35,10 +40,13 @@ add_library(
   ${SRCS}
 )
 
+add_dependencies(mir mirprotobuf)
+
 add_executable(
   ubuntu_display_server
   
   main.cpp
+  ${MIR_3RD_PARTY_SOURCES}
 )
 
 target_link_libraries(
@@ -53,8 +61,6 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
  
-  3rd_party
-
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -63,3 +69,11 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+install(
+  TARGETS ubuntu_display_server
+  RUNTIME DESTINATION bin)
+  
+set(
+  MIR_GENERATED_INCLUDE_DIRECTORIES 
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES} 
+  PARENT_SCOPE)

@@ -14,34 +14,60 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-IF(PROTOBUF_FOUND)
+# Check for google protocol buffers and generate code
+find_package( Protobuf REQUIRED )
 
-INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIRS})
+include_directories(
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR})
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS
+set(
+  MIR_PROTOBUF_PROTOCOL_SPEC
   mir_protobuf_wire.proto
   mir_protobuf.proto
 )
 
-ENDIF()
-
-set(
-  PROTBUF_SOURCES
-
-  ${PROTO_SRCS}
-  ${PROTO_HDRS}
+protobuf_generate_cpp(
+  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
+  ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
 add_library( 
-  mirprotobuf STATIC
+  mirprotobuf SHARED
   
-  ${PROTBUF_SOURCES}
+  ${GENERATED_PROTOBUF_SRCS}
+  ${GENERATED_PROTOBUF_HDRS}
 )
 
+target_link_libraries(
+  mirprotobuf
+
+  ${PROTOBUF_LIBRARIES}
+)
+
+set_target_properties(
+  mirprotobuf
+  PROPERTIES
+  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+  SOVERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+)
+
+# Export the include directories 
 list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 
+set(
+  MIR_GENERATED_INCLUDE_DIRECTORIES 
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES} 
+  PARENT_SCOPE)
 
-set(MIR_GENERATED_INCLUDE_DIRECTORIES ${MIR_GENERATED_INCLUDE_DIRECTORIES} PARENT_SCOPE)
+# Install the protobuf library
+install(
+  TARGETS mirprotobuf
+  LIBRARY DESTINATION lib
+)
+
+install(
+  FILES ${MIR_PROTOBUF_PROTOCOL_SPEC}
+  DESTINATION share/mir/protocol
+)
 

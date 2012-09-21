@@ -35,6 +35,7 @@ class AdaptorICSTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice());
         native_handle = mock_alloc_device->buffer_handle; 
 
@@ -48,6 +49,10 @@ protected:
 
         stride = geom::Stride(300*4);
 
+        EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,_,_,_))
+            .Times(AtLeast(0));
+        EXPECT_CALL(*mock_alloc_device, free_interface(_,_))
+            .Times(AtLeast(0));
     }
 
     native_handle_t* native_handle;
@@ -112,21 +117,6 @@ TEST_F(AdaptorICSTest, resource_type_test_success_ret)
     EXPECT_NE(buffer_data.get(), (mga::AndroidBufferHandle*) NULL);
 }
 
-#if 0
-TEST_F(AdaptorICSTest, resource_type_test_success_stride_is_set)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
-    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
-
-    geom::Stride saved_stride(0);
-    stride = geom::Stride(0);
-    alloc_adaptor->alloc_buffer(buffer_data, stride, width, height, pf, usage );
-    EXPECT_NE(saved_stride, stride );
-}
-#endif
-
 TEST_F(AdaptorICSTest, resource_type_test_proper_alloc_is_used)
 {
     using namespace testing;
@@ -181,11 +171,6 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
 
     alloc_adaptor->alloc_buffer(width, height, pf, usage );
 }
-
-
-
-
-
 
 TEST_F(AdaptorICSTest, handle_width_is_correct)
 {
@@ -273,3 +258,52 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
     EXPECT_EQ((unsigned int) buffer_cast->usage, (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER));
 }
 
+TEST_F(AdaptorICSTest, handle_has_reffable_incref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.incRef);
+    EXPECT_NO_THROW({
+        buffer_cast->common.incRef(native_base);
+    }); 
+}
+
+TEST_F(AdaptorICSTest, handle_has_reffable_decref)
+{
+    using namespace testing;
+
+    struct android_native_base_t *native_base=NULL; 
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.decRef);
+    EXPECT_NO_THROW({
+        buffer_cast->common.decRef(native_base);
+    }); 
+}
+
+TEST_F(AdaptorICSTest, handle_has_right_magic)
+{
+    using namespace testing;
+    int magic = ANDROID_NATIVE_MAKE_CONSTANT('_','b','f','r');  /* magic value shared by JB and ICS */
+
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    EXPECT_EQ( buffer_cast->common.magic, magic);
+}
+
+TEST_F(AdaptorICSTest, handle_has_version)
+{
+    using namespace testing;
+    int version = 96;  /* version value shared by JB and ICS */
+
+    auto handle = alloc_adaptor->alloc_buffer(width, height, pf, usage );
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+  
+    EXPECT_EQ( buffer_cast->common.version, version);
+}
