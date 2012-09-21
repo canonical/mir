@@ -15,17 +15,16 @@
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 list(APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libancillary)
-set(
-  LIBANCILLARY_SOURCES
+list(
+  APPEND MIR_3RD_PARTY_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary/fd_send.c 
+  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary/fd_recv.c)
 
-  libancillary/fd_send.c
-  libancillary/fd_recv.c
-)
+add_library(
+  3rd_party 
 
-add_library( 
-  3rd_party STATIC
-
-  ${LIBANCILLARY_SOURCES}
+  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)
+SET(MIR_3RD_PARTY_SOURCES ${MIR_3RD_PARTY_SOURCES} PARENT_SCOPE)

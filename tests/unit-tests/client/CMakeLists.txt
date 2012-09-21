@@ -12,14 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>,
+#              Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES 
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_registrar.cpp
 )
 
-set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

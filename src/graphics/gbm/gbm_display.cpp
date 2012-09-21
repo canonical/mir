@@ -169,7 +169,7 @@ mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
 
     uint32_t handle = gbm_bo_get_handle(bo).u32;
     uint32_t stride = gbm_bo_get_stride(bo);
-    uint32_t fb_id;
+    uint32_t fb_id = 0;
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
     auto ret = drmModeAddFB(drm.fd, kms.mode.hdisplay, kms.mode.vdisplay,
