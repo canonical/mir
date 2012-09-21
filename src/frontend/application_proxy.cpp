@@ -33,7 +33,7 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 void mir::frontend::ApplicationProxy::connect(
     ::google::protobuf::RpcController*,
                      const ::mir::protobuf::ConnectParameters* request,
-                     ::mir::protobuf::Void*,
+                     ::mir::protobuf::Connection*,
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();

@@ -47,7 +47,7 @@ public:
 private:
     virtual void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
-                         ::mir::protobuf::Void* response,
+                         ::mir::protobuf::Connection* response,
                          ::google::protobuf::Closure* done);
 
     void create_surface(google::protobuf::RpcController* controller,

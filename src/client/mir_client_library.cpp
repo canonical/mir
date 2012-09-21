@@ -226,7 +226,7 @@ private:
     mp::DisplayServer::Stub server;
     std::shared_ptr<mc::Logger> log;
     mp::Void void_response;
-    mir::protobuf::Void connect_result;
+    mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
