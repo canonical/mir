@@ -58,23 +58,6 @@ private:
     const std::shared_ptr<const gralloc_module_t> module;
 };
 
-int mcl::AndroidRegistrarGralloc::extract_width_from_handle(const std::shared_ptr<const native_handle_t>& handle)
-{
-    int offset = handle->numFds + width_offset_from_fd; 
-    return handle->data[offset];
-}
-
-int mcl::AndroidRegistrarGralloc::extract_height_from_handle(const std::shared_ptr<const native_handle_t>& handle)
-{
-    int offset = handle->numFds + height_offset_from_fd; 
-    return handle->data[offset];
-}
-
-geom::PixelFormat mcl::AndroidRegistrarGralloc::extract_pf_from_handle(const std::shared_ptr<const native_handle_t>&)
-{
-    return geom::PixelFormat::rgba_8888;//geom::android::convert_from_android_pixel_code(handle->data[offset]);
-}
-
 std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
 {
     char* vaddr;

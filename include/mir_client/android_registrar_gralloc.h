@@ -39,14 +39,7 @@ public:
     std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
 
 private:
-    int extract_width_from_handle(const std::shared_ptr<const native_handle_t>& handle);
-    int extract_height_from_handle(const std::shared_ptr<const native_handle_t>& handle);
-    geometry::PixelFormat extract_pf_from_handle(const std::shared_ptr<const native_handle_t>& handle);
-
     std::shared_ptr<const gralloc_module_t> gralloc_module;
-    static const int width_offset_from_fd = 5;
-    static const int height_offset_from_fd = 6;
-    static const int pf_offset_from_fd = 7;
 };
 
 }
