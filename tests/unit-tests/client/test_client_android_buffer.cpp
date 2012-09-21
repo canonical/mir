@@ -186,48 +186,21 @@ TEST_F(ClientAndroidBufferTest, buffer_returns_pf_without_modifying)
     EXPECT_EQ(buffer->pixel_format(), pf_copy);
 }
 
-#if 0
-move to buffer test
-TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_vaddr)
+TEST_F(ClientAndroidBufferTest, check_bounds_on_secure)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
 
-    void * vaddr_fake = (void*) 0x84982;
-    EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,_,_))
+    geom::Point point{ geom::X(0), geom::Y(0)};
+    geom::Size size{width_copy, height_copy};
+    geom::Rectangle rect{point, size};
+
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,rect))
         .Times(1)
-        .WillOnce(DoAll(
-            SetArgPointee<7>(vaddr_fake),
-            Return(0)));
+        .WillOnce(Return(empty_char));
 
-    auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(vaddr_fake, region->vaddr);
+    buffer->secure_for_cpu_write();
 }
 
-TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_width)
-{
-    using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
-
-    auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(width, region->width.as_uint32_t());
-}
-
-TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_height)
-{
-    using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
-
-    auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(height, region->height.as_uint32_t());
-}
-
-TEST_F(ClientAndroidRegistrarTest, memory_handle_is_constructed_with_right_format)
-{
-    using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
-
-    auto region = registrar.secure_for_cpu(fake_handle);
-    EXPECT_EQ(geom::PixelFormat::rgba_8888, region->format);
-}
-#endif

@@ -50,8 +50,7 @@ private:
     std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
 
-    const geometry::Height buffer_height;
-    const geometry::Width buffer_width;
+    geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 };
 

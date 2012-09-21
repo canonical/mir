@@ -25,14 +25,16 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
                          std::shared_ptr<MirBufferPackage> && package, geom::Width && w,
                          geom::Height && h, geom::PixelFormat && pf)
  : buffer_registrar(registrar),
-   buffer_height(h),
-   buffer_width(w),
    buffer_pf(pf)
 {
     auto buffer_package = std::move(package);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(buffer_package));
 
     buffer_registrar->register_buffer(native_handle.get());
+   
+    geom::Point pt{geom::X(0),geom::Y(0)};
+    geom::Size size{std::move(w), std::move(h)}; 
+    rect = geom::Rectangle {pt, size};
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
@@ -64,7 +66,6 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
 
 std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_write()
 {
-    geom::Rectangle rect;
     auto vaddr = buffer_registrar->secure_for_cpu(native_handle, rect);
     auto region =  std::make_shared<mcl::MemoryRegion>();
     region->vaddr = vaddr;
@@ -73,11 +74,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
 
 geom::Width mcl::AndroidClientBuffer::width() const
 {
-    return buffer_width;
+    return rect.size.width;
 }
 geom::Height mcl::AndroidClientBuffer::height() const
 {
-    return buffer_height;
+    return rect.size.height;
 }
 geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
 {
