@@ -120,7 +120,15 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
-    if (auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response))
+    auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response);
+    if (!tfd)
+    {
+        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+        if (surface && surface->has_buffer())
+            tfd = surface->mutable_buffer();
+    }
+
+    if (tfd)
     {
         tfd->clear_fd();
 
