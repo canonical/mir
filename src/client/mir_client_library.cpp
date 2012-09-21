@@ -96,7 +96,7 @@ public:
         return !surface.has_error();
     }
 
-    void populate(mcl::MirGraphicsRegion& buffer_package)
+    void populate(MirGraphicsRegion&)
     {
         if (is_valid() && surface.has_buffer())
         {
