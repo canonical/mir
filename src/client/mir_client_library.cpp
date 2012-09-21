@@ -98,6 +98,7 @@ public:
     {
         if (is_valid() && surface.has_buffer())
         {
+            unique_lock<mutex> lock(buffer_update_guard);
             auto const& buffer = surface.buffer();
 
             buffer_package.data_items = buffer.data_size();
@@ -117,6 +118,7 @@ public:
 
     void next_buffer(mir_surface_lifecycle_callback callback, void * context)
     {
+        unique_lock<mutex> lock(buffer_update_guard);
         server.next_buffer(
             0,
             &surface.id(),
@@ -137,6 +139,7 @@ private:
     mp::Void void_response;
     mp::Surface surface;
     std::string error_message;
+    mutex buffer_update_guard;
 };
 
 // TODO the connection should track all associated surfaces, and release them on
