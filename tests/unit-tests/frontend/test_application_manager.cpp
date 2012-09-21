@@ -17,10 +17,11 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/compositor/buffer_texture_binder.h"
 #include "mir/frontend/application_manager.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
+#include "mir/graphics/texture.h"
+#include "mir_test/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,12 +33,6 @@ namespace mg = mir::graphics;
 
 namespace
 {
-
-struct MockBufferTextureBinder : mc::BufferTextureBinder
-{
-    MOCK_METHOD0 (lock_and_bind_back_buffer, std::shared_ptr<mg::Texture>(void));
-    MOCK_METHOD0 (unlock_back_buffer, void(void));
-};
 
 struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
@@ -66,12 +61,12 @@ TEST(ApplicationManager, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder(
-        new MockBufferTextureBinder());
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(
+        new mc::MockBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
-            ms::a_surface(),
-            buffer_texture_binder));
+            ms::a_surface().name,
+            buffer_bundle));
 
     MockApplicationSurfaceOrganiser organizer;
     mf::ApplicationManager app_manager(&organizer);

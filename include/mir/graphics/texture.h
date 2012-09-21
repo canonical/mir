@@ -20,13 +20,24 @@
 #ifndef MIR_GRAPHICS_TEXTURE_H_
 #define MIR_GRAPHICS_TEXTURE_H_
 
+#include <memory>
+
 namespace mir
 {
+namespace compositor
+{
+class Buffer;
+}
+
 namespace graphics
 {
 
 struct Texture
 {
+    explicit Texture(std::shared_ptr<mir::compositor::Buffer> const& buffer) :
+        buffer(buffer) {}
+private:
+    std::shared_ptr<compositor::Buffer> buffer;
 };
 
 }

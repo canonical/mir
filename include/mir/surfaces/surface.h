@@ -30,7 +30,9 @@ namespace mir
 {
 namespace compositor
 {
-class BufferTextureBinder;
+class BufferBundle;
+class GraphicBufferClientResource;
+struct BufferIPCPackage;
 }
 
 namespace surfaces
@@ -60,17 +62,21 @@ SurfaceCreationParameters a_surface();
 class Surface : public graphics::Renderable
 {
  public:
-    Surface(const SurfaceCreationParameters& params,
-            std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder);
+    Surface(const std::string& name,
+            std::shared_ptr<compositor::BufferBundle> buffer_bundle);
+
+    ~Surface();
 
     std::string const& name() const;
     geometry::Width width() const;
     geometry::Height height() const;
     compositor::PixelFormat pixel_format() const;
+    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 
  private:
-    SurfaceCreationParameters params;
-    std::shared_ptr<compositor::BufferTextureBinder> buffer_texture_binder;
+    std::string surface_name;
+    std::shared_ptr<compositor::BufferBundle> buffer_bundle;
+    std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;
 };
 
 }
