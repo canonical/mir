@@ -96,19 +96,10 @@ public:
         return !surface.has_error();
     }
 
-    void populate(mcl::MirBufferPackage& buffer_package)
+    void populate(mcl::MirGraphicsRegion& buffer_package)
     {
         if (is_valid() && surface.has_buffer())
         {
-            auto const& buffer = surface.buffer();
-
-            buffer_package.data.resize(buffer.data_size());
-            for (int i = 0; i != buffer.data_size(); ++i)
-                buffer_package.data[i] = buffer.data(i);
-
-            buffer_package.fd.resize(buffer.fd_size());
-            for (int i = 0; i != buffer.fd_size(); ++i)
-                buffer_package.fd[i] = buffer.fd(i);
         }
     }
 
@@ -323,12 +314,11 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-#if 0
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
+void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package)
 {
     surface->populate(*buffer_package);
 }
-#endif
+
 void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     surface->next_buffer(callback, context);
