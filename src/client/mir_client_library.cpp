@@ -22,6 +22,7 @@
 #include "mir_protobuf.pb.h"
 
 #include <set>
+#include <unordered_set>
 #include <cstddef>
 
 namespace mc = mir::client;
@@ -151,7 +152,19 @@ public:
         , server(&channel)
         , log(log)
     {
+        {
+            lock_guard<mutex> lock(connection_guard);
+            valid_connections.insert(this);
+        }
         connect_result.set_error("connect not called");
+    }
+
+    ~MirConnection()
+    {
+        {
+            lock_guard<mutex> lock(connection_guard);
+            valid_connections.erase(this);
+        }
     }
 
     MirConnection(MirConnection const &) = delete;
@@ -202,11 +215,16 @@ public:
         while (created) cv.wait(lock);
     }
 
-    bool is_valid()
+    static bool is_valid(MirConnection *connection)
     {
-        return connect_result.has_error();
-    }
+        {
+            lock_guard<mutex> lock(connection_guard);
+            if (valid_connections.count(connection) == 0)
+               return false;
+        }
 
+        return !connection->connect_result.has_error();
+    }
 private:
     void done_disconnect()
     {
@@ -229,7 +247,13 @@ private:
 
     std::string error_message;
     std::set<MirSurface *> surfaces;
+
+    static mutex connection_guard;
+    static std::unordered_set<MirConnection *> valid_connections;
 };
+
+mutex MirConnection::connection_guard;
+std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
 void mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
@@ -248,7 +272,7 @@ void mir_connect(char const* socket_file, char const* name, mir_connected_callba
 
 int mir_connection_is_valid(MirConnection * connection)
 {
-    return !connection->is_valid();
+    return MirConnection::is_valid(connection);
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
