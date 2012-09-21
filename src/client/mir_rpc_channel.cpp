@@ -28,6 +28,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/null.hpp>
 
+#include <cstdlib>
 
 namespace
 {
@@ -58,7 +59,7 @@ cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
 cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
-    google::protobuf::Closure* complete)
+    std::shared_ptr<google::protobuf::Closure> const& complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -119,19 +120,25 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
-    static const int size = 32; // TODO - validate this magic hard limit is enough
-    int32_t buffer[size];
-
-    int received = 0;
-    while ((received = ancil_recv_fds(socket.native_handle(), buffer, size)) == -1)
-        /* TODO avoid spinning forever */;
-
     if (auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response))
     {
         tfd->clear_fd();
 
-        for (int i = 0; i != received; ++i)
-            tfd->add_fd(buffer[i]);
+        if (tfd->fds_on_side_channel() > 0)
+        {
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << tfd->fds_on_side_channel() << " file descriptors" << std::endl;
+            static const int size = 32; // TODO - validate this magic hard limit is enough
+            int32_t buffer[size];
+
+            int received = 0;
+            while ((received = ancil_recv_fds(socket.native_handle(), buffer, tfd->fds_on_side_channel())) == -1)
+                /* TODO avoid spinning forever */;
+
+            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
+
+            for (int i = 0; i != received; ++i)
+                tfd->add_fd(buffer[i]);
+        }
     }
     complete->Run();
 }
@@ -147,13 +154,11 @@ void c::MirRpcChannel::CallMethod(
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
-    if (method->name() == "test_file_descriptors"
-        || method->name() == "next_buffer")
-    {
-        complete = google::protobuf::NewCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete);
-    }
+    std::shared_ptr<google::protobuf::Closure> callback(
+        google::protobuf::NewPermanentCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete));
+
     // Only save details after serialization succeeds
-    auto& send_buffer = pending_calls.save_completion_details(invocation, response, complete);
+    auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
     send_message(buffer.str(), send_buffer);
@@ -262,6 +267,10 @@ std::ostream& c::ConsoleLogger::error()
 
 std::ostream& c::ConsoleLogger::debug()
 {
+    static char const* const debug = getenv("MIR_CLIENT_DEBUG");
+
+    if (debug) return std::cerr  << "DEBUG: ";
+
     static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
     return null;
 }

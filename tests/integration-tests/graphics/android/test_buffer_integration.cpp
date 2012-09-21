@@ -21,7 +21,7 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 
 #include "mir_test/test_utils_android_graphics.h"
 #include "mir_test/test_utils_graphics.h"
@@ -53,7 +53,7 @@ protected:
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
         w = geom::Width(gl_animation.texture_width());
         h = geom::Height(gl_animation.texture_height());
-        pf  = mc::PixelFormat::rgba_8888;
+        pf  = geom::PixelFormat::rgba_8888;
     }
 
     mt::glAnimationBasic gl_animation;
@@ -61,7 +61,7 @@ protected:
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
     geom::Width  w;
     geom::Height h;
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
 
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
@@ -120,9 +120,9 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
-    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 
@@ -146,9 +146,9 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
-    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 

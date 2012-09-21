@@ -52,9 +52,6 @@ private:
 
     std::mutex swapper_mutex;
 
-    std::condition_variable consumed_cv;
-    bool compositor_has_consumed;
-
     std::condition_variable buffer_available_cv;
     std::queue<Buffer*> client_queue;
 

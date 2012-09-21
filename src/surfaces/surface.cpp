@@ -38,6 +38,10 @@ ms::Surface::Surface(
     assert(buffer_bundle);
 }
 
+ms::Surface::~Surface()
+{
+}
+
 std::string const& ms::Surface::name() const
 {
     return surface_name;
@@ -63,7 +67,7 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package()
 {
-    graphics_resource.reset();
+    graphics_resource.reset();  // Release old client buffer
     graphics_resource = buffer_bundle->secure_client_buffer();
 
     /* at this point, the ipc code sends the data outside of the server.

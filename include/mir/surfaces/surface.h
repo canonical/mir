@@ -65,6 +65,8 @@ class Surface : public graphics::Renderable
     Surface(const std::string& name,
             std::shared_ptr<compositor::BufferBundle> buffer_bundle);
 
+    ~Surface();
+
     std::string const& name() const;
     geometry::Width width() const;
     geometry::Height height() const;

@@ -40,6 +40,17 @@ namespace
 {
 char const* const mir_test_socket = mir::test_socket_file().c_str();
 
+class StubBuffer : public mc::Buffer
+{
+    geom::Width width() const { return geom::Width(); }
+    geom::Height height() const { return geom::Height(); }
+    geom::Stride stride() const { return geom::Stride(); }
+    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
+    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
+    void bind_to_texture() {}
+};
+
+
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MockBufferAllocationStrategy()
@@ -56,16 +67,30 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Width, geom::Height, geom::PixelFormat)
     {
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperDouble(std::unique_ptr<mc::Buffer>(), std::unique_ptr<mc::Buffer>()));
+            new mc::BufferSwapperDouble(
+                std::unique_ptr<mc::Buffer>(new StubBuffer()),
+                std::unique_ptr<mc::Buffer>(new StubBuffer())));
     }
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
+    MockGraphicBufferAllocator()
+    {
+        using testing::_;
+        ON_CALL(*this, alloc_buffer(_,_,_))
+            .WillByDefault(testing::Invoke(this, &MockGraphicBufferAllocator::on_create_swapper));
+    }
+
     MOCK_METHOD3(
         alloc_buffer,
         std::unique_ptr<mc::Buffer> (geom::Width, geom::Height, geom::PixelFormat));
+
+    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Width, geom::Height, geom::PixelFormat)
+    {
+        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+    }
 };
 
 
