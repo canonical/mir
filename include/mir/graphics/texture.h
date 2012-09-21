@@ -36,7 +36,7 @@ struct Texture
 {
     explicit Texture(std::shared_ptr<mir::compositor::Buffer> const& buffer) :
         buffer(buffer) {}
-
+private:
     std::shared_ptr<compositor::Buffer> buffer;
 };
 
