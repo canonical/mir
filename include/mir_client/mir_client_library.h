@@ -66,6 +66,15 @@ typedef struct MirSurfaceParameters
     MirPixelFormat pixel_format;
 } MirSurfaceParameters;
 
+typedef struct MirGraphicsRegion
+{
+    int width;
+    int height;
+    MirPixelFormat pixel_format;
+    char *vaddr;
+
+} MirGraphicsRegion;
+
 typedef struct MirSurface MirSurface;
 
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
@@ -86,13 +95,11 @@ char const * mir_surface_get_error_message(MirSurface * surface);
 /* Get a valid surface's parameters. */
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters);
 
-#if 0
 /* Get a surface's buffer. */
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package);
 
 /* Advance a surface's buffer. */
 void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context);
-#endif
 
 /* Release the supplied surface and any associated buffer. */
 void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);

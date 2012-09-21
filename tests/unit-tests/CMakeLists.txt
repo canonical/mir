@@ -21,7 +21,6 @@ set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 
 add_subdirectory(client/)
 add_subdirectory(compositor/)
-add_subdirectory(client/)
 add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
