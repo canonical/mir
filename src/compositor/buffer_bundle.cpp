@@ -16,7 +16,9 @@
  * Authored by:
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include "mir/compositor/buffer_bundle.h"
+
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/graphics/texture.h"
@@ -25,80 +27,86 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 namespace
 {
-class TexDeleter
+struct CompositorReleaseDeleter
 {
-
-public:
-    TexDeleter(mc::BufferSwapper* sw, mc::Buffer* buf)
-        : swapper(std::move(sw)),
-          buffer_ptr(buf)
+    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw) :
+        swapper(sw)
     {
-    };
-
-    void operator()(mg::Texture* texture)
-    {
-        swapper->compositor_release(buffer_ptr);
-        delete texture;
     }
 
-private:
+    void operator()(mc::Buffer* buffer)
+    {
+        swapper->compositor_release(buffer);
+    }
+
     mc::BufferSwapper* const swapper;
-    mc::Buffer* const buffer_ptr;
 };
 
-
-class BufDeleter
+struct ClientReleaseDeleter
 {
-public:
-    BufDeleter(mc::BufferSwapper* sw, mc::Buffer* buf)
-        : swapper(sw),
-          buffer_ptr(buf)
+    ClientReleaseDeleter(mc::BufferSwapper* sw) :
+        swapper(sw)
     {
-    };
-
-    void operator()(mc::GraphicBufferClientResource* resource)
-    {
-        swapper->client_release(buffer_ptr);
-        delete resource;
     }
 
-private:
+    void operator()(mc::Buffer* buffer)
+    {
+        swapper->client_release(buffer);
+    }
+
     mc::BufferSwapper* const swapper;
-    mc::Buffer* const buffer_ptr;
 };
 }
 
-mc::BufferBundle::BufferBundle(std::unique_ptr<BufferSwapper>&& swapper)
-    :
-    swapper(std::move(swapper))
+mc::BufferBundleSurfaces::BufferBundleSurfaces(
+    std::unique_ptr<BufferSwapper>&& swapper,
+    geometry::Width width,
+    geometry::Height height,
+    PixelFormat pixel_format) :
+    swapper(std::move(swapper)), width(width), height(height), pixel_format(pixel_format)
 {
 }
 
-mc::BufferBundle::~BufferBundle()
+mc::BufferBundleSurfaces::BufferBundleSurfaces(
+    std::unique_ptr<BufferSwapper>&& swapper) :
+    swapper(std::move(swapper)), width(), height(), pixel_format(PixelFormat::rgba_5658)
 {
 }
 
-std::shared_ptr<mir::graphics::Texture> mc::BufferBundle::lock_and_bind_back_buffer()
+mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
-    auto compositor_buffer = swapper->compositor_acquire();
-    compositor_buffer->bind_to_texture();
-
-    mg::Texture* tex = new mg::Texture;
-    TexDeleter deleter(swapper.get(), compositor_buffer);
-    return std::shared_ptr<mg::Texture>(tex, deleter);
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundle::secure_client_buffer()
+std::shared_ptr<mir::graphics::Texture> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
 {
-    auto client_buffer = swapper->client_acquire();
+    std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
+    bptr->bind_to_texture();
 
-    BufDeleter deleter(swapper.get(), client_buffer);
-    GraphicBufferClientResource* graphics_resource = new GraphicBufferClientResource;
-    graphics_resource->ipc_package = client_buffer->get_ipc_package();
-
-    return std::shared_ptr<mc::GraphicBufferClientResource>(graphics_resource, deleter);
+    return std::make_shared<mg::Texture>(bptr);
 }
 
+std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
+{
+    std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
+
+    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr);
+}
+
+mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
+{
+    return pixel_format;
+}
+
+geom::Height mc::BufferBundleSurfaces::bundle_height()
+{
+    return height;
+}
+
+geom::Width mc::BufferBundleSurfaces::bundle_width()
+{
+    return width;
+}

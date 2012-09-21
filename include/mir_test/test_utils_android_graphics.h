@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 #define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 
-#include "mir/compositor/buffer_queue.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/dimensions.h"
 
 #include <hardware/gralloc.h>

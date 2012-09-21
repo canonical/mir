@@ -18,6 +18,7 @@
 
 #include "mir/frontend/application_proxy.h"
 
+#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
@@ -60,9 +61,14 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_height(surface->height().as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
 
+        auto const& ipc_package = surface->get_buffer_ipc_package();
         auto buffer = response->mutable_buffer();
-        // TODO get current BufferIPCPackage and populate buffer
-        (void)buffer;
+
+        for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
+            buffer->add_data(*p);
+
+        for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
+            buffer->add_fd(*p);
     }
 
     surfaces[id] = handle;
@@ -76,9 +82,15 @@ void mir::frontend::ApplicationProxy::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    auto handle = surfaces[request->value()].lock();
-    // TODO get next BufferIPCPackage and populate response
-    (void)response;
+    auto surface = surfaces[request->value()].lock();
+
+    auto const& ipc_package = surface->get_buffer_ipc_package();
+
+    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
+        response->add_data(*p);
+
+    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
+        response->add_fd(*p);
 
     done->Run();
 }
@@ -104,6 +116,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     if (p != surfaces.end())
     {
         surface_organiser->destroy_surface(p->second);
+        surfaces.erase(p);
     }
     else
     {

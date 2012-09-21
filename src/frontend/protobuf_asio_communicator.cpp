@@ -83,10 +83,14 @@ struct mfd::Session
     {
         std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
         response->clear_fd();
+        response->set_fds_on_side_channel(fd.size());
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
 
-        ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        if (fd.size() > 0)
+        {
+            ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        }
     }
 
     template<class ParameterMessage, class ResultMessage>
@@ -104,15 +108,17 @@ struct mfd::Session
 
         try
         {
+            std::unique_ptr<google::protobuf::Closure> callback(
+                google::protobuf::NewPermanentCallback(this,
+                    &Session::send_response,
+                    invocation.id(),
+                    &result_message));
+
             (display_server.get()->*function)(
                 0,
                 &parameter_message,
                 &result_message,
-                google::protobuf::NewCallback(
-                    this,
-                    &Session::send_response,
-                    invocation.id(),
-                    &result_message));
+                callback.get());
         }
         catch (std::exception const& x)
         {

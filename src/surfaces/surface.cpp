@@ -19,6 +19,8 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_bundle.h"
 
 #include <cassert>
 
@@ -26,36 +28,55 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 
 ms::Surface::Surface(
-    const ms::SurfaceCreationParameters& params,
-    std::shared_ptr<mc::BufferTextureBinder> buffer_texture_binder) :
-    params(params),
-    buffer_texture_binder(buffer_texture_binder)
+    const std::string& name,
+    std::shared_ptr<mc::BufferBundle> buffer_bundle) :
+    surface_name(name),
+    buffer_bundle(buffer_bundle)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
-    assert(buffer_texture_binder);
+    assert(buffer_bundle);
+}
+
+ms::Surface::~Surface()
+{
 }
 
 std::string const& ms::Surface::name() const
 {
-    return params.name;
+    return surface_name;
 }
 
 mir::geometry::Width ms::Surface::width() const
 {
-    return params.width;
+    return buffer_bundle->bundle_width();
 }
 
 mir::geometry::Height ms::Surface::height() const
 {
-    return params.height;
+    return buffer_bundle->bundle_height();
 }
 
+//note: not sure the surface should be aware of pixel format. might be something that the 
+//texture (which goes to compositor should be aware of though
+//todo: kdub remove 
 mc::PixelFormat ms::Surface::pixel_format() const
 {
-    // TODO This should actually be supplied from somewhere (where?)
-    return mc::PixelFormat();
+    return buffer_bundle->get_bundle_pixel_format();
 }
 
+std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package()
+{
+    graphics_resource.reset();  // Release old client buffer
+    graphics_resource = buffer_bundle->secure_client_buffer();
+
+    /* at this point, the ipc code sends the data outside of the server.
+       we must hold a reference (graphics_resource) to the resource on behalf
+       of the client until it is returned to us */
+    return graphics_resource->ipc_package;
+}
+
+
+/* todo: kdub: split into different file */
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
     name = new_name;

@@ -202,23 +202,19 @@ struct NullDeleter
 
 class MockLogger : public mir::client::Logger
 {
-    std::ostringstream out;
-
-    std::ostream& dummy_error() { return std::cerr << "ERROR: "; }
-//    std::ostream& dummy_error() { return out << "ERROR: "; }
-
-//    std::ostream& dummy_debug() { return std::cerr << "DEBUG: "; }
-    std::ostream& dummy_debug() { return out << "DEBUG: "; }
+    mir::client::ConsoleLogger real_logger;
 
 public:
     MockLogger()
     {
+        using mir::client::ConsoleLogger;
+
         ON_CALL(*this, error())
-            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_error));
+            .WillByDefault(::testing::Invoke(&real_logger, &ConsoleLogger::error));
         EXPECT_CALL(*this, error()).Times(0);
 
         ON_CALL(*this, debug())
-            .WillByDefault(::testing::Invoke(this, &MockLogger::dummy_debug));
+            .WillByDefault(::testing::Invoke(&real_logger, &ConsoleLogger::debug));
         EXPECT_CALL(*this, debug()).Times(testing::AtLeast(0));
     }
 

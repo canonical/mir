@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 
 #include "mir_test/mock_swapper.h"
@@ -70,7 +70,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_binds)
 {
     EXPECT_CALL(*mock_buffer, bind_to_texture())
     .Times(1);
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     auto texture = buffer_bundle.lock_and_bind_back_buffer();
 }
@@ -84,7 +84,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
 
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     auto texture = buffer_bundle.lock_and_bind_back_buffer();
 }
@@ -97,7 +97,7 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
     .Times(1);
     EXPECT_CALL(*mock_swapper, client_release(_))
     .Times(1);
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
@@ -107,7 +107,7 @@ TEST_F(BufferBundleTest, client_requesting_resource_queries_for_ipc_package)
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1);
 
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
     auto buffer_package = buffer_bundle.secure_client_buffer();
 }
 
@@ -119,7 +119,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundle buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
     std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
