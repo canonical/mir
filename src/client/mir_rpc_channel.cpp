@@ -120,34 +120,35 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
-    auto tfd = dynamic_cast<mir::protobuf::Buffer*>(response);
-    if (!tfd)
+    auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
+    if (!buffer)
     {
         auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
         if (surface && surface->has_buffer())
-            tfd = surface->mutable_buffer();
+            buffer = surface->mutable_buffer();
     }
 
-    if (tfd)
+    if (buffer)
     {
-        tfd->clear_fd();
+        buffer->clear_fd();
 
-        if (tfd->fds_on_side_channel() > 0)
+        if (buffer->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << tfd->fds_on_side_channel() << " file descriptors" << std::endl;
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << buffer->fds_on_side_channel() << " file descriptors" << std::endl;
 
-            std::vector<int32_t> buffer(tfd->fds_on_side_channel());
+            std::vector<int32_t> buf(buffer->fds_on_side_channel());
 
             int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buffer.data(), buffer.size())) == -1)
+            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
                 /* TODO avoid spinning forever */;
 
             log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
 
             for (int i = 0; i != received; ++i)
-                tfd->add_fd(buffer[i]);
+                buffer->add_fd(buf[i]);
         }
     }
+
     complete->Run();
 }
 
