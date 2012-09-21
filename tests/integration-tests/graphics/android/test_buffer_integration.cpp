@@ -21,7 +21,7 @@
 #include "mir/graphics/android/android_display.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/compositor/buffer_bundle_surfaces.h"
 
 #include "mir_test/test_utils_android_graphics.h"
 #include "mir_test/test_utils_graphics.h"
@@ -122,7 +122,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 
@@ -148,7 +148,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
-    auto bundle = std::make_shared<mc::BufferBundle>(std::move(swapper));
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 
