@@ -306,7 +306,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
     launch_client_process(client_config);
 }
 
-#if 0
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buffers)
 {
     struct ClientConfig : ClientConfigCommon
@@ -331,7 +330,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
             ASSERT_TRUE(surface != NULL);
 
-            mcl::MirBufferPackage buffer_package;
+            MirGraphicsRegion buffer_package;
             mir_surface_get_current_buffer(surface, &buffer_package);
 
             mir_surface_next_buffer(surface, next_buffer_callback, this);
@@ -349,5 +348,4 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
     launch_client_process(client_config);
 }
-#endif
 }
