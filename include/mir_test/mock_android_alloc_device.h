@@ -34,24 +34,6 @@ public:
 
 };
     
-native_handle_t* mock_generate_sane_android_handle(int numFd, int numInt)
-{
-    native_handle_t *handle;
-    int total=numFd + numInt;
-    int header_offset=3; 
-
-    handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
-    handle->version = 0x389;
-    handle->numFds = numFd;
-    handle->numInts = numInt;
-    for(int i=0; i<total; i++)
-    {
-        handle->data[i] = i*3;
-    }
-
-    return handle;
-}
-
 
 class MockAllocDevice : public ICSAllocInterface,
     public alloc_device_t
@@ -101,6 +83,24 @@ public:
     {
         MockAllocDevice* mocker = static_cast<MockAllocDevice*>(mock_alloc);
         mocker->dump_interface(mock_alloc, buf, buf_len);
+    }
+
+    native_handle_t* mock_generate_sane_android_handle(int numFd, int numInt)
+    {
+        native_handle_t *handle;
+        int total=numFd + numInt;
+        int header_offset=3; 
+
+        handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
+        handle->version = 0x389;
+        handle->numFds = numFd;
+        handle->numInts = numInt;
+        for(int i=0; i<total; i++)
+        {
+            handle->data[i] = i*3;
+        }
+
+        return handle;
     }
 
     MOCK_METHOD7(alloc_interface,  int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*));

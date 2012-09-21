@@ -102,27 +102,11 @@ protected:
         rect = geom::Rectangle{ pt,
                                {geom::Width(width), geom::Height(height)}};
 
-        int numDataICS = 8; /* typical ICS/JB number of ints */
-        numFd = 4; /*example value */
-        int width_position_in_handle = numFd + ics_width_offset;
-        int height_position_in_handle = numFd + ics_height_offset;
-        int format_position_in_handle = numFd + ics_format_offset;
-
-        auto handle_raw = mock_generate_sane_android_handle(numFd, numDataICS);
-        handle_raw->data[width_position_in_handle] = width;
-        handle_raw->data[height_position_in_handle] = height;
-        handle_raw->data[format_position_in_handle] = HAL_PIXEL_FORMAT_RGBA_8888;
-        fake_handle = std::shared_ptr<native_handle_t>(handle_raw);
+        fake_handle = std::make_shared<native_handle_t>();
     }
    
     geom::Rectangle rect;
     uint32_t width, height, top, left; 
-    int numFd;
-    static const int ics_width_offset = 5;
-    static const int ics_height_offset = 6;
-    static const int ics_format_offset = 7;
-    int width_position_in_handle;
-    int height_position_in_handle;
 
     std::shared_ptr<const native_handle_t> fake_handle;
     std::shared_ptr<MockRegistrarDevice> mock_module;
