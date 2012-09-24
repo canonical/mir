@@ -106,15 +106,6 @@ struct mp::SignalDispatcher::Private
     {
     }
 
-    ~Private()
-    {
-        worker_thread.interrupt();
-//        if (worker_thread.joinable())
-//            {
-//            worker_thread.join();
-//            }
-    }
-
     void worker()
     {
         while(true)
@@ -127,7 +118,6 @@ struct mp::SignalDispatcher::Private
                 signal_channel(s);
             } catch(...)
             {
-                std::cerr << "DEBUG " << __PRETTY_FUNCTION__ << std::endl;
                 break;
             }
         }
