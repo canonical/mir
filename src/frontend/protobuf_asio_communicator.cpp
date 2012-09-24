@@ -81,12 +81,33 @@ struct mfd::Session
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
     {
-        std::vector<int32_t> fd(response->fd().data(), response->fd().data()+response->fd().size());
-        response->clear_fd();
-        response->set_fds_on_side_channel(fd.size());
+        const auto& fd = extract_fds_from_buffer(response);
+        send_response(id, static_cast<google::protobuf::Message*>(response));
+        send_fds(fd);
+    }
+
+    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
+    // OTOH until we have a real requirement it is hard to see how best to generalise.
+    void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+    {
+        const auto& fd = response->has_buffer() ?
+            extract_fds_from_buffer(response->mutable_buffer()) :
+            std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
+        send_fds(fd);
+    }
 
+    std::vector<int32_t> extract_fds_from_buffer(mir::protobuf::Buffer* buffer)
+    {
+        std::vector < int32_t > fd(buffer->fd().data(), buffer->fd().data() + buffer->fd().size());
+        buffer->clear_fd();
+        buffer->set_fds_on_side_channel(fd.size());
+        return fd;
+    }
+
+    void send_fds(std::vector<int32_t> const& fd)
+    {
         if (fd.size() > 0)
         {
             ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
