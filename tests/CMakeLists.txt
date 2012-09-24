@@ -25,7 +25,10 @@ if(MIR_ENABLE_DEATH_TESTS)
 endif(MIR_ENABLE_DEATH_TESTS)
 
 add_subdirectory(acceptance-tests/)
-add_subdirectory(death-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)
 add_subdirectory(utils/)
+
+if(MIR_ENABLE_DEATH_TESTS)
+    add_subdirectory(death-tests/)
+endif(MIR_ENABLE_DEATH_TESTS)
