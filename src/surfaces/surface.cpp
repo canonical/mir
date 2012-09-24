@@ -46,14 +46,9 @@ std::string const& ms::Surface::name() const
     return surface_name;
 }
 
-mir::geometry::Width ms::Surface::width() const
+mir::geometry::Size ms::Surface::size() const
 {
-    return buffer_bundle->bundle_width();
-}
-
-mir::geometry::Height ms::Surface::height() const
-{
-    return buffer_bundle->bundle_height();
+    return buffer_bundle->bundle_size();
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 
@@ -84,24 +79,10 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::strin
 }
 
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_width(geometry::Width new_width)
-{
-    width = new_width;
-    return *this;
-}
-
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_height(geometry::Height new_height)
-{
-    height = new_height;
-    return *this;
-}
-
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
-        geometry::Width new_width,
-        geometry::Height new_height)
+        geometry::Size new_size)
 {
-    width = new_width;
-    height = new_height;
+    size = new_size;
 
     return *this;
 }
@@ -110,14 +91,14 @@ bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
-    return lhs.width == rhs.width && lhs.height == rhs.height;
+    return lhs.size == rhs.size;
 }
 
 bool ms::operator!=(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
-    return lhs.width != rhs.width || lhs.height != rhs.height;
+    return lhs.size != rhs.size;
 }
 
 ms::SurfaceCreationParameters ms::a_surface()

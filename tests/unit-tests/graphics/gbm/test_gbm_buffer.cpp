@@ -46,21 +46,20 @@ protected:
         auto platform = std::make_shared<mgg::GBMPlatform>();
         allocator.reset(new mgg::GBMBufferAllocator(platform));
 
-        width = geom::Width(300);
-        height = geom::Height(200);
+        size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = mc::PixelFormat::rgba_8888;
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
-        .WillByDefault(Return(width.as_uint32_t()));
+        .WillByDefault(Return(size.width.as_uint32_t()));
 
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
-        .WillByDefault(Return(height.as_uint32_t()));
+        .WillByDefault(Return(size.height.as_uint32_t()));
 
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_BO_FORMAT_ARGB8888));
 
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
-        .WillByDefault(Return(4 * width.as_uint32_t()));
+        .WillByDefault(Return(4 * size.width.as_uint32_t()));
     }
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
@@ -69,8 +68,7 @@ protected:
 
     // Defaults
     mc::PixelFormat pf;
-    geom::Width width;
-    geom::Height height;
+    geom::Size size;
 };
 
 TEST_F(GBMGraphicBufferBasic, dimensions_test)
@@ -80,9 +78,8 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(width, height, pf);
-    ASSERT_EQ(width, buffer->width());
-    ASSERT_EQ(height, buffer->height());
+    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(size, pf);
+    ASSERT_EQ(size, buffer->size());
 }
 
 TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
@@ -92,7 +89,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(size, pf));
     ASSERT_EQ(pf, buffer->pixel_format());
 }
 
@@ -105,9 +102,9 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
 
     // RGBA 8888 cannot take less than 4 bytes
     // TODO: is there a *maximum* sane value for stride?
-    geom::Stride minimum(width.as_uint32_t() * 4);
+    geom::Stride minimum(size.width.as_uint32_t() * 4);
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(width, height, pf));
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(size, pf));
 
     ASSERT_LE(minimum, buffer->stride());
 }
@@ -119,7 +116,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
     EXPECT_CALL(mock_gbm, gbm_bo_get_handle(_))
             .Times(Exactly(1));
 
-    auto buffer = allocator->alloc_buffer(width, height, pf);
+    auto buffer = allocator->alloc_buffer(size, pf);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_TRUE(ipc_package->ipc_fds.empty());
     ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
@@ -136,7 +133,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
             .Times(Exactly(1))
             .WillOnce(Return(mock_handle));
 
-    auto buffer = allocator->alloc_buffer(width, height, pf);
+    auto buffer = allocator->alloc_buffer(size, pf);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_EQ(mock_handle.u32, static_cast<uint32_t>(ipc_package->ipc_data[0]));
 }

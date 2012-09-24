@@ -32,6 +32,7 @@
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -90,8 +91,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
         new ms::Surface(
             params.name,
             buffer_bundle_factory->create_buffer_bundle(
-                params.width,
-                params.height,
+                geom::Size{params.size.width, params.size.height},
                 mc::PixelFormat::rgba_8888)));
 
     surfaces.insert(surface);

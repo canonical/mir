@@ -60,14 +60,10 @@ EGLClientBuffer mga::AndroidBufferHandleDefault::get_egl_client_buffer() const
     return (EGLClientBuffer) &anw_buffer;
 }
 
-geom::Height mga::AndroidBufferHandleDefault::height() const
+geom::Size mga::AndroidBufferHandleDefault::size() const
 {
-    return geom::Height(anw_buffer.height);
-}
-
-geom::Width mga::AndroidBufferHandleDefault::width() const
-{
-    return geom::Width(anw_buffer.width);
+    return geom::Size{geom::Width{anw_buffer.width},
+                      geom::Height{anw_buffer.height}};
 }
 
 geom::Stride mga::AndroidBufferHandleDefault::stride() const

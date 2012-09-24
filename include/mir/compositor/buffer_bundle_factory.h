@@ -39,8 +39,7 @@ public:
     virtual ~BufferBundleFactory() {}
 
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        geometry::Width width,
-        geometry::Height height,
+        geometry::Size size,
         PixelFormat pf) = 0;
 
 protected:
