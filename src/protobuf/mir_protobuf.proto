@@ -25,6 +25,14 @@ message Buffer {
   optional string error = 127;
 }
 
+message Connection {
+  repeated sint32 fd = 1;
+  repeated int32  data = 2;
+  optional int32  fds_on_side_channel = 3;
+
+  optional string error = 127;
+}
+
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
@@ -40,7 +48,7 @@ message Void {
 }
 
 service DisplayServer {
-  rpc connect(ConnectParameters) returns (Void);
+  rpc connect(ConnectParameters) returns (Connection);
   rpc disconnect(Void) returns (Void);
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc next_buffer(SurfaceId) returns (Buffer);

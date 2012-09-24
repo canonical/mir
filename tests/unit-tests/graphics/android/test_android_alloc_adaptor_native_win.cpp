@@ -39,13 +39,12 @@ protected:
 
         /* set up common defaults */
         pf = geom::PixelFormat::rgba_8888;
-        width = geom::Width(110);
-        height = geom::Height(230);
+        size = geom::Size{geom::Width{110}, geom::Height{230}};
         usage = mga::BufferUsage::use_hardware;
         stride = geom::Stride(300*4);
 
-        anwb.height = (int) height.as_uint32_t();
-        anwb.width = (int) width.as_uint32_t();
+        anwb.height = (int) size.height.as_uint32_t();
+        anwb.width = (int) size.width.as_uint32_t();
         anwb.stride = (int) stride.as_uint32_t();
         anwb.handle  = mock_alloc_device->buffer_handle;
 
@@ -56,23 +55,16 @@ protected:
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
     std::shared_ptr<MockAllocDevice> mock_alloc_device;
 
-    geom::Width width;
-    geom::Height height;
+    geom::Size size;
     geom::Stride stride;
     mga::BufferUsage usage;
     geom::PixelFormat pf;
 };
 
-TEST_F(AdaptorNativeWinProduction, native_win_has_correct_height)
+TEST_F(AdaptorNativeWinProduction, native_win_has_correct_size)
 {
     buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    EXPECT_EQ(buffer_handle->height(), height);
-}
-
-TEST_F(AdaptorNativeWinProduction, native_win_has_correct_width)
-{
-    buffer_handle =  std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    EXPECT_EQ(buffer_handle->width(), width);
+    EXPECT_EQ(buffer_handle->size(), size);
 }
 
 TEST_F(AdaptorNativeWinProduction, native_win_has_correct_stride)

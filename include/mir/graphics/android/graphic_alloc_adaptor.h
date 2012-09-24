@@ -34,8 +34,8 @@ namespace android
 class GraphicAllocAdaptor
 {
 public:
-    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Width, geometry::Height,
-            geometry::PixelFormat, BufferUsage usage) = 0;
+    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Size size,
+        geometry::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;
     virtual ~GraphicAllocAdaptor() {}

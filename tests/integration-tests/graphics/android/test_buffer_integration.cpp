@@ -51,16 +51,15 @@ protected:
     {
         allocator = platform->create_buffer_allocator();
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
-        w = geom::Width(gl_animation.texture_width());
-        h = geom::Height(gl_animation.texture_height());
+        size = geom::Size{geom::Width{gl_animation.texture_width()},
+                          geom::Height{gl_animation.texture_height()}};
         pf  = geom::PixelFormat::rgba_8888;
     }
 
     mt::glAnimationBasic gl_animation;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
-    geom::Width  w;
-    geom::Height h;
+    geom::Size size;
     geom::PixelFormat pf;
 
     /* note about display: android drivers seem to only be able to open fb once
@@ -99,7 +98,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
     using namespace testing;
 
     EXPECT_NO_THROW({ 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf); 
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf); 
     });
 }
 
@@ -107,7 +106,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
 
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
@@ -121,7 +120,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
@@ -129,7 +128,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     std::shared_ptr<mg::Texture> texture_res;
 
     auto client_buffer = bundle->secure_client_buffer();
-    sw_renderer.render_pattern(client_buffer, w, h, 0xFF0000FF);
+    sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
     client_buffer.reset();
 
     texture_res = bundle->lock_and_bind_back_buffer();
@@ -147,7 +146,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(w, h, pf);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
@@ -158,7 +157,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, w, h, 0xFF0000FF);
+        sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();
@@ -169,7 +168,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, w, h, 0x0000FFFF);
+        sw_renderer.render_pattern(client_buffer, size, 0x0000FFFF);
         client_buffer.reset();
 
         texture_res = bundle->lock_and_bind_back_buffer();

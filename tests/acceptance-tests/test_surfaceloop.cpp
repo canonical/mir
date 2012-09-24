@@ -42,8 +42,7 @@ char const* const mir_test_socket = mir::test_socket_file().c_str();
 
 class StubBuffer : public mc::Buffer
 {
-    geom::Width width() const { return geom::Width(); }
-    geom::Height height() const { return geom::Height(); }
+    geom::Size size() const { return geom::Size(); }
     geom::Stride stride() const { return geom::Stride(); }
     geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
     std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
@@ -56,15 +55,15 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_,_,_))
+        ON_CALL(*this, create_swapper(_,_))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
-    MOCK_METHOD3(
+    MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, geom::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Width, geom::Height, geom::PixelFormat)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Size, geom::PixelFormat)
     {
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(
@@ -79,23 +78,22 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     MockGraphicBufferAllocator()
     {
         using testing::_;
-        ON_CALL(*this, alloc_buffer(_,_,_))
+        ON_CALL(*this, alloc_buffer(_,_))
             .WillByDefault(testing::Invoke(this, &MockGraphicBufferAllocator::on_create_swapper));
     }
 
-    MOCK_METHOD3(
+    MOCK_METHOD2(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (geom::Width, geom::Height, geom::PixelFormat));
+        std::unique_ptr<mc::Buffer> (geom::Size, geom::PixelFormat));
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Width, geom::Height, geom::PixelFormat)
+    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Size, geom::PixelFormat)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
 };
 
 
-geom::Width const width{640};
-geom::Height const height{480};
+geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 }
 
@@ -221,7 +219,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(width, height, format)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(size, format)).Times(1);
 
             return buffer_allocation_strategy;
         }
@@ -285,7 +283,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocator)
                 buffer_allocator = std::make_shared<MockGraphicBufferAllocator>();
 
-            EXPECT_CALL(*buffer_allocator, alloc_buffer(width, height, format)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(size, format)).Times(AtLeast(2));
 
             return buffer_allocator;
         }
@@ -488,9 +486,7 @@ struct BufferCounterConfig : TestingServerConfiguration
             while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1));
         }
 
-        virtual geom::Width width() const { return geom::Width(); }
-
-        virtual geom::Height height() const { return geom::Height(); }
+        virtual geom::Size size() const { return geom::Size(); }
 
         virtual geom::Stride stride() const { return geom::Stride(); }
 
@@ -511,8 +507,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     {
      public:
         virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-            geom::Width /*width*/,
-            geom::Height /*height*/,
+            geom::Size /*size*/,
             geom::PixelFormat /*pf*/)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());

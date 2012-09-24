@@ -41,18 +41,15 @@ mc::BufferBundleManager::BufferBundleManager(
 
 
 std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
-    geometry::Width width,
-    geometry::Height height,
+    geometry::Size size,
     geometry::PixelFormat pf)
 {
     auto swapper(buffer_allocation_strategy->create_swapper(
-            width,
-            height,
+            size,
             pf));
 
     return std::make_shared<mc::BufferBundleSurfaces>(
         std::move(swapper),
-        width,
-        height,
+        size,
         pf);
 }

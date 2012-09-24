@@ -33,10 +33,12 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 void mir::frontend::ApplicationProxy::connect(
     ::google::protobuf::RpcController*,
                      const ::mir::protobuf::ConnectParameters* request,
-                     ::mir::protobuf::Void*,
+                     ::mir::protobuf::Connection*,
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();
+    // TODO - get ConnectionIPCPackage
+    // (does this come via surface_organiser or from a NEW dependency on platform?)
     done->Run();
 }
 
@@ -49,16 +51,16 @@ void mir::frontend::ApplicationProxy::create_surface(
     auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_width(geometry::Width(request->width()))
-        .of_height(geometry::Height(request->height()))
+        .of_size(geometry::Size{geometry::Width{request->width()},
+                                geometry::Height{request->height()}})
         );
 
     auto const id = next_id();
     {
         auto surface = handle.lock();
         response->mutable_id()->set_value(id);
-        response->set_width(surface->width().as_uint32_t());
-        response->set_height(surface->height().as_uint32_t());
+        response->set_width(surface->size().width.as_uint32_t());
+        response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
 
         auto const& ipc_package = surface->get_buffer_ipc_package();

@@ -36,16 +36,15 @@ public:
 
         mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
         mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
-        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _, _))
+        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _))
         .Times(AtLeast(0));
         EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
         .Times(AtLeast(0));
 
-        width = geom::Width(300);
-        height = geom::Height(220);
+        size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::rgba_8888;
         buffer = std::shared_ptr<mc::Buffer>(
-                     new mga::AndroidBuffer(mock_alloc_dev, width, height, pf));
+                     new mga::AndroidBuffer(mock_alloc_dev, size, pf));
 
         egl_mock.silence_uninteresting();
         gl_mock.silence_uninteresting();
@@ -56,8 +55,7 @@ public:
     };
 
 
-    geom::Width width;
-    geom::Height height;
+    geom::Size size;
     geom::PixelFormat pf;
 
     std::shared_ptr<mc::Buffer> buffer;

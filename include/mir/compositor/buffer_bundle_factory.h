@@ -23,6 +23,7 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/geometry/dimensions.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <memory>
 
@@ -39,8 +40,7 @@ public:
     virtual ~BufferBundleFactory() {}
 
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        geometry::Width width,
-        geometry::Height height,
+        geometry::Size size,
         geometry::PixelFormat pf) = 0;
 
 protected:

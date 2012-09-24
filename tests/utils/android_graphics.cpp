@@ -39,12 +39,12 @@ mt::grallocRenderSW::~grallocRenderSW()
     gralloc_close(alloc_dev);
 }
 
-void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Width w, geom::Height h, int val)
+void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Size size, int val)
 {
     auto ipc_pack = res->ipc_package;
 
-    int width =  w.as_uint32_t(); 
-    int height = h.as_uint32_t();
+    int width =  size.width.as_uint32_t(); 
+    int height = size.height.as_uint32_t();
 
     /* reconstruct the native_window_t */
     native_handle_t* native_handle;

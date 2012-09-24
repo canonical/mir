@@ -35,12 +35,11 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        width = geom::Width{1024};
-        height =geom::Height{768};
+        size = geom::Size{geom::Width{1024}, geom::Height{768}};
         stride = geom::Stride{1024};
         pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
 
-        mock_buffer = std::make_shared<mc::MockBuffer>(width, height, stride, pixel_format);
+        mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
         
         EXPECT_CALL(*mock_buffer, bind_to_texture())
@@ -60,8 +59,7 @@ protected:
 
     std::shared_ptr<mc::MockBuffer> mock_buffer;
     std::unique_ptr<mc::MockSwapper> mock_swapper;
-    geom::Width width;
-    geom::Height height;
+    geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;
 };

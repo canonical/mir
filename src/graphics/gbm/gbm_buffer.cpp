@@ -56,14 +56,10 @@ mgg::GBMBuffer::~GBMBuffer()
 {
 }
 
-geom::Width mgg::GBMBuffer::width() const
+geom::Size mgg::GBMBuffer::size() const
 {
-    return geom::Width(gbm_bo_get_width(gbm_handle.get()));
-}
-
-geom::Height mgg::GBMBuffer::height() const
-{
-    return geom::Height(gbm_bo_get_height(gbm_handle.get()));
+    return {geom::Width{gbm_bo_get_width(gbm_handle.get())},
+            geom::Height{gbm_bo_get_height(gbm_handle.get())}};
 }
 
 geom::Stride mgg::GBMBuffer::stride() const

@@ -45,14 +45,13 @@ struct EmptyDeleter
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
-    MOCK_METHOD3(
+    MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Width, geom::Height, geom::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
 };
 
-const geom::Width width{1024};
-const geom::Height height{768};
-const geom::Stride stride{geom::dim_cast<geom::Stride>(width)};
+geom::Size size{geom::Width{1024}, geom::Height{768}};
+const geom::Stride stride{geom::dim_cast<geom::Stride>(size.width)};
 const geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
 
 }
@@ -61,7 +60,7 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    mc::MockBuffer mock_buffer{width, height, stride, pixel_format};
+    mc::MockBuffer mock_buffer{size, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
         EmptyDeleter());
@@ -71,12 +70,11 @@ TEST(buffer_manager, create_buffer)
             std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, EmptyDeleter()));
 
 
-    EXPECT_CALL(allocation_strategy, create_swapper(Eq(width), Eq(height), Eq(pixel_format))).Times(AtLeast(1));
+    EXPECT_CALL(allocation_strategy, create_swapper(Eq(size), Eq(pixel_format))).Times(AtLeast(1));
 
     std::shared_ptr<mc::BufferBundle> bundle{
         buffer_bundle_manager.create_buffer_bundle(
-            width,
-            height,
+            size,
             pixel_format)};
 
     EXPECT_TRUE(bundle.get());

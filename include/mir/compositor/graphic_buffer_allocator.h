@@ -35,8 +35,7 @@ public:
     virtual ~GraphicBufferAllocator() {}
 
     virtual std::unique_ptr<Buffer> alloc_buffer(
-        geometry::Width width,
-        geometry::Height height,
+        geometry::Size size,
         geometry::PixelFormat pf) = 0;
 
 protected:

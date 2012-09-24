@@ -36,12 +36,12 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& 
 }
 
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
-    geom::Width width, geom::Height height, geom::PixelFormat pf)
+    geom::Size size, geom::PixelFormat pf)
 {
     gbm_bo *handle = gbm_bo_create(
         platform->gbm.device, 
-        width.as_uint32_t(), 
-        height.as_uint32_t(),
+        size.width.as_uint32_t(), 
+        size.height.as_uint32_t(),
         mgg::mir_format_to_gbm_format(pf), 
         GBM_BO_USE_RENDERING);
     

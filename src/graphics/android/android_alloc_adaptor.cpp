@@ -61,15 +61,14 @@ static void incRef(android_native_base_t*)
 }
 
 std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
-    geom::Width width, geom::Height height,
-    geom::PixelFormat pf, BufferUsage usage)
+    geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
 
     int ret, stride_as_int = 0;
     int format = convert_to_android_pixel_code(pf);
     int usage_flag = convert_to_android_usage(usage);
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) width.as_uint32_t(), (int) height.as_uint32_t(),
+    ret = alloc_dev->alloc(alloc_dev.get(), (int) size.width.as_uint32_t(), (int) size.height.as_uint32_t(),
                            format, usage_flag, &buf_handle, &stride_as_int);
 
     AndroidBufferHandleEmptyDeleter empty_del;
@@ -79,8 +78,8 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
 
     /* pack ANativeWindow buffer for the handle */
     ANativeWindowBuffer buffer;
-    buffer.width = (int) width.as_uint32_t();
-    buffer.height = (int) height.as_uint32_t();
+    buffer.width = (int) size.width.as_uint32_t();
+    buffer.height = (int) size.height.as_uint32_t();
     buffer.stride = stride_as_int;
     buffer.handle = buf_handle;
     buffer.format = format;

@@ -34,8 +34,7 @@ class MockBufferHandle : public AndroidBufferHandle
 public:
 
     MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
-    MOCK_CONST_METHOD0(height, geometry::Height());
-    MOCK_CONST_METHOD0(width,  geometry::Width());
+    MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(usage,  BufferUsage());
@@ -52,11 +51,11 @@ public:
     {
         using namespace testing;
 
-        ON_CALL(*this, alloc_buffer(_,_,_,_))
+        ON_CALL(*this, alloc_buffer(_,_,_))
         .WillByDefault(Return(mock_handle));
     }
 
-    MOCK_METHOD4(alloc_buffer, std::shared_ptr<AndroidBufferHandle>(geometry::Width, geometry::Height, geometry::PixelFormat, BufferUsage));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
     std::shared_ptr<AndroidBufferHandle> mock_handle;

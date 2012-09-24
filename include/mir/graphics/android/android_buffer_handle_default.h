@@ -41,8 +41,7 @@ class AndroidBufferHandleDefault: public AndroidBufferHandle
 public:
     explicit AndroidBufferHandleDefault(ANativeWindowBuffer buf, geometry::PixelFormat pf, BufferUsage use);
 
-    geometry::Width width() const;
-    geometry::Height height() const;
+    geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat format() const;
     BufferUsage usage() const;

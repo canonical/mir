@@ -19,7 +19,7 @@
 #define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 
 #include <hardware/gralloc.h>
 #include <memory>
@@ -35,7 +35,7 @@ public:
     grallocRenderSW(); 
     ~grallocRenderSW(); 
     void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
-                        geometry::Width w, geometry::Height h, int val );
+                        geometry::Size size, int val );
  
 private:
     gralloc_module_t* module;

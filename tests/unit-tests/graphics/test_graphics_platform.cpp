@@ -67,15 +67,13 @@ TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = mg::create_platform();
     auto allocator = platform->create_buffer_allocator();
-    geom::Width w(320);
-    geom::Height h(240);
+    geom::Size size{geom::Width{320}, geom::Height{240}};
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    auto buffer = allocator->alloc_buffer(w, h, pf);
+    auto buffer = allocator->alloc_buffer(size, pf);
 
     ASSERT_TRUE(buffer.get() != NULL); 
 
-    EXPECT_EQ(buffer->width(), w);
-    EXPECT_EQ(buffer->height(), h);
+    EXPECT_EQ(buffer->size(), size);
     EXPECT_EQ(buffer->pixel_format(), pf );
  
 }

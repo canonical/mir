@@ -96,7 +96,7 @@ public:
         return !surface.has_error();
     }
 
-    void populate(MirGraphicsRegion&)
+    void populate(MirGraphicsRegion& )
     {
         if (is_valid() && surface.has_buffer())
         {
@@ -105,6 +105,7 @@ public:
 
     void next_buffer(mir_surface_lifecycle_callback callback, void * context)
     {
+        lock_guard<mutex> lock(buffer_update_guard);
         server.next_buffer(
             0,
             &surface.id(),
@@ -125,6 +126,7 @@ private:
     mp::Void void_response;
     mp::Surface surface;
     std::string error_message;
+    mutex buffer_update_guard;
 };
 
 // TODO the connection should track all associated surfaces, and release them on
@@ -228,7 +230,7 @@ private:
     mp::DisplayServer::Stub server;
     std::shared_ptr<mcl::Logger> log;
     mp::Void void_response;
-    mir::protobuf::Void connect_result;
+    mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 

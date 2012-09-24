@@ -19,8 +19,8 @@
 #ifndef MIR_SURFACES_SURFACE_H_
 #define MIR_SURFACES_SURFACE_H_
 
-#include "mir/geometry/dimensions.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir/geometry/size.h"
 #include "mir/graphics/renderable.h"
 
 #include <memory>
@@ -42,15 +42,10 @@ struct SurfaceCreationParameters
 {
     SurfaceCreationParameters& of_name(std::string const& new_name);
 
-    SurfaceCreationParameters& of_width(geometry::Width new_width);
-
-    SurfaceCreationParameters& of_height(geometry::Height new_height);
-
-    SurfaceCreationParameters& of_size(geometry::Width new_width, geometry::Height new_height);
+    SurfaceCreationParameters& of_size(geometry::Size new_size);
 
     std::string name;
-    geometry::Width width;
-    geometry::Height height;
+    geometry::Size size;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
@@ -68,8 +63,7 @@ class Surface : public graphics::Renderable
     ~Surface();
 
     std::string const& name() const;
-    geometry::Width width() const;
-    geometry::Height height() const;
+    geometry::Size size() const;
     geometry::PixelFormat pixel_format() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 

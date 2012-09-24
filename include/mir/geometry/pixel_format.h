@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
 #include <cstdint>
+#include <cstddef>
 
 namespace mir
 {
