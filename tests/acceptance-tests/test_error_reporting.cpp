@@ -70,7 +70,7 @@ struct ErrorServer : mir::protobuf::DisplayServer
     void connect(
         ::google::protobuf::RpcController*,
         const ::mir::protobuf::ConnectParameters*,
-        ::mir::protobuf::Void*,
+        ::mir::protobuf::Connection*,
         ::google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);

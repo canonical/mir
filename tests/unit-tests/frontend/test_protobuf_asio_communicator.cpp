@@ -95,7 +95,7 @@ struct StubServer : mir::protobuf::DisplayServer
     void connect(
         ::google::protobuf::RpcController*,
                          const ::mir::protobuf::ConnectParameters* request,
-                         ::mir::protobuf::Void*,
+                         ::mir::protobuf::Connection*,
                          ::google::protobuf::Closure* done)
     {
         app_name = request->application_name();
@@ -166,7 +166,7 @@ struct ErrorServer : mir::protobuf::DisplayServer
     void connect(
         ::google::protobuf::RpcController*,
         const ::mir::protobuf::ConnectParameters*,
-        ::mir::protobuf::Void*,
+        ::mir::protobuf::Connection*,
         ::google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -324,6 +324,7 @@ struct TestClient
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
+    mir::protobuf::Connection connection;
 
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(create_surface_done, void ());
@@ -529,7 +530,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, connection_sets_app_name)
     client.display_server.connect(
         0,
         &client.connect_parameters,
-        &client.ignored,
+        &client.connection,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     client.wait_for_connect_done();
@@ -549,7 +550,7 @@ TEST_F(ProtobufAsioCommunicatorTestFixture, create_surface_sets_surface_name)
     client.display_server.connect(
         0,
         &client.connect_parameters,
-        &client.ignored,
+        &client.connection,
         google::protobuf::NewCallback(&client, &TestClient::connect_done));
 
     client.wait_for_connect_done();
@@ -773,7 +774,7 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
     client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     EXPECT_CALL(client, connect_done()).Times(1);
 
-    mir::protobuf::Void result;
+    mir::protobuf::Connection result;
     client.display_server.connect(
         0,
         &client.connect_parameters,
