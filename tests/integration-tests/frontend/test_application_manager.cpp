@@ -47,7 +47,7 @@ struct MockSurfaceStack : public ms::SurfaceStackModel
 
 }
 
-TEST(TestApplicationManager, create_surface_dispatches_to_surface_stack)
+TEST(TestApplicationManagerAndSurfaceController, create_surface_dispatches_to_surface_stack)
 {
     using namespace ::testing;
 
