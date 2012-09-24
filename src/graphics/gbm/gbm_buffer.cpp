@@ -33,13 +33,13 @@ void mgg::GBMBufferObjectDeleter::operator()(gbm_bo* handle) const
         gbm_bo_destroy(handle);
 }
 
-mc::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
+geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
     (void)format;
-    return mc::PixelFormat::rgba_8888;
+    return geom::PixelFormat::rgba_8888;
 }
 
-uint32_t mgg::mir_format_to_gbm_format(mc::PixelFormat format)
+uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 {
     (void)format;
     return GBM_BO_FORMAT_ARGB8888;
@@ -67,7 +67,7 @@ geom::Stride mgg::GBMBuffer::stride() const
     return geom::Stride(gbm_bo_get_stride(gbm_handle.get()));
 }
 
-mc::PixelFormat mgg::GBMBuffer::pixel_format() const
+geom::PixelFormat mgg::GBMBuffer::pixel_format() const
 {
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }

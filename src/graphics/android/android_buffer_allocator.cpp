@@ -61,7 +61,7 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
 }
 
 std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
-    geom::Size size, mc::PixelFormat pf)
+    geom::Size size, geom::PixelFormat pf)
 {
     return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, size, pf));
 }

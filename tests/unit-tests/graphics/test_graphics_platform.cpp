@@ -68,7 +68,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     auto platform = mg::create_platform();
     auto allocator = platform->create_buffer_allocator();
     geom::Size size{geom::Width{320}, geom::Height{240}};
-    mc::PixelFormat pf(mc::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     auto buffer = allocator->alloc_buffer(size, pf);
 
     ASSERT_TRUE(buffer.get() != NULL); 

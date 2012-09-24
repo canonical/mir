@@ -44,14 +44,14 @@ namespace android
 class AndroidBuffer: public compositor::Buffer
 {
 public:
-    AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Size size, compositor::PixelFormat pf);
+    AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Size size, geometry::PixelFormat pf);
     ~AndroidBuffer();
 
     geometry::Size size() const;
 
     geometry::Stride stride() const;
 
-    compositor::PixelFormat pixel_format() const;
+    geometry::PixelFormat pixel_format() const;
 
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 

@@ -16,47 +16,44 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
 
-#include <memory>
+#include <cstdint>
+#include <cstddef>
 
 namespace mir
 {
-
-namespace graphics
+namespace geometry
 {
-class Texture;
-}
-
-namespace compositor
+enum class PixelFormat : uint32_t
 {
-class BufferIPCPackage;
-class Buffer
+    rgba_8888,
+    rgb_888,
+    pixel_format_invalid
+};
+
+class PixelOperation
 {
 public:
+    PixelOperation();
 
-    virtual ~Buffer() {}
-
-    virtual geometry::Size size() const = 0;
-
-    virtual geometry::Stride stride() const = 0;
-
-    virtual geometry::PixelFormat pixel_format() const = 0;
-
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-
-    virtual void bind_to_texture() = 0;
-
-protected:
-    Buffer() = default;
-    Buffer(Buffer const&) = delete;
-    Buffer& operator=(Buffer const&) = delete;
+    size_t bytes_per_pixel(PixelFormat pf)
+    {
+        switch(pf)
+        {
+            case PixelFormat::rgba_8888:
+                return 4;
+            case PixelFormat::rgb_888:
+                return 3;
+            default:
+                return 0;
+        }
+    }
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */

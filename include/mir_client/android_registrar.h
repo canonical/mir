@@ -13,24 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_CLIENT_ANDROID_REGISTRAR_H_
+#define MIR_CLIENT_ANDROID_REGISTRAR_H_
 
-#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
-#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#include "mir_client/mir_buffer_package.h"
+#include "mir/geometry/rectangle.h"
+#include <cutils/native_handle.h>
 
-
+#include <memory>
 namespace mir
 {
-namespace compositor
+namespace client
 {
-enum class PixelFormat : uint32_t
-{
-    rgba_8888,
-    rgba_5658
-};
-}
-}
+class MemoryRegion;
 
-#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
+class AndroidRegistrar
+{
+public:
+    virtual void register_buffer(const native_handle_t *handle) = 0;
+    virtual void unregister_buffer(const native_handle_t *handle) = 0;
+    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+};
+
+}
+}
+#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */

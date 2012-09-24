@@ -92,7 +92,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
             params.name,
             buffer_bundle_factory->create_buffer_bundle(
                 geom::Size{params.size.width, params.size.height},
-                mc::PixelFormat::rgba_8888)));
+                geom::PixelFormat::rgba_8888)));
 
     surfaces.insert(surface);
     return surface;

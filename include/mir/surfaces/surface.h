@@ -19,9 +19,9 @@
 #ifndef MIR_SURFACES_SURFACE_H_
 #define MIR_SURFACES_SURFACE_H_
 
+#include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/pixel_format.h"
 
 #include <memory>
 #include <string>
@@ -64,7 +64,7 @@ class Surface : public graphics::Renderable
 
     std::string const& name() const;
     geometry::Size size() const;
-    compositor::PixelFormat pixel_format() const;
+    geometry::PixelFormat pixel_format() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 
  private:

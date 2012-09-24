@@ -17,35 +17,31 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
+#ifndef MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_
+#define MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_
 
-#include <hardware/hardware.h>
-
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/graphics/android/graphic_alloc_adaptor.h"
+#include "mir/geometry/pixel_format.h"
+#include "mir_client/android_registrar.h"
+#include <hardware/gralloc.h>
 
 namespace mir
 {
-namespace graphics
-{
-namespace android
+namespace client
 {
 
-class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
+class AndroidRegistrarGralloc : public AndroidRegistrar 
 {
 public:
-    AndroidBufferAllocator();
+    AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
 
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Size size, geometry::PixelFormat pf);
+    void register_buffer(const native_handle_t *handle);
+    void unregister_buffer(const native_handle_t *handle);
+    std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
+
 private:
-    const hw_module_t    *hw_module;
-    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
+    std::shared_ptr<const gralloc_module_t> gralloc_module;
 };
 
 }
 }
-}
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */
+#endif /* MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_ */

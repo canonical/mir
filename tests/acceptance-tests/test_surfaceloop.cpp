@@ -44,7 +44,7 @@ class StubBuffer : public mc::Buffer
 {
     geom::Size size() const { return geom::Size(); }
     geom::Stride stride() const { return geom::Stride(); }
-    mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
+    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
     std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
     void bind_to_texture() {}
 };
@@ -61,9 +61,9 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 
     MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Size, mc::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Size, mc::PixelFormat)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Size, geom::PixelFormat)
     {
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(
@@ -84,9 +84,9 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD2(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (geom::Size, mc::PixelFormat));
+        std::unique_ptr<mc::Buffer> (geom::Size, geom::PixelFormat));
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Size, mc::PixelFormat)
+    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Size, geom::PixelFormat)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
@@ -94,7 +94,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
-mc::PixelFormat const format{mc::PixelFormat::rgba_8888};
+geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 }
 
 namespace mir
@@ -490,7 +490,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual geom::Stride stride() const { return geom::Stride(); }
 
-        virtual mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
+        virtual geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
 
         virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
         {
@@ -508,7 +508,7 @@ struct BufferCounterConfig : TestingServerConfiguration
      public:
         virtual std::unique_ptr<mc::Buffer> alloc_buffer(
             geom::Size /*size*/,
-            mc::PixelFormat /*pf*/)
+            geom::PixelFormat /*pf*/)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());
         }

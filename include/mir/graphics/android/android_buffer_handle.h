@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
 #include "mir/geometry/size.h"
-#include "mir/compositor/pixel_format.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -52,7 +52,7 @@ public:
 
     virtual geometry::Size size() const   = 0;
     virtual geometry::Stride stride() const = 0;
-    virtual compositor::PixelFormat format() const  = 0;
+    virtual geometry::PixelFormat format() const  = 0;
     virtual BufferUsage usage() const = 0;
 
     virtual EGLClientBuffer get_egl_client_buffer() const = 0;

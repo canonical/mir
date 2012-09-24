@@ -36,14 +36,14 @@ class AndroidAllocAdaptor : public GraphicAllocAdaptor
 public:
     explicit AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device);
     std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Size,
-            compositor::PixelFormat, BufferUsage usage);
+            geometry::PixelFormat, BufferUsage usage);
 
     /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used to check buffer contents */
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;
-    int convert_to_android_format(compositor::PixelFormat pf);
     int convert_to_android_usage(BufferUsage usage);
+    int convert_to_android_pixel_code(geometry::PixelFormat mir_pixel_format);
 
 };
 

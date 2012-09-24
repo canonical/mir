@@ -13,50 +13,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#ifndef MIR_CLIENT_CLIENT_BUFFER_H_
+#define MIR_CLIENT_CLIENT_BUFFER_H_
 
-#include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir/geometry/dimensions.h"
 
 #include <memory>
 
 namespace mir
 {
-
-namespace graphics
+namespace client
 {
-class Texture;
-}
+class MirBufferPackage;
 
-namespace compositor
+/* vaddr is valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * PixelOperation.bytes_per_pixel(format)] */
+struct MemoryRegion
 {
-class BufferIPCPackage;
-class Buffer
+    geometry::Width width;
+    geometry::Height height;
+    geometry::PixelFormat format;
+    std::shared_ptr<char> vaddr;
+};
+
+class ClientBuffer
 {
-public:
-
-    virtual ~Buffer() {}
-
-    virtual geometry::Size size() const = 0;
-
-    virtual geometry::Stride stride() const = 0;
-
+    virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
+    virtual geometry::Width width() const = 0;
+    virtual geometry::Height height() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
-
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-
-    virtual void bind_to_texture() = 0;
-
-protected:
-    Buffer() = default;
-    Buffer(Buffer const&) = delete;
-    Buffer& operator=(Buffer const&) = delete;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+#endif /* MIR_CLIENT_CLIENT_BUFFER_H_ */

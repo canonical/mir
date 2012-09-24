@@ -66,16 +66,14 @@ typedef struct MirSurfaceParameters
     MirPixelFormat pixel_format;
 } MirSurfaceParameters;
 
-enum { mir_buffer_package_max = 32 };
-
-typedef struct MirBufferPackage
+typedef struct MirGraphicsRegion
 {
-    int data_items;
-    int fd_items;
+    int width;
+    int height;
+    MirPixelFormat pixel_format;
+    char *vaddr;
 
-    int data[mir_buffer_package_max];
-    int fd[mir_buffer_package_max];
-} MirBufferPackage;
+} MirGraphicsRegion;
 
 typedef struct MirSurface MirSurface;
 
@@ -98,7 +96,7 @@ char const * mir_surface_get_error_message(MirSurface * surface);
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters);
 
 /* Get a surface's buffer. */
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package);
 
 /* Advance a surface's buffer. */
 void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context);
