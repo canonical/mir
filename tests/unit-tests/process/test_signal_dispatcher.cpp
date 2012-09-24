@@ -100,7 +100,7 @@ using mir::a_successful_exit_function;
 using mir::a_main_function_collecting_received_signals;
 
 TEST(SignalDispatcher,
-     a_default_dispatcher_does_not_catch_any_signals)
+    DISABLED_a_default_dispatcher_does_not_catch_any_signals)
 {
     auto p = mp::fork_and_run_in_a_different_process(
         a_main_function_accessing_the_signal_dispatcher,
@@ -112,7 +112,7 @@ TEST(SignalDispatcher,
 }
 
 TEST(SignalDispatcher,
-     enabling_a_signal_results_in_signal_channel_delivering_the_signal)
+    DISABLED_enabling_a_signal_results_in_signal_channel_delivering_the_signal)
 {
     auto p = mp::fork_and_run_in_a_different_process(
         a_main_function_collecting_received_signals<SIGTERM>,
