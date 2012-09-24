@@ -52,9 +52,7 @@ public:
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
 
-    virtual geometry::Width width() const;
-
-    virtual geometry::Height height() const;
+    virtual geometry::Size size() const;
 
     virtual geometry::Stride stride() const;
 

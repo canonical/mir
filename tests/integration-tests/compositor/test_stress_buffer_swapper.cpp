@@ -41,12 +41,11 @@ struct ThreadFixture {
                             mc::Buffer** )> b)
         : sleep_duration(50)
     {
-            geom::Width w {1024};
-            geom::Height h {768};
+            geom::Size size{geom::Width{1024}, geom::Height{768}};
             geom::Stride s {1024};
             mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
-            std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(w, h, s, pf));
-            std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(w, h, s, pf));
+            std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
+            std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
 
             auto swapper = std::make_shared<mc::BufferSwapperDouble>(
                     std::move(buffer_a),

@@ -28,30 +28,26 @@ namespace geom = mir::geometry;
 
 TEST(surface, default_creation_parameters)
 {
+    using namespace geom;
     ms::SurfaceCreationParameters params;
 
-    ASSERT_EQ(geom::Width(0), params.width);
-    ASSERT_EQ(geom::Height(0), params.height);
+    ASSERT_EQ(Width(0), params.size.width);
+    ASSERT_EQ(Height(0), params.size.height);
 
     ASSERT_EQ(ms::a_surface(), params);
 }
 
 TEST(surface, builder_mutators)
 {
-    geom::Width w{1024};
-    geom::Height h{768};
+    using namespace geom;
+    Size const size{Width{1024}, Height{768}};
 
-    ASSERT_EQ(w, ms::a_surface().of_width(w).width);
-    ASSERT_EQ(h, ms::a_surface().of_height(h).height);
-    auto params = ms::a_surface().of_size(w, h); 
-    ms::SurfaceCreationParameters reference{std::string(), w, h};
+    auto params = ms::a_surface().of_size(size); 
+    ms::SurfaceCreationParameters reference{std::string(), size};
     ASSERT_EQ(
         reference,
         params
         );
-    ASSERT_EQ(
-        params,
-        ms::a_surface().of_width(w).of_height(h));
 }
 
 namespace
@@ -62,16 +58,14 @@ struct SurfaceCreation : public ::testing::Test
     {
         surface_name = "test_surfaceA";
         pf = mc::PixelFormat::rgba_8888;
-        width = geom::Width(43);
-        height = geom::Height(420);
+        size = geom::Size{geom::Width{43}, geom::Height{420}};
         mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
     }
 
     std::string surface_name;
     std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
     mc::PixelFormat pf;
-    geom::Width width;
-    geom::Height height;
+    geom::Size size;
 };
 }
 
@@ -99,34 +93,19 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
     EXPECT_EQ(ret_pf, pf); 
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_width)
+TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
 {
     using namespace testing;
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
 
-    EXPECT_CALL(*mock_buffer_bundle, bundle_width())
+    EXPECT_CALL(*mock_buffer_bundle, bundle_size())
         .Times(1)
-        .WillOnce(Return(width));
+        .WillOnce(Return(size));
 
-    auto ret_w = surf.width();
+    auto ret_size = surf.size();
 
-    EXPECT_EQ(ret_w, width); 
-}
-
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_heigt)
-{
-    using namespace testing;
-
-    ms::Surface surf(surface_name, mock_buffer_bundle );
-
-    EXPECT_CALL(*mock_buffer_bundle, bundle_height())
-        .Times(1)
-        .WillOnce(Return(height));
-
-    auto ret_h = surf.height();
-
-    EXPECT_EQ(ret_h, height); 
+    EXPECT_EQ(ret_size, size); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)

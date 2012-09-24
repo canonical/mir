@@ -66,7 +66,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
         using namespace ::testing;
         ON_CALL(
             *this,
-            create_buffer_bundle(_, _, _))
+            create_buffer_bundle(_, _))
                 .WillByDefault(
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
@@ -74,11 +74,10 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
-    MOCK_METHOD3(
+    MOCK_METHOD2(
         create_buffer_bundle,
         std::shared_ptr<mc::BufferBundle>(
-            geom::Width width,
-            geom::Height height,
+            geom::Size size,
             mc::PixelFormat pf));
 
 };
@@ -109,12 +108,12 @@ TEST(
 
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _, _))
+        create_buffer_bundle(_, _))
             .Times(AtLeast(1));
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     stack.destroy_surface(surface);
 }
@@ -128,7 +127,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _, _)).Times(0);
+        create_buffer_bundle(_, _)).Times(0);
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
@@ -146,16 +145,16 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _, _)).Times(AtLeast(1));
+        create_buffer_bundle(_, _)).Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     auto surface1 = stack.create_surface(
-        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        ms::a_surface().of_size(geom::Width(1024), geom::Height(768)));
+        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     MockSurfaceRenderer renderer;
     EXPECT_CALL(renderer,

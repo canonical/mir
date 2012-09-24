@@ -37,8 +37,7 @@ public:
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
 
     std::unique_ptr<BufferSwapper> create_swapper(
-        geometry::Width width,
-        geometry::Height height,
+        geometry::Size size,
         PixelFormat pf);
 
 private:

@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_H_
 
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 #include "mir/compositor/pixel_format.h"
 
 #include <EGL/egl.h>
@@ -50,8 +50,7 @@ class AndroidBufferHandle
 public:
     virtual ~AndroidBufferHandle() {}
 
-    virtual geometry::Width width() const   = 0;
-    virtual geometry::Height height() const = 0;
+    virtual geometry::Size size() const   = 0;
     virtual geometry::Stride stride() const = 0;
     virtual compositor::PixelFormat format() const  = 0;
     virtual BufferUsage usage() const = 0;

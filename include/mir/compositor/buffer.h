@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 #include "mir/compositor/pixel_format.h"
 
 #include <memory>
@@ -41,9 +41,7 @@ public:
 
     virtual ~Buffer() {}
 
-    virtual geometry::Width width() const = 0;
-
-    virtual geometry::Height height() const = 0;
+    virtual geometry::Size size() const = 0;
 
     virtual geometry::Stride stride() const = 0;
 

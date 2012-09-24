@@ -20,7 +20,7 @@
 #define MIR_TEST_MOCK_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <gmock/gmock.h>
@@ -36,18 +36,15 @@ namespace geom = mir::geometry;
 struct MockBuffer : public Buffer
 {
  public:
-    MockBuffer(geom::Width w,
-               geom::Height h,
+    MockBuffer(geom::Size size,
                geom::Stride s,
                PixelFormat pf)
 	{
         empty_package = std::make_shared<BufferIPCPackage>();
 
 	    using namespace testing;
-        ON_CALL(*this, width())
-                .WillByDefault(Return(w));
-        ON_CALL(*this, height())
-                .WillByDefault(Return(h));
+        ON_CALL(*this, size())
+                .WillByDefault(Return(size));
         ON_CALL(*this, stride())
                 .WillByDefault(Return(s));
         ON_CALL(*this, pixel_format())
@@ -57,8 +54,7 @@ struct MockBuffer : public Buffer
                 .WillByDefault(Return(empty_package));
 	}
 
-    MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(height, geom::Height());
+    MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<BufferIPCPackage>());

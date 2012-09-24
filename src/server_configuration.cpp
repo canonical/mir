@@ -52,9 +52,7 @@ public:
 
 class StubBuffer : public mc::Buffer
 {
-    geom::Width width() const { return geom::Width(); }
-
-    geom::Height height() const { return geom::Height(); }
+    geom::Size size() const { return geom::Size(); }
 
     geom::Stride stride() const { return geom::Stride(); }
 
@@ -70,7 +68,7 @@ class StubBuffer : public mc::Buffer
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Width, geom::Height, mc::PixelFormat)
+    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, mc::PixelFormat)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }

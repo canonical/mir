@@ -28,7 +28,7 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
-                                  geom::Width w, geom::Height h, mc::PixelFormat pf)
+                                  geom::Size size, mc::PixelFormat pf)
     :
     alloc_device(alloc_dev)
 {
@@ -37,8 +37,7 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     if (!alloc_device)
         throw std::runtime_error("No allocation device for graphics buffer");
 
-    native_window_buffer_handle = alloc_device->alloc_buffer(w, h,
-                                  pf, usage);
+    native_window_buffer_handle = alloc_device->alloc_buffer(size, pf, usage);
 
     if (!native_window_buffer_handle.get())
         throw std::runtime_error("Graphics buffer allocation failed");
@@ -55,14 +54,9 @@ mga::AndroidBuffer::~AndroidBuffer()
 }
 
 
-geom::Width mga::AndroidBuffer::width() const
+geom::Size mga::AndroidBuffer::size() const
 {
-    return native_window_buffer_handle->width();
-}
-
-geom::Height mga::AndroidBuffer::height() const
-{
-    return native_window_buffer_handle->height();
+    return native_window_buffer_handle->size();
 }
 
 geom::Stride mga::AndroidBuffer::stride() const
