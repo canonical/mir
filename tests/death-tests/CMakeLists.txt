@@ -12,20 +12,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: 	Alan Griffiths <alan@octopull.co.uk>
 
-option(
-  MIR_ENABLE_DEATH_TESTS
-  "Option to control whether to run death tests"
-  ON
+
+add_executable(
+  death-tests
+  test_buffer_allocation_strategy.cpp
 )
 
-if(MIR_ENABLE_DEATH_TESTS)
-  add_definitions(-DMIR_DEATH_TESTS_ENABLED)
-endif(MIR_ENABLE_DEATH_TESTS)
+target_link_libraries(
+  death-tests
+  
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirprocess
+  mirsurfaces
+  mirclient
+  mirplatformgraphics
+  mirprotobuf
+  
+  3rd_party
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(death-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
-add_subdirectory(utils/)
+  ${PROTOBUF_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+mir_discover_tests(death-tests)
