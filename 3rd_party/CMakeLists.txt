@@ -14,7 +14,11 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/libancillary)
+list(
+  APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES
+  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary
+  ${CMAKE_CURRENT_SOURCE_DIR}/glm)
+
 list(
   APPEND MIR_3RD_PARTY_SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/libancillary/fd_send.c 
