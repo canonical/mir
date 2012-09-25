@@ -1399,6 +1399,8 @@ class ThreadLocal {
 class Mutex {
  public:
   Mutex() {}
+  void Lock() {}
+  void Unlock() {}
   void AssertHeld() const {}
 };
 
