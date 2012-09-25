@@ -19,16 +19,28 @@
 #ifndef MIR_GRAPHICS_RENDERABLE_H_
 #define MIR_GRAPHICS_RENDERABLE_H_
 
+#include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
+#include <memory>
+#include <glm/glm.hpp>
+
 namespace mir
 {
 namespace graphics
 {
+
+class Texture;
 
 // The interface by which a Renderer talks to, e.g., a surface.
 class Renderable
 {
 public:
     virtual ~Renderable() {}
+
+    virtual geometry::Point top_left() const = 0;
+    virtual geometry::Size size() const = 0;
+    virtual std::shared_ptr<Texture> texture() const = 0;
+    virtual glm::mat4 transformation() const = 0;
 
 protected:
     Renderable() = default;

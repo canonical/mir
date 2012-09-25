@@ -26,6 +26,7 @@
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
@@ -47,9 +48,24 @@ std::string const& ms::Surface::name() const
     return surface_name;
 }
 
+geom::Point ms::Surface::top_left() const
+{
+    return top_left_point;
+}
+
 mir::geometry::Size ms::Surface::size() const
 {
     return buffer_bundle->bundle_size();
+}
+
+std::shared_ptr<mg::Texture> ms::Surface::texture() const
+{
+    return buffer_bundle->lock_and_bind_back_buffer();
+}
+
+glm::mat4 ms::Surface::transformation() const
+{
+    return transformation_matrix;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 

@@ -17,13 +17,16 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/graphics/texture.h"
 #include "mir_test/mock_buffer_bundle.h"
+#include "mir_test/mock_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 TEST(surface, default_creation_parameters)
@@ -59,12 +62,14 @@ struct SurfaceCreation : public ::testing::Test
         surface_name = "test_surfaceA";
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
-        mock_buffer_bundle = std::make_shared<mc::MockBufferBundle>();
+        stride = geom::Stride{4 * size.width.as_uint32_t()};
+        mock_buffer_bundle = std::make_shared<testing::NiceMock<mc::MockBufferBundle>>();
     }
 
     std::string surface_name;
-    std::shared_ptr<mc::MockBufferBundle> mock_buffer_bundle;
+    std::shared_ptr<testing::NiceMock<mc::MockBufferBundle>> mock_buffer_bundle;
     geom::PixelFormat pf;
+    geom::Stride stride;
     geom::Size size;
 };
 }
@@ -123,4 +128,43 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 
     EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
 
+}
+
+TEST_F(SurfaceCreation, test_surface_gets_top_left)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+
+    auto ret_top_left = surf.top_left();
+
+    EXPECT_EQ(geom::Point(), ret_top_left); 
+}
+
+TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+
+    auto ret_transformation = surf.transformation();
+
+    EXPECT_EQ(glm::mat4(), ret_transformation); 
+}
+
+TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+    auto buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pf);
+    auto texture = std::make_shared<mg::Texture>(buffer);
+
+    EXPECT_CALL(*mock_buffer_bundle, lock_and_bind_back_buffer())
+        .Times(1)
+        .WillOnce(Return(texture));
+
+    auto ret_texture = surf.texture();
+
+    EXPECT_EQ(texture.get(), ret_texture.get()); 
 }
