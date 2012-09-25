@@ -69,8 +69,8 @@ public:
     }
 
 private:
-    std::mutex guard;
-    std::condition_variable wait_condition;
+    mutex guard;
+    condition_variable wait_condition;
     bool waiting_for_result;
 };
 
@@ -135,10 +135,7 @@ public:
 
     void populate(MirGraphicsRegion& )
     {
-        if (is_valid() && surface.has_buffer())
-        {
-            next_buffer_wait_handle.wait_for_result();
-        }
+        // TODO
     }
 
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context)
