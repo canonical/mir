@@ -244,7 +244,7 @@ private:
 mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
-void mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -257,6 +257,8 @@ void mir_connect(char const* socket_file, char const* name, mir_connected_callba
     {
         // TODO callback with an error connection
     }
+
+    return 0; // TODO
 }
 
 int mir_connection_is_valid(MirConnection * connection)
@@ -275,7 +277,7 @@ void mir_connection_release(MirConnection * connection)
     delete connection;
 }
 
-void mir_surface_create(MirConnection * connection,
+MirWaitHandle* mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * params,
                         mir_surface_lifecycle_callback callback,
                         void * context)
@@ -288,12 +290,15 @@ void mir_surface_create(MirConnection * connection,
     {
         // TODO callback with an error surface
     }
+
+    return 0; // TODO
 }
 
-void mir_surface_release(MirSurface * surface,
+MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
     surface->release(callback, context);
+    return 0; // TODO
 }
 
 int mir_debug_surface_id(MirSurface * surface)
@@ -321,8 +326,15 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buff
     surface->populate(*buffer_package);
 }
 
-void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     surface->next_buffer(callback, context);
+
+    return 0; // TODO
+}
+
+void mir_wait_for(MirWaitHandle* /*sync*/)
+{
+    // TODO
 }
 
