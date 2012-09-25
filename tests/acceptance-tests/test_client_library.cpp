@@ -348,4 +348,40 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
     launch_client_process(client_config);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_using_mir_wait_for)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params =
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+
+            ASSERT_TRUE(surface != NULL);
+
+            MirGraphicsRegion buffer_package;
+            mir_surface_get_current_buffer(surface, &buffer_package);
+
+            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+
+            mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
+
+            ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
 }
