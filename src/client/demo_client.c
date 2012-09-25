@@ -35,11 +35,6 @@ static void set_connection(MirConnection *new_connection, void * context)
     connection = new_connection;
 }
 
-static void wait_for(sig_atomic_t *connection_callback_context)
-{
-    while (!*connection_callback_context) sleep(0);
-}
-
 static void surface_create_callback(MirSurface *new_surface, void *context)
 {
     (void)context;

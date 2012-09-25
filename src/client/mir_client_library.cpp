@@ -47,7 +47,10 @@ public:
 
     void result_requested()
     {
-        lock_guard<mutex> lock(guard);
+        unique_lock<mutex> lock(guard);
+
+        while (waiting_for_result)
+            wait_condition.wait(lock);
 
         waiting_for_result = true;
     }
