@@ -38,6 +38,14 @@ public:
         .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
+        /* 
+         * Silence uninteresting calls called when cleaning up resources in
+         * the MockGBM destructor, and which are not handled by NiceMock<>. 
+         */
+        EXPECT_CALL(mock_gbm, gbm_bo_get_device(_))
+        .Times(AtLeast(0));
+        EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
+        .Times(AtLeast(0));
     }
 
 
