@@ -62,6 +62,8 @@ class Surface : public graphics::Renderable
     ~Surface();
 
     std::string const& name() const;
+    void move_to(geometry::Point const& top_left);
+    void set_rotation(float degrees, glm::vec3 const& axis);
 
     /* From Renderable */
     geometry::Point top_left() const;

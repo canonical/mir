@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_bundle.h"
 
 #include <cassert>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
@@ -46,6 +47,16 @@ ms::Surface::~Surface()
 std::string const& ms::Surface::name() const
 {
     return surface_name;
+}
+
+void ms::Surface::move_to(geometry::Point const& top_left)
+{
+    top_left_point = top_left;
+}
+
+void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
+{
+    transformation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
 }
 
 geom::Point ms::Surface::top_left() const

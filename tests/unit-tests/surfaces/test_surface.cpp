@@ -141,6 +141,21 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
     EXPECT_EQ(geom::Point(), ret_top_left); 
 }
 
+TEST_F(SurfaceCreation, test_surface_move_to)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+
+    geom::Point p{geom::X{55}, geom::Y{66}};
+
+    surf.move_to(p);
+
+    auto ret_top_left = surf.top_left();
+
+    EXPECT_EQ(p, ret_top_left); 
+}
+
 TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
 {
     using namespace testing;
@@ -150,6 +165,18 @@ TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
     auto ret_transformation = surf.transformation();
 
     EXPECT_EQ(glm::mat4(), ret_transformation); 
+}
+
+TEST_F(SurfaceCreation, test_surface_set_rotation)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+
+    auto ret_transformation = surf.transformation();
+
+    EXPECT_NE(glm::mat4(), ret_transformation); 
 }
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
