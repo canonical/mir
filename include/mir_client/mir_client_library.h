@@ -105,7 +105,7 @@ MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycl
 /* Release the supplied surface and any associated buffer. */
 MirWaitHandle* mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
 
-void mir_wait_for(MirWaitHandle* sync);
+void mir_wait_for(MirWaitHandle* wait_handle);
 
 
 /* Return the id of the surface. (Only useful for debug output.) */

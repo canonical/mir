@@ -58,7 +58,7 @@ public:
 
         waiting_for_result = false;
 
-        wait_condition.notify_one();
+        wait_condition.notify_all();
     }
 
     void wait_for_result()
@@ -92,14 +92,17 @@ public:
         message.set_height(params.height);
         message.set_pixel_format(params.pixel_format);
 
-        server.create_surface(0, &message, &surface, gp::NewCallback(callback, this, context));
+        create_wait_handle.result_requested();
+        server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
     }
-    void release(mir_surface_lifecycle_callback callback, void * context)
+    MirWaitHandle* release(mir_surface_lifecycle_callback callback, void * context)
     {
         mir::protobuf::SurfaceId message;
         message.set_value(surface.id().value());
+        release_wait_handle.result_requested();
         server.release_surface(0, &message, &void_response,
                                gp::NewCallback(this, &MirSurface::released, callback, context));
+        return &release_wait_handle;
     }
 
     MirSurfaceParameters get_parameters() const
@@ -134,33 +137,56 @@ public:
     {
         if (is_valid() && surface.has_buffer())
         {
+            next_buffer_wait_handle.wait_for_result();
         }
     }
 
-    void next_buffer(mir_surface_lifecycle_callback callback, void * context)
+    MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context)
     {
-        lock_guard<mutex> lock(buffer_update_guard);
+        next_buffer_wait_handle.result_requested();
         server.next_buffer(
             0,
             &surface.id(),
             surface.mutable_buffer(),
-            google::protobuf::NewCallback(callback, this, context));
+            google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
+
+        return &next_buffer_wait_handle;
     }
 
+    MirWaitHandle* get_create_wait_handle()
+    {
+        return &create_wait_handle;
+    }
 
 private:
 
     void released(mir_surface_lifecycle_callback callback, void * context)
     {
+        release_wait_handle.result_received();
         callback(this, context);
         delete this;
+    }
+
+    void created(mir_surface_lifecycle_callback callback, void * context)
+    {
+        create_wait_handle.result_received();
+        callback(this, context);
+    }
+
+    void new_buffer(mir_surface_lifecycle_callback callback, void * context)
+    {
+        next_buffer_wait_handle.result_received();
+        callback(this, context);
     }
 
     mp::DisplayServer::Stub & server;
     mp::Void void_response;
     mp::Surface surface;
     std::string error_message;
-    mutex buffer_update_guard;
+
+    MirWaitHandle create_wait_handle;
+    MirWaitHandle release_wait_handle;
+    MirWaitHandle next_buffer_wait_handle;
 };
 
 // TODO the connection should track all associated surfaces, and release them on
@@ -192,12 +218,13 @@ public:
     MirConnection(MirConnection const &) = delete;
     MirConnection& operator=(MirConnection const &) = delete;
 
-    MirSurface* create_surface(
+    MirWaitHandle* create_surface(
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback,
         void * context)
     {
-        return new MirSurface(server, params, callback, context);
+        auto tmp = new MirSurface(server, params, callback, context);
+        return tmp->get_create_wait_handle();
     }
 
     char const * get_error_message()
@@ -323,21 +350,20 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 {
     try
     {
-        connection->create_surface(*params, callback, context);
+        return connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
         // TODO callback with an error surface
+        return 0; // TODO
     }
 
-    return 0; // TODO
 }
 
 MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    surface->release(callback, context);
-    return 0; // TODO
+    return surface->release(callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
@@ -367,13 +393,12 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buff
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
-    surface->next_buffer(callback, context);
-
-    return 0; // TODO
+    return surface->next_buffer(callback, context);
 }
 
-void mir_wait_for(MirWaitHandle* /*sync*/)
+void mir_wait_for(MirWaitHandle* wait_handle)
 {
-    // TODO
+    if (wait_handle)
+        wait_handle->wait_for_result();
 }
 
