@@ -29,15 +29,10 @@ static char const *socket_file = "/tmp/mir_socket";
 static MirConnection *connection = 0;
 static MirSurface *surface = 0;
 
-// TODO dirty, dirty hack because stdatomic.h is missing
-static sig_atomic_t connection_flag = 0;
-static sig_atomic_t surface_create_flag = 0;
-static sig_atomic_t surface_release_flag = 0;
-
-static void set_flag(MirConnection *new_connection, void *context)
+static void set_connection(MirConnection *new_connection, void * context)
 {
+    (void)context;
     connection = new_connection;
-    *((sig_atomic_t*)context) = 1;
 }
 
 static void wait_for(sig_atomic_t *connection_callback_context)
@@ -47,15 +42,15 @@ static void wait_for(sig_atomic_t *connection_callback_context)
 
 static void surface_create_callback(MirSurface *new_surface, void *context)
 {
+    (void)context;
     surface = new_surface;
-    *((sig_atomic_t*)context) = 1;
 }
 
 static void surface_release_callback(MirSurface *old_surface, void *context)
 {
     (void)old_surface;
+    (void)context;
     surface = 0;
-    *((sig_atomic_t*)context) = 1;
 }
 
 int main(int argc, char* argv[])
@@ -83,8 +78,7 @@ int main(int argc, char* argv[])
 
     puts("Starting");
 
-    mir_connect(socket_file, __PRETTY_FUNCTION__, set_flag, &connection_flag);
-    wait_for(&connection_flag);
+    mir_wait_for(mir_connect(socket_file, __PRETTY_FUNCTION__, set_connection, 0));
     puts("Connected");
 
     assert(connection != NULL);
@@ -93,8 +87,7 @@ int main(int argc, char* argv[])
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
-    mir_surface_create(connection, &request_params, surface_create_callback, &surface_create_flag);
-    wait_for(&surface_create_flag);
+    mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
     puts("Surface created");
 
     assert(surface != NULL);
@@ -107,8 +100,7 @@ int main(int argc, char* argv[])
     assert(request_params.height ==  response_params.height);
     assert(request_params.pixel_format == response_params.pixel_format);
 
-    mir_surface_release(surface, surface_release_callback, &surface_release_flag);
-    wait_for(&surface_release_flag);
+    mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
     puts("Surface released");
 
     mir_connection_release(connection);
