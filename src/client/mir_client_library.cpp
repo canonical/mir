@@ -40,6 +40,40 @@ namespace gp = google::protobuf;
     using namespace std;
 #endif
 
+class MirWaitHandle
+{
+public:
+    MirWaitHandle() : guard(), wait_condition(), waiting_for_result(false) {}
+
+    void result_requested()
+    {
+        lock_guard<mutex> lock(guard);
+
+        waiting_for_result = true;
+    }
+
+    void result_received()
+    {
+        lock_guard<mutex> lock(guard);
+
+        waiting_for_result = false;
+
+        wait_condition.notify_one();
+    }
+
+    void wait_for_result()
+    {
+        unique_lock<mutex> lock(guard);
+        while (waiting_for_result)
+            wait_condition.wait(lock);
+    }
+
+private:
+    std::mutex guard;
+    std::condition_variable wait_condition;
+    bool waiting_for_result;
+};
+
 class MirSurface
 {
 public:
@@ -135,8 +169,7 @@ class MirConnection
 {
 public:
     MirConnection(const std::string& socket_file,
-        std::shared_ptr<mcl::Logger> const & log)
-        : created(true),
+        std::shared_ptr<mcl::Logger> const & log) :
           channel(socket_file, log)
         , server(&channel)
         , log(log)
@@ -179,29 +212,32 @@ public:
         }
     }
 
-    void connect(
+    MirWaitHandle* connect(
         const char* app_name,
         mir_connected_callback callback,
         void * context)
     {
         connect_parameters.set_application_name(app_name);
+        connect_wait_handle.result_requested();
         server.connect(
             0,
             &connect_parameters,
             &connect_result,
-            google::protobuf::NewCallback(callback, this, context));
+            google::protobuf::NewCallback(
+                this, &MirConnection::connected, callback, context));
+        return &connect_wait_handle;
     }
 
     void disconnect()
     {
+        disconnect_wait_handle.result_requested();
         server.disconnect(
             0,
             &ignored,
             &ignored,
             google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-        unique_lock<mutex> lock(guard);
-        while (created) cv.wait(lock);
+        disconnect_wait_handle.wait_for_result();
     }
 
     static bool is_valid(MirConnection *connection)
@@ -215,16 +251,6 @@ public:
         return !connection->connect_result.has_error();
     }
 private:
-    void done_disconnect()
-    {
-        unique_lock<mutex> lock(guard);
-        created = false;
-        cv.notify_one();
-    }
-
-    mutex guard;
-    condition_variable cv;
-    bool created;
 
     mcl::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
@@ -235,10 +261,24 @@ private:
     mir::protobuf::ConnectParameters connect_parameters;
 
     std::string error_message;
-    std::set<MirSurface *> surfaces;
+    std::set<MirSurface*> surfaces;
+
+    MirWaitHandle connect_wait_handle;
+    MirWaitHandle disconnect_wait_handle;
+
+    void done_disconnect()
+    {
+        disconnect_wait_handle.result_received();
+    }
+
+    void connected(mir_connected_callback callback, void * context)
+    {
+        connect_wait_handle.result_received();
+        callback(this, context);
+    }
 
     static mutex connection_guard;
-    static std::unordered_set<MirConnection *> valid_connections;
+    static std::unordered_set<MirConnection*> valid_connections;
 };
 
 mutex MirConnection::connection_guard;
@@ -251,14 +291,13 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
         MirConnection * connection = new MirConnection(socket_file, log);
-        connection->connect(name, callback, context);
+        return connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)
     {
         // TODO callback with an error connection
+        return 0; // TODO
     }
-
-    return 0; // TODO
 }
 
 int mir_connection_is_valid(MirConnection * connection)
