@@ -43,7 +43,7 @@ struct ThreadFixture {
     {
             geom::Size size{geom::Width{1024}, geom::Height{768}};
             geom::Stride s {1024};
-            mc::PixelFormat pf {mc::PixelFormat::rgba_8888};
+            geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
             std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
             std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
 

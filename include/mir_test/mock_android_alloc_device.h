@@ -33,6 +33,7 @@ public:
     virtual int dump_interface(alloc_device_t* dev, char *buf, int len) = 0;
 
 };
+    
 
 class MockAllocDevice : public ICSAllocInterface,
     public alloc_device_t
@@ -43,7 +44,7 @@ public:
     {
         using namespace testing;
 
-        buffer_handle = mock_generate_sane_android_handle();
+        buffer_handle = mock_generate_sane_android_handle(43, 22);
         fake_stride = 300;
 
         alloc = hook_alloc;
@@ -84,19 +85,9 @@ public:
         mocker->dump_interface(mock_alloc, buf, buf_len);
     }
 
-    MOCK_METHOD7(alloc_interface,  int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*));
-    MOCK_METHOD2(free_interface, int(alloc_device_t*, buffer_handle_t));
-    MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
-
-    native_handle_t* buffer_handle;
-    int fake_stride;
-
-private:
-    native_handle_t* mock_generate_sane_android_handle()
+    native_handle_t* mock_generate_sane_android_handle(int numFd, int numInt)
     {
         native_handle_t *handle;
-        int numFd=34;
-        int numInt=41;
         int total=numFd + numInt;
         int header_offset=3; 
 
@@ -112,6 +103,12 @@ private:
         return handle;
     }
 
+    MOCK_METHOD7(alloc_interface,  int(alloc_device_t*, int, int, int, int, buffer_handle_t*, int*));
+    MOCK_METHOD2(free_interface, int(alloc_device_t*, buffer_handle_t));
+    MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
+
+    native_handle_t* buffer_handle;
+    int fake_stride;
 };
 }
 

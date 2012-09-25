@@ -56,7 +56,7 @@ class StubBuffer : public mc::Buffer
 
     geom::Stride stride() const { return geom::Stride(); }
 
-    mc::PixelFormat pixel_format() const { return mc::PixelFormat(); }
+    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
 
     std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
 
@@ -68,7 +68,7 @@ class StubBuffer : public mc::Buffer
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, mc::PixelFormat)
+    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }

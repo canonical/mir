@@ -36,7 +36,7 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
 
 std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
     geometry::Size size,
-    PixelFormat pf)
+    geometry::PixelFormat pf)
 {
     return std::unique_ptr<BufferSwapper>(
         new BufferSwapperDouble(

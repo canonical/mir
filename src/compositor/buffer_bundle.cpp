@@ -65,14 +65,14 @@ struct ClientReleaseDeleter
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
     geometry::Size size,
-    PixelFormat pixel_format) :
+    geometry::PixelFormat pixel_format) :
     swapper(std::move(swapper)), size(size), pixel_format(pixel_format)
 {
 }
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper) :
-    swapper(std::move(swapper)), size(), pixel_format(PixelFormat::rgba_5658)
+    swapper(std::move(swapper)), size(), pixel_format(geometry::PixelFormat::rgba_8888)
 {
 }
 
@@ -95,7 +95,7 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
     return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr);
 }
 
-mc::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
+geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
 {
     return pixel_format;
 }

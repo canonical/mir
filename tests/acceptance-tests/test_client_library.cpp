@@ -19,6 +19,7 @@
 #include "display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/client_buffer.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
@@ -32,6 +33,7 @@
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace mcl = mir::client;
 
 namespace
 {
@@ -328,7 +330,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
             ASSERT_TRUE(surface != NULL);
 
-            MirBufferPackage buffer_package;
+            MirGraphicsRegion buffer_package;
             mir_surface_get_current_buffer(surface, &buffer_package);
 
             mir_surface_next_buffer(surface, next_buffer_callback, this);

@@ -38,7 +38,7 @@ struct MockBuffer : public Buffer
  public:
     MockBuffer(geom::Size size,
                geom::Stride s,
-               PixelFormat pf)
+               geom::PixelFormat pf)
 	{
         empty_package = std::make_shared<BufferIPCPackage>();
 
@@ -56,7 +56,7 @@ struct MockBuffer : public Buffer
 
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<BufferIPCPackage>());
 
     MOCK_METHOD0(bind_to_texture, void());

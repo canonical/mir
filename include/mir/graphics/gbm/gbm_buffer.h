@@ -39,8 +39,8 @@ struct GBMBufferObjectDeleter
     void operator()(gbm_bo* handle) const;
 };
 
-compositor::PixelFormat gbm_format_to_mir_format(uint32_t format);
-uint32_t mir_format_to_gbm_format(compositor::PixelFormat format);
+geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
+uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 
 
 class GBMBuffer: public compositor::Buffer
@@ -56,7 +56,7 @@ public:
 
     virtual geometry::Stride stride() const;
 
-    virtual compositor::PixelFormat pixel_format() const;
+    virtual geometry::PixelFormat pixel_format() const;
 
     virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
 

@@ -18,6 +18,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_rpc_channel.h"
+#include "mir_client/mir_buffer_package.h" 
 
 #include "mir_protobuf.pb.h"
 
@@ -25,7 +26,7 @@
 #include <unordered_set>
 #include <cstddef>
 
-namespace mc = mir::client;
+namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -95,25 +96,10 @@ public:
         return !surface.has_error();
     }
 
-    void populate(MirBufferPackage& buffer_package)
+    void populate(MirGraphicsRegion& )
     {
         if (is_valid() && surface.has_buffer())
         {
-            lock_guard<mutex> lock(buffer_update_guard);
-            auto const& buffer = surface.buffer();
-
-            buffer_package.data_items = buffer.data_size();
-            for (int i = 0; i != buffer.data_size(); ++i)
-                buffer_package.data[i] = buffer.data(i);
-
-            buffer_package.fd_items = buffer.fd_size();
-            for (int i = 0; i != buffer.fd_size(); ++i)
-                buffer_package.fd[i] = buffer.fd(i);
-        }
-        else
-        {
-            buffer_package.data_items = 0;
-            buffer_package.fd_items = 0;
         }
     }
 
@@ -149,7 +135,7 @@ class MirConnection
 {
 public:
     MirConnection(const std::string& socket_file,
-        std::shared_ptr<mc::Logger> const & log)
+        std::shared_ptr<mcl::Logger> const & log)
         : created(true),
           channel(socket_file, log)
         , server(&channel)
@@ -240,9 +226,9 @@ private:
     condition_variable cv;
     bool created;
 
-    mc::MirRpcChannel channel;
+    mcl::MirRpcChannel channel;
     mp::DisplayServer::Stub server;
-    std::shared_ptr<mc::Logger> log;
+    std::shared_ptr<mcl::Logger> log;
     mp::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
@@ -263,7 +249,7 @@ void mir_connect(char const* socket_file, char const* name, mir_connected_callba
 
     try
     {
-        auto log = std::make_shared<mc::ConsoleLogger>();
+        auto log = std::make_shared<mcl::ConsoleLogger>();
         MirConnection * connection = new MirConnection(socket_file, log);
         connection->connect(name, callback, context);
     }
@@ -330,7 +316,7 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
+void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package)
 {
     surface->populate(*buffer_package);
 }

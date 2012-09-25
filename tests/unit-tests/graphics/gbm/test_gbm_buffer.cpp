@@ -47,7 +47,7 @@ protected:
         allocator.reset(new mgg::GBMBufferAllocator(platform));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
-        pf = mc::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::rgba_8888;
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
@@ -67,7 +67,7 @@ protected:
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
-    mc::PixelFormat pf;
+    geom::PixelFormat pf;
     geom::Size size;
 };
 

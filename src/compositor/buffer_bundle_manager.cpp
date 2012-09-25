@@ -42,7 +42,7 @@ mc::BufferBundleManager::BufferBundleManager(
 
 std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     geometry::Size size,
-    PixelFormat pf)
+    geometry::PixelFormat pf)
 {
     auto swapper(buffer_allocation_strategy->create_swapper(
             size,

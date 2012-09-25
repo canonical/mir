@@ -17,35 +17,23 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
+#ifndef MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
+#define MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
 
-#include <hardware/hardware.h>
-
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/graphics/android/graphic_alloc_adaptor.h"
+#include <vector>
 
 namespace mir
 {
-namespace graphics
+namespace client
 {
-namespace android
+/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
+               maintain divide between client/server headers */
+struct MirBufferPackage
 {
-
-class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
-{
-public:
-    AndroidBufferAllocator();
-
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Size size, geometry::PixelFormat pf);
-private:
-    const hw_module_t    *hw_module;
-    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
+    std::vector<int> data;
+    std::vector<int> fd;
 };
 
 }
 }
-}
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */
+#endif /* MIR_CLIENT_MIR_BUFFER_PACKAGE_H_ */
