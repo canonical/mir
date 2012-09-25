@@ -17,7 +17,6 @@
 
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_compositor.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocation_strategy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_bundle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper.cpp

@@ -14,21 +14,12 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-option(
-  MIR_ENABLE_DEATH_TESTS
-  "Option to control whether to run death tests"
-  ON
+list(APPEND INTEGRATION_TESTS_SRCS 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_process.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_signal_dispatcher.cpp
 )
 
-if(MIR_ENABLE_DEATH_TESTS)
-  add_definitions(-DMIR_DEATH_TESTS_ENABLED)
-endif(MIR_ENABLE_DEATH_TESTS)
-
-add_subdirectory(acceptance-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
-add_subdirectory(utils/)
-
-if(MIR_ENABLE_DEATH_TESTS)
-    add_subdirectory(death-tests/)
-endif(MIR_ENABLE_DEATH_TESTS)
+set(
+  INTEGRATION_TESTS_SRCS 
+  ${INTEGRATION_TESTS_SRCS} 
+  PARENT_SCOPE)

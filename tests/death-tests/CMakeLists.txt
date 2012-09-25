@@ -12,14 +12,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: 	Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_process.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_signal_dispatcher.cpp
+
+add_executable(
+  death-tests
+  test_buffer_allocation_strategy.cpp
+  test_application_manager_death.cpp
+  test_process_death.cpp
 )
 
-set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+target_link_libraries(
+  death-tests
+  
+  mir
+  mircompositor
+  mirfrontend
+  mirinput
+  mirprocess
+  mirsurfaces
+  mirclient
+  mirplatformgraphics
+  mirprotobuf
+  
+  3rd_party
+
+  ${PROTOBUF_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+mir_discover_tests(death-tests)
