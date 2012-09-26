@@ -206,3 +206,16 @@ TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
 
     EXPECT_EQ(1.0f, ret_alpha); 
 }
+
+TEST_F(SurfaceCreation, test_surface_set_alpha)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+    float alpha = 0.67f;
+
+    surf.set_alpha(0.67);
+    auto ret_alpha = surf.alpha();
+
+    EXPECT_EQ(alpha, ret_alpha); 
+}

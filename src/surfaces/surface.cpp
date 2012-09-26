@@ -34,7 +34,8 @@ ms::Surface::Surface(
     const std::string& name,
     std::shared_ptr<mc::BufferBundle> buffer_bundle) :
     surface_name(name),
-    buffer_bundle(buffer_bundle)
+    buffer_bundle(buffer_bundle),
+    alpha_value(1.0f)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -59,6 +60,11 @@ void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
     transformation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
 }
 
+void ms::Surface::set_alpha(float alpha_v)
+{
+    alpha_value = alpha_v;
+}
+
 geom::Point ms::Surface::top_left() const
 {
     return top_left_point;
@@ -81,7 +87,7 @@ glm::mat4 ms::Surface::transformation() const
 
 float ms::Surface::alpha() const
 {
-    return 1.0f;
+    return alpha_value;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 

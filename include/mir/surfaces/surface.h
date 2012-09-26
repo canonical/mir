@@ -64,6 +64,7 @@ class Surface : public graphics::Renderable
     std::string const& name() const;
     void move_to(geometry::Point const& top_left);
     void set_rotation(float degrees, glm::vec3 const& axis);
+    void set_alpha(float alpha);
 
     /* From Renderable */
     geometry::Point top_left() const;
@@ -81,6 +82,7 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
+    float alpha_value;
 };
 
 }
