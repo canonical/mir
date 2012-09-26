@@ -36,6 +36,7 @@ namespace gp = google::protobuf;
     using ::boost::lock_guard;
     using ::boost::thread;
     using ::boost::mutex;
+    using ::mir::std::this_thread::yield;
 #else
     using namespace std;
 #endif
@@ -43,7 +44,13 @@ namespace gp = google::protobuf;
 class MirWaitHandle
 {
 public:
-    MirWaitHandle() : guard(), wait_condition(), waiting_for_result(false) {}
+    MirWaitHandle() : waiting_threads(0), guard(), wait_condition(), waiting_for_result(false) {}
+
+    ~MirWaitHandle()
+    {
+        // Delay destruction while there are waiting threads
+        while (waiting_threads.load()) yield();
+    }
 
     void result_requested()
     {
@@ -66,12 +73,21 @@ public:
 
     void wait_for_result()
     {
-        unique_lock<mutex> lock(guard);
-        while (waiting_for_result)
-            wait_condition.wait(lock);
+        int tmp = waiting_threads.load();
+        while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1));
+
+        {
+            unique_lock<mutex> lock(guard);
+            while (waiting_for_result)
+                wait_condition.wait(lock);
+        }
+
+        tmp = waiting_threads.load();
+        while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1));
     }
 
 private:
+    std::atomic<int> waiting_threads;
     mutex guard;
     condition_variable wait_condition;
     bool waiting_for_result;
@@ -98,6 +114,7 @@ public:
         create_wait_handle.result_requested();
         server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
     }
+
     MirWaitHandle* release(mir_surface_lifecycle_callback callback, void * context)
     {
         mir::protobuf::SurfaceId message;
@@ -162,21 +179,21 @@ private:
 
     void released(mir_surface_lifecycle_callback callback, void * context)
     {
-        release_wait_handle.result_received();
         callback(this, context);
+        release_wait_handle.result_received();
         delete this;
     }
 
     void created(mir_surface_lifecycle_callback callback, void * context)
     {
-        create_wait_handle.result_received();
         callback(this, context);
+        create_wait_handle.result_received();
     }
 
     void new_buffer(mir_surface_lifecycle_callback callback, void * context)
     {
-        next_buffer_wait_handle.result_received();
         callback(this, context);
+        next_buffer_wait_handle.result_received();
     }
 
     mp::DisplayServer::Stub & server;
@@ -300,8 +317,8 @@ private:
 
     void connected(mir_connected_callback callback, void * context)
     {
-        connect_wait_handle.result_received();
         callback(this, context);
+        connect_wait_handle.result_received();
     }
 
     static mutex connection_guard;
