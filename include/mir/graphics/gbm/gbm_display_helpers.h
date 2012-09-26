@@ -44,8 +44,12 @@ public:
     DRMHelper& operator=(const DRMHelper&) = delete;
 
     void setup();
+    int get_authenticated_fd();
 
     int fd;
+
+private:
+    int open_drm_device();
 };
 
 class KMSHelper {
