@@ -20,7 +20,6 @@
 #define MIR_SURFACES_SURFACE_H_
 
 #include "mir/geometry/pixel_format.h"
-#include "mir/geometry/size.h"
 #include "mir/graphics/renderable.h"
 
 #include <memory>
@@ -63,7 +62,17 @@ class Surface : public graphics::Renderable
     ~Surface();
 
     std::string const& name() const;
+    void move_to(geometry::Point const& top_left);
+    void set_rotation(float degrees, glm::vec3 const& axis);
+    void set_alpha(float alpha);
+
+    /* From Renderable */
+    geometry::Point top_left() const;
     geometry::Size size() const;
+    std::shared_ptr<graphics::Texture> texture() const;
+    glm::mat4 transformation() const;
+    float alpha() const;
+
     geometry::PixelFormat pixel_format() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
 
@@ -71,6 +80,9 @@ class Surface : public graphics::Renderable
     std::string surface_name;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
     std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;
+    geometry::Point top_left_point;
+    glm::mat4 transformation_matrix;
+    float alpha_value;
 };
 
 }
