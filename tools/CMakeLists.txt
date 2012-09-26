@@ -15,6 +15,8 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+include_directories(${GLESv2_INCLUDE_DIRS})
+
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
 
@@ -23,4 +25,16 @@ target_link_libraries(
 
     mirplatformgraphics
     test-utils
+)
+
+set(RENDER_SURFACES_SOURCES render_surfaces.cpp)
+add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
+target_link_libraries(
+    render_surfaces
+
+    mircompositor
+    mirsurfaces
+    mirgraphics
+    mirplatformgraphics
+    ${Boost_LIBRARIES}
 )
