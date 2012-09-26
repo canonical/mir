@@ -43,7 +43,11 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 {
-    return std::make_shared<mg::PlatformIPCPackage>();
+    auto pkg = std::make_shared<mg::PlatformIPCPackage>();
+
+    pkg->ipc_fds.push_back(drm.get_authenticated_fd());
+
+    return pkg;
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform()
