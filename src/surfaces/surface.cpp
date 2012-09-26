@@ -23,16 +23,19 @@
 #include "mir/compositor/buffer_bundle.h"
 
 #include <cassert>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     const std::string& name,
     std::shared_ptr<mc::BufferBundle> buffer_bundle) :
     surface_name(name),
-    buffer_bundle(buffer_bundle)
+    buffer_bundle(buffer_bundle),
+    alpha_value(1.0f)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -47,9 +50,44 @@ std::string const& ms::Surface::name() const
     return surface_name;
 }
 
+void ms::Surface::move_to(geometry::Point const& top_left)
+{
+    top_left_point = top_left;
+}
+
+void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
+{
+    transformation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+}
+
+void ms::Surface::set_alpha(float alpha_v)
+{
+    alpha_value = alpha_v;
+}
+
+geom::Point ms::Surface::top_left() const
+{
+    return top_left_point;
+}
+
 mir::geometry::Size ms::Surface::size() const
 {
     return buffer_bundle->bundle_size();
+}
+
+std::shared_ptr<mg::Texture> ms::Surface::texture() const
+{
+    return buffer_bundle->lock_and_bind_back_buffer();
+}
+
+glm::mat4 ms::Surface::transformation() const
+{
+    return transformation_matrix;
+}
+
+float ms::Surface::alpha() const
+{
+    return alpha_value;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 

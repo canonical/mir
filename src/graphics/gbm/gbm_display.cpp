@@ -111,8 +111,8 @@ mgg::GBMDisplay::~GBMDisplay()
 
 geom::Rectangle mgg::GBMDisplay::view_area() const
 {
-    geom::Rectangle rect;
-    return rect;
+    return {{geom::X(0), geom::Y(0)},
+            {geom::Width(kms.mode.hdisplay), geom::Height(kms.mode.vdisplay)}};
 }
 
 bool mgg::GBMDisplay::post_update()
