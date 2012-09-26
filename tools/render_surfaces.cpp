@@ -29,6 +29,7 @@
 #include <csignal>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
     /* Set up the surfaces */
-    std::unique_ptr<Moveable> m{new Moveable[num_moveables]};
+    std::vector<Moveable> m{num_moveables};
 
     const uint32_t surface_size{300};
 
@@ -185,7 +186,7 @@ int main(int argc, char **argv)
         uint32_t y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_size / 2.0;
 
         s->move_to({geom::X{x}, geom::Y{y}});
-        m.get()[i] = Moveable(*s, display_size,
+        m[i] = Moveable(*s, display_size,
                               cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                               sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
                               glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
@@ -211,7 +212,7 @@ int main(int argc, char **argv)
 
         /* Update surface state */
         for (int i = 0; i < num_moveables; ++i)
-            m.get()[i].step();
+            m[i].step();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         compositor.render(display.get());
