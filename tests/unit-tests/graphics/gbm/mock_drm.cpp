@@ -193,3 +193,13 @@ int drmHandleEvent(int fd, drmEventContextPtr evctx)
 {
     return global_mock->drmHandleEvent(fd, evctx);
 }
+
+int drmGetMagic(int fd, drm_magic_t *magic)
+{
+    return global_mock->drmGetMagic(fd, magic);
+}
+
+int drmAuthMagic(int fd, drm_magic_t magic)
+{
+    return global_mock->drmAuthMagic(fd, magic);
+}

@@ -82,6 +82,9 @@ public:
 			                          uint32_t flags, void *user_data));
     MOCK_METHOD2(drmHandleEvent, int(int fd, drmEventContextPtr evctx));
 
+    MOCK_METHOD2(drmGetMagic, int(int fd, drm_magic_t *magic));
+    MOCK_METHOD2(drmAuthMagic, int(int fd, drm_magic_t magic));
+
     FakeDRMResources fake_drm;
 };
 
