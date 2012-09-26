@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2009-11-25
 // Updated : 2010-02-13
@@ -10,13 +10,8 @@
 // - GLM core
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtx{
-namespace wrap
+namespace glm
 {
-	////////////////////////
-	// clamp
-
 	template <typename genType> 
 	GLM_FUNC_QUALIFIER genType clamp
 	(
@@ -167,7 +162,4 @@ namespace wrap
 			Result[i] = mirrorRepeat(Texcoord[i]);
 		return Result;
 	}
-
-}//namespace wrap
-}//namespace gtx
 }//namespace glm

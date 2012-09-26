@@ -1,16 +1,41 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-05-21
-// Updated : 2010-02-04
-// Licence : This source is under MIT License
-// File    : glm/gtc/quaternion.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtc_quaternion
+/// @file glm/gtc/quaternion.inl
+/// @date 2009-05-21 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
 #include <limits>
 
 namespace glm{
-namespace detail{
+namespace detail
+{
+    template <typename T>
+    GLM_FUNC_QUALIFIER typename tquat<T>::size_type tquat<T>::length() const
+    {
+        return 4;
+    }
 
     template <typename T> 
     GLM_FUNC_QUALIFIER tquat<T>::tquat() : 
@@ -88,7 +113,7 @@ namespace detail{
 		tmat3x3<T> const & m
 	)
     {
-		*this = gtc::quaternion::quat_cast(m);
+		*this = quat_cast(m);
     }
 
     template <typename T> 
@@ -97,7 +122,7 @@ namespace detail{
 		tmat4x4<T> const & m
 	)
     {
-		*this = gtc::quaternion::quat_cast(m);
+		*this = quat_cast(m);
     }
 
     //////////////////////////////////////////////////////////////
@@ -211,7 +236,7 @@ namespace detail{
 		detail::tquat<T> const & q 
 	)
 	{
-		return gtc::quaternion::inverse(q) * v;
+		return inverse(q) * v;
 	}
 
 	template <typename T>
@@ -231,7 +256,7 @@ namespace detail{
 		detail::tquat<T> const & q 
 	)
 	{
-		return gtc::quaternion::inverse(q) * v;
+		return inverse(q) * v;
 	}
 
 	template <typename T> 
@@ -291,12 +316,9 @@ namespace detail{
 
 }//namespace detail
 
-namespace gtc{
-namespace quaternion{
-
 	////////////////////////////////////////////////////////
     template <typename T> 
-	GLM_FUNC_QUALIFIER typename detail::tquat<T>::value_type length
+	GLM_FUNC_QUALIFIER T length
 	(
 		detail::tquat<T> const & q
 	)
@@ -318,7 +340,7 @@ namespace quaternion{
     }
 
     template <typename T> 
-    GLM_FUNC_QUALIFIER typename detail::tquat<T>::value_type dot
+    GLM_FUNC_QUALIFIER T dot
 	(
 		detail::tquat<T> const & q1, 
 		detail::tquat<T> const & q2
@@ -448,7 +470,7 @@ namespace quaternion{
 		detail::tquat<T> const & q
 	)
     {
-        return gtc::quaternion::conjugate(q) / gtc::quaternion::dot(q, q);
+        return conjugate(q) / dot(q, q);
     }
 
     template <typename T> 
@@ -462,8 +484,8 @@ namespace quaternion{
 		detail::tvec3<T> Tmp = v;
 
         // Axis of rotation must be normalised
-        typename detail::tquat<T>::value_type len = glm::core::function::geometric::length(Tmp);
-        if(abs(len - typename detail::tquat<T>::value_type(1)) > typename detail::tquat<T>::value_type(0.001))
+        typename detail::tquat<T>::value_type len = glm::length(Tmp);
+        if(abs(len - T(1)) > T(0.001))
         {
             T oneOverLen = T(1) / len;
             Tmp.x *= oneOverLen;
@@ -478,13 +500,22 @@ namespace quaternion{
         //return gtc::quaternion::cross(q, detail::tquat<T>(cos(AngleRad * T(0.5)), Tmp.x * fSin, Tmp.y * fSin, Tmp.z * fSin));
 	}
 
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tvec3<T> eulerAngles
+	(
+        detail::tquat<T> const & x
+    )
+	{
+		return detail::tvec3<T>(pitch(x), yaw(x), roll(x));
+	}
+    
     template <typename T> 
     GLM_FUNC_QUALIFIER detail::tmat3x3<T> mat3_cast
 	(
 		detail::tquat<T> const & q
 	)
     {
-        detail::tmat3x3<T> Result(typename detail::tquat<T>::value_type(1));
+        detail::tmat3x3<T> Result(T(1));
         Result[0][0] = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
         Result[0][1] = 2 * q.x * q.y + 2 * q.w * q.z;
         Result[0][2] = 2 * q.x * q.z - 2 * q.w * q.y;
@@ -537,8 +568,8 @@ namespace quaternion{
             biggestIndex = 3;
         }
 
-        typename detail::tquat<T>::value_type biggestVal = sqrt(fourBiggestSquaredMinus1 + typename detail::tquat<T>::value_type(1)) * typename detail::tquat<T>::value_type(0.5);
-        typename detail::tquat<T>::value_type mult = typename detail::tquat<T>::value_type(0.25) / biggestVal;
+        typename detail::tquat<T>::value_type biggestVal = sqrt(fourBiggestSquaredMinus1 + T(1)) * T(0.5);
+        typename detail::tquat<T>::value_type mult = T(0.25) / biggestVal;
 
         detail::tquat<T> Result;
         switch(biggestIndex)
@@ -580,6 +611,4 @@ namespace quaternion{
 		return quat_cast(detail::tmat3x3<T>(m4));
     }
 
-}//namespace quaternion
-}//namespace gtc
 }//namespace glm

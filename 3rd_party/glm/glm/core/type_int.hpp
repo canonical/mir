@@ -1,11 +1,30 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2008-08-22
-// Updated : 2008-09-17
-// Licence : This source is under MIT License
-// File    : glm/core/type_int.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/core/type_int.hpp
+/// @date 2008-08-22 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef glm_core_type_int
 #define glm_core_type_int
@@ -37,73 +56,82 @@ namespace detail
 	GLM_DETAIL_IS_UINT(highp_uint_t);
 }//namespace detail
 
-namespace core{
-namespace type{
-namespace precision //!< Namespace for precision stuff.
-{
-	//! Low precision signed integer. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
+	/// @addtogroup core_precision
+	/// @{
+
+	/// Low precision signed integer. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::lowp_int_t				lowp_int;
-	//! Medium precision signed integer. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
-	typedef detail::mediump_int_t				mediump_int;
-	//! High precision signed integer.
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
+    
+	/// Medium precision signed integer. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
+	typedef detail::mediump_int_t			mediump_int;
+    
+	/// High precision signed integer.
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::highp_int_t				highp_int;
 
-	//! Low precision unsigned integer. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
+	/// Low precision unsigned integer. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::lowp_uint_t				lowp_uint;
-	//! Medium precision unsigned integer. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
+    
+	/// Medium precision unsigned integer. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::mediump_uint_t			mediump_uint;
-	//! High precision unsigned integer. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification.
-	//! \ingroup core_precision
+    
+	/// High precision unsigned integer. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::highp_uint_t				highp_uint;
-}//namespace precision
 
 #if(!defined(GLM_PRECISION_HIGHP_INT) && !defined(GLM_PRECISION_MEDIUMP_INT) && !defined(GLM_PRECISION_LOWP_INT))
-	typedef precision::mediump_int				int_t;
+	typedef mediump_int                 int_t;
 #elif(defined(GLM_PRECISION_HIGHP_INT) && !defined(GLM_PRECISION_MEDIUMP_INT) && !defined(GLM_PRECISION_LOWP_INT))
-	typedef precision::highp_int					int_t;
+	typedef highp_int					int_t;
 #elif(!defined(GLM_PRECISION_HIGHP_INT) && defined(GLM_PRECISION_MEDIUMP_INT) && !defined(GLM_PRECISION_LOWP_INT))
-	typedef precision::mediump_int				int_t;
+	typedef mediump_int                 int_t;
 #elif(!defined(GLM_PRECISION_HIGHP_INT) && !defined(GLM_PRECISION_MEDIUMP_INT) && defined(GLM_PRECISION_LOWP_INT))
-	typedef precision::lowp_int					int_t;
+	typedef lowp_int					int_t;
 #else
 #	error "GLM error: multiple default precision requested for signed interger types"
 #endif
 
 #if(!defined(GLM_PRECISION_HIGHP_UINT) && !defined(GLM_PRECISION_MEDIUMP_UINT) && !defined(GLM_PRECISION_LOWP_UINT))
-	typedef precision::mediump_uint				uint_t;
+	typedef mediump_uint				uint_t;
 #elif(defined(GLM_PRECISION_HIGHP_UINT) && !defined(GLM_PRECISION_MEDIUMP_UINT) && !defined(GLM_PRECISION_LOWP_UINT))
-	typedef precision::highp_uint					uint_t;
+	typedef highp_uint					uint_t;
 #elif(!defined(GLM_PRECISION_HIGHP_UINT) && defined(GLM_PRECISION_MEDIUMP_UINT) && !defined(GLM_PRECISION_LOWP_UINT))
-	typedef precision::mediump_uint				uint_t;
+	typedef mediump_uint				uint_t;
 #elif(!defined(GLM_PRECISION_HIGHP_UINT) && !defined(GLM_PRECISION_MEDIUMP_UINT) && defined(GLM_PRECISION_LOWP_UINT))
-	typedef precision::lowp_uint					uint_t;
+	typedef lowp_uint					uint_t;
 #else
 #	error "GLM error: multiple default precision requested for unsigned interger types"
 #endif
 
-	//! Unsigned integer. 
-	//! From GLSL 1.30.8 specification section 4.1.3 Integers.
+	/// Unsigned integer type. 
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.3 Integers</a>
 	typedef uint_t								uint;
 
-}//namespace type
-}//namespace core
+	/// @}
+
 }//namespace glm
 
 #endif//glm_core_type_int

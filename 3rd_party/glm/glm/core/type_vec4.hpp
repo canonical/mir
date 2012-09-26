@@ -1,11 +1,30 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2008-08-22
-// Updated : 2010-02-03
-// Licence : This source is under MIT License
-// File    : glm/core/type_tvec4.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/core/type_vec4.hpp
+/// @date 2008-08-22 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef glm_core_type_gentype4
 #define glm_core_type_gentype4
@@ -25,8 +44,8 @@ namespace detail
 	template <typename T> struct tvec2;
 	template <typename T> struct tvec3;
 
-	///Basic 4D vector type.
-	//! \ingroup core_template
+	// Basic 4D vector type.
+	// @ingroup core_template
 	template <typename T>
 	struct tvec4
 	{
@@ -35,7 +54,6 @@ namespace detail
 		typedef T value_type;
 		typedef std::size_t size_type;
 		GLM_FUNC_DECL size_type length() const;
-		static GLM_FUNC_DECL size_type value_size();
 
 		typedef tvec4<T> type;
 		typedef tvec4<bool> bool_type;
@@ -43,20 +61,44 @@ namespace detail
 		//////////////////////////////////////
 		// Data
 
-#	if(GLM_COMPONENT == GLM_COMPONENT_ONLY_XYZW)
-		value_type x, y, z, w;
-#	elif(GLM_COMPONENT == GLM_COMPONENT_MS_EXT)
+#	if(GLM_COMPONENT == GLM_COMPONENT_CXX11)
 		union 
 		{
+#		if(defined(GLM_SWIZZLE))
+			_GLM_SWIZZLE4_2_MEMBERS(value_type, glm::detail::tvec2<value_type>, x, y, z, w)
+			_GLM_SWIZZLE4_2_MEMBERS(value_type, glm::detail::tvec2<value_type>, r, g, b, a)
+			_GLM_SWIZZLE4_2_MEMBERS(value_type, glm::detail::tvec2<value_type>, s, t, p, q)
+			_GLM_SWIZZLE4_3_MEMBERS(value_type, glm::detail::tvec3<value_type>, x, y, z, w)
+			_GLM_SWIZZLE4_3_MEMBERS(value_type, glm::detail::tvec3<value_type>, r, g, b, a)
+			_GLM_SWIZZLE4_3_MEMBERS(value_type, glm::detail::tvec3<value_type>, s, t, p, q)
+			_GLM_SWIZZLE4_4_MEMBERS(value_type, glm::detail::tvec4<value_type>, x, y, z, w)
+			_GLM_SWIZZLE4_4_MEMBERS(value_type, glm::detail::tvec4<value_type>, r, g, b, a)
+			_GLM_SWIZZLE4_4_MEMBERS(value_type, glm::detail::tvec4<value_type>, s, t, p, q)
+#		endif//(defined(GLM_SWIZZLE))
+
 			struct{value_type r, g, b, a;};
 			struct{value_type s, t, p, q;};
 			struct{value_type x, y, z, w;};
 		};
-#	else//(GLM_COMPONENT == GLM_COMPONENT_GLSL_NAMES)
+#	elif(GLM_COMPONENT == GLM_COMPONENT_CXX98)
 		union {value_type x, r, s;};
 		union {value_type y, g, t;};
 		union {value_type z, b, p;};
 		union {value_type w, a, q;};
+
+#		if(defined(GLM_SWIZZLE))
+			// Defines all he swizzle operator as functions
+			GLM_SWIZZLE_GEN_REF_FROM_VEC4(T, detail::tvec4, detail::tref2, detail::tref3, detail::tref4)
+			GLM_SWIZZLE_GEN_VEC_FROM_VEC4(T, detail::tvec4, detail::tvec2, detail::tvec3, detail::tvec4)
+#		endif//(defined(GLM_SWIZZLE))
+#	else //(GLM_COMPONENT == GLM_COMPONENT_ONLY_XYZW)
+		value_type x, y, z, w;
+
+#		if(defined(GLM_SWIZZLE))
+			// Defines all he swizzle operator as functions
+			GLM_SWIZZLE_GEN_REF_FROM_VEC4_COMP(T, detail::tvec4, detail::tref2, detail::tref3, detail::tref4, x, y, z, w)
+			GLM_SWIZZLE_GEN_VEC_FROM_VEC4_COMP(T, detail::tvec4, detail::tvec2, detail::tvec3, detail::tvec4, x, y, z, w)
+#		endif//(defined(GLM_SWIZZLE))
 #	endif//GLM_COMPONENT
 
 		//////////////////////////////////////
@@ -123,6 +165,48 @@ namespace detail
 		//! Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename U> 
 		GLM_FUNC_DECL explicit tvec4(tvec4<U> const & v);
+
+        template <int E0, int E1, int E2, int E3>
+        GLM_FUNC_DECL tvec4(glm::detail::swizzle<4, T, tvec4<T>, E0, E1, E2, E3> const & that)
+        {
+            *this = that();
+        }
+
+        template <int E0, int E1, int F0, int F1>
+        GLM_FUNC_DECL tvec4(glm::detail::swizzle<2, T, tvec2<T>, E0, E1, -1, -2> const & v, glm::detail::swizzle<2, T, tvec2<T>, F0, F1, -1, -2> const & u)
+        {
+            *this = tvec4<T>(v(), u());
+        }
+
+        template <int E0, int E1>
+        GLM_FUNC_DECL tvec4(T const & x, T const & y, glm::detail::swizzle<2, T, tvec2<T>, E0, E1, -1, -2> const & v)
+        {
+            *this = tvec4<T>(x, y, v());
+        }
+
+        template <int E0, int E1>
+        GLM_FUNC_DECL tvec4(T const & x, glm::detail::swizzle<2, T, tvec2<T>, E0, E1, -1, -2> const & v, T const & w)
+        {
+            *this = tvec4<T>(x, v(), w);
+        }
+
+        template <int E0, int E1>
+        GLM_FUNC_DECL tvec4(glm::detail::swizzle<2, T, tvec2<T>, E0, E1, -1, -2> const & v, T const & z, T const & w)
+        {
+            *this = tvec4<T>(v(), z, w);
+        }
+
+        template <int E0, int E1, int E2>
+        GLM_FUNC_DECL tvec4(glm::detail::swizzle<3, T, tvec3<T>, E0, E1, E2, -1> const & v, T const & w)
+        {
+            *this = tvec4<T>(v(), w);
+        }
+
+        template <int E0, int E1, int E2>
+        GLM_FUNC_DECL tvec4(T const & x, glm::detail::swizzle<3, T, tvec3<T>, E0, E1, E2, -1> const & v)
+        {
+            *this = tvec4<T>(x, v());
+        }
 
 		//////////////////////////////////////
 		// Swizzle constructors
@@ -225,7 +309,7 @@ namespace detail
 	{
 		GLM_FUNC_DECL tref4(T & x, T & y, T & z, T & w);
 		GLM_FUNC_DECL tref4(tref4<T> const & r);
-		GLM_FUNC_DECL tref4(tvec4<T> const & v);
+		GLM_FUNC_DECL explicit tref4(tvec4<T> const & v);
 
 		GLM_FUNC_DECL tref4<T> & operator= (tref4<T> const & r);
 		GLM_FUNC_DECL tref4<T> & operator= (tvec4<T> const & v);
@@ -241,67 +325,73 @@ namespace detail
 	GLM_DETAIL_IS_VECTOR(tvec4);
 }//namespace detail
 
-namespace core{
-namespace type{
-namespace precision
-{
-	//! 4 components vector of high precision floating-point numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.5.2 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// @addtogroup core_precision
+	/// @{
+
+	/// 4 components vector of high precision floating-point numbers. 
+	/// There is no guarantee on the actual precision.
+	///
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<highp_float>		highp_vec4;
 
-	//! 4 components vector of medium precision floating-point numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.5.2 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of medium precision floating-point numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<mediump_float>	mediump_vec4;
 
-	//! 4 components vector of low precision floating-point numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.5.2 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of low precision floating-point numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<lowp_float>		lowp_vec4;
 
-	//! 4 components vector of high precision signed integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of high precision signed integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<highp_int>		highp_ivec4;
 
-	//! 4 components vector of medium precision signed integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of medium precision signed integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<mediump_int>		mediump_ivec4;
 
-	//! 4 components vector of low precision signed integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of low precision signed integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<lowp_int>			lowp_ivec4;
 
-	//! 4 components vector of high precision unsigned integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of high precision unsigned integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<highp_uint>		highp_uvec4;
 
-	//! 4 components vector of medium precision unsigned integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of medium precision unsigned integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<mediump_uint>		mediump_uvec4;
 
-	//! 4 components vector of low precision unsigned integer numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.5 Precision Qualifiers.
-	//! \ingroup core_precision
+	/// 4 components vector of low precision unsigned integer numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.5 Vectors</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tvec4<lowp_uint>		lowp_uvec4;
 
-}//namespace precision
-}//namespace type
-}//namespace core
+	/// @}
 }//namespace glm
 
 #ifndef GLM_EXTERNAL_TEMPLATE

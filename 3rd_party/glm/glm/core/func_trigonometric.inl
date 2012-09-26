@@ -1,745 +1,246 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2008-08-03
-// Updated : 2008-09-14
-// Licence : This source is under MIT License
-// File    : glm/core/func_trigonometric.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/core/func_trigonometric.inl
+/// @date 2008-08-03 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
+
+#include "_vectorize.hpp"
 
 namespace glm
 {
-	namespace core{
-	namespace function{
-	namespace trigonometric{
-
-    // radians
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType radians
+	// radians
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType radians
 	(
 		genType const & degrees
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'radians' only accept floating-point input");
 
-        const genType pi = genType(3.1415926535897932384626433832795);
-        return degrees * (pi / genType(180));
-    }
+		genType const pi = genType(3.1415926535897932384626433832795);
+		return degrees * (pi / genType(180));
+	}
 
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec2<T> radians
-	(
-		detail::tvec2<T> const & degrees
-	)
-    {
-        return detail::tvec2<T>(
-            radians(degrees.x),
-            radians(degrees.y));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> radians
-	(
-		detail::tvec3<T> const & degrees
-	)
-    {
-        return detail::tvec3<T>(
-            radians(degrees.x),
-            radians(degrees.y),
-            radians(degrees.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> radians
-	(
-		detail::tvec4<T> const & degrees
-	)
-    {
-        return detail::tvec4<T>(
-            radians(degrees.x),
-            radians(degrees.y),
-            radians(degrees.z),
-            radians(degrees.w));
-    }
-
-    // degrees
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType degrees
+	VECTORIZE_VEC(radians)
+	
+	// degrees
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType degrees
 	(
 		genType const & radians
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'degrees' only accept floating-point input");
 
-        const genType pi = genType(3.1415926535897932384626433832795);
-        return radians * (genType(180) / pi);
-    }
+		const genType pi = genType(3.1415926535897932384626433832795);
+		return radians * (genType(180) / pi);
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> degrees
-	(
-		detail::tvec2<T> const & radians
-	)
-    {
-        return detail::tvec2<T>(
-            degrees(radians.x),
-            degrees(radians.y));
-    }
+	VECTORIZE_VEC(degrees)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> degrees
-	(	
-		detail::tvec3<T> const & radians
-	)
-    {
-        return detail::tvec3<T>(
-            degrees(radians.x),
-            degrees(radians.y),
-            degrees(radians.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> degrees
-	(
-		detail::tvec4<T> const & radians
-	)
-    {
-        return detail::tvec4<T>(
-            degrees(radians.x),
-            degrees(radians.y),
-            degrees(radians.z),
-            degrees(radians.w));
-    }
-
-    // sin
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType sin
+	// sin
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType sin
 	(
 		genType const & angle
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sin' only accept floating-point input");
 
 		return ::std::sin(angle);
-    }
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> sin
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            sin(angle.x),
-            sin(angle.y));
-    }
+	VECTORIZE_VEC(sin)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> sin
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            sin(angle.x),
-            sin(angle.y),
-            sin(angle.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> sin
-	(
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            sin(angle.x),
-            sin(angle.y),
-            sin(angle.z),
-            sin(angle.w));
-    }
-
-    // cos
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType cos(genType const & angle)
-    {
+	// cos
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType cos(genType const & angle)
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'cos' only accept floating-point input");
 
-        return ::std::cos(angle);
-    }
+		return ::std::cos(angle);
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> cos
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            cos(angle.x),
-            cos(angle.y));
-    }
+	VECTORIZE_VEC(cos)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> cos
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            cos(angle.x),
-            cos(angle.y),
-            cos(angle.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> cos
-	(	
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            cos(angle.x),
-            cos(angle.y),
-            cos(angle.z),
-            cos(angle.w));
-    }
-
-    // tan
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType tan
+	// tan
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType tan
 	(
 		genType const & angle
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'tan' only accept floating-point input");
 
-        return ::std::tan(angle);
-    }
+		return ::std::tan(angle);
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> tan
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            tan(angle.x),
-            tan(angle.y));
-    }
+	VECTORIZE_VEC(tan)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> tan
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            tan(angle.x),
-            tan(angle.y),
-            tan(angle.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> tan
-	(
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            tan(angle.x),
-            tan(angle.y),
-            tan(angle.z),
-            tan(angle.w));
-    }
-
-    // asin
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType asin
+	// asin
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType asin
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asin' only accept floating-point input");
 
-        return ::std::asin(x);
-    }
+		return ::std::asin(x);
+	}
 
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec2<T> asin
-	(
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            asin(x.x),
-            asin(x.y));
-    }
+	VECTORIZE_VEC(asin)
 
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec3<T> asin
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            asin(x.x),
-            asin(x.y),
-            asin(x.z));
-    }
-
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec4<T> asin
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            asin(x.x),
-            asin(x.y),
-            asin(x.z),
-            asin(x.w));
-    }
-
-    // acos
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType acos
+	// acos
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType acos
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acos' only accept floating-point input");
 
-        return ::std::acos(x);
-    }
+		return ::std::acos(x);
+	}
 
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec2<T> acos
-	(
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            acos(x.x),
-            acos(x.y));
-    }
+	VECTORIZE_VEC(acos)
 
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec3<T> acos
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            acos(x.x),
-            acos(x.y),
-            acos(x.z));
-    }
-
-    template <typename T>
-	GLM_FUNC_QUALIFIER detail::tvec4<T> acos
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            acos(x.x),
-            acos(x.y),
-            acos(x.z),
-            acos(x.w));
-    }
-
-    // atan
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType atan
+	// atan
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType atan
 	(
 		genType const & y, 
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'atan' only accept floating-point input");
 
-        return ::std::atan2(y, x);
-    }
+		return ::std::atan2(y, x);
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> atan
-	(
-		detail::tvec2<T> const & y, 
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            atan(y.x, x.x),
-            atan(y.y, x.y));
-    }
+	VECTORIZE_VEC_VEC(atan)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> atan
-	(
-		detail::tvec3<T> const & y, 
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            atan(y.x, x.x),
-            atan(y.y, x.y),
-            atan(y.z, x.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> atan
-	(
-		detail::tvec4<T> const & y, 
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            atan(y.x, x.x),
-            atan(y.y, x.y),
-            atan(y.z, x.z),
-            atan(y.w, x.w));
-    }
-
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType atan
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType atan
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'atan' only accept floating-point input");
 
-        return ::std::atan(x);
-    }
+		return ::std::atan(x);
+	}
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec2<T> atan
-	(
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            atan(x.x),
-            atan(x.y));
-    }
+	VECTORIZE_VEC(atan)
 
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec3<T> atan
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            atan(x.x),
-            atan(x.y),
-            atan(x.z));
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER detail::tvec4<T> atan
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            atan(x.x),
-            atan(x.y),
-            atan(x.z),
-            atan(x.w));
-    }
-
-    // sinh
-    template <typename genType> 
-    GLM_FUNC_QUALIFIER genType sinh
+	// sinh
+	template <typename genType> 
+	GLM_FUNC_QUALIFIER genType sinh
 	(
 		genType const & angle
 	)
-    {
-        GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sinh' only accept floating-point input");
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sinh' only accept floating-point input");
 
 		return std::sinh(angle);
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec2<T> sinh
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            sinh(angle.x),
-            sinh(angle.y));
-    }
+	VECTORIZE_VEC(sinh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> sinh
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            sinh(angle.x),
-            sinh(angle.y),
-            sinh(angle.z));
-    }
-
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> sinh
-	(
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            sinh(angle.x),
-            sinh(angle.y),
-            sinh(angle.z),
-            sinh(angle.w));
-    }
-
-    // cosh
-    template <typename genType> 
-    GLM_FUNC_QUALIFIER genType cosh
+	// cosh
+	template <typename genType> 
+	GLM_FUNC_QUALIFIER genType cosh
 	(
 		genType const & angle
 	)
-    {
-        GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'cosh' only accept floating-point input");
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'cosh' only accept floating-point input");
 
 		return std::cosh(angle);
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec2<T> cosh
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            cosh(angle.x),
-            cosh(angle.y));
-    }
+	VECTORIZE_VEC(cosh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> cosh
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            cosh(angle.x),
-            cosh(angle.y),
-            cosh(angle.z));
-    }
-
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> cosh
-	(
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            cosh(angle.x),
-            cosh(angle.y),
-            cosh(angle.z),
-            cosh(angle.w));
-    }
-
-    // tanh
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType tanh
+	// tanh
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType tanh
 	(
 		genType const & angle
 	)
-    {
-        GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'tanh' only accept floating-point input");
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'tanh' only accept floating-point input");
 
 		return std::tanh(angle);
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec2<T> tanh
-	(
-		detail::tvec2<T> const & angle
-	)
-    {
-        return detail::tvec2<T>(
-            tanh(angle.x),
-            tanh(angle.y));
-    }
+	VECTORIZE_VEC(tanh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> tanh
-	(
-		detail::tvec3<T> const & angle
-	)
-    {
-        return detail::tvec3<T>(
-            tanh(angle.x),
-            tanh(angle.y),
-            tanh(angle.z));
-    }
-
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> tanh
-	(
-		detail::tvec4<T> const & angle
-	)
-    {
-        return detail::tvec4<T>(
-            tanh(angle.x),
-            tanh(angle.y),
-            tanh(angle.z),
-            tanh(angle.w));
-    }
-
-    // asinh
-    template <typename genType> 
-    GLM_FUNC_QUALIFIER genType asinh
+	// asinh
+	template <typename genType> 
+	GLM_FUNC_QUALIFIER genType asinh
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asinh' only accept floating-point input");
 		
 		return (x < genType(0) ? genType(-1) : (x > genType(0) ? genType(1) : genType(0))) * log(abs(x) + sqrt(genType(1) + x * x));
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec2<T> asinh
-	(
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            asinh(x.x),
-            asinh(x.y));
-    }
+	VECTORIZE_VEC(asinh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> asinh
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            asinh(x.x),
-            asinh(x.y),
-            asinh(x.z));
-    }
-
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> asinh
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            asinh(x.x),
-            asinh(x.y),
-            asinh(x.z),
-            asinh(x.w));
-    }
-
-    // acosh
-    template <typename genType> 
-    GLM_FUNC_QUALIFIER genType acosh
+	// acosh
+	template <typename genType> 
+	GLM_FUNC_QUALIFIER genType acosh
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acosh' only accept floating-point input");
 
 		if(x < genType(1))
 			return genType(0);
 		return log(x + sqrt(x * x - genType(1)));
-    }
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec2<T> acosh
-	(
-		detail::tvec2<T> const & x
-	)
-	{
-		return detail::tvec2<T>(
-			acosh(x.x),
-			acosh(x.y));
 	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> acosh
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            acosh(x.x),
-            acosh(x.y),
-            acosh(x.z));
-    }
+	VECTORIZE_VEC(acosh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> acosh
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            acosh(x.x),
-            acosh(x.y),
-            acosh(x.z),
-            acosh(x.w));
-    }
-
-    // atanh
-    template <typename genType>
-    GLM_FUNC_QUALIFIER genType atanh
+	// atanh
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType atanh
 	(
 		genType const & x
 	)
-    {
+	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'atanh' only accept floating-point input");
 		
 		if(abs(x) >= genType(1))
 			return 0;
 		return genType(0.5) * log((genType(1) + x) / (genType(1) - x));
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec2<T> atanh
-	(
-		detail::tvec2<T> const & x
-	)
-    {
-        return detail::tvec2<T>(
-            atanh(x.x),
-            atanh(x.y));
-    }
+	VECTORIZE_VEC(atanh)
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec3<T> atanh
-	(
-		detail::tvec3<T> const & x
-	)
-    {
-        return detail::tvec3<T>(
-            atanh(x.x),
-            atanh(x.y),
-            atanh(x.z));
-    }
-
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tvec4<T> atanh
-	(
-		detail::tvec4<T> const & x
-	)
-    {
-        return detail::tvec4<T>(
-            atanh(x.x),
-            atanh(x.y),
-            atanh(x.z),
-            atanh(x.w));
-    }
-
-	}//namespace trigonometric
-	}//namespace function
-	}//namespace core
 }//namespace glm

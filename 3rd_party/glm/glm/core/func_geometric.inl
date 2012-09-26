@@ -1,18 +1,35 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2008-08-03
-// Updated : 2010-02-04
-// Licence : This source is under MIT License
-// File    : glm/core/func_geometric.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/core/func_geometric.inl
+/// @date 2008-08-03 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
+
+#include "_vectorize.hpp"
 
 namespace glm
 {
-	namespace core{
-	namespace function{
-	namespace geometric{
-
     // length
     template <typename genType>
 	GLM_FUNC_QUALIFIER genType length
@@ -117,6 +134,7 @@ namespace glm
 	(
 		genType const & x, 
 		genType const & y
+        
 	)
 	{
 		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'dot' only accept floating-point inputs");
@@ -261,10 +279,29 @@ namespace glm
 		genType const & N
 	)
 	{
-		return I - N * dot(N, I) * float(2);
+		return I - N * dot(N, I) * genType(2);
 	}
 
     // refract
+    template <typename genType>
+    GLM_FUNC_QUALIFIER genType refract
+	(
+		genType const & I, 
+		genType const & N, 
+		genType const & eta
+	)
+    {
+		//It could be a vector
+		//GLM_STATIC_ASSERT(detail::type<genType>::is_float);
+
+        genType dotValue = dot(N, I);
+        genType k = genType(1) - eta * eta * (genType(1) - dotValue * dotValue);
+        if(k < genType(0))
+            return genType(0);
+        else
+            return eta * I - (eta * dotValue + sqrt(k)) * N;
+    }
+
     template <typename genType>
     GLM_FUNC_QUALIFIER genType refract
 	(
@@ -284,7 +321,4 @@ namespace glm
             return eta * I - (eta * dotValue + sqrt(k)) * N;
     }
 
-	}//namespace geometric
-	}//namespace function
-	}//namespace core
 }//namespace glm

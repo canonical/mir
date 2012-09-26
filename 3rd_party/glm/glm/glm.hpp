@@ -1,11 +1,79 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-01-14
-// Updated : 2011-01-19
-// Licence : This source is under MIT License
-// File    : glm/glm.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/glm.hpp
+/// @date 2005-01-14 / 2011-10-24
+/// @author Christophe Riccio
+///
+///	@defgroup core GLM Core
+///	
+///	@brief The core of GLM, which implements exactly and only the GLSL specification to the degree possible.
+///
+/// The GLM core consists of @ref core_types "C++ types that mirror GLSL types" and
+/// C++ functions that mirror the GLSL functions. It also includes 
+/// @ref core_precision "a set of precision-based types" that can be used in the appropriate
+/// functions. The C++ types are all based on a basic set of @ref core_template "template types".
+/// 
+/// The best documentation for GLM Core is the current GLSL specification,
+/// <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.clean.pdf">version 4.2
+/// (pdf file)</a>.
+/// There are a few @ref pg_differences "differences" between GLM core and GLSL.
+/// 
+/// GLM core functionnalities require <glm/glm.hpp> to be included to be used.
+/// 
+/// @defgroup core_types Types
+/// 
+/// @brief The standard types defined by the specification.
+/// 
+/// These types are all typedefs of more generalized, template types. To see the definiton
+/// of these template types, go to @ref core_template.
+/// 
+/// @ingroup core
+/// 
+/// @defgroup core_precision Precision types
+/// 
+/// @brief Non-GLSL types that are used to define precision-based types.
+/// 
+/// The GLSL language allows the user to define the precision of a particular variable.
+/// In OpenGL's GLSL, these precision qualifiers have no effect; they are there for compatibility
+/// with OpenGL ES's precision qualifiers, where they @em do have an effect.
+/// 
+/// C++ has no language equivalent to precision qualifiers. So GLM provides the next-best thing:
+/// a number of typedefs of the @ref core_template that use a particular precision.
+/// 
+/// None of these types make any guarantees about the actual precision used.
+/// 
+/// @ingroup core
+/// 
+/// @defgroup core_template Template types
+/// 
+/// @brief The generic template types used as the basis for the core types. 
+/// 
+/// These types are all templates used to define the actual @ref core_types.
+/// These templetes are implementation details of GLM types and should not be used explicitly.
+/// 
+/// @ingroup core
+///////////////////////////////////////////////////////////////////////////////////
 
 #include "core/_fixes.hpp"
 
@@ -16,47 +84,14 @@
 #include <climits>
 #include <cfloat>
 #include <limits>
+#include <cstdio>
+//#include <type_traits>
 #include "core/setup.hpp"
 
 #if(defined(GLM_MESSAGES) && !defined(GLM_MESSAGE_CORE_INCLUDED_DISPLAYED))
 #	define GLM_MESSAGE_CORE_INCLUDED_DISPLAYED
 #	pragma message("GLM: Core library included")
 #endif//GLM_MESSAGE
-
-//! GLM namespace, it contains all GLSL based features.
-namespace glm
-{
-	//! GLM core. Namespace that includes all the feature define by GLSL 4.10.6 specification. This namespace is included in glm namespace.
-	namespace core
-	{
-		//! Scalar, vectors and matrices 
-		//! from section 4.1.2 Booleans, 4.1.3 Integers section, 4.1.4 Floats section,
-		//! 4.1.5 Vectors and section 4.1.6 Matrices of GLSL 1.30.8 specification. 
-		//! This namespace resolves precision qualifier define in section 4.5 of GLSL 1.30.8 specification.
-		namespace type
-		{
-			namespace precision{}
-		}
-
-		//! Some of the functions defined in section 8 Built-in Functions of GLSL 1.30.8 specification.
-		//! Angle and trigonometry, exponential, common, geometric, matrix and vector relational functions.
-		namespace function{}
-	}//namespace core
-
-	//! G-Truc Creation stable extensions.
-	namespace gtc{}
-
-	//! G-Truc Creation experimental extensions. 
-	//! The interface could change between releases.
-	namespace gtx{}
-
-	//! VIRTREV extensions.
-	namespace virtrev{}
-
- 	using namespace core::type;
-	using namespace core::type::precision;
-	using namespace core::function;
-}//namespace glm
 
 #include "./core/_detail.hpp"
 #include "./core/type.hpp"

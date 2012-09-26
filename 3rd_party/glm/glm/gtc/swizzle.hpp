@@ -1,17 +1,42 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2010-02-20
-// Updated : 2010-02-20
-// Licence : This source is under MIT License
-// File    : glm/gtc/swizzle.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtc_swizzle
+/// @file glm/gtc/swizzle.hpp
+/// @date 2010-02-20 / 2011-06-05
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+/// 
+/// @defgroup gtc_swizzle GLM_GTC_swizzle: Swizzle 'operator' implementation
+/// @ingroup gtc
+/// 
+/// @brief Provide functions to emulate GLSL swizzle operator fonctionalities.
+/// 
+/// <glm/gtc/swizzle.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtc_swizzle
-#define glm_gtc_swizzle
+#ifndef GLM_GTC_swizzle
+#define GLM_GTC_swizzle GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -21,17 +46,24 @@
 #	pragma message("GLM: GLM_GTC_swizzle extension included")
 #endif
 
-namespace glm{
-namespace gtc{
-namespace swizzle ///< GLM_GTC_swizzle extension
+namespace glm
 {
-	using namespace gtc::half_float;
+	/// @addtogroup gtc_swizzle
+	/// @{
+	
 
 	template <typename T, template <typename> class vecType>
 	T const & swizzle(	
 		vecType<T> const & v,
 		comp x);
 
+    /// 
+	/// 
+	/// @param v Vector source   
+	/// @param x 
+	/// @tparam T  
+    /// @tparam vecType 
+	/// @see gtc_swizzle
 	template <typename T, template <typename> class vecType>
 	detail::tvec2<T> const & swizzle(
 		vecType<T> const & v,
@@ -343,12 +375,9 @@ namespace swizzle ///< GLM_GTC_swizzle extension
 	static_swizzle4_ref(glm::u32, 4)
 	static_swizzle4_ref(glm::u64, 4)
 
-}//namespace swizzle
-}//namespace gtc
+	/// @}
 }//namespace glm
 
 #include "swizzle.inl"
 
-namespace glm{using namespace gtc::swizzle;}
-
-#endif//glm_gtc_swizzle
+#endif//GLM_GTC_swizzle

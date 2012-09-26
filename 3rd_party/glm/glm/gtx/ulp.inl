@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2011-03-07
 // Updated : 2011-04-26
@@ -42,34 +42,34 @@ typedef union
 } ieee_double_shape_type;
 
 #define GLM_EXTRACT_WORDS(ix0,ix1,d)                                \
-do {                                                            \
-  ieee_double_shape_type ew_u;                                  \
-  ew_u.value = (d);                                             \
-  (ix0) = ew_u.parts.msw;                                       \
-  (ix1) = ew_u.parts.lsw;                                       \
-} while (0)
+	do {                                                            \
+	  ieee_double_shape_type ew_u;                                  \
+	  ew_u.value = (d);                                             \
+	  (ix0) = ew_u.parts.msw;                                       \
+	  (ix1) = ew_u.parts.lsw;                                       \
+	} while (0)
 
 #define GLM_GET_FLOAT_WORD(i,d)                                     \
-do {                                                            \
-  ieee_float_shape_type gf_u;                                   \
-  gf_u.value = (d);                                             \
-  (i) = gf_u.word;                                              \
-} while (0)
+	do {                                                            \
+	  ieee_float_shape_type gf_u;                                   \
+	  gf_u.value = (d);                                             \
+	  (i) = gf_u.word;                                              \
+	} while (0)
 
 #define GLM_SET_FLOAT_WORD(d,i)                                     \
-do {                                                            \
-  ieee_float_shape_type sf_u;                                   \
-  sf_u.word = (i);                                              \
-  (d) = sf_u.value;                                             \
-} while (0)
+	do {                                                            \
+	  ieee_float_shape_type sf_u;                                   \
+	  sf_u.word = (i);                                              \
+	  (d) = sf_u.value;                                             \
+	} while (0)
 
 #define GLM_INSERT_WORDS(d,ix0,ix1)                                 \
-do {                                                            \
-  ieee_double_shape_type iw_u;                                  \
-  iw_u.parts.msw = (ix0);                                       \
-  iw_u.parts.lsw = (ix1);                                       \
-  (d) = iw_u.value;                                             \
-} while (0)
+	do {                                                            \
+	  ieee_double_shape_type iw_u;                                  \
+	  iw_u.parts.msw = (ix0);                                       \
+	  iw_u.parts.lsw = (ix1);                                       \
+	  (d) = iw_u.value;                                             \
+	} while (0)
 
 namespace glm{
 namespace detail
@@ -173,7 +173,7 @@ namespace detail
 
 #pragma warning(pop)
 
-#if(GLM_COMPILER & GLM_COMPILER_VC)
+#if(GLM_COMPILER & GLM_COMPILER_VC || GLM_COMPILER & GLM_COMPILER_INTEL)
 #	define GLM_NEXT_AFTER_FLT(x, toward) glm::detail::nextafterf((x), (toward))
 #   define GLM_NEXT_AFTER_DBL(x, toward) _nextafter((x), (toward))
 #else
@@ -181,221 +181,119 @@ namespace detail
 #   define GLM_NEXT_AFTER_DBL(x, toward) nextafter((x), (toward))
 #endif
 
-namespace glm{
-namespace gtx{
-namespace ulp
+namespace glm
 {
-    GLM_FUNC_QUALIFIER float next_float(float const & x)
-    {
-        return GLM_NEXT_AFTER_FLT(x, std::numeric_limits<float>::max());
-    }
-
-    GLM_FUNC_QUALIFIER double next_float(double const & x)
-    {
-        return GLM_NEXT_AFTER_DBL(x, std::numeric_limits<double>::max());
-    }
-
-    template<typename T, template<typename> class vecType>
-    GLM_FUNC_QUALIFIER vecType<T> next_float(vecType<T> const & x)
-    {
-        vecType<T> Result;
-        for(std::size_t i = 0; i < Result.length(); ++i)
-            Result[i] = next_float(x[i]);
-        return Result;
-    }
-
-    GLM_FUNC_QUALIFIER float prev_float(float const & x)
-    {
-        return GLM_NEXT_AFTER_FLT(x, std::numeric_limits<float>::min());
-    }
-
-    GLM_FUNC_QUALIFIER double prev_float(double const & x)
-    {
-        return GLM_NEXT_AFTER_DBL(x, std::numeric_limits<double>::min());
-    }
-
-    template<typename T, template<typename> class vecType>
-    GLM_FUNC_QUALIFIER vecType<T> prev_float(vecType<T> const & x)
-    {
-        vecType<T> Result;
-        for(std::size_t i = 0; i < Result.length(); ++i)
-            Result[i] = prev_float(x[i]);
-        return Result;
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER T next_float(T const & x, uint const & ulps)
-    {
-        T temp = x;
-        for(std::size_t i = 0; i < ulps; ++i)
-            temp = next_float(temp);
-        return temp;
-    }
-
-    template<typename T, template<typename> class vecType>
-    GLM_FUNC_QUALIFIER vecType<T> next_float(vecType<T> const & x, vecType<uint> const & ulps)
-    {
-        vecType<T> Result;
-        for(std::size_t i = 0; i < Result.length(); ++i)
-            Result[i] = next_float(x[i], ulps[i]);
-        return Result;
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER T prev_float(T const & x, uint const & ulps)
-    {
-        T temp = x;
-        for(std::size_t i = 0; i < ulps; ++i)
-            temp = prev_float(temp);
-        return temp;
-    }
-
-    template<typename T, template<typename> class vecType>
-    GLM_FUNC_QUALIFIER vecType<T> prev_float(vecType<T> const & x, vecType<uint> const & ulps)
-    {
-        vecType<T> Result;
-        for(std::size_t i = 0; i < Result.length(); ++i)
-            Result[i] = prev_float(x[i], ulps[i]);
-        return Result;
-    }
-
-    template <typename T>
-    GLM_FUNC_QUALIFIER uint float_distance(T const & x, T const & y)
-    {
-        uint ulp = 0;
-
-        if(x < y)
-        {
-            T temp = x;
-            while(temp != y && ulp < std::numeric_limits<std::size_t>::max())
-            {
-                ++ulp;
-                temp = next_float(temp);
-            }
-        }
-        else if(y < x)
-        {
-            T temp = y;
-            while(temp != x && ulp < std::numeric_limits<std::size_t>::max())
-            {
-                ++ulp;
-                temp = next_float(temp);
-            }
-        }
-        else // ==
-        {
-
-        }
-
-        return ulp;
-    }
-
-    template<typename T, template<typename> class vecType>
-    GLM_FUNC_QUALIFIER vecType<uint> float_distance(vecType<T> const & x, vecType<T> const & y)
-    {
-        vecType<uint> Result;
-        for(std::size_t i = 0; i < Result.length(); ++i)
-            Result[i] = float_distance(x[i], y[i]);
-        return Result;
-    }
-/*
-	inline std::size_t ulp
-	(
-		detail::thalf const & a,
-		detail::thalf const & b
-	)
+	GLM_FUNC_QUALIFIER float next_float(float const & x)
 	{
-		std::size_t Count = 0;
-		float TempA(a);
-		float TempB(b);
-		//while((TempA = _nextafterf(TempA, TempB)) != TempB)
-			++Count;
-		return Count;
+		return GLM_NEXT_AFTER_FLT(x, std::numeric_limits<float>::max());
 	}
 
-	inline std::size_t ulp
-	(
-		float const & a,
-		float const & b
-	)
+	GLM_FUNC_QUALIFIER double next_float(double const & x)
 	{
-		std::size_t Count = 0;
-		float Temp = a;
-		//while((Temp = _nextafterf(Temp, b)) != b)
-        {
-            std::cout << Temp << " " << b << std::endl;
-			++Count;
-        }
-		return Count;
+		return GLM_NEXT_AFTER_DBL(x, std::numeric_limits<double>::max());
 	}
 
-	inline std::size_t ulp
-	(
-		double const & a,
-		double const & b
-	)
+	template<typename T, template<typename> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T> next_float(vecType<T> const & x)
 	{
-		std::size_t Count = 0;
-		double Temp = a;
-		//while((Temp = _nextafter(Temp, b)) != b)
-        {
-            std::cout << Temp << " " << b << std::endl;
-			++Count;
-        }
-		return Count;
+		vecType<T> Result;
+		for(std::size_t i = 0; i < Result.length(); ++i)
+			Result[i] = next_float(x[i]);
+		return Result;
+	}
+
+	GLM_FUNC_QUALIFIER float prev_float(float const & x)
+	{
+		return GLM_NEXT_AFTER_FLT(x, std::numeric_limits<float>::min());
+	}
+
+	GLM_FUNC_QUALIFIER double prev_float(double const & x)
+	{
+		return GLM_NEXT_AFTER_DBL(x, std::numeric_limits<double>::min());
+	}
+
+	template<typename T, template<typename> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T> prev_float(vecType<T> const & x)
+	{
+		vecType<T> Result;
+		for(std::size_t i = 0; i < Result.length(); ++i)
+			Result[i] = prev_float(x[i]);
+		return Result;
 	}
 
 	template <typename T>
-	inline std::size_t ulp
-	(
-		detail::tvec2<T> const & a,
-		detail::tvec2<T> const & b
-	)
+	GLM_FUNC_QUALIFIER T next_float(T const & x, uint const & ulps)
 	{
-        std::size_t ulps[] = 
-        {
-            ulp(a[0], b[0]),
-            ulp(a[1], b[1])
-        };
+		T temp = x;
+		for(std::size_t i = 0; i < ulps; ++i)
+			temp = next_float(temp);
+		return temp;
+	}
 
-        return glm::max(ulps[0], ulps[1]);
+	template<typename T, template<typename> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T> next_float(vecType<T> const & x, vecType<uint> const & ulps)
+	{
+		vecType<T> Result;
+		for(std::size_t i = 0; i < Result.length(); ++i)
+			Result[i] = next_float(x[i], ulps[i]);
+		return Result;
 	}
 
 	template <typename T>
-	inline std::size_t ulp
-	(
-		detail::tvec3<T> const & a,
-		detail::tvec3<T> const & b
-	)
+	GLM_FUNC_QUALIFIER T prev_float(T const & x, uint const & ulps)
 	{
-        std::size_t ulps[] = 
-        {
-            ulp(a[0], b[0]),
-            ulp(a[1], b[1]),
-            ulp(a[2], b[2])
-        };
+		T temp = x;
+		for(std::size_t i = 0; i < ulps; ++i)
+			temp = prev_float(temp);
+		return temp;
+	}
 
-        return glm::max(glm::max(ulps[0], ulps[1]), ulps[2]);
+	template<typename T, template<typename> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T> prev_float(vecType<T> const & x, vecType<uint> const & ulps)
+	{
+		vecType<T> Result;
+		for(std::size_t i = 0; i < Result.length(); ++i)
+			Result[i] = prev_float(x[i], ulps[i]);
+		return Result;
 	}
 
 	template <typename T>
-	inline std::size_t ulp
-	(
-		detail::tvec4<T> const & a,
-		detail::tvec4<T> const & b
-	)
+	GLM_FUNC_QUALIFIER uint float_distance(T const & x, T const & y)
 	{
-        std::size_t ulps[] = 
-        {
-            ulp(a[0], b[0]),
-            ulp(a[1], b[1]),
-            ulp(a[2], b[2]),
-            ulp(a[3], b[3])
-        };
+		uint ulp = 0;
 
-        return glm::max(glm::max(ulps[0], ulps[1]), glm::max(ulps[2], ulps[3]));
+		if(x < y)
+		{
+			T temp = x;
+			while(temp != y && ulp < std::numeric_limits<std::size_t>::max())
+			{
+				++ulp;
+				temp = next_float(temp);
+			}
+		}
+		else if(y < x)
+		{
+			T temp = y;
+			while(temp != x && ulp < std::numeric_limits<std::size_t>::max())
+			{
+				++ulp;
+				temp = next_float(temp);
+			}
+		}
+		else // ==
+		{
+
+		}
+
+		return ulp;
 	}
-*/
-}//namespace ulp
-}//namespace gtx
+
+	template<typename T, template<typename> class vecType>
+	GLM_FUNC_QUALIFIER vecType<uint> float_distance(vecType<T> const & x, vecType<T> const & y)
+	{
+		vecType<uint> Result;
+		for(std::size_t i = 0; i < Result.length(); ++i)
+			Result[i] = float_distance(x[i], y[i]);
+		return Result;
+	}
 }//namespace glm

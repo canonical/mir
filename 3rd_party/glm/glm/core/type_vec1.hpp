@@ -1,11 +1,30 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2008-08-25
-// Updated : 2010-02-04
-// Licence : This source is under MIT License
-// File    : glm/core/type_vec1.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core
+/// @file glm/core/type_vec1.hpp
+/// @date 2008-08-25 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef glm_core_type_gentype1
 #define glm_core_type_gentype1
@@ -36,7 +55,6 @@ namespace detail
 		typedef T value_type;
 		typedef std::size_t size_type;
 		GLM_FUNC_DECL size_type length() const;
-		static GLM_FUNC_DECL size_type value_size();
 
 		typedef tvec1<T> type;
 		typedef tvec1<bool> bool_type;
@@ -99,33 +117,55 @@ namespace detail
 		// Unary arithmetic operators
 
 		GLM_FUNC_DECL tvec1<T> & operator= (tvec1<T> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator= (tvec1<U> const & v);
 
-		GLM_FUNC_DECL tvec1<T> & operator+=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator+=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator-=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator-=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator*=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator*=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator/=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator/=(tvec1<T> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator+=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator+=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator-=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator-=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator*=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator*=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator/=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator/=(tvec1<U> const & v);
 		GLM_FUNC_DECL tvec1<T> & operator++();
 		GLM_FUNC_DECL tvec1<T> & operator--();
 
 		//////////////////////////////////////
 		// Unary bit operators
 
-		GLM_FUNC_DECL tvec1<T> & operator%=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator%=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator&=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator&=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator|=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator|=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator^=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator^=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator<<=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator<<=(tvec1<T> const & v);
-		GLM_FUNC_DECL tvec1<T> & operator>>=(value_type const & s);
-		GLM_FUNC_DECL tvec1<T> & operator>>=(tvec1<T> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator%=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator%=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator&=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator&=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator|=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator|=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator^=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator^=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator<<=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator<<=(tvec1<U> const & v);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator>>=(U const & s);
+		template <typename U> 
+		GLM_FUNC_DECL tvec1<T> & operator>>=(tvec1<U> const & v);
 
 		//////////////////////////////////////
 		// Swizzle operators
@@ -152,15 +192,15 @@ namespace detail
 
 	GLM_DETAIL_IS_VECTOR(tvec1);
 
-	typedef detail::tvec1<core::type::precision::highp_float>		highp_vec1_t;
-	typedef detail::tvec1<core::type::precision::mediump_float>		mediump_vec1_t;
-	typedef detail::tvec1<core::type::precision::lowp_float>		lowp_vec1_t;
-	typedef detail::tvec1<core::type::precision::highp_int>			highp_ivec1_t;
-	typedef detail::tvec1<core::type::precision::mediump_int>		mediump_ivec1_t;
-	typedef detail::tvec1<core::type::precision::lowp_int>			lowp_ivec1_t;
-	typedef detail::tvec1<core::type::precision::highp_uint>		highp_uvec1_t;
-	typedef detail::tvec1<core::type::precision::mediump_uint>		mediump_uvec1_t;
-	typedef detail::tvec1<core::type::precision::lowp_uint>			lowp_uvec1_t;
+	typedef detail::tvec1<highp_float>		highp_vec1_t;
+	typedef detail::tvec1<mediump_float>	mediump_vec1_t;
+	typedef detail::tvec1<lowp_float>		lowp_vec1_t;
+	typedef detail::tvec1<highp_int>		highp_ivec1_t;
+	typedef detail::tvec1<mediump_int>		mediump_ivec1_t;
+	typedef detail::tvec1<lowp_int>			lowp_ivec1_t;
+	typedef detail::tvec1<highp_uint>		highp_uvec1_t;
+	typedef detail::tvec1<mediump_uint>		mediump_uvec1_t;
+	typedef detail::tvec1<lowp_uint>		lowp_uvec1_t;
 
 }//namespace detail
 }//namespace glm

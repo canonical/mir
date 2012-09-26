@@ -1,21 +1,43 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-12-21
-// Updated : 2009-05-21
-// Licence : This source is under MIT License
-// File    : glm/gtx/quaternion.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// ToDo:
-// - Study constructors with angles and axis
-// - Study constructors with vec3 that are the imaginary component of quaternion
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtx_quaternion
+/// @file glm/gtx/quaternion.hpp
+/// @date 2005-12-21 / 2011-06-07
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+/// @see gtx_extented_min_max (dependence)
+///
+/// @defgroup gtx_quaternion GLM_GTX_quaternion: Extented quaternion types and functions
+/// @ingroup gtx
+/// 
+/// @brief Extented quaternion types and functions
+/// 
+/// <glm/gtx/quaternion.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtx_quaternion
-#define glm_gtx_quaternion
+#ifndef GLM_GTX_quaternion
+#define GLM_GTX_quaternion GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -25,14 +47,10 @@
 #	pragma message("GLM: GLM_GTX_quaternion extension included")
 #endif
 
-namespace glm{
-namespace gtx{
-namespace quaternion ///< GLM_GTX_quaternion extension: Quaternion types and functions
+namespace glm
 {
-	using namespace gtc::quaternion;
-
-	/// \addtogroup gtx_quaternion
-	///@{
+	/// @addtogroup gtx_quaternion
+	/// @{
 
 	//! Compute a cross product between a quaternion and a vector. 
 	//! From GLM_GTX_quaternion extension.
@@ -158,36 +176,30 @@ namespace quaternion ///< GLM_GTX_quaternion extension: Quaternion types and fun
 	template <typename valType> 
 	valType yaw(
 		detail::tquat<valType> const & x);
-		
-	//! Returns euler angles, yitch as x, yaw as y, roll as z. 
-	//! From GLM_GTX_quaternion extension.
-	template <typename valType> 
-	detail::tvec3<valType> eulerAngles(
-		detail::tquat<valType> const & x);
 
 	//! Converts a quaternion to a 3 * 3 matrix. 
 	//! From GLM_GTX_quaternion extension.
     template <typename valType> 
 	detail::tmat3x3<valType> toMat3(
-		detail::tquat<valType> const & x){return gtc::quaternion::mat3_cast(x);}
+		detail::tquat<valType> const & x){return mat3_cast(x);}
 
 	//! Converts a quaternion to a 4 * 4 matrix. 
 	//! From GLM_GTX_quaternion extension.
 	template <typename valType> 
 	detail::tmat4x4<valType> toMat4(
-		detail::tquat<valType> const & x){return gtc::quaternion::mat4_cast(x);}
+		detail::tquat<valType> const & x){return mat4_cast(x);}
 
 	//! Converts a 3 * 3 matrix to a quaternion. 
 	//! From GLM_GTX_quaternion extension.
 	template <typename valType> 
 	detail::tquat<valType> toQuat(
-		detail::tmat3x3<valType> const & x){return gtc::quaternion::quat_cast(x);}
+		detail::tmat3x3<valType> const & x){return quat_cast(x);}
 
 	//! Converts a 4 * 4 matrix to a quaternion. 
 	//! From GLM_GTX_quaternion extension.
 	template <typename valType> 
 	detail::tquat<valType> toQuat(
-		detail::tmat4x4<valType> const & x){return gtc::quaternion::quat_cast(x);}
+		detail::tmat4x4<valType> const & x){return quat_cast(x);}
 
 	//! Quaternion interpolation using the rotation short path. 
 	//! From GLM_GTX_quaternion extension.
@@ -206,12 +218,8 @@ namespace quaternion ///< GLM_GTX_quaternion extension: Quaternion types and fun
 		T const & a);
 
 	/// @}
-}//namespace quaternion
-}//namespace gtx
-} //namespace glm
+}//namespace glm
 
 #include "quaternion.inl"
 
-namespace glm{using namespace gtx::quaternion;}
-
-#endif//glm_gtx_quaternion
+#endif//GLM_GTX_quaternion

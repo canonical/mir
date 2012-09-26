@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2005-12-21
 // Updated : 2009-04-29
@@ -7,15 +7,13 @@
 // File    : glm/gtx/transform.inl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtx{
-namespace transform
+namespace glm
 {
     template <typename T> 
     GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate(
 		T x, T y, T z)
     {
-		return gtc::matrix_transform::translate(
+		return translate(
 			detail::tmat4x4<T>(1.0f), 
 			detail::tvec3<T>(x, y , z));
     }
@@ -25,7 +23,7 @@ namespace transform
 		detail::tmat4x4<T> const & m, 
 		T x, T y, T z)
     {
-        return gtc::matrix_transform::translate(
+        return translate(
 			m, detail::tvec3<T>(x, y , z));
     }
 
@@ -33,7 +31,7 @@ namespace transform
     GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate(
 		detail::tvec3<T> const & v)
     {
-		return gtc::matrix_transform::translate(
+		return translate(
 			detail::tmat4x4<T>(1.0f), v);
     }
 
@@ -42,7 +40,7 @@ namespace transform
 		T angle, 
 		T x, T y, T z)
     {
-		return gtc::matrix_transform::rotate(
+		return rotate(
 			detail::tmat4x4<T>(1), angle, detail::tvec3<T>(x, y, z));
     }
 
@@ -51,7 +49,7 @@ namespace transform
 		T angle, 
 		detail::tvec3<T> const & v)
     {
-		return gtc::matrix_transform::rotate(
+		return rotate(
 			detail::tmat4x4<T>(1), angle, v);
     }
 
@@ -61,14 +59,14 @@ namespace transform
 		T angle, 
 		T x, T y, T z)
     {
-		return gtc::matrix_transform::rotate(
+		return rotate(
 			m, angle, detail::tvec3<T>(x, y, z));
     }
 
     template <typename T> 
     GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale(T x, T y, T z)
     {
-		return gtc::matrix_transform::scale(
+		return scale(
 			detail::tmat4x4<T>(1), detail::tvec3<T>(x, y, z));
     }
 
@@ -77,7 +75,7 @@ namespace transform
 		detail::tmat4x4<T> const & m, 
 		T x, T y, T z)
     {
-        return gtc::matrix_transform::scale(
+        return scale(
 			m, detail::tvec3<T>(x, y, z));
     }
 
@@ -85,10 +83,8 @@ namespace transform
     GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale(
 		detail::tvec3<T> const & v)
     {
-        return gtc::matrix_transform::scale(
+        return scale(
 			detail::tmat4x4<T>(1.0f), v);
     }
 
-}//namespace transform
-}//namespace gtx
 }//namespace glm

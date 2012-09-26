@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2007-03-14
 // Updated : 2010-02-19
@@ -7,9 +7,7 @@
 // File    : gtx_extented_min_max.inl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtx{
-namespace extented_min_max
+namespace glm
 {
 	template <typename T>
 	GLM_FUNC_QUALIFIER T min(
@@ -177,6 +175,4 @@ namespace extented_min_max
 		return glm::max(glm::max(x, y), glm::max(z, w));
 	}
 
-}//namespace extented_min_max
-}//namespace gtx
 }//namespace glm

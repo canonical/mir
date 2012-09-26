@@ -1,593 +1,182 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2008-10-09
-// Updated : 2008-10-09
+// Updated : 2011-10-14
 // Licence : This source is under MIT License
 // File    : glm/gtx/reciprocal.inl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtx{
-namespace reciprocal{
+#include "../core/_vectorize.hpp"
 
-// sec
-template <typename genType>
-GLM_FUNC_QUALIFIER genType sec
-(
-	genType const & angle
-)
+namespace glm
 {
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sec' only accept floating-point values");
+	// sec
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType sec
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sec' only accept floating-point values");
 
-	return genType(1) / glm::cos(angle);
-}
+		return genType(1) / glm::cos(angle);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> sec
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        sec(angle.x),
-        sec(angle.y));
-}
+	VECTORIZE_VEC(sec)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> sec
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        sec(angle.x),
-        sec(angle.y),
-        sec(angle.z));
-}
+	// csc
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType csc
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'csc' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> sec
-(
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        sec(angle.x),
-        sec(angle.y),
-        sec(angle.z),
-        sec(angle.w));
-}
+		return genType(1) / glm::sin(angle);
+	}
 
-// csc
-template <typename genType>
-GLM_FUNC_QUALIFIER genType csc
-(
-	genType const & angle
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'csc' only accept floating-point values");
+	VECTORIZE_VEC(csc)
 
-    return genType(1) / glm::sin(angle);
-}
+	// cot
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType cot
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'cot' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> csc
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        csc(angle.x),
-        csc(angle.y));
-}
+		return genType(1) / glm::tan(angle);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> csc
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        csc(angle.x),
-        csc(angle.y),
-        csc(angle.z));
-}
+	VECTORIZE_VEC(cot)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> csc
-(	
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        csc(angle.x),
-        csc(angle.y),
-        csc(angle.z),
-        csc(angle.w));
-}
-
-// cot
-template <typename genType>
-GLM_FUNC_QUALIFIER genType cot
-(
-	genType const & angle
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'cot' only accept floating-point values");
-
-	return genType(1) / glm::tan(angle);
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> cot
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        cot(angle.x),
-        cot(angle.y));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> cot
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        cot(angle.x),
-        cot(angle.y),
-        cot(angle.z));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> cot
-(
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        cot(angle.x),
-        cot(angle.y),
-        cot(angle.z),
-        cot(angle.w));
-}
-
-// asec
-template <typename genType>
-GLM_FUNC_QUALIFIER genType asec
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asec' only accept floating-point values");
+	// asec
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType asec
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asec' only accept floating-point values");
 	
-	return acos(genType(1) / x);
-}
+		return acos(genType(1) / x);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> asec
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        asec(x.x),
-        asec(x.y));
-}
+	VECTORIZE_VEC(asec)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> asec
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        asec(x.x),
-        asec(x.y),
-        asec(x.z));
-}
+	// acsc
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType acsc
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acsc' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> asec
-(
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        asec(x.x),
-        asec(x.y),
-        asec(x.z),
-        asec(x.w));
-}
+		return asin(genType(1) / x);
+	}
 
-// acsc
-template <typename genType>
-GLM_FUNC_QUALIFIER genType acsc
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acsc' only accept floating-point values");
+	VECTORIZE_VEC(acsc)
 
-	return asin(genType(1) / x);
-}
+	// acot
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType acot
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acot' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> acsc
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        acsc(x.x),
-        acsc(x.y));
-}
+		genType const pi_over_2 = genType(3.1415926535897932384626433832795 / 2.0);
+		return pi_over_2 - atan(x);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> acsc
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        acsc(x.x),
-        acsc(x.y),
-        acsc(x.z));
-}
+	VECTORIZE_VEC(acot)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> acsc
-(	
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        acsc(x.x),
-        acsc(x.y),
-        acsc(x.z),
-        acsc(x.w));
-}
+	// sech
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType sech
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sech' only accept floating-point values");
 
-// acot
-template <typename genType>
-GLM_FUNC_QUALIFIER genType acot
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acot' only accept floating-point values");
+		return genType(1) / glm::cosh(angle);
+	}
 
-	genType const pi_over_2 = genType(3.1415926535897932384626433832795 / 2.0);
-	return pi_over_2 - atan(x);
-}
+	VECTORIZE_VEC(sech)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> acot
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        acot(x.x),
-        acot(x.y));
-}
+	// csch
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType csch
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'csch' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> acot
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        acot(x.x),
-        acot(x.y),
-        acot(x.z));
-}
+		return genType(1) / glm::sinh(angle);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> acot
-(
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        acot(x.x),
-        acot(x.y),
-        acot(x.z),
-        acot(x.w));
-}
+	VECTORIZE_VEC(csch)
 
-// sech
-template <typename genType>
-GLM_FUNC_QUALIFIER genType sech
-(
-	genType const & angle
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'sech' only accept floating-point values");
+	// coth
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType coth
+	(
+		genType const & angle
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'coth' only accept floating-point values");
 
-	return genType(1) / glm::cosh(angle);
-}
+		return glm::cosh(angle) / glm::sinh(angle);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> sech
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        sech(angle.x),
-        sech(angle.y));
-}
+	VECTORIZE_VEC(coth)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> sech
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        sech(angle.x),
-        sech(angle.y),
-        sech(angle.z));
-}
+	// asech
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType asech
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asech' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> sech
-(
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        sech(angle.x),
-        sech(angle.y),
-        sech(angle.z),
-        sech(angle.w));
-}
+		return acosh(genType(1) / x);
+	}
 
-// csch
-template <typename genType>
-GLM_FUNC_QUALIFIER genType csch
-(
-	genType const & angle
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'csch' only accept floating-point values");
+	VECTORIZE_VEC(asech)
 
-    return genType(1) / glm::sinh(angle);
-}
+	// acsch
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType acsch
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acsch' only accept floating-point values");
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> csch
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        csch(angle.x),
-        csch(angle.y));
-}
+		return asinh(genType(1) / x);
+	}
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> csch
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        csch(angle.x),
-        csch(angle.y),
-        csch(angle.z));
-}
+	VECTORIZE_VEC(acsch)
 
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> csch
-(	
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        csch(angle.x),
-        csch(angle.y),
-        csch(angle.z),
-        csch(angle.w));
-}
+	// acoth
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType acoth
+	(
+		genType const & x
+	)
+	{
+		GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acoth' only accept floating-point values");
 
-// coth
-template <typename genType>
-GLM_FUNC_QUALIFIER genType coth
-(
-	genType const & angle
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'coth' only accept floating-point values");
+		return atanh(genType(1) / x);
+	}
 
-	return glm::cosh(angle) / glm::sinh(angle);
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> coth
-(
-	detail::tvec2<valType> const & angle
-)
-{
-    return detail::tvec2<valType>(
-        coth(angle.x),
-        coth(angle.y));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> coth
-(
-	detail::tvec3<valType> const & angle
-)
-{
-    return detail::tvec3<valType>(
-        coth(angle.x),
-        coth(angle.y),
-        coth(angle.z));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> coth
-(
-	detail::tvec4<valType> const & angle
-)
-{
-    return detail::tvec4<valType>(
-        coth(angle.x),
-        coth(angle.y),
-        coth(angle.z),
-        coth(angle.w));
-}
-
-// asech
-template <typename genType>
-GLM_FUNC_QUALIFIER genType asech
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'asech' only accept floating-point values");
-
-	return acosh(genType(1) / x);
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> asech
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        asech(x.x),
-        asech(x.y));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> asech
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        asech(x.x),
-        asech(x.y),
-        asech(x.z));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> asech
-(
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        asech(x.x),
-        asech(x.y),
-        asech(x.z),
-        asech(x.w));
-}
-
-// acsch
-template <typename genType>
-GLM_FUNC_QUALIFIER genType acsch
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acsch' only accept floating-point values");
-
-    return asinh(genType(1) / x);
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> acsch
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        acsch(x.x),
-        acsch(x.y));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> acsch
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        acsch(x.x),
-        acsch(x.y),
-        acsch(x.z));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> acsch
-(	
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        acsch(x.x),
-        acsch(x.y),
-        acsch(x.z),
-        acsch(x.w));
-}
-
-// acoth
-template <typename genType>
-GLM_FUNC_QUALIFIER genType acoth
-(
-	genType const & x
-)
-{
-	GLM_STATIC_ASSERT(detail::type<genType>::is_float, "'acoth' only accept floating-point values");
-
-	return atanh(genType(1) / x);
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec2<valType> acoth
-(
-	detail::tvec2<valType> const & x
-)
-{
-    return detail::tvec2<valType>(
-        acoth(x.x),
-        acoth(x.y));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec3<valType> acoth
-(
-	detail::tvec3<valType> const & x
-)
-{
-    return detail::tvec3<valType>(
-        acoth(x.x),
-        acoth(x.y),
-        acoth(x.z));
-}
-
-template <typename valType>
-GLM_FUNC_QUALIFIER detail::tvec4<valType> acoth
-(
-	detail::tvec4<valType> const & x
-)
-{
-    return detail::tvec4<valType>(
-        acoth(x.x),
-        acoth(x.y),
-        acoth(x.z),
-        acoth(x.w));
-}
-
-}//namespace reciprocal
-}//namespace gtx
+	VECTORIZE_VEC(acoth)
 }//namespace glm

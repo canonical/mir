@@ -1,17 +1,41 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-12-27
-// Updated : 2010-11-12
-// Licence : This source is under MIT License
-// File    : glm/gtc/matrix_access.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+/// 
+/// @ref gtc_matrix_access
+/// @file glm/gtc/matrix_access.hpp
+/// @date 2005-12-27 / 2011-05-16
+/// @author Christophe Riccio
+/// 
+/// @see core (dependence)
+/// 
+/// @defgroup gtc_matrix_access GLM_GTC_matrix_access: Access matrix rows and columns
+/// @ingroup gtc
+/// 
+/// Defines functions to access rows or columns of a matrix easily.
+/// <glm/gtc/matrix_access.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtc_matrix_access
-#define glm_gtc_matrix_access
+#ifndef GLM_GTC_matrix_access
+#define GLM_GTC_matrix_access GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -20,51 +44,44 @@
 #	pragma message("GLM: GLM_GTC_matrix_access extension included")
 #endif
 
-namespace glm{
-namespace gtc{
-namespace matrix_access ///< GLM_GTC_matrix_access extension: Set a column or a row of a matrix
+namespace glm
 {
-	/// \addtogroup gtc_matrix_access
-	///@{
+	/// @addtogroup gtc_matrix_access
+	/// @{
 
-	//! Get a specific row of a matrix.
-	//! From GLM_GTC_matrix_access extension.
+	/// Get a specific row of a matrix.
+	/// @see gtc_matrix_access
 	template <typename genType> 
 	typename genType::row_type row(
 		genType const & m, 
 		int index);
 
-	//! Set a specific row to a matrix.
-	//! From GLM_GTC_matrix_access extension.
+	/// Set a specific row to a matrix.
+	/// @see gtc_matrix_access
     template <typename genType> 
 	genType row(
 		genType const & m, 
 		int index, 
 		typename genType::row_type const & x);
 
-	//! Get a specific column of a matrix.
-	//! From GLM_GTC_matrix_access extension.
+	/// Get a specific column of a matrix.
+	/// @see gtc_matrix_access
 	template <typename genType> 
 	typename genType::col_type column(
 		genType const & m, 
 		int index);
 
-	 //! Set a specific column to a matrix.
-	 //! From GLM_GTC_matrix_access extension.
+	 /// Set a specific column to a matrix.
+	 /// @see gtc_matrix_access
 	template <typename genType> 
 	genType column(
 		genType const & m, 
 		int index, 
 		typename genType::col_type const & x);
 
-	///@}
-
-}//namespace matrix_access
-}//namespace gtc
+	/// @}
 }//namespace glm
 
 #include "matrix_access.inl"
 
-namespace glm{using namespace gtc::matrix_access;}
-
-#endif//glm_gtc_matrix_access
+#endif//GLM_GTC_matrix_access

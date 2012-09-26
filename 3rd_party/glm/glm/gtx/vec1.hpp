@@ -1,17 +1,41 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2010-02-08
-// Updated : 2010-02-08
-// Licence : This source is under MIT License
-// File    : glm/gtx/vec1.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtx_vec1
+/// @file glm/gtx/vec1.hpp
+/// @date 2010-02-08 / 2011-06-07
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+///
+/// @defgroup gtx_vec1 GLM_GTX_vec1: Add vec1 types
+/// @ingroup gtx
+/// 
+/// @brief Add vec1, ivec1, uvec1 and bvec1 types.
+/// <glm/gtx/vec1.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtx_vec1
-#define glm_gtx_vec1
+#ifndef GLM_GTX_vec1
+#define GLM_GTX_vec1 GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -21,10 +45,7 @@
 #	pragma message("GLM: GLM_GTX_vec1 extension included")
 #endif
 
-namespace glm{
-namespace gtx{
-namespace vector1{ ///< GLM_GTX_vec1 extension: 1 component vector.
-namespace precision
+namespace glm
 {
 	//! 1 component vector of high precision floating-point numbers. 
 	//! There is no guarantee on the actual precision.
@@ -64,7 +85,6 @@ namespace precision
 	//! There is no guarantee on the actual precision.
 	//! From GLM_GTX_vec1 extension.
 	typedef detail::lowp_uvec1_t			lowp_uvec1;
-}//namespace precision
 
 	//////////////////////////
 	// vec1 definition
@@ -74,48 +94,44 @@ namespace precision
 	typedef detail::tvec1<bool>	bvec1;
 
 #if(defined(GLM_PRECISION_HIGHP_FLOAT))
-	typedef precision::highp_vec1			vec1;
+	typedef highp_vec1			vec1;
 #elif(defined(GLM_PRECISION_MEDIUMP_FLOAT))
-	typedef precision::mediump_vec1			vec1;
+	typedef mediump_vec1			vec1;
 #elif(defined(GLM_PRECISION_LOWP_FLOAT))
-	typedef precision::lowp_vec1			vec1;
+	typedef lowp_vec1			vec1;
 #else
 	//! 1 component vector of floating-point numbers.
 	//! From GLM_GTX_vec1 extension.
-	typedef precision::mediump_vec1			vec1;
+	typedef mediump_vec1			vec1;
 #endif//GLM_PRECISION
 
 #if(defined(GLM_PRECISION_HIGHP_INT))
-	typedef precision::highp_ivec1			ivec1;
+	typedef highp_ivec1			ivec1;
 #elif(defined(GLM_PRECISION_MEDIUMP_INT))
-	typedef precision::mediump_ivec1		ivec1;
+	typedef mediump_ivec1		ivec1;
 #elif(defined(GLM_PRECISION_LOWP_INT))
-	typedef precision::lowp_ivec1			ivec1;
+	typedef lowp_ivec1			ivec1;
 #else
 	//! 1 component vector of signed integer numbers. 
 	//! From GLM_GTX_vec1 extension.
-	typedef precision::mediump_ivec1		ivec1;
+	typedef mediump_ivec1		ivec1;
 #endif//GLM_PRECISION
 
 #if(defined(GLM_PRECISION_HIGHP_UINT))
-	typedef precision::highp_uvec1			uvec1;
+	typedef highp_uvec1			uvec1;
 #elif(defined(GLM_PRECISION_MEDIUMP_UINT))
-	typedef precision::mediump_uvec1		uvec1;
+	typedef mediump_uvec1		uvec1;
 #elif(defined(GLM_PRECISION_LOWP_UINT))
-	typedef precision::lowp_uvec1			uvec1;
+	typedef lowp_uvec1			uvec1;
 #else
 	//! 1 component vector of unsigned integer numbers. 
 	//! From GLM_GTX_vec1 extension.
-	typedef precision::mediump_uvec1		uvec1;
+	typedef mediump_uvec1		uvec1;
 #endif//GLM_PRECISION
 
-}// namespace vec1
-}// namespace gtx
 }// namespace glm
 
 #include "vec1.inl"
 
-namespace glm{using namespace gtx::vector1;}
-
-#endif//glm_gtx_vec1
+#endif//GLM_GTX_vec1
 

@@ -1,11 +1,30 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-01-27
-// Updated : 2010-02-11
-// Licence : This source is under MIT License
-// File    : glm/core/type_mat2x2.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref core	
+/// @file glm/core/type_mat2x2.hpp
+/// @date 2005-01-27 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef glm_core_type_mat2x2
 #define glm_core_type_mat2x2
@@ -29,11 +48,12 @@ namespace detail
 	template <typename T> struct tmat4x3;
 	template <typename T> struct tmat4x4;
 
-	//! \brief Template for 2 * 2 matrix of floating-point numbers.
-	//! \ingroup core_template
+	// @brief Template for 2 * 2 matrix of floating-point numbers.
+	// @ingroup core_template
 	template <typename T> 
 	struct tmat2x2
 	{
+                // Implementation detail
 		enum ctor{null};
 		typedef T value_type;
 		typedef std::size_t size_type;
@@ -44,16 +64,18 @@ namespace detail
 
 		typedef tmat2x2<T> type;
 		typedef tmat2x2<T> transpose_type;
-
+        
+		GLM_FUNC_DECL size_type length() const;
+        
 	public:
-		// Implementation detail
+                // Implementation detail
 		GLM_FUNC_DECL tmat2x2<T> _inverse() const;
 
 	private:
 		//////////////////////////////////////
-		// Data 
+                // Implementation detail
 		col_type value[2];
-
+        
 	public:
 		//////////////////////////////////////
 		// Constructors
@@ -77,7 +99,7 @@ namespace detail
 		template <typename U> 
 		GLM_FUNC_DECL explicit tmat2x2(
 			U const & x);
-			
+
 		template <typename U, typename V, typename M, typename N> 
 		GLM_FUNC_DECL explicit tmat2x2(
 			U const & x1, V const & y1, 
@@ -239,49 +261,52 @@ namespace detail
 		int);
 } //namespace detail
 
-namespace core{
-namespace type{
-namespace precision
-{
-	//! 2 columns of 2 components matrix of low precision floating-point numbers.
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// @addtogroup core_precision
+	/// @{
+
+	/// 2 columns of 2 components matrix of low precision floating-point numbers.
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<lowp_float>		lowp_mat2;
 
-	//! 2 columns of 2 components matrix of medium precision floating-point numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// 2 columns of 2 components matrix of medium precision floating-point numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<mediump_float>	mediump_mat2;
 
-	//! 2 columns of 2 components matrix of high precision floating-point numbers. 
-	//! There is no guarantee on the actual precision. 
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// 2 columns of 2 components matrix of high precision floating-point numbers. 
+	/// There is no guarantee on the actual precision. 
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<highp_float>	highp_mat2;
 
-	//! 2 columns of 2 components matrix of low precision floating-point numbers.
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// 2 columns of 2 components matrix of low precision floating-point numbers.
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<lowp_float>		lowp_mat2x2;
 
-	//! 2 columns of 2 components matrix of medium precision floating-point numbers. 
-	//! There is no guarantee on the actual precision.
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// 2 columns of 2 components matrix of medium precision floating-point numbers. 
+	/// There is no guarantee on the actual precision.
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<mediump_float>	mediump_mat2x2;
 
-	//! 2 columns of 2 components matrix of high precision floating-point numbers. 
-	//! There is no guarantee on the actual precision. 
-	//! From GLSL 1.30.8 specification, section 4.1.6 Matrices and section 4.5 Precision and Precision Qualifiers
-	//! \ingroup core_precision
+	/// 2 columns of 2 components matrix of high precision floating-point numbers. 
+	/// There is no guarantee on the actual precision. 
+	/// 
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.1.6 Matrices</a>
+	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 4.7.2 Precision Qualifier</a>
 	typedef detail::tmat2x2<highp_float>	highp_mat2x2;
 
-}//namespace precision
-}//namespace type
-}//namespace core
+	/// @}
 }//namespace glm
 
 #ifndef GLM_EXTERNAL_TEMPLATE

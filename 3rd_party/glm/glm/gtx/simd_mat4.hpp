@@ -1,21 +1,47 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-05-07
-// Updated : 2009-05-07
-// Licence : This source is under MIT License
-// File    : glm/gtx/simd_vec4.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-// - intrinsic
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtx_simd_vec4
+/// @file glm/gtx/simd_vec4.hpp
+/// @date 2009-05-07 / 2011-06-07
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+///
+/// @defgroup gtx_simd_mat4 GLM_GTX_simd_mat4: SIMD mat4 type and functions
+/// @ingroup gtx
+/// 
+/// @brief SIMD implementation of mat4 type.
+/// 
+/// <glm/gtx/simd_mat4.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtx_simd_mat4
-#define glm_gtx_simd_mat4
+#ifndef GLM_GTX_simd_mat4
+#define GLM_GTX_simd_mat4 GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
+
+#if(GLM_ARCH != GLM_ARCH_PURE)
 
 #if(GLM_ARCH & GLM_ARCH_SSE2)
 #	include "../core/intrinsic_matrix.hpp"
@@ -128,13 +154,10 @@ namespace detail
 	fmat4x4SIMD const operator++ (fmat4x4SIMD const & m, int);
 }//namespace detail
 
-namespace gtx{
-namespace simd_mat4 ///< GLM_GTX_simd_mat4 extension: SIMD implementation of mat4 type.
-{
 	typedef detail::fmat4x4SIMD simdMat4;
 
-	/// \addtogroup gtx_simd_mat4
-	///@{
+	/// @addtogroup gtx_simd_mat4
+	/// @{
 
 	//! Convert a simdMat4 to a mat4.
 	//! (From GLM_GTX_simd_mat4 extension)
@@ -172,12 +195,10 @@ namespace simd_mat4 ///< GLM_GTX_simd_mat4 extension: SIMD implementation of mat
 		detail::fmat4x4SIMD const & m);
 
 	/// @}
-}// namespace simd_mat4
-}// namespace gtx
 }// namespace glm
 
 #include "simd_mat4.inl"
 
-namespace glm{using namespace gtx::simd_mat4;}
+#endif//(GLM_ARCH != GLM_ARCH_PURE)
 
-#endif//glm_gtx_simd_mat4
+#endif//GLM_GTX_simd_mat4

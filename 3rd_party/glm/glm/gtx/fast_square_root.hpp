@@ -1,21 +1,44 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2006-01-04
-// Updated : 2008-10-07
-// Licence : This source is under MIT License
-// File    : glm/gtx/fast_square_root.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Note:
-// - Sqrt optimisation based on Newton's method, 
-// www.gamedev.net/community/forums/topic.asp?topic id=139956
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtx_fast_square_root
+/// @file glm/gtx/fast_square_root.hpp
+/// @date 2006-01-04 / 2011-06-07
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+///
+/// @defgroup gtx_fast_square_root GLM_GTX_fast_square_root: Fast square root functions
+/// @ingroup gtx
+/// 
+/// @brief Fast but less accurate implementations of square root based functions.
+/// - Sqrt optimisation based on Newton's method, 
+/// www.gamedev.net/community/forums/topic.asp?topic id=139956
+/// 
+/// <glm/gtx/fast_square_root.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtx_fast_square_root
-#define glm_gtx_fast_square_root
+#ifndef GLM_GTX_fast_square_root
+#define GLM_GTX_fast_square_root GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -24,11 +47,9 @@
 #	pragma message("GLM: GLM_GTX_fast_square_root extension included")
 #endif
 
-namespace glm{
-namespace gtx{
-namespace fast_square_root 	///< GLM_GTX_fast_square_root extension: Fast but less accurate implementations of square root based functions.
+namespace glm
 {
-	/// \addtogroup gtx_fast_square_root
+	/// @addtogroup gtx_fast_square_root
 	/// @{
 
 	//! Faster than the common sqrt function but less accurate.
@@ -57,12 +78,8 @@ namespace fast_square_root 	///< GLM_GTX_fast_square_root extension: Fast but le
 	genType fastNormalize(genType const & x);
 
 	/// @}
-}// namespace fast_square_root
-}// namespace gtx
 }// namespace glm
 
 #include "fast_square_root.inl"
 
-namespace glm{using namespace gtx::fast_square_root;}
-
-#endif//glm_gtx_fast_square_root
+#endif//GLM_GTX_fast_square_root

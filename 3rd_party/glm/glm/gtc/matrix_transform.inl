@@ -1,56 +1,73 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-04-29
-// Updated : 2009-04-29
-// Licence : This source is under MIT License
-// File    : glm/gtc/matrix_transform.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtc_matrix_transform
+/// @file glm/gtc/matrix_transform.inl
+/// @date 2009-04-29 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtc{
-namespace matrix_transform
+namespace glm
 {
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate
 	(
 		detail::tmat4x4<T> const & m,
 		detail::tvec3<T> const & v
 	)
-    {
+	{
 		detail::tmat4x4<T> Result(m);
 		Result[3] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3];
 		return Result;
-    }
+	}
 		
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> rotate
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> rotate
 	(
 		detail::tmat4x4<T> const & m,
 		T const & angle, 
 		detail::tvec3<T> const & v
 	)
-    {
-        T a = radians(angle);
-        T c = cos(a);
-        T s = sin(a);
+	{
+		T a = radians(angle);
+		T c = cos(a);
+		T s = sin(a);
 
-        detail::tvec3<T> axis = normalize(v);
+		detail::tvec3<T> axis = normalize(v);
 
 		detail::tvec3<T> temp = (T(1) - c) * axis;
 
-        detail::tmat4x4<T> Rotate(detail::tmat4x4<T>::null);
+		detail::tmat4x4<T> Rotate(detail::tmat4x4<T>::null);
 		Rotate[0][0] = c + temp[0] * axis[0];
-	    Rotate[0][1] = 0 + temp[0] * axis[1] + s * axis[2];
-	    Rotate[0][2] = 0 + temp[0] * axis[2] - s * axis[1];
+		Rotate[0][1] = 0 + temp[0] * axis[1] + s * axis[2];
+		Rotate[0][2] = 0 + temp[0] * axis[2] - s * axis[1];
 
-	    Rotate[1][0] = 0 + temp[1] * axis[0] - s * axis[2];
-	    Rotate[1][1] = c + temp[1] * axis[1];
-	    Rotate[1][2] = 0 + temp[1] * axis[2] + s * axis[0];
+		Rotate[1][0] = 0 + temp[1] * axis[0] - s * axis[2];
+		Rotate[1][1] = c + temp[1] * axis[1];
+		Rotate[1][2] = 0 + temp[1] * axis[2] + s * axis[0];
 
-	    Rotate[2][0] = 0 + temp[2] * axis[0] + s * axis[1];
-	    Rotate[2][1] = 0 + temp[2] * axis[1] - s * axis[0];
-	    Rotate[2][2] = c + temp[2] * axis[2];
+		Rotate[2][0] = 0 + temp[2] * axis[0] + s * axis[1];
+		Rotate[2][1] = 0 + temp[2] * axis[1] - s * axis[0];
+		Rotate[2][2] = c + temp[2] * axis[2];
 
 		detail::tmat4x4<T> Result(detail::tmat4x4<T>::null);
 		Result[0] = m[0] * Rotate[0][0] + m[1] * Rotate[0][1] + m[2] * Rotate[0][2];
@@ -58,33 +75,33 @@ namespace matrix_transform
 		Result[2] = m[0] * Rotate[2][0] + m[1] * Rotate[2][1] + m[2] * Rotate[2][2];
 		Result[3] = m[3];
 		return Result;
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale
 	(
 		detail::tmat4x4<T> const & m,
 		detail::tvec3<T> const & v
 	)
-    {
-        detail::tmat4x4<T> Result(detail::tmat4x4<T>::null);
+	{
+		detail::tmat4x4<T> Result(detail::tmat4x4<T>::null);
 		Result[0] = m[0] * v[0];
 		Result[1] = m[1] * v[1];
 		Result[2] = m[2] * v[2];
 		Result[3] = m[3];
 		return Result;
-    }
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate_slow
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> translate_slow
 	(
 		detail::tmat4x4<T> const & m,
 		detail::tvec3<T> const & v
 	)
-    {
-        detail::tmat4x4<T> Result(T(1));
-        Result[3] = detail::tvec4<T>(v, T(1));
-        return m * Result;
+	{
+		detail::tmat4x4<T> Result(T(1));
+		Result[3] = detail::tvec4<T>(v, T(1));
+		return m * Result;
 
 		//detail::tmat4x4<valType> Result(m);
 		Result[3] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3];
@@ -93,55 +110,55 @@ namespace matrix_transform
 		//Result[3][2] = m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2] + m[3][2];
 		//Result[3][3] = m[0][3] * v[0] + m[1][3] * v[1] + m[2][3] * v[2] + m[3][3];
 		//return Result;
-    }
+	}
 		
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> rotate_slow
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> rotate_slow
 	(
 		detail::tmat4x4<T> const & m,
 		T const & angle, 
 		detail::tvec3<T> const & v
 	)
-    {
-        T a = radians(angle);
-        T c = cos(a);
-        T s = sin(a);
-        detail::tmat4x4<T> Result;
+	{
+		T a = radians(angle);
+		T c = cos(a);
+		T s = sin(a);
+		detail::tmat4x4<T> Result;
 
-        detail::tvec3<T> axis = normalize(v);
+		detail::tvec3<T> axis = normalize(v);
 
-        Result[0][0] = c + (1 - c)      * axis.x     * axis.x;
-	    Result[0][1] = (1 - c) * axis.x * axis.y + s * axis.z;
-	    Result[0][2] = (1 - c) * axis.x * axis.z - s * axis.y;
-	    Result[0][3] = 0;
+		Result[0][0] = c + (1 - c)      * axis.x     * axis.x;
+		Result[0][1] = (1 - c) * axis.x * axis.y + s * axis.z;
+		Result[0][2] = (1 - c) * axis.x * axis.z - s * axis.y;
+		Result[0][3] = 0;
 
-	    Result[1][0] = (1 - c) * axis.y * axis.x - s * axis.z;
-	    Result[1][1] = c + (1 - c) * axis.y * axis.y;
-	    Result[1][2] = (1 - c) * axis.y * axis.z + s * axis.x;
-	    Result[1][3] = 0;
+		Result[1][0] = (1 - c) * axis.y * axis.x - s * axis.z;
+		Result[1][1] = c + (1 - c) * axis.y * axis.y;
+		Result[1][2] = (1 - c) * axis.y * axis.z + s * axis.x;
+		Result[1][3] = 0;
 
-	    Result[2][0] = (1 - c) * axis.z * axis.x + s * axis.y;
-	    Result[2][1] = (1 - c) * axis.z * axis.y - s * axis.x;
-	    Result[2][2] = c + (1 - c) * axis.z * axis.z;
-	    Result[2][3] = 0;
+		Result[2][0] = (1 - c) * axis.z * axis.x + s * axis.y;
+		Result[2][1] = (1 - c) * axis.z * axis.y - s * axis.x;
+		Result[2][2] = c + (1 - c) * axis.z * axis.z;
+		Result[2][3] = 0;
 
-        Result[3] = detail::tvec4<T>(0, 0, 0, 1);
-        return m * Result;
-    }
+		Result[3] = detail::tvec4<T>(0, 0, 0, 1);
+		return m * Result;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale_slow
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> scale_slow
 	(
 		detail::tmat4x4<T> const & m,
 		detail::tvec3<T> const & v
 	)
-    {
-        detail::tmat4x4<T> Result(T(1));
-        Result[0][0] = v.x;
-        Result[1][1] = v.y;
-        Result[2][2] = v.z;
-        return m * Result;
-    }
+	{
+		detail::tmat4x4<T> Result(T(1));
+		Result[0][0] = v.x;
+		Result[1][1] = v.y;
+		Result[2][2] = v.z;
+		return m * Result;
+	}
 
 	template <typename valType> 
 	GLM_FUNC_QUALIFIER detail::tmat4x4<valType> ortho
@@ -243,9 +260,9 @@ namespace matrix_transform
 		detail::tmat4x4<valType> Result(valType(0));
 		Result[0][0] = w;
 		Result[1][1] = h;
-		Result[2][2] = (zFar + zNear) / (zFar - zNear);
-		Result[2][3] = valType(1);
-		Result[3][2] = -(valType(2) * zFar * zNear) / (zFar - zNear);
+		Result[2][2] = - (zFar + zNear) / (zFar - zNear);
+		Result[2][3] = - valType(1);
+		Result[3][2] = - (valType(2) * zFar * zNear) / (zFar - zNear);
 		return Result;
 	}
 
@@ -362,36 +379,32 @@ namespace matrix_transform
 		return scale(Result, detail::tvec3<T>(T(viewport[2]) / delta.x, T(viewport[3]) / delta.y, T(1)));
 	}
 
-    template <typename T> 
+	template <typename T> 
 	GLM_FUNC_QUALIFIER detail::tmat4x4<T> lookAt
 	(
 		detail::tvec3<T> const & eye,
 		detail::tvec3<T> const & center,
 		detail::tvec3<T> const & up
 	)
-    {
-        detail::tvec3<T> f = normalize(center - eye);
-        detail::tvec3<T> u = normalize(up);
-        detail::tvec3<T> s = normalize(cross(f, u));
-        u = cross(s, f);
+	{
+		detail::tvec3<T> f = normalize(center - eye);
+		detail::tvec3<T> u = normalize(up);
+		detail::tvec3<T> s = normalize(cross(f, u));
+		u = cross(s, f);
 
-        detail::tmat4x4<T> Result(1);
-        Result[0][0] = s.x;
-        Result[1][0] = s.y;
-        Result[2][0] = s.z;
-        Result[0][1] = u.x;
-        Result[1][1] = u.y;
-        Result[2][1] = u.z;
-        Result[0][2] =-f.x;
-        Result[1][2] =-f.y;
-        Result[2][2] =-f.z;
-    /*  Test this instead of translate3D
-        Result[3][0] =-dot(s, eye);
-        Result[3][1] =-dot(y, eye);
-        Result[3][2] = dot(f, eye);
-    */  
-		return gtc::matrix_transform::translate(Result, -eye);
-    }
-}//namespace matrix_transform
-}//namespace gtc
+		detail::tmat4x4<T> Result(1);
+		Result[0][0] = s.x;
+		Result[1][0] = s.y;
+		Result[2][0] = s.z;
+		Result[0][1] = u.x;
+		Result[1][1] = u.y;
+		Result[2][1] = u.z;
+		Result[0][2] =-f.x;
+		Result[1][2] =-f.y;
+		Result[2][2] =-f.z;
+		Result[3][0] =-dot(s, eye);
+		Result[3][1] =-dot(u, eye);
+		Result[3][2] = dot(f, eye);
+		return Result;
+	}
 }//namespace glm

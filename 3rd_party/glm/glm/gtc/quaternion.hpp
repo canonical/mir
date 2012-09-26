@@ -1,22 +1,43 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-05-21
-// Updated : 2010-02-04
-// Licence : This source is under MIT License
-// File    : glm/gtc/quaternion.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-// - GLM_GTC_half_float
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// ToDo:
-// - Study constructors with angles and axis
-// - Study constructors with vec3 that are the imaginary component of quaternion
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtc_quaternion
+/// @file glm/gtc/quaternion.hpp
+/// @date 2009-05-21 / 2011-06-05
+/// @author Christophe Riccio
+///
+/// @see core (dependence)
+/// @see gtc_half_float (dependence)
+/// 
+/// @defgroup gtc_quaternion GLM_GTC_quaternion: Quaternion types and functions
+/// @ingroup gtc
+/// 
+/// @brief Defines a templated quaternion type and several quaternion operations.
+/// 
+/// <glm/gtc/quaternion.hpp> need to be included to use these functionalities.
+///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef glm_gtc_quaternion
-#define glm_gtc_quaternion
+#ifndef GLM_GTC_quaternion
+#define GLM_GTC_quaternion GLM_VERSION
 
 // Dependency:
 #include "../glm.hpp"
@@ -29,22 +50,27 @@
 namespace glm{
 namespace detail
 {
-	//! \brief Template for quaternion. 
-	//! From GLM_GTC_quaternion extension.
-	/// \ingroup gtc_quaternion
+	/// @brief Template for quaternion. 
+	/// @see gtc_quaternion
+	/// @ingroup gtc_quaternion
 	template <typename T> 
 	struct tquat// : public genType<T, tquat>
 	{
-		typedef T value_type;
+        enum ctor{null};
+        
+        typedef T value_type;
+        typedef std::size_t size_type;
 
 	public:
 		value_type x, y, z, w;
+        
+        GLM_FUNC_DECL size_type length() const;
 
 		// Constructors
 		tquat();
 		explicit tquat(
 			value_type const & s, 
-			tvec3<T> const & v);
+			glm::detail::tvec3<T> const & v);
 		explicit tquat(
 			value_type const & w, 
 			value_type const & x, 
@@ -121,125 +147,136 @@ namespace detail
 
 } //namespace detail
 
-namespace gtc{
-namespace quaternion ///< GLM_GTC_quaternion extension: Quaternion types and functions
-{
 	/// @addtogroup gtc_quaternion
 	/// @{
 
-	//! Returns the length of the quaternion. 
-	//! From GLM_GTC_quaternion extension.
+	/// Returns the length of the quaternion. 
+	/// 
+	/// @see gtc_quaternion
     template <typename T> 
-	typename detail::tquat<T>::value_type length(
+    T length(
 		detail::tquat<T> const & q);
 
-    //! Returns the normalized quaternion. 
-	//! From GLM_GTC_quaternion extension.
+    /// Returns the normalized quaternion. 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tquat<T> normalize(
 		detail::tquat<T> const & q);
 		
-    //! Returns dot product of q1 and q2, i.e., q1[0] * q2[0] + q1[1] * q2[1] + ... 
-	//! From GLM_GTC_quaternion extension.
+    /// Returns dot product of q1 and q2, i.e., q1[0] * q2[0] + q1[1] * q2[1] + ... 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
-	typename detail::tquat<T>::value_type dot(
+	T dot(
 		detail::tquat<T> const & q1, 
 		detail::tquat<T> const & q2);
 
-    //! Returns the cross product of q1 and q2. 
-	//! From GLM_GTC_quaternion extension.
-	template <typename T> 
-	GLM_DEPRECATED detail::tquat<T> cross(
-		detail::tquat<T> const & q1, 
-		detail::tquat<T> const & q2);
-		
-	//! Returns a SLERP interpolated quaternion of x and y according a. 
-	//! From GLM_GTC_quaternion extension.
+	/// Returns a SLERP interpolated quaternion of x and y according a. 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tquat<T> mix(
 		detail::tquat<T> const & x, 
 		detail::tquat<T> const & y, 
 		T const & a);
 		
-	//! Returns the q conjugate. 
-	//! From GLM_GTC_quaternion extension.
+	/// Returns the q conjugate. 
+	/// 
+	/// @see gtc_quaternion
     template <typename T> 
 	detail::tquat<T> conjugate(
 		detail::tquat<T> const & q);
 
-	//! Returns the q inverse. 
-	//! From GLM_GTC_quaternion extension.
+	/// Returns the q inverse. 
+	/// 
+	/// @see gtc_quaternion
     template <typename T> 
 	detail::tquat<T> inverse(
 		detail::tquat<T> const & q);
 
-	//! Rotates a quaternion from an vector of 3 components axis and an angle expressed in degrees.
-	//! From GLM_GTC_quaternion extension.
+	/// Rotates a quaternion from an vector of 3 components axis and an angle expressed in degrees.
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tquat<T> rotate(
 		detail::tquat<T> const & q, 
 		typename detail::tquat<T>::value_type const & angle, 
 		detail::tvec3<T> const & v);
 
-	//! Converts a quaternion to a 3 * 3 matrix. 
-	//! From GLM_GTC_quaternion extension.
+	/// Returns euler angles, yitch as x, yaw as y, roll as z. 
+	/// 
+	/// @see gtc_quaternion
+	template <typename T> 
+	detail::tvec3<T> eulerAngles(
+        detail::tquat<T> const & x);
+    
+	/// Converts a quaternion to a 3 * 3 matrix. 
+	/// 
+	/// @see gtc_quaternion
     template <typename T> 
 	detail::tmat3x3<T> mat3_cast(
 		detail::tquat<T> const & x);
 
-	//! Converts a quaternion to a 4 * 4 matrix. 
-	//! From GLM_GTC_quaternion extension.
+	/// Converts a quaternion to a 4 * 4 matrix. 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tmat4x4<T> mat4_cast(
 		detail::tquat<T> const & x);
 
-	//! Converts a 3 * 3 matrix to a quaternion. 
-	//! From GLM_GTC_quaternion extension.
+	/// Converts a 3 * 3 matrix to a quaternion. 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tquat<T> quat_cast(
 		detail::tmat3x3<T> const & x);
 
-	//! Converts a 4 * 4 matrix to a quaternion. 
-	//! From GLM_GTC_quaternion extension.
+	/// Converts a 4 * 4 matrix to a quaternion. 
+	/// 
+	/// @see gtc_quaternion
 	template <typename T> 
 	detail::tquat<T> quat_cast(
 		detail::tmat4x4<T> const & x);
 
-	//! Quaternion of floating-point numbers. 
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of floating-point numbers. 
+	/// 
+	/// @see gtc_quaternion
     typedef detail::tquat<float> quat;
 
-	//! Quaternion of half-precision floating-point numbers.
-	//! From GLM_GTC_quaternion extension.
-	typedef detail::tquat<detail::thalf>	hquat;
+	/// Quaternion of half-precision floating-point numbers.
+	/// 
+	/// @see gtc_quaternion
+	typedef detail::tquat<detail::half>	hquat;
 
-	//! Quaternion of single-precision floating-point numbers. 
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of single-precision floating-point numbers. 
+	/// 
+	/// @see gtc_quaternion
 	typedef detail::tquat<float>	fquat;
 
-	//! Quaternion of double-precision floating-point numbers. 
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of double-precision floating-point numbers. 
+	/// 
+	/// @see gtc_quaternion
 	typedef detail::tquat<double>	dquat;
 
-	//! Quaternion of low precision floating-point numbers.
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of low precision floating-point numbers.
+	/// 
+	/// @see gtc_quaternion
 	typedef detail::tquat<lowp_float>		lowp_quat;
 
-	//! Quaternion of medium precision floating-point numbers. 
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of medium precision floating-point numbers. 
+	/// 
+	/// @see gtc_quaternion
 	typedef detail::tquat<mediump_float>	mediump_quat;
 
-	//! Quaternion of high precision floating-point numbers. 
-	//! From GLM_GTC_quaternion extension.
+	/// Quaternion of high precision floating-point numbers. 
+	/// 
+	/// @see gtc_quaternion
 	typedef detail::tquat<highp_float>		highp_quat;
-	/// @}
 
-} //namespace quaternion
-} //namespace gtc
+	/// @}
 } //namespace glm
 
 #include "quaternion.inl"
 
-namespace glm{using namespace gtc::quaternion;}
-
-#endif//glm_gtc_quaternion
+#endif//GLM_GTC_quaternion

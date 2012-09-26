@@ -1,15 +1,32 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-12-21
-// Updated : 2010-12-13
-// Licence : This source is under MIT License
-// File    : glm/gtc/matrix_inverse.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @ref gtc_matrix_inverse
+/// @file glm/gtc/matrix_inverse.inl
+/// @date 2005-12-21 / 2011-06-15
+/// @author Christophe Riccio
+///////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtc{
-namespace matrix_inverse
+namespace glm
 {
 	template <typename T> 
 	GLM_FUNC_QUALIFIER detail::tmat3x3<T> affineInverse
@@ -40,8 +57,10 @@ namespace matrix_inverse
 	}
 
 	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat2x2<valType> inverseTranspose(
-		detail::tmat2x2<valType> const & m)
+	GLM_FUNC_QUALIFIER detail::tmat2x2<valType> inverseTranspose
+	(
+		detail::tmat2x2<valType> const & m
+	)
 	{
 		valType Determinant = m[0][0] * m[1][1] - m[1][0] * m[0][1];
 
@@ -55,8 +74,10 @@ namespace matrix_inverse
 	}
 
 	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat3x3<valType> inverseTranspose(
-		detail::tmat3x3<valType> const & m)
+	GLM_FUNC_QUALIFIER detail::tmat3x3<valType> inverseTranspose
+	(
+		detail::tmat3x3<valType> const & m
+	)
 	{
 		valType Determinant = 
 			+ m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
@@ -79,8 +100,10 @@ namespace matrix_inverse
 	}
 
 	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat4x4<valType> inverseTranspose(
-		detail::tmat4x4<valType> const & m)
+	GLM_FUNC_QUALIFIER detail::tmat4x4<valType> inverseTranspose
+	(
+		detail::tmat4x4<valType> const & m
+	)
 	{
 		valType SubFactor00 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
 		valType SubFactor01 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
@@ -133,7 +156,4 @@ namespace matrix_inverse
     
 		return Inverse;
 	}
-
-}//namespace matrix_inverse
-}//namespace gtc
 }//namespace glm

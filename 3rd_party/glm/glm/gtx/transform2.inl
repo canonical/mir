@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
+// OpenGL Mathematics Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Created : 2005-02-28
 // Updated : 2005-04-23
@@ -7,129 +7,127 @@
 // File : glm/gtx/transform2.inl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace glm{
-namespace gtx{
-namespace transform2
+namespace glm
 {
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat3x3<T> shearX2D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat3x3<T> shearX2D(
 		const detail::tmat3x3<T>& m, 
 		T s)
-    {
-        detail::tmat3x3<T> r(1);
-        r[0][1] = s;
-        return m * r;
-    }
+	{
+		detail::tmat3x3<T> r(1);
+		r[0][1] = s;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat3x3<T> shearY2D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat3x3<T> shearY2D(
 		const detail::tmat3x3<T>& m, 
 		T s)
-    {
-        detail::tmat3x3<T> r(1);
-        r[1][0] = s;
-        return m * r;
-    }
+	{
+		detail::tmat3x3<T> r(1);
+		r[1][0] = s;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> shearX3D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> shearX3D(
 		const detail::tmat4x4<T>& m, 
 		T s, 
 		T t)
-    {
-        detail::tmat4x4<T> r(1);
-        r[1][0] = s;
-        r[2][0] = t;
-        return m * r;
-    }
+	{
+		detail::tmat4x4<T> r(1);
+		r[1][0] = s;
+		r[2][0] = t;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> shearY3D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> shearY3D(
 		const detail::tmat4x4<T>& m, 
 		T s, 
 		T t)
-    {
-        detail::tmat4x4<T> r(1);
-        r[0][1] = s;
-        r[2][1] = t;
-        return m * r;
-    }
+	{
+		detail::tmat4x4<T> r(1);
+		r[0][1] = s;
+		r[2][1] = t;
+		return m * r;
+	}
 
-    template <typename T>     
+	template <typename T>     
 	GLM_FUNC_QUALIFIER detail::tmat4x4<T> shearZ3D(
 		const detail::tmat4x4<T>& m, 
 		T s, 
 		T t)
-    {
-        detail::tmat4x4<T> r(1);
-        r[0][2] = s;
-        r[1][2] = t;
-        return m * r;
-    }
+	{
+		detail::tmat4x4<T> r(1);
+		r[0][2] = s;
+		r[1][2] = t;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat3x3<T> reflect2D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat3x3<T> reflect2D(
 		const detail::tmat3x3<T>& m, 
 		const detail::tvec3<T>& normal)
-    {
-        detail::tmat3x3<T> r(1);
-        r[0][0] = 1 - 2 * normal.x * normal.x;
-        r[0][1] = -2 * normal.x * normal.y;
-        r[1][0] = -2 * normal.x * normal.y;
-        r[1][1] = 1 - 2 * normal.y * normal.y;
-        return m * r;
-    }
+	{
+		detail::tmat3x3<T> r(1);
+		r[0][0] = 1 - 2 * normal.x * normal.x;
+		r[0][1] = -2 * normal.x * normal.y;
+		r[1][0] = -2 * normal.x * normal.y;
+		r[1][1] = 1 - 2 * normal.y * normal.y;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> reflect3D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> reflect3D(
 		const detail::tmat4x4<T>& m, 
 		const detail::tvec3<T>& normal)
-    {
-        detail::tmat4x4<T> r(1);
-        r[0][0] = 1 - 2 * normal.x * normal.x;
-        r[0][1] = -2 * normal.x * normal.y;
-        r[0][2] = -2 * normal.x * normal.z;
+	{
+		detail::tmat4x4<T> r(1);
+		r[0][0] = 1 - 2 * normal.x * normal.x;
+		r[0][1] = -2 * normal.x * normal.y;
+		r[0][2] = -2 * normal.x * normal.z;
 
-        r[1][0] = -2 * normal.x * normal.y;
-        r[1][1] = 1 - 2 * normal.y * normal.y;
-        r[1][2] = -2 * normal.y * normal.z;
+		r[1][0] = -2 * normal.x * normal.y;
+		r[1][1] = 1 - 2 * normal.y * normal.y;
+		r[1][2] = -2 * normal.y * normal.z;
 
-        r[2][0] = -2 * normal.x * normal.z;
-        r[2][1] = -2 * normal.y * normal.z;
-        r[2][2] = 1 - 2 * normal.z * normal.z;
-        return m * r;
-    }
+		r[2][0] = -2 * normal.x * normal.z;
+		r[2][1] = -2 * normal.y * normal.z;
+		r[2][2] = 1 - 2 * normal.z * normal.z;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat3x3<T> proj2D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat3x3<T> proj2D(
 		const detail::tmat3x3<T>& m, 
 		const detail::tvec3<T>& normal)
-    {
-        detail::tmat3x3<T> r(1);
-        r[0][0] = 1 - normal.x * normal.x;
-        r[0][1] = - normal.x * normal.y;
-        r[1][0] = - normal.x * normal.y;
-        r[1][1] = 1 - normal.y * normal.y;
-        return m * r;
-    }
+	{
+		detail::tmat3x3<T> r(1);
+		r[0][0] = 1 - normal.x * normal.x;
+		r[0][1] = - normal.x * normal.y;
+		r[1][0] = - normal.x * normal.y;
+		r[1][1] = 1 - normal.y * normal.y;
+		return m * r;
+	}
 
-    template <typename T> 
-    GLM_FUNC_QUALIFIER detail::tmat4x4<T> proj3D(
+	template <typename T> 
+	GLM_FUNC_QUALIFIER detail::tmat4x4<T> proj3D(
 		const detail::tmat4x4<T>& m, 
 		const detail::tvec3<T>& normal)
-    {
-        detail::tmat4x4<T> r(1);
-        r[0][0] = 1 - normal.x * normal.x;
-        r[0][1] = - normal.x * normal.y;
-        r[0][2] = - normal.x * normal.z;
-        r[1][0] = - normal.x * normal.y;
-        r[1][1] = 1 - normal.y * normal.y;
-        r[1][2] = - normal.y * normal.z;
-        r[2][0] = - normal.x * normal.z;
-        r[2][1] = - normal.y * normal.z;
-        r[2][2] = 1 - normal.z * normal.z;
-        return m * r;
-    }
+	{
+		detail::tmat4x4<T> r(1);
+		r[0][0] = 1 - normal.x * normal.x;
+		r[0][1] = - normal.x * normal.y;
+		r[0][2] = - normal.x * normal.z;
+		r[1][0] = - normal.x * normal.y;
+		r[1][1] = 1 - normal.y * normal.y;
+		r[1][2] = - normal.y * normal.z;
+		r[2][0] = - normal.x * normal.z;
+		r[2][1] = - normal.y * normal.z;
+		r[2][2] = 1 - normal.z * normal.z;
+		return m * r;
+	}
 
 	template <typename T> 
 	GLM_FUNC_QUALIFIER detail::tmat4x4<T> scaleBias(
@@ -152,8 +150,5 @@ namespace transform2
 	{
 		return m * scaleBias(scale, bias);
 	}
-
-}//namespace transform2
-}//namespace gtx
 }//namespace glm
 

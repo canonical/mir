@@ -1,11 +1,59 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2011 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-05-01
-// Updated : 2010-12-13
-// Licence : This source is under MIT License
-// File    : glm/ext.hpp
-///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+/// OpenGL Mathematics (glm.g-truc.net)
+///
+/// Copyright (c) 2005 - 2012 G-Truc Creation (www.g-truc.net)
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+/// 
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+/// 
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+///
+/// @file glm/glm.hpp
+/// @date 2009-05-01 / 2011-05-16
+/// @author Christophe Riccio
+///
+/// @ref core (Dependence)
+/// 
+/// @defgroup gtc GTC Extensions (Stable)
+///
+/// @brief Functions and types that the GLSL specification doesn't define, but useful to have for a C++ program.
+/// 
+/// GTC extensions aim to be stable. 
+/// 
+/// Even if it's highly unrecommended, it's possible to include all the extensions at once by
+/// including <glm/ext.hpp>. Otherwise, each extension needs to be included  a specific file.
+/// 
+/// @defgroup gtx GTX Extensions (Experimental)
+/// 
+/// @brief Functions and types that the GLSL specification doesn't define, but 
+/// useful to have for a C++ program.
+/// 
+/// Experimental extensions are useful functions and types, but the development of
+/// their API and functionality is not necessarily stable. They can change 
+/// substantially between versions. Backwards compatibility is not much of an issue
+/// for them.
+/// 
+/// Even if it's highly unrecommended, it's possible to include all the extensions 
+/// at once by including <glm/ext.hpp>. Otherwise, each extension needs to be 
+/// included  a specific file.
+/// 
+/// @defgroup virtrev VIRTREV Extensions
+/// 
+/// @brief Extensions develop and maintain by Mathieu [matrem] Roumillac
+/// (http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showprofile&User=22660).
+///////////////////////////////////////////////////////////////////////////////////
 
 #ifndef glm_ext
 #define glm_ext
@@ -76,7 +124,6 @@
 #include "./gtx/transform.hpp"
 #include "./gtx/transform2.hpp"
 #include "./gtx/ulp.hpp"
-#include "./gtx/unsigned_int.hpp"
 #include "./gtx/vec1.hpp"
 #include "./gtx/vector_access.hpp"
 #include "./gtx/vector_angle.hpp"
