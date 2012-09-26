@@ -39,6 +39,7 @@ namespace gp = google::protobuf;
     using ::mir::std::this_thread::yield;
 #else
     using namespace std;
+    using std::this_thread::yield;
 #endif
 
 class MirWaitHandle
