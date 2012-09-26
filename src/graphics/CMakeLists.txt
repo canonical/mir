@@ -16,6 +16,8 @@
 
 # By default, build for LLVM
 
+include_directories(${GLESv2_INCLUDE_DIRS})
+
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(android/)
 endif()
@@ -23,3 +25,15 @@ endif()
 if (MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory(gbm/)
 endif()
+
+add_library(
+  mirgraphics STATIC
+
+  gl_renderer.cpp
+)
+
+target_link_libraries(
+  mirgraphics
+
+  ${GLESv2_LIBRARIES}
+)
