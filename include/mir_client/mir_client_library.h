@@ -24,10 +24,10 @@ extern "C" {
 #endif
 
 /* This header defines the MIR client library's C API.
-
-   This API comprises a suite of free functions. The functions are asynchronous:
-   callers must pass in a callback function to determine when the call completes,
-   and should check any object returned by the callback is valid before use.
+ *
+ * This API comprises a suite of free functions. The functions are asynchronous:
+ * callers must pass in a callback function to determine when the call completes,
+ * and should check any object returned by the callback is valid before use.
  */
 
 /* Display server connection API */
@@ -61,9 +61,10 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-/* Request a connection to the MIR server.
-   The supplied callback is called when the connection is established, or fails.
-*/
+/*
+ * Request a connection to the MIR server.
+ * The supplied callback is called when the connection is established, or fails.
+ */
 MirWaitHandle* mir_connect(
     char const *socket_file,
     char const *app_name,
@@ -73,12 +74,13 @@ MirWaitHandle* mir_connect(
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_connection_is_valid(MirConnection *connection);
 
-/* Returns a text description of any error resulting in an invalid connection,
-   or the empty string "" if the connection is valid. */
+/*
+ * Returns a text description of any error resulting in an invalid connection,
+ * or the empty string "" if the connection is valid.
+ */
 char const *mir_connection_get_error_message(MirConnection *connection);
 
-/* Release a connection to the MIR server.
- */
+/* Release a connection to the MIR server. */
 void mir_connection_release(MirConnection *connection);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
@@ -117,10 +119,8 @@ MirWaitHandle* mir_surface_release(
 
 void mir_wait_for(MirWaitHandle* wait_handle);
 
-
 /* Return the id of the surface. (Only useful for debug output.) */
 int mir_debug_surface_id(MirSurface *surface);
-
 
 #ifdef __cplusplus
 }
