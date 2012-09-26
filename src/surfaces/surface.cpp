@@ -79,6 +79,11 @@ glm::mat4 ms::Surface::transformation() const
     return transformation_matrix;
 }
 
+float ms::Surface::alpha() const
+{
+    return 1.0f;
+}
+
 //note: not sure the surface should be aware of pixel format. might be something that the 
 //texture (which goes to compositor should be aware of though
 //todo: kdub remove 

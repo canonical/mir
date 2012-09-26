@@ -41,6 +41,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual std::shared_ptr<Texture> texture() const = 0;
     virtual glm::mat4 transformation() const = 0;
+    virtual float alpha() const = 0;
 
 protected:
     Renderable() = default;

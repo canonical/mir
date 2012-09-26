@@ -195,3 +195,14 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
 
     EXPECT_EQ(texture.get(), ret_texture.get()); 
 }
+
+TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+
+    auto ret_alpha = surf.alpha();
+
+    EXPECT_EQ(1.0f, ret_alpha); 
+}
