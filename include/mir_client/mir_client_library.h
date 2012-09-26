@@ -32,6 +32,7 @@ extern "C" {
 
 /* Display server connection API */
 typedef struct MirConnection MirConnection;
+typedef struct MirWaitHandle MirWaitHandle;
 
 typedef void (* mir_connected_callback)(MirConnection * connection, void * client_context);
 typedef void (* mir_disconnected_callback)(void * client_context);
@@ -39,7 +40,7 @@ typedef void (* mir_disconnected_callback)(void * client_context);
 /* Request a connection to the MIR server.
    The supplied callback is called when the connection is established, or fails.
 */
-void mir_connect(char const* socket_file, char const* app_name, mir_connected_callback callback, void * client_context);
+MirWaitHandle* mir_connect(char const* socket_file, char const* app_name, mir_connected_callback callback, void * client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_connection_is_valid(MirConnection * connection);
@@ -80,7 +81,7 @@ typedef struct MirSurface MirSurface;
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
-void mir_surface_create(MirConnection * connection,
+MirWaitHandle* mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * surface_parameters,
                         mir_surface_lifecycle_callback callback,
                         void * client_context);
@@ -99,10 +100,12 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
 void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package);
 
 /* Advance a surface's buffer. */
-void mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context);
+MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context);
 
 /* Release the supplied surface and any associated buffer. */
-void mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
+MirWaitHandle* mir_surface_release(MirSurface * surface, mir_surface_lifecycle_callback callback, void * context);
+
+void mir_wait_for(MirWaitHandle* wait_handle);
 
 
 /* Return the id of the surface. (Only useful for debug output.) */
