@@ -21,6 +21,7 @@
 #include <mir/graphics/android/android_buffer_allocator.h>
 #include <mir/graphics/android/android_display.h>
 #include <mir/graphics/android/android_framebuffer_window.h>
+#include <mir/graphics/platform_ipc_package.h>
 
 #include <ui/FramebufferNativeWindow.h>
 
@@ -44,6 +45,11 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);
+}
+
+std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
+{
+    return std::make_shared<mg::PlatformIPCPackage>();
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform()

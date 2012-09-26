@@ -13,31 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#ifndef MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_
+#define MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_
 
-#include "mir/graphics/platform.h"
+#include <vector>
+#include <cinttypes>
 
 namespace mir
 {
 namespace graphics
 {
-namespace android
-{
 
-class AndroidPlatform : public Platform
+struct PlatformIPCPackage
 {
-public:
-    /* From Platform */
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
-    std::shared_ptr<Display> create_display();
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::vector<int32_t> ipc_data;
+    std::vector<int32_t> ipc_fds;
 };
 
 }
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */
+
+#endif /* MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_ */
+

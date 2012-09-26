@@ -35,6 +35,7 @@ namespace graphics
 {
 
 class Display;
+class PlatformIPCPackage;
 
 class Platform
 {
@@ -45,6 +46,7 @@ public:
 
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator() = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
+    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 };
 
 // Create and return a new graphics platform.
