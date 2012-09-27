@@ -25,12 +25,9 @@
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
-
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -47,30 +44,6 @@ class StubRenderer : public mg::Renderer
 public:
     virtual void render(mg::Renderable&)
     {
-    }
-};
-
-class StubBuffer : public mc::Buffer
-{
-    geom::Size size() const { return geom::Size(); }
-
-    geom::Stride stride() const { return geom::Stride(); }
-
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
-
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
-
-    void bind_to_texture() {}
-
-};
-
-// TODO replace with a real buffer allocator appropriate to the platform default
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
- public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
-    {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
 };
 
@@ -114,9 +87,8 @@ socket_file(socket_file)
 
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
-//    static std::shared_ptr<mg::Platform> platform = mg::create_platform();
-//    return platform->create_buffer_allocator();
-    return std::make_shared<StubGraphicBufferAllocator>();
+    static std::shared_ptr<mg::Platform> platform = mg::create_platform();
+    return platform->create_buffer_allocator();
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
