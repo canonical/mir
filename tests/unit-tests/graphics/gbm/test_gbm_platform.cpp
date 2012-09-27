@@ -18,15 +18,12 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mock_drm.h"
 #include "mock_gbm.h"
 
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace geom = mir::geometry;
 
 class GBMGraphicsPlatform : public ::testing::Test
 {
