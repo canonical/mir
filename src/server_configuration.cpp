@@ -111,11 +111,23 @@ socket_file(socket_file)
 {
 }
 
+std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_platform()
+{
+    if (!graphics_platform)
+    {
+        // TODO I doubt we need the extra level of indirection provided by
+        // mg::create_platform() - we just need to move the implementation
+        // of DefaultServerConfiguration::make_graphics_platform() to the
+        // graphics libraries.
+        graphics_platform = mg::create_platform();
+    }
+
+    return graphics_platform;
+}
 
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
-//    static std::shared_ptr<mg::Platform> platform = mg::create_platform();
-//    return platform->create_buffer_allocator();
+//    return make_graphics_platform()->create_buffer_allocator();
     return std::make_shared<StubGraphicBufferAllocator>();
 }
 
