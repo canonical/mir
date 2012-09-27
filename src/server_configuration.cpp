@@ -78,17 +78,20 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
-        surface_organiser(surface_organiser)
+        std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<mg::Platform> const& graphics_platform) :
+        surface_organiser(surface_organiser),
+        graphics_platform(graphics_platform)
     {
     }
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mg::Platform> const graphics_platform;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(surface_organiser);
+        return std::make_shared<mf::ApplicationProxy>(surface_organiser, graphics_platform);
     }
 };
 
@@ -148,7 +151,7 @@ mir::DefaultServerConfiguration::make_ipc_factory(
 {
     auto surface_organiser = std::make_shared<Surfaces>(
         buffer_allocation_strategy);
-    return std::make_shared<DefaultIpcFactory>(surface_organiser);
+    return std::make_shared<DefaultIpcFactory>(surface_organiser, make_graphics_platform());
 }
 
 std::shared_ptr<mf::Communicator>

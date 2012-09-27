@@ -25,8 +25,11 @@
 
 
 mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
-    surface_organiser(surface_organiser), next_surface_id(0)
+    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<graphics::Platform> const & graphics_platform) :
+    surface_organiser(surface_organiser),
+    graphics_platform(graphics_platform),
+    next_surface_id(0)
 {
 }
 
