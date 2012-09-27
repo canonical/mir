@@ -467,6 +467,8 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     launch_client_process(client_creates_surfaces);
 }
 
+namespace mir
+{
 namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
@@ -528,6 +530,8 @@ struct BufferCounterConfig : TestingServerConfiguration
 std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
 std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
 }
+}
+using mir::BufferCounterConfig;
 
 TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 {
