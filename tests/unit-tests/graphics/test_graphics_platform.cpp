@@ -77,3 +77,11 @@ TEST_F(GraphicsPlatform, buffer_creation)
     EXPECT_EQ(buffer->pixel_format(), pf );
  
 }
+
+TEST_F(GraphicsPlatform, get_ipc_package)
+{
+    auto platform = mg::create_platform();
+    auto pkg = platform->get_ipc_package();
+
+    ASSERT_TRUE(pkg.get() != NULL); 
+}

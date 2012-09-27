@@ -16,35 +16,25 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_
+#define MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/gbm/gbm_display_helpers.h"
+#include <vector>
+#include <cinttypes>
 
 namespace mir
 {
 namespace graphics
 {
-namespace gbm
+
+struct PlatformIPCPackage
 {
-
-class GBMPlatform : public Platform, public std::enable_shared_from_this<GBMPlatform>
-{
-public:
-    GBMPlatform();
-
-    /* From Platform */
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
-    std::shared_ptr<Display> create_display();
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
-
-    helpers::DRMHelper drm;
-    helpers::GBMHelper gbm;
+    std::vector<int32_t> ipc_data;
+    std::vector<int32_t> ipc_fds;
 };
 
 }
 }
-}
-#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
+
+#endif /* MIR_GRAPHICS_PLATFORM_IPC_PACKAGE_H_ */
 

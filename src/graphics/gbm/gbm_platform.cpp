@@ -19,6 +19,7 @@
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_display.h"
+#include "mir/graphics/platform_ipc_package.h"
 
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
@@ -38,6 +39,15 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(this->shared_from_this());
+}
+
+std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
+{
+    auto pkg = std::make_shared<mg::PlatformIPCPackage>();
+
+    pkg->ipc_fds.push_back(drm.get_authenticated_fd());
+
+    return pkg;
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform()

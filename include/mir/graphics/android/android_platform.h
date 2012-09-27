@@ -34,6 +34,7 @@ public:
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator();
     std::shared_ptr<Display> create_display();
+    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
 };
 
 }

@@ -29,20 +29,56 @@ namespace mggh=mir::graphics::gbm::helpers;
 
 void mggh::DRMHelper::setup()
 {
-    static const char *drivers[] = {
-        "i915", "radeon", "nouveau", 0
-    };
-
-    const char** driver{drivers};
-
-    while (fd < 0 && *driver)
-    {
-        fd = drmOpen(*driver, NULL);
-        ++driver;
-    }
+    fd = open_drm_device();
 
     if (fd < 0)
         throw std::runtime_error("Failed to open DRM device\n");
+}
+
+int mggh::DRMHelper::get_authenticated_fd()
+{
+    /* We must have our own device fd first, so that it has become the DRM master */
+    if (fd < 0)
+        throw std::runtime_error("Tried to get authenticated DRM fd before setting up the DRM master\n");
+
+    int drm_fd = open_drm_device();
+
+    if (drm_fd < 0)
+        throw std::runtime_error("Failed to open DRM device for authenticated fd\n");
+
+    drm_magic_t magic;
+
+    if (drmGetMagic(drm_fd, &magic))
+    {
+        close(drm_fd);
+        throw std::runtime_error("Failed to get DRM device magic cookie\n");
+    }
+
+    if (drmAuthMagic(drm_fd, magic))
+    {
+        close(drm_fd);
+        throw std::runtime_error("Failed to authenticate DRM device magic cookie\n");
+    }
+
+    return drm_fd;
+}
+
+int mggh::DRMHelper::open_drm_device()
+{
+    static const char *drivers[] = {
+        "i915", "radeon", "nouveau", 0
+    };
+    int drm_fd = -1;
+
+    const char** driver{drivers};
+
+    while (drm_fd < 0 && *driver)
+    {
+        drm_fd = drmOpen(*driver, NULL);
+        ++driver;
+    }
+
+    return drm_fd;
 }
 
 mggh::DRMHelper::~DRMHelper()
