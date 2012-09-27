@@ -478,12 +478,12 @@ struct BufferCounterConfig : TestingServerConfiguration
         StubBuffer()
         {
             int created = buffers_created.load();
-            while (!buffers_created.compare_exchange_weak(created, created + 1));
+            while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
         }
         ~StubBuffer()
         {
             int destroyed = buffers_destroyed.load();
-            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1));
+            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
         }
 
         virtual geom::Size size() const { return geom::Size(); }

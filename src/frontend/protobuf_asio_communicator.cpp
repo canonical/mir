@@ -199,9 +199,8 @@ void mf::ProtobufAsioCommunicator::start_accept()
 
 int mf::ProtobufAsioCommunicator::next_id()
 {
-    int id;
-    do { id = next_session_id.load(); }
-    while (!next_session_id.compare_exchange_weak(id, id + 1));
+    int id = next_session_id.load();
+    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return id;
 }
 
