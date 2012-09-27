@@ -20,6 +20,8 @@
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/geometry/dimensions.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
@@ -36,12 +38,18 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 void mir::frontend::ApplicationProxy::connect(
     ::google::protobuf::RpcController*,
                      const ::mir::protobuf::ConnectParameters* request,
-                     ::mir::protobuf::Connection*,
+                     ::mir::protobuf::Connection* response,
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();
-    // TODO - get ConnectionIPCPackage
-    // (does this come via surface_organiser or from a NEW dependency on platform?)
+    auto ipc_package = graphics_platform->get_ipc_package();
+
+    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
+        response->add_data(*p);
+
+    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
+        response->add_fd(*p);
+
     done->Run();
 }
 
