@@ -33,7 +33,7 @@ protobuf_generate_cpp(
 )
 
 add_library( 
-  mirprotobuf SHARED
+  mirprotobuf STATIC
   
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
@@ -64,6 +64,7 @@ set(
 install(
   TARGETS mirprotobuf
   LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
 
 install(
