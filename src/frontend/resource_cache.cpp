@@ -28,6 +28,17 @@ void mir::frontend::ResourceCache::save_resource(
 
 void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
 {
-    std::lock_guard<std::mutex> lock(guard);
-    resources.erase(key);
+    std::shared_ptr<void> value;
+    {
+        std::lock_guard<std::mutex> lock(guard);
+
+        auto const& p = resources.find(key);
+
+        if (p != resources.end())
+        {
+            value = p->second;
+        }
+
+        resources.erase(key);
+    }
 }
