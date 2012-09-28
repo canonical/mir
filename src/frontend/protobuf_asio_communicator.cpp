@@ -18,6 +18,7 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 
 #include "mir_protobuf.pb.h"
@@ -59,7 +60,8 @@ struct mfd::Session
         boost::asio::io_service& io_service,
         int id_,
         ConnectedSessions* connected_sessions,
-        std::shared_ptr<protobuf::DisplayServer> const&);
+        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
     int id() const
     {
@@ -85,7 +87,7 @@ struct mfd::Session
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
-        ApplicationProxy::resources.erase(response);
+        resource_cache->free_resource(response);
     }
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
@@ -95,7 +97,7 @@ struct mfd::Session
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
-        ApplicationProxy::resources.erase(response);
+        resource_cache->free_resource(response);
     }
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
@@ -169,6 +171,7 @@ struct mfd::Session
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
     std::vector<char> whole_message;
+    std::shared_ptr<ResourceCache> const resource_cache;
 };
 
 
@@ -189,7 +192,8 @@ void mf::ProtobufAsioCommunicator::start_accept()
         io_service,
         next_id(),
         &connected_sessions,
-        ipc_factory->make_ipc_server());
+        ipc_factory->make_ipc_server(),
+        ipc_factory->resource_cache());
 
     acceptor.async_accept(
         session->socket,
@@ -250,11 +254,13 @@ mfd::Session::Session(
     boost::asio::io_service& io_service,
     int id_,
     ConnectedSessions* connected_sessions,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server)
+    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<ResourceCache> const& resource_cache)
     : socket(io_service),
     id_(id_),
     connected_sessions(connected_sessions),
-    display_server(display_server)
+    display_server(display_server),
+    resource_cache(resource_cache)
 {
 }
 

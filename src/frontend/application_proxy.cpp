@@ -17,17 +17,19 @@
  */
 
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
-mir::frontend::ApplicationProxy::Resources mir::frontend::ApplicationProxy::resources;
-
 mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
-    surface_organiser(surface_organiser), next_surface_id(0)
+    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<ResourceCache> const& resource_cache) :
+    surface_organiser(surface_organiser),
+    next_surface_id(0),
+    resource_cache(resource_cache)
 {
 }
 
@@ -73,7 +75,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
             buffer->add_fd(*p);
 
-        resources[response] = ipc_package;
+        resource_cache->save_resource(response, ipc_package);
     }
 
     surfaces[id] = handle;
@@ -97,7 +99,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
         response->add_fd(*p);
 
-    resources[response] = ipc_package;
+    resource_cache->save_resource(response, ipc_package);
     done->Run();
 }
 

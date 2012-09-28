@@ -35,19 +35,17 @@ class Surface;
 }
 namespace frontend
 {
+class ResourceCache;
 
 class ApplicationProxy : public mir::protobuf::DisplayServer
 {
 public:
 
-    ApplicationProxy(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+    ApplicationProxy(
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
     std::string const& name() const { return app_name; }
-
-
-    // Some resources need to be kept until message is sent
-    typedef std::map<google::protobuf::Message*, std::shared_ptr<void>> Resources;
-    static Resources resources;
 
 private:
     virtual void connect(::google::protobuf::RpcController* controller,
@@ -90,6 +88,7 @@ private:
 
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;
+    std::shared_ptr<ResourceCache> resource_cache;
 };
 
 }

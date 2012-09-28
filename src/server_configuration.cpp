@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/resource_cache.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -79,16 +80,23 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
-        surface_organiser(surface_organiser)
+        surface_organiser(surface_organiser),
+        cache(std::make_shared<mf::ResourceCache>())
     {
     }
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mf::ResourceCache> const cache;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(surface_organiser);
+        return std::make_shared<mf::ApplicationProxy>(surface_organiser, resource_cache());
+    }
+
+    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    {
+        return cache;
     }
 };
 
