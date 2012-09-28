@@ -23,6 +23,7 @@
 #include "mir/frontend/application_proxy.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_ipc_package.h"
@@ -50,6 +51,7 @@ public:
     }
 };
 
+// TODO replace with a real buffer appropriate to the platform default
 class StubBuffer : public mc::Buffer
 {
     geom::Size size() const { return geom::Size(); }
@@ -74,21 +76,43 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
+// TODO replace with a real platform based Platform
+class StubGraphicPlatform : public mg::Platform
+{
+    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator()
+    {
+        return std::make_shared<StubGraphicBufferAllocator>();
+    }
+
+    virtual std::shared_ptr<mg::Display> create_display()
+    {
+        return std::shared_ptr<mg::Display>();
+    }
+
+    virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    {
+        return std::make_shared<mg::PlatformIPCPackage>();
+    }
+};
+
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser) :
-        surface_organiser(surface_organiser)
+        std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<mg::Platform> const& graphics_platform) :
+        surface_organiser(surface_organiser),
+        graphics_platform(graphics_platform)
     {
     }
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mg::Platform> const graphics_platform;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(surface_organiser);
+        return std::make_shared<mf::ApplicationProxy>(surface_organiser, graphics_platform);
     }
 };
 
@@ -111,12 +135,24 @@ socket_file(socket_file)
 {
 }
 
+std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_platform()
+{
+    if (!graphics_platform)
+    {
+//        // TODO I doubt we need the extra level of indirection provided by
+//        // mg::create_platform() - we just need to move the implementation
+//        // of DefaultServerConfiguration::make_graphics_platform() to the
+//        // graphics libraries.
+//        graphics_platform = mg::create_platform();
+        graphics_platform = std::make_shared<StubGraphicPlatform>();
+    }
+
+    return graphics_platform;
+}
 
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
-//    static std::shared_ptr<mg::Platform> platform = mg::create_platform();
-//    return platform->create_buffer_allocator();
-    return std::make_shared<StubGraphicBufferAllocator>();
+    return make_graphics_platform()->create_buffer_allocator();
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy> mir::DefaultServerConfiguration::make_buffer_allocation_strategy()
@@ -136,7 +172,7 @@ mir::DefaultServerConfiguration::make_ipc_factory(
 {
     auto surface_organiser = std::make_shared<Surfaces>(
         buffer_allocation_strategy);
-    return std::make_shared<DefaultIpcFactory>(surface_organiser);
+    return std::make_shared<DefaultIpcFactory>(surface_organiser, make_graphics_platform());
 }
 
 std::shared_ptr<mf::Communicator>

@@ -36,6 +36,7 @@ class ProtobufIpcFactory;
 namespace graphics
 {
 class Renderer;
+class Platform;
 }
 
 class ServerConfiguration
@@ -50,6 +51,9 @@ public:
 
     // the allocator strategy to use
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy() = 0;
+
+    virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
+
 
 protected:
     ServerConfiguration() = default;
@@ -74,8 +78,10 @@ public:
     // the allocator strategy to use
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
 
+    virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
 private:
     std::string socket_file;
+    std::shared_ptr<graphics::Platform> graphics_platform;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
