@@ -101,7 +101,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
 int mir::frontend::ApplicationProxy::next_id()
 {
     int id = next_surface_id.load();
-    while (!next_surface_id.compare_exchange_weak(id, id + 1));
+    while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return id;
 }
 

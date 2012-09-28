@@ -467,6 +467,8 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     launch_client_process(client_creates_surfaces);
 }
 
+namespace mir
+{
 namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
@@ -478,12 +480,12 @@ struct BufferCounterConfig : TestingServerConfiguration
         StubBuffer()
         {
             int created = buffers_created.load();
-            while (!buffers_created.compare_exchange_weak(created, created + 1));
+            while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
         }
         ~StubBuffer()
         {
             int destroyed = buffers_destroyed.load();
-            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1));
+            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
         }
 
         virtual geom::Size size() const { return geom::Size(); }
@@ -528,6 +530,8 @@ struct BufferCounterConfig : TestingServerConfiguration
 std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
 std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
 }
+}
+using mir::BufferCounterConfig;
 
 TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 {
