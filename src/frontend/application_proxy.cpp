@@ -23,6 +23,7 @@
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
+mir::frontend::ApplicationProxy::Resources mir::frontend::ApplicationProxy::resources;
 
 mir::frontend::ApplicationProxy::ApplicationProxy(
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) :
@@ -71,6 +72,8 @@ void mir::frontend::ApplicationProxy::create_surface(
 
         for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
             buffer->add_fd(*p);
+
+        resources[response] = ipc_package;
     }
 
     surfaces[id] = handle;
@@ -94,6 +97,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
         response->add_fd(*p);
 
+    resources[response] = ipc_package;
     done->Run();
 }
 

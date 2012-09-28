@@ -44,6 +44,11 @@ public:
 
     std::string const& name() const { return app_name; }
 
+
+    // Some resources need to be kept until message is sent
+    typedef std::map<google::protobuf::Message*, std::shared_ptr<void>> Resources;
+    static Resources resources;
+
 private:
     virtual void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,

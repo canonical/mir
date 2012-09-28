@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/application_proxy.h"
 #include "mir/thread/all.h"
 
 #include "mir_protobuf.pb.h"
@@ -84,6 +85,7 @@ struct mfd::Session
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
+        ApplicationProxy::resources.erase(response);
     }
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
@@ -93,6 +95,7 @@ struct mfd::Session
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
+        ApplicationProxy::resources.erase(response);
     }
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
