@@ -52,6 +52,7 @@ void mir::frontend::ApplicationProxy::connect(
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
         response->add_fd(*p);
 
+    resource_cache->save_resource(response, ipc_package);
     done->Run();
 }
 

@@ -110,6 +110,7 @@ struct mfd::Session
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
+        resource_cache->free_resource(response);
     }
 
     template<class Response>
