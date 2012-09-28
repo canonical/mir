@@ -33,6 +33,12 @@ namespace surfaces
 class ApplicationSurfaceOrganiser;
 class Surface;
 }
+
+namespace graphics
+{
+class Platform;
+}
+
 namespace frontend
 {
 class ResourceCache;
@@ -43,6 +49,7 @@ public:
 
     ApplicationProxy(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     std::string const& name() const { return app_name; }
@@ -84,6 +91,8 @@ private:
 
     std::string app_name;
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<graphics::Platform> const graphics_platform;
+
     std::atomic<int> next_surface_id;
 
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;

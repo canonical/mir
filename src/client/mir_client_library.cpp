@@ -75,7 +75,7 @@ public:
     void wait_for_result()
     {
         int tmp = waiting_threads.load();
-        while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1));
+        while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) yield();
 
         {
             unique_lock<mutex> lock(guard);
@@ -84,7 +84,7 @@ public:
         }
 
         tmp = waiting_threads.load();
-        while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1));
+        while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
     }
 
 private:
