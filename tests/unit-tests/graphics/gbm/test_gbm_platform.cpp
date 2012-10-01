@@ -35,12 +35,18 @@ public:
 TEST_F(GBMGraphicsPlatform, get_ipc_package)
 {
     using namespace testing;
+    const int auth_fd{66};
 
     /* First time for master DRM fd, second for authenticated fd */
     EXPECT_CALL(mock_drm, drmOpen(_,_))
         .Times(2)
         .WillOnce(Return(mock_drm.fake_drm.fd))
-        .WillOnce(Return(66));
+        .WillOnce(Return(auth_fd));
+
+    EXPECT_CALL(mock_drm, drmClose(mock_drm.fake_drm.fd));
+
+    /* Expect authenticated fd to be closed when package is destroyed */
+    EXPECT_CALL(mock_drm, drmClose(auth_fd));
 
     EXPECT_NO_THROW (
         auto platform = mg::create_platform();
@@ -48,6 +54,6 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
 
         ASSERT_TRUE(pkg.get());
         ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size()); 
-        ASSERT_EQ(66, pkg->ipc_fds[0]); 
+        ASSERT_EQ(auth_fd, pkg->ipc_fds[0]); 
     );
 }
