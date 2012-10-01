@@ -23,6 +23,8 @@
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_rpc_channel.h"
 
+#include "mir_test/mock_ipc_factory.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -30,6 +32,7 @@
 #include <memory>
 
 namespace mf = mir::frontend;
+namespace mt = mir::test;
 
 namespace mir
 {
@@ -194,13 +197,6 @@ struct ErrorServer : mir::protobuf::DisplayServer
 
 std::string const ErrorServer::test_exception_text{"test exception text"};
 
-struct NullDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
-
 class MockLogger : public mir::client::Logger
 {
     mir::client::ConsoleLogger real_logger;
@@ -223,34 +219,6 @@ public:
     MOCK_METHOD0(debug,std::ostream& ());
 };
 
-class MockIpcFactory : public mf::ProtobufIpcFactory
-{
-public:
-    MockIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(&server, NullDeleter()),
-        cache(std::make_shared<mf::ResourceCache>())
-    {
-        using namespace testing;
-
-        ON_CALL(*this, make_ipc_server()).WillByDefault(Return(this->server));
-
-        // called during initialisation:
-        // there's always a server awaiting the next connection
-        EXPECT_CALL(*this, make_ipc_server()).Times(1);
-    }
-
-    MOCK_METHOD0(make_ipc_server, std::shared_ptr<mir::protobuf::DisplayServer>());
-
-private:
-    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
-    {
-        return cache;
-    }
-
-    std::shared_ptr<mir::protobuf::DisplayServer> server;
-    std::shared_ptr<mf::ResourceCache> const cache;
-};
-
 struct TestServer
 {
     static std::string const & socket_name()
@@ -260,7 +228,7 @@ struct TestServer
     }
 
     TestServer() :
-        factory(std::make_shared<MockIpcFactory>(stub_services)),
+        factory(std::make_shared<mt::MockIpcFactory>(stub_services)),
         comm(socket_name(), factory)
     {
     }
@@ -276,7 +244,7 @@ struct TestServer
 
     // "Server" side
     StubServer stub_services;
-    std::shared_ptr<MockIpcFactory> factory;
+    std::shared_ptr<mt::MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
 
@@ -289,14 +257,14 @@ struct TestErrorServer
     }
 
     TestErrorServer() :
-        factory(std::make_shared<MockIpcFactory>(stub_services)),
+        factory(std::make_shared<mt::MockIpcFactory>(stub_services)),
         comm(socket_name(), factory)
     {
     }
 
     // "Server" side
     ErrorServer stub_services;
-    std::shared_ptr<MockIpcFactory> factory;
+    std::shared_ptr<mt::MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
 
