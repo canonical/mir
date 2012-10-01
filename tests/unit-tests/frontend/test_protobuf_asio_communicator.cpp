@@ -18,6 +18,7 @@
  */
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_rpc_channel.h"
@@ -226,7 +227,8 @@ class MockIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     MockIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(&server, NullDeleter())
+        server(&server, NullDeleter()),
+        cache(std::make_shared<mf::ResourceCache>())
     {
         using namespace testing;
 
@@ -240,7 +242,13 @@ public:
     MOCK_METHOD0(make_ipc_server, std::shared_ptr<mir::protobuf::DisplayServer>());
 
 private:
+    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    {
+        return cache;
+    }
+
     std::shared_ptr<mir::protobuf::DisplayServer> server;
+    std::shared_ptr<mf::ResourceCache> const cache;
 };
 
 struct TestServer

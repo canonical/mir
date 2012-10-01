@@ -21,6 +21,7 @@
 #include "mir_client/mir_logger.h"
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 
 #include "mir_protobuf.pb.h"
@@ -208,7 +209,8 @@ class StubIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     StubIpcFactory() :
-        server(std::make_shared<ErrorServer>())
+        server(std::make_shared<ErrorServer>()),
+        cache(std::make_shared<mf::ResourceCache>())
     {
     }
 
@@ -217,8 +219,14 @@ public:
         return server;
     }
 
+    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    {
+        return cache;
+    }
+
 private:
     std::shared_ptr<mir::protobuf::DisplayServer> server;
+    std::shared_ptr<mf::ResourceCache> const cache;
 };
 }
 

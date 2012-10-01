@@ -41,6 +41,7 @@ class Platform;
 
 namespace frontend
 {
+class ResourceCache;
 
 class ApplicationProxy : public mir::protobuf::DisplayServer
 {
@@ -48,7 +49,8 @@ public:
 
     ApplicationProxy(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
-        std::shared_ptr<graphics::Platform> const & graphics_platform);
+        std::shared_ptr<graphics::Platform> const & graphics_platform,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
     std::string const& name() const { return app_name; }
 
@@ -95,6 +97,7 @@ private:
 
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;
+    std::shared_ptr<ResourceCache> resource_cache;
 };
 
 }
