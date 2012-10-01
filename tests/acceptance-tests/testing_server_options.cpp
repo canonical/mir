@@ -18,6 +18,77 @@
 
 #include "testing_process_manager.h"
 
+/////////////////////////////////////////////////////////////////////
+// ===>> TODO start of frig to stub out graphics from tests <<=== //
+// We stub out the graphics - because real graphics cause all the
+// tests to fail. There must be a better way?
+
+#include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
+
+namespace geom = mir::geometry;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
+
+namespace
+{
+class StubBuffer : public mc::Buffer
+{
+    geom::Size size() const { return geom::Size(); }
+
+    geom::Stride stride() const { return geom::Stride(); }
+
+    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
+
+    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
+
+    void bind_to_texture() {}
+
+};
+
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+ public:
+    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
+    {
+        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+    }
+};
+
+class StubGraphicPlatform : public mg::Platform
+{
+    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator()
+    {
+        return std::make_shared<StubGraphicBufferAllocator>();
+    }
+
+    virtual std::shared_ptr<mg::Display> create_display()
+    {
+        return std::shared_ptr<mg::Display>();
+    }
+
+    virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    {
+        return std::make_shared<mg::PlatformIPCPackage>();
+    }
+};
+}
+
+std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()
+{
+    if (!graphics_platform)
+    {
+        graphics_platform = std::make_shared<StubGraphicPlatform>();
+    }
+
+    return graphics_platform;
+}
+// ====>> TODO end of frig to stub out graphics from tests <<==== //
+/////////////////////////////////////////////////////////////////////
+
 void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
@@ -30,3 +101,4 @@ mir::TestingServerConfiguration::TestingServerConfiguration() :
     DefaultServerConfiguration(test_socket_file())
 {
 }
+

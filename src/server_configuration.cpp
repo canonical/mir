@@ -24,12 +24,9 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -42,57 +39,12 @@ namespace ms = mir::surfaces;
 
 namespace
 {
-
 // TODO replace with a real renderer appropriate to the platform default
 class StubRenderer : public mg::Renderer
 {
 public:
     virtual void render(mg::Renderable&)
     {
-    }
-};
-
-// TODO replace with a real buffer appropriate to the platform default
-class StubBuffer : public mc::Buffer
-{
-    geom::Size size() const { return geom::Size(); }
-
-    geom::Stride stride() const { return geom::Stride(); }
-
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
-
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
-
-    void bind_to_texture() {}
-
-};
-
-// TODO replace with a real buffer allocator appropriate to the platform default
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
-{
- public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
-    {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
-    }
-};
-
-// TODO replace with a real platform based Platform
-class StubGraphicPlatform : public mg::Platform
-{
-    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator()
-    {
-        return std::make_shared<StubGraphicBufferAllocator>();
-    }
-
-    virtual std::shared_ptr<mg::Display> create_display()
-    {
-        return std::shared_ptr<mg::Display>();
-    }
-
-    virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
     }
 };
 
@@ -150,12 +102,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_pla
 {
     if (!graphics_platform)
     {
-//        // TODO I doubt we need the extra level of indirection provided by
-//        // mg::create_platform() - we just need to move the implementation
-//        // of DefaultServerConfiguration::make_graphics_platform() to the
-//        // graphics libraries.
-//        graphics_platform = mg::create_platform();
-        graphics_platform = std::make_shared<StubGraphicPlatform>();
+        // TODO I doubt we need the extra level of indirection provided by
+        // mg::create_platform() - we just need to move the implementation
+        // of DefaultServerConfiguration::make_graphics_platform() to the
+        // graphics libraries.
+        graphics_platform = mg::create_platform();
     }
 
     return graphics_platform;
