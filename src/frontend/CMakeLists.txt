@@ -22,6 +22,7 @@ set(
   application_proxy.cpp
   application_manager.cpp
   protobuf_asio_communicator.cpp
+
   resource_cache.cpp
   ${PROTO_HDRS}
 )

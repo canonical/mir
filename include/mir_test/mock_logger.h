@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace
+namespace test
 {
 class MockLogger : public mir::client::Logger
 {
