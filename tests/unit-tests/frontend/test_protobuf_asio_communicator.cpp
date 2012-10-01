@@ -38,6 +38,8 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
+const int mt::StubServer::file_descriptors;
+
 namespace mir
 {
 namespace

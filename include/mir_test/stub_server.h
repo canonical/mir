@@ -132,7 +132,6 @@ struct StubServer : mir::protobuf::DisplayServer
     }
 };
 
-const int StubServer::file_descriptors;
 }
 }
 #endif /* MIR_TEST_STUB_SERVER_H_ */
