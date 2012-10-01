@@ -32,6 +32,11 @@ namespace
 
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
+    GBMPlatformIPCPackage(int drm_auth_fd)
+    {
+        ipc_fds.push_back(drm_auth_fd);
+    }
+
     ~GBMPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
@@ -59,11 +64,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 {
-    auto pkg = std::make_shared<GBMPlatformIPCPackage>();
-
-    pkg->ipc_fds.push_back(drm.get_authenticated_fd());
-
-    return pkg;
+    return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform()
