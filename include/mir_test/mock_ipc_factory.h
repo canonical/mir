@@ -21,6 +21,7 @@
 #define MIR_TEST_MOCK_IPC_FACTORY_H_
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir_test/stub_server.h"
 
 #include <gmock/gmock.h>
 

@@ -20,6 +20,10 @@
 #include "mir/graphics/android/android_buffer_allocator.h"
 #include "mir/process/process.h"
 
+#include "mir_client/mir_client_library.h"
+
+#include "mir_test/mock_ipc_factory.h"
+
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -28,6 +32,8 @@ namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mp=mir::process;
 namespace geom=mir::geometry;
+namespace mt=mir::test;
+
 
 namespace 
 {
@@ -109,6 +115,7 @@ protected:
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::Buffer> server_buffer;
+    mt::MockIpcFactory server_instance;
 };
 
 TEST_F(AndroidBufferShare, client_send_sucessful)
