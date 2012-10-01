@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/resource_cache.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -102,17 +103,27 @@ public:
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
         std::shared_ptr<mg::Platform> const& graphics_platform) :
         surface_organiser(surface_organiser),
+        cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform)
     {
     }
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(surface_organiser, graphics_platform);
+        return std::make_shared<mf::ApplicationProxy>(
+            surface_organiser,
+            graphics_platform,
+            resource_cache());
+    }
+
+    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    {
+        return cache;
     }
 };
 

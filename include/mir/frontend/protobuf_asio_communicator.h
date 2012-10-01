@@ -42,6 +42,7 @@ namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ProtobufAsioCommunicator;
+class ResourceCache;
 namespace detail
 {
 class Session;
@@ -71,6 +72,7 @@ class ProtobufIpcFactory
 {
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
+    virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 
 protected:
     ProtobufIpcFactory() {}
