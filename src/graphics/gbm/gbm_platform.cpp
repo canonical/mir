@@ -21,9 +21,25 @@
 #include "mir/graphics/gbm/gbm_display.h"
 #include "mir/graphics/platform_ipc_package.h"
 
+#include <xf86drm.h>
+
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
 namespace mc=mir::compositor;
+
+namespace
+{
+
+struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
+{
+    ~GBMPlatformIPCPackage()
+    {
+        if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
+            drmClose(ipc_fds[0]);
+    }
+};
+
+}
 
 mgg::GBMPlatform::GBMPlatform()
 {
@@ -43,7 +59,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 {
-    auto pkg = std::make_shared<mg::PlatformIPCPackage>();
+    auto pkg = std::make_shared<GBMPlatformIPCPackage>();
 
     pkg->ipc_fds.push_back(drm.get_authenticated_fd());
 
