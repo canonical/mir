@@ -29,6 +29,7 @@ namespace graphics
 
 struct PlatformIPCPackage
 {
+    virtual ~PlatformIPCPackage() {}
     std::vector<int32_t> ipc_data;
     std::vector<int32_t> ipc_fds;
 };
