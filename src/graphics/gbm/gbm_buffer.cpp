@@ -24,6 +24,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <stdexcept>
+#include <mutex>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
@@ -36,8 +37,12 @@ PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = 0;
 PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = 0;
 PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = 0;
 
+std::mutex ext_mutex;
+
 void ensure_egl_image_extensions()
 {
+    std::lock_guard<std::mutex> lock(ext_mutex);
+
     if (eglCreateImageKHR != 0 && eglDestroyImageKHR != 0 &&
         glEGLImageTargetTexture2DOES != 0)
     {
