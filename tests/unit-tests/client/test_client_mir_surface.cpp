@@ -42,6 +42,11 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(pixel_format, geom::PixelFormat());
 };
 
+struct MockClientFactory : public mcl::ClientBufferFactory
+{
+    MOCK_METHOD0(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer(const mcl::MirBufferPackage&));
+};
+
 }
 }
 
@@ -56,12 +61,16 @@ struct MirClientSurfaceTest : public testing::Test
 
     protobuf::DisplayServer::Stub server;
     MirSurfaceParameters const params;
+    MockFactory mock_factory;
 };
 
 
 void empty_callback(MirSurface *, void*) {};
 TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
-    auto surface = mcl::MirSurface( server, params, empty_callback, NULL);
+    using namespace testing;
+
+    auto surface = mcl::MirSurface( server, mock_factory, params, empty_callback, NULL);
+    EXPECT_CALL(mock_factory, create_buffer_from_ipc_message(_));
  
 }
