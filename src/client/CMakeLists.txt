@@ -44,6 +44,7 @@ set(
   mir_rpc_channel.cpp
 
   private/mir_connection.cpp
+  private/mir_wait_handle.cpp
   ${PROTO_SRCS}
 )
 

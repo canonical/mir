@@ -23,6 +23,8 @@
 #include <set>
 #include <unordered_set>
 
+#include "mir/thread/all.h"
+
 #include "mir_protobuf.pb.h"
 
 #include "mir_client/mir_client_library.h"
@@ -81,7 +83,7 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
 
-    static mutex connection_guard;
+    static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 };
 }

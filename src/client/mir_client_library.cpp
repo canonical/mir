@@ -17,6 +17,10 @@
  */
 
 #include "mir_client/mir_client_library.h"
+
+#include "mir_client/private/mir_connection.h"
+#include "mir_client/private/mir_surface.h"
+
 #include "mir_client/mir_rpc_channel.h"
 #include "mir_client/mir_buffer_package.h" 
 
@@ -42,292 +46,8 @@ namespace gp = google::protobuf;
     using std::this_thread::yield;
 #endif
 
-class MirWaitHandle
-{
-public:
-    MirWaitHandle() : waiting_threads(0), guard(), wait_condition(), waiting_for_result(false) {}
-
-    ~MirWaitHandle()
-    {
-        // Delay destruction while there are waiting threads
-        while (waiting_threads.load()) yield();
-    }
-
-    void result_requested()
-    {
-        unique_lock<mutex> lock(guard);
-
-        while (waiting_for_result)
-            wait_condition.wait(lock);
-
-        waiting_for_result = true;
-    }
-
-    void result_received()
-    {
-        lock_guard<mutex> lock(guard);
-
-        waiting_for_result = false;
-
-        wait_condition.notify_all();
-    }
-
-    void wait_for_result()
-    {
-        int tmp = waiting_threads.load();
-        while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) yield();
-
-        {
-            unique_lock<mutex> lock(guard);
-            while (waiting_for_result)
-                wait_condition.wait(lock);
-        }
-
-        tmp = waiting_threads.load();
-        while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
-    }
-
-private:
-    std::atomic<int> waiting_threads;
-    mutex guard;
-    condition_variable wait_condition;
-    bool waiting_for_result;
-};
-
-class MirSurface
-{
-public:
-    MirSurface(MirSurface const &) = delete;
-    MirSurface& operator=(MirSurface const &) = delete;
-
-    MirSurface(
-        mp::DisplayServer::Stub & server,
-        MirSurfaceParameters const & params,
-        mir_surface_lifecycle_callback callback, void * context)
-        : server(server)
-    {
-        mir::protobuf::SurfaceParameters message;
-        message.set_surface_name(params.name ? params.name : std::string());
-        message.set_width(params.width);
-        message.set_height(params.height);
-        message.set_pixel_format(params.pixel_format);
-
-        create_wait_handle.result_requested();
-        server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
-    }
-
-    MirWaitHandle* release(mir_surface_lifecycle_callback callback, void * context)
-    {
-        mir::protobuf::SurfaceId message;
-        message.set_value(surface.id().value());
-        release_wait_handle.result_requested();
-        server.release_surface(0, &message, &void_response,
-                               gp::NewCallback(this, &MirSurface::released, callback, context));
-        return &release_wait_handle;
-    }
-
-    MirSurfaceParameters get_parameters() const
-    {
-        return MirSurfaceParameters {
-            0,
-            surface.width(),
-            surface.height(),
-            static_cast<MirPixelFormat>(surface.pixel_format())};
-    }
-
-    char const * get_error_message()
-    {
-        if (surface.has_error())
-        {
-            return surface.error().c_str();
-        }
-        return error_message.c_str();
-    }
-
-    int id() const
-    {
-        return surface.id().value();
-    }
-
-    bool is_valid() const
-    {
-        return !surface.has_error();
-    }
-
-    void populate(MirGraphicsRegion& )
-    {
-        // TODO
-    }
-
-    MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context)
-    {
-        next_buffer_wait_handle.result_requested();
-        server.next_buffer(
-            0,
-            &surface.id(),
-            surface.mutable_buffer(),
-            google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
-
-        return &next_buffer_wait_handle;
-    }
-
-    MirWaitHandle* get_create_wait_handle()
-    {
-        return &create_wait_handle;
-    }
-
-private:
-
-    void released(mir_surface_lifecycle_callback callback, void * context)
-    {
-        callback(this, context);
-        release_wait_handle.result_received();
-        delete this;
-    }
-
-    void created(mir_surface_lifecycle_callback callback, void * context)
-    {
-        callback(this, context);
-        create_wait_handle.result_received();
-    }
-
-    void new_buffer(mir_surface_lifecycle_callback callback, void * context)
-    {
-        callback(this, context);
-        next_buffer_wait_handle.result_received();
-    }
-
-    mp::DisplayServer::Stub & server;
-    mp::Void void_response;
-    mp::Surface surface;
-    std::string error_message;
-
-    MirWaitHandle create_wait_handle;
-    MirWaitHandle release_wait_handle;
-    MirWaitHandle next_buffer_wait_handle;
-};
-
-// TODO the connection should track all associated surfaces, and release them on
-// disconnection.
-class MirConnection
-{
-public:
-    MirConnection(const std::string& socket_file,
-        std::shared_ptr<mcl::Logger> const & log) :
-          channel(socket_file, log)
-        , server(&channel)
-        , log(log)
-    {
-        {
-            lock_guard<mutex> lock(connection_guard);
-            valid_connections.insert(this);
-        }
-        connect_result.set_error("connect not called");
-    }
-
-    ~MirConnection()
-    {
-        {
-            lock_guard<mutex> lock(connection_guard);
-            valid_connections.erase(this);
-        }
-    }
-
-    MirConnection(MirConnection const &) = delete;
-    MirConnection& operator=(MirConnection const &) = delete;
-
-    MirWaitHandle* create_surface(
-        MirSurfaceParameters const & params,
-        mir_surface_lifecycle_callback callback,
-        void * context)
-    {
-        auto tmp = new MirSurface(server, params, callback, context);
-        return tmp->get_create_wait_handle();
-    }
-
-    char const * get_error_message()
-    {
-        if (connect_result.has_error())
-        {
-            return connect_result.error().c_str();
-        }
-        else
-        {
-        return error_message.c_str();
-        }
-    }
-
-    MirWaitHandle* connect(
-        const char* app_name,
-        mir_connected_callback callback,
-        void * context)
-    {
-        connect_parameters.set_application_name(app_name);
-        connect_wait_handle.result_requested();
-        server.connect(
-            0,
-            &connect_parameters,
-            &connect_result,
-            google::protobuf::NewCallback(
-                this, &MirConnection::connected, callback, context));
-        return &connect_wait_handle;
-    }
-
-    void disconnect()
-    {
-        disconnect_wait_handle.result_requested();
-        server.disconnect(
-            0,
-            &ignored,
-            &ignored,
-            google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
-
-        disconnect_wait_handle.wait_for_result();
-    }
-
-    static bool is_valid(MirConnection *connection)
-    {
-        {
-            lock_guard<mutex> lock(connection_guard);
-            if (valid_connections.count(connection) == 0)
-               return false;
-        }
-
-        return !connection->connect_result.has_error();
-    }
-private:
-
-    mcl::MirRpcChannel channel;
-    mp::DisplayServer::Stub server;
-    std::shared_ptr<mcl::Logger> log;
-    mp::Void void_response;
-    mir::protobuf::Connection connect_result;
-    mir::protobuf::Void ignored;
-    mir::protobuf::ConnectParameters connect_parameters;
-
-    std::string error_message;
-    std::set<MirSurface*> surfaces;
-
-    MirWaitHandle connect_wait_handle;
-    MirWaitHandle disconnect_wait_handle;
-
-    void done_disconnect()
-    {
-        disconnect_wait_handle.result_received();
-    }
-
-    void connected(mir_connected_callback callback, void * context)
-    {
-        callback(this, context);
-        connect_wait_handle.result_received();
-    }
-
-    static mutex connection_guard;
-    static std::unordered_set<MirConnection*> valid_connections;
-};
-
-mutex MirConnection::connection_guard;
-std::unordered_set<MirConnection *> MirConnection::valid_connections;
+mutex mcl::MirConnection::connection_guard;
+std::unordered_set<mcl::MirConnection *> mcl::MirConnection::valid_connections;
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
@@ -335,8 +55,8 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     try
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
-        MirConnection * connection = new MirConnection(socket_file, log);
-        return connection->connect(name, callback, context);
+        mcl::MirConnection * connection = new mcl::MirConnection(socket_file, log);
+        return ( ::MirWaitHandle*) connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)
     {
@@ -345,30 +65,30 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     }
 }
 
-int mir_connection_is_valid(MirConnection * connection)
+int mir_connection_is_valid(mcl::MirConnection * connection)
 {
-    return MirConnection::is_valid(connection);
+    return mcl::MirConnection::is_valid(connection);
 }
 
-char const * mir_connection_get_error_message(MirConnection * connection)
+char const * mir_connection_get_error_message(mcl::MirConnection * connection)
 {
     return connection->get_error_message();
 }
 
-void mir_connection_release(MirConnection * connection)
+void mir_connection_release(mcl::MirConnection * connection)
 {
     connection->disconnect();
     delete connection;
 }
 
-MirWaitHandle* mir_surface_create(MirConnection * connection,
+MirWaitHandle* mir_surface_create(mcl::MirConnection * connection,
                         MirSurfaceParameters const * params,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
     try
     {
-        return connection->create_surface(*params, callback, context);
+        return (::MirWaitHandle*) connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
@@ -378,6 +98,7 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 
 }
 
+#if 0
 MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
@@ -419,4 +140,4 @@ void mir_wait_for(MirWaitHandle* wait_handle)
     if (wait_handle)
         wait_handle->wait_for_result();
 }
-
+#endif

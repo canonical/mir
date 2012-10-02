@@ -18,21 +18,7 @@
 #ifndef MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_
 #define MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_
 
-#ifdef MIR_USING_BOOST_THREADS
-    #include <boost/thread.hpp>
-    #include <boost/thread/future.hpp>
-    #include <boost/thread/condition_variable.hpp>
-    using ::mir::std::condition_variable;
-    using ::boost::unique_lock;
-    using ::boost::lock_guard;
-    using ::boost::thread;
-    using ::boost::mutex;
-    using ::mir::std::this_thread::yield;
-#else
-    #include <thread>
-    using namespace std;
-    using std::this_thread::yield;
-#endif
+#include "mir/thread/all.h"
 
 namespace mir
 {
@@ -51,8 +37,8 @@ public:
 
 private:
     std::atomic<int> waiting_threads;
-    mutex guard;
-    condition_variable wait_condition;
+    std::mutex guard;
+    std::condition_variable wait_condition;
     bool waiting_for_result;
 };
 
