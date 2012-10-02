@@ -45,6 +45,7 @@ set(
 
   private/mir_connection.cpp
   private/mir_wait_handle.cpp
+  private/mir_surface.cpp
   ${PROTO_SRCS}
 )
 

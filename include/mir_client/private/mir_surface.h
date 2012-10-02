@@ -20,6 +20,8 @@
 
 #include "mir_protobuf.pb.h"
 
+#include "mir_client/private/mir_wait_handle.h"
+
 namespace mir
 {
 namespace client
