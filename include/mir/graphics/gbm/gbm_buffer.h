@@ -23,8 +23,9 @@
 #include "mir/compositor/buffer.h"
 
 #include <gbm.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
-#include <stdexcept>
 #include <memory>
 
 namespace mir
@@ -63,7 +64,10 @@ public:
     virtual void bind_to_texture();
 
 private:
+    void ensure_egl_image();
+
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
+    EGLImageKHR egl_image;
 };
 
 }
