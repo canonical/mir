@@ -98,46 +98,52 @@ MirWaitHandle* mir_surface_create(mcl::MirConnection * connection,
 
 }
 
-#if 0
 MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    return surface->release(callback, context);
+    auto surface_cast = (mcl::MirSurface*) surface;
+    return (MirWaitHandle*) surface_cast->release(callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
 {
-    return surface->id();
+    auto surface_cast = (mcl::MirSurface*) surface;
+    return surface_cast->id();
 }
 
 int mir_surface_is_valid(MirSurface* surface)
 {
-    return surface->is_valid();
+    auto surface_cast = (mcl::MirSurface*) surface;
+    return surface_cast->is_valid();
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
 {
-    return surface->get_error_message();
+    auto surface_cast = (mcl::MirSurface*) surface;
+    return surface_cast->get_error_message();
 }
 
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
-    *parameters = surface->get_parameters();
+    auto surface_cast = (mcl::MirSurface*) surface;
+    *parameters = surface_cast->get_parameters();
 }
 
 void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package)
 {
-    surface->populate(*buffer_package);
+    auto surface_cast = (mcl::MirSurface*) surface;
+    surface_cast->populate(*buffer_package);
 }
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
-    return surface->next_buffer(callback, context);
+    auto surface_cast = (mcl::MirSurface*) surface;
+    return (MirWaitHandle*) surface_cast->next_buffer(callback, context);
 }
 
 void mir_wait_for(MirWaitHandle* wait_handle)
 {
-    if (wait_handle)
-        wait_handle->wait_for_result();
+    auto wait_handle_cast = (mcl::MirWaitHandle*) wait_handle;
+    if (wait_handle_cast)
+        wait_handle_cast->wait_for_result();
 }
-#endif
