@@ -68,25 +68,17 @@ struct TestServer
     mf::ProtobufAsioCommunicator comm;
 };
 
-struct BasicTestFixture : public ::testing::Test
-{
-    BasicTestFixture()
-    {
-        server = std::make_shared<TestServer>("./test_socket");    
-    }
-    
-//    static std::string socket_name; /* ("./mir_test_pb_asio_socket") */;
-    std::shared_ptr<TestServer> server;
-};
-
-
-struct ProtobufAsioCommunicatorTestFixture : public BasicTestFixture
+struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
+        server = std::make_shared<TestServer>("./test_socket");
+ 
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
+
         server->comm.start();
+
         client = std::make_shared<mt::TestClient>("./test_socket");
     }
 
@@ -96,26 +88,26 @@ struct ProtobufAsioCommunicatorTestFixture : public BasicTestFixture
     }
 
     std::shared_ptr<mt::TestClient> client;
+    std::shared_ptr<TestServer> server;
 };
 
-
-struct ProtobufAsioMultiClientCommunicatorTestFixture : public BasicTestFixture
+struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 {
     static int const number_of_clients = 10;
 
     void SetUp()
     {
+        server = std::make_shared<TestServer>("./test_socket");
+        ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
+        EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
+
+        server->comm.start();
+
         for(int i=0; i<number_of_clients; i++)
         {
             auto client_tmp = std::make_shared<mt::TestClient>("./test_socket"); 
             client.push_back(client_tmp);
         }
-
-        ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
-        EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
-        server->comm.start();
-
-        printf("done.. setup\n"); 
     }
 
     void TearDown()
@@ -124,6 +116,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public BasicTestFixture
     }
 
     std::vector<std::shared_ptr<mt::TestClient>> client;
+    std::shared_ptr<TestServer> server;
 };
 }
 
