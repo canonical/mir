@@ -15,17 +15,20 @@
  *
  * Authored by:
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
-#include <gbm.h>
-
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
+
+PFNEGLCREATEIMAGEKHRPROC mgg::GBMBuffer::eglCreateImageKHR = 0;
+PFNEGLDESTROYIMAGEKHRPROC mgg::GBMBuffer::eglDestroyImageKHR = 0;
+PFNGLEGLIMAGETARGETTEXTURE2DOESPROC mgg::GBMBuffer::glEGLImageTargetTexture2DOES = 0;
 
 void mgg::GBMBufferObjectDeleter::operator()(gbm_bo* handle) const
 {
@@ -48,12 +51,14 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
 mgg::GBMBuffer::GBMBuffer(
     std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
-        : gbm_handle(std::move(handle))
+        : gbm_handle(std::move(handle)), egl_image(EGL_NO_IMAGE_KHR)
 {
 }
 
 mgg::GBMBuffer::~GBMBuffer()
 {
+    if (egl_image != EGL_NO_IMAGE_KHR)
+        (*eglDestroyImageKHR)(eglGetCurrentDisplay(), egl_image);
 }
 
 geom::Size mgg::GBMBuffer::size() const
@@ -81,4 +86,68 @@ std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 
 void mgg::GBMBuffer::bind_to_texture()
 {
+    ensure_egl_image();
+
+    (*glEGLImageTargetTexture2DOES)(GL_TEXTURE_2D, egl_image);
+}
+
+void mgg::GBMBuffer::ensure_egl_image()
+{
+    static const EGLint image_attrs[] =
+    {
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+        EGL_NONE
+    };
+
+    if (egl_image == EGL_NO_IMAGE_KHR)
+    {
+        ensure_egl_image_extensions();
+
+        egl_image = (*eglCreateImageKHR)(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
+                                         EGL_NATIVE_PIXMAP_KHR, gbm_handle.get(),
+                                         image_attrs);
+        if (egl_image == EGL_NO_IMAGE_KHR)
+            throw std::runtime_error("Failed to create EGLImage from GBM bo");
+    }
+}
+
+void mgg::GBMBuffer::ensure_egl_image_extensions()
+{
+    if (eglCreateImageKHR != 0 && eglDestroyImageKHR != 0 &&
+        glEGLImageTargetTexture2DOES != 0)
+    {
+        return;
+    }
+
+    std::string ext_string;
+    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+    if (exts)
+        ext_string = exts;
+
+    /* Mesa in the framebuffer doesn't advertise EGL_KHR_image_pixmap properly */
+    //if (ext_string.find("EGL_KHR_image_pixmap") != std::string::npos)
+    {
+        eglCreateImageKHR =
+            reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
+        eglDestroyImageKHR =
+            reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
+    }
+
+    if (!eglCreateImageKHR || !eglDestroyImageKHR)
+        throw std::runtime_error("EGL implementation doesn't support EGLImage");
+    
+    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+    if (exts)
+        ext_string = exts;
+    else
+        ext_string.clear();
+
+    if (ext_string.find("GL_OES_EGL_image") != std::string::npos)
+    {
+        glEGLImageTargetTexture2DOES = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+                eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+    }
+
+    if (!glEGLImageTargetTexture2DOES)
+        throw std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage");
 }

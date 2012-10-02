@@ -16,13 +16,16 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir_test/egl_mock.h"
+#include "mir_test/gl_mock.h"
+#include "mock_drm.h"
+#include "mock_gbm.h"
+
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
-#include "mock_drm.h"
-#include "mock_gbm.h"
 
 #include <gbm.h>
 
@@ -60,10 +63,28 @@ protected:
 
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(4 * size.width.as_uint32_t()));
+
+        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
+        const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
+        typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
+            .WillByDefault(Return(egl_exts));
+        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
+            .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
     }
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mir::EglMock> mock_egl;
+    ::testing::NiceMock<mir::GLMock>  mock_gl;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
@@ -136,4 +157,71 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
     auto buffer = allocator->alloc_buffer(size, pf);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_EQ(mock_handle.u32, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+}
+
+TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
+{
+    using namespace testing;
+    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+
+    EXPECT_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        buffer->bind_to_texture();
+    }, std::runtime_error);
+}
+
+TEST_F(GBMGraphicBufferBasic, bind_to_texture_gl_oes_egl_image_not_supported)
+{
+    using namespace testing;
+
+    const char* gl_exts = "GL_OES_texture_npot";
+
+    ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
+        .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
+    EXPECT_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        buffer->bind_to_texture();
+    }, std::runtime_error);
+}
+
+TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_creation_failed)
+{
+    using namespace testing;
+
+    ON_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
+        .WillByDefault(Return(EGL_NO_IMAGE_KHR));
+
+    EXPECT_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        buffer->bind_to_texture();
+    }, std::runtime_error);
+}
+
+TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
+{
+    using namespace testing;
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,EGL_NATIVE_PIXMAP_KHR,_,_))
+            .Times(Exactly(1));
+
+        EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
+            .Times(Exactly(1));
+
+        EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,mock_egl.fake_egl_image))
+            .Times(Exactly(1));
+    }
+
+    EXPECT_NO_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        buffer->bind_to_texture();
+    });
 }
