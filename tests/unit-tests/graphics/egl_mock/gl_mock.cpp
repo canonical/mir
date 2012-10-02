@@ -62,6 +62,12 @@ void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
     global_gl_mock->glEGLImageTargetTexture2DOES(target, image);
 }
 
+const GLubyte* glGetString(GLenum name)
+{
+    CHECK_GLOBAL_MOCK(const GLubyte*);
+    return global_gl_mock->glGetString(name);
+}
+
 void mir::GLMock::silence_uninteresting()
 {
     using namespace testing;
