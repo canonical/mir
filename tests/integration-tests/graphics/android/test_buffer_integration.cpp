@@ -125,7 +125,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     auto client_buffer = bundle->secure_client_buffer();
     sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
@@ -151,7 +151,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     for(;;)
     {

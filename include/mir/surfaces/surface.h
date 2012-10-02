@@ -31,6 +31,7 @@ namespace compositor
 {
 class BufferBundle;
 class GraphicBufferClientResource;
+class GraphicRegion;
 struct BufferIPCPackage;
 }
 
@@ -69,7 +70,7 @@ class Surface : public graphics::Renderable
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<graphics::Texture> texture() const;
+    std::shared_ptr<compositor::GraphicRegion> texture() const;
     glm::mat4 transformation() const;
     float alpha() const;
 

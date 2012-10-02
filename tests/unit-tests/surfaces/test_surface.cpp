@@ -17,7 +17,6 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir/graphics/texture.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/mock_buffer.h"
 
@@ -26,7 +25,6 @@
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 TEST(surface, default_creation_parameters)
@@ -185,15 +183,14 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
 
     ms::Surface surf{surface_name, mock_buffer_bundle};
     auto buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pf);
-    auto texture = std::make_shared<mg::Texture>(buffer);
 
     EXPECT_CALL(*mock_buffer_bundle, lock_and_bind_back_buffer())
         .Times(1)
-        .WillOnce(Return(texture));
+        .WillOnce(Return(buffer));
 
     auto ret_texture = surf.texture();
 
-    EXPECT_EQ(texture.get(), ret_texture.get()); 
+    EXPECT_EQ(buffer.get(), ret_texture.get()); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)

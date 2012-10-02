@@ -21,35 +21,28 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir/compositor/graphic_region.h"
 
 #include <memory>
 
 namespace mir
 {
-
-namespace graphics
-{
-class Texture;
-}
-
 namespace compositor
 {
 class BufferIPCPackage;
-class Buffer
+
+class Buffer : public GraphicRegion
 {
 public:
-
     virtual ~Buffer() {}
 
+    /* From GraphicRegion */
     virtual geometry::Size size() const = 0;
-
     virtual geometry::Stride stride() const = 0;
-
     virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual void bind_to_texture() = 0;
 
     virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-
-    virtual void bind_to_texture() = 0;
 
 protected:
     Buffer() = default;

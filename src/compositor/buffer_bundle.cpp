@@ -21,12 +21,10 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/graphics/texture.h"
 
 #include <cassert>
 
 namespace mc = mir::compositor;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 namespace
@@ -80,12 +78,12 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mir::graphics::Texture> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
+std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
 {
     std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
     bptr->bind_to_texture();
 
-    return std::make_shared<mg::Texture>(bptr);
+    return bptr;
 }
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
