@@ -27,10 +27,11 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+class MirBufferPackage;
 
 class ClientBufferFactory
 {
-    virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&); 
+    virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&) = 0; 
 
 };
 }

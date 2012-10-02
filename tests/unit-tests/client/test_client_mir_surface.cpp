@@ -22,6 +22,7 @@
 #include "mir_client/private/client_buffer.h"
 #include "mir_client/private/client_buffer_factory.h"
 #include "mir_client/private/mir_rpc_channel.h"
+#include "mir_client/private/mir_buffer_package.h"
 #include "mir_client/private/mir_surface.h"
 
 #include <gtest/gtest.h>
@@ -65,16 +66,18 @@ struct MirClientSurfaceTest : public testing::Test
     {
         params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
 
-        channel = std::make_shared<mcl::MirRpcChannel>("./test_file", logger); 
-        server = std::make_shared<mp::DisplayServer::Stub>(channel.get());
+        logger = std::make_shared<mcl::ConsoleLogger>();
+        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_file"), logger); 
+        server = std::make_shared<mp::DisplayServer::Stub>(channel.get()); 
+        mock_factory = std::make_shared<mt::MockClientFactory>(); 
     }
 
     std::shared_ptr<mp::DisplayServer::Stub> server;
     std::shared_ptr<mcl::MirRpcChannel> channel;
-    mcl::ConsoleLogger logger;
+    std::shared_ptr<mcl::ConsoleLogger> logger;
 
     MirSurfaceParameters params;
-    mt::MockClientFactory mock_factory;
+    std::shared_ptr<mt::MockClientFactory> mock_factory;
 };
 
 
@@ -83,8 +86,8 @@ TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
     using namespace testing;
 
-    auto surface = mcl::MirSurface( server, mock_factory, params, empty_callback, NULL);
+    auto surface = std::make_shared<mcl::MirSurface> ( *server, mock_factory, params, &empty_callback, (void*) NULL);
 
-    EXPECT_CALL(mock_factory, create_buffer_from_ipc_message(_));
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_));
  
 }

@@ -60,6 +60,7 @@ mcl::MirConnection::~MirConnection()
     }
 }
 
+#if TODO 
 mcl::MirWaitHandle* mcl::MirConnection::create_surface(
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback,
@@ -68,6 +69,15 @@ mcl::MirWaitHandle* mcl::MirConnection::create_surface(
     auto tmp = new mcl::MirSurface(server, params, callback, context);
     return tmp->get_create_wait_handle();
 }
+#else 
+mcl::MirWaitHandle* mcl::MirConnection::create_surface(
+    MirSurfaceParameters const &,
+    mir_surface_lifecycle_callback,
+    void *)
+{
+    return NULL;
+}
+#endif 
 
 char const * mcl::MirConnection::get_error_message()
 {

@@ -26,6 +26,7 @@ namespace mir
 {
 namespace client
 {
+class ClientBufferFactory;
 
 class MirSurface
 {
@@ -35,6 +36,7 @@ public:
 
     MirSurface(
         protobuf::DisplayServer::Stub & server,
+        const std::shared_ptr<ClientBufferFactory>& factory, 
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 

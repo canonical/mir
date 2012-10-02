@@ -19,6 +19,7 @@
 #include "mir_client/mir_client_library.h"
 
 #include "mir_client/private/mir_surface.h"
+#include "mir_client/private/client_buffer_factory.h"
 //#include "mir_client/mir_rpc_channel.h"
 //#include "mir_client/mir_buffer_package.h" 
 
@@ -34,6 +35,7 @@ namespace gp = google::protobuf;
 
 mcl::MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
+    const std::shared_ptr<ClientBufferFactory>& /* factory */, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server)
