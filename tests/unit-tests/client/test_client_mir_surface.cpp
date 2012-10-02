@@ -16,8 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include <gtest/gtest.h>
+#include "mir_client/private/client_buffer.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+namespace mcl = mir::client;
+namespace geom = mir::geometry;
+
+namespace mir
+{
+namespace test
+{ 
+
+struct MockBuffer : public mcl::ClientBuffer
+{
+    MockBuffer()
+    {
+
+    }
+
+    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
+    MOCK_METHOD0(width, geom::Width());
+    MOCK_METHOD0(height, geom::Height());
+    MOCK_METHOD0(pixel_format, geom::PixelFormat());
+};
+}
+}
+
+namespace mt = mir::test;
 
 struct MirClientSurfaceTest : public testing::Test
 {
