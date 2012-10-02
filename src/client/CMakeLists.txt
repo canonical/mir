@@ -53,8 +53,8 @@ if( MIR_PLATFORM STREQUAL "android")
 set(
   CLIENT_SOURCES
 
-  android_client_buffer.cpp
-  android_registrar.cpp
+  android/android_client_buffer.cpp
+  android/android_registrar.cpp
   ${CLIENT_SOURCES}
 )
 endif()
