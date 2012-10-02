@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android_client_buffer.h"
+#include "mir_client/android/android_client_buffer.h"
 
 namespace mcl=mir::client;
 namespace geom=mir::geometry;

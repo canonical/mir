@@ -41,8 +41,7 @@ set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
-  mir_rpc_channel.cpp
-
+  private/mir_rpc_channel.cpp
   private/mir_connection.cpp
   private/mir_wait_handle.cpp
   private/mir_surface.cpp

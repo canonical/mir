@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
-#define MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
+#ifndef MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_
+#define MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_
 
 #include <vector>
 
@@ -36,4 +36,4 @@ struct MirBufferPackage
 
 }
 }
-#endif /* MIR_CLIENT_MIR_BUFFER_PACKAGE_H_ */
+#endif /* MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_ */

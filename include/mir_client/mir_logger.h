@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_LOGGER_H_
-#define MIR_LOGGER_H_
+#ifndef MIR_CLIENT_PRIVATE_LOGGER_H_
+#define MIR_CLIENT_PRIVATE_LOGGER_H_
 
 #include <iosfwd>
 
@@ -48,4 +48,4 @@ public:
 }
 }
 
-#endif /* MIR_LOGGER_H_ */
+#endif /* MIR_CLIENT_PRIVATE_LOGGER_H_ */

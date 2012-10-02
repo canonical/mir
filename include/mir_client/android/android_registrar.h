@@ -17,10 +17,10 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_REGISTRAR_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
 
-#include "mir_client/mir_buffer_package.h"
+#include "mir_client/private/mir_buffer_package.h"
 #include "mir/geometry/rectangle.h"
 #include <cutils/native_handle.h>
 

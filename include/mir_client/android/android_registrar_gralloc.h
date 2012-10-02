@@ -17,11 +17,11 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_
-#define MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
+#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
 
 #include "mir/geometry/pixel_format.h"
-#include "mir_client/android_registrar.h"
+#include "mir_client/android/android_registrar.h"
 #include <hardware/gralloc.h>
 
 namespace mir
@@ -44,4 +44,4 @@ private:
 
 }
 }
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_GRALLOC_H_ */
+#endif /* MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_ */

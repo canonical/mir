@@ -29,7 +29,7 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir_client/mir_rpc_channel.h"
+#include "mir_client/private/mir_rpc_channel.h"
 #include "mir_client/private/mir_wait_handle.h"
 
 namespace mir

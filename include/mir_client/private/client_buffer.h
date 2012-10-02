@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_BUFFER_H_
-#define MIR_CLIENT_CLIENT_BUFFER_H_
+#ifndef MIR_CLIENT_PRIVATE_CLIENT_BUFFER_H_
+#define MIR_CLIENT_PRIVATE_CLIENT_BUFFER_H_
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
@@ -51,4 +51,4 @@ class ClientBuffer
 }
 }
 
-#endif /* MIR_CLIENT_CLIENT_BUFFER_H_ */
+#endif /* MIR_CLIENT_PRIVATE_CLIENT_BUFFER_H_ */
