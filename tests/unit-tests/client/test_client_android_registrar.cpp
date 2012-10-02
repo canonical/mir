@@ -88,7 +88,8 @@ class ClientAndroidRegistrarTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        
+        using namespace testing;
+ 
         mock_module = std::shared_ptr<MockRegistrarDevice>( new MockRegistrarDevice );
         mock_addr = (gralloc_module_t*) mock_module.get();
         
@@ -103,6 +104,11 @@ protected:
                                {geom::Width(width), geom::Height(height)}};
 
         fake_handle = std::make_shared<native_handle_t>();
+
+        EXPECT_CALL(*mock_module, lock_interface( _, _, _, _, _, _, _, _))
+            .Times(AtLeast(0));
+        EXPECT_CALL(*mock_module, unlock_interface( _, _))
+            .Times(AtLeast(0));
     }
    
     geom::Rectangle rect;
