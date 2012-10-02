@@ -16,12 +16,19 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_protobuf.pb.h"
+#include "mir_client/mir_client_library.h"
+#include "mir_client/mir_logger.h"
 #include "mir_client/private/client_buffer.h"
+#include "mir_client/private/client_buffer_factory.h"
+#include "mir_client/private/mir_rpc_channel.h"
+#include "mir_client/private/mir_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 
 namespace mir
@@ -44,7 +51,7 @@ struct MockBuffer : public mcl::ClientBuffer
 
 struct MockClientFactory : public mcl::ClientBufferFactory
 {
-    MOCK_METHOD0(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer(const mcl::MirBufferPackage&));
+    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const mcl::MirBufferPackage&));
 };
 
 }
@@ -56,21 +63,28 @@ struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
     {
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
 
+        channel = std::make_shared<mcl::MirRpcChannel>("./test_file", logger); 
+        server = std::make_shared<mp::DisplayServer::Stub>(channel.get());
     }
 
-    protobuf::DisplayServer::Stub server;
-    MirSurfaceParameters const params;
-    MockFactory mock_factory;
+    std::shared_ptr<mp::DisplayServer::Stub> server;
+    std::shared_ptr<mcl::MirRpcChannel> channel;
+    mcl::ConsoleLogger logger;
+
+    MirSurfaceParameters params;
+    mt::MockClientFactory mock_factory;
 };
 
 
-void empty_callback(MirSurface *, void*) {};
+void empty_callback(MirSurface*, void*) {}
 TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
     using namespace testing;
 
     auto surface = mcl::MirSurface( server, mock_factory, params, empty_callback, NULL);
+
     EXPECT_CALL(mock_factory, create_buffer_from_ipc_message(_));
  
 }
