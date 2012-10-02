@@ -41,6 +41,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(height, geom::Height());
     MOCK_METHOD0(pixel_format, geom::PixelFormat());
 };
+
 }
 }
 
@@ -52,12 +53,15 @@ struct MirClientSurfaceTest : public testing::Test
     {
 
     }
+
+    protobuf::DisplayServer::Stub server;
+    MirSurfaceParameters const params;
 };
 
-TEST_F(MirClientSurfaceTest, get_buffer_matches_created)
+
+void empty_callback(MirSurface *, void*) {};
+TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
-    /*MirSurface(
-        protobuf::DisplayServer::Stub & server,
-        MirSurfaceParameters const & params,
-        mir_surface_lifecycle_callback callback, void * context); */
+    auto surface = mcl::MirSurface( server, params, empty_callback, NULL);
+ 
 }
