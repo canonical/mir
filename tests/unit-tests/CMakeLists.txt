@@ -20,12 +20,12 @@ include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS})
 set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 
 add_subdirectory(client/)
-add_subdirectory(compositor/)
+#add_subdirectory(compositor/)
 add_subdirectory(frontend/)
-add_subdirectory(geometry/)
-add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(surfaces/)
+#add_subdirectory(geometry/)
+#add_subdirectory(graphics/)
+#add_subdirectory(input/)
+#add_subdirectory(surfaces/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
@@ -42,7 +42,7 @@ target_link_libraries(
   mirprotobuf
 
   3rd_party
-  mirtest_eglmock
+#  mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

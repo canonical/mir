@@ -25,8 +25,8 @@
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
-#include "mir_test/stub_server.h"
 #include "mir_test/test_client.h"
+#include "mir_test/test_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -45,34 +45,11 @@ namespace mir
 namespace
 {
 
-struct TestServer
-{
-    TestServer(std::string socket_name) :
-        factory(std::make_shared<mt::MockIpcFactory>(stub_services)),
-        comm(socket_name, factory)
-    {
-    }
-
-    void expect_surface_count(int expected_count)
-    {
-        std::unique_lock<std::mutex> ul(stub_services.guard);
-        while (stub_services.surface_count != expected_count)
-            stub_services.wait_condition.wait(ul);
-
-        EXPECT_EQ(expected_count, stub_services.surface_count);
-    }
-
-    // "Server" side
-    mt::StubServer stub_services;
-    std::shared_ptr<mt::MockIpcFactory> factory;
-    mf::ProtobufAsioCommunicator comm;
-};
-
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
-        server = std::make_shared<TestServer>("./test_socket");
+        server = std::make_shared<mt::TestServer>("./test_socket");
  
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
@@ -88,7 +65,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     std::shared_ptr<mt::TestClient> client;
-    std::shared_ptr<TestServer> server;
+    std::shared_ptr<mt::TestServer> server;
 };
 
 struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
@@ -97,7 +74,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     void SetUp()
     {
-        server = std::make_shared<TestServer>("./test_socket");
+        server = std::make_shared<mt::TestServer>("./test_socket");
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
 
@@ -116,7 +93,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
     }
 
     std::vector<std::shared_ptr<mt::TestClient>> client;
-    std::shared_ptr<TestServer> server;
+    std::shared_ptr<mt::TestServer> server;
 };
 }
 
