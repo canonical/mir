@@ -65,30 +65,33 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     }
 }
 
-int mir_connection_is_valid(mcl::MirConnection * connection)
+int mir_connection_is_valid(MirConnection * connection)
 {
-    return mcl::MirConnection::is_valid(connection);
+    return mcl::MirConnection::is_valid((mcl::MirConnection*) connection);
 }
 
-char const * mir_connection_get_error_message(mcl::MirConnection * connection)
+char const * mir_connection_get_error_message(MirConnection * connection)
 {
-    return connection->get_error_message();
+    auto connection_cast = (mcl::MirConnection*) connection;
+    return connection_cast->get_error_message();
 }
 
-void mir_connection_release(mcl::MirConnection * connection)
+void mir_connection_release(MirConnection * connection)
 {
-    connection->disconnect();
-    delete connection;
+    auto connection_cast = (mcl::MirConnection*) connection;
+    connection_cast->disconnect();
+    delete connection_cast;
 }
 
-MirWaitHandle* mir_surface_create(mcl::MirConnection * connection,
+MirWaitHandle* mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * params,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
     try
     {
-        return (::MirWaitHandle*) connection->create_surface(*params, callback, context);
+        auto connection_cast = (mcl::MirConnection*) connection;
+        return (::MirWaitHandle*) connection_cast->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
