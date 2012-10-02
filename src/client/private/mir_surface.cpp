@@ -19,14 +19,6 @@
 #include "mir_client/mir_client_library.h"
 
 #include "mir_client/private/mir_surface.h"
-//#include "mir_client/mir_rpc_channel.h"
-//#include "mir_client/mir_buffer_package.h" 
-
-//#include "mir_protobuf.pb.h"
-
-//#include <set>
-//#include <unordered_set>
-//#include <cstddef>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
