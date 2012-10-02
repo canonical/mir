@@ -25,10 +25,7 @@
 #include <gbm.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
-#include <stdexcept>
 #include <memory>
 
 namespace mir
@@ -68,14 +65,9 @@ public:
 
 private:
     void ensure_egl_image();
-    void ensure_egl_image_extensions();
 
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
     EGLImageKHR egl_image;
-
-    static PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
-    static PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
-    static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
 };
 
 }

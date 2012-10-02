@@ -21,14 +21,63 @@
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <stdexcept>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
-PFNEGLCREATEIMAGEKHRPROC mgg::GBMBuffer::eglCreateImageKHR = 0;
-PFNEGLDESTROYIMAGEKHRPROC mgg::GBMBuffer::eglDestroyImageKHR = 0;
-PFNGLEGLIMAGETARGETTEXTURE2DOESPROC mgg::GBMBuffer::glEGLImageTargetTexture2DOES = 0;
+namespace
+{
+PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR = 0;
+PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR = 0;
+PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES = 0;
+
+void ensure_egl_image_extensions()
+{
+    if (eglCreateImageKHR != 0 && eglDestroyImageKHR != 0 &&
+        glEGLImageTargetTexture2DOES != 0)
+    {
+        return;
+    }
+
+    std::string ext_string;
+    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+    if (exts)
+        ext_string = exts;
+
+    /* Mesa in the framebuffer doesn't advertise EGL_KHRimage_pixmap properly */
+    //if (ext_string.find("EGL_KHRimage_pixmap") != std::string::npos)
+    {
+        eglCreateImageKHR =
+            reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
+        eglDestroyImageKHR =
+            reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
+    }
+
+    if (!eglCreateImageKHR || !eglDestroyImageKHR)
+        throw std::runtime_error("EGL implementation doesn't support EGLImage");
+    
+    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+    if (exts)
+        ext_string = exts;
+    else
+        ext_string.clear();
+
+    if (ext_string.find("GL_OES_EGL_image") != std::string::npos)
+    {
+        glEGLImageTargetTexture2DOES = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+                eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+    }
+
+    if (!glEGLImageTargetTexture2DOES)
+        throw std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage");
+}
+
+}
 
 void mgg::GBMBufferObjectDeleter::operator()(gbm_bo* handle) const
 {
@@ -109,45 +158,4 @@ void mgg::GBMBuffer::ensure_egl_image()
         if (egl_image == EGL_NO_IMAGE_KHR)
             throw std::runtime_error("Failed to create EGLImage from GBM bo");
     }
-}
-
-void mgg::GBMBuffer::ensure_egl_image_extensions()
-{
-    if (eglCreateImageKHR != 0 && eglDestroyImageKHR != 0 &&
-        glEGLImageTargetTexture2DOES != 0)
-    {
-        return;
-    }
-
-    std::string ext_string;
-    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
-    if (exts)
-        ext_string = exts;
-
-    /* Mesa in the framebuffer doesn't advertise EGL_KHR_image_pixmap properly */
-    //if (ext_string.find("EGL_KHR_image_pixmap") != std::string::npos)
-    {
-        eglCreateImageKHR =
-            reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
-        eglDestroyImageKHR =
-            reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
-    }
-
-    if (!eglCreateImageKHR || !eglDestroyImageKHR)
-        throw std::runtime_error("EGL implementation doesn't support EGLImage");
-    
-    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    if (exts)
-        ext_string = exts;
-    else
-        ext_string.clear();
-
-    if (ext_string.find("GL_OES_EGL_image") != std::string::npos)
-    {
-        glEGLImageTargetTexture2DOES = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                eglGetProcAddress("glEGLImageTargetTexture2DOES"));
-    }
-
-    if (!glEGLImageTargetTexture2DOES)
-        throw std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage");
 }

@@ -33,6 +33,7 @@
 #include <gmock/gmock.h>
 
 #include <cstdint>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
