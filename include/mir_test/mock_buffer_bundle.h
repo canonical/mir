@@ -31,7 +31,7 @@ namespace compositor
 struct MockBufferBundle : public BufferBundle
 {
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
-    MOCK_METHOD0(lock_and_bind_back_buffer, std::shared_ptr<GraphicRegion>());
+    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<GraphicRegion>());
 
     MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(bundle_size, geometry::Size());

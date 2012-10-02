@@ -78,10 +78,9 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_and_bind_back_buffer()
+std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
     std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
-    bptr->bind_to_texture();
 
     return bptr;
 }

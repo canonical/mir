@@ -184,7 +184,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     ms::Surface surf{surface_name, mock_buffer_bundle};
     auto buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pf);
 
-    EXPECT_CALL(*mock_buffer_bundle, lock_and_bind_back_buffer())
+    EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
         .Times(1)
         .WillOnce(Return(buffer));
 
