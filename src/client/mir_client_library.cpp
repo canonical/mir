@@ -18,11 +18,11 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir_client/private/mir_connection.h"
-#include "mir_client/private/mir_surface.h"
+#include "private/mir_connection.h"
+#include "private/mir_surface.h"
 
-#include "mir_client/private/mir_rpc_channel.h"
-#include "mir_client/private/mir_buffer_package.h" 
+#include "private/mir_rpc_channel.h"
+#include "private/mir_buffer_package.h" 
 
 #include "mir_protobuf.pb.h"
 

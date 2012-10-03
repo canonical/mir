@@ -16,10 +16,11 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/private/mir_connection.h"
-#include "mir_client/private/mir_surface.h"
 #include "mir_client/mir_logger.h"
-#include "mir_client/private/mir_buffer_package.h"
+
+#include "private/mir_connection.h"
+#include "private/mir_surface.h"
+#include "private/mir_buffer_package.h"
 
 #include <cstddef>
 

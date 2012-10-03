@@ -37,6 +37,10 @@ include_directories(
 
 endif()
 
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set(
   CLIENT_SOURCES
 
@@ -52,8 +56,8 @@ if( MIR_PLATFORM STREQUAL "android")
 set(
   CLIENT_SOURCES
 
-  android/android_client_buffer.cpp
-  android/android_registrar.cpp
+  private/android/android_client_buffer.cpp
+  private/android/android_registrar.cpp
   ${CLIENT_SOURCES}
 )
 endif()
