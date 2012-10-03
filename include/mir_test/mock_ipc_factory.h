@@ -52,7 +52,7 @@ public:
 
         // called during initialisation:
         // there's always a server awaiting the next connection
-        EXPECT_CALL(*this, make_ipc_server()).Times(1);
+        EXPECT_CALL(*this, make_ipc_server()).Times(AtLeast(1));
     }
 
     MOCK_METHOD0(make_ipc_server, std::shared_ptr<mir::protobuf::DisplayServer>());

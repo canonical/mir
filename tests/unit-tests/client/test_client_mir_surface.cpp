@@ -65,6 +65,16 @@ struct MockClientFactory : public mcl::ClientBufferFactory
 
 namespace mt = mir::test;
 
+
+
+struct CallBack
+{
+    void msg()
+    {
+        printf("SERVER CONNECT\n");
+    }
+};
+
 struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
@@ -74,24 +84,26 @@ struct MirClientSurfaceTest : public testing::Test
         test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
         test_server->comm.start();
 
-        logger = std::make_shared<mcl::ConsoleLogger>();
-        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger); 
-        server = std::make_shared<mp::DisplayServer::Stub>(channel.get()); 
         mock_factory = std::make_shared<mt::MockClientFactory>();
 
         params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
     
-        client_tools = std::make_shared<mt::TestClient>("./test_socket_surface");
-
-        mir::protobuf::ConnectParameters connect_parameters;
-        connect_parameters.set_application_name(__PRETTY_FUNCTION__);
-        server->connect(0,
+        /* connect dummy server */
+        connect_parameters.set_application_name("test");
+        mock_server_tool->connect(0,
                         &connect_parameters,
                         &response,
-                        google::protobuf::NewCallback(client_tools.get(), &mt::TestClient::create_surface_done));
+                        google::protobuf::NewCallback(&callback, &CallBack::msg));
 
-        client_tools->wait_for_create_surface();
-        printf("connection done\n");
+        /* connect client */
+        logger = std::make_shared<mcl::ConsoleLogger>();
+        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger); 
+        client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(channel.get());
+        client_comm_channel->connect(
+            0,
+            &connect_parameters,
+            &response,
+            google::protobuf::NewCallback(&callback, &CallBack::msg));
     }
 
     void TearDown()
@@ -99,8 +111,6 @@ struct MirClientSurfaceTest : public testing::Test
         test_server->comm.stop();
     }
 
-
-    std::shared_ptr<mp::DisplayServer::Stub> server;
     std::shared_ptr<mcl::MirRpcChannel> channel;
     std::shared_ptr<mcl::ConsoleLogger> logger;
 
@@ -108,19 +118,32 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mt::MockClientFactory> mock_factory;
 
     mir::protobuf::Connection response;
+    mir::protobuf::ConnectParameters connect_parameters;
 
     std::shared_ptr<mt::TestServer> test_server;
     std::shared_ptr<mt::TestClient> client_tools;
     std::shared_ptr<mt::MockServerTool> mock_server_tool;
+
+    CallBack callback;
+
+    std::shared_ptr<mir::protobuf::DisplayServer::Stub> client_comm_channel;
 };
 
 
-void empty_callback(MirSurface*, void*) {}
+void empty_callback(MirSurface*, void*) { printf("should not hit\n"); }
 TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
     using namespace testing;
 
-    auto surface = std::make_shared<MirSurface> ( *server, mock_factory, params, &empty_callback, (void*) NULL);
 
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
+
+    auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+
+
+    printf("done\n");
+//    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
+
 }
