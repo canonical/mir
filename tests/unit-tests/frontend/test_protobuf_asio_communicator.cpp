@@ -150,7 +150,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,surface_creation_results_in_a_callback)
 }
 
 
-TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
+TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name_from_parameter)
 {
     using namespace testing;
     EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(0));
@@ -166,6 +166,29 @@ TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
     EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->app_name);
 }
 
+TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(1));
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(1));
+
+    mock_client->display_server.connect(
+        0,
+        &mock_client->connect_parameters,
+        &mock_client->connection,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
+    mock_client->wait_for_connect_done();
+
+    mock_client->surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
+    mock_client->display_server.create_surface(
+        0,
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+    mock_client->wait_for_create_surface();
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->surface_name);
+}
 
 
 
@@ -287,33 +310,6 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 };
 
 
-TEST_F(ProtobufAsioCommunicatorTestFixture, create_surface_sets_surface_name)
-{
-    EXPECT_CALL(*client, connect_done()).Times(1);
-    EXPECT_CALL(*client, create_surface_done()).Times(1);
-
-    client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
-
-    client->display_server.connect(
-        0,
-        &client->connect_parameters,
-        &client->connection,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::connect_done));
-
-    client->wait_for_connect_done();
-
-    client->surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
-
-    client->display_server.create_surface(
-        0,
-        &client->surface_parameters,
-        &client->surface,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::create_surface_done));
-
-    client->wait_for_create_surface();
-
-    EXPECT_EQ(__PRETTY_FUNCTION__, server->stub_services.surface_name);
-}
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
         create_surface_results_in_a_surface_being_created)
