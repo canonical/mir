@@ -101,23 +101,20 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 
 void MirSurface::released(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast, context);
+    callback(this, context);
     release_wait_handle.result_received();
     delete this;
 }
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast , context);
+    callback(this , context);
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast, context);
+    callback(this, context);
     next_buffer_wait_handle.result_received();
 }
 
