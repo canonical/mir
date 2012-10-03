@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android/android_client_buffer.h"
-#include "mir_client/android/android_registrar_gralloc.h"
-#include "mir_client/private/mir_buffer_package.h"
+#include "private/android/android_client_buffer.h"
+#include "private/android/android_registrar_gralloc.h"
+#include "private/mir_buffer_package.h"
 #include "mir_test/mock_android_alloc_device.h"
 
 #include <system/graphics.h>

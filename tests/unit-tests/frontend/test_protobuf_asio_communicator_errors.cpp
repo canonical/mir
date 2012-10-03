@@ -20,11 +20,69 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
-#include "mir_test/stub_server_error.h"
+#include "mir_test/mock_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/test_client.h"
 
 namespace mt = mir::test;
+
+namespace mir
+{
+namespace test
+{
+
+struct ErrorServer : MockServerTool
+{
+    static std::string const test_exception_text;
+
+    void create_surface(
+        google::protobuf::RpcController*,
+        const protobuf::SurfaceParameters*,
+        protobuf::Surface*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void release_surface(
+        google::protobuf::RpcController*,
+        const protobuf::SurfaceId*,
+        protobuf::Void*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+
+    void connect(
+        ::google::protobuf::RpcController*,
+        const ::mir::protobuf::ConnectParameters*,
+        ::mir::protobuf::Connection*,
+        ::google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void disconnect(
+        google::protobuf::RpcController*,
+        const protobuf::Void*,
+        protobuf::Void*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+
+    void test_file_descriptors(
+        google::protobuf::RpcController*,
+        const protobuf::Void*,
+        protobuf::Buffer*,
+        google::protobuf::Closure*)
+    {
+        throw std::runtime_error(test_exception_text);
+    }
+};
+
+std::string const ErrorServer::test_exception_text{"test exception text"};
 
 struct TestErrorServer
 {
@@ -40,11 +98,14 @@ struct TestErrorServer
     mf::ProtobufAsioCommunicator comm;
 };
 
+}
+}
+
 struct ProtobufErrorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
-        server = std::make_shared<TestErrorServer>("./test_error_fixture");
+        server = std::make_shared<mt::TestErrorServer>("./test_error_fixture");
         client = std::make_shared<mt::TestClient>("./test_error_fixture");
 
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
@@ -57,7 +118,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
         server->comm.stop();
     }
 
-    std::shared_ptr<TestErrorServer> server;
+    std::shared_ptr<mt::TestErrorServer> server;
     std::shared_ptr<mt::TestClient>  client;
 };
 

@@ -29,14 +29,16 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir_client/private/mir_rpc_channel.h"
-#include "mir_client/private/mir_wait_handle.h"
+#include "private/mir_rpc_channel.h"
+#include "private/mir_wait_handle.h"
 
 namespace mir
 {
 namespace client
 {
 class Logger;
+}
+}
 
 // TODO the connection should track all associated surfaces, and release them on
 // disconnection.
@@ -44,7 +46,7 @@ class MirConnection
 {
 public:
     MirConnection(const std::string& socket_file,
-                  std::shared_ptr<Logger> const & log);
+                  std::shared_ptr<mir::client::Logger> const & log);
     ~MirConnection();
 
     MirConnection(MirConnection const &) = delete;
@@ -66,10 +68,10 @@ public:
 
     static bool is_valid(MirConnection *connection);
 private:
-    MirRpcChannel channel;
-    protobuf::DisplayServer::Stub server;
-    std::shared_ptr<Logger> log;
-    protobuf::Void void_response;
+    mir::client::MirRpcChannel channel;
+    mir::protobuf::DisplayServer::Stub server;
+    std::shared_ptr<mir::client::Logger> log;
+    mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
@@ -83,10 +85,8 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
 
-    static std::mutex connection_guard;
+    static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 };
-}
-}
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_ */

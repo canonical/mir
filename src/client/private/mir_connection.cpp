@@ -16,10 +16,11 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/private/mir_connection.h"
-#include "mir_client/private/mir_surface.h"
 #include "mir_client/mir_logger.h"
-#include "mir_client/private/mir_buffer_package.h"
+
+#include "private/mir_connection.h"
+#include "private/mir_surface.h"
+#include "private/mir_buffer_package.h"
 
 #include <cstddef>
 
@@ -39,7 +40,7 @@ namespace gp = google::protobuf;
     using std::this_thread::yield;
 #endif
 
-mcl::MirConnection::MirConnection(const std::string& socket_file,
+MirConnection::MirConnection(const std::string& socket_file,
     std::shared_ptr<mcl::Logger> const & log) :
       channel(socket_file, log)
     , server(&channel)
@@ -52,7 +53,7 @@ mcl::MirConnection::MirConnection(const std::string& socket_file,
     connect_result.set_error("connect not called");
 }
 
-mcl::MirConnection::~MirConnection()
+MirConnection::~MirConnection()
 {
     {
         lock_guard<mutex> lock(connection_guard);
@@ -61,16 +62,16 @@ mcl::MirConnection::~MirConnection()
 }
 
 #if TODO 
-mcl::MirWaitHandle* mcl::MirConnection::create_surface(
+MirWaitHandle* MirConnection::create_surface(
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto tmp = new mcl::MirSurface(server, params, callback, context);
+    auto tmp = new MirSurface(server, params, callback, context);
     return tmp->get_create_wait_handle();
 }
 #else 
-mcl::MirWaitHandle* mcl::MirConnection::create_surface(
+MirWaitHandle* MirConnection::create_surface(
     MirSurfaceParameters const &,
     mir_surface_lifecycle_callback,
     void *)
@@ -79,7 +80,7 @@ mcl::MirWaitHandle* mcl::MirConnection::create_surface(
 }
 #endif 
 
-char const * mcl::MirConnection::get_error_message()
+char const * MirConnection::get_error_message()
 {
     if (connect_result.has_error())
     {
@@ -91,7 +92,7 @@ char const * mcl::MirConnection::get_error_message()
     }
 }
 
-mcl::MirWaitHandle* mcl::MirConnection::connect(
+MirWaitHandle* MirConnection::connect(
     const char* app_name,
     mir_connected_callback callback,
     void * context)
@@ -107,7 +108,7 @@ mcl::MirWaitHandle* mcl::MirConnection::connect(
     return &connect_wait_handle;
 }
 
-void mcl::MirConnection::disconnect()
+void MirConnection::disconnect()
 {
     disconnect_wait_handle.result_requested();
     server.disconnect(
@@ -119,7 +120,7 @@ void mcl::MirConnection::disconnect()
     disconnect_wait_handle.wait_for_result();
 }
 
-bool mcl::MirConnection::is_valid(MirConnection *connection)
+bool MirConnection::is_valid(MirConnection *connection)
 {
     {
         lock_guard<mutex> lock(connection_guard);
@@ -130,12 +131,12 @@ bool mcl::MirConnection::is_valid(MirConnection *connection)
     return !connection->connect_result.has_error();
 }
 
-void mcl::MirConnection::done_disconnect()
+void MirConnection::done_disconnect()
 {
     disconnect_wait_handle.result_received();
 }
 
-void mcl::MirConnection::connected(mir_connected_callback callback, void * context)
+void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     auto cast = (::MirConnection*) (this);
     callback(cast, context);

@@ -16,11 +16,9 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/private/mir_wait_handle.h"
+#include "private/mir_wait_handle.h"
 
-namespace mcl = mir::client;
-
-mcl::MirWaitHandle::MirWaitHandle() :
+MirWaitHandle::MirWaitHandle() :
     waiting_threads(0),
     guard(),
     wait_condition(),
@@ -28,15 +26,15 @@ mcl::MirWaitHandle::MirWaitHandle() :
 {
 }
 
-mcl::MirWaitHandle::~MirWaitHandle()
+MirWaitHandle::~MirWaitHandle()
 {
     // Delay destruction while there are waiting threads
-    while (waiting_threads.load()) std::this_thread::yield();
+    while (waiting_threads.load()) yield();
 }
 
-void mcl::MirWaitHandle::result_requested()
+void MirWaitHandle::result_requested()
 {
-    std::unique_lock<std::mutex> lock(guard);
+    unique_lock<mutex> lock(guard);
 
     while (waiting_for_result)
         wait_condition.wait(lock);
@@ -44,26 +42,26 @@ void mcl::MirWaitHandle::result_requested()
     waiting_for_result = true;
 }
 
-void mcl::MirWaitHandle::result_received()
+void MirWaitHandle::result_received()
 {
-    std::lock_guard<std::mutex> lock(guard);
+    lock_guard<mutex> lock(guard);
 
     waiting_for_result = false;
 
     wait_condition.notify_all();
 }
 
-void mcl::MirWaitHandle::wait_for_result()
+void MirWaitHandle::wait_for_result()
 {
     int tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) std::this_thread::yield();
+    while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) yield();
 
     {
-        std::unique_lock<std::mutex> lock(guard);
+        unique_lock<mutex> lock(guard);
         while (waiting_for_result)
             wait_condition.wait(lock);
     }
 
     tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) std::this_thread::yield();
+    while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
 }

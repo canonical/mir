@@ -17,28 +17,31 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
+#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
 
-#include "mir_client/private/mir_buffer_package.h"
-#include "mir/geometry/rectangle.h"
-#include <cutils/native_handle.h>
+#include "mir/geometry/pixel_format.h"
+#include "private/android/android_registrar.h"
+#include <hardware/gralloc.h>
 
-#include <memory>
 namespace mir
 {
 namespace client
 {
-class MemoryRegion;
 
-class AndroidRegistrar
+class AndroidRegistrarGralloc : public AndroidRegistrar 
 {
 public:
-    virtual void register_buffer(const native_handle_t *handle) = 0;
-    virtual void unregister_buffer(const native_handle_t *handle) = 0;
-    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+    AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
+
+    void register_buffer(const native_handle_t *handle);
+    void unregister_buffer(const native_handle_t *handle);
+    std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
+
+private:
+    std::shared_ptr<const gralloc_module_t> gralloc_module;
 };
 
 }
 }
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_ */
