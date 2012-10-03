@@ -136,6 +136,49 @@ private:
     std::shared_ptr<mt::TestServer> mock_server;
 };
 
+TEST_F(ProtobufAsioCommunicatorBasic,surface_creation_results_in_a_callback)
+{
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+
+    mock_client->display_server.create_surface(
+        0,
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+    mock_client->wait_for_create_surface();
+
+}
+
+
+TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(0));
+
+    mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+    mock_client->display_server.connect(
+        0,
+        &mock_client->connect_parameters,
+        &mock_client->connection,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
+    mock_client->wait_for_connect_done();
+
+    EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->app_name);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 struct ProtobufAsioCommunicatorCounter : public ::testing::Test
 {
     void SetUp()
@@ -162,22 +205,24 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
     std::shared_ptr<mt::TestServer> mock_server;
 };
 
-
-TEST_F(ProtobufAsioCommunicatorBasic,surface_creation_results_in_a_callback)
+TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+    using namespace testing;
+    EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(0));
 
-    mock_client->display_server.create_surface(
+    mock_client->display_server.connect(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
-    mock_client->wait_for_create_surface();
+        &mock_client->connect_parameters,
+        &mock_client->connection,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
+    mock_client->wait_for_connect_done();
 
+    mock_server_tool->expect_surface_count(0);
 }
 
 TEST_F(ProtobufAsioCommunicatorCounter, connection_results_in_a_callback)
 {
+    using namespace testing;
     EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(0));
 
     mock_client->display_server.create_surface(
@@ -189,25 +234,6 @@ TEST_F(ProtobufAsioCommunicatorCounter, connection_results_in_a_callback)
     mock_client->wait_for_create_surface();
 
     mock_server_tool->expect_surface_count(1);
-}
-
-TEST_F(ProtobufAsioCommunicatorCounter, connection_sets_app_name)
-{
-    EXPECT_CALL(*mock_client, connect_done()).Times(1);
-
-    mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
-
-    mock_client->display_server.connect(
-        0,
-        &mock_client->connect_parameters,
-        &mock_client->connection,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
-
-    mock_client->wait_for_connect_done();
-
-    mock_server_tool->expect_surface_count(0);
-
-    EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->app_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorCounter,
