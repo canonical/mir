@@ -60,7 +60,7 @@ mcl::MirConnection::~MirConnection()
     }
 }
 
-mcl::MirWaitHandle* mcl::MirConnection::create_surface(
+MirWaitHandle* mcl::MirConnection::create_surface(
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback,
     void * context)
@@ -81,7 +81,7 @@ char const * mcl::MirConnection::get_error_message()
     }
 }
 
-mcl::MirWaitHandle* mcl::MirConnection::connect(
+MirWaitHandle* mcl::MirConnection::connect(
     const char* app_name,
     mir_connected_callback callback,
     void * context)

@@ -141,12 +141,11 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buff
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     auto surface_cast = (mcl::MirSurface*) surface;
-    return (MirWaitHandle*) surface_cast->next_buffer(callback, context);
+    return surface_cast->next_buffer(callback, context);
 }
 
 void mir_wait_for(MirWaitHandle* wait_handle)
 {
-    auto wait_handle_cast = (mcl::MirWaitHandle*) wait_handle;
-    if (wait_handle_cast)
-        wait_handle_cast->wait_for_result();
+    if (wait_handle)
+        wait_handle->wait_for_result();
 }

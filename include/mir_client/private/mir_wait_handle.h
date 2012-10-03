@@ -20,10 +20,17 @@
 
 #include "mir/thread/all.h"
 
-namespace mir
-{
-namespace client
-{
+#ifdef MIR_USING_BOOST_THREADS
+    using ::mir::std::condition_variable;
+    using ::boost::unique_lock;
+    using ::boost::lock_guard;
+    using ::boost::thread;
+    using ::boost::mutex;
+    using ::mir::std::this_thread::yield;
+#else
+    using namespace std;
+    using std::this_thread::yield;
+#endif
 
 class MirWaitHandle
 {
@@ -37,11 +44,9 @@ public:
 
 private:
     std::atomic<int> waiting_threads;
-    std::mutex guard;
-    std::condition_variable wait_condition;
+    mutex guard;
+    condition_variable wait_condition;
     bool waiting_for_result;
 };
 
-}
-}
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

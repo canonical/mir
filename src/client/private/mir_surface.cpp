@@ -40,7 +40,7 @@ mcl::MirSurface::MirSurface(
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
-mcl::MirWaitHandle* mcl::MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mcl::MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
 {
     mir::protobuf::SurfaceId message;
     message.set_value(surface.id().value());
@@ -83,7 +83,7 @@ void mcl::MirSurface::populate(MirGraphicsRegion& )
     // TODO
 }
 
-mcl::MirWaitHandle* mcl::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mcl::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     next_buffer_wait_handle.result_requested();
     server.next_buffer(
@@ -95,7 +95,7 @@ mcl::MirWaitHandle* mcl::MirSurface::next_buffer(mir_surface_lifecycle_callback 
     return &next_buffer_wait_handle;
 }
 
-mcl::MirWaitHandle* mcl::MirSurface::get_create_wait_handle()
+MirWaitHandle* mcl::MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;
 }
