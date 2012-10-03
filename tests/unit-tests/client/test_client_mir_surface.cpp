@@ -27,6 +27,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_server.h"
+#include "mir_test/mock_server_tool.h"
 #include "mir_test/test_client.h"
 
 #include <gtest/gtest.h>
@@ -68,9 +69,9 @@ struct MirClientSurfaceTest : public testing::Test
 {
     void SetUp()
     {
-        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
 
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface");
+        mock_server_tool = std::make_shared<mt::MockServerTool>();
+        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
         test_server->comm.start();
 
         logger = std::make_shared<mcl::ConsoleLogger>();
@@ -78,6 +79,7 @@ struct MirClientSurfaceTest : public testing::Test
         server = std::make_shared<mp::DisplayServer::Stub>(channel.get()); 
         mock_factory = std::make_shared<mt::MockClientFactory>();
 
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
     
         client_tools = std::make_shared<mt::TestClient>("./test_socket_surface");
 
@@ -106,8 +108,10 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mt::MockClientFactory> mock_factory;
 
     mir::protobuf::Connection response;
+
     std::shared_ptr<mt::TestServer> test_server;
     std::shared_ptr<mt::TestClient> client_tools;
+    std::shared_ptr<mt::MockServerTool> mock_server_tool;
 };
 
 
