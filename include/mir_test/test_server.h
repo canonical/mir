@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_TEST_SERVER_H_
 #define MIR_TEST_TEST_SERVER_H_
 
-#include "mir_test/stub_server.h"
+#include "mir_test/mock_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 
@@ -30,23 +30,15 @@ namespace test
 
 struct TestServer
 {
-    TestServer(std::string socket_name) :
-        factory(std::make_shared<MockIpcFactory>(stub_services)),
+        //todo cleanup construcotr;
+    TestServer(std::string socket_name,
+               const std::shared_ptr<protobuf::DisplayServer>& tool) :
+        factory(std::make_shared<MockIpcFactory>(*tool)),
         comm(socket_name, factory)
     {
     }
 
-    void expect_surface_count(int expected_count)
-    {
-        std::unique_lock<std::mutex> ul(stub_services.guard);
-        while (stub_services.surface_count != expected_count)
-            stub_services.wait_condition.wait(ul);
-
-        EXPECT_EQ(expected_count, stub_services.surface_count);
-    }
-
     // "Server" side
-    StubServer stub_services;
     std::shared_ptr<MockIpcFactory> factory;
     frontend::ProtobufAsioCommunicator comm;
 };

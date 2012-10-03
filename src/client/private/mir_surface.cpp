@@ -21,12 +21,13 @@
 #include "private/client_buffer_factory.h"
 #include "private/mir_surface.h"
 
+namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
-    const std::shared_ptr<ClientBufferFactory>& /* factory */, 
+    const std::shared_ptr<mcl::ClientBufferFactory>& /* factory */, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server)

@@ -19,11 +19,11 @@
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
-#include "mir_client/private/client_buffer.h"
-#include "mir_client/private/client_buffer_factory.h"
-#include "mir_client/private/mir_rpc_channel.h"
-#include "mir_client/private/mir_buffer_package.h"
-#include "mir_client/private/mir_surface.h"
+#include "private/client_buffer.h"
+#include "private/client_buffer_factory.h"
+#include "private/mir_rpc_channel.h"
+#include "private/mir_buffer_package.h"
+#include "private/mir_surface.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_server.h"
@@ -116,7 +116,7 @@ TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
     using namespace testing;
 
-    auto surface = std::make_shared<mcl::MirSurface> ( *server, mock_factory, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> ( *server, mock_factory, params, &empty_callback, (void*) NULL);
 
     EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
 }

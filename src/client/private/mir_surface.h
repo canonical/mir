@@ -39,6 +39,7 @@ public:
 
     MirSurface(
         mir::protobuf::DisplayServer::Stub & server,
+        const std::shared_ptr<mir::client::ClientBufferFactory>& /* factory */, 
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
