@@ -27,58 +27,6 @@ namespace mir
 {
 namespace test
 {
-struct ErrorServer : mir::protobuf::DisplayServer
-{
-    static std::string const test_exception_text;
-
-    void create_surface(
-        google::protobuf::RpcController*,
-        const protobuf::SurfaceParameters*,
-        protobuf::Surface*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
-    void release_surface(
-        google::protobuf::RpcController*,
-        const protobuf::SurfaceId*,
-        protobuf::Void*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
-
-    void connect(
-        ::google::protobuf::RpcController*,
-        const ::mir::protobuf::ConnectParameters*,
-        ::mir::protobuf::Connection*,
-        ::google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
-    void disconnect(
-        google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Void*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
-    void test_file_descriptors(
-        google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Buffer*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-};
-
-std::string const ErrorServer::test_exception_text{"test exception text"};
 }
 }
 #endif /* MIR_TEST_STUB_SERVER_ERROR_H_ */

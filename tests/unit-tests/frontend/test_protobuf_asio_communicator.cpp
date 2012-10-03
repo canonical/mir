@@ -38,12 +38,60 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
-const int mt::StubServer::file_descriptors;
 
 namespace mir
 {
-namespace
+namespace test
 {
+
+struct StubServer : public MockServerTool
+{
+    static const int file_descriptors = 5;
+
+    int surface_count;
+    int file_descriptor[file_descriptors];
+
+    StubServer() : surface_count(0)
+    {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            *i = 0;
+    }
+
+    void create_surface(google::protobuf::RpcController* controller,
+                 const mir::protobuf::SurfaceParameters* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    { 
+        ++surface_count;
+        MockServerTool::create_surface(controller, request, response, done);
+    }
+
+    void test_file_descriptors(::google::protobuf::RpcController* ,
+                         const ::mir::protobuf::Void* ,
+                         ::mir::protobuf::Buffer* fds,
+                         ::google::protobuf::Closure* done)
+    {
+        for (int i = 0; i != file_descriptors; ++i)
+        {
+            static char const test_file_fmt[] = "fd_test_file%d";
+            char test_file[sizeof test_file_fmt];
+            sprintf(test_file, test_file_fmt, i);
+            remove(test_file);
+            file_descriptor[i] = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
+
+            fds->add_fd(file_descriptor[i]);
+        }
+
+        done->Run();
+    }
+
+    void close_files()
+    {
+        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
+            close(*i), *i = 0;
+    }
+};
+const int StubServer::file_descriptors;
 
 struct TestServer
 {
@@ -67,12 +115,13 @@ struct TestServer
     std::shared_ptr<mt::MockIpcFactory> factory;
     mf::ProtobufAsioCommunicator comm;
 };
+}
 
 struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
-        server = std::make_shared<TestServer>("./test_socket");
+        server = std::make_shared<mt::TestServer>("./test_socket");
  
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
@@ -88,7 +137,7 @@ struct ProtobufAsioCommunicatorTestFixture : public ::testing::Test
     }
 
     std::shared_ptr<mt::TestClient> client;
-    std::shared_ptr<TestServer> server;
+    std::shared_ptr<mt::TestServer> server;
 };
 
 struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
@@ -97,7 +146,7 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
 
     void SetUp()
     {
-        server = std::make_shared<TestServer>("./test_socket");
+        server = std::make_shared<mt::TestServer>("./test_socket");
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
 
@@ -116,9 +165,8 @@ struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
     }
 
     std::vector<std::shared_ptr<mt::TestClient>> client;
-    std::shared_ptr<TestServer> server;
+    std::shared_ptr<mt::TestServer> server;
 };
-}
 
 
 TEST_F(ProtobufAsioCommunicatorTestFixture, connection_results_in_a_callback)
