@@ -163,9 +163,22 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
 };
 
 
-TEST_F(ProtobufAsioCommunicatorCounter, connection_results_in_a_callback)
+TEST_F(ProtobufAsioCommunicatorBasic,surface_creation_results_in_a_callback)
 {
     EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+
+    mock_client->display_server.create_surface(
+        0,
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+    mock_client->wait_for_create_surface();
+
+}
+
+TEST_F(ProtobufAsioCommunicatorCounter, connection_results_in_a_callback)
+{
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(0));
 
     mock_client->display_server.create_surface(
         0,
