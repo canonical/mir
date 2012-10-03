@@ -186,10 +186,12 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
 
     void SetUp()
     {
+        using namespace testing;
+
         mock_server_tool = std::make_shared<mt::MockServerSurfaceCounter>();
         mock_server = std::make_shared<mt::TestServer>("./test_socket", mock_server_tool);
         ::testing::Mock::VerifyAndClearExpectations(mock_server->factory.get());
-        EXPECT_CALL(*mock_server->factory, make_ipc_server()).Times(1);
+        EXPECT_CALL(*mock_server->factory, make_ipc_server()).Times(AtLeast(0));
 
         mock_server->comm.start();
 
