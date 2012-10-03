@@ -20,7 +20,7 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
-#include "mir_test/stub_server.h"
+#include "mir_test/mock_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/test_client.h"
 
@@ -30,6 +30,7 @@ namespace mir
 {
 namespace test
 {
+
 struct ErrorServer : MockServerTool
 {
     static std::string const test_exception_text;

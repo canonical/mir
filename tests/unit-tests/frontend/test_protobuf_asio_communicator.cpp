@@ -25,7 +25,7 @@
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
-#include "mir_test/stub_server.h"
+#include "mir_test/mock_server_tool.h"
 #include "mir_test/test_client.h"
 
 #include <gtest/gtest.h>
