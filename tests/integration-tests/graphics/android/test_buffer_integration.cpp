@@ -125,13 +125,13 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     auto client_buffer = bundle->secure_client_buffer();
     sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
     client_buffer.reset();
 
-    texture_res = bundle->lock_and_bind_back_buffer();
+    texture_res = bundle->lock_back_buffer();
     gl_animation.render_gl();
     display->post_update();
     texture_res.reset();
@@ -151,7 +151,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     for(;;)
     {
@@ -160,7 +160,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
         client_buffer.reset();
 
-        texture_res = bundle->lock_and_bind_back_buffer();
+        texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
@@ -171,7 +171,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         sw_renderer.render_pattern(client_buffer, size, 0x0000FFFF);
         client_buffer.reset();
 
-        texture_res = bundle->lock_and_bind_back_buffer();
+        texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();

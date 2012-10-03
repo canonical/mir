@@ -20,7 +20,6 @@
 #include "mir/frontend/application_manager.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
-#include "mir/graphics/texture.h"
 #include "mir_test/mock_buffer_bundle.h"
 
 #include <gmock/gmock.h>
@@ -29,7 +28,6 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
-namespace mg = mir::graphics;
 
 namespace
 {
