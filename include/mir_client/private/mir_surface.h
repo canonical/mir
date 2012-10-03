@@ -23,11 +23,6 @@
 #include "mir_client/private/mir_wait_handle.h"
 #include "mir_client/mir_client_library.h"
 
-namespace mir
-{
-namespace client
-{
-
 class MirSurface
 {
 public:
@@ -35,7 +30,7 @@ public:
     MirSurface& operator=(MirSurface const &) = delete;
 
     MirSurface(
-        protobuf::DisplayServer::Stub & server,
+        mir::protobuf::DisplayServer::Stub & server,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
@@ -53,9 +48,9 @@ private:
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
 
-    protobuf::DisplayServer::Stub & server;
-    protobuf::Void void_response;
-    protobuf::Surface surface;
+    mir::protobuf::DisplayServer::Stub & server;
+    mir::protobuf::Void void_response;
+    mir::protobuf::Surface surface;
     std::string error_message;
 
     MirWaitHandle create_wait_handle;
@@ -63,6 +58,4 @@ private:
     MirWaitHandle next_buffer_wait_handle;
 };
 
-}
-}
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

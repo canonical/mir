@@ -20,11 +20,10 @@
 
 #include "mir_client/private/mir_surface.h"
 
-namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-mcl::MirSurface::MirSurface(
+MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
@@ -40,7 +39,7 @@ mcl::MirSurface::MirSurface(
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
-MirWaitHandle* mcl::MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
 {
     mir::protobuf::SurfaceId message;
     message.set_value(surface.id().value());
@@ -50,7 +49,7 @@ MirWaitHandle* mcl::MirSurface::release(mir_surface_lifecycle_callback callback,
     return &release_wait_handle;
 }
 
-MirSurfaceParameters mcl::MirSurface::get_parameters() const
+MirSurfaceParameters MirSurface::get_parameters() const
 {
     return MirSurfaceParameters {
         0,
@@ -59,7 +58,7 @@ MirSurfaceParameters mcl::MirSurface::get_parameters() const
         static_cast<MirPixelFormat>(surface.pixel_format())};
 }
 
-char const * mcl::MirSurface::get_error_message()
+char const * MirSurface::get_error_message()
 {
     if (surface.has_error())
     {
@@ -68,22 +67,22 @@ char const * mcl::MirSurface::get_error_message()
     return error_message.c_str();
 }
 
-int mcl::MirSurface::id() const
+int MirSurface::id() const
 {
     return surface.id().value();
 }
 
-bool mcl::MirSurface::is_valid() const
+bool MirSurface::is_valid() const
 {
     return !surface.has_error();
 }
 
-void mcl::MirSurface::populate(MirGraphicsRegion& )
+void MirSurface::populate(MirGraphicsRegion& )
 {
     // TODO
 }
 
-MirWaitHandle* mcl::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     next_buffer_wait_handle.result_requested();
     server.next_buffer(
@@ -95,12 +94,12 @@ MirWaitHandle* mcl::MirSurface::next_buffer(mir_surface_lifecycle_callback callb
     return &next_buffer_wait_handle;
 }
 
-MirWaitHandle* mcl::MirSurface::get_create_wait_handle()
+MirWaitHandle* MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;
 }
 
-void mcl::MirSurface::released(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::released(mir_surface_lifecycle_callback callback, void * context)
 {
     auto cast = ( ::MirSurface* ) this;
     callback(cast, context);
@@ -108,14 +107,14 @@ void mcl::MirSurface::released(mir_surface_lifecycle_callback callback, void * c
     delete this;
 }
 
-void mcl::MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     auto cast = ( ::MirSurface* ) this;
     callback(cast , context);
     create_wait_handle.result_received();
 }
 
-void mcl::MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     auto cast = ( ::MirSurface* ) this;
     callback(cast, context);

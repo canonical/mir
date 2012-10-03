@@ -46,8 +46,8 @@ namespace gp = google::protobuf;
     using std::this_thread::yield;
 #endif
 
-mutex mcl::MirConnection::connection_guard;
-std::unordered_set<mcl::MirConnection *> mcl::MirConnection::valid_connections;
+mutex MirConnection::connection_guard;
+std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
@@ -55,7 +55,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     try
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
-        mcl::MirConnection * connection = new mcl::MirConnection(socket_file, log);
+        MirConnection * connection = new MirConnection(socket_file, log);
         return ( ::MirWaitHandle*) connection->connect(name, callback, context);
     }
     catch (std::exception const& /*x*/)
@@ -67,20 +67,18 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
 int mir_connection_is_valid(MirConnection * connection)
 {
-    return mcl::MirConnection::is_valid((mcl::MirConnection*) connection);
+    return MirConnection::is_valid((MirConnection*) connection);
 }
 
 char const * mir_connection_get_error_message(MirConnection * connection)
 {
-    auto connection_cast = (mcl::MirConnection*) connection;
-    return connection_cast->get_error_message();
+    return connection->get_error_message();
 }
 
 void mir_connection_release(MirConnection * connection)
 {
-    auto connection_cast = (mcl::MirConnection*) connection;
-    connection_cast->disconnect();
-    delete connection_cast;
+    connection->disconnect();
+    delete connection;
 }
 
 MirWaitHandle* mir_surface_create(MirConnection * connection,
@@ -90,8 +88,7 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 {
     try
     {
-        auto connection_cast = (mcl::MirConnection*) connection;
-        return (::MirWaitHandle*) connection_cast->create_surface(*params, callback, context);
+        return (::MirWaitHandle*) connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
@@ -104,44 +101,37 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    return (MirWaitHandle*) surface_cast->release(callback, context);
+    return (MirWaitHandle*) surface->release(callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    return surface_cast->id();
+    return surface->id();
 }
 
 int mir_surface_is_valid(MirSurface* surface)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    return surface_cast->is_valid();
+    return surface->is_valid();
 }
 
 char const * mir_surface_get_error_message(MirSurface * surface)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    return surface_cast->get_error_message();
+    return surface->get_error_message();
 }
 
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    *parameters = surface_cast->get_parameters();
+    *parameters = surface->get_parameters();
 }
 
 void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    surface_cast->populate(*buffer_package);
+    surface->populate(*buffer_package);
 }
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
-    auto surface_cast = (mcl::MirSurface*) surface;
-    return surface_cast->next_buffer(callback, context);
+    return surface->next_buffer(callback, context);
 }
 
 void mir_wait_for(MirWaitHandle* wait_handle)
