@@ -129,21 +129,15 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mir::protobuf::DisplayServer::Stub> client_comm_channel;
 };
 
-
-void empty_callback(MirSurface*, void*) { printf("should not hit\n"); }
+void empty_callback(MirSurface*, void*) { }
 TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 {
     using namespace testing;
-
-
 
     auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
-
-    printf("done\n");
-//    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
-
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
 }
