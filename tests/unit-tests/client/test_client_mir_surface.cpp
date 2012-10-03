@@ -24,6 +24,10 @@
 #include "mir_client/private/mir_rpc_channel.h"
 #include "mir_client/private/mir_buffer_package.h"
 #include "mir_client/private/mir_surface.h"
+#include "mir/frontend/resource_cache.h"
+
+#include "mir_test/test_server.h"
+#include "mir_test/test_client.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -66,11 +70,33 @@ struct MirClientSurfaceTest : public testing::Test
     {
         params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
 
+        test_server = std::make_shared<mt::TestServer>("./test_socket_surface");
+        test_server->comm.start();
+
         logger = std::make_shared<mcl::ConsoleLogger>();
-        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_file"), logger); 
+        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger); 
         server = std::make_shared<mp::DisplayServer::Stub>(channel.get()); 
-        mock_factory = std::make_shared<mt::MockClientFactory>(); 
+        mock_factory = std::make_shared<mt::MockClientFactory>();
+
+    
+        client_tools = std::make_shared<mt::TestClient>("./test_socket_surface");
+
+        mir::protobuf::ConnectParameters connect_parameters;
+        connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+        server->connect(0,
+                        &connect_parameters,
+                        &response,
+                        google::protobuf::NewCallback(client_tools.get(), &mt::TestClient::create_surface_done));
+
+        client_tools->wait_for_create_surface();
+        printf("connection done\n");
     }
+
+    void TearDown()
+    {
+        test_server->comm.stop();
+    }
+
 
     std::shared_ptr<mp::DisplayServer::Stub> server;
     std::shared_ptr<mcl::MirRpcChannel> channel;
@@ -78,6 +104,10 @@ struct MirClientSurfaceTest : public testing::Test
 
     MirSurfaceParameters params;
     std::shared_ptr<mt::MockClientFactory> mock_factory;
+
+    mir::protobuf::Connection response;
+    std::shared_ptr<mt::TestServer> test_server;
+    std::shared_ptr<mt::TestClient> client_tools;
 };
 
 
@@ -88,6 +118,5 @@ TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
 
     auto surface = std::make_shared<mcl::MirSurface> ( *server, mock_factory, params, &empty_callback, (void*) NULL);
 
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_));
- 
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
 }
