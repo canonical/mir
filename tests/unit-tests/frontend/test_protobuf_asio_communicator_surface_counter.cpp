@@ -46,15 +46,11 @@ namespace test
 
 struct MockServerSurfaceCounter : public MockServerTool
 {
-    static const int file_descriptors = 5;
 
     int surface_count;
-    int file_descriptor[file_descriptors];
 
     MockServerSurfaceCounter() : surface_count(0)
     {
-        for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
-            *i = 0;
     }
 
     void create_surface(google::protobuf::RpcController* controller,
