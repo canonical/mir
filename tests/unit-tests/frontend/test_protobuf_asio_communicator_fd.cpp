@@ -39,7 +39,6 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
-
 namespace mir
 {
 namespace test
