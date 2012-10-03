@@ -169,8 +169,8 @@ TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name_from_parameter)
 TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(1));
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(1));
+    EXPECT_CALL(*mock_client, connect_done()).Times(AtLeast(0));
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(0));
 
     mock_client->display_server.connect(
         0,
@@ -190,7 +190,45 @@ TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
     EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->surface_name);
 }
 
+TEST_F(ProtobufAsioCommunicatorBasic,
+        create_surface_results_in_callback)
+{
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
 
+    mock_client->display_server.create_surface(
+        0,
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+
+    mock_client->wait_for_create_surface();
+}
+
+TEST_F(ProtobufAsioCommunicatorBasic,
+       double_disconnection_attempt_has_no_effect)
+{
+    // We don't expect this to be called, so it can't auto destruct
+    std::unique_ptr<google::protobuf::Closure> new_callback(
+                            google::protobuf::NewPermanentCallback(
+                                mock_client.get(),
+                                &mt::TestClient::disconnect_done));
+    EXPECT_CALL(*mock_client, disconnect_done()).Times(1);
+    EXPECT_CALL(*mock_client->logger, error()).Times(testing::AtLeast(1));
+
+    mock_client->display_server.disconnect(
+        0,
+        &mock_client->ignored,
+        &mock_client->ignored,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::disconnect_done));
+    mock_client->wait_for_disconnect_done();
+
+    mock_client->display_server.disconnect(
+        0,
+        &mock_client->ignored,
+        &mock_client->ignored,
+        new_callback.get());
+    mock_client->wait_for_disconnect_done();
+}
 
 
 
@@ -281,49 +319,8 @@ TEST_F(ProtobufAsioCommunicatorCounter,
 }
 
 #if 0
-struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
-{
-    static int const number_of_clients = 10;
-
-    void SetUp()
-    {
-        server = std::make_shared<mt::TestServer>("./test_socket");
-        ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
-        EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
-
-        server->comm.start();
-
-        for(int i=0; i<number_of_clients; i++)
-        {
-            auto client_tmp = std::make_shared<mt::TestClient>("./test_socket"); 
-            client.push_back(client_tmp);
-        }
-    }
-
-    void TearDown()
-    {
-        server->comm.stop();
-    }
-
-    std::vector<std::shared_ptr<mt::TestClient>> mock_client;
-    std::shared_ptr<mt::TestServer> mock_server;
-};
 
 
-
-TEST_F(ProtobufAsioCommunicatorTestFixture,
-        create_surface_results_in_a_surface_being_created)
-{
-    EXPECT_CALL(*client, create_surface_done()).Times(1);
-
-    client->display_server.create_surface(
-        0,
-        &client->surface_parameters,
-        &client->surface,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::create_surface_done));
-
-    client->wait_for_create_surface();
-}
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
        connect_create_surface_then_disconnect_a_session)
@@ -347,34 +344,6 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufAsioCommunicatorTestFixture,
-       double_disconnection_attempt_has_no_effect)
-{
-    EXPECT_CALL(*client, create_surface_done()).Times(1);
-    client->display_server.create_surface(
-        0,
-        &client->surface_parameters,
-        &client->surface,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::create_surface_done));
-
-    client->wait_for_create_surface();
-
-    EXPECT_CALL(*client, disconnect_done()).Times(1);
-    client->display_server.disconnect(
-        0,
-        &client->ignored,
-        &client->ignored,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::disconnect_done));
-
-    client->wait_for_disconnect_done();
-
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtLeast(1));
-
-    // We don't expect this to be called, so it can't auto destruct
-    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestClient::disconnect_done));
-    client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
-    client->wait_for_disconnect_done();
-}
 
 
 TEST_F(ProtobufAsioCommunicatorTestFixture,
@@ -462,6 +431,54 @@ TEST_F(ProtobufAsioCommunicatorTestFixture,
 
     client->wait_for_disconnect_done();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct ProtobufAsioMultiClientCommunicatorTestFixture : public ::testing::Test
+{
+    static int const number_of_clients = 10;
+
+    void SetUp()
+    {
+        server = std::make_shared<mt::TestServer>("./test_socket");
+        ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
+        EXPECT_CALL(*server->factory, make_ipc_server()).Times(number_of_clients);
+
+        server->comm.start();
+
+        for(int i=0; i<number_of_clients; i++)
+        {
+            auto client_tmp = std::make_shared<mt::TestClient>("./test_socket"); 
+            client.push_back(client_tmp);
+        }
+    }
+
+    void TearDown()
+    {
+        server->comm.stop();
+    }
+
+    std::vector<std::shared_ptr<mt::TestClient>> mock_client;
+    std::shared_ptr<mt::TestServer> mock_server;
+};
+
 
 TEST_F(ProtobufAsioMultiClientCommunicatorTestFixture,
        multiple_clients_can_connect_create_surface_and_disconnect)
