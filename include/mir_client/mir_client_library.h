@@ -52,6 +52,17 @@ typedef struct MirSurfaceParameters
     MirPixelFormat pixel_format;
 } MirSurfaceParameters;
 
+enum { mir_platform_package_max = 32 };
+
+typedef struct MirPlatformPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_platform_package_max];
+    int fd[mir_platform_package_max];
+} MirPlatformPackage;
+
 enum { mir_buffer_package_max = 32 };
 
 typedef struct MirBufferPackage
@@ -93,6 +104,8 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 
 /* Release a connection to the MIR server. */
 void mir_connection_release(MirConnection *connection);
+
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 MirWaitHandle* mir_surface_create(

@@ -297,6 +297,7 @@ public:
 
     void disconnect()
     {
+        connect_wait_handle.wait_for_result();
         disconnect_wait_handle.result_requested();
         server.disconnect(
             0,
@@ -306,6 +307,28 @@ public:
 
         disconnect_wait_handle.wait_for_result();
     }
+
+    void populate(MirPlatformPackage& platform_package)
+    {
+        connect_wait_handle.wait_for_result();
+
+        if (!connect_result.has_error())
+        {
+            platform_package.data_items = connect_result.data_size();
+            for (int i = 0; i != connect_result.data_size(); ++i)
+                platform_package.data[i] = connect_result.data(i);
+
+            platform_package.fd_items = connect_result.fd_size();
+            for (int i = 0; i != connect_result.fd_size(); ++i)
+                platform_package.fd[i] = connect_result.fd(i);
+        }
+        else
+        {
+            platform_package.data_items = 0;
+            platform_package.fd_items = 0;
+        }
+    }
+
 
     static bool is_valid(MirConnection *connection)
     {
@@ -429,6 +452,11 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
 void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
 {
     surface->populate(*buffer_package);
+}
+
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
+{
+    connection->populate(*platform_package);
 }
 
 void mir_surface_get_graphics_region(MirSurface *surface, MirGraphicsRegion *graphics_region)
