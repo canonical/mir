@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "private/mir_wait_handle.h"
+#include "mir_wait_handle.h"
 
 MirWaitHandle::MirWaitHandle() :
     waiting_threads(0),

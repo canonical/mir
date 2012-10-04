@@ -18,9 +18,9 @@
 
 #include "mir_client/mir_logger.h"
 
-#include "private/mir_connection.h"
-#include "private/mir_surface.h"
-#include "private/mir_buffer_package.h"
+#include "mir_connection.h"
+#include "mir_surface.h"
+#include "mir_buffer_package.h"
 
 #include <cstddef>
 

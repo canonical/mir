@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_TEST_CLIENT_H_
 #define MIR_TEST_TEST_CLIENT_H_
 
-#include "private/mir_rpc_channel.h"
+#include "mir_rpc_channel.h"
 
 #include "mir_test/mock_logger.h"
 

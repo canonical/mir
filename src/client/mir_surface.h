@@ -21,7 +21,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_client/mir_client_library.h"
-#include "private/mir_wait_handle.h"
+#include "mir_wait_handle.h"
 
 class MirSurface
 {

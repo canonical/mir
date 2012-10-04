@@ -18,7 +18,7 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "private/mir_surface.h"
+#include "mir_surface.h"
 
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
