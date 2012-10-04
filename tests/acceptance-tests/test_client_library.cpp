@@ -330,7 +330,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
             ASSERT_TRUE(surface != NULL);
 
-            MirGraphicsRegion buffer_package;
+            MirBufferPackage buffer_package;
             mir_surface_get_current_buffer(surface, &buffer_package);
 
             mir_surface_next_buffer(surface, next_buffer_callback, this);
@@ -341,6 +341,30 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             wait_for_surface_release();
 
             ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+            ASSERT_TRUE(connection != NULL);
+
+            MirPlatformPackage platform_package;
+            platform_package.data_items = -1;
+            platform_package.fd_items = -1;
+
+            mir_connection_get_platform(connection, &platform_package);
+            EXPECT_GE(0, platform_package.data_items);
+            EXPECT_GE(0, platform_package.fd_items);
 
             mir_connection_release(connection);
         }
@@ -370,7 +394,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_using_mir_wait_for)
             ASSERT_TRUE(surface != NULL);
 
             MirGraphicsRegion buffer_package;
-            mir_surface_get_current_buffer(surface, &buffer_package);
+            mir_surface_get_graphics_region(surface, &buffer_package);
 
             mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
 
