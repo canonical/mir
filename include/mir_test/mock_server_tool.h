@@ -39,7 +39,7 @@ struct MockServerTool : mir::protobuf::DisplayServer
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer();
+        response->mutable_buffer()->set_buffer_id(22);
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
