@@ -23,11 +23,15 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_wait_handle.h"
 
+#include <memory>
+#include <map>
+
 namespace mir
 {
 namespace client
 {
 class ClientBufferFactory;
+class ClientBuffer;
 }
 }
 
@@ -65,6 +69,8 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
+
+    std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_cache;
 
     std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
 };

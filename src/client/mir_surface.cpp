@@ -22,6 +22,8 @@
 #include "mir_surface.h"
 #include "mir_buffer_package.h"
 
+#include <cassert>
+
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
@@ -90,7 +92,6 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, 
         &surface.id(),
         surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
-    printf("next_buffer called\n");
     return &next_buffer_wait_handle;
 }
 
@@ -108,10 +109,17 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
+    int id = 5;
+
     MirBufferPackage ipc_package;
     populate(ipc_package);
     mcl::MirBufferPackage internal_ipc_package(ipc_package);
-    buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+
+    /* this is only called when surface is first created. if anything has been putting things 
+       in cache before this callback, its wrong */
+    assert(buffer_cache.empty());
+    buffer_cache[id] = new_buffer;
 
     callback(this, context);
     create_wait_handle.result_received();
@@ -119,11 +127,20 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
-
-    MirBufferPackage ipc_package;
-    populate(ipc_package);
-    mcl::MirBufferPackage internal_ipc_package(ipc_package);
-    buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+    int id = 5;
+    auto it = buffer_cache.find(id);
+    if (it == buffer_cache.end())
+    {
+        MirBufferPackage ipc_package;
+        populate(ipc_package);
+        mcl::MirBufferPackage internal_ipc_package(ipc_package);
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+        buffer_cache[id] = new_buffer;
+        printf("NOTFOUND\n");
+    } else
+    {
+        printf("found...\n");
+    }
 
     callback(this, context);
     next_buffer_wait_handle.result_received();

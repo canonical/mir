@@ -67,7 +67,6 @@ struct MockServerPackageGenerator : public MockServerTool
         ::google::protobuf::Closure* done)
     {
         create_buffer_response( response );
-        printf("sending out\n");
         done->Run();
     }
 
@@ -94,6 +93,8 @@ struct MockServerPackageGenerator : public MockServerTool
     private:
     void create_buffer_response(mir::protobuf::Buffer* response)
     {
+        response->set_buffer_id(0);
+
         /* assemble buffers */
         response->set_fds_on_side_channel(1);
         for (unsigned int i=0; i< server_package.data.size(); i++)
