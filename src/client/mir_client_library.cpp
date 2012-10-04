@@ -154,6 +154,28 @@ public:
         return !surface.has_error();
     }
 
+    void populate(MirBufferPackage& buffer_package)
+    {
+        if (is_valid() && surface.has_buffer())
+        {
+            next_buffer_wait_handle.wait_for_result();
+            auto const& buffer = surface.buffer();
+
+            buffer_package.data_items = buffer.data_size();
+            for (int i = 0; i != buffer.data_size(); ++i)
+                buffer_package.data[i] = buffer.data(i);
+
+            buffer_package.fd_items = buffer.fd_size();
+            for (int i = 0; i != buffer.fd_size(); ++i)
+                buffer_package.fd[i] = buffer.fd(i);
+        }
+        else
+        {
+            buffer_package.data_items = 0;
+            buffer_package.fd_items = 0;
+        }
+    }
+
     void populate(MirGraphicsRegion& )
     {
         // TODO
@@ -402,6 +424,11 @@ char const * mir_surface_get_error_message(MirSurface * surface)
 void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
     *parameters = surface->get_parameters();
+}
+
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
+{
+    surface->populate(*buffer_package);
 }
 
 void mir_surface_get_graphics_region(MirSurface *surface, MirGraphicsRegion *graphics_region)

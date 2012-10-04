@@ -111,6 +111,9 @@ char const *mir_surface_get_error_message(MirSurface *surface);
 /* Get a valid surface's parameters. */
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
+/* Get a surface's buffer. */
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+
 /* Get a surface's graphics_region. */
 void mir_surface_get_graphics_region(
     MirSurface *surface,

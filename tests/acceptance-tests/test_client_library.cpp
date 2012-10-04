@@ -330,8 +330,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
             ASSERT_TRUE(surface != NULL);
 
-            MirGraphicsRegion buffer_package;
-            mir_surface_get_graphics_region(surface, &buffer_package);
+            MirBufferPackage buffer_package;
+            mir_surface_get_current_buffer(surface, &buffer_package);
 
             mir_surface_next_buffer(surface, next_buffer_callback, this);
             wait_for_next_buffer();
