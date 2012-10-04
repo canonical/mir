@@ -129,7 +129,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
 {
     using namespace testing;
 
-    auto null_buffer_initializer = std::shared_ptr<mg::BufferInitializer>();
+    auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
 
     EXPECT_NO_THROW({

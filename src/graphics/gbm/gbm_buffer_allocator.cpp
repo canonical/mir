@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <xf86drm.h>
 #include <gbm.h>
+#include <cassert>
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -36,6 +37,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer)
         : platform(platform), buffer_initializer(buffer_initializer)
 {
+    assert(buffer_initializer.get() != 0);
 }
 
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
@@ -52,8 +54,7 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     {
         auto buffer = std::unique_ptr<mc::Buffer>(new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
 
-        if (buffer_initializer)
-            (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
+        (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
 
         return buffer;
     }

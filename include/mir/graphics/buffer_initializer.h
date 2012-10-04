@@ -43,6 +43,12 @@ protected:
     BufferInitializer& operator=(const BufferInitializer&) = delete;
 };
 
+class NullBufferInitializer : public BufferInitializer
+{
+public:
+    void operator()(compositor::Buffer& /*buffer*/, EGLClientBuffer /*client_buffer*/) {}
+};
+
 }
 }
 

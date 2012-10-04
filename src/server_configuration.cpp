@@ -24,6 +24,7 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
@@ -114,7 +115,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_pla
 
 std::shared_ptr<mc::GraphicBufferAllocator> mir::DefaultServerConfiguration::make_graphic_buffer_allocator()
 {
-    std::shared_ptr<mg::BufferInitializer> buffer_initializer;
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     return make_graphics_platform()->create_buffer_allocator(buffer_initializer);
 }
 

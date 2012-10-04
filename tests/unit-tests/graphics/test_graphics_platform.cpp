@@ -23,6 +23,7 @@
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
 #endif
+#include "mir/graphics/buffer_initializer.h"
 
 #include <gtest/gtest.h>
 
@@ -33,22 +34,25 @@ namespace geom = mir::geometry;
 class GraphicsPlatform : public ::testing::Test
 {
 public:
-#ifndef ANDROID
     GraphicsPlatform()
     {
         using namespace testing;
+        buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
 
+#ifndef ANDROID
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(320));
 
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
         .WillByDefault(Return(240));
+#endif
     }
 
+    std::shared_ptr<mg::BufferInitializer> buffer_initializer;
+#ifndef ANDROID
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
-    std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 };
 
 TEST_F(GraphicsPlatform, buffer_allocator_creation)

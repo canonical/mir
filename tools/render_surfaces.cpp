@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/gl_renderer.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -138,7 +139,7 @@ int main(int argc, char **argv)
     auto platform = mg::create_platform();
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
-    auto buffer_initializer = std::shared_ptr<mg::BufferInitializer>();
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
     mc::BufferBundleManager manager{strategy};
