@@ -54,12 +54,24 @@ struct MockServerPackageGenerator : public MockServerTool
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        create_buffer_response( response );
+        create_surface_response( response );
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
         done->Run();
     }
 
+    void next_buffer(
+        ::google::protobuf::RpcController* /*controller*/,
+        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::Buffer* response,
+        ::google::protobuf::Closure* done)
+    {
+        create_buffer_response( response );
+        printf("sending out\n");
+        done->Run();
+    }
+
+/* helpers */
     void generate_unique_buffer()
     {
         int num_fd = 2, num_data = 8; 
@@ -80,23 +92,27 @@ struct MockServerPackageGenerator : public MockServerTool
     mcl::MirBufferPackage server_package;
 
     private:
-    void create_buffer_response(mir::protobuf::Surface* response)
+    void create_buffer_response(mir::protobuf::Buffer* response)
+    {
+        /* assemble buffers */
+        response->set_fds_on_side_channel(1);
+        for (unsigned int i=0; i< server_package.data.size(); i++)
+        {
+            response->add_data(server_package.data[i]);
+        }
+        for (unsigned int i=0; i< server_package.fd.size(); i++)
+        {
+            response->add_fd(server_package.fd[i]);
+        }
+    }
+
+    void create_surface_response(mir::protobuf::Surface* response)
     {
         response->mutable_id()->set_value(2);
         response->set_width(3);
         response->set_height(5);
         response->set_pixel_format(mir_pixel_format_rgba_8888);
-
-        /* assemble buffers */
-        response->mutable_buffer()->set_fds_on_side_channel(1);
-        for (unsigned int i=0; i< server_package.data.size(); i++)
-        {
-            response->mutable_buffer()->add_data(server_package.data[i]);
-        }
-        for (unsigned int i=0; i< server_package.fd.size(); i++)
-        {
-            response->mutable_buffer()->add_fd(server_package.fd[i]);
-        }
+        create_buffer_response(response->mutable_buffer());
     }
 };
 

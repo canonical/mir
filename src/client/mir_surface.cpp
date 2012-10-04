@@ -90,7 +90,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, 
         &surface.id(),
         surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
-
+    printf("next_buffer called\n");
     return &next_buffer_wait_handle;
 }
 
@@ -111,18 +111,19 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     MirBufferPackage ipc_package;
     populate(ipc_package);
     mcl::MirBufferPackage internal_ipc_package(ipc_package);
-
     buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+
     callback(this, context);
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+
     MirBufferPackage ipc_package;
     populate(ipc_package);
     mcl::MirBufferPackage internal_ipc_package(ipc_package);
-    buffer_factory->create_buffer_from_ipc_message(ipc_package);
+    buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
 
     callback(this, context);
     next_buffer_wait_handle.result_received();
@@ -132,7 +133,7 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 {
     if (is_valid() && surface.has_buffer())
     {
-        next_buffer_wait_handle.wait_for_result();
+//        next_buffer_wait_handle.wait_for_result();
         auto const& buffer = surface.buffer();
 
         buffer_package.data_items = buffer.data_size();
