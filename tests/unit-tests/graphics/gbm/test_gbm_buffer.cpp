@@ -48,7 +48,8 @@ protected:
         using namespace testing;
 
         auto platform = std::make_shared<mgg::GBMPlatform>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform));
+        auto dummy_init = std::shared_ptr<mg::BufferInitializer>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform, dummy_init));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
