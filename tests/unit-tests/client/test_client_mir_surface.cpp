@@ -149,3 +149,16 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 }
+
+void empty_callback(MirSurface*, void*) { }
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(1);
+ 
+    auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+}
