@@ -39,7 +39,7 @@ public:
 
     MirSurface(
         mir::protobuf::DisplayServer::Stub & server,
-        const std::shared_ptr<mir::client::ClientBufferFactory>& /* factory */, 
+        const std::shared_ptr<mir::client::ClientBufferFactory>& factory, 
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
@@ -65,6 +65,8 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
+
+    std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

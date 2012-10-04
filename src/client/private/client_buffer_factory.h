@@ -31,6 +31,7 @@ class MirBufferPackage;
 
 class ClientBufferFactory
 {
+public:
     virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&) = 0; 
 
 };

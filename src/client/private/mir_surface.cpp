@@ -20,6 +20,7 @@
 
 #include "private/client_buffer_factory.h"
 #include "private/mir_surface.h"
+#include "private/mir_buffer_package.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -27,10 +28,11 @@ namespace gp = google::protobuf;
 
 MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
-    const std::shared_ptr<mcl::ClientBufferFactory>& /* factory */, 
+    const std::shared_ptr<mcl::ClientBufferFactory>& factory, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
-    : server(server)
+    : server(server),
+      buffer_factory(factory)
 {
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -104,23 +106,23 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 
 void MirSurface::released(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast, context);
+    callback(this, context);
     release_wait_handle.result_received();
     delete this;
 }
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast , context);
+    mcl::MirBufferPackage ipc_package;
+    buffer_factory->create_buffer_from_ipc_message(ipc_package);
+    callback(this, context);
+
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
-    auto cast = ( ::MirSurface* ) this;
-    callback(cast, context);
+    callback(this, context);
     next_buffer_wait_handle.result_received();
 }
 

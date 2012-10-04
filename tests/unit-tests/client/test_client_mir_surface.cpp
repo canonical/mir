@@ -57,7 +57,15 @@ struct MockBuffer : public mcl::ClientBuffer
 
 struct MockClientFactory : public mcl::ClientBufferFactory
 {
+    MockClientFactory()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_buffer_from_ipc_message(_))
+            .WillByDefault(Return(emptybuffer));
+    }
     MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const mcl::MirBufferPackage&));
+
+    std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
 
 }
@@ -130,14 +138,14 @@ struct MirClientSurfaceTest : public testing::Test
 };
 
 void empty_callback(MirSurface*, void*) { }
-TEST_F(MirClientSurfaceTest, next_buffer_creates_on_first)
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
 {
     using namespace testing;
 
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(1);
+ 
     auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
-
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
-
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_)); 
 }
