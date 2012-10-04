@@ -209,7 +209,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
     wait_handle->wait_for_result();
 }
 
-TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server )
+TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_create )
 {
     using namespace testing;
 
@@ -243,7 +243,6 @@ TEST_F(MirClientSurfaceTest, client_does_not_create_a_buffer_its_seen_before )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
     
-
     /* test */
     EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
         .Times(0);
@@ -265,4 +264,34 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_unique_buffer )
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
     buffer_wait_handle->wait_for_result();
+}
+
+TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_unique_buffer )
+{
+    using namespace testing;
+
+    mcl::MirBufferPackage submitted_package;
+ 
+    auto surface = std::make_shared<MirSurface> (
+                         *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+
+    /* gen new buffer for next call*/
+    mock_server_tool->generate_unique_buffer();
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(1)
+        .WillOnce(DoAll(
+            SaveArg<0>(&submitted_package),
+            Return(mock_factory->emptybuffer)));
+
+    /* request new */
+    auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
+    buffer_wait_handle->wait_for_result();
+
+    /* check for same contents */
+    ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
+    ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
+    for(unsigned int i=0; i< submitted_package.data.size(); i++)
+        EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
 }
