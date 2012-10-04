@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_
-#define MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_
+#ifndef MIR_CLIENT_MIR_CONNECTION_H_
+#define MIR_CLIENT_MIR_CONNECTION_H_
 
 #include <string>
 #include <memory>
@@ -89,4 +89,4 @@ private:
     static std::unordered_set<MirConnection*> valid_connections;
 };
 
-#endif /* MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_ */
+#endif /* MIR_CLIENT_MIR_CONNECTION_H_ */
