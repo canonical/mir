@@ -121,6 +121,8 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+    mcl::MirBufferPackage ipc_package;
+    buffer_factory->create_buffer_from_ipc_message(ipc_package);
     callback(this, context);
     next_buffer_wait_handle.result_received();
 }
