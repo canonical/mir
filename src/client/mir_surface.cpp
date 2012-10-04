@@ -113,14 +113,9 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
-<<<<<<< TREE
     mcl::MirBufferPackage ipc_package;
     buffer_factory->create_buffer_from_ipc_message(ipc_package);
     callback(this, context);
-
-=======
-    callback(this , context);
->>>>>>> MERGE-SOURCE
     create_wait_handle.result_received();
 }
 

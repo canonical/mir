@@ -19,11 +19,11 @@
 #include "mir_protobuf.pb.h"
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
-#include "private/client_buffer.h"
-#include "private/client_buffer_factory.h"
-#include "private/mir_rpc_channel.h"
-#include "private/mir_buffer_package.h"
-#include "private/mir_surface.h"
+#include "client_buffer.h"
+#include "client_buffer_factory.h"
+#include "mir_rpc_channel.h"
+#include "mir_buffer_package.h"
+#include "mir_surface.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_server.h"
@@ -150,15 +150,19 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
     wait_handle->wait_for_result();
 }
 
-void empty_callback(MirSurface*, void*) { }
-TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
+void empty_surface_callback(MirSurface*, void*) {}
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer )
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
-        .Times(1);
- 
+    /* setup */
     auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
+
+    /* test */
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(1);
+    auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
+    buffer_wait_handle->wait_for_result();
 }
