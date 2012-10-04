@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_RPC_CHANNEL_H_
-#define MIR_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_MIR_RPC_CHANNEL_H_
+#define MIR_CLIENT_MIR_RPC_CHANNEL_H_
 
 #include "mir/thread/all.h"
 #include "mir_client/mir_logger.h"
@@ -121,4 +121,4 @@ private:
 
 
 
-#endif /* MIR_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_MIR_RPC_CHANNEL_H_ */

@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_
-#define MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_
+#ifndef MIR_CLIENT_MIR_CONNECTION_H_
+#define MIR_CLIENT_MIR_CONNECTION_H_
 
 #include <string>
 #include <memory>
@@ -29,8 +29,8 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "private/mir_rpc_channel.h"
-#include "private/mir_wait_handle.h"
+#include "mir_rpc_channel.h"
+#include "mir_wait_handle.h"
 
 namespace mir
 {
@@ -89,4 +89,4 @@ private:
     static std::unordered_set<MirConnection*> valid_connections;
 };
 
-#endif /* MIR_CLIENT_PRIVATE_MIR_CONNECTION_H_ */
+#endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

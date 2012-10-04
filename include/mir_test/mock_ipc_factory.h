@@ -20,6 +20,7 @@
 #ifndef MIR_TEST_MOCK_IPC_FACTORY_H_
 #define MIR_TEST_MOCK_IPC_FACTORY_H_
 
+#include "mir_test/empty_deleter.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 
 #include <gmock/gmock.h>
@@ -28,21 +29,15 @@ namespace mf = mir::frontend;
 
 namespace mir
 {
+
 namespace test
 {
-
-struct NullDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     MockIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(&server, NullDeleter()),
+        server(&server, EmptyDeleter()),
         cache(std::make_shared<mf::ResourceCache>())
     {
         using namespace testing;

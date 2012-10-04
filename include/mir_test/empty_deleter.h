@@ -13,27 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_
-#define MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_
+#ifndef MIR_TEST_EMPTY_DELETER_H_
+#define MIR_TEST_EMPTY_DELETER_H_
 
-#include <vector>
+#include "mir/frontend/protobuf_asio_communicator.h"
+
+#include <gmock/gmock.h>
+
+namespace mf = mir::frontend;
 
 namespace mir
 {
-namespace client
+
+struct EmptyDeleter
 {
-/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
-               maintain divide between client/server headers */
-struct MirBufferPackage
-{
-    std::vector<int> data;
-    std::vector<int> fd;
+    void operator()(void* )
+    {
+    }
 };
 
 }
-}
-#endif /* MIR_CLIENT_PRIVATE_MIR_BUFFER_PACKAGE_H_ */
+#endif /* MIR_TEST_EMPTY_DELETER_H_ */

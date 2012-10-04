@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_
-#define MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_
+#ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
+#define MIR_CLIENT_MIR_WAIT_HANDLE_H_
 
 #include "mir/thread/all.h"
 
@@ -49,4 +49,4 @@ private:
     bool waiting_for_result;
 };
 
-#endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */
+#endif /* MIR_CLIENT_MIR_WAIT_HANDLE_H_ */

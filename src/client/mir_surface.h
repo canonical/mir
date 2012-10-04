@@ -15,13 +15,13 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_PRIVATE_MIR_SURFACE_H_
-#define MIR_CLIENT_PRIVATE_MIR_SURFACE_H_
+#ifndef MIR_CLIENT_MIR_SURFACE_H_
+#define MIR_CLIENT_MIR_SURFACE_H_
 
 #include "mir_protobuf.pb.h"
 
 #include "mir_client/mir_client_library.h"
-#include "private/mir_wait_handle.h"
+#include "mir_wait_handle.h"
 
 namespace mir
 {

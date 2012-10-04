@@ -18,9 +18,9 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "private/client_buffer_factory.h"
-#include "private/mir_surface.h"
-#include "private/mir_buffer_package.h"
+#include "client_buffer_factory.h"
+#include "mir_surface.h"
+#include "mir_buffer_package.h"
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -113,10 +113,14 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
+<<<<<<< TREE
     mcl::MirBufferPackage ipc_package;
     buffer_factory->create_buffer_from_ipc_message(ipc_package);
     callback(this, context);
 
+=======
+    callback(this , context);
+>>>>>>> MERGE-SOURCE
     create_wait_handle.result_received();
 }
 

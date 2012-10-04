@@ -17,28 +17,23 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#ifndef MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
+#define MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
 
-#include "private/mir_buffer_package.h"
-#include "mir/geometry/rectangle.h"
-#include <cutils/native_handle.h>
+#include <vector>
 
-#include <memory>
 namespace mir
 {
 namespace client
 {
-class MemoryRegion;
-
-class AndroidRegistrar
+/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
+               maintain divide between client/server headers */
+struct MirBufferPackage
 {
-public:
-    virtual void register_buffer(const native_handle_t *handle) = 0;
-    virtual void unregister_buffer(const native_handle_t *handle) = 0;
-    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+    std::vector<int> data;
+    std::vector<int> fd;
 };
 
 }
 }
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_CLIENT_MIR_BUFFER_PACKAGE_H_ */

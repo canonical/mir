@@ -45,10 +45,10 @@ set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
-  private/mir_rpc_channel.cpp
-  private/mir_connection.cpp
-  private/mir_wait_handle.cpp
-  private/mir_surface.cpp
+  mir_rpc_channel.cpp
+  mir_connection.cpp
+  mir_wait_handle.cpp
+  mir_surface.cpp
   ${PROTO_SRCS}
 )
 
@@ -56,8 +56,8 @@ if( MIR_PLATFORM STREQUAL "android")
 set(
   CLIENT_SOURCES
 
-  private/android/android_client_buffer.cpp
-  private/android/android_registrar.cpp
+  android/android_client_buffer.cpp
+  android/android_registrar.cpp
   ${CLIENT_SOURCES}
 )
 endif()
