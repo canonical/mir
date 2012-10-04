@@ -22,6 +22,7 @@
 
 #include <vector>
 
+#include "mir_client/mir_client_library.h"
 namespace mir
 {
 namespace client
@@ -30,6 +31,18 @@ namespace client
                maintain divide between client/server headers */
 struct MirBufferPackage
 {
+    MirBufferPackage() {}
+    MirBufferPackage( ::MirBufferPackage &package)
+    {
+        for (auto i=0; i<package.fd_items; i++)
+        {
+            fd.push_back(package.fd[i]);
+        }
+        for (auto i=0; i<package.data_items; i++)
+        {
+            data.push_back(package.data[i]);
+        }
+    }
     std::vector<int> data;
     std::vector<int> fd;
 };

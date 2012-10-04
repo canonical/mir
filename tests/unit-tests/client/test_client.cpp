@@ -62,8 +62,8 @@ TEST(MirClientTest, mir_translates_buffer_ipc)
     mcl::MirBufferPackage internal_package(client_package);
 
 
-    ASSERT_EQ(client_package.data_items, internal_package.data.size());
-    ASSERT_EQ(client_package.fd_items, internal_package.fd.size());
+    ASSERT_EQ(client_package.data_items, (int) internal_package.data.size());
+    ASSERT_EQ(client_package.fd_items, (int) internal_package.fd.size());
 
     int i=0;
     for(auto it = internal_package.data.begin(); it != internal_package.data.end(); it++)
