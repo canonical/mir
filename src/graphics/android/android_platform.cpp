@@ -31,7 +31,8 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator()
+std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
 {
     return std::make_shared<mga::AndroidBufferAllocator>();
 }

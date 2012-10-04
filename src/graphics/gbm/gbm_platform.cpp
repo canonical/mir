@@ -52,7 +52,8 @@ mgg::GBMPlatform::GBMPlatform()
     gbm.setup(drm);
 }
 
-std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator()
+std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
 {
     return std::make_shared<mgg::GBMBufferAllocator>(this->shared_from_this());
 }

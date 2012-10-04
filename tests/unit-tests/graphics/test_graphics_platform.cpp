@@ -32,8 +32,8 @@ namespace geom = mir::geometry;
 
 class GraphicsPlatform : public ::testing::Test
 {
-#ifndef ANDROID
 public:
+#ifndef ANDROID
     GraphicsPlatform()
     {
         using namespace testing;
@@ -48,6 +48,7 @@ public:
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
+    std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 };
 
 TEST_F(GraphicsPlatform, buffer_allocator_creation)
@@ -56,7 +57,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
     EXPECT_NO_THROW (
         auto platform = mg::create_platform();
-        auto allocator = platform->create_buffer_allocator();
+        auto allocator = platform->create_buffer_allocator(buffer_initializer);
 
         EXPECT_TRUE(allocator.get());
     );
@@ -66,7 +67,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = mg::create_platform();
-    auto allocator = platform->create_buffer_allocator();
+    auto allocator = platform->create_buffer_allocator(buffer_initializer);
     geom::Size size{geom::Width{320}, geom::Height{240}};
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     auto buffer = allocator->alloc_buffer(size, pf);

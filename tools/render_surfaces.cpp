@@ -138,7 +138,8 @@ int main(int argc, char **argv)
     auto platform = mg::create_platform();
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
-    auto buffer_allocator = platform->create_buffer_allocator();
+    auto buffer_initializer = std::shared_ptr<mg::BufferInitializer>();
+    auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
     mc::BufferBundleManager manager{strategy};
     ms::SurfaceStack surface_stack{&manager};

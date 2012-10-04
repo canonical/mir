@@ -16,29 +16,34 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#ifndef MIR_GRAPHICS_BUFFER_INITIALIZER_H_
+#define MIR_GRAPHICS_BUFFER_INITIALIZER_H_
 
-#include "mir/graphics/platform.h"
+#include <EGL/egl.h>
 
 namespace mir
 {
+namespace compositor
+{
+class Buffer;
+}
 namespace graphics
 {
-namespace android
-{
 
-class AndroidPlatform : public Platform
+class BufferInitializer
 {
 public:
-    /* From Platform */
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<Display> create_display();
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    virtual ~BufferInitializer() {}
+
+    virtual void operator()(compositor::Buffer& buffer, EGLClientBuffer client_buffer) = 0;
+
+protected:
+    BufferInitializer() = default;
+    BufferInitializer(const BufferInitializer&) = delete;
+    BufferInitializer& operator=(const BufferInitializer&) = delete;
 };
 
 }
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */
+
+#endif /* MIR_GRAPHICS_BUFFER_INITIALIZER_H_ */

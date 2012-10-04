@@ -49,7 +49,8 @@ protected:
 
     virtual void SetUp()
     {
-        allocator = platform->create_buffer_allocator();
+        auto buffer_initializer = std::shared_ptr<mg::BufferInitializer>();
+        allocator = platform->create_buffer_allocator(buffer_initializer);
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
