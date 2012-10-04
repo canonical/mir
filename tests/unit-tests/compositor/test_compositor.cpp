@@ -23,7 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test/mock_display.h"
-
+#include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,14 +53,6 @@ struct MockSurfaceCollection : public ms::SurfaceCollection
     MOCK_METHOD1(invoke_for_each_surface, void(ms::SurfaceEnumerator&));
 };
 
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T*) const
-    {
-    }
-};
-
 }
 
 
@@ -71,7 +63,7 @@ TEST(Compositor, render)
     MockSurfaceRenderer mock_renderer;
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
-        EmptyDeleter());
+        mir::EmptyDeleter());
     MockScenegraph scenegraph;
     mg::MockDisplay display;
     MockSurfaceCollection view;
@@ -90,7 +82,7 @@ TEST(Compositor, render)
             .Times(1)
             .WillRepeatedly(
                 Return(
-                    std::shared_ptr<MockSurfaceCollection>(&view, EmptyDeleter())));
+                    std::shared_ptr<MockSurfaceCollection>(&view, mir::EmptyDeleter())));
 
     EXPECT_CALL(display, post_update())
             .Times(1);
