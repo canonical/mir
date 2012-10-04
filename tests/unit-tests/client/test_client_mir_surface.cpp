@@ -46,6 +46,7 @@ struct MockServerPackageGenerator : public MockServerTool
 {
     MockServerPackageGenerator()
     {
+        generate_unique_buffer();
     }
 
     void create_surface(google::protobuf::RpcController* ,
@@ -53,39 +54,50 @@ struct MockServerPackageGenerator : public MockServerTool
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        response->mutable_id()->set_value(2); // TODO distinct numbers & tracking
-        response->set_width(3);
-        response->set_height(5);
-        response->set_pixel_format(request->pixel_format());
+        create_buffer_response( response );
+        std::unique_lock<std::mutex> lock(guard);
+        surface_name = request->surface_name();
+        done->Run();
+    }
 
+    void generate_unique_buffer()
+    {
         int num_fd = 2, num_data = 8; 
         server_package.fd.clear();
         server_package.data.clear();
         server_package.fd.resize(num_fd);
         server_package.data.resize(num_data);
-
-        response->mutable_buffer()->set_fds_on_side_channel(1);
         for (auto i=0; i<num_fd; i++)
         {
-            int tmp = i*3;
-            server_package.fd[i] = tmp;
-            response->mutable_buffer()->add_fd(tmp);
+            server_package.fd[i] = i*3;
         }
-
         for (auto i=0; i<num_data; i++)
         {
-            int tmp = i*5;
-            server_package.data[i] = tmp;
-            response->mutable_buffer()->add_data(tmp);
+            server_package.data[i] = i*2;
         }
-
-        std::unique_lock<std::mutex> lock(guard);
-        surface_name = request->surface_name();
-
-        done->Run();
     }
-    
+ 
     mcl::MirBufferPackage server_package;
+
+    private:
+    void create_buffer_response(mir::protobuf::Surface* response)
+    {
+        response->mutable_id()->set_value(2);
+        response->set_width(3);
+        response->set_height(5);
+        response->set_pixel_format(mir_pixel_format_rgba_8888);
+
+        /* assemble buffers */
+        response->mutable_buffer()->set_fds_on_side_channel(1);
+        for (unsigned int i=0; i< server_package.data.size(); i++)
+        {
+            response->mutable_buffer()->add_data(server_package.data[i]);
+        }
+        for (unsigned int i=0; i< server_package.fd.size(); i++)
+        {
+            response->mutable_buffer()->add_fd(server_package.fd[i]);
+        }
+    }
 };
 
 struct MockBuffer : public mcl::ClientBuffer
@@ -208,16 +220,40 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server )
             SaveArg<0>(&submitted_package),
             Return(mock_factory->emptybuffer)));
  
-    auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (
+                         *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
+    /* check for same contents */
     ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
     ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
+    for(unsigned int i=0; i< submitted_package.fd.size(); i++)
+        EXPECT_EQ(submitted_package.fd[i], mock_server_tool->server_package.fd[i]);
+    for(unsigned int i=0; i< submitted_package.data.size(); i++)
+        EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
 }
 
 void empty_surface_callback(MirSurface*, void*) {}
-TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer )
+
+TEST_F(MirClientSurfaceTest, client_does_not_create_a_buffer_its_seen_before )
+{
+    using namespace testing;
+
+    /* setup */
+    auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+    
+
+    /* test */
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(0);
+    auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
+    buffer_wait_handle->wait_for_result();
+}
+
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_unique_buffer )
 {
     using namespace testing;
 
