@@ -349,6 +349,34 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirPlatformPackage platform_package;
+            platform_package.data_items = -1;
+            platform_package.fd_items = -1;
+            mir_connection_get_platform(connection, &platform_package);
+
+            EXPECT_GE(0, platform_package.data_items);
+            EXPECT_GE(0, platform_package.fd_items);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_using_mir_wait_for)
 {
     struct ClientConfig : ClientConfigCommon
