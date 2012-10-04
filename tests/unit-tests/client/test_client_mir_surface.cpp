@@ -228,8 +228,6 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server )
     /* check for same contents */
     ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
     ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
-    for(unsigned int i=0; i< submitted_package.fd.size(); i++)
-        EXPECT_EQ(submitted_package.fd[i], mock_server_tool->server_package.fd[i]);
     for(unsigned int i=0; i< submitted_package.data.size(); i++)
         EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
 }
