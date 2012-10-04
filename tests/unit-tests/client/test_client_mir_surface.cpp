@@ -42,6 +42,52 @@ namespace mir
 namespace test
 { 
 
+struct MockServerPackageGenerator : public MockServerTool
+{
+    MockServerPackageGenerator()
+    {
+    }
+
+    void create_surface(google::protobuf::RpcController* ,
+                 const mir::protobuf::SurfaceParameters* request,
+                 mir::protobuf::Surface* response,
+                 google::protobuf::Closure* done)
+    {
+        response->mutable_id()->set_value(2); // TODO distinct numbers & tracking
+        response->set_width(3);
+        response->set_height(5);
+        response->set_pixel_format(request->pixel_format());
+
+        int num_fd = 2, num_data = 8; 
+        server_package.fd.clear();
+        server_package.data.clear();
+        server_package.fd.resize(num_fd);
+        server_package.data.resize(num_data);
+
+        response->mutable_buffer()->set_fds_on_side_channel(1);
+        for (auto i=0; i<num_fd; i++)
+        {
+            int tmp = i*3;
+            server_package.fd[i] = tmp;
+            response->mutable_buffer()->add_fd(tmp);
+        }
+
+        for (auto i=0; i<num_data; i++)
+        {
+            int tmp = i*5;
+            server_package.data[i] = tmp;
+            response->mutable_buffer()->add_data(tmp);
+        }
+
+        std::unique_lock<std::mutex> lock(guard);
+        surface_name = request->surface_name();
+
+        done->Run();
+    }
+    
+    mcl::MirBufferPackage server_package;
+};
+
 struct MockBuffer : public mcl::ClientBuffer
 {
     MockBuffer()
@@ -88,14 +134,15 @@ struct MirClientSurfaceTest : public testing::Test
     void SetUp()
     {
 
-        mock_server_tool = std::make_shared<mt::MockServerTool>();
+        mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
         test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
         test_server->comm.start();
 
         mock_factory = std::make_shared<mt::MockClientFactory>();
 
         params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
-    
+  
+ 
         /* connect dummy server */
         connect_parameters.set_application_name("test");
         mock_server_tool->connect(0,
@@ -130,7 +177,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<mt::TestServer> test_server;
     std::shared_ptr<mt::TestClient> client_tools;
-    std::shared_ptr<mt::MockServerTool> mock_server_tool;
+    std::shared_ptr<mt::MockServerPackageGenerator> mock_server_tool;
 
     CallBack callback;
 
@@ -148,6 +195,25 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
     auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
+}
+
+TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server )
+{
+    using namespace testing;
+
+    mcl::MirBufferPackage submitted_package;
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+        .Times(1)
+        .WillOnce(DoAll(
+            SaveArg<0>(&submitted_package),
+            Return(mock_factory->emptybuffer)));
+ 
+    auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+
+    ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
+    ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
 }
 
 void empty_surface_callback(MirSurface*, void*) {}
