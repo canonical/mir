@@ -52,6 +52,28 @@ typedef struct MirSurfaceParameters
     MirPixelFormat pixel_format;
 } MirSurfaceParameters;
 
+enum { mir_platform_package_max = 32 };
+
+typedef struct MirPlatformPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_platform_package_max];
+    int fd[mir_platform_package_max];
+} MirPlatformPackage;
+
+enum { mir_buffer_package_max = 32 };
+
+typedef struct MirBufferPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_buffer_package_max];
+    int fd[mir_buffer_package_max];
+} MirBufferPackage;
+
 typedef struct MirGraphicsRegion
 {
     int width;
@@ -83,6 +105,8 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 /* Release a connection to the MIR server. */
 void mir_connection_release(MirConnection *connection);
 
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 MirWaitHandle* mir_surface_create(
     MirConnection *connection,
@@ -101,9 +125,12 @@ char const *mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
 /* Get a surface's buffer. */
-void mir_surface_get_current_buffer(
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+
+/* Get a surface's graphics_region. */
+void mir_surface_get_graphics_region(
     MirSurface *surface,
-    MirGraphicsRegion *buffer_package);
+    MirGraphicsRegion *graphics_region);
 
 /* Advance a surface's buffer. */
 MirWaitHandle* mir_surface_next_buffer(

@@ -143,5 +143,23 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     connect_wait_handle.result_received();
 }
 
+void MirConnection::populate(MirPlatformPackage& platform_package)
+{
+    connect_wait_handle.wait_for_result();
 
+    if (!connect_result.has_error())
+    {
+        platform_package.data_items = connect_result.data_size();
+        for (int i = 0; i != connect_result.data_size(); ++i)
+            platform_package.data[i] = connect_result.data(i);
 
+        platform_package.fd_items = connect_result.fd_size();
+        for (int i = 0; i != connect_result.fd_size(); ++i)
+            platform_package.fd[i] = connect_result.fd(i);
+    }
+    else
+    {
+        platform_package.data_items = 0;
+        platform_package.fd_items = 0;
+    }
+}

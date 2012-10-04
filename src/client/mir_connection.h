@@ -66,6 +66,8 @@ public:
 
     void disconnect();
 
+    void populate(MirPlatformPackage& platform_package);
+
     static bool is_valid(MirConnection *connection);
 private:
     mir::client::MirRpcChannel channel;

@@ -36,7 +36,7 @@ public:
     void silence_uninteresting();
 
     MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
-
+    MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
 };
 }
 

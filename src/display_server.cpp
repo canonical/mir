@@ -79,6 +79,7 @@ void mir::DisplayServer::start()
 void mir::DisplayServer::do_stuff()
 {
     //TODO
+    std::this_thread::yield();
 }
 
 void mir::DisplayServer::stop()

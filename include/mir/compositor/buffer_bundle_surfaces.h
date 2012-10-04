@@ -43,7 +43,7 @@ public:
 
     std::shared_ptr<GraphicBufferClientResource> secure_client_buffer();
 
-    std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer();
+    std::shared_ptr<GraphicRegion> lock_back_buffer();
 
     geometry::PixelFormat get_bundle_pixel_format();
     geometry::Size bundle_size();

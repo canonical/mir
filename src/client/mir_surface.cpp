@@ -82,11 +82,6 @@ bool MirSurface::is_valid() const
     return !surface.has_error();
 }
 
-void MirSurface::populate(MirGraphicsRegion& )
-{
-    // TODO
-}
-
 MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     next_buffer_wait_handle.result_requested();
@@ -127,3 +122,24 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     next_buffer_wait_handle.result_received();
 }
 
+void MirSurface::populate(MirBufferPackage& buffer_package)
+{
+    if (is_valid() && surface.has_buffer())
+    {
+        next_buffer_wait_handle.wait_for_result();
+        auto const& buffer = surface.buffer();
+
+        buffer_package.data_items = buffer.data_size();
+        for (int i = 0; i != buffer.data_size(); ++i)
+            buffer_package.data[i] = buffer.data(i);
+
+        buffer_package.fd_items = buffer.fd_size();
+        for (int i = 0; i != buffer.fd_size(); ++i)
+            buffer_package.fd[i] = buffer.fd(i);
+    }
+    else
+    {
+        buffer_package.data_items = 0;
+        buffer_package.fd_items = 0;
+    }
+}

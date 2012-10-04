@@ -48,7 +48,7 @@ public:
     char const * get_error_message();
     int id() const;
     bool is_valid() const;
-    void populate(MirGraphicsRegion& );
+    void populate(MirBufferPackage& );
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 

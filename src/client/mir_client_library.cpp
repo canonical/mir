@@ -124,9 +124,19 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirGraphicsRegion *buffer_package)
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
 {
     surface->populate(*buffer_package);
+}
+
+void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
+{
+    connection->populate(*platform_package);
+}
+
+void mir_surface_get_graphics_region(MirSurface * /*surface*/, MirGraphicsRegion * /*graphics_region*/)
+{
+//    surface->populate(*graphics_region);
 }
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
