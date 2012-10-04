@@ -108,8 +108,14 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
-    mcl::MirBufferPackage ipc_package;
-    buffer_factory->create_buffer_from_ipc_message(ipc_package);
+    MirBufferPackage ipc_package;
+    auto const& buffer = surface.buffer();
+    populate(ipc_package);
+
+    mcl::MirBufferPackage internal_ipc_package;
+
+    printf("OK GOT BUFFER CALLBACK %i\n", buffer.data(1));
+    buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
     callback(this, context);
     create_wait_handle.result_received();
 }
