@@ -18,16 +18,20 @@
 
 #include "mir_client/mir_client_library.h"
 #include "android/android_client_buffer_factory.h"
+#include "mir_test/mock_android_registrar.h"
 
 #include <gtest/gtest.h>
 //#include <gmock/gmock.h>
 
 namespace mcl=mir::client;
+namespace mt=mir::test;
 
 TEST(MirAndroidClientBufferFactory, factory)
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferFactory factory;
+    auto mock_registrar = std::make_shared<mt::MockAndroidRegistrar>();
+
+    mcl::AndroidClientBufferFactory factory(mock_registrar);
     printf("0x%x\n", (int) &factory);
 }
