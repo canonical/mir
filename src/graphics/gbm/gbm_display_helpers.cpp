@@ -54,7 +54,7 @@ int mggh::DRMHelper::get_authenticated_fd()
         throw std::runtime_error("Failed to get DRM device magic cookie\n");
     }
 
-    if (drmAuthMagic(auth_fd, magic))
+    if (drmAuthMagic(fd, magic))
     {
         close(auth_fd);
         throw std::runtime_error("Failed to authenticate DRM device magic cookie\n");
