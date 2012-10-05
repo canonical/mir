@@ -21,9 +21,7 @@
 #include "android/android_client_buffer.h"
 #include "mir_test/mock_android_registrar.h"
 
-
 #include <gtest/gtest.h>
-//#include <gmock/gmock.h>
 
 namespace geom=mir::geometry;
 namespace mcl=mir::client;
