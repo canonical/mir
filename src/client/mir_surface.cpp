@@ -151,16 +151,12 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-    geom::Width w(0);
-    geom::Height h(0);
-    auto pf = geom::PixelFormat::rgba_8888;
-
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
     {
         auto ipc_package = std::make_shared<MirBufferPackage>();
         populate(*ipc_package);
-        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, w, h, pf);
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, surface_width, surface_height, surface_pf);
         buffer_cache[last_buffer_id] = new_buffer;
     }
     
