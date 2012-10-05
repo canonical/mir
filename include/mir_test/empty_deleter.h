@@ -13,39 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_TEST_EMPTY_DELETER_H_
+#define MIR_TEST_EMPTY_DELETER_H_
 
-#ifndef MIR_CLIENT_PRIVATE_LOGGER_H_
-#define MIR_CLIENT_PRIVATE_LOGGER_H_
+#include "mir/frontend/protobuf_asio_communicator.h"
 
-#include <iosfwd>
+#include <gmock/gmock.h>
+
+namespace mf = mir::frontend;
 
 namespace mir
 {
-namespace client
-{
-class Logger
-{
-public:
-    virtual std::ostream& error() = 0;
-    virtual std::ostream& debug() = 0;
-protected:
-    Logger() {}
-    virtual ~Logger() {}
-    Logger(Logger const&) = delete;
-    Logger& operator=(Logger const&) = delete;
-};
 
-class ConsoleLogger : public Logger
+struct EmptyDeleter
 {
-public:
-    virtual std::ostream& error();
-    virtual std::ostream& debug();
+    void operator()(void* )
+    {
+    }
 };
 
 }
-}
-
-#endif /* MIR_CLIENT_PRIVATE_LOGGER_H_ */
+#endif /* MIR_TEST_EMPTY_DELETER_H_ */

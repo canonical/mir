@@ -28,6 +28,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/empty_deleter.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -35,13 +36,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct EmptyDeleter
-{
-    template<typename T>
-    void operator()(T* )
-    {
-    }
-};
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
@@ -63,11 +57,11 @@ TEST(buffer_manager, create_buffer)
     mc::MockBuffer mock_buffer{size, stride, pixel_format};
     std::shared_ptr<mc::MockBuffer> default_buffer(
         &mock_buffer,
-        EmptyDeleter());
+        mir::EmptyDeleter());
     MockBufferAllocationStrategy allocation_strategy;
 
     mc::BufferBundleManager buffer_bundle_manager(
-            std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, EmptyDeleter()));
+            std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, mir::EmptyDeleter()));
 
 
     EXPECT_CALL(allocation_strategy, create_swapper(Eq(size), Eq(pixel_format))).Times(AtLeast(1));
