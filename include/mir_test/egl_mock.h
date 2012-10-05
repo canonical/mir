@@ -35,11 +35,14 @@ public:
     ~EglMock();
     void silence_uninteresting();
 
+    typedef void (*generic_function_pointer_t)(void);
+
     MOCK_METHOD1(eglGetDisplay, EGLDisplay(NativeDisplayType));
     MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
     MOCK_METHOD1(eglTerminate, EGLBoolean(EGLDisplay));
     MOCK_METHOD2(eglQueryString,const char*(EGLDisplay, EGLint));
     MOCK_METHOD1(eglBindApi, EGLBoolean(EGLenum));
+    MOCK_METHOD1(eglGetProcAddress,generic_function_pointer_t(const char*));
 
     // Config management
     MOCK_METHOD4(eglGetConfigs, EGLBoolean(EGLDisplay,EGLConfig*,EGLint,EGLint*));

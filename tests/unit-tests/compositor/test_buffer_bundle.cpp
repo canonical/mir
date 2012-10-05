@@ -64,15 +64,6 @@ protected:
     geom::PixelFormat pixel_format;
 };
 
-TEST_F(BufferBundleTest, get_buffer_for_compositor_binds)
-{
-    EXPECT_CALL(*mock_buffer, bind_to_texture())
-    .Times(1);
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
-
-    auto texture = buffer_bundle.lock_and_bind_back_buffer();
-}
-
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
@@ -84,7 +75,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    auto texture = buffer_bundle.lock_and_bind_back_buffer();
+    auto texture = buffer_bundle.lock_back_buffer();
 }
 
 TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)

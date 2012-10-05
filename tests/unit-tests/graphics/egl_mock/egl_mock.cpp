@@ -183,6 +183,12 @@ EGLBoolean eglBindAPI (EGLenum api)
     return global_egl_mock->eglBindApi(api);
 }
 
+mir::EglMock::generic_function_pointer_t eglGetProcAddress (const char *name)
+{
+    CHECK_GLOBAL_MOCK(mir::EglMock::generic_function_pointer_t)
+    return global_egl_mock->eglGetProcAddress(name);
+}
+
 EGLBoolean eglGetConfigs (EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)

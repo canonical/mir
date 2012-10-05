@@ -26,10 +26,12 @@
 
 namespace mir
 {
+namespace compositor
+{
+class GraphicRegion;
+}
 namespace graphics
 {
-
-class Texture;
 
 // The interface by which a Renderer talks to, e.g., a surface.
 class Renderable
@@ -39,7 +41,7 @@ public:
 
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
-    virtual std::shared_ptr<Texture> texture() const = 0;
+    virtual std::shared_ptr<compositor::GraphicRegion> texture() const = 0;
     virtual glm::mat4 transformation() const = 0;
     virtual float alpha() const = 0;
 

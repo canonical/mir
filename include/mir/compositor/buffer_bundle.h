@@ -27,17 +27,12 @@
 
 namespace mir
 {
-
-namespace graphics
-{
-class Texture;
-}
-
 namespace compositor
 {
 class BufferSwapper;
 class BufferIPCPackage;
 class Buffer;
+class GraphicRegion;
 
 struct GraphicBufferClientResource
 {
@@ -57,7 +52,7 @@ class BufferBundle
 {
 public:
     virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
-    virtual std::shared_ptr<graphics::Texture> lock_and_bind_back_buffer() = 0;
+    virtual std::shared_ptr<GraphicRegion> lock_back_buffer() = 0;
     virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
     virtual geometry::Size bundle_size() = 0;
 };

@@ -39,6 +39,8 @@ class ClientAndroidBufferTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+        
         height = geom::Height(124);
         height_copy = geom::Height(height);
 
@@ -51,6 +53,11 @@ protected:
         package = std::make_shared<mcl::MirBufferPackage>();
         mock_android_registrar = std::make_shared<MockAndroidRegistrar>();
         package_copy = std::make_shared<mcl::MirBufferPackage>(*package.get());
+
+        EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+            .Times(AtLeast(0));
+        EXPECT_CALL(*mock_android_registrar, unregister_buffer(_))
+            .Times(AtLeast(0));
     }
     std::shared_ptr<mcl::MirBufferPackage> package;
     std::shared_ptr<mcl::MirBufferPackage> package_copy;

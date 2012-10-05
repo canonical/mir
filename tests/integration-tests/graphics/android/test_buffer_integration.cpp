@@ -19,6 +19,7 @@
 #include "mir/graphics/android/android_platform.h"
 #include "mir/graphics/android/android_buffer_allocator.h"
 #include "mir/graphics/android/android_display.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
@@ -49,7 +50,8 @@ protected:
 
     virtual void SetUp()
     {
-        allocator = platform->create_buffer_allocator();
+        auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+        allocator = platform->create_buffer_allocator(buffer_initializer);
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
@@ -125,13 +127,13 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     auto client_buffer = bundle->secure_client_buffer();
     sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
     client_buffer.reset();
 
-    texture_res = bundle->lock_and_bind_back_buffer();
+    texture_res = bundle->lock_back_buffer();
     gl_animation.render_gl();
     display->post_update();
     texture_res.reset();
@@ -151,7 +153,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mg::Texture> texture_res;
+    std::shared_ptr<mc::GraphicRegion> texture_res;
 
     for(;;)
     {
@@ -160,7 +162,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
         client_buffer.reset();
 
-        texture_res = bundle->lock_and_bind_back_buffer();
+        texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
@@ -171,7 +173,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         sw_renderer.render_pattern(client_buffer, size, 0x0000FFFF);
         client_buffer.reset();
 
-        texture_res = bundle->lock_and_bind_back_buffer();
+        texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
