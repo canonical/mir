@@ -13,17 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
-#include "android/android_client_buffer_factory.h"
+#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_FACTORY_H_
+#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_FACTORY_H_
 
-#include <gtest/gtest.h>
-//#include <gmock/gmock.h>
+#include "client_buffer_factory.h"
 
-TEST(MirAndroidClientBufferFactory, factory)
+namespace mir
 {
-    using namespace testing;
+namespace client
+{
+class ClientBuffer;
 
+class AndroidClientBufferFactory : public ClientBufferFactory
+{
+public:
+    AndroidClientBufferFactory() {}
+    std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&); 
+
+};
 }
+}
+#endif /* MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_ */
