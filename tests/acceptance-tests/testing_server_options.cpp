@@ -60,7 +60,8 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
 class StubGraphicPlatform : public mg::Platform
 {
-    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator()
+    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }

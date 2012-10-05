@@ -84,6 +84,11 @@ bool MirSurface::is_valid() const
     return !surface.has_error();
 }
 
+void MirSurface::populate(MirGraphicsRegion&)
+{
+    //todo
+}
+
 MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     next_buffer_wait_handle.result_requested();
@@ -92,6 +97,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, 
         &surface.id(),
         surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
+    
     return &next_buffer_wait_handle;
 }
 

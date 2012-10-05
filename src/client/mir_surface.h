@@ -52,7 +52,8 @@ public:
     char const * get_error_message();
     int id() const;
     bool is_valid() const;
-    void populate(MirBufferPackage& );
+    void populate(MirBufferPackage& buffer_package);
+    void populate(MirGraphicsRegion& region);
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 

@@ -23,6 +23,7 @@
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
+#include "mir_test/mock_buffer_initializer.h"
 
 #include <memory>
 #include <gtest/gtest.h>
@@ -40,8 +41,9 @@ class GBMBufferAllocatorTest  : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto platform = std::make_shared<mgg::GBMPlatform>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform));
+        platform = std::make_shared<mgg::GBMPlatform>();
+        mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
@@ -53,6 +55,8 @@ protected:
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    std::shared_ptr<mgg::GBMPlatform> platform;
+    std::shared_ptr<testing::NiceMock<mg::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 };
 
@@ -109,4 +113,26 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(bo));
 
     allocator->alloc_buffer(size, pf);
+}
+
+TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_initializer, operator_call(_,_))
+        .Times(1);
+
+    allocator->alloc_buffer(size, pf);
+}
+
+TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
+{
+    using namespace testing;
+
+    auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
+
+    EXPECT_NO_THROW({
+        allocator->alloc_buffer(size, pf);
+    });
 }

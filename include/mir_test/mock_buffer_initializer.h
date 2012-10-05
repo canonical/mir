@@ -16,29 +16,29 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#ifndef MIR_TEST_MOCK_BUFFER_INITIALIZER_H_
+#define MIR_TEST_MOCK_BUFFER_INITIALIZER_H_
 
-#include "mir/graphics/platform.h"
+#include "mir/graphics/buffer_initializer.h"
 
 namespace mir
 {
 namespace graphics
 {
-namespace android
-{
 
-class AndroidPlatform : public Platform
+class MockBufferInitializer : public BufferInitializer
 {
 public:
-    /* From Platform */
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<Display> create_display();
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    MOCK_METHOD2(operator_call, void(compositor::Buffer& buffer, EGLClientBuffer client_buffer));
+
+    void operator()(compositor::Buffer& buffer, EGLClientBuffer client_buffer)
+    {
+        operator_call(buffer, client_buffer);
+    }
 };
 
 }
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */
+
+#endif /* MIR_TEST_MOCK_BUFFER_INITIALIZER_H_ */
+
