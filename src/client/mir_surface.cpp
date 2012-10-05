@@ -35,6 +35,9 @@ MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       last_buffer_id(-1),
+      surface_width(geom::Width{0}),
+      surface_height(geom::Height{0}),
+      surface_pf(geom::PixelFormat::rgba_8888), 
       buffer_factory(factory)
 {
     mir::protobuf::SurfaceParameters message;
@@ -114,19 +117,25 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
     delete this;
 }
 
+void MirSurface::save_buffer_dimensions()
+{
+    surface_width = geom::Width(surface.width());
+    surface_height = geom::Height(surface.height());
+    //surface_pf = 
+}
+
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-    geom::Width w(0);
-    geom::Height h(0);
-    auto pf = geom::PixelFormat::rgba_8888;
+    save_buffer_dimensions();
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
     populate(*ipc_package);
 
-    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, w, h, pf);
+    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, 
+                                                                     surface_width, surface_height, surface_pf);
 
     /* this is only called when surface is first created. if anything has been putting things 
        in cache before this callback, its wrong */

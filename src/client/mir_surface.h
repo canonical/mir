@@ -20,6 +20,8 @@
 
 #include "mir_protobuf.pb.h"
 
+#include "mir/geometry/pixel_format.h"
+#include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
 #include "mir_wait_handle.h"
 
@@ -62,6 +64,8 @@ private:
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
 
+    void save_buffer_dimensions();
+
     mir::protobuf::DisplayServer::Stub & server;
     mir::protobuf::Void void_response;
     mir::protobuf::Surface surface;
@@ -73,6 +77,9 @@ private:
 
     int last_buffer_id;
     std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_cache;
+    mir::geometry::Width surface_width;
+    mir::geometry::Height surface_height;
+    mir::geometry::PixelFormat surface_pf;
 
     std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
 };
