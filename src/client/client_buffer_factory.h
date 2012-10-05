@@ -21,11 +21,14 @@
 #define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_
 
 #include <memory>
+#include <mir/geometry/pixel_format.h>
+#include <mir/geometry/dimensions.h>
 
 class MirBufferPackage;
 
 namespace mir
 {
+
 namespace client
 {
 class ClientBuffer;
@@ -33,7 +36,8 @@ class ClientBuffer;
 class ClientBufferFactory
 {
 public:
-    virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>&) = 0;
+    virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>&,
+                                geometry::Width, geometry::Height, geometry::PixelFormat) = 0;
 };
 }
 }

@@ -18,17 +18,24 @@
 
 #include "mir_client/mir_client_library.h"
 #include "android/android_client_buffer_factory.h"
+#include "android/android_client_buffer.h"
 #include "mir_test/mock_android_registrar.h"
+
 
 #include <gtest/gtest.h>
 //#include <gmock/gmock.h>
 
+namespace geom=mir::geometry;
 namespace mcl=mir::client;
 namespace mt=mir::test;
 
 TEST(MirAndroidClientBufferFactory, factory)
 {
     using namespace testing;
+
+    geom::Width w(12);
+    geom::Height h(14);
+    auto pf = geom::PixelFormat::rgba_8888;
 
     auto mock_registrar = std::make_shared<mt::MockAndroidRegistrar>();
     auto package = std::make_shared<MirBufferPackage>();
@@ -37,6 +44,9 @@ TEST(MirAndroidClientBufferFactory, factory)
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
-    auto buffer = factory.create_buffer_from_ipc_message(package);
- 
+    auto buffer = factory.create_buffer_from_ipc_message(package, w, h, pf);
+
+    EXPECT_EQ(buffer->height(), h); 
+    EXPECT_EQ(buffer->width(), w); 
+    EXPECT_EQ(buffer->pixel_format(), pf); 
 }

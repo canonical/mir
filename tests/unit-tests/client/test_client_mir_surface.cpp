@@ -138,12 +138,12 @@ struct MockClientFactory : public mcl::ClientBufferFactory
 
         emptybuffer=std::make_shared<MockBuffer>();
 
-        EXPECT_CALL(*this, create_buffer_from_ipc_message(_))
+        EXPECT_CALL(*this, create_buffer_from_ipc_message(_,_,_,_))
             .Times(AtLeast(0));
-        ON_CALL(*this, create_buffer_from_ipc_message(_))
+        ON_CALL(*this, create_buffer_from_ipc_message(_,_,_,_))
             .WillByDefault(Return(emptybuffer));
     }
-    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const std::shared_ptr<MirBufferPackage>&));
+    MOCK_METHOD4(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const std::shared_ptr<MirBufferPackage>&, geom::Width, geom::Height, geom::PixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
@@ -220,7 +220,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
         .Times(1);
  
     auto surface = std::make_shared<MirSurface> ( *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
@@ -233,7 +233,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     using namespace testing;
 
     std::shared_ptr<MirBufferPackage> submitted_package;
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
         .Times(1)
         .WillOnce(DoAll(
             SaveArg<0>(&submitted_package),
@@ -263,7 +263,7 @@ TEST_F(MirClientSurfaceTest, client_does_not_create_a_buffer_its_seen_before )
     wait_handle->wait_for_result();
     
     /* test */
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
         .Times(0);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
     buffer_wait_handle->wait_for_result();
@@ -280,7 +280,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_unique_buffer )
 
     mock_server_tool->generate_unique_buffer();
     /* test */
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
     buffer_wait_handle->wait_for_result();
@@ -299,7 +299,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
 
     /* gen new buffer for next call*/
     mock_server_tool->generate_unique_buffer();
-    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
         .Times(1)
         .WillOnce(DoAll(
             SaveArg<0>(&submitted_package),
