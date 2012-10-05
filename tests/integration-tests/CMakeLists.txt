@@ -33,11 +33,13 @@ target_link_libraries(
 
   mirclient
   mircompositor
-#  mirfrontend
-#  mirinput
-#  mirsurfaces
-#  mirplatformgraphics
+  mirfrontend
+  mirinput
+  mirsurfaces
+  mirplatformgraphics
   mirprocess
+
+  3rd_party
 
   test-utils
 

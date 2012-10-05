@@ -18,11 +18,25 @@
 
 #include "mir/process/process.h"
 
+#include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/resource_cache.h"
 #include "mir/graphics/android/android_buffer.h"
+#include "mir/graphics/android/android_alloc_adaptor.h"
+#include "mir/compositor/buffer_ipc_package.h"
+
+#include "mir_test/mock_server_tool.h"
+#include "mir_test/test_server.h"
+#include "mir_test/empty_deleter.h"
+
+#include <hardware/gralloc.h>
 
 #include <gmock/gmock.h>
 
 namespace mp=mir::process;
+namespace mt=mir::test;
+namespace mc=mir::compositor;
+namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 struct TestClient
 {
@@ -30,6 +44,7 @@ struct TestClient
 /* client code */
 static int main_function()
 {
+#if 0
     /* only use C api */
 
     MirConnection* connection;
@@ -58,6 +73,7 @@ static int main_function()
 
     /* release */
     mir_connection_release(connection);
+#endif
     return 0;
 }
 
@@ -68,36 +84,43 @@ static int exit_function()
 
 };
 
-struct MockServerGenerator : public MockServerTool
+struct MockServerGenerator : public mt::MockServerTool
 {
-    MockServerPackageGenerator(BufferIPCPackage)
+    MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>&)
     {
 
     }
 
 
-    BufferIPCPackage package;
+    mc::BufferIPCPackage package;
 };
 
 
 struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
+
+        size = geom::Size{geom::Width{64}, geom::Height{48}};
+        pf = geom::PixelFormat::rgba_8888;
+
         int err;
+        struct alloc_device_t *alloc_device_raw;
         const hw_module_t    *hw_module;
         err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
         if (err < 0)
             throw std::runtime_error("Could not open hardware module");
-        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( hw_module, mir::EmptyDeleter());
+        gralloc_open(hw_module, &alloc_device_raw);
 
-        auto alloc_adaptor = std::make_shared<AndroidAllocAdaptor>(alloc_device);
+        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
 
-        auto android_buffer = std::make_shared<AndroidBuffer>(alloc_adaptor, size, pf);
+        auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
+
+        auto android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
 
         auto package = android_buffer->get_ipc_package();
 
-        mock_server = std::make_shared<mt::MockServerGenerator>();
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
+        mock_server = std::make_shared<MockServerGenerator>(package);
+        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
         test_server->comm.start();
 
     }
@@ -109,7 +132,10 @@ struct TestClientIPCRender : public testing::Test
 
     std::shared_ptr<mt::TestServer> test_server;
 
-    std::shared_ptr<MockIPCServer> mock_server; 
+    std::shared_ptr<MockServerGenerator> mock_server;
+
+    geom::Size size;
+    geom::PixelFormat pf; 
 };
 
 TEST_F(TestClientIPCRender, test_render)
