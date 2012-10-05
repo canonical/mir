@@ -18,6 +18,8 @@
 
 #include "mir/process/process.h"
 
+#include "mir/graphics/android/android_buffer.h"
+
 #include <gmock/gmock.h>
 
 namespace mp=mir::process;
@@ -28,14 +30,13 @@ struct TestClient
 /* client code */
 static int main_function()
 {
-    /* only use C */
+    /* only use C api */
 
     /* make surface */
     /* grab a buffer*/
     /* render pattern */
     /* release */
 
-    /* exit */
     return 0;
 }
 
@@ -46,16 +47,49 @@ static int exit_function()
 
 };
 
+struct MockServerGenerator : public MockServerTool
+{
+    MockServerPackageGenerator(BufferIPCPackage)
+    {
+
+    }
+
+
+    BufferIPCPackage package;
+};
 
 
 struct TestClientIPCRender : public testing::Test
 {
-
     void SetUp() {
+        int err;
+        const hw_module_t    *hw_module;
+        err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+        if (err < 0)
+            throw std::runtime_error("Could not open hardware module");
+        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( hw_module, mir::EmptyDeleter());
+
+        auto alloc_adaptor = std::make_shared<AndroidAllocAdaptor>(alloc_device);
+
+        auto android_buffer = std::make_shared<AndroidBuffer>(alloc_adaptor, size, pf);
+
+        auto package = android_buffer->get_ipc_package();
+
+        mock_server = std::make_shared<mt::MockServerGenerator>();
+        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
+        test_server->comm.start();
 
     }
-};
 
+    void TearDown()
+    {
+        test_server->comm.stop();
+    }
+
+    std::shared_ptr<mt::TestServer> test_server;
+
+    std::shared_ptr<MockIPCServer> mock_server; 
+};
 
 TEST_F(TestClientIPCRender, test_render)
 {
