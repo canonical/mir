@@ -31,7 +31,12 @@ TEST(MirAndroidClientBufferFactory, factory)
     using namespace testing;
 
     auto mock_registrar = std::make_shared<mt::MockAndroidRegistrar>();
+    MirBufferPackage package;
 
     mcl::AndroidClientBufferFactory factory(mock_registrar);
-    printf("0x%x\n", (int) &factory);
+   
+    EXPECT_CALL(*mock_registrar, register_buffer(_))
+        .Times(1); 
+    auto buffer = factory.create_buffer_from_ipc_message(package);
+ 
 }
