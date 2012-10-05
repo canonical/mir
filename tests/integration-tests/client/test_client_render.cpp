@@ -18,6 +18,8 @@
 
 #include "mir/process/process.h"
 
+#include "mir_client/mir_client_library.h"
+
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/android/android_buffer.h"
@@ -38,42 +40,67 @@ namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
+void connected_callback(MirConnection *connection, void* context)
+{
+    context = connection;
+}
+void create_callback(MirSurface *surface, void*context)
+{
+    context = surface;
+}
+
+void render_pattern(MirGraphicsRegion *region)
+{
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        return;
+
+    int *pixel = (int*) region->vaddr; 
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            pixel[i*region->width + j] = 0x12345689;
+        }
+    }
+}
+
 struct TestClient
 {
+
 
 /* client code */
 static int main_function()
 {
-#if 0
     /* only use C api */
 
     MirConnection* connection;
-    MirWaitHandle* connection_wait_handle;
-    MirWaitHandle* surface_wait_handle;
+    MirSurface* surface;
     MirGraphicsRegion graphics_region;
-    /* establish connection */
-    connection_wait_handle = mir_connect("./test_socket_surface",
-                                         "test_renderer",
-                                         connected_callback, NULL);
-    mir_wait(connection_wait_handle);
-    if (mir_connection_is_valid(connection))
+    MirSurfaceParameters surface_parameters;
+
+ /* establish connection */
+    mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                 &connected_callback, &connection));
+    if (!mir_connection_is_valid(connection))
         return -1;
 
     /* make surface */
-    surface_wait_handle = mir_surface_create( connection,
-                                              parameters,
-                                              create_callback, NULL);
-    mir_wait(surface_wait_handle);
 
+    surface_parameters.name = "testsurface";
+    surface_parameters.width = 48;
+    surface_parameters.height = 64;
+    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+    mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                      &create_callback, &surface));
     /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
 
     /* render pattern */
-    render_stripes(graphics_region);
+    render_pattern(&graphics_region);
 
     /* release */
     mir_connection_release(connection);
-#endif
     return 0;
 }
 
