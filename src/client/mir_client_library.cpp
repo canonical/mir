@@ -22,7 +22,6 @@
 #include "mir_surface.h"
 
 #include "mir_rpc_channel.h"
-#include "mir_buffer_package.h" 
 
 #include "mir_protobuf.pb.h"
 

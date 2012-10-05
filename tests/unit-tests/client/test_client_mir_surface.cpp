@@ -22,7 +22,6 @@
 #include "client_buffer.h"
 #include "client_buffer_factory.h"
 #include "mir_rpc_channel.h"
-#include "mir_buffer_package.h"
 #include "mir_surface.h"
 #include "mir/frontend/resource_cache.h"
 
@@ -77,10 +76,6 @@ struct MockServerPackageGenerator : public MockServerTool
         global_buffer_id++;
 
         int num_fd = 2, num_data = 8; 
-        server_package.fd.clear();
-        server_package.data.clear();
-        server_package.fd.resize(num_fd);
-        server_package.data.resize(num_data);
         for (auto i=0; i<num_fd; i++)
         {
             server_package.fd[i] = i*3;
@@ -91,7 +86,7 @@ struct MockServerPackageGenerator : public MockServerTool
         }
     }
  
-    mcl::MirBufferPackage server_package;
+    MirBufferPackage server_package;
 
     private:
     int global_buffer_id;
@@ -102,11 +97,11 @@ struct MockServerPackageGenerator : public MockServerTool
 
         /* assemble buffers */
         response->set_fds_on_side_channel(1);
-        for (unsigned int i=0; i< server_package.data.size(); i++)
+        for (int i=0; i< server_package.data_items; i++)
         {
             response->add_data(server_package.data[i]);
         }
-        for (unsigned int i=0; i< server_package.fd.size(); i++)
+        for (int i=0; i< server_package.fd_items; i++)
         {
             response->add_fd(server_package.fd[i]);
         }
@@ -148,7 +143,7 @@ struct MockClientFactory : public mcl::ClientBufferFactory
         ON_CALL(*this, create_buffer_from_ipc_message(_))
             .WillByDefault(Return(emptybuffer));
     }
-    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const mcl::MirBufferPackage&));
+    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const MirBufferPackage&));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
@@ -237,7 +232,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
 {
     using namespace testing;
 
-    mcl::MirBufferPackage submitted_package;
+    MirBufferPackage submitted_package;
     EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
         .Times(1)
         .WillOnce(DoAll(
@@ -250,9 +245,9 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     wait_handle->wait_for_result();
 
     /* check for same contents */
-    ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
-    ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
-    for(unsigned int i=0; i< submitted_package.data.size(); i++)
+    ASSERT_EQ(submitted_package.data_items, mock_server_tool->server_package.data_items);
+    ASSERT_EQ(submitted_package.fd_items,   mock_server_tool->server_package.fd_items);
+    for(auto i=0; i< submitted_package.data_items; i++)
         EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
 }
 
@@ -295,7 +290,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
 {
     using namespace testing;
 
-    mcl::MirBufferPackage submitted_package;
+    MirBufferPackage submitted_package;
  
     auto surface = std::make_shared<MirSurface> (
                          *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
@@ -315,8 +310,8 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
     buffer_wait_handle->wait_for_result();
 
     /* check for same contents */
-    ASSERT_EQ(submitted_package.data.size(), mock_server_tool->server_package.data.size());
-    ASSERT_EQ(submitted_package.fd.size(),   mock_server_tool->server_package.fd.size());
-    for(unsigned int i=0; i< submitted_package.data.size(); i++)
+    ASSERT_EQ(submitted_package.data_items, mock_server_tool->server_package.data_items);
+    ASSERT_EQ(submitted_package.fd_items,   mock_server_tool->server_package.fd_items);
+    for(auto i=0; i< submitted_package.data_items; i++)
         EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
 }

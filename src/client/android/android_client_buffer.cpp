@@ -16,13 +16,14 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir_client/mir_client_library.h"
 #include "android/android_client_buffer.h"
 
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                         std::shared_ptr<mcl::MirBufferPackage> && package, geom::Width && w,
+                         std::shared_ptr<MirBufferPackage> && package, geom::Width && w,
                          geom::Height && h, geom::PixelFormat && pf)
  : buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, geom::Size{std::move(w), std::move(h)}}),
@@ -39,17 +40,17 @@ mcl::AndroidClientBuffer::~AndroidClientBuffer()
     buffer_registrar->unregister_buffer(native_handle.get());
 }
 
-const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<mcl::MirBufferPackage>& package)
+const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)
 {
     int native_handle_header_size = 3;
-    int total = package->fd.size() + package->data.size() + native_handle_header_size;
+    int total = package->fd_items + package->data_items + native_handle_header_size;
     native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
 
-    handle->numFds  = package->fd.size();
-    handle->numInts = package->data.size();
+    handle->numFds  = package->fd_items;
+    handle->numInts = package->data_items;
 
-    int i=0;
-    for(auto it= package->fd.begin(); it != package->fd.end(); it++)
+/* 
+    for(i=0; i< ; i++)
     {
         handle->data[i++] = *it;
     } 
@@ -57,7 +58,7 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
     {
         handle->data[i++] = *it;
     } 
-
+*/
     return handle;
 }
 

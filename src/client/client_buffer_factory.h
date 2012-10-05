@@ -26,7 +26,6 @@ namespace mir
 {
 namespace client
 {
-class MirBufferPackage;
 class ClientBuffer;
 
 class ClientBufferFactory

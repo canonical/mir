@@ -17,7 +17,6 @@
  */
 
 #include "android/android_client_buffer.h"
-#include "mir_buffer_package.h"
 
 #include <memory>
 #include <algorithm>

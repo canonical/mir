@@ -20,7 +20,6 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
-#include "mir_buffer_package.h"
 
 #include <cstddef>
 
