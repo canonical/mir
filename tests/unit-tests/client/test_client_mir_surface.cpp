@@ -47,6 +47,9 @@ struct MockServerPackageGenerator : public MockServerTool
      : global_buffer_id(0)
     {
         generate_unique_buffer();
+        width_sent  = 891;
+        height_sent = 458;
+        pf_sent = mir_pixel_format_rgba_8888;
     }
 
     void create_surface(google::protobuf::RpcController* ,
@@ -88,6 +91,10 @@ struct MockServerPackageGenerator : public MockServerTool
  
     MirBufferPackage server_package;
 
+    int width_sent;
+    int height_sent;
+    int pf_sent;
+
     private:
     int global_buffer_id;
 
@@ -110,9 +117,9 @@ struct MockServerPackageGenerator : public MockServerTool
     void create_surface_response(mir::protobuf::Surface* response)
     {
         response->mutable_id()->set_value(2);
-        response->set_width(3);
-        response->set_height(5);
-        response->set_pixel_format(mir_pixel_format_rgba_8888);
+        response->set_width(width_sent);
+        response->set_height(height_sent);
+        response->set_pixel_format(pf_sent);
         create_buffer_response(response->mutable_buffer());
     }
 };
@@ -314,4 +321,24 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
     ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
     for(auto i=0; i< submitted_package->data_items; i++)
         EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
+}
+
+TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
+{
+    using namespace testing;
+
+    geom::Width w;
+    std::shared_ptr<MirBufferPackage> submitted_package;
+ 
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
+        .Times(1)
+        .WillOnce(DoAll(
+            SaveArg<1>(&w),
+            Return(mock_factory->emptybuffer)));
+    auto surface = std::make_shared<MirSurface> (
+                         *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+
+    EXPECT_EQ(w.as_uint32_t(), (unsigned int) mock_server_tool->width_sent);
 }
