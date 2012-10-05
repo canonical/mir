@@ -17,21 +17,16 @@
  */
 
 #include "android/android_client_buffer.h"
+#include "mir_test/mock_android_registrar.h"
 
 #include <memory>
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mt=mir::test;
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
-
-struct MockAndroidRegistrar : public mcl::AndroidRegistrar
-{
-    MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
-    MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
-    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geom::Rectangle));
-};
 
 class ClientAndroidBufferTest : public ::testing::Test
 {
@@ -50,7 +45,7 @@ protected:
         pf_copy = geom::PixelFormat(pf);
 
         package = std::make_shared<MirBufferPackage>();
-        mock_android_registrar = std::make_shared<MockAndroidRegistrar>();
+        mock_android_registrar = std::make_shared<mt::MockAndroidRegistrar>();
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
 
         EXPECT_CALL(*mock_android_registrar, register_buffer(_))
@@ -64,7 +59,7 @@ protected:
     geom::Width width, width_copy;
     geom::PixelFormat pf, pf_copy;
     std::shared_ptr<mcl::AndroidClientBuffer> buffer;
-    std::shared_ptr<MockAndroidRegistrar> mock_android_registrar;
+    std::shared_ptr<mt::MockAndroidRegistrar> mock_android_registrar;
 };
 
 TEST_F(ClientAndroidBufferTest, client_init)
