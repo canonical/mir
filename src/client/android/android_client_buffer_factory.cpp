@@ -13,21 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_EMPTY_DELETER_H_
-#define MIR_TEST_EMPTY_DELETER_H_
+#include "android/android_client_buffer_factory.h"
+#include "android/android_client_buffer.h"
 
-namespace mir
+//GO AWAY
+#include "mir_test/empty_deleter.h"
+
+namespace mcl=mir::client;
+
+mcl::AndroidClientBufferFactory::AndroidClientBufferFactory()
 {
-
-struct EmptyDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
-
 }
-#endif /* MIR_TEST_EMPTY_DELETER_H_ */
+
+std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferFactory::create_buffer_from_ipc_message(const MirBufferPackage&)
+{
+    mcl::AndroidClientBuffer* null = NULL;
+   
+    auto test = std::shared_ptr<mcl::AndroidClientBuffer>(null, mir::EmptyDeleter()); 
+    return test;
+} 

@@ -22,6 +22,8 @@
 
 #include <memory>
 
+class MirBufferPackage;
+
 namespace mir
 {
 namespace client

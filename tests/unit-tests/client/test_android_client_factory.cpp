@@ -28,6 +28,6 @@ TEST(MirAndroidClientBufferFactory, factory)
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferFactory factory();
+    mcl::AndroidClientBufferFactory factory;
     printf("0x%x\n", (int) &factory);
 }
