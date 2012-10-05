@@ -136,7 +136,6 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
     {
@@ -154,7 +153,6 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 {
     if (is_valid() && surface.has_buffer())
     {
-//        next_buffer_wait_handle.wait_for_result();
         auto const& buffer = surface.buffer();
 
         buffer_package.data_items = buffer.data_size();

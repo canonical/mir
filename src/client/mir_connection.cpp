@@ -60,24 +60,16 @@ MirConnection::~MirConnection()
     }
 }
 
-#if TODO 
 MirWaitHandle* MirConnection::create_surface(
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback,
     void * context)
 {
+#ifdef TODO
     auto tmp = new MirSurface(server, params, callback, context);
     return tmp->get_create_wait_handle();
+#endif
 }
-#else 
-MirWaitHandle* MirConnection::create_surface(
-    MirSurfaceParameters const &,
-    mir_surface_lifecycle_callback,
-    void *)
-{
-    return NULL;
-}
-#endif 
 
 char const * MirConnection::get_error_message()
 {
