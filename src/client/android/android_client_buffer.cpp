@@ -49,16 +49,17 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
     handle->numFds  = package->fd_items;
     handle->numInts = package->data_items;
 
-/* 
-    for(i=0; i< ; i++)
+    for(auto i=0; i< handle->numFds; i++)
     {
-        handle->data[i++] = *it;
-    } 
-    for(auto it= package->fd.begin(); it != package->fd.end(); it++)
+        handle->data[i] = package->fd[i];
+    }
+
+    int offset_i = handle->numFds; 
+    for(auto i=0; i< handle->numInts; i++, offset_i++)
     {
-        handle->data[i++] = *it;
-    } 
-*/
+        handle->data[i] = package->data[offset_i];
+    }
+ 
     return handle;
 }
 

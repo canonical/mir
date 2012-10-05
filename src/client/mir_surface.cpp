@@ -111,16 +111,15 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
-/*
+
     MirBufferPackage ipc_package;
     populate(ipc_package);
-    mcl::MirBufferPackage internal_ipc_package(ipc_package);
-    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
-*/
+    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package);
+
     /* this is only called when surface is first created. if anything has been putting things 
        in cache before this callback, its wrong */
     assert(buffer_cache.empty());
-  //  buffer_cache[last_buffer_id] = new_buffer;
+    buffer_cache[last_buffer_id] = new_buffer;
 
     callback(this, context);
     create_wait_handle.result_received();
@@ -131,17 +130,16 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-/*
+
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
     {
         MirBufferPackage ipc_package;
         populate(ipc_package);
-        mcl::MirBufferPackage internal_ipc_package(ipc_package);
-        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package);
         buffer_cache[last_buffer_id] = new_buffer;
     }
-*/
+    
     callback(this, context);
     next_buffer_wait_handle.result_received();
 }
