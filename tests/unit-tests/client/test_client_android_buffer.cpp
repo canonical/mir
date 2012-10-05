@@ -50,17 +50,17 @@ protected:
         pf = geom::PixelFormat::rgba_8888;
         pf_copy = geom::PixelFormat(pf);
 
-        package = std::make_shared<mcl::MirBufferPackage>();
+        package = std::make_shared<MirBufferPackage>();
         mock_android_registrar = std::make_shared<MockAndroidRegistrar>();
-        package_copy = std::make_shared<mcl::MirBufferPackage>(*package.get());
+        package_copy = std::make_shared<MirBufferPackage>(*package.get());
 
         EXPECT_CALL(*mock_android_registrar, register_buffer(_))
             .Times(AtLeast(0));
         EXPECT_CALL(*mock_android_registrar, unregister_buffer(_))
             .Times(AtLeast(0));
     }
-    std::shared_ptr<mcl::MirBufferPackage> package;
-    std::shared_ptr<mcl::MirBufferPackage> package_copy;
+    std::shared_ptr<MirBufferPackage> package;
+    std::shared_ptr<MirBufferPackage> package_copy;
     geom::Height height, height_copy;
     geom::Width width, width_copy;
     geom::PixelFormat pf, pf_copy;
@@ -86,7 +86,6 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 {
     using namespace testing;
     const native_handle_t *handle;
-    int i=0;
 
     EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
@@ -96,16 +95,15 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
                                                         std::move(width), std::move(height), std::move(pf));
 
     ASSERT_NE((int)handle, NULL);
-    ASSERT_EQ(handle->numFds, (int) package_copy->fd.size());
-    for(auto it = package_copy->fd.begin(); it != package_copy->fd.end(); it++)
-        EXPECT_EQ(*it, handle->data[i++]); 
+    ASSERT_EQ(handle->numFds, (int) package_copy->fd_items);
+    for(auto i = 0; i < package_copy->fd_items; i++)
+        EXPECT_EQ(package_copy->fd[i], handle->data[i]); 
 }
 
 TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
 {
     using namespace testing;
     const native_handle_t *handle;
-    int i=0;
 
     EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
@@ -115,9 +113,9 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
                                                         std::move(width), std::move(height), std::move(pf));
 
     ASSERT_NE((int)handle, NULL);
-    ASSERT_EQ(handle->numInts, (int) package_copy->data.size());
-    for(auto it = package_copy->fd.begin(); it != package_copy->fd.end(); it++)
-        EXPECT_EQ(*it, handle->data[i++]); 
+    ASSERT_EQ(handle->numInts, (int) package_copy->data_items);
+    for(auto i = 0; i < package_copy->data_items; i++)
+        EXPECT_EQ(package_copy->data[i], handle->data[i + package_copy->fd_items]); 
 }
 
 TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
