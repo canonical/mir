@@ -121,7 +121,13 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     /* this is only called when surface is first created. if anything has been putting things 
        in cache before this callback, its wrong */
     assert(buffer_cache.empty());
+    printf("LAST_BUFFER_ID %i\n", last_buffer_id);
     buffer_cache[last_buffer_id] = new_buffer;
+    auto it = buffer_cache.find(last_buffer_id);
+    if (it != buffer_cache.end())
+    {
+        printf("found, duh\n");
+    }
 
     callback(this, context);
     create_wait_handle.result_received();
@@ -132,6 +138,9 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
+    for(auto it = buffer_cache.begin(); it != buffer_cache.end(); it++)
+        printf("%i : %x\n", (int) it->first, (unsigned int) it->second.get());
+    printf("LAST_BUFFER_ID %i\n", last_buffer_id);
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
     {
@@ -141,7 +150,8 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
         auto new_buffer = buffer_factory->create_buffer_from_ipc_message(internal_ipc_package);
         buffer_cache[last_buffer_id] = new_buffer;
         printf("NOTFOUND\n");
-    } else
+    }
+    else
     {
         printf("found...\n");
     }

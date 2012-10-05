@@ -74,6 +74,8 @@ struct MockServerPackageGenerator : public MockServerTool
 /* helpers */
     void generate_unique_buffer()
     {
+        global_buffer_id++;
+
         int num_fd = 2, num_data = 8; 
         server_package.fd.clear();
         server_package.data.clear();
@@ -96,7 +98,7 @@ struct MockServerPackageGenerator : public MockServerTool
 
     void create_buffer_response(mir::protobuf::Buffer* response)
     {
-        response->set_buffer_id(global_buffer_id++);
+        response->set_buffer_id(global_buffer_id);
 
         /* assemble buffers */
         response->set_fds_on_side_channel(1);
@@ -128,9 +130,9 @@ struct MockBuffer : public mcl::ClientBuffer
     }
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_METHOD0(width, geom::Width());
-    MOCK_METHOD0(height, geom::Height());
-    MOCK_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(width, geom::Width());
+    MOCK_CONST_METHOD0(height, geom::Height());
+    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 };
 
 struct MockClientFactory : public mcl::ClientBufferFactory
@@ -138,6 +140,9 @@ struct MockClientFactory : public mcl::ClientBufferFactory
     MockClientFactory()
     {
         using namespace testing;
+
+        emptybuffer=std::make_shared<MockBuffer>();
+
         ON_CALL(*this, create_buffer_from_ipc_message(_))
             .WillByDefault(Return(emptybuffer));
     }
@@ -279,6 +284,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_unique_buffer )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
+    mock_server_tool->generate_unique_buffer();
     /* test */
     EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
         .Times(1);
