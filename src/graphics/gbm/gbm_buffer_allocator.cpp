@@ -20,19 +20,24 @@
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_platform.h"
+#include "mir/graphics/buffer_initializer.h"
 
 #include <stdexcept>
 #include <xf86drm.h>
 #include <gbm.h>
+#include <cassert>
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
-mgg::GBMBufferAllocator::GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform)
-        : platform(platform)
+mgg::GBMBufferAllocator::GBMBufferAllocator(
+        const std::shared_ptr<GBMPlatform>& platform,
+        const std::shared_ptr<BufferInitializer>& buffer_initializer)
+        : platform(platform), buffer_initializer(buffer_initializer)
 {
+    assert(buffer_initializer.get() != 0);
 }
 
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
@@ -46,7 +51,13 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         GBM_BO_USE_RENDERING);
     
     if (handle != NULL)
-        return std::unique_ptr<mc::Buffer>(new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
+    {
+        auto buffer = std::unique_ptr<mc::Buffer>(new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
+
+        (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
+
+        return buffer;
+    }
 
     return std::unique_ptr<mc::Buffer>();
 }

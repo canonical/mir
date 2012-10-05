@@ -27,6 +27,8 @@ namespace mir
 {
 namespace graphics
 {
+class BufferInitializer;
+
 namespace gbm
 {
 
@@ -35,13 +37,15 @@ class GBMPlatform;
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    explicit GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform);
+    GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
+                       const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
         geometry::Size size, geometry::PixelFormat pf);
 
 private:
     std::shared_ptr<GBMPlatform> platform;
+    std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
 };
 
 }

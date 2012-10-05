@@ -24,6 +24,7 @@
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_buffer.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 
@@ -48,7 +49,8 @@ protected:
         using namespace testing;
 
         auto platform = std::make_shared<mgg::GBMPlatform>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform));
+        auto null_init = std::make_shared<mg::NullBufferInitializer>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
