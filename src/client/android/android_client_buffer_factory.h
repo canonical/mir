@@ -31,7 +31,7 @@ class ClientBuffer;
 class AndroidClientBufferFactory : public ClientBufferFactory
 {
 public:
-    AndroidClientBufferFactory() {}
+    AndroidClientBufferFactory();
     std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&); 
 
 };

@@ -22,8 +22,12 @@
 #include <gtest/gtest.h>
 //#include <gmock/gmock.h>
 
+namespace mcl=mir::client;
+
 TEST(MirAndroidClientBufferFactory, factory)
 {
     using namespace testing;
 
+    mcl::AndroidClientBufferFactory factory();
+    printf("0x%x\n", (int) &factory);
 }
