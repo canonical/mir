@@ -342,3 +342,23 @@ TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
 
     EXPECT_EQ(w.as_uint32_t(), (unsigned int) mock_server_tool->width_sent);
 }
+
+TEST_F(MirClientSurfaceTest, message_height_used_in_buffer_creation )
+{
+    using namespace testing;
+
+    geom::Height h;
+    std::shared_ptr<MirBufferPackage> submitted_package;
+ 
+    EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_,_,_,_))
+        .Times(1)
+        .WillOnce(DoAll(
+            SaveArg<2>(&h),
+            Return(mock_factory->emptybuffer)));
+    auto surface = std::make_shared<MirSurface> (
+                         *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
+    auto wait_handle = surface->get_create_wait_handle();
+    wait_handle->wait_for_result();
+
+    EXPECT_EQ(h.as_uint32_t(), (unsigned int) mock_server_tool->height_sent);
+}
