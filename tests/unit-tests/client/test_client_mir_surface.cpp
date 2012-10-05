@@ -143,6 +143,8 @@ struct MockClientFactory : public mcl::ClientBufferFactory
 
         emptybuffer=std::make_shared<MockBuffer>();
 
+        EXPECT_CALL(*this, create_buffer_from_ipc_message(_))
+            .Times(AtLeast(0));
         ON_CALL(*this, create_buffer_from_ipc_message(_))
             .WillByDefault(Return(emptybuffer));
     }
@@ -160,10 +162,7 @@ namespace mt = mir::test;
 
 struct CallBack
 {
-    void msg()
-    {
-        printf("SERVER CONNECT\n");
-    }
+    void msg() {}
 };
 
 struct MirClientSurfaceTest : public testing::Test

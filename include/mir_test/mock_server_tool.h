@@ -51,9 +51,11 @@ struct MockServerTool : mir::protobuf::DisplayServer
     virtual void next_buffer(
         ::google::protobuf::RpcController* /*controller*/,
         ::mir::protobuf::SurfaceId const* /*request*/,
-        ::mir::protobuf::Buffer* /*response*/,
+        ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {
+        response->set_buffer_id(22);
+
         std::unique_lock<std::mutex> lock(guard);
         wait_condition.notify_one();
         done->Run();
