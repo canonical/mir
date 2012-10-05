@@ -45,6 +45,7 @@ namespace test
 struct MockServerPackageGenerator : public MockServerTool
 {
     MockServerPackageGenerator()
+     : global_buffer_id(0)
     {
         generate_unique_buffer();
     }
@@ -91,9 +92,11 @@ struct MockServerPackageGenerator : public MockServerTool
     mcl::MirBufferPackage server_package;
 
     private:
+    int global_buffer_id;
+
     void create_buffer_response(mir::protobuf::Buffer* response)
     {
-        response->set_buffer_id(0);
+        response->set_buffer_id(global_buffer_id++);
 
         /* assemble buffers */
         response->set_fds_on_side_channel(1);
