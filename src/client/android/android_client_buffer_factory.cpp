@@ -25,7 +25,7 @@
 
 namespace mcl=mir::client;
 
-mcl::AndroidClientBufferFactory::AndroidClientBufferFactory()
+mcl::AndroidClientBufferFactory::AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>&)
 {
 }
 

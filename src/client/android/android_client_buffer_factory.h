@@ -27,11 +27,12 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+class AndroidRegistrar;
 
 class AndroidClientBufferFactory : public ClientBufferFactory
 {
 public:
-    AndroidClientBufferFactory();
+    AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>&);
     std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const MirBufferPackage&); 
 
 };
