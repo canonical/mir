@@ -32,11 +32,32 @@ static int main_function()
 {
     /* only use C api */
 
-    /* make surface */
-    /* grab a buffer*/
-    /* render pattern */
-    /* release */
+    MirConnection* connection;
+    MirWaitHandle* connection_wait_handle;
+    MirWaitHandle* surface_wait_handle;
+    MirGraphicsRegion graphics_region;
+    /* establish connection */
+    connection_wait_handle = mir_connect("./test_socket_surface",
+                                         "test_renderer",
+                                         connected_callback, NULL);
+    mir_wait(connection_wait_handle);
+    if (mir_connection_is_valid(connection))
+        return -1;
 
+    /* make surface */
+    surface_wait_handle = mir_surface_create( connection,
+                                              parameters,
+                                              create_callback, NULL);
+    mir_wait(surface_wait_handle);
+
+    /* grab a buffer*/
+    mir_surface_get_graphics_region( surface, &graphics_region);
+
+    /* render pattern */
+    render_stripes(graphics_region);
+
+    /* release */
+    mir_connection_release(connection);
     return 0;
 }
 
