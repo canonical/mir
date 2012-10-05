@@ -118,8 +118,9 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-    MirBufferPackage ipc_package;
-    populate(ipc_package);
+    auto ipc_package = std::make_shared<MirBufferPackage>();
+    populate(*ipc_package);
+
     auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package);
 
     /* this is only called when surface is first created. if anything has been putting things 
@@ -139,8 +140,8 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
     {
-        MirBufferPackage ipc_package;
-        populate(ipc_package);
+        auto ipc_package = std::make_shared<MirBufferPackage>();
+        populate(*ipc_package);
         auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package);
         buffer_cache[last_buffer_id] = new_buffer;
     }

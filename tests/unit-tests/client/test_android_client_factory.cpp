@@ -31,7 +31,7 @@ TEST(MirAndroidClientBufferFactory, factory)
     using namespace testing;
 
     auto mock_registrar = std::make_shared<mt::MockAndroidRegistrar>();
-    MirBufferPackage package;
+    auto package = std::make_shared<MirBufferPackage>();
 
     mcl::AndroidClientBufferFactory factory(mock_registrar);
    

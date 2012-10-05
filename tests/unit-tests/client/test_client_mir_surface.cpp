@@ -143,7 +143,7 @@ struct MockClientFactory : public mcl::ClientBufferFactory
         ON_CALL(*this, create_buffer_from_ipc_message(_))
             .WillByDefault(Return(emptybuffer));
     }
-    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const MirBufferPackage&));
+    MOCK_METHOD1(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const std::shared_ptr<MirBufferPackage>&));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
@@ -232,7 +232,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
 {
     using namespace testing;
 
-    MirBufferPackage submitted_package;
+    std::shared_ptr<MirBufferPackage> submitted_package;
     EXPECT_CALL(*mock_factory, create_buffer_from_ipc_message(_))
         .Times(1)
         .WillOnce(DoAll(
@@ -245,10 +245,10 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     wait_handle->wait_for_result();
 
     /* check for same contents */
-    ASSERT_EQ(submitted_package.data_items, mock_server_tool->server_package.data_items);
-    ASSERT_EQ(submitted_package.fd_items,   mock_server_tool->server_package.fd_items);
-    for(auto i=0; i< submitted_package.data_items; i++)
-        EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
+    ASSERT_EQ(submitted_package->data_items, mock_server_tool->server_package.data_items);
+    ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
+    for(auto i=0; i< submitted_package->data_items; i++)
+        EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
 }
 
 void empty_surface_callback(MirSurface*, void*) {}
@@ -290,7 +290,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
 {
     using namespace testing;
 
-    MirBufferPackage submitted_package;
+    std::shared_ptr<MirBufferPackage> submitted_package;
  
     auto surface = std::make_shared<MirSurface> (
                          *client_comm_channel, mock_factory, params, &empty_callback, (void*) NULL);
@@ -310,8 +310,8 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_next_
     buffer_wait_handle->wait_for_result();
 
     /* check for same contents */
-    ASSERT_EQ(submitted_package.data_items, mock_server_tool->server_package.data_items);
-    ASSERT_EQ(submitted_package.fd_items,   mock_server_tool->server_package.fd_items);
-    for(auto i=0; i< submitted_package.data_items; i++)
-        EXPECT_EQ(submitted_package.data[i], mock_server_tool->server_package.data[i]);
+    ASSERT_EQ(submitted_package->data_items, mock_server_tool->server_package.data_items);
+    ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
+    for(auto i=0; i< submitted_package->data_items; i++)
+        EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
 }

@@ -24,15 +24,17 @@
 #include "mir_test/empty_deleter.h"
 
 namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
-mcl::AndroidClientBufferFactory::AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>&)
+mcl::AndroidClientBufferFactory::AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>& buffer_registrar)
+ : registrar(buffer_registrar)
 {
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferFactory::create_buffer_from_ipc_message(const MirBufferPackage&)
+std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferFactory::create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>& package)
 {
-    mcl::AndroidClientBuffer* null = NULL;
-   
-    auto test = std::shared_ptr<mcl::AndroidClientBuffer>(null, mir::EmptyDeleter()); 
-    return test;
+    geom::Width w(0);
+    geom::Height h(0);
+ 
+    return std::make_shared<mcl::AndroidClientBuffer>(registrar, package, w, h, geom::PixelFormat::rgba_8888 );
 } 
