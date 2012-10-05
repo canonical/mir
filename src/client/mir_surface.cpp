@@ -117,6 +117,7 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
     delete this;
 }
 
+/* todo: does this break single point of reference for width? */
 void MirSurface::save_buffer_dimensions()
 {
     surface_width = geom::Width(surface.width());

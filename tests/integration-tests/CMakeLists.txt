@@ -14,9 +14,10 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(frontend/)
+add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
+add_subdirectory(frontend/)
 add_subdirectory(process/)
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -30,6 +31,7 @@ add_executable(
 target_link_libraries(
   integration-tests
 
+  mirclient
   mircompositor
   mirfrontend
   mirinput
