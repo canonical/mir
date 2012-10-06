@@ -35,6 +35,7 @@ struct MockServerTool : mir::protobuf::DisplayServer
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
+        printf("hthing...\n");
         response->mutable_id()->set_value(13); // TODO distinct numbers & tracking
         response->set_width(request->width());
         response->set_height(request->height());
@@ -77,6 +78,7 @@ struct MockServerTool : mir::protobuf::DisplayServer
                          ::mir::protobuf::Connection*,
                          ::google::protobuf::Closure* done)
     {
+        printf("hthing...connect\n");
         app_name = request->application_name();
         done->Run();
     }

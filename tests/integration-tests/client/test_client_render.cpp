@@ -73,7 +73,6 @@ struct TestClient
 static int main_function()
 {
     /* only use C api */
-
     MirConnection* connection;
     MirSurface* surface;
     MirGraphicsRegion graphics_region;
@@ -82,9 +81,6 @@ static int main_function()
  /* establish connection */
     mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
                                  &connected_callback, &connection));
-    if (!mir_connection_is_valid(connection))
-        return -1;
-
     /* make surface */
 
     surface_parameters.name = "testsurface";
@@ -96,6 +92,9 @@ static int main_function()
     /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
 
+    printf("render pattern w %X\n", (int) graphics_region.width);
+    printf("render pattern h %X\n", (int) graphics_region.height);
+    printf("render pattern 0x%X\n", (int) graphics_region.vaddr);
     /* render pattern */
     render_pattern(&graphics_region);
 
@@ -106,7 +105,7 @@ static int main_function()
 
 static int exit_function()
 {
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 };
@@ -158,7 +157,6 @@ struct TestClientIPCRender : public testing::Test
     }
 
     std::shared_ptr<mt::TestServer> test_server;
-
     std::shared_ptr<MockServerGenerator> mock_server;
 
     geom::Size size;
@@ -167,6 +165,7 @@ struct TestClientIPCRender : public testing::Test
 
 TEST_F(TestClientIPCRender, test_render)
 {
+    printf("HIT HERE\n");
     /* start server */
     auto p = mp::fork_and_run_in_a_different_process(
         TestClient::main_function,
