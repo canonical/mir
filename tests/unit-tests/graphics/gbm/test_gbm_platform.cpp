@@ -43,6 +43,10 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
         .WillOnce(Return(mock_drm.fake_drm.fd))
         .WillOnce(Return(auth_fd));
 
+    /* Expect proper authorization */
+    EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd,_));
+
     EXPECT_CALL(mock_drm, drmClose(mock_drm.fake_drm.fd));
 
     /* Expect authenticated fd to be closed when package is destroyed */
