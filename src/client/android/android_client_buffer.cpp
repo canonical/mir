@@ -46,9 +46,7 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
     int total = package->fd_items + package->data_items + native_handle_header_size;
     native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
 
-
-    handle->version = 12;// (10+3)*4; 
-
+    handle->version = total;
     handle->numFds  = package->fd_items;
     handle->numInts = package->data_items;
 

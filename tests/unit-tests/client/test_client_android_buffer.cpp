@@ -128,6 +128,22 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
         .Times(1);
 }
 
+TEST_F(ClientAndroidBufferTest, client_sets_correct_version)
+{
+    using namespace testing;
+
+    const native_handle_t* buffer_handle;
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&buffer_handle));
+ 
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    int total = 3 + buffer_handle->numFds + buffer_handle->numInts;
+    EXPECT_EQ(buffer_handle->version, total);
+}
+
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
 {
     using namespace testing;
@@ -266,3 +282,4 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
 
     EXPECT_EQ(region->format, pf_copy);
 }
+
