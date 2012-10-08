@@ -27,6 +27,9 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/chrono/chrono.h"
+#include "mir_test/mir_image.h"
+#include "buffer_render_target.h"
+#include "image_renderer.h"
 #include <csignal>
 #include <iostream>
 #include <sstream>
@@ -38,6 +41,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ms=mir::surfaces;
 namespace geom=mir::geometry;
+namespace mt=mir::tools;
 
 using namespace std;
 
@@ -52,6 +56,27 @@ void signal_handler(int /*signum*/)
 {
     running = false;
 }
+
+class RenderResourcesBufferInitializer : public mg::BufferInitializer
+{
+public:
+    RenderResourcesBufferInitializer()
+        : img_renderer{mir_image.pixel_data,
+                       geom::Size{geom::Width{mir_image.width},
+                                  geom::Height{mir_image.height}},
+                       mir_image.bytes_per_pixel}
+    {
+    }
+
+    void operator()(mc::Buffer& buffer, EGLClientBuffer client_buffer)
+    {
+        mt::BufferRenderTarget brt{buffer, client_buffer};
+        brt.make_current();
+        img_renderer.render();
+    }
+
+    mt::ImageRenderer img_renderer;
+};
 
 struct Moveable
 {
@@ -139,7 +164,7 @@ int main(int argc, char **argv)
     auto platform = mg::create_platform();
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto buffer_initializer = std::make_shared<RenderResourcesBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
     mc::BufferBundleManager manager{strategy};
@@ -194,6 +219,10 @@ int main(int argc, char **argv)
                               glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
                               2.0f * M_PI * cos(i));
     }
+
+    /* Make the output window current again */
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, display_size.width.as_uint32_t(), display_size.height.as_uint32_t());
 
     /* Draw! */
     glClearColor(0.0, 1.0, 0.0, 1.0);
