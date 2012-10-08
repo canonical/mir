@@ -174,9 +174,8 @@ struct CallBack
     void msg() { }
 };
 
-void dump_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
+bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
 {
-
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
     handle->numInts = package->ipc_data.size();
@@ -198,47 +197,22 @@ void dump_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_
     region.height = 48;
     region.pixel_format = mir_pixel_format_rgba_8888; 
 
-    if (!render_pattern(&region, false))
-        exit(0);
-
-    grmod->unlock(grmod, handle); 
+    auto valid = render_pattern(&region, false);
+    grmod->unlock(grmod, handle);
+    return valid; 
 }
 
 
 struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
-        auto p = mp::fork_and_run_in_a_different_process(
+        client_process = mp::fork_and_run_in_a_different_process(
             mt::TestClient::main_function,
             mt::TestClient::exit_function);
 
         size = geom::Size{geom::Width{64}, geom::Height{48}};
         pf = geom::PixelFormat::rgba_8888;
 
-        int err;
-        struct alloc_device_t *alloc_device_raw;
-        err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
-        if (err < 0)
-            throw std::runtime_error("Could not open hardware module");
-        gralloc_open(hw_module, &alloc_device_raw);
-
-        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
-
-        auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
-
-        auto android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
-
-        auto package = android_buffer->get_ipc_package();
-
-        mock_server = std::make_shared<mt::MockServerGenerator>(package);
-
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-        test_server->comm.start();
-
-
-        EXPECT_TRUE(p->wait_for_termination().succeeded());
-
-        dump_buffer(mock_server->package, hw_module);
     }
 
     void TearDown()
@@ -255,16 +229,31 @@ struct TestClientIPCRender : public testing::Test
     geom::Size size;
     geom::PixelFormat pf; 
     CallBack callback;
+    std::shared_ptr<mp::Process> client_process;
 };
-
 
 TEST_F(TestClientIPCRender, test_render)
 {
-    /* start server */
+    /* allocate an android buffer */
+    int err;
+    struct alloc_device_t *alloc_device_raw;
+    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+    if (err < 0)
+        throw std::runtime_error("Could not open hardware module");
+    gralloc_open(hw_module, &alloc_device_raw);
+    auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
+    auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
+    auto android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+    auto package = android_buffer->get_ipc_package();
 
-//    dump_buffer(mock_server->package, hw_module);
-    /* wait for connect */    
-    /* wait for buffer sent back */
+    /* start a server */
+    mock_server = std::make_shared<mt::MockServerGenerator>(package);
+    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    test_server->comm.start();
 
-    /* verify pattern */
+    /* wait for client to finish */
+    EXPECT_TRUE(client_process->wait_for_termination().succeeded());
+
+    /* check content */
+    EXPECT_TRUE(check_buffer(mock_server->package, hw_module));
 }
