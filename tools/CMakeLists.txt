@@ -27,7 +27,7 @@ target_link_libraries(
     test-utils
 )
 
-set(RENDER_SURFACES_SOURCES render_surfaces.cpp)
+set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
 add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(
     render_surfaces
