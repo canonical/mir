@@ -100,7 +100,6 @@ static int main_function()
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
-#if 0
     MirGraphicsRegion graphics_region;
     /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
@@ -113,7 +112,6 @@ static int main_function()
 
     /* release */
     mir_connection_release(connection);
-#endif
     return 0;
 }
 
