@@ -133,7 +133,7 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     ASSERT_LE(minimum, buffer->stride());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
+TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_has_correct_size)
 {
     using namespace testing;
 
@@ -146,7 +146,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
     ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
+TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_contains_correct_handle)
 {
     using namespace testing;
 

@@ -25,6 +25,8 @@
 #include <GLES2/gl2ext.h>
 #include <stdexcept>
 #include <mutex>
+#include <xf86drm.h>
+#include <sys/ioctl.h>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
@@ -134,7 +136,17 @@ geom::PixelFormat mgg::GBMBuffer::pixel_format() const
 std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 {
     auto temp = std::make_shared<mc::BufferIPCPackage>();
-    temp->ipc_data.push_back(gbm_bo_get_handle(gbm_handle.get()).u32);
+    auto device = gbm_bo_get_device(gbm_handle.get());
+    auto handle = gbm_bo_get_handle(gbm_handle.get()).u32;
+    auto drm_fd = gbm_device_get_fd(device);
+    struct drm_gem_flink flink{handle, 0};
+
+    auto ret = ioctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+        throw std::runtime_error("Failed to get GEM flink name from gbm bo");
+
+    temp->ipc_data.push_back(flink.name);
+
     return temp;
 }
 
