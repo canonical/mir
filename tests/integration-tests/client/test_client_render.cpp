@@ -77,10 +77,11 @@ struct TestClient
 /* client code */
 static int main_function()
 {
+    sleep(4);
+    printf("done sleeping\n");
     /* only use C api */
     MirConnection* connection;
     MirSurface* surface;
-    MirGraphicsRegion graphics_region;
     MirSurfaceParameters surface_parameters;
 
  /* establish connection */
@@ -89,7 +90,6 @@ static int main_function()
     /* make surface */
     printf("client done waiting for connect %X\n", (int) connection);
 
-
     surface_parameters.name = "testsurface";
     surface_parameters.width = 48;
     surface_parameters.height = 64;
@@ -97,6 +97,8 @@ static int main_function()
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
     printf("CREATION DONE\n");
+#if 0
+    MirGraphicsRegion graphics_region;
     /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
 
@@ -108,6 +110,7 @@ static int main_function()
 
     /* release */
     mir_connection_release(connection);
+#endif
     return 0;
 }
 
@@ -170,6 +173,9 @@ struct CallBack
 struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
+        auto p = mp::fork_and_run_in_a_different_process(
+            TestClient::main_function,
+            TestClient::exit_function);
 
         size = geom::Size{geom::Width{64}, geom::Height{48}};
         pf = geom::PixelFormat::rgba_8888;
@@ -202,6 +208,7 @@ struct TestClientIPCRender : public testing::Test
                         &response,
                         google::protobuf::NewCallback(&callback, &CallBack::msg)); */
 
+        EXPECT_TRUE(p->wait_for_termination().succeeded());
     }
 
     void TearDown()
@@ -223,15 +230,10 @@ struct TestClientIPCRender : public testing::Test
 TEST_F(TestClientIPCRender, test_render)
 {
     /* start server */
-    auto p = mp::fork_and_run_in_a_different_process(
-        TestClient::main_function,
-        TestClient::exit_function);
-
 
     /* wait for connect */    
     /* wait for buffer sent back */
     sleep(10);
-//    EXPECT_TRUE(p->wait_for_termination().succeeded());
 
     /* verify pattern */
 }

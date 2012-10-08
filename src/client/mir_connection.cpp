@@ -76,14 +76,6 @@ MirWaitHandle* MirConnection::create_surface(
         throw std::runtime_error("Could not open hardware module");
     }
 
-    printf("STRING :%s\n", hw_module->name);
-    struct alloc_device_t* alloc_dev;
-    error = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
-    if (error < 0)
-    {
-        printf("ERROR\n");
-        throw std::runtime_error("Could not open hardware module");
-    }
     gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;
     printf("GRALLOC MODULE %X\n", (int) gr_dev);
 
