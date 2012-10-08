@@ -1,6 +1,6 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderable.h"
-#include "mir_test/mir_image.h"
+#include "mir/compositor/graphic_region.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -160,11 +160,6 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 mir_image.width, mir_image.height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE,
-                 mir_image.pixel_data);
-
     glUniform1i(tex_loc, 0);
 
     /* Create VBO */
@@ -230,9 +225,9 @@ void mg::GLRenderer::render(Renderable& renderable)
     glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
-    /* TODO: Bind renderable texture */
-    //glBindTexture(GL_TEXTURE_2D, texture);
-    //renderable->texture().map_texture();
+    /* Use the renderable's texture */
+    glBindTexture(GL_TEXTURE_2D, resources.texture);
+    renderable.texture()->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
