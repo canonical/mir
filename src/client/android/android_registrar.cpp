@@ -31,32 +31,8 @@ mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<cons
 
 void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t * handle)
 {
-    printf("register buffer grall\n");
-    printf("version %i\n", handle->version);
-    printf("NUMFD %i\n", handle->numFds);
-    printf("NUMDATA %i\n", handle->numInts);
-    printf("grallmod %i\n",(int) gralloc_module.get());
-
-    int i;
-    for( i=0; i < handle->numFds + handle->numInts; i++)
-    {
-        printf("data %i: 0x%X\n", i, handle->data[i]);
-    }
-
-    printf("GRALLOC 0x%X\n", (int) gralloc_module.get());
-    printf("GRALLOC 0x%X\n", (int) handle);
-    auto ret = gralloc_module->registerBuffer(gralloc_module.get(), handle);
-    printf("RET %i\n", ret);
-
-#if 0
     if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
-    {
-        printf("register buffer grall ERROR\n");
         throw std::runtime_error("error registering graphics buffer for client use\n");
-    }
-
-    printf("register buffer grall OK\n");
-#endif
 }
 
 void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t * handle)

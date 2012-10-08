@@ -87,7 +87,6 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 {
     try
     {
-        printf("IN LIB %X\n", (int) connection);
         return connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)

@@ -33,14 +33,5 @@ mcl::AndroidClientBufferFactory::AndroidClientBufferFactory(const std::shared_pt
 
 std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferFactory::create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>& package, geometry::Width w, geometry::Height h, geometry::PixelFormat pf)
 {
-    printf("making buf\n");
-    try 
-    {
-        printf("making buf2\n");
-        return std::make_shared<mcl::AndroidClientBuffer>(registrar, package, w, h, pf );
-    } catch (...) 
-    {
-        printf("ERROR\n");
-        return std::make_shared<mcl::AndroidClientBuffer>(registrar, package, w, h, pf );
-    }
+    return std::make_shared<mcl::AndroidClientBuffer>(registrar, package, w, h, pf );
 } 

@@ -43,13 +43,11 @@ namespace geom=mir::geometry;
 
 void connected_callback(MirConnection *connection, void* context)
 {
-    printf("CLIENT connect callback %X\n", (int) connection);
     MirConnection** tmp = (MirConnection**) context;
     *tmp = connection;
 }
 void create_callback(MirSurface *surface, void*context)
 {
-    printf("CLIENT create callback %X\n", (int) surface);
     MirSurface** surf = (MirSurface**) context;
     *surf = surface;
 }
@@ -82,7 +80,6 @@ struct TestClient
 /* client code */
 static int main_function()
 {
-    printf("done sleeping\n");
     /* only use C api */
     MirConnection* connection = NULL;
     MirSurface* surface;
@@ -96,7 +93,6 @@ static int main_function()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     /* make surface */
-    printf("client done waiting for connect %X\n", (int) connection);
 
     surface_parameters.name = "testsurface";
     surface_parameters.width = 48;
@@ -104,7 +100,6 @@ static int main_function()
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
-    printf("CREATION DONE\n");
 #if 0
     MirGraphicsRegion graphics_region;
     /* grab a buffer*/
@@ -149,7 +144,6 @@ struct MockServerGenerator : public mt::MockServerTool
         response->mutable_buffer()->set_buffer_id(22);
 
         unsigned int i;
-        printf("PACKAGE INT %i FD %i\n", package->ipc_data.size(), package->ipc_fds.size());
         response->mutable_buffer()->set_fds_on_side_channel(1);
         for(i=0; i<package->ipc_fds.size(); i++)
             response->mutable_buffer()->add_fd(package->ipc_fds[i]);
@@ -160,7 +154,6 @@ struct MockServerGenerator : public mt::MockServerTool
         surface_name = request->surface_name();
         wait_condition.notify_one();
 
-        printf("MOCK SERVER: create surface DONE\n");
         done->Run();
     }
 
@@ -171,7 +164,7 @@ struct MockServerGenerator : public mt::MockServerTool
 
 struct CallBack
 {
-    void msg() { printf("CALLBACK TETST\n"); }
+    void msg() { }
 };
 
 struct TestClientIPCRender : public testing::Test

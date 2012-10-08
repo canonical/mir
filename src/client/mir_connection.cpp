@@ -72,18 +72,15 @@ MirWaitHandle* MirConnection::create_surface(
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (error < 0)
     {
-        printf("ERRORR\n");
         throw std::runtime_error("Could not open hardware module");
     }
 
     gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;
-    printf("GRALLOC MODULE %X\n", (int) gr_dev);
 
     gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev);
     auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
     auto factory = std::make_shared<mcl::AndroidClientBufferFactory>(registrar); 
     surface = new MirSurface(server, factory, params, callback, context);
-    printf("done creating surface\n");
     return surface->get_create_wait_handle();
 }
 
@@ -112,7 +109,6 @@ MirWaitHandle* MirConnection::connect(
         &connect_result,
         google::protobuf::NewCallback(
             this, &MirConnection::connected, callback, context));
-    printf("client connect\n");
     return &connect_wait_handle;
 }
 
@@ -148,7 +144,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     auto cast = (::MirConnection*) (this);
     callback(cast, context);
-    printf("called connection\n");
     connect_wait_handle.result_received();
 }
 

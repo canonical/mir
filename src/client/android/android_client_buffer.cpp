@@ -46,7 +46,6 @@ const native_handle_t* mcl::AndroidClientBuffer::convert_to_native_handle(const 
     int total = package->fd_items + package->data_items + native_handle_header_size;
     native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
 
-    printf("NATIVE MEMREGION 0x%X\n", (int) handle);
 
     handle->version = 12;// (10+3)*4; 
 
