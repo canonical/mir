@@ -18,6 +18,7 @@
 
 #include "mir_client/mir_client_library.h"
 
+#include "client_buffer.h"
 #include "client_buffer_factory.h"
 #include "mir_surface.h"
 
@@ -88,13 +89,28 @@ bool MirSurface::is_valid() const
     return !surface.has_error();
 }
 
-void MirSurface::populate(MirGraphicsRegion&)
+void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
-    //todo
+    auto buffer = buffer_cache[last_buffer_id];
+    secured_region = buffer->secure_for_cpu_write();
+    region_out.width = secured_region->width.as_uint32_t();
+    region_out.height = secured_region->height.as_uint32_t();
+//    region_out.pixel_format = secured_region->pixel_format.as_uint32_t();
+    //todo: fix
+    region_out.pixel_format = mir_pixel_format_rgba_8888;
+    region_out.vaddr = secured_region->vaddr.get();
+
+}
+
+void MirSurface::release_cpu_region()
+{
+    secured_region.reset();
 }
 
 MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+    release_cpu_region();
+
     next_buffer_wait_handle.result_requested();
     server.next_buffer(
         0,

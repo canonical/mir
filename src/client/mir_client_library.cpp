@@ -133,9 +133,9 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-void mir_surface_get_graphics_region(MirSurface * /*surface*/, MirGraphicsRegion * /*graphics_region*/)
+void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
-//    surface->populate(*graphics_region);
+    surface->get_cpu_region( *graphics_region);
 }
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
@@ -147,4 +147,10 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 {
     if (wait_handle)
         wait_handle->wait_for_result();
+}
+
+
+void release_region(MirSurface * surface)
+{
+    surface->release_cpu_region();
 }

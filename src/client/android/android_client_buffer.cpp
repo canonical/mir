@@ -74,6 +74,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
     region->width = rect.size.width;
     region->height = rect.size.height;
     region->format = buffer_pf;
+
     return region;
 }
 

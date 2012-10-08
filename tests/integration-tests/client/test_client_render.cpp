@@ -63,7 +63,7 @@ void render_pattern(MirGraphicsRegion *region)
     {
         for(j=0; j<region->height; j++)
         {
-            pixel[i*region->width + j] = 0x12345689;
+            pixel[j*region->width + i] = 0x12345689;
         }
     }
 }
@@ -104,11 +104,10 @@ static int main_function()
     /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
 
-    printf("render pattern w %X\n", (int) graphics_region.width);
-    printf("render pattern h %X\n", (int) graphics_region.height);
-    printf("render pattern 0x%X\n", (int) graphics_region.vaddr);
     /* render pattern */
     render_pattern(&graphics_region);
+
+    release_region(surface);
 
     /* release */
     mir_connection_release(connection);
@@ -165,6 +164,32 @@ struct CallBack
     void msg() { }
 };
 
+void dump_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
+{
+
+    native_handle_t* handle;
+    handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
+    handle->numInts = package->ipc_data.size();
+    handle->numFds  = package->ipc_fds.size();
+    int i;
+    for(i = 0; i< handle->numFds; i++)
+        handle->data[i] = package->ipc_fds[i];
+    for(; i < handle->numFds + handle->numInts; i++)
+        handle->data[i] = package->ipc_data[i-handle->numFds];
+    for(i=0; i < handle->numFds + handle->numInts; i++)
+        printf(" THING %i, %i\n",i, handle->data[i]);
+
+    int *vaddr;
+    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
+    gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
+ //   grmod->registerBuffer(grmod, handle); 
+    grmod->lock(grmod, handle, usage, 0, 0, 64, 48, (void**) &vaddr); 
+
+    for(i=0; i< 64*48; i++)
+        printf("[%i]: 0x%X\n", i, vaddr[i]);
+}
+
+
 struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
@@ -177,7 +202,6 @@ struct TestClientIPCRender : public testing::Test
 
         int err;
         struct alloc_device_t *alloc_device_raw;
-        const hw_module_t    *hw_module;
         err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
         if (err < 0)
             throw std::runtime_error("Could not open hardware module");
@@ -198,6 +222,8 @@ struct TestClientIPCRender : public testing::Test
 
 
         EXPECT_TRUE(p->wait_for_termination().succeeded());
+
+        dump_buffer(mock_server->package, hw_module);
     }
 
     void TearDown()
@@ -210,6 +236,7 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mt::TestServer> test_server;
     std::shared_ptr<mt::MockServerGenerator> mock_server;
 
+    const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf; 
     CallBack callback;
@@ -219,6 +246,7 @@ TEST_F(TestClientIPCRender, test_render)
 {
     /* start server */
 
+//    dump_buffer(mock_server->package, hw_module);
     /* wait for connect */    
     /* wait for buffer sent back */
 

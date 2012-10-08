@@ -34,6 +34,7 @@ namespace client
 {
 class ClientBufferFactory;
 class ClientBuffer;
+class MemoryRegion;
 }
 }
 
@@ -55,9 +56,11 @@ public:
     int id() const;
     bool is_valid() const;
     void populate(MirBufferPackage& buffer_package);
-    void populate(MirGraphicsRegion& region);
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
+
+    void get_cpu_region(MirGraphicsRegion& region);
+    void release_cpu_region();
 
 private:
     void released(mir_surface_lifecycle_callback callback, void * context);
@@ -81,6 +84,7 @@ private:
     mir::geometry::Height surface_height;
     mir::geometry::PixelFormat surface_pf;
 
+    std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
 };
 

@@ -50,6 +50,7 @@ struct MemoryRegionDeleter
 
     void operator()(char *)
     {
+        printf("UNLOCK\n");
         module->unlock(module.get(), handle.get());
         //we didn't alloc region(just mapped it), so we don't delete
     }
@@ -66,10 +67,12 @@ std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_p
     int height = rect.size.height.as_uint32_t();
     int top = rect.top_left.x.as_uint32_t();
     int left = rect.top_left.y.as_uint32_t();
+        printf("here it is..\n");
     if ( gralloc_module->lock(gralloc_module.get(), handle.get(), 
                               usage, top, left, width, height, (void**) &vaddr) )
         throw std::runtime_error("error securing buffer for client cpu use");
 
+    printf("VADDR 0x%X\n",(int) vaddr);
     MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<char>(vaddr, del);
 }
