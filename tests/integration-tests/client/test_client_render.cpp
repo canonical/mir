@@ -70,6 +70,11 @@ void render_pattern(MirGraphicsRegion *region)
     }
 }
 
+
+namespace mir
+{
+namespace test
+{
 struct TestClient
 {
 
@@ -77,16 +82,19 @@ struct TestClient
 /* client code */
 static int main_function()
 {
-    sleep(4);
     printf("done sleeping\n");
     /* only use C api */
-    MirConnection* connection;
+    MirConnection* connection = NULL;
     MirSurface* surface;
     MirSurfaceParameters surface_parameters;
 
- /* establish connection */
-    mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                 &connected_callback, &connection));
+     /* establish connection. wait for server to come up */
+    while (connection == NULL)
+    {
+        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                     &connected_callback, &connection));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
     /* make surface */
     printf("client done waiting for connect %X\n", (int) connection);
 
@@ -121,10 +129,6 @@ static int exit_function()
 
 };
 
-namespace mir
-{
-namespace test
-{
 struct MockServerGenerator : public mt::MockServerTool
 {
     MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack)
@@ -174,8 +178,8 @@ struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
         auto p = mp::fork_and_run_in_a_different_process(
-            TestClient::main_function,
-            TestClient::exit_function);
+            mt::TestClient::main_function,
+            mt::TestClient::exit_function);
 
         size = geom::Size{geom::Width{64}, geom::Height{48}};
         pf = geom::PixelFormat::rgba_8888;
@@ -201,12 +205,6 @@ struct TestClientIPCRender : public testing::Test
         test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
         test_server->comm.start();
 
-        connect_parameters.set_application_name("test");
-/*`
-        mock_server->connect(0,
-                        &connect_parameters,
-                        &response,
-                        google::protobuf::NewCallback(&callback, &CallBack::msg)); */
 
         EXPECT_TRUE(p->wait_for_termination().succeeded());
     }
@@ -216,7 +214,6 @@ struct TestClientIPCRender : public testing::Test
         test_server->comm.stop();
     }
 
-    mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::Connection response;
 
     std::shared_ptr<mt::TestServer> test_server;
@@ -233,7 +230,6 @@ TEST_F(TestClientIPCRender, test_render)
 
     /* wait for connect */    
     /* wait for buffer sent back */
-    sleep(10);
 
     /* verify pattern */
 }
