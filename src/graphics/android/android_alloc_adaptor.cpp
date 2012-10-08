@@ -71,6 +71,11 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     ret = alloc_dev->alloc(alloc_dev.get(), (int) size.width.as_uint32_t(), (int) size.height.as_uint32_t(),
                            format, usage_flag, &buf_handle, &stride_as_int);
 
+    printf("AT ALLOC:\n");
+    printf("AT version: %i\n", buf_handle->version);
+    for(auto i=0; i<buf_handle->numFds + buf_handle->numInts; i++)
+        printf("0x%X\n", buf_handle->data[i]);
+
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *null_handle = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))

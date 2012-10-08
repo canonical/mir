@@ -92,9 +92,7 @@ mp::Result mp::Process::wait_for_termination()
 
     if (!detached)
     {
-        printf("WAITING\n");
         terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
-        printf("PUNCH THROUGH\n");
 
         if (terminated)
         {

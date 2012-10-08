@@ -18,6 +18,7 @@
 #ifndef MIR_CLIENT_MIR_CONNECTION_H_
 #define MIR_CLIENT_MIR_CONNECTION_H_
 
+#include <hardware/gralloc.h>
 #include <string>
 #include <memory>
 #include <set>
@@ -78,6 +79,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
+    MirSurface* surface;
     std::string error_message;
     std::set<MirSurface*> surfaces;
 
@@ -89,6 +91,8 @@ private:
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
+
+    std::shared_ptr<const gralloc_module_t> gralloc_dev;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

@@ -21,7 +21,6 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 
-#include <hardware/gralloc.h>
 #include "android/android_client_buffer_factory.h"
 #include "android/android_registrar_gralloc.h"
 
@@ -72,19 +71,28 @@ MirWaitHandle* MirConnection::create_surface(
     const hw_module_t *hw_module;
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (error < 0)
+    {
+        printf("ERRORR\n");
         throw std::runtime_error("Could not open hardware module");
+    }
 
+    printf("STRING :%s\n", hw_module->name);
     struct alloc_device_t* alloc_dev;
     error = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
     if (error < 0)
+    {
+        printf("ERROR\n");
         throw std::runtime_error("Could not open hardware module");
-    gralloc_module_t* gr_dev = (gralloc_module_t*) alloc_dev;
+    }
+    gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;
+    printf("GRALLOC MODULE %X\n", (int) gr_dev);
 
-    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev);
+    gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev);
     auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
     auto factory = std::make_shared<mcl::AndroidClientBufferFactory>(registrar); 
-    auto tmp = new MirSurface(server, factory, params, callback, context);
-    return tmp->get_create_wait_handle();
+    surface = new MirSurface(server, factory, params, callback, context);
+    printf("done creating surface\n");
+    return surface->get_create_wait_handle();
 }
 
 char const * MirConnection::get_error_message()
@@ -112,6 +120,7 @@ MirWaitHandle* MirConnection::connect(
         &connect_result,
         google::protobuf::NewCallback(
             this, &MirConnection::connected, callback, context));
+    printf("client connect\n");
     return &connect_wait_handle;
 }
 
@@ -147,6 +156,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     auto cast = (::MirConnection*) (this);
     callback(cast, context);
+    printf("called connection\n");
     connect_wait_handle.result_received();
 }
 

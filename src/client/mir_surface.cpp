@@ -127,6 +127,7 @@ void MirSurface::save_buffer_dimensions()
 
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
+    printf("CREATED CALLBACK\n");
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
@@ -173,14 +174,20 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 
         buffer_package.data_items = buffer.data_size();
         for (int i = 0; i != buffer.data_size(); ++i)
+        {
             buffer_package.data[i] = buffer.data(i);
+        }
 
         buffer_package.fd_items = buffer.fd_size();
+        
         for (int i = 0; i != buffer.fd_size(); ++i)
+        {
             buffer_package.fd[i] = buffer.fd(i);
+        }
     }
     else
     {
+        printf("POPULATED FAIL\n");
         buffer_package.data_items = 0;
         buffer_package.fd_items = 0;
     }

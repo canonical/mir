@@ -85,14 +85,13 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
-    printf("cerate surface\n");
     try
     {
+        printf("IN LIB %X\n", (int) connection);
         return connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
-        printf("EXCEPTION\n");
         // TODO callback with an error surface
         return 0; // TODO
     }
