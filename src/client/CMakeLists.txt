@@ -86,6 +86,7 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  ${LIBHARDWARE_LIBRARIES}
 )
 
 add_executable(

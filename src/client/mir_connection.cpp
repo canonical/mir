@@ -21,6 +21,10 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 
+#include <hardware/gralloc.h>
+#include "android/android_client_buffer_factory.h"
+#include "android/android_registrar_gralloc.h"
+
 #include <cstddef>
 
 namespace mcl = mir::client;
@@ -65,7 +69,21 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto tmp = new MirSurface(server, params, callback, context);
+    const hw_module_t *hw_module;
+    int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+    if (error < 0)
+        throw std::runtime_error("Could not open hardware module");
+
+    struct alloc_device_t* alloc_dev;
+    error = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
+    if (error < 0)
+        throw std::runtime_error("Could not open hardware module");
+    gralloc_module_t* gr_dev = (gralloc_module_t*) alloc_dev;
+
+    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev);
+    auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
+    auto factory = std::make_shared<mcl::AndroidClientBufferFactory>(registrar); 
+    auto tmp = new MirSurface(server, factory, params, callback, context);
     return tmp->get_create_wait_handle();
 }
 
