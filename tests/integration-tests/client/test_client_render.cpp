@@ -52,10 +52,11 @@ void create_callback(MirSurface *surface, void*context)
     *surf = surface;
 }
 
-void render_pattern(MirGraphicsRegion *region)
+bool render_pattern(MirGraphicsRegion *region, bool check)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        return;
+        return false;
+
 
     int *pixel = (int*) region->vaddr; 
     int i,j;
@@ -63,9 +64,18 @@ void render_pattern(MirGraphicsRegion *region)
     {
         for(j=0; j<region->height; j++)
         {
-            pixel[j*region->width + i] = 0x12345689;
+            if (check)
+            {
+                if (pixel[j*region->width + i] != 0x12345689)
+                    return false;
+            }
+            else
+            {
+                pixel[j*region->width + i] = 0x12345689;
+            }
         }
     }
+    return true;
 }
 
 
@@ -105,7 +115,7 @@ static int main_function()
     mir_surface_get_graphics_region( surface, &graphics_region);
 
     /* render pattern */
-    render_pattern(&graphics_region);
+    render_pattern(&graphics_region, false);
 
     release_region(surface);
 
@@ -176,17 +186,22 @@ void dump_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_
         handle->data[i] = package->ipc_fds[i];
     for(; i < handle->numFds + handle->numInts; i++)
         handle->data[i] = package->ipc_data[i-handle->numFds];
-    for(i=0; i < handle->numFds + handle->numInts; i++)
-        printf(" THING %i, %i\n",i, handle->data[i]);
 
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
- //   grmod->registerBuffer(grmod, handle); 
     grmod->lock(grmod, handle, usage, 0, 0, 64, 48, (void**) &vaddr); 
 
-    for(i=0; i< 64*48; i++)
-        printf("[%i]: 0x%X\n", i, vaddr[i]);
+    MirGraphicsRegion region;
+    region.vaddr = (char*) vaddr;
+    region.width = 64;
+    region.height = 48;
+    region.pixel_format = mir_pixel_format_rgba_8888; 
+
+    if (!render_pattern(&region, false))
+        exit(0);
+
+    grmod->unlock(grmod, handle); 
 }
 
 
@@ -241,6 +256,7 @@ struct TestClientIPCRender : public testing::Test
     geom::PixelFormat pf; 
     CallBack callback;
 };
+
 
 TEST_F(TestClientIPCRender, test_render)
 {
