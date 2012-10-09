@@ -81,7 +81,6 @@ TEST_F(ProtobufAsioCommunicatorBasic,surface_creation_results_in_a_callback)
     mock_client->wait_for_create_surface();
 }
 
-
 TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name_from_parameter)
 {
     using namespace testing;

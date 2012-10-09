@@ -93,7 +93,6 @@ MirWaitHandle* MirConnection::connect(
     void * context)
 {
     connect_parameters.set_application_name(app_name);
-    connect_wait_handle.result_requested();
     server.connect(
         0,
         &connect_parameters,
@@ -105,7 +104,6 @@ MirWaitHandle* MirConnection::connect(
 
 void MirConnection::disconnect()
 {
-    disconnect_wait_handle.result_requested();
     server.disconnect(
         0,
         &ignored,

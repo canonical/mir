@@ -47,15 +47,15 @@ MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
 
-    create_wait_handle.result_requested();
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
 MirWaitHandle* MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
 {
+    release_cpu_region();
+
     mir::protobuf::SurfaceId message;
     message.set_value(surface.id().value());
-    release_wait_handle.result_requested();
     server.release_surface(0, &message, &void_response,
                            gp::NewCallback(this, &MirSurface::released, callback, context));
     return &release_wait_handle;
@@ -111,7 +111,6 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, 
 {
     release_cpu_region();
 
-    next_buffer_wait_handle.result_requested();
     server.next_buffer(
         0,
         &surface.id(),
@@ -130,6 +129,9 @@ void MirSurface::released(mir_surface_lifecycle_callback callback, void * contex
 {
     callback(this, context);
     release_wait_handle.result_received();
+
+    // we send release_wait_handle out to the client, so at this point, the client could still use it
+
     delete this;
 }
 

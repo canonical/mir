@@ -149,7 +149,6 @@ void mir_wait_for(MirWaitHandle* wait_handle);
 /* Return the id of the surface. (Only useful for debug output.) */
 int mir_debug_surface_id(MirSurface *surface);
 
-void release_region(MirSurface * surface);
 #ifdef __cplusplus
 }
 #endif

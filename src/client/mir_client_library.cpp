@@ -149,8 +149,3 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
-
-void release_region(MirSurface * surface)
-{
-    surface->release_cpu_region();
-}

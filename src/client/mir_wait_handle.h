@@ -38,15 +38,16 @@ public:
     MirWaitHandle();
     ~MirWaitHandle();
 
-    void result_requested();
     void result_received();
     void wait_for_result();
 
 private:
     std::atomic<int> waiting_threads;
-    mutex guard;
-    condition_variable wait_condition;
-    bool waiting_for_result;
+    mir::std::mutex guard;
+    mir::std::condition_variable wait_condition;
+
+    bool result_has_occurred;
+    bool request_has_occurred;
 };
 
 #endif /* MIR_CLIENT_MIR_WAIT_HANDLE_H_ */

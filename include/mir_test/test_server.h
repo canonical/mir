@@ -30,7 +30,6 @@ namespace test
 
 struct TestServer
 {
-        //todo cleanup construcotr;
     TestServer(std::string socket_name,
                const std::shared_ptr<protobuf::DisplayServer>& tool) :
         factory(std::make_shared<MockIpcFactory>(*tool)),

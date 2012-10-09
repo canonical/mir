@@ -65,9 +65,9 @@ struct MockServerTool : mir::protobuf::DisplayServer
     virtual void release_surface(::google::protobuf::RpcController* /*controller*/,
                          const ::mir::protobuf::SurfaceId* /*request*/,
                          ::mir::protobuf::Void* /*response*/,
-                         ::google::protobuf::Closure* /*done*/)
+                         ::google::protobuf::Closure* done)
     {
-        // TODO need some tests for releasing surfaces
+        done->Run();
     }
 
 

@@ -60,10 +60,7 @@ void run_mir()
 
     signal_display_server = &server;
 
-    std::future<void> future{
-        std::async(std::launch::async, std::bind(&DisplayServer::start, &server))};
-
-    future.wait();
+    server.start();
 }
 }
 }

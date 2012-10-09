@@ -22,33 +22,29 @@ MirWaitHandle::MirWaitHandle() :
     waiting_threads(0),
     guard(),
     wait_condition(),
-    waiting_for_result(false) 
+    result_has_occurred(false),
+    request_has_occurred(false)
 {
 }
 
 MirWaitHandle::~MirWaitHandle()
 {
+    {
+        unique_lock<mutex> lock(guard);
+        result_has_occurred = true;
+        wait_condition.notify_all();
+    }
     // Delay destruction while there are waiting threads
     while (waiting_threads.load()) yield();
 }
 
-void MirWaitHandle::result_requested()
-{
-    unique_lock<mutex> lock(guard);
-
-    while (waiting_for_result)
-        wait_condition.wait(lock);
-
-    waiting_for_result = true;
-}
-
 void MirWaitHandle::result_received()
 {
-    lock_guard<mutex> lock(guard);
-
-    waiting_for_result = false;
+    unique_lock<mutex> lock(guard);
+    result_has_occurred = true;
 
     wait_condition.notify_all();
+    lock.unlock();
 }
 
 void MirWaitHandle::wait_for_result()
@@ -58,10 +54,13 @@ void MirWaitHandle::wait_for_result()
 
     {
         unique_lock<mutex> lock(guard);
-        while (waiting_for_result)
+        while ( (!result_has_occurred) )
             wait_condition.wait(lock);
+        result_has_occurred = false;
     }
 
     tmp = waiting_threads.load();
     while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
 }
+
+

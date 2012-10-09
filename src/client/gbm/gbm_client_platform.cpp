@@ -51,7 +51,7 @@ class EmptyBuffer : public mcl::ClientBuffer
 class EmptyFactory : public mcl::ClientBufferFactory
 {
 public:
-    std::shared_ptr<mcl::ClientBuffer> create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>&,
+    std::shared_ptr<mcl::ClientBuffer> create_buffer_from_ipc_message(std::shared_ptr<MirBufferPackage>&&,
                                 geom::Width, geom::Height, geom::PixelFormat) 
     {
         return std::make_shared<EmptyBuffer>();
