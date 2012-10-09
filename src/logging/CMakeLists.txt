@@ -12,30 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Guest <thomas.guest@canonical.com>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-# By default, build for LLVM
+set(
+  LOGGING_SOURCES
 
-include_directories(${GLESv2_INCLUDE_DIRS})
-
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(android/)
-endif()
-
-if (MIR_PLATFORM STREQUAL "gbm")
-  add_subdirectory(gbm/)
-endif()
-
-add_library(
-  mirgraphics STATIC
-
-  gl_renderer.cpp
+  dumb_console_logger.cpp
 )
 
-target_link_libraries(
-  mirgraphics
-
-  mirlogging
+add_library( 
+  mirlogging STATIC
   
-  ${GLESv2_LIBRARIES}
+  ${LOGGING_SOURCES}
 )

@@ -38,6 +38,10 @@ namespace graphics
 class Renderer;
 class Platform;
 }
+namespace logging
+{
+class Logger;
+}
 
 class ServerConfiguration
 {
@@ -81,6 +85,7 @@ public:
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
 private:
     std::string socket_file;
+    std::shared_ptr<logging::Logger> logger;
     std::shared_ptr<graphics::Platform> graphics_platform;
 
     // the communications interface to use

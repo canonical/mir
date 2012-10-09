@@ -19,6 +19,8 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(protobuf/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+add_subdirectory(logging/)
+
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
@@ -56,6 +58,7 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirinput
+  mirlogging
   mirprocess
   mirsurfaces
   mirplatformgraphics
