@@ -138,8 +138,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    connect_wait_handle.wait_for_result();
-
     if (!connect_result.has_error())
     {
         platform_package.data_items = connect_result.data_size();
