@@ -48,7 +48,6 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
 
-
     int *pixel = (int*) region->vaddr; 
     int i,j;
     for(i=0; i< region->width; i++)
@@ -70,7 +69,6 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
 }
 
 /* client code */
-
 void connected_callback(MirConnection *connection, void* context)
 {
     MirConnection** tmp = (MirConnection**) context;

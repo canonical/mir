@@ -86,6 +86,7 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
         mock_server->comm.start();
 
         mock_client = std::make_shared<mt::TestClient>("./test_socket");
+        mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
