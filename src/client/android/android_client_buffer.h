@@ -34,7 +34,7 @@ namespace client
 class AndroidClientBuffer : public ClientBuffer
 {
 public:
-    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, const std::shared_ptr<MirBufferPackage> ,
+    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> && ,
                         geometry::Width width, geometry::Height height, geometry::PixelFormat pf );
     ~AndroidClientBuffer();
     

@@ -33,7 +33,7 @@ class AndroidClientBufferFactory : public ClientBufferFactory
 {
 public:
     AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>&);
-    std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(const std::shared_ptr<MirBufferPackage>&,
+    std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(std::shared_ptr<MirBufferPackage> &&,
                                 geometry::Width, geometry::Height, geometry::PixelFormat);
  
 private:

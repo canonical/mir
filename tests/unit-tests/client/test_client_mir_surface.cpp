@@ -150,7 +150,7 @@ struct MockClientFactory : public mcl::ClientBufferFactory
         ON_CALL(*this, create_buffer_from_ipc_message(_,_,_,_))
             .WillByDefault(Return(emptybuffer));
     }
-    MOCK_METHOD4(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(const std::shared_ptr<MirBufferPackage>&, geom::Width, geom::Height, geom::PixelFormat));
+    MOCK_METHOD4(create_buffer_from_ipc_message, std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> &&, geom::Width, geom::Height, geom::PixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
