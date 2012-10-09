@@ -17,7 +17,8 @@
 if( MIR_PLATFORM STREQUAL "android")
 list(
   APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_render.cpp
+#  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_render.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_compositor_render.cpp
 )
 
 set(
