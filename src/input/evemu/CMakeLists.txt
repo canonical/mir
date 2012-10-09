@@ -17,7 +17,7 @@
 option(
   MIR_INPUT_ENABLE_EVEMU
   "Controls if devices for handling evdev events are compiled"
-  ON
+  OFF
 )
 
 if(MIR_INPUT_ENABLE_EVEMU)
