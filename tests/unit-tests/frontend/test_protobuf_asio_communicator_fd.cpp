@@ -56,18 +56,20 @@ struct MockServerFd : public MockServerTool
 
     void test_file_descriptors(::google::protobuf::RpcController* ,
                          const ::mir::protobuf::Void* ,
-                         ::mir::protobuf::Buffer* fds,
+                         ::mir::protobuf::Buffer* buffer,
                          ::google::protobuf::Closure* done)
     {
         for (int i = 0; i != file_descriptors; ++i)
         {
+            buffer->set_buffer_id(22);
+
             static char const test_file_fmt[] = "fd_test_file%d";
             char test_file[sizeof test_file_fmt];
             sprintf(test_file, test_file_fmt, i);
             remove(test_file);
             file_descriptor[i] = open(test_file, O_CREAT, S_IWUSR|S_IRUSR);
 
-            fds->add_fd(file_descriptor[i]);
+            buffer->add_fd(file_descriptor[i]);
         }
 
         done->Run();
