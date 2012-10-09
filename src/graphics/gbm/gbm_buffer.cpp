@@ -26,7 +26,6 @@
 #include <stdexcept>
 #include <mutex>
 #include <xf86drm.h>
-#include <sys/ioctl.h>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
@@ -141,7 +140,7 @@ std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
     auto drm_fd = gbm_device_get_fd(device);
     struct drm_gem_flink flink{handle, 0};
 
-    auto ret = ioctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
     if (ret)
         throw std::runtime_error("Failed to get GEM flink name from gbm bo");
 

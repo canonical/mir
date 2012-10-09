@@ -133,7 +133,7 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     ASSERT_LE(minimum, buffer->stride());
 }
 
-TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_has_correct_size)
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 {
     using namespace testing;
 
@@ -146,10 +146,23 @@ TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_has_correct_size)
     ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
 }
 
-TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_contains_correct_handle)
+MATCHER_P(GEMFlinkHandleIs, value, "")
+{ 
+    auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);
+    return flink->handle == value;
+}
+
+ACTION_P(SetGEMFlinkName, value)
+{ 
+    auto flink = reinterpret_cast<struct drm_gem_flink*>(arg2);
+    flink->name = value;
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
 {
     using namespace testing;
 
+    uint32_t gem_flink_name{0x77};
     gbm_bo_handle mock_handle;
     mock_handle.u32 = 0xdeadbeef;
 
@@ -157,9 +170,29 @@ TEST_F(GBMGraphicBufferBasic, DISABLED_buffer_ipc_package_contains_correct_handl
             .Times(Exactly(1))
             .WillOnce(Return(mock_handle));
 
-    auto buffer = allocator->alloc_buffer(size, pf);
-    auto ipc_package = buffer->get_ipc_package();
-    ASSERT_EQ(mock_handle.u32, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK, GEMFlinkHandleIs(mock_handle.u32)))
+            .Times(Exactly(1))
+            .WillOnce(DoAll(SetGEMFlinkName(gem_flink_name), Return(0)));
+
+    EXPECT_NO_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        auto ipc_package = buffer->get_ipc_package();
+        ASSERT_EQ(gem_flink_name, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+    });
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_gem_flink_failure)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK,_))
+            .Times(Exactly(1))
+            .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        auto ipc_package = buffer->get_ipc_package();
+    }, std::runtime_error);
 }
 
 TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
