@@ -78,7 +78,6 @@ struct MockServerTool : mir::protobuf::DisplayServer
                          ::google::protobuf::Closure* done)
     {
         app_name = request->application_name();
-        wait_condition.notify_one();
         done->Run();
     }
 

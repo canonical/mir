@@ -34,24 +34,15 @@
 
 #include <gmock/gmock.h>
 
-#include "mir/thread/all.h" 
+#include "mir/thread/all.h"
+ 
 namespace mp=mir::process;
 namespace mt=mir::test;
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-void connected_callback(MirConnection *connection, void* context)
-{
-    MirConnection** tmp = (MirConnection**) context;
-    *tmp = connection;
-}
-void create_callback(MirSurface *surface, void*context)
-{
-    MirSurface** surf = (MirSurface**) context;
-    *surf = surface;
-}
-
+/* used by both client/server for patterns */ 
 bool render_pattern(MirGraphicsRegion *region, bool check)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
@@ -78,6 +69,18 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
     return true;
 }
 
+/* client code */
+
+void connected_callback(MirConnection *connection, void* context)
+{
+    MirConnection** tmp = (MirConnection**) context;
+    *tmp = connection;
+}
+void create_callback(MirSurface *surface, void*context)
+{
+    MirSurface** surf = (MirSurface**) context;
+    *surf = surface;
+}
 
 namespace mir
 {
@@ -86,8 +89,6 @@ namespace test
 struct TestClient
 {
 
-
-/* client code */
 static int main_function()
 {
     /* only use C api */
@@ -128,9 +129,9 @@ static int exit_function()
 {
     return EXIT_SUCCESS;
 }
-
 };
 
+/* server code */
 struct MockServerGenerator : public mt::MockServerTool
 {
     MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack)
@@ -202,7 +203,6 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     return valid; 
 }
 
-
 struct TestClientIPCRender : public testing::Test
 {
     void SetUp() {
@@ -212,7 +212,6 @@ struct TestClientIPCRender : public testing::Test
 
         size = geom::Size{geom::Width{64}, geom::Height{48}};
         pf = geom::PixelFormat::rgba_8888;
-
     }
 
     void TearDown()
