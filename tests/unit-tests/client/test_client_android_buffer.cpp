@@ -62,13 +62,6 @@ protected:
     std::shared_ptr<mt::MockAndroidRegistrar> mock_android_registrar;
 };
 
-TEST_F(ClientAndroidBufferTest, client_init)
-{
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
-    EXPECT_NE((int) buffer.get(), NULL);
-}
-
 TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
 {
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
