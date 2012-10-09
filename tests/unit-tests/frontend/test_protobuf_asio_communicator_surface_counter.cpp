@@ -46,7 +46,6 @@ namespace test
 
 struct MockServerSurfaceCounter : public MockServerTool
 {
-
     int surface_count;
 
     MockServerSurfaceCounter() : surface_count(0)

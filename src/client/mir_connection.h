@@ -18,7 +18,6 @@
 #ifndef MIR_CLIENT_MIR_CONNECTION_H_
 #define MIR_CLIENT_MIR_CONNECTION_H_
 
-#include <hardware/gralloc.h>
 #include <string>
 #include <memory>
 #include <set>
@@ -38,6 +37,10 @@ namespace mir
 namespace client
 {
 class Logger;
+class ClientBufferFactory;
+
+std::shared_ptr<ClientBufferFactory> create_platform_factory ();
+
 }
 }
 
@@ -92,7 +95,7 @@ private:
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-    std::shared_ptr<const gralloc_module_t> gralloc_dev;
+    std::shared_ptr<mir::client::ClientBufferFactory> factory;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */
