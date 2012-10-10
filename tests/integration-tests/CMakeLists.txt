@@ -16,12 +16,12 @@
 
 add_subdirectory(client/)
 add_subdirectory(compositor/)
-#add_subdirectory(input/)
-#add_subdirectory(frontend/)
+add_subdirectory(input/)
+add_subdirectory(frontend/)
 add_subdirectory(process/)
 
 if (MIR_PLATFORM STREQUAL "android")
-#  add_subdirectory(graphics/android)
+  add_subdirectory(graphics/android)
 endif()
 
 add_executable(

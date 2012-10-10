@@ -74,7 +74,6 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
 }
 }
 
-
 namespace mir
 {
 namespace test
@@ -246,7 +245,6 @@ struct TestClientIPCRender : public testing::Test
 
 TEST_F(TestClientIPCRender, test_render)
 {
-
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
