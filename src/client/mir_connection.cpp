@@ -71,7 +71,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    surface = new MirSurface(server, factory, params, callback, context);
+    auto surface = new MirSurface(server, factory, params, callback, context);
     return surface->get_create_wait_handle();
 }
 
@@ -139,6 +139,11 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
+void MirConnection::done_disconnect()
+{
+    disconnect_wait_handle.result_received();
+}
+
 void MirConnection::disconnect()
 {
     server.disconnect(
@@ -160,12 +165,6 @@ bool MirConnection::is_valid(MirConnection *connection)
 
     return !connection->connect_result.has_error();
 }
-
-void MirConnection::done_disconnect()
-{
-    disconnect_wait_handle.result_received();
-}
-
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {

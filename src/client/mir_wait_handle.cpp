@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Guest <thomas.guest@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir_wait_handle.h"
@@ -41,14 +41,10 @@ void MirWaitHandle::result_received()
 
 void MirWaitHandle::wait_for_result()
 {
-
-    {
-        unique_lock<mutex> lock(guard);
-        while ( (!result_has_occurred) )
-            wait_condition.wait(lock);
-        result_has_occurred = false;
-    }
-
+    unique_lock<mutex> lock(guard);
+    while ( (!result_has_occurred) )
+        wait_condition.wait(lock);
+    result_has_occurred = false;
 }
 
 

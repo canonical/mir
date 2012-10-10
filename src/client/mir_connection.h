@@ -87,9 +87,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    MirSurface* surface;
     std::string error_message;
-    std::set<MirSurface*> surfaces;
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle release_wait_handle;
@@ -98,9 +96,10 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
 
+    void released(SurfaceRelease );
+
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
-    void released(SurfaceRelease );
 
     std::shared_ptr<mir::client::ClientBufferFactory> factory;
 };
