@@ -73,7 +73,7 @@ public:
         mir_connected_callback callback,
         void * context);
 
-    void disconnect();
+    MirWaitHandle* disconnect();
 
     void populate(MirPlatformPackage& platform_package);
 
@@ -93,15 +93,16 @@ private:
     MirWaitHandle release_wait_handle;
     MirWaitHandle disconnect_wait_handle;
 
-    void done_disconnect();
-    void connected(mir_connected_callback callback, void * context);
-
-    void released(SurfaceRelease );
+    std::shared_ptr<mir::client::ClientBufferFactory> factory;
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-    std::shared_ptr<mir::client::ClientBufferFactory> factory;
+    void done_disconnect();
+    void connected(mir_connected_callback callback, void * context);
+    void released(SurfaceRelease );
+
+
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

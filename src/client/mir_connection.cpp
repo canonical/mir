@@ -49,21 +49,19 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
+    factory = mir::client::create_platform_factory();
+
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
     }
     connect_result.set_error("connect not called");
-
-    factory = mir::client::create_platform_factory();
 }
 
 MirConnection::~MirConnection()
 {
-    {
-        lock_guard<mutex> lock(connection_guard);
-        valid_connections.erase(this);
-    }
+    lock_guard<mutex> lock(connection_guard);
+    valid_connections.erase(this);
 }
 
 MirWaitHandle* MirConnection::create_surface(
@@ -144,7 +142,7 @@ void MirConnection::done_disconnect()
     disconnect_wait_handle.result_received();
 }
 
-void MirConnection::disconnect()
+MirWaitHandle* MirConnection::disconnect()
 {
     server.disconnect(
         0,
@@ -152,7 +150,7 @@ void MirConnection::disconnect()
         &ignored,
         google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-    disconnect_wait_handle.wait_for_result();
+    return &disconnect_wait_handle;
 }
 
 bool MirConnection::is_valid(MirConnection *connection)

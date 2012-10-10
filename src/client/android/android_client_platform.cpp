@@ -22,6 +22,13 @@
 
 namespace mcl=mir::client;
 
+struct EmptyDeleter
+{
+    void operator()(void* )
+    {
+    }
+};
+
 std::shared_ptr<mcl::ClientBufferFactory> mcl::create_platform_factory()
 {
     const hw_module_t *hw_module;
@@ -32,7 +39,9 @@ std::shared_ptr<mcl::ClientBufferFactory> mcl::create_platform_factory()
     }
 
     gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;
-    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev);
+    /* we use an empty deleter because hw_get_module does not give us the ownership of the ptr */
+    EmptyDeleter empty_del;
+    auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
     auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
     return std::make_shared<mcl::AndroidClientBufferFactory>(registrar);
 }

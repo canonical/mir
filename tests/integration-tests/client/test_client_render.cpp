@@ -89,7 +89,6 @@ struct TestClient
 
 static int main_function()
 {
-    printf("MAIN\n");
     /* only use C api */
     MirConnection* connection = NULL;
     MirSurface* surface;
@@ -103,7 +102,6 @@ static int main_function()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     /* make surface */
-
     surface_parameters.name = "testsurface";
     surface_parameters.width = 48;
     surface_parameters.height = 64;
@@ -117,19 +115,15 @@ static int main_function()
     /* render pattern */
     render_pattern(&graphics_region, false);
 
-    printf("waiter\n");
     mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
-    printf("done waiter\n");
 
     /* release */
     mir_connection_release(connection);
-    printf("done with conn\n");
     return 0;
 }
 
 static int exit_function()
 {
-    printf("EXIT SUCCESS\n");
     return EXIT_SUCCESS;
 }
 };
