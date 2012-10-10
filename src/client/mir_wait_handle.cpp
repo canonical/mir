@@ -19,7 +19,6 @@
 #include "mir_wait_handle.h"
 
 MirWaitHandle::MirWaitHandle() :
-    waiting_threads(0),
     guard(),
     wait_condition(),
     result_has_occurred(false),
@@ -29,13 +28,6 @@ MirWaitHandle::MirWaitHandle() :
 
 MirWaitHandle::~MirWaitHandle()
 {
-    {
-        unique_lock<mutex> lock(guard);
-        result_has_occurred = true;
-        wait_condition.notify_all();
-    }
-    // Delay destruction while there are waiting threads
-    while (waiting_threads.load()) yield();
 }
 
 void MirWaitHandle::result_received()
@@ -49,8 +41,6 @@ void MirWaitHandle::result_received()
 
 void MirWaitHandle::wait_for_result()
 {
-    int tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) yield();
 
     {
         unique_lock<mutex> lock(guard);
@@ -59,8 +49,6 @@ void MirWaitHandle::wait_for_result()
         result_has_occurred = false;
     }
 
-    tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
 }
 
 

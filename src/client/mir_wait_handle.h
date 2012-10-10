@@ -15,6 +15,7 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
 #define MIR_CLIENT_MIR_WAIT_HANDLE_H_
 
@@ -42,7 +43,6 @@ public:
     void wait_for_result();
 
 private:
-    std::atomic<int> waiting_threads;
     mir::std::mutex guard;
     mir::std::condition_variable wait_condition;
 

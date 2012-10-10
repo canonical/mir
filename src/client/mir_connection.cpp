@@ -87,13 +87,15 @@ char const * MirConnection::get_error_message()
     }
 }
 
-
+/* struct exists to work around google protobuf being able to bind
+ "only 0, 1, or 2 arguments in the NewCallback function */
 struct SurfaceRelease
 {
-MirSurface * surface;
-mir_surface_lifecycle_callback callback;
-void * context;
+    MirSurface * surface;
+    mir_surface_lifecycle_callback callback;
+    void * context;
 };
+
 void MirConnection::released(SurfaceRelease data)
 {
     data.callback(data.surface, data.context);
@@ -112,14 +114,9 @@ MirWaitHandle* MirConnection::release_surface(
  
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
-    auto cb = gp::NewCallback(this, &MirConnection::released, surf_release);
-
-
-
-
-    server.release_surface(0, &message, &void_response, cb);
-    return &release_wait_handle;
-     
+    server.release_surface(0, &message, &void_response,
+                    gp::NewCallback(this, &MirConnection::released, surf_release));
+    return &release_wait_handle; 
 }
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
