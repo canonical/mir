@@ -230,9 +230,9 @@ private:
 };
 }
 
+#if 0
 TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 {
-#if 0
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
@@ -241,7 +241,6 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
             return std::make_shared<StubIpcFactory>();
         }
     } server_config;
-#endif
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
@@ -282,3 +281,4 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 
     launch_client_process(client_config);
 }
+#endif
