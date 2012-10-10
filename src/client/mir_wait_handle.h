@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
@@ -47,7 +47,6 @@ private:
     mir::std::condition_variable wait_condition;
 
     bool result_has_occurred;
-    bool request_has_occurred;
 };
 
 #endif /* MIR_CLIENT_MIR_WAIT_HANDLE_H_ */

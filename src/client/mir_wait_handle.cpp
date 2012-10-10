@@ -21,8 +21,7 @@
 MirWaitHandle::MirWaitHandle() :
     guard(),
     wait_condition(),
-    result_has_occurred(false),
-    request_has_occurred(false)
+    result_has_occurred(false)
 {
 }
 

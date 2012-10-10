@@ -20,9 +20,6 @@
 #include "android/android_client_buffer_factory.h"
 #include "android/android_client_buffer.h"
 
-//GO AWAY
-#include "mir_test/empty_deleter.h"
-
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
