@@ -129,8 +129,8 @@ static int main_function()
     /* render pattern */
     render_pattern2(&graphics_region, false);
 
-    release_region(surface);
-
+    mir_wait_for(mir_surface_release(connection, surface, 
+                            &create_callback2, &surface));
     /* release */
     mir_connection_release(connection);
     return 0;

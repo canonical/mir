@@ -76,7 +76,9 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    connection->disconnect();
+    auto wait_handle = connection->disconnect();
+    wait_handle->wait_for_result();
+
     delete connection;
 }
 
@@ -97,10 +99,10 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 
 }
 
-MirWaitHandle* mir_surface_release(MirSurface * surface,
+MirWaitHandle* mir_surface_release(MirConnection * connection, MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    return surface->release(callback, context);
+    return connection->release_surface(surface, callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
@@ -149,8 +151,3 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
-
-void release_region(MirSurface * surface)
-{
-    surface->release_cpu_region();
-}

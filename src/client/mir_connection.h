@@ -44,6 +44,7 @@ std::shared_ptr<ClientBufferFactory> create_platform_factory ();
 }
 }
 
+struct SurfaceRelease;
 // TODO the connection should track all associated surfaces, and release them on
 // disconnection.
 class MirConnection
@@ -60,6 +61,10 @@ public:
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback,
         void * context);
+    MirWaitHandle* release_surface(
+            MirSurface *surface,
+            mir_surface_lifecycle_callback callback,
+            void *context);
 
     char const * get_error_message();
 
@@ -68,7 +73,7 @@ public:
         mir_connected_callback callback,
         void * context);
 
-    void disconnect();
+    MirWaitHandle* disconnect();
 
     void populate(MirPlatformPackage& platform_package);
 
@@ -82,20 +87,22 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    MirSurface* surface;
     std::string error_message;
-    std::set<MirSurface*> surfaces;
 
     MirWaitHandle connect_wait_handle;
+    MirWaitHandle release_wait_handle;
     MirWaitHandle disconnect_wait_handle;
 
-    void done_disconnect();
-    void connected(mir_connected_callback callback, void * context);
+    std::shared_ptr<mir::client::ClientBufferFactory> factory;
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-    std::shared_ptr<mir::client::ClientBufferFactory> factory;
+    void done_disconnect();
+    void connected(mir_connected_callback callback, void * context);
+    void released(SurfaceRelease );
+
+
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

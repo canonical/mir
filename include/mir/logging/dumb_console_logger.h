@@ -13,37 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#include "mir_wait_handle.h"
+#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-MirWaitHandle::MirWaitHandle() :
-    guard(),
-    wait_condition(),
-    result_has_occurred(false)
+#include "mir/logging/logger.h"
+
+namespace mir
 {
+namespace logging
+{
+class DumbConsoleLogger : public Logger
+{
+public:
+    DumbConsoleLogger();
+    
+protected:
+    void log(Severity severity, const std::string& message, const std::string& component);
+};
+}
 }
 
-MirWaitHandle::~MirWaitHandle()
-{
-}
-
-void MirWaitHandle::result_received()
-{
-    unique_lock<mutex> lock(guard);
-    result_has_occurred = true;
-
-    wait_condition.notify_all();
-    lock.unlock();
-}
-
-void MirWaitHandle::wait_for_result()
-{
-    unique_lock<mutex> lock(guard);
-    while ( (!result_has_occurred) )
-        wait_condition.wait(lock);
-    result_has_occurred = false;
-}
-
-
+#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_

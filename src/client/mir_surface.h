@@ -49,8 +49,8 @@ public:
         const std::shared_ptr<mir::client::ClientBufferFactory>& factory, 
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
+    ~MirSurface();
 
-    MirWaitHandle* release(mir_surface_lifecycle_callback callback, void * context);
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
@@ -63,26 +63,19 @@ public:
     void release_cpu_region();
 
 private:
-    void released(mir_surface_lifecycle_callback callback, void * context);
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
-
-    void save_buffer_dimensions();
+    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf );
 
     mir::protobuf::DisplayServer::Stub & server;
-    mir::protobuf::Void void_response;
     mir::protobuf::Surface surface;
     std::string error_message;
 
     MirWaitHandle create_wait_handle;
-    MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
     int last_buffer_id;
     std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_cache;
-    mir::geometry::Width surface_width;
-    mir::geometry::Height surface_height;
-    mir::geometry::PixelFormat surface_pf;
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;

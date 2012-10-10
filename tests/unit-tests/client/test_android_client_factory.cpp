@@ -42,6 +42,8 @@ TEST(MirAndroidClientBufferFactory, factory)
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
+    EXPECT_CALL(*mock_registrar, unregister_buffer(_))
+        .Times(1); 
     auto buffer = factory.create_buffer_from_ipc_message(package, w, h, pf);
 
     EXPECT_EQ(buffer->height(), h); 

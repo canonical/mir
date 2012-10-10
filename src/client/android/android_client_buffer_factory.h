@@ -35,10 +35,9 @@ public:
     AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>&);
     std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(std::shared_ptr<MirBufferPackage> &&,
                                 geometry::Width, geometry::Height, geometry::PixelFormat);
- 
 private:
     std::shared_ptr<AndroidRegistrar> registrar;
 };
 }
 }
-#endif /* MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_ */
+#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_FACTORY_H_ */

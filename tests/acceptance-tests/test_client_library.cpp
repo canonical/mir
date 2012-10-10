@@ -195,7 +195,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(surface, release_surface_callback, this);
+            mir_surface_release(connection, surface, release_surface_callback, this);
 
             wait_for_surface_release();
 
@@ -288,7 +288,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
                 ASSERT_NE(old_surface_count, 0u);
 
                 MirSurface * surface = any_surface();
-                mir_surface_release(surface, release_surface_callback, this);
+                mir_surface_release(connection, surface, release_surface_callback, this);
 
                 wait_for_surface_release();
 
@@ -336,7 +336,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             mir_surface_next_buffer(surface, next_buffer_callback, this);
             wait_for_next_buffer();
 
-            mir_surface_release(surface, release_surface_callback, this);
+            mir_surface_release(connection, surface, release_surface_callback, this);
 
             wait_for_surface_release();
 
@@ -398,7 +398,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_using_mir_wait_for)
 
             mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
 
-            mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
+            mir_wait_for(mir_surface_release(connection, surface, release_surface_callback, this));
 
             ASSERT_TRUE(surface == NULL);
 

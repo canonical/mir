@@ -271,7 +271,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
                 mir_surface_get_parameters(ssync->surface, &response_params);
             });
 
-            mir_surface_release(ssync->surface, release_surface_callback, ssync);
+            mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
 
             wait_for_surface_release(ssync);
 

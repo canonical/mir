@@ -59,6 +59,7 @@ public:
 
     MOCK_METHOD2(drmOpen, int(const char *name, const char *busid));
     MOCK_METHOD1(drmClose, int(int fd));
+    MOCK_METHOD3(drmIoctl, int(int fd, unsigned long request, void *arg));
 
     MOCK_METHOD1(drmModeGetResources, drmModeResPtr(int fd));
     MOCK_METHOD2(drmModeGetConnector, drmModeConnectorPtr(int fd, uint32_t connectorId));
