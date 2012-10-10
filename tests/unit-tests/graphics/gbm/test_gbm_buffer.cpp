@@ -54,6 +54,7 @@ protected:
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
+        stride = geom::Stride{4 * size.width.as_uint32_t()};
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
@@ -65,7 +66,7 @@ protected:
         .WillByDefault(Return(GBM_BO_FORMAT_ARGB8888));
 
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
-        .WillByDefault(Return(4 * size.width.as_uint32_t()));
+        .WillByDefault(Return(stride.as_uint32_t()));
 
         const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
         const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
@@ -93,6 +94,7 @@ protected:
     // Defaults
     geom::PixelFormat pf;
     geom::Size size;
+    geom::Stride stride;
 };
 
 TEST_F(GBMGraphicBufferBasic, dimensions_test)
@@ -137,19 +139,29 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_get_handle(_))
-            .Times(Exactly(1));
-
     auto buffer = allocator->alloc_buffer(size, pf);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_TRUE(ipc_package->ipc_fds.empty());
-    ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
+    ASSERT_EQ(size_t(2), ipc_package->ipc_data.size());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
+MATCHER_P(GEMFlinkHandleIs, value, "")
+{ 
+    auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);
+    return flink->handle == value;
+}
+
+ACTION_P(SetGEMFlinkName, value)
+{ 
+    auto flink = reinterpret_cast<struct drm_gem_flink*>(arg2);
+    flink->name = value;
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
 {
     using namespace testing;
 
+    uint32_t gem_flink_name{0x77};
     gbm_bo_handle mock_handle;
     mock_handle.u32 = 0xdeadbeef;
 
@@ -157,9 +169,30 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_handle)
             .Times(Exactly(1))
             .WillOnce(Return(mock_handle));
 
-    auto buffer = allocator->alloc_buffer(size, pf);
-    auto ipc_package = buffer->get_ipc_package();
-    ASSERT_EQ(mock_handle.u32, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK, GEMFlinkHandleIs(mock_handle.u32)))
+            .Times(Exactly(1))
+            .WillOnce(DoAll(SetGEMFlinkName(gem_flink_name), Return(0)));
+
+    EXPECT_NO_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        auto ipc_package = buffer->get_ipc_package();
+        ASSERT_EQ(gem_flink_name, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+        ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->ipc_data[1]));
+    });
+}
+
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_gem_flink_failure)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK,_))
+            .Times(Exactly(1))
+            .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        auto buffer = allocator->alloc_buffer(size, pf);
+        auto ipc_package = buffer->get_ipc_package();
+    }, std::runtime_error);
 }
 
 TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
