@@ -42,6 +42,11 @@ namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
+namespace
+{
+static int test_width  = 64;
+static int test_height = 48;
+
 /* used by both client/server for patterns */ 
 bool render_pattern(MirGraphicsRegion *region, bool check)
 {
@@ -67,23 +72,25 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
     }
     return true;
 }
+}
 
-/* client code */
-void connected_callback(MirConnection *connection, void* context)
-{
-    MirConnection** tmp = (MirConnection**) context;
-    *tmp = connection;
-}
-void create_callback(MirSurface *surface, void*context)
-{
-    MirSurface** surf = (MirSurface**) context;
-    *surf = surface;
-}
 
 namespace mir
 {
 namespace test
 {
+/* client code */
+static void connected_callback(MirConnection *connection, void* context)
+{
+    MirConnection** tmp = (MirConnection**) context;
+    *tmp = connection;
+}
+static void create_callback(MirSurface *surface, void*context)
+{
+    MirSurface** surf = (MirSurface**) context;
+    *surf = surface;
+}
+
 struct TestClient
 {
 
@@ -103,8 +110,8 @@ static int main_function()
     }
     /* make surface */
     surface_parameters.name = "testsurface";
-    surface_parameters.width = 48;
-    surface_parameters.height = 64;
+    surface_parameters.width = test_width;
+    surface_parameters.height = test_height;
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
@@ -143,8 +150,8 @@ struct MockServerGenerator : public mt::MockServerTool
                  google::protobuf::Closure* done)
     {
         response->mutable_id()->set_value(13); // TODO distinct numbers & tracking
-        response->set_width(64);
-        response->set_height(48);
+        response->set_width(test_width);
+        response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(22);
 
@@ -164,13 +171,6 @@ struct MockServerGenerator : public mt::MockServerTool
 
     std::shared_ptr<mc::BufferIPCPackage> package;
 };
-}
-}
-
-struct CallBack
-{
-    void msg() { }
-};
 
 bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
 {
@@ -187,17 +187,20 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
-    grmod->lock(grmod, handle, usage, 0, 0, 64, 48, (void**) &vaddr); 
+    grmod->lock(grmod, handle, usage, 0, 0, test_width, test_height, (void**) &vaddr); 
 
     MirGraphicsRegion region;
     region.vaddr = (char*) vaddr;
-    region.width = 64;
-    region.height = 48;
+    region.width = test_width;
+    region.height = test_height;
     region.pixel_format = mir_pixel_format_rgba_8888; 
 
     auto valid = render_pattern(&region, false);
     grmod->unlock(grmod, handle);
     return valid; 
+}
+
+}
 }
 
 struct TestClientIPCRender : public testing::Test
@@ -207,8 +210,20 @@ struct TestClientIPCRender : public testing::Test
             mt::TestClient::main_function,
             mt::TestClient::exit_function);
 
-        size = geom::Size{geom::Width{64}, geom::Height{48}};
+        size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::rgba_8888;
+
+        /* allocate an android buffer */
+        int err;
+        struct alloc_device_t *alloc_device_raw;
+        err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+        if (err < 0)
+            throw std::runtime_error("Could not open hardware module");
+        gralloc_open(hw_module, &alloc_device_raw);
+        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
+        auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
+        android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+        package = android_buffer->get_ipc_package();
     }
 
     void TearDown()
@@ -224,23 +239,13 @@ struct TestClientIPCRender : public testing::Test
     const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf; 
-    CallBack callback;
     std::shared_ptr<mp::Process> client_process;
+    std::shared_ptr<mc::BufferIPCPackage> package;
+    std::shared_ptr<mga::AndroidBuffer> android_buffer;
 };
 
 TEST_F(TestClientIPCRender, test_render)
 {
-    /* allocate an android buffer */
-    int err;
-    struct alloc_device_t *alloc_device_raw;
-    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
-    if (err < 0)
-        throw std::runtime_error("Could not open hardware module");
-    gralloc_open(hw_module, &alloc_device_raw);
-    auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
-    auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
-    auto android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
-    auto package = android_buffer->get_ipc_package();
 
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
@@ -251,5 +256,5 @@ TEST_F(TestClientIPCRender, test_render)
     EXPECT_TRUE(client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(check_buffer(mock_server->package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
 }
