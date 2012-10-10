@@ -48,7 +48,7 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     virtual void on_exit(DisplayServer* display_server);
 
     // TODO can we remove this function and default to real graphics in tests?
-    std::shared_ptr<graphics::Platform> make_graphics_platform();
+//    std::shared_ptr<graphics::Platform> make_graphics_platform();
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
