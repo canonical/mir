@@ -68,6 +68,7 @@ private:
 
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
     EGLImageKHR egl_image;
+    uint32_t gem_flink_name;
 };
 
 }

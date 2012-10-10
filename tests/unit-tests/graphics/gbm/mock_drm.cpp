@@ -119,6 +119,11 @@ int drmClose(int fd)
     return global_mock->drmClose(fd);
 }
 
+int drmIoctl(int fd, unsigned long request, void *arg)
+{
+    return global_mock->drmIoctl(fd, request, arg);
+}
+
 drmModeResPtr drmModeGetResources(int fd)
 {
     return global_mock->drmModeGetResources(fd);
