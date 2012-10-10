@@ -58,7 +58,6 @@ struct MockServerPackageGenerator : public MockServerTool
                  google::protobuf::Closure* done)
     {
         create_surface_response( response );
-        std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
         done->Run();
     }
@@ -160,8 +159,6 @@ struct MockClientFactory : public mcl::ClientBufferFactory
 
 namespace mt = mir::test;
 
-
-
 struct CallBack
 {
     void msg() {}
@@ -197,6 +194,7 @@ struct MirClientSurfaceTest : public testing::Test
             &connect_parameters,
             &response,
             google::protobuf::NewCallback(&callback, &CallBack::msg));
+    
     }
 
     void TearDown()
