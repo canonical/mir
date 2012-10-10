@@ -232,7 +232,7 @@ private:
 
 TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 {
-
+#if 0
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
@@ -241,16 +241,15 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
             return std::make_shared<StubIpcFactory>();
         }
     } server_config;
-
+#endif
+    TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
     struct ClientConfig : ClientConfigCommon
     {
         void exec()
         {
-            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
-
-            wait_for_connect();
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_FALSE(mir_connection_is_valid(connection));

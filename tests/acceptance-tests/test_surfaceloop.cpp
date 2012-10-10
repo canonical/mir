@@ -208,6 +208,7 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
+#if 0
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
@@ -334,6 +335,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_client_process(client_config);
 }
+#endif
 
 TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 {
@@ -533,6 +535,7 @@ std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
 }
 using mir::BufferCounterConfig;
 
+#if 0
 TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 {
     struct ServerConfig : BufferCounterConfig
@@ -614,3 +617,4 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
 
     launch_client_process(client_creates_surfaces);
 }
+#endif

@@ -24,12 +24,12 @@ add_executable(
   test_client_library.cpp
   display_server_test_fixture.cpp
   test_renderloop.cpp
-#  test_surfaceloop.cpp
-#  test_test_framework.cpp
+  test_surfaceloop.cpp
+  test_test_framework.cpp
   testing_process_manager.cpp
   testing_server_options.cpp
-#  test_server_startup.cpp
-#  test_error_reporting.cpp
+  test_server_startup.cpp
+  test_error_reporting.cpp
 )
 
 target_link_libraries(
