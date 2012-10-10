@@ -106,8 +106,19 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
 mgg::GBMBuffer::GBMBuffer(
     std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
-        : gbm_handle(std::move(handle)), egl_image(EGL_NO_IMAGE_KHR)
+        : gbm_handle(std::move(handle)), egl_image(EGL_NO_IMAGE_KHR),
+          gem_flink_name(0)
 {
+    auto device = gbm_bo_get_device(gbm_handle.get());
+    auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
+    auto drm_fd = gbm_device_get_fd(device);
+    struct drm_gem_flink flink{gem_handle, 0};
+
+    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+        throw std::runtime_error("Failed to get GEM flink name from gbm bo");
+
+    gem_flink_name = flink.name;
 }
 
 mgg::GBMBuffer::~GBMBuffer()
@@ -135,16 +146,8 @@ geom::PixelFormat mgg::GBMBuffer::pixel_format() const
 std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 {
     auto temp = std::make_shared<mc::BufferIPCPackage>();
-    auto device = gbm_bo_get_device(gbm_handle.get());
-    auto handle = gbm_bo_get_handle(gbm_handle.get()).u32;
-    auto drm_fd = gbm_device_get_fd(device);
-    struct drm_gem_flink flink{handle, 0};
 
-    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
-    if (ret)
-        throw std::runtime_error("Failed to get GEM flink name from gbm bo");
-
-    temp->ipc_data.push_back(flink.name);
+    temp->ipc_data.push_back(gem_flink_name);
 
     return temp;
 }

@@ -41,12 +41,17 @@ class GBMBufferAllocatorTest  : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
         platform = std::make_shared<mgg::GBMPlatform>();
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
         allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
+
+        ON_CALL(mock_gbm, gbm_bo_get_handle(_))
+        .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
     }
 
     // Defaults
