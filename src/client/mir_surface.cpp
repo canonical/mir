@@ -50,7 +50,7 @@ MirSurface::MirSurface(
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
-void MirSurface::release()
+MirSurface::~MirSurface()
 {
     release_cpu_region();
 }
@@ -119,21 +119,14 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
-
-/* todo: does this break single point of reference for width? */
-void MirSurface::save_buffer_dimensions()
-{
-    surface_width = geom::Width(surface.width());
-    surface_height = geom::Height(surface.height());
-    //surface_pf = 
-}
-
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-    save_buffer_dimensions();
+    // todo: (kdub) we should probably take width/height info out of surface and put it in buffer only
+    surface_width = geom::Width(surface.width());
+    surface_height = geom::Height(surface.height());
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
     populate(*ipc_package);

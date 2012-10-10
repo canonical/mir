@@ -108,8 +108,6 @@ MirWaitHandle* MirConnection::release_surface(
         mir_surface_lifecycle_callback callback,
         void * context)
 {
-    surface->release();
- 
     SurfaceRelease surf_release{surface, callback, context}; 
  
     mir::protobuf::SurfaceId message;

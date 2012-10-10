@@ -49,8 +49,8 @@ public:
         const std::shared_ptr<mir::client::ClientBufferFactory>& factory, 
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
+    ~MirSurface();
 
-    void release();
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
@@ -63,14 +63,10 @@ public:
     void release_cpu_region();
 
 private:
-    void released(mir_surface_lifecycle_callback callback, void * context);
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
 
-    void save_buffer_dimensions();
-
     mir::protobuf::DisplayServer::Stub & server;
-    mir::protobuf::Void void_response;
     mir::protobuf::Surface surface;
     std::string error_message;
 
