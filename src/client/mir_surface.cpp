@@ -36,9 +36,6 @@ MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       last_buffer_id(-1),
-      surface_width(geom::Width{0}),
-      surface_height(geom::Height{0}),
-      surface_pf(geom::PixelFormat::rgba_8888), 
       buffer_factory(factory)
 {
     mir::protobuf::SurfaceParameters message;
@@ -119,14 +116,23 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
+/* todo: all these conversion functions are a bit of a kludge, probably 
+         better to have a more developed geometry::PixelFormat that can handle this */
+geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+{
+    if ( pf == mir_pixel_format_rgba_8888 )
+        return geom::PixelFormat::rgba_8888;
+    return geom::PixelFormat::pixel_format_invalid;
+}
+
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 
-    // todo: (kdub) we should probably take width/height info out of surface and put it in buffer only
-    surface_width = geom::Width(surface.width());
-    surface_height = geom::Height(surface.height());
+    auto surface_width = geom::Width(surface.width());
+    auto surface_height = geom::Height(surface.height());
+    auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format()); 
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
     populate(*ipc_package);
@@ -147,6 +153,11 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
+
+    auto surface_width = geom::Width(surface.width());
+    auto surface_height = geom::Height(surface.height());
+    //todo: fix
+    auto surface_pf = geom::PixelFormat::rgba_8888; 
 
     auto it = buffer_cache.find(last_buffer_id);
     if (it == buffer_cache.end())
