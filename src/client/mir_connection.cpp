@@ -87,6 +87,48 @@ char const * MirConnection::get_error_message()
     }
 }
 
+
+struct SurfaceRelease
+{
+MirSurface * surface;
+mir_surface_lifecycle_callback callback;
+void * context;
+};
+void MirConnection::released(SurfaceRelease data)
+{
+    data.callback(data.surface, data.context);
+    release_wait_handle.result_received();
+    delete data.surface;
+}
+
+MirWaitHandle* MirConnection::release_surface(
+        MirSurface *surface,
+        mir_surface_lifecycle_callback callback,
+        void * context)
+{
+    surface->release();
+ 
+    SurfaceRelease surf_release{surface, callback, context}; 
+ 
+    mir::protobuf::SurfaceId message;
+    message.set_value(surface->id());
+    auto cb = gp::NewCallback(this, &MirConnection::released, surf_release);
+
+
+
+
+    server.release_surface(0, &message, &void_response, cb);
+    return &release_wait_handle;
+     
+}
+
+void MirConnection::connected(mir_connected_callback callback, void * context)
+{
+    callback(this, context);
+    connect_wait_handle.result_received();
+
+}
+
 MirWaitHandle* MirConnection::connect(
     const char* app_name,
     mir_connected_callback callback,
@@ -129,12 +171,6 @@ void MirConnection::done_disconnect()
     disconnect_wait_handle.result_received();
 }
 
-void MirConnection::connected(mir_connected_callback callback, void * context)
-{
-    callback(this, context);
-    connect_wait_handle.result_received();
-
-}
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {

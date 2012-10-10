@@ -50,15 +50,9 @@ MirSurface::MirSurface(
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
-MirWaitHandle* MirSurface::release(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::release()
 {
     release_cpu_region();
-
-    mir::protobuf::SurfaceId message;
-    message.set_value(surface.id().value());
-    server.release_surface(0, &message, &void_response,
-                           gp::NewCallback(this, &MirSurface::released, callback, context));
-    return &release_wait_handle;
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -125,15 +119,6 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
-void MirSurface::released(mir_surface_lifecycle_callback callback, void * context)
-{
-    callback(this, context);
-    release_wait_handle.result_received();
-
-    // we send release_wait_handle out to the client, so at this point, the client could still use it
-
-    delete this;
-}
 
 /* todo: does this break single point of reference for width? */
 void MirSurface::save_buffer_dimensions()

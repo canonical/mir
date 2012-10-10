@@ -50,7 +50,7 @@ public:
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
-    MirWaitHandle* release(mir_surface_lifecycle_callback callback, void * context);
+    void release();
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
@@ -75,7 +75,6 @@ private:
     std::string error_message;
 
     MirWaitHandle create_wait_handle;
-    MirWaitHandle release_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
     int last_buffer_id;
