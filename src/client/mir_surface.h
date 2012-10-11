@@ -74,6 +74,7 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
+    bool no_buffer_error;
     int last_buffer_id;
     std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_cache;
 
