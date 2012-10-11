@@ -137,15 +137,21 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     auto ipc_package = std::make_shared<MirBufferPackage>();
     populate(*ipc_package);
 
-    auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, 
-                                                                     surface_width, surface_height, surface_pf);
+    try 
+    {
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(
+                                    ipc_package, surface_width, surface_height, surface_pf);
+        /* this is only called when surface is first created. if anything has been putting things 
+           in cache before this callback, its wrong */
+        assert(buffer_cache.empty());
+        buffer_cache[last_buffer_id] = new_buffer;
 
-    /* this is only called when surface is first created. if anything has been putting things 
-       in cache before this callback, its wrong */
-    assert(buffer_cache.empty());
-    buffer_cache[last_buffer_id] = new_buffer;
+        callback(this, context);
+    } catch (...)
+    {   
+        callback(NULL, context);
+    }
 
-    callback(this, context);
     create_wait_handle.result_received();
 }
 

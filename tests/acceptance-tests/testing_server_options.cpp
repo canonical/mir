@@ -18,6 +18,7 @@
 
 #include "testing_process_manager.h"
 
+#ifndef ANDROID
 /////////////////////////////////////////////////////////////////////
 // ===>> TODO start of frig to stub out graphics from tests <<=== //
 // We stub out the graphics - because real graphics cause all the
@@ -77,7 +78,6 @@ class StubGraphicPlatform : public mg::Platform
     }
 };
 }
-
 std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()
 {
     if (!graphics_platform)
@@ -89,6 +89,7 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
 }
 // ====>> TODO end of frig to stub out graphics from tests <<==== //
 /////////////////////////////////////////////////////////////////////
+#endif
 
 void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
