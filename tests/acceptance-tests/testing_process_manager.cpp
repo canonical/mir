@@ -241,12 +241,11 @@ bool mir::detect_server(
 
     do
     {
-      if (error) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(0));
-      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(0));
     }
+//   while (connect(sockfd, (struct sockaddr *)&remote, len) == -1);
     while ((connect(sockfd, (struct sockaddr *)&remote, len) == -1)
-            && (error && std::chrono::system_clock::now() < limit));
+            && (std::chrono::system_clock::now() < limit));
 
     close(sockfd);
 

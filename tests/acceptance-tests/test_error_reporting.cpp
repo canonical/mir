@@ -257,7 +257,13 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
                 {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, ssync));
 
+        //android client is currently accepting real buffers, so a server side error will cause the client to 
+        // fail as well
+        #ifdef ANDROID
             EXPECT_TRUE(ssync->surface == NULL);
+        #else
+            EXPECT_FALSE(ssync->surface == NULL);
+        #endif
 
             mir_connection_release(connection);
         }
