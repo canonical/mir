@@ -28,6 +28,7 @@ namespace mc = mir::compositor;
 
 namespace mir
 {
+#if 0
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
     ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
@@ -47,4 +48,5 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 
     launch_client_process(client_config);
 }
+#endif
 }
