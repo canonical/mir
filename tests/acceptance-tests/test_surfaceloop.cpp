@@ -211,7 +211,6 @@ void wait_for_surface_release(SurfaceSync* context)
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
-    TestingServerConfiguration server_config;
 #ifndef ANDROID
     struct ServerConfig : TestingServerConfiguration
     {
@@ -227,7 +226,10 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         std::shared_ptr<MockBufferAllocationStrategy> buffer_allocation_strategy;
     } server_config;
+#else
+    TestingServerConfiguration server_config;
 #endif
+
     launch_server_process(server_config);
 
     struct ClientConfig : ClientConfigCommon
@@ -272,10 +274,10 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
-#if 0
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffers_on_server)
 {
+#ifndef ANDROID
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mc::GraphicBufferAllocator> make_graphic_buffer_allocator()
@@ -292,6 +294,9 @@ TEST_F(BespokeDisplayServerTestFixture,
 
         std::shared_ptr<MockGraphicBufferAllocator> buffer_allocator;
     } server_config;
+#else
+    TestingServerConfiguration server_config;
+#endif
 
     launch_server_process(server_config);
 
@@ -336,7 +341,6 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     launch_client_process(client_config);
 }
-#endif
 
 TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
 {
