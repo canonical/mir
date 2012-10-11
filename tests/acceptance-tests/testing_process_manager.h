@@ -47,8 +47,10 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     // Code to run in server process after server exits
     virtual void on_exit(DisplayServer* display_server);
 
+#ifndef ANDROID
     // TODO can we remove this function and default to real graphics in tests?
-//    std::shared_ptr<graphics::Platform> make_graphics_platform();
+    std::shared_ptr<graphics::Platform> make_graphics_platform();
+#endif
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
