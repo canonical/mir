@@ -474,6 +474,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
     launch_client_process(client_creates_surfaces);
 }
 
+#if 0
 namespace mir
 {
 namespace
@@ -489,7 +490,7 @@ struct BufferCounterConfig : TestingServerConfiguration
             int created = buffers_created.load();
             while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
         }
-        ~BufferCounter()
+        ~StubBuffer()
         {
             int destroyed = buffers_destroyed.load();
             while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
@@ -534,8 +535,8 @@ struct BufferCounterConfig : TestingServerConfiguration
     std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
 };
 
-std::atomic<int> BufferCounterConfig::BufferCounter::buffers_created;
-std::atomic<int> BufferCounterConfig::BufferCounter::buffers_destroyed;
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
 }
 }
 using mir::BufferCounterConfig;
@@ -571,11 +572,11 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destroyed)
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_create(ssync+i);
 
-//            for (int i = 0; i != max_surface_count; ++i)
-//                mir_surface_release(connection, ssync[i].surface, release_surface_callback, ssync+i);
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_release(connection, ssync[i].surface, release_surface_callback, ssync+i);
 
-//            for (int i = 0; i != max_surface_count; ++i)
-//                wait_for_surface_release(ssync+i);
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_release(ssync+i);
 
             mir_connection_release(connection);
         }
@@ -590,8 +591,8 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
     {
         void on_exit(mir::DisplayServer*)
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, BufferCounter::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, BufferCounter::buffers_destroyed.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
@@ -621,3 +622,4 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
 
     launch_client_process(client_creates_surfaces);
 }
+#endif
