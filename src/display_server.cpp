@@ -51,7 +51,9 @@ struct mir::DisplayServer::Private
     compositor::BufferBundleManager buffer_bundle_manager;
     surfaces::SurfaceStack surface_stack;
     compositor::Compositor compositor;
-    std::atomic<bool> exit;
+
+    std::mutex guard;
+    bool exit;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
@@ -72,19 +74,27 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::start()
 {
     p->communicator->start();
-    while (!p->exit.load(std::memory_order_seq_cst))
+
+    std::unique_lock<std::mutex> lk(p->guard);
+    while (!p->exit)
+    {
+        lk.unlock();
+        std::this_thread::yield();
         do_stuff();
+        lk.lock();
+        
+    }
 }
 
 void mir::DisplayServer::do_stuff()
 {
     //TODO
-    std::this_thread::yield();
 }
 
 void mir::DisplayServer::stop()
 {
-    p->exit.store(true, std::memory_order_seq_cst);
+    std::unique_lock<std::mutex> lk(p->guard);
+    p->exit=true;
 }
 
 void mir::DisplayServer::render(mg::Display* display)
