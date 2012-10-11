@@ -121,7 +121,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
 
     launch_client_process(client_config);
 }
-#if 1
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 {
     struct ClientConfig : ClientConfigCommon
@@ -287,5 +287,4 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
     launch_client_process(client_config);
 }
-#endif
 }
