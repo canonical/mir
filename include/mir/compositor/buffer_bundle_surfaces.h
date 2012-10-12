@@ -22,9 +22,10 @@
 
 #include "mir/compositor/buffer_bundle.h"
 
+#include <map>
+
 namespace mir
 {
-
 namespace compositor
 {
 
@@ -59,6 +60,7 @@ protected:
 private:
     std::shared_ptr<BufferIDUniqueGenerator> generator;
     std::unique_ptr<BufferSwapper> swapper;
+    std::map<Buffer*, BufferID> buffer_to_id_map;
     geometry::Size size;
     geometry::PixelFormat pixel_format;
 };

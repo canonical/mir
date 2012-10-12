@@ -164,13 +164,10 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_th
     int num_iteration = 7;
     EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(num_iteration)
-        .WillOnce(Return(mock_buffer.get()));
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(num_iteration)
-        .WillOnce(Return(second_mock_buffer.get()));
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(num_iteration)
+        .WillOnce(Return(mock_buffer.get()))
+        .WillOnce(Return(second_mock_buffer.get()))
         .WillRepeatedly(Return(third_mock_buffer.get()));
+
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
  
     EXPECT_CALL(*mock_generator, generate_unique_id())
