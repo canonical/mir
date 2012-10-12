@@ -21,11 +21,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mc=mir::compositor;
+
 TEST(buffer_id, value_set )
 {
-    int id_as_int = 44;
+    unsigned int id_as_int = 44;
     mc::BufferID id{id_as_int};
-    EXPECT_EQ(id_as_int, id.as_int32_t());
+    EXPECT_EQ(id_as_int, id.as_uint32_t());
 }
 
 TEST(buffer_id, equality_testable)

@@ -28,14 +28,25 @@ class BufferID
 {
 public:
     BufferID() : value(id_invalid){}
-
+    BufferID(int val) : value(val){}
     bool is_valid() { return false; }
-
+    uint32_t as_uint32_t() const { return value; };
 
 private:
     const uint32_t value;
     static const int id_invalid = 0;
 };
+
+inline bool operator == (BufferID const& /*lhs*/, BufferID const& /*rhs*/)
+{
+//    return lhs.as_uint32_t() == rhs.as_uint32_t();
+    return false;
+}
+inline bool operator != (BufferID const& /*lhs*/, BufferID const& /*rhs*/)
+{
+//    return lhs.as_uint32_t() == rhs.as_uint32_t();
+    return false;
+}
 
 }
 }
