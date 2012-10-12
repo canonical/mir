@@ -20,6 +20,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -77,11 +78,13 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
 
+
+        surface->advance_client_buffer();
+        auto const& id = surface->get_buffer_id();
         auto const& ipc_package = surface->get_buffer_ipc_package();
         auto buffer = response->mutable_buffer();
 
-        /* todo: this should be unique to the buffer */
-        buffer->set_buffer_id(0);
+        buffer->set_buffer_id(id.as_uint32_t());
         for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
             buffer->add_data(*p);
 
@@ -104,16 +107,11 @@ void mir::frontend::ApplicationProxy::next_buffer(
 {
     auto surface = surfaces[request->value()].lock();
 
+    surface->advance_client_buffer();
+    auto const& id = surface->get_buffer_id();
     auto const& ipc_package = surface->get_buffer_ipc_package();
 
-    //if hit in cache,
-    //  send id
-    //if not hit in cache,
-    //  gen new id
-    //  send full buffer, with new id, cache package 
-
-    /* todo: this should be unique to the buffer */
-    response->set_buffer_id(0);
+    response->set_buffer_id(id.as_uint32_t());
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
         response->add_data(*p);
 
