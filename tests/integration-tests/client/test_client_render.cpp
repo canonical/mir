@@ -89,6 +89,9 @@ static void create_callback(MirSurface *surface, void*context)
     MirSurface** surf = (MirSurface**) context;
     *surf = surface;
 }
+static void next_callback(MirSurface *, void*)
+{
+}
 
 struct TestClient
 {
@@ -144,6 +147,7 @@ static int render_double()
     MirConnection* connection = NULL;
     MirSurface* surface;
     MirSurfaceParameters surface_parameters;
+    MirGraphicsRegion graphics_region;
 
      /* establish connection. wait for server to come up */
     while (connection == NULL)
@@ -159,12 +163,10 @@ static int render_double()
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
-    MirGraphicsRegion graphics_region;
-    /* grab a buffer*/
     mir_surface_get_graphics_region( surface, &graphics_region);
-
-    /* render pattern */
     render_pattern(&graphics_region, false);
+
+    mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
 
     mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
 
@@ -183,7 +185,9 @@ static int exit_function()
 struct MockServerGenerator : public mt::MockServerTool
 {
     MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack)
-     : package(pack)
+     : package(pack),
+        next_received(false),
+        next_allowed(false)
     {
 
     }
@@ -213,7 +217,61 @@ struct MockServerGenerator : public mt::MockServerTool
         done->Run();
     }
 
+    virtual void next_buffer(
+        ::google::protobuf::RpcController* /*controller*/,
+        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::Buffer* response,
+        ::google::protobuf::Closure* done)
+    {
+        {
+            std::unique_lock<std::mutex> lk(next_guard);
+            next_received = true;
+            next_cv.notify_one();
+        }
+
+        {
+            std::unique_lock<std::mutex> lk(allow_guard);
+            while (!next_allowed)
+                allow_cv.wait(lk);
+            next_allowed = false;
+        }
+
+        response->set_buffer_id(22);
+
+        std::unique_lock<std::mutex> lock(guard);
+        wait_condition.notify_one();
+        done->Run();
+    }
+
+    void wait_on_next_buffer()
+    {
+        std::unique_lock<std::mutex> lk(next_guard);
+        while (!next_received)
+            next_cv.wait(lk);
+        next_received = false;
+    }
+
+    void allow_next_continue()
+    {
+        std::unique_lock<std::mutex> lk(allow_guard);
+        next_allowed = true;
+        allow_cv.notify_one();
+    }
+
+    void set_package(const std::shared_ptr<mc::BufferIPCPackage>& pack)
+    {
+        package = pack;
+    }
+
     std::shared_ptr<mc::BufferIPCPackage> package;
+
+    std::mutex next_guard;
+    std::condition_variable next_cv;
+    bool next_received;
+
+    std::mutex allow_guard;
+    std::condition_variable allow_cv;
+    bool next_allowed;
 };
 
 bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
@@ -277,7 +335,9 @@ struct TestClientIPCRender : public testing::Test
         auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+        second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         package = android_buffer->get_ipc_package();
+        second_package = second_android_buffer->get_ipc_package();
 
     }
 
@@ -295,7 +355,9 @@ struct TestClientIPCRender : public testing::Test
     geom::Size size;
     geom::PixelFormat pf; 
     std::shared_ptr<mc::BufferIPCPackage> package;
+    std::shared_ptr<mc::BufferIPCPackage> second_package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
+    std::shared_ptr<mga::AndroidBuffer> second_android_buffer;
 
     static std::shared_ptr<mp::Process> render_single_client_process;
     static std::shared_ptr<mp::Process> render_double_client_process;
@@ -330,9 +392,16 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* activate client */
     render_double_client_process->cont();
 
+    /* wait for next buffer */
+    mock_server->wait_on_next_buffer();
+    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+
+    mock_server->set_package(second_package);
+
+    mock_server->allow_next_continue();
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
 }
