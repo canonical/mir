@@ -138,8 +138,6 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id)
 {
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
-
-
 }
 
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)
@@ -153,4 +151,5 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_val
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();   
     EXPECT_TRUE(buffer_resource->id.is_valid()); 
+    EXPECT_EQ(buffer_resource->id, mock_generator->id); 
 }
