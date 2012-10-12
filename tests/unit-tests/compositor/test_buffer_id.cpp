@@ -52,3 +52,20 @@ TEST(buffer_id, equality_testable)
     EXPECT_NE(id0, id1);
     EXPECT_NE(id1, id0);
 }
+
+TEST(unique_generator, generate_unique)
+{
+    unsigned int ids = 542;
+    std::vector<mc::BufferID> generated_ids;
+    mc::BufferIDUniqueGenerator generator;
+
+    for(auto i=0; i < ids; i++)
+        generated_ids.push_back(generator.generate_new_id());
+
+    for(auto it = generated_ids.begin(); it != generated_ids.end(); it++)
+    {
+        for(auto it2 = generated_ids.begin(); it2 != generated_ids.end(); it2++)
+            EXPECT_NE(*it, *it2);
+    } 
+
+}
