@@ -36,7 +36,7 @@ TEST(buffer_id, invalid)
     EXPECT_FALSE(invalid_id.is_valid());
 
     mc::BufferID valid_id{3};
-    EXPECT_FALSE(valid_id.is_valid());
+    EXPECT_TRUE(valid_id.is_valid());
 }
 
 TEST(buffer_id, equality_testable)
