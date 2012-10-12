@@ -106,6 +106,12 @@ void mir::frontend::ApplicationProxy::next_buffer(
 
     auto const& ipc_package = surface->get_buffer_ipc_package();
 
+    //if hit in cache,
+    //  send id
+    //if not hit in cache,
+    //  gen new id
+    //  send full buffer, with new id, cache package 
+
     /* todo: this should be unique to the buffer */
     response->set_buffer_id(0);
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
