@@ -153,6 +153,31 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same
     }
 }
 
+TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_three_different_buffers)
+{
+    using namespace testing;
+
+    int num_iteration = 7;
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillOnce(Return((mc::Buffer*) 0x44));
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillOnce(Return((mc::Buffer*) 0x45));
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillRepeatedly(Return((mc::Buffer*) 0x46));
+ 
+    EXPECT_CALL(*mock_generator, generate_unique_id())
+        .Times(3);
+    for(auto i=0; i<num_iteration; i++)
+    {
+        buffer_bundle.secure_client_buffer();
+    }
+}
+
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)
 {
     using namespace testing;
