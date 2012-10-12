@@ -156,6 +156,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
 

@@ -298,13 +298,11 @@ struct MockServerGenerator : public mt::MockServerTool
         {
             std::unique_lock<std::mutex> lk(next_guard);
             next_received = true;
-            next_cv.notify_one();
-        }
+            next_cv.notify_all();
 
-        {
-            std::unique_lock<std::mutex> lk(allow_guard);
-            while (!next_allowed)
+            while (!next_allowed) {
                 allow_cv.wait(lk);
+            }
             next_allowed = false;
         }
 
@@ -329,9 +327,10 @@ struct MockServerGenerator : public mt::MockServerTool
 
     void allow_next_continue()
     {
-        std::unique_lock<std::mutex> lk(allow_guard);
+        std::unique_lock<std::mutex> lk(next_guard);
         next_allowed = true;
-        allow_cv.notify_one();
+        allow_cv.notify_all();
+        lk.unlock();
     }
 
     void set_package(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
@@ -344,11 +343,11 @@ struct MockServerGenerator : public mt::MockServerTool
 
     std::mutex next_guard;
     std::condition_variable next_cv;
-    bool next_received;
-
-    std::mutex allow_guard;
     std::condition_variable allow_cv;
+    bool next_received;
     bool next_allowed;
+
+//    std::mutex allow_guard;
 
     int package_id;
 };
@@ -510,9 +509,8 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     mock_server->allow_next_continue();
 
     /* wait for client to finish */
-    EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
+    EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
     EXPECT_TRUE(mt::check_buffer(package, hw_module));
 }
