@@ -31,6 +31,7 @@ class Display
 {
 public:
     virtual geometry::Rectangle view_area() const = 0;
+    virtual void clear() = 0;
     virtual bool post_update() = 0;
 
 protected:
