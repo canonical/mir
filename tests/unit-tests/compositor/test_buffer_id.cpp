@@ -55,17 +55,23 @@ TEST(buffer_id, equality_testable)
 
 TEST(unique_generator, generate_unique)
 {
-    unsigned int ids = 542;
+    int ids = 542;
     std::vector<mc::BufferID> generated_ids;
     mc::BufferIDUniqueGenerator generator;
 
     for(auto i=0; i < ids; i++)
-        generated_ids.push_back(generator.generate_new_id());
+        generated_ids.push_back(generator.generate_unique_id());
 
-    for(auto it = generated_ids.begin(); it != generated_ids.end(); it++)
+    while ( !generated_ids.empty() )
     {
-        for(auto it2 = generated_ids.begin(); it2 != generated_ids.end(); it2++)
-            EXPECT_NE(*it, *it2);
-    } 
+        mc::BufferID test_id = generated_ids.back();
+        EXPECT_TRUE(test_id.is_valid());
 
+        generated_ids.pop_back();
+
+        for(auto it = generated_ids.begin(); it != generated_ids.end(); it++)
+        {
+            EXPECT_NE(*it, test_id);
+        } 
+    }
 }

@@ -33,7 +33,7 @@ public:
     uint32_t as_uint32_t() const { return value; };
 
 private:
-    const uint32_t value;
+    uint32_t value;
     static const uint32_t id_invalid = 0;
 };
 
@@ -45,6 +45,24 @@ inline bool operator != (BufferID const& lhs, BufferID const& rhs)
 {
     return lhs.as_uint32_t() != rhs.as_uint32_t();
 }
+
+class BufferIDUniqueGenerator
+{
+public:
+    BufferIDUniqueGenerator() : id_counter(0) {}
+   
+    BufferID generate_unique_id()
+    {
+        /* saturate at int max */
+        if (id_counter == 0xFFFFFFFF )
+            return BufferID{0};
+        return BufferID{++id_counter};
+    } 
+private:
+    uint32_t id_counter;
+
+
+};
 
 }
 }
