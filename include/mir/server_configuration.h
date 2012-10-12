@@ -37,23 +37,25 @@ namespace graphics
 {
 class Renderer;
 class Platform;
+class Display;
+class BufferInitializer;
+}
+namespace surfaces
+{
+class ApplicationSurfaceOrganiser;
 }
 
 class ServerConfiguration
 {
 public:
-    // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy) = 0;
-
-    // the renderer to use
-    virtual std::shared_ptr<graphics::Renderer> make_renderer() = 0;
-
-    // the allocator strategy to use
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy() = 0;
-
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
-
+    virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
+            std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
+    virtual std::shared_ptr<graphics::Renderer> make_renderer(
+            std::shared_ptr<graphics::Display> const& display) = 0;
+    virtual std::shared_ptr<frontend::Communicator> make_communicator(
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -68,27 +70,22 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(std::string const& socket_file);
 
-    // the communicator to use
-    virtual std::shared_ptr<frontend::Communicator>
-    make_communicator(std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
-
-    // the renderer to use
-    virtual std::shared_ptr<graphics::Renderer> make_renderer();
-
-    // the allocator strategy to use
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
-
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
+    virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
+            std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
+    virtual std::shared_ptr<graphics::Renderer> make_renderer(
+            std::shared_ptr<graphics::Display> const& display);
+    virtual std::shared_ptr<frontend::Communicator> make_communicator(
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+
 private:
     std::string socket_file;
     std::shared_ptr<graphics::Platform> graphics_platform;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<compositor::BufferAllocationStrategy> const& buffer_allocation_strategy);
-
-    // the graphic buffer source to use
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> make_graphic_buffer_allocator();
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
 };
 }
 
