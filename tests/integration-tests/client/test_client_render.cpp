@@ -72,6 +72,74 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
     }
     return true;
 }
+bool render_second_pattern(MirGraphicsRegion *region, bool check)
+{
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        return false;
+
+    int *pixel = (int*) region->vaddr; 
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            //should render red/blue/teal/white square
+            //lsb
+            if (j < region->height/2)
+            { 
+                if (i < region->width/2)
+                {
+                    if (check)
+                    {   
+                        if (pixel[j*region->width + i] != (int) 0xFFFF0000) return false;
+                    }
+                    else
+                    {
+                        pixel[j*region->width + i] = 0xFFFF0000;
+                    }
+                } 
+                else
+                { 
+                    if (check)
+                    {
+                        if (pixel[j*region->width + i] != (int)0xFFFFFF00) return false;
+                    }
+                    else
+                    {
+                        pixel[j*region->width + i] = 0xFFFFFF00;
+                    }
+                }
+            }
+            else
+            { 
+                if (i < region->width/2)
+                {
+                    if (check)
+                    {
+                        if (pixel[j*region->width + i] != (int)0xFFFFFFFF) return false;
+                    }
+                    else
+                    {
+                        pixel[j*region->width + i] = 0xFFFFFFFF;
+                    }
+                } 
+                else
+                { 
+                    if (check)
+                    {
+                        if (pixel[j*region->width + i] != (int)0xFF0000FF) return false;
+                    }
+                    else
+                    {
+                        pixel[j*region->width + i] = 0xFF0000FF;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
 }
 
 namespace mir
@@ -161,12 +229,15 @@ static int render_double()
     surface_parameters.width = test_width;
     surface_parameters.height = test_height;
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
     mir_surface_get_graphics_region( surface, &graphics_region);
     render_pattern(&graphics_region, false);
 
     mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
+    mir_surface_get_graphics_region( surface, &graphics_region);
+    render_second_pattern(&graphics_region, false);
 
     mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
 
@@ -236,10 +307,14 @@ struct MockServerGenerator : public mt::MockServerTool
             next_allowed = false;
         }
 
-        response->set_buffer_id(22);
+        response->set_buffer_id(23);
+        unsigned int i;
+        response->set_fds_on_side_channel(1);
+        for(i=0; i<package->ipc_fds.size(); i++)
+            response->add_fd(package->ipc_fds[i]);
+        for(i=0; i<package->ipc_data.size(); i++)
+            response->add_data(package->ipc_data[i]);
 
-        std::unique_lock<std::mutex> lock(guard);
-        wait_condition.notify_one();
         done->Run();
     }
 
@@ -297,9 +372,10 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     region.height = test_height;
     region.pixel_format = mir_pixel_format_rgba_8888; 
 
-    auto valid = render_pattern(&region, false);
+    auto valid = render_pattern(&region, true);
+    auto valid2 = render_second_pattern(&region, true);
     grmod->unlock(grmod, handle);
-    return valid; 
+    return valid || valid2; 
 }
 
 }
@@ -334,6 +410,7 @@ struct TestClientIPCRender : public testing::Test
         gralloc_open(hw_module, &alloc_device_raw);
         auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
+
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         package = android_buffer->get_ipc_package();
