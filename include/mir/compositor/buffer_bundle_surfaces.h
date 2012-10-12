@@ -28,14 +28,18 @@ namespace mir
 namespace compositor
 {
 
+class BufferIDUniqueGenerator;
+
 class BufferBundleSurfaces : public BufferBundle
 {
 public:
-    explicit BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper);
+    BufferBundleSurfaces(
+        std::unique_ptr<BufferSwapper>&& swapper, 
+        std::shared_ptr<BufferIDUniqueGenerator> generator );
 
     BufferBundleSurfaces(
         std::unique_ptr<BufferSwapper>&& swapper,
+        std::shared_ptr<BufferIDUniqueGenerator> generator,
         geometry::Size size,
         geometry::PixelFormat pixel_format);
 

@@ -53,7 +53,7 @@ public:
 
 };
 
-class BufferIDMonotonicIncreaseGenerator : BufferIDUniqueGenerator
+class BufferIDMonotonicIncreaseGenerator : public BufferIDUniqueGenerator
 {
 public:
     BufferIDMonotonicIncreaseGenerator() : id_counter(0) {}
