@@ -30,6 +30,15 @@ TEST(buffer_id, value_set )
     EXPECT_EQ(id_as_int, id.as_uint32_t());
 }
 
+TEST(buffer_id, invalid)
+{
+    mc::BufferID invalid_id;
+    EXPECT_FALSE(invalid_id.is_valid());
+
+    mc::BufferID valid_id{3};
+    EXPECT_FALSE(valid_id.is_valid());
+}
+
 TEST(buffer_id, equality_testable)
 {
     int id_as_int0 = 44; 
