@@ -124,8 +124,8 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 
     auto ret_ipc = surf.get_buffer_ipc_package();
 
-    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
-
+    EXPECT_EQ(ret_ipc->package.get(), graphics_resource->ipc_package.get()); 
+    EXPECT_TRUE(ret_ipc->buffer_id.is_valid()); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
