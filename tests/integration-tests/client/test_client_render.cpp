@@ -255,10 +255,11 @@ static int exit_function()
 /* server code */
 struct MockServerGenerator : public mt::MockServerTool
 {
-    MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack)
+    MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
      : package(pack),
         next_received(false),
-        next_allowed(false)
+        next_allowed(false),
+        package_id(id)
     {
 
     }
@@ -272,7 +273,7 @@ struct MockServerGenerator : public mt::MockServerTool
         response->set_width(test_width);
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(22);
+        response->mutable_buffer()->set_buffer_id(package_id);
 
         unsigned int i;
         response->mutable_buffer()->set_fds_on_side_channel(1);
@@ -307,7 +308,7 @@ struct MockServerGenerator : public mt::MockServerTool
             next_allowed = false;
         }
 
-        response->set_buffer_id(23);
+        response->set_buffer_id(package_id);
         unsigned int i;
         response->set_fds_on_side_channel(1);
         for(i=0; i<package->ipc_fds.size(); i++)
@@ -333,9 +334,10 @@ struct MockServerGenerator : public mt::MockServerTool
         allow_cv.notify_one();
     }
 
-    void set_package(const std::shared_ptr<mc::BufferIPCPackage>& pack)
+    void set_package(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
     {
         package = pack;
+        package_id = id;
     }
 
     std::shared_ptr<mc::BufferIPCPackage> package;
@@ -347,6 +349,8 @@ struct MockServerGenerator : public mt::MockServerTool
     std::mutex allow_guard;
     std::condition_variable allow_cv;
     bool next_allowed;
+
+    int package_id;
 };
 
 bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
@@ -395,6 +399,12 @@ struct TestClientIPCRender : public testing::Test
         render_double_client_process = mp::fork_and_run_in_a_different_process(
             mt::TestClient::render_double,
             mt::TestClient::exit_function);
+
+        second_render_with_same_buffer_client_process
+             = mp::fork_and_run_in_a_different_process(
+                            mt::TestClient::render_double,
+                            mt::TestClient::exit_function);
+
     }
 
     void SetUp() {
@@ -438,14 +448,16 @@ struct TestClientIPCRender : public testing::Test
 
     static std::shared_ptr<mp::Process> render_single_client_process;
     static std::shared_ptr<mp::Process> render_double_client_process;
+    static std::shared_ptr<mp::Process> second_render_with_same_buffer_client_process;
 };
 std::shared_ptr<mp::Process> TestClientIPCRender::render_single_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_double_client_process;
+std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
     /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package);
+    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
     test_server->comm.start();
 
@@ -462,7 +474,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 TEST_F(TestClientIPCRender, test_render_double)
 {
     /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package);
+    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
     test_server->comm.start();
 
@@ -473,7 +485,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     mock_server->wait_on_next_buffer();
     EXPECT_TRUE(mt::check_buffer(package, hw_module));
 
-    mock_server->set_package(second_package);
+    mock_server->set_package(second_package, 15);
 
     mock_server->allow_next_continue();
     /* wait for client to finish */
@@ -481,4 +493,26 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
+}
+
+TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
+{
+    /* start a server */
+    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
+    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    test_server->comm.start();
+
+    /* activate client */
+    second_render_with_same_buffer_client_process->cont();
+
+    /* wait for next buffer */
+    mock_server->wait_on_next_buffer();
+    mock_server->allow_next_continue();
+
+    /* wait for client to finish */
+    EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
+
+    /* check content */
+    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(package, hw_module));
 }
