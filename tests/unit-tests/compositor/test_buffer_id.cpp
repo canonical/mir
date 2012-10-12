@@ -57,7 +57,7 @@ TEST(unique_generator, generate_unique)
 {
     int ids = 542;
     std::vector<mc::BufferID> generated_ids;
-    mc::BufferIDUniqueGenerator generator;
+    mc::BufferIDMonotonicIncreaseGenerator generator;
 
     for(auto i=0; i < ids; i++)
         generated_ids.push_back(generator.generate_unique_id());

@@ -29,6 +29,22 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+struct MockIDGenerator: public mc::BufferIDUniqueGenerator
+{
+    MockIDGenerator()
+    {
+        using namespace testing;
+        id = mc::BufferID{34};
+        ON_CALL(*this, generate_unique_id())
+            .WillByDefault(Return(id));
+    }
+
+    MOCK_METHOD0(generate_unique_id, mc::BufferID());
+
+    mc::BufferID id;
+};
+
+
 class BufferBundleTest : public ::testing::Test
 {
 protected:
@@ -55,6 +71,8 @@ protected:
             .Times(AtLeast(0)); 
         EXPECT_CALL(*mock_swapper, compositor_release(_))
             .Times(AtLeast(0)); 
+    
+        mock_generator = std::make_shared<MockIDGenerator>();
     }
 
     std::shared_ptr<mc::MockBuffer> mock_buffer;
@@ -62,6 +80,7 @@ protected:
     geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;
+    std::shared_ptr<MockIDGenerator> mock_generator;
 };
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
@@ -113,6 +132,14 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
     std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
     EXPECT_EQ(buffer_package, dummy_ipc_package);
+}
+
+
+TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id)
+{
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+
+
 }
 
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)

@@ -49,7 +49,14 @@ inline bool operator != (BufferID const& lhs, BufferID const& rhs)
 class BufferIDUniqueGenerator
 {
 public:
-    BufferIDUniqueGenerator() : id_counter(0) {}
+    virtual BufferID generate_unique_id() = 0;
+
+};
+
+class BufferIDMonotonicIncreaseGenerator : BufferIDUniqueGenerator
+{
+public:
+    BufferIDMonotonicIncreaseGenerator() : id_counter(0) {}
    
     BufferID generate_unique_id()
     {
