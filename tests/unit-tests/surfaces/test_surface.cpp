@@ -111,10 +111,9 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
     EXPECT_EQ(ret_size, size); 
 }
 
-TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
+TEST_F(SurfaceCreation, test_surface_advance_buffer)
 {
     using namespace testing;
-
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>();
 
@@ -122,10 +121,45 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
         .Times(1)
         .WillOnce(Return(graphics_resource));
 
-    auto ret_ipc = surf.get_buffer_ipc_package();
+    surf.advance_client_buffer();
+}
 
-    EXPECT_EQ(ret_ipc->package.get(), graphics_resource->ipc_package.get()); 
-    EXPECT_TRUE(ret_ipc->buffer_id.is_valid()); 
+TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
+{
+    using namespace testing;
+
+    mc::BufferId{4} id;
+    auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
+    auto mock_buffer = std::make_shared<mc::MockBuffer>();
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
+    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+        .Times(AtLeast(0))
+        .WillOnce(Return(graphics_resource));
+    surf.advance_client_buffer();
+
+    auto ret_ipc = surf.get_buffer_ipc_package();
+    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
+}
+
+TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
+{
+    using namespace testing;
+
+    mc::BufferId{4} id;
+    auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
+    auto mock_buffer = std::make_shared<mc::MockBuffer>();
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
+    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+        .Times(AtLeast(0))
+        .WillOnce(Return(graphics_resource));
+    surf.advance_client_buffer();
+
+    auto ret_id = surf.get_buffer_id();
+    EXPECT_EQ(ret_id, set_id); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)

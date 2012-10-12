@@ -46,7 +46,7 @@ struct GraphicBufferClientResource
     {
     }
 
-    BufferID id;
+    const BufferID id;
     std::shared_ptr<BufferIPCPackage> const ipc_package;
     std::shared_ptr<Buffer> const buffer;
 };
