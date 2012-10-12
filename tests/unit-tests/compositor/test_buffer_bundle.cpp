@@ -117,13 +117,13 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)
 {
+    using namespace testing;
     std::shared_ptr<mc::BufferIPCPackage> dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
-   
-    EXPECT_NE(buffer_resource->id, buffer_id_invalid );  
+    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();   
+    EXPECT_NE(buffer_resource->id, buffer_id_invalid ); 
 }
