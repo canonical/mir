@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/geometry/forward.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {

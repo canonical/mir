@@ -84,8 +84,7 @@ void mir::DisplayServer::start()
 
 void mir::DisplayServer::do_stuff()
 {
-    //TODO
-    std::this_thread::yield();
+    render(p->display.get());
 }
 
 void mir::DisplayServer::stop()
