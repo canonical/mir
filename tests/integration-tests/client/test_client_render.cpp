@@ -92,9 +92,15 @@ static void create_callback(MirSurface *surface, void*context)
 
 struct TestClient
 {
-
+static void sig_handle(int)
+{
+}
 static int main_function()
 {
+    if (signal(SIGCONT, sig_handle) == SIG_ERR)
+        return -1;
+    pause();
+
     /* only use C api */
     MirConnection* connection = NULL;
     MirSurface* surface;
@@ -204,11 +210,21 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
 
 struct TestClientIPCRender : public testing::Test
 {
-    void SetUp() {
+    /* kdub -- some of the (less thoroughly tested) android blob drivers annoyingly keep
+       static state about what process they are in. Once you fork, this info is invalid,
+       yet the driver uses the info and bad things happen.
+       Fork all needed processes before touching the blob! */
+    static void SetUpTestCase() {
         client_process = mp::fork_and_run_in_a_different_process(
             mt::TestClient::main_function,
             mt::TestClient::exit_function);
 
+        client_process2 = mp::fork_and_run_in_a_different_process(
+            mt::TestClient::main_function,
+            mt::TestClient::exit_function);
+    }
+
+    void SetUp() {
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::rgba_8888;
 
@@ -223,6 +239,7 @@ struct TestClientIPCRender : public testing::Test
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         package = android_buffer->get_ipc_package();
+
     }
 
     void TearDown()
@@ -238,10 +255,13 @@ struct TestClientIPCRender : public testing::Test
     const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf; 
-    std::shared_ptr<mp::Process> client_process;
+    static std::shared_ptr<mp::Process> client_process;
+    static std::shared_ptr<mp::Process> client_process2;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
 };
+std::shared_ptr<mp::Process> TestClientIPCRender::client_process;
+std::shared_ptr<mp::Process> TestClientIPCRender::client_process2;
 
 TEST_F(TestClientIPCRender, test_render)
 {
@@ -250,8 +270,27 @@ TEST_F(TestClientIPCRender, test_render)
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
     test_server->comm.start();
 
+    /* activate client */
+    client_process->cont();
+
     /* wait for client to finish */
     EXPECT_TRUE(client_process->wait_for_termination().succeeded());
+
+    /* check content */
+    EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
+}
+
+TEST_F(TestClientIPCRender, test_render3)
+{
+    /* start a server */
+    mock_server = std::make_shared<mt::MockServerGenerator>(package);
+    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    test_server->comm.start();
+
+    client_process2->cont();
+
+    /* wait for client to finish */
+    EXPECT_TRUE(client_process2->wait_for_termination().succeeded());
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
