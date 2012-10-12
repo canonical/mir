@@ -35,6 +35,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 namespace
 {
@@ -235,7 +236,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<mc::BufferAllocationStrategy> const&)
+            std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&)
         {
             return std::make_shared<ErrorIpcFactory>();
         }

@@ -21,6 +21,8 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
@@ -214,7 +216,8 @@ TEST_F(BespokeDisplayServerTestFixture,
 #ifndef ANDROID
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mc::BufferAllocationStrategy> make_buffer_allocation_strategy()
+        std::shared_ptr<mc::BufferAllocationStrategy> make_buffer_allocation_strategy(
+                std::shared_ptr<mc::GraphicBufferAllocator> const& /*buffer_allocator*/)
         {
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
@@ -274,21 +277,24 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+/*
+ * Need to declare outside method, because g++ 4.4 doesn't support local types
+ * as template parameters (in std::make_shared<StubPlatform>()).
+ */
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffers_on_server)
 {
 #ifndef ANDROID
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mc::GraphicBufferAllocator> make_graphic_buffer_allocator()
+     public:
+        std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
         {
             using testing::AtLeast;
 
-            if (!buffer_allocator)
-                buffer_allocator = std::make_shared<MockGraphicBufferAllocator>();
-
-            EXPECT_CALL(*buffer_allocator, alloc_buffer(size, format)).Times(AtLeast(2));
-
+            auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
+            EXPECT_CALL(*buffer_allocator,alloc_buffer(size, format)).Times(AtLeast(2));
             return buffer_allocator;
         }
 
@@ -473,4 +479,3 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
 
     launch_client_process(client_creates_surfaces);
 }
-

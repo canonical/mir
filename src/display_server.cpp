@@ -21,11 +21,12 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
-#include "mir/compositor/compositor.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
-#include "mir/graphics/renderer.h"
+#include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
 
 #include "mir/thread/all.h"
 
@@ -36,35 +37,39 @@ namespace ms = mir::surfaces;
 
 struct mir::DisplayServer::Private
 {
-    Private(
-        const std::shared_ptr<mf::Communicator>& communicator,
-        const std::shared_ptr<mc::BufferAllocationStrategy>& strategy,
-        const std::shared_ptr<mg::Renderer>& renderer)
-            : communicator(communicator),
-              buffer_bundle_manager(strategy),
-              surface_stack(&buffer_bundle_manager),
-              compositor(&surface_stack, renderer),
-              exit(false)
+    Private(ServerConfiguration& config)
+        : graphics_platform{config.make_graphics_platform()},
+          display{graphics_platform->create_display()},
+          buffer_allocator{graphics_platform->create_buffer_allocator(config.make_buffer_initializer())},
+          buffer_allocation_strategy{config.make_buffer_allocation_strategy(buffer_allocator)},
+          buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
+          surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
+          surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
+          renderer{config.make_renderer(display)},
+          compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
+          communicator{config.make_communicator(surface_controller)},
+          exit(false)
     {
     }
-    std::shared_ptr<frontend::Communicator> communicator;
-    compositor::BufferBundleManager buffer_bundle_manager;
-    surfaces::SurfaceStack surface_stack;
-    compositor::Compositor compositor;
 
-    std::mutex guard;
+    std::shared_ptr<mg::Platform> graphics_platform;
+    std::shared_ptr<mg::Display> display;
+    std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<mc::BufferAllocationStrategy> buffer_allocation_strategy;
+    std::shared_ptr<mc::BufferBundleManager> buffer_bundle_manager;
+    std::shared_ptr<ms::SurfaceStack> surface_stack;
+    std::shared_ptr<ms::SurfaceController> surface_controller;
+    std::shared_ptr<mg::Renderer> renderer;
+    std::shared_ptr<mc::Compositor> compositor;
+    std::shared_ptr<frontend::Communicator> communicator;
+    std::mutex exit_guard;
     bool exit;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
     p()
 {
-    auto buffer_allocation_strategy = config.make_buffer_allocation_strategy();
-
-    p.reset(new mir::DisplayServer::Private(
-        config.make_communicator(buffer_allocation_strategy),
-        buffer_allocation_strategy,
-        config.make_renderer()));
+    p.reset(new mir::DisplayServer::Private(config));
 }
 
 mir::DisplayServer::~DisplayServer()
@@ -75,29 +80,28 @@ void mir::DisplayServer::start()
 {
     p->communicator->start();
 
-    std::unique_lock<std::mutex> lk(p->guard);
+    std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
     {
         lk.unlock();
-        std::this_thread::yield();
         do_stuff();
-        lk.lock();
-        
+        lk.lock();     
     }
 }
 
 void mir::DisplayServer::do_stuff()
 {
     //TODO
+    std::this_thread::yield();
 }
 
 void mir::DisplayServer::stop()
 {
-    std::unique_lock<std::mutex> lk(p->guard);
+    std::unique_lock<std::mutex> lk(p->exit_guard);
     p->exit=true;
 }
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    p->compositor.render(display);
+    p->compositor->render(display);
 }
