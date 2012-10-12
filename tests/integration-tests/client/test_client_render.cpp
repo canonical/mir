@@ -95,7 +95,46 @@ struct TestClient
 static void sig_handle(int)
 {
 }
-static int main_function()
+static int render_single()
+{
+    if (signal(SIGCONT, sig_handle) == SIG_ERR)
+        return -1;
+    pause();
+
+    /* only use C api */
+    MirConnection* connection = NULL;
+    MirSurface* surface;
+    MirSurfaceParameters surface_parameters;
+
+     /* establish connection. wait for server to come up */
+    while (connection == NULL)
+    {
+        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                     &connected_callback, &connection));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    /* make surface */
+    surface_parameters.name = "testsurface";
+    surface_parameters.width = test_width;
+    surface_parameters.height = test_height;
+    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+    mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                      &create_callback, &surface));
+    MirGraphicsRegion graphics_region;
+    /* grab a buffer*/
+    mir_surface_get_graphics_region( surface, &graphics_region);
+
+    /* render pattern */
+    render_pattern(&graphics_region, false);
+
+    mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
+
+    /* release */
+    mir_connection_release(connection);
+    return 0;
+}
+
+static int render_double()
 {
     if (signal(SIGCONT, sig_handle) == SIG_ERR)
         return -1;
@@ -215,12 +254,12 @@ struct TestClientIPCRender : public testing::Test
        yet the driver uses the info and bad things happen.
        Fork all needed processes before touching the blob! */
     static void SetUpTestCase() {
-        client_process = mp::fork_and_run_in_a_different_process(
-            mt::TestClient::main_function,
+        render_single_client_process = mp::fork_and_run_in_a_different_process(
+            mt::TestClient::render_single,
             mt::TestClient::exit_function);
 
-        client_process2 = mp::fork_and_run_in_a_different_process(
-            mt::TestClient::main_function,
+        render_double_client_process = mp::fork_and_run_in_a_different_process(
+            mt::TestClient::render_double,
             mt::TestClient::exit_function);
     }
 
@@ -255,15 +294,16 @@ struct TestClientIPCRender : public testing::Test
     const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf; 
-    static std::shared_ptr<mp::Process> client_process;
-    static std::shared_ptr<mp::Process> client_process2;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
-};
-std::shared_ptr<mp::Process> TestClientIPCRender::client_process;
-std::shared_ptr<mp::Process> TestClientIPCRender::client_process2;
 
-TEST_F(TestClientIPCRender, test_render)
+    static std::shared_ptr<mp::Process> render_single_client_process;
+    static std::shared_ptr<mp::Process> render_double_client_process;
+};
+std::shared_ptr<mp::Process> TestClientIPCRender::render_single_client_process;
+std::shared_ptr<mp::Process> TestClientIPCRender::render_double_client_process;
+
+TEST_F(TestClientIPCRender, test_render_single)
 {
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
@@ -271,26 +311,27 @@ TEST_F(TestClientIPCRender, test_render)
     test_server->comm.start();
 
     /* activate client */
-    client_process->cont();
+    render_single_client_process->cont();
 
     /* wait for client to finish */
-    EXPECT_TRUE(client_process->wait_for_termination().succeeded());
+    EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
 }
 
-TEST_F(TestClientIPCRender, test_render3)
+TEST_F(TestClientIPCRender, test_render_double)
 {
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
     test_server->comm.start();
 
-    client_process2->cont();
+    /* activate client */
+    render_double_client_process->cont();
 
     /* wait for client to finish */
-    EXPECT_TRUE(client_process2->wait_for_termination().succeeded());
+    EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
