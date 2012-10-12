@@ -128,9 +128,10 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 {
     using namespace testing;
 
-    mc::BufferId{4} id;
+    mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
-    auto mock_buffer = std::make_shared<mc::MockBuffer>();
+    auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
+    auto mock_buffer = std::make_shared<mc::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
@@ -147,9 +148,10 @@ TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
 {
     using namespace testing;
 
-    mc::BufferId{4} id;
+    mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
-    auto mock_buffer = std::make_shared<mc::MockBuffer>();
+    auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
+    auto mock_buffer = std::make_shared<mc::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
@@ -159,7 +161,7 @@ TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
     surf.advance_client_buffer();
 
     auto ret_id = surf.get_buffer_id();
-    EXPECT_EQ(ret_id, set_id); 
+    EXPECT_EQ(ret_id, id); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
