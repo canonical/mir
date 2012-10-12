@@ -92,7 +92,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     auto texture = buffer_bundle.lock_back_buffer();
 }
@@ -105,7 +105,7 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
     .Times(1);
     EXPECT_CALL(*mock_swapper, client_release(_))
     .Times(1);
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
@@ -115,7 +115,7 @@ TEST_F(BufferBundleTest, client_requesting_resource_queries_for_ipc_package)
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
     auto buffer_package = buffer_bundle.secure_client_buffer();
 }
 
@@ -127,7 +127,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
     std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
@@ -137,7 +137,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 
 TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id)
 {
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 }
 
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)
@@ -147,7 +147,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_val
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();   
     EXPECT_TRUE(buffer_resource->id.is_valid()); 
