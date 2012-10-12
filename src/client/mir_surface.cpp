@@ -86,7 +86,6 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
-//    region_out.pixel_format = secured_region->pixel_format.as_uint32_t();
     //todo: fix
     region_out.pixel_format = mir_pixel_format_rgba_8888;
     region_out.vaddr = secured_region->vaddr.get();
