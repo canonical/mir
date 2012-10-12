@@ -94,9 +94,12 @@ std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
+    printf("secure...\n");
     std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
+    printf("secure...\n");
 
     auto id = generator->generate_unique_id();
+    printf("secure...\n");
     return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr, id);
 
 }

@@ -56,6 +56,8 @@ protected:
         pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
 
         mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
+        second_mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
+        third_mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
         
         EXPECT_CALL(*mock_buffer, bind_to_texture())
@@ -76,6 +78,8 @@ protected:
     }
 
     std::shared_ptr<mc::MockBuffer> mock_buffer;
+    std::shared_ptr<mc::MockBuffer> second_mock_buffer;
+    std::shared_ptr<mc::MockBuffer> third_mock_buffer;
     std::unique_ptr<mc::MockSwapper> mock_swapper;
     geom::Size size;
     geom::Stride stride;
@@ -140,16 +144,16 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same
     using namespace testing;
 
     int num_iteration = 5;
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
     EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(num_iteration)
-        .WillRepeatedly(Return((mc::Buffer*) 0x44));
+        .WillRepeatedly(Return(mock_buffer.get()));
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
  
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(1);
     for(auto i=0; i<num_iteration; i++)
     {
-        buffer_bundle.secure_client_buffer();
+        auto buffer_resource = buffer_bundle.secure_client_buffer();
     }
 }
 
@@ -158,17 +162,16 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_th
     using namespace testing;
 
     int num_iteration = 7;
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillOnce(Return(mock_buffer.get()));
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillOnce(Return(second_mock_buffer.get()));
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(num_iteration)
+        .WillRepeatedly(Return(third_mock_buffer.get()));
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
-
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(num_iteration)
-        .WillOnce(Return((mc::Buffer*) 0x44));
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(num_iteration)
-        .WillOnce(Return((mc::Buffer*) 0x45));
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(num_iteration)
-        .WillRepeatedly(Return((mc::Buffer*) 0x46));
  
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(3);
