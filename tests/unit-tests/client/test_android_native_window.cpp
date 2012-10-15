@@ -16,7 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+
+struct MockMirSurface : public MirSurface
+{
+
+
+};
 
 class AndroidNativeWindowTest : public ::testing::Test
 {
@@ -26,6 +34,8 @@ protected:
     }
 };
 
-TEST_F(AndroidNativeWindowTest, client_buffer_assumes_ownership)
+TEST_F(AndroidNativeWindowTest, native_window_initialization)
 {
+    MockMirSurface mock_surface;
+    MirNativeWindow window(mock_surface); 
 }
