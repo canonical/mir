@@ -24,6 +24,7 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
  : surface(client_surface)
 {
     ANativeWindow::query = &query_static;
+    ANativeWindow::perform = &perform_static;
 }
 
 int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
@@ -67,3 +68,9 @@ int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* v
     return self->query(key, value);
 } 
 
+int mcl::MirNativeWindow::perform_static(ANativeWindow*, int, ...)
+{
+    /* todo: kdub: the driver will send us requests sometimes via this hook. we will 
+                   probably have to service these requests eventually */
+    return 0;
+} 

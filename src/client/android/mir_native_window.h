@@ -34,6 +34,7 @@ public:
 
 private:
     static int query_static(const ANativeWindow* anw, int key, int* value);
+    static int perform_static(ANativeWindow* anw, int key, ...);
 
     /* anw functions */
     int query(int key, int* value) const;
