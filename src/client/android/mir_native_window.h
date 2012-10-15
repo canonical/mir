@@ -20,13 +20,14 @@
 #define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
 
 #include "mir_client_surface.h"
+#include <system/window.h>
 
 namespace mir
 {
 namespace client
 {
 
-class MirNativeWindow
+class MirNativeWindow : public ANativeWindow
 {
 public:
     explicit MirNativeWindow(ClientSurface* surface); 

@@ -40,8 +40,18 @@ protected:
     }
 };
 
-TEST_F(AndroidNativeWindowTest, native_window_initialization)
+TEST_F(AndroidNativeWindowTest, native_window_query_hook)
 {
     MockMirSurface mock_surface;
-    mcl::MirNativeWindow window(&mock_surface); 
+    ANativeWindow* anw;
+    int value;
+ 
+    anw = new mcl::MirNativeWindow(&mock_surface);
+
+    EXPECT_CALL(mock_surface, get_parameters())
+        .Times(1);
+
+    anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
+
+    delete anw;
 }
