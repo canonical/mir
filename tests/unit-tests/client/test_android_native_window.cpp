@@ -81,6 +81,9 @@ TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
  
     anw = new mcl::MirNativeWindow(mock_surface.get());
 
+    EXPECT_CALL(*mock_surface, get_parameters())
+        .Times(1);
+
     auto rc = anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
 
     EXPECT_EQ(rc, 0);
@@ -96,11 +99,32 @@ TEST_F(AndroidNativeWindowTest, native_window_height_query_hook)
     int value;
  
     anw = new mcl::MirNativeWindow(mock_surface.get());
+    EXPECT_CALL(*mock_surface, get_parameters())
+        .Times(1);
 
     auto rc = anw->query(anw, NATIVE_WINDOW_HEIGHT ,&value);
 
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(value, surf_params.height);
+
+    delete anw;
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_format_query_hook)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+    int value;
+
+    surf_params.pixel_format = mir_pixel_format_rgba_8888; 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+    EXPECT_CALL(*mock_surface, get_parameters())
+        .Times(1);
+
+    auto rc = anw->query(anw, NATIVE_WINDOW_FORMAT ,&value);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(value, HAL_PIXEL_FORMAT_RGBA_8888);
 
     delete anw;
 }
