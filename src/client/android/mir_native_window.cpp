@@ -25,12 +25,23 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
 {
     ANativeWindow::query = &query_static;
 }
-#include <iostream>
-int mcl::MirNativeWindow::query(int, int* value ) const
+
+int mcl::MirNativeWindow::query(int key, int* value ) const
 {
-    auto params = surface->get_parameters();
-    *value = params.width;
-    return 0;
+    int ret = 0;
+    switch (key)
+    {
+        case NATIVE_WINDOW_WIDTH:
+            *value = surface->get_parameters().width;
+            break;
+        case NATIVE_WINDOW_HEIGHT:
+            *value = surface->get_parameters().height;
+            break;
+        default:
+            ret = -1;
+            break;
+    }
+    return ret;
 }
  
 int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
