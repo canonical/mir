@@ -30,7 +30,10 @@ namespace client
 class MirNativeWindow : public ANativeWindow
 {
 public:
-    explicit MirNativeWindow(ClientSurface* surface); 
+    explicit MirNativeWindow(ClientSurface* surface);
+
+private:
+    static int query_static(const ANativeWindow* anw, int key, int* value); 
 };
 
 }

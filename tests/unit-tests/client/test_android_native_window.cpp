@@ -49,7 +49,7 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
 
     ASSERT_NE((int) anw->query, NULL);
     EXPECT_NO_THROW({
-    anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
+        anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
     });
     
 
