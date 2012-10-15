@@ -35,7 +35,12 @@ public:
 private:
     static int query_static(const ANativeWindow* anw, int key, int* value);
 
+    /* anw functions */
     int query(int key, int* value) const;
+
+
+    /* helpers */
+    int convert_pixel_format(MirPixelFormat mir_pixel_format) const;
 
     /* todo: we should probably take ownership of the ClientSurface */
     ClientSurface * surface; 

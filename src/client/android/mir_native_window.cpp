@@ -26,6 +26,17 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
     ANativeWindow::query = &query_static;
 }
 
+int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
+{
+    switch(mir_pixel_format)
+    {
+        case mir_pixel_format_rgba_8888:
+            return HAL_PIXEL_FORMAT_RGBA_8888; 
+        default:
+            return 0;
+    }
+}
+
 int mcl::MirNativeWindow::query(int key, int* value ) const
 {
     int ret = 0;
@@ -37,6 +48,9 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
         case NATIVE_WINDOW_HEIGHT:
             *value = surface->get_parameters().height;
             break;
+        case NATIVE_WINDOW_FORMAT:
+            *value = convert_pixel_format(surface->get_parameters().pixel_format);
+            break;
         default:
             ret = -1;
             break;
@@ -46,6 +60,7 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
  
 int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
 {
+    printf("QUERY!\n");
     auto self = static_cast<const mcl::MirNativeWindow*>(anw);
     return self->query(key, value);
 } 

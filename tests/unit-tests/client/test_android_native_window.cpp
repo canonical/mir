@@ -48,6 +48,7 @@ protected:
     {
         surf_params.width = 530;
         surf_params.height = 715;
+        surf_params.pixel_format = mir_pixel_format_rgba_8888; 
 
         mock_surface = std::make_shared<MockMirSurface>(surf_params);
     }
@@ -116,7 +117,6 @@ TEST_F(AndroidNativeWindowTest, native_window_format_query_hook)
     ANativeWindow* anw;
     int value;
 
-    surf_params.pixel_format = mir_pixel_format_rgba_8888; 
     anw = new mcl::MirNativeWindow(mock_surface.get());
     EXPECT_CALL(*mock_surface, get_parameters())
         .Times(1);
