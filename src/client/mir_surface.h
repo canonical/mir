@@ -24,6 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
 #include "mir_wait_handle.h"
+#include "mir_client_surface.h"
 
 #include <memory>
 #include <map>
@@ -38,7 +39,7 @@ class MemoryRegion;
 }
 }
 
-class MirSurface
+class MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
