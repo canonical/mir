@@ -78,7 +78,15 @@ mga::AndroidDisplay::~AndroidDisplay()
                space agreed upon, we can implement this */
 geom::Rectangle mga::AndroidDisplay::view_area() const
 {
-    geom::Rectangle rect;
+    geom::X x(0);
+    geom::Y y(0);
+    geom::Point pt{x,y};
+
+    /* todo: use real values! */
+    geom::Width w(720);
+    geom::Height h(1280);
+    geom::Size sz{w,h};
+    geom::Rectangle rect{pt, sz};
     return rect;
 }
 

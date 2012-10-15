@@ -116,6 +116,25 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+add_executable(
+  ubuntu_ds_demo_client_unaccelerated
+  
+  demo_client_unaccelerated.c
+)
+
+target_link_libraries(
+  ubuntu_ds_demo_client_unaccelerated
+  
+  mirclient
+  mirprotobuf
+  
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
+
+
 install(
   TARGETS ubuntu_ds_demo_client
   RUNTIME DESTINATION bin)
