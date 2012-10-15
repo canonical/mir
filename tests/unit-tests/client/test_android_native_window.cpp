@@ -128,3 +128,24 @@ TEST_F(AndroidNativeWindowTest, native_window_format_query_hook)
 
     delete anw;
 }
+
+TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+    /* transform hint is a bitmask of a few options for rotation/flipping buffer. a value 
+       of zero is no transform */
+    int transform_hint_zero = 0;
+    int value;
+
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+    EXPECT_CALL(*mock_surface, get_parameters())
+        .Times(1);
+
+    auto rc = anw->query(anw, NATIVE_WINDOW_TRANSFORM_HINT ,&value);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(value, transform_hint_zero);
+
+    delete anw;
+}

@@ -60,7 +60,6 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
  
 int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
 {
-    printf("QUERY!\n");
     auto self = static_cast<const mcl::MirNativeWindow*>(anw);
     return self->query(key, value);
 } 
