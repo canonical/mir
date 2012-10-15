@@ -45,6 +45,7 @@ public:
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
+    void clear();
     bool post_update();
 
 private:

@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
-static char const *socket_file = "/tmp/mir_socket";
+static char const *socket_file = "/data/tmp/mir_socket";
 static MirConnection *connection = 0;
 static MirSurface *surface = 0;
 

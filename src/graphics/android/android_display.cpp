@@ -22,6 +22,8 @@
 
 #include <stdexcept>
 
+#include <GLES2/gl2.h>
+
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -78,6 +80,11 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
 {
     geom::Rectangle rect;
     return rect;
+}
+
+void mga::AndroidDisplay::clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
 bool mga::AndroidDisplay::post_update()
