@@ -139,8 +139,6 @@ TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
     int value;
 
     anw = new mcl::MirNativeWindow(mock_surface.get());
-    EXPECT_CALL(*mock_surface, get_parameters())
-        .Times(1);
 
     auto rc = anw->query(anw, NATIVE_WINDOW_TRANSFORM_HINT ,&value);
 

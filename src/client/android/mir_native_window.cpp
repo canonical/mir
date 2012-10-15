@@ -51,6 +51,9 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
         case NATIVE_WINDOW_FORMAT:
             *value = convert_pixel_format(surface->get_parameters().pixel_format);
             break;
+        case NATIVE_WINDOW_TRANSFORM_HINT:
+            *value = 0; /* transform hint is a bitmask. 0 means no transform */
+            break;
         default:
             ret = -1;
             break;
