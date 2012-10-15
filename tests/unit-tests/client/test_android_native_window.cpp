@@ -16,18 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "mir_client_surface.h"
 #include "android/mir_native_window.h"
-
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <memory>
 namespace mcl=mir::client;
 
 namespace
 {
 struct MockMirSurface : public mcl::ClientSurface
 {
+    MockMirSurface(MirSurfaceParameters params)
+     : params(params)
+    {
+        using namespace testing;
+        ON_CALL(*this, get_parameters())
+            .WillByDefault(Return(params)); 
+    }
+
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+
+    MirSurfaceParameters params;
 };
 }
 
@@ -38,18 +48,20 @@ protected:
     {
         surf_params.width = 530;
         surf_params.height = 715;
+
+        mock_surface = std::make_shared<MockMirSurface>(surf_params);
     }
 
     MirSurfaceParameters surf_params;
+    std::shared_ptr<MockMirSurface> mock_surface;
 };
 
 TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
 {
-    MockMirSurface mock_surface;
     ANativeWindow* anw;
     int value;
  
-    anw = new mcl::MirNativeWindow(&mock_surface);
+    anw = new mcl::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->query, NULL);
     EXPECT_NO_THROW({
@@ -63,14 +75,10 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
 TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
 {
     using namespace testing;
-    MockMirSurface mock_surface;
     ANativeWindow* anw;
     int value;
  
-    anw = new mcl::MirNativeWindow(&mock_surface);
-
-    EXPECT_CALL(mock_surface, get_parameters())
-        .Times(AtLeast(0));
+    anw = new mcl::MirNativeWindow(mock_surface.get());
 
     auto rc = anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
 
