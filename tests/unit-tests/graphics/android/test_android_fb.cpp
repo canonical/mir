@@ -53,10 +53,14 @@ protected:
         .Times(AtLeast(0));
         EXPECT_CALL(*native_win, android_display_egl_config(_))
         .Times(AtLeast(0));
+
+        width = 435;
+        height = 477;
     }
 
     std::shared_ptr<MockAndroidFramebufferWindow> native_win;
     mir::EglMock mock_egl;
+    int width, height;
 };
 
 TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
@@ -442,4 +446,29 @@ TEST_F(AndroidTestFramebufferInit, display_post_failure)
 
     bool success = display->post_update();
     EXPECT_FALSE(success);
+}
+
+TEST_F(AndroidTestFramebufferInit, framebuffer_correct_view_area)
+{
+    using namespace testing;
+    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+
+    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display, mock_egl.fake_egl_surface,
+                                          EGL_WIDTH, _ ))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>((EGLint) width),
+                        Return(EGL_TRUE)));
+
+    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display, mock_egl.fake_egl_surface,
+                                          EGL_HEIGHT, _ ))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>((EGLint) width),
+                        Return(EGL_TRUE)));
+
+    auto area = display->view_area();
+
+    EXPECT_EQ((int)area.top_left.x.as_uint32_t() , 0);
+    EXPECT_EQ((int)area.top_left.y.as_uint32_t() , 0);
+    EXPECT_EQ((int)area.size.width.as_uint32_t() , width);
+    EXPECT_EQ((int)area.size.height.as_uint32_t(), height);
 }
