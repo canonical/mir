@@ -16,32 +16,23 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+
 #include "mir_client_surface.h"
-#include "android/mir_native_window.h"
 
-namespace mcl=mir::client;
-
-namespace
+namespace mir
 {
-struct MockMirSurface : public mcl::ClientSurface
+namespace client
 {
 
-
-};
-}
-
-class AndroidNativeWindowTest : public ::testing::Test
+class MirNativeWindow
 {
-protected:
-    virtual void SetUp()
-    {
-    }
+public:
+    explicit MirNativeWindow(ClientSurface* surface); 
 };
 
-TEST_F(AndroidNativeWindowTest, native_window_initialization)
-{
-    MockMirSurface mock_surface;
-    mcl::MirNativeWindow window(&mock_surface); 
 }
+}
+
+#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */
