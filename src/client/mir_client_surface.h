@@ -18,6 +18,9 @@
 
 #ifndef MIR_CLIENT_CLIENT_SURFACE_H_
 #define MIR_CLIENT_CLIENT_SURFACE_H_
+
+#include "mir_client/mir_client_library.h"
+
 namespace mir
 {
 namespace client
@@ -25,7 +28,8 @@ namespace client
 
 class ClientSurface
 {
-
+public:
+    virtual MirSurfaceParameters get_parameters() const = 0;
 };
 
 }

@@ -27,8 +27,7 @@ namespace
 {
 struct MockMirSurface : public mcl::ClientSurface
 {
-
-
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
 };
 }
 
