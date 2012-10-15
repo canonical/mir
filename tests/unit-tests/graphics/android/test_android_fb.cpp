@@ -462,7 +462,7 @@ TEST_F(AndroidTestFramebufferInit, framebuffer_correct_view_area)
     EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display, mock_egl.fake_egl_surface,
                                           EGL_HEIGHT, _ ))
         .Times(1)
-        .WillOnce(DoAll(SetArgPointee<3>((EGLint) width),
+        .WillOnce(DoAll(SetArgPointee<3>((EGLint) height),
                         Return(EGL_TRUE)));
 
     auto area = display->view_area();
