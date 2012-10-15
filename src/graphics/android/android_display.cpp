@@ -73,18 +73,16 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglTerminate(egl_display);
 }
 
-/* todo: kdub: this will return some sort of information concerning the coordinate space
-               of the displays. once we have a not-stubbed rect class and a coordinate
-               space agreed upon, we can implement this */
 geom::Rectangle mga::AndroidDisplay::view_area() const
 {
-    geom::X x(0);
-    geom::Y y(0);
-    geom::Point pt{x,y};
+    int display_width, display_height;
+    eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
+    eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
+    geom::Width w(display_width); 
+    geom::Height h(display_height);
 
-    /* todo: use real values! */
-    geom::Width w(720);
-    geom::Height h(1280);
+    geom::Point pt { geom::X{0},
+                     geom::Y{0}};
     geom::Size sz{w,h};
     geom::Rectangle rect{pt, sz};
     return rect;
