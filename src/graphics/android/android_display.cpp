@@ -73,7 +73,6 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglTerminate(egl_display);
 }
 
-#include <iostream>
 geom::Rectangle mga::AndroidDisplay::view_area() const
 {
     int display_width, display_height;
