@@ -56,6 +56,7 @@ protected:
     std::shared_ptr<MockMirSurface> mock_surface;
 };
 
+/* Query hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
 {
     ANativeWindow* anw;
@@ -84,6 +85,22 @@ TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
 
     EXPECT_EQ(rc, 0);
     EXPECT_EQ(value, surf_params.width);
+
+    delete anw;
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_height_query_hook)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+    int value;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    auto rc = anw->query(anw, NATIVE_WINDOW_HEIGHT ,&value);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(value, surf_params.height);
 
     delete anw;
 }
