@@ -147,3 +147,18 @@ TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
 
     delete anw;
 }
+
+/* perform hook tests */
+TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
+{
+    ANativeWindow* anw;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    ASSERT_NE((int) anw->perform, NULL);
+    EXPECT_NO_THROW({
+        anw->perform(anw, NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS , 40, 22);
+    });
+    
+    delete anw;
+}
