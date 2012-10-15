@@ -104,12 +104,6 @@ int main(int argc, char* argv[])
     platform_package.data_items = -1;
     platform_package.fd_items = -1;
 
-/*
-    mir_connection_get_platform(connection, &platform_package);
-    assert(0 <= platform_package.data_items);
-    assert(0 <= platform_package.fd_items);
-*/
-
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
     mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
@@ -120,7 +114,7 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
     MirGraphicsRegion graphics_region;
-        int i=0; 
+    int i=0; 
     while (1)
     {
         mir_wait_for(mir_surface_next_buffer(surface, surface_next_callback, 0 ));
@@ -131,20 +125,6 @@ int main(int argc, char* argv[])
             render_pattern(&graphics_region, 0xFFFF0000);
     }
 
-#if 0
-    MirSurfaceParameters response_params;
-    mir_surface_get_parameters(surface, &response_params);
-    assert(request_params.width == response_params.width);
-    assert(request_params.height ==  response_params.height);
-    assert(request_params.pixel_format == response_params.pixel_format);
-
-    MirBufferPackage buffer_package;
-    buffer_package.data_items = -1;
-    buffer_package.fd_items = -1;
-    mir_surface_get_current_buffer(surface, &buffer_package);
-    assert(0 <= buffer_package.data_items);
-    assert(0 <= buffer_package.fd_items);
-#endif
     mir_wait_for(mir_surface_release(connection, surface, surface_release_callback, 0));
     puts("Surface released");
 
