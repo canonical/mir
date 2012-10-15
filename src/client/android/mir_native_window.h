@@ -33,7 +33,12 @@ public:
     explicit MirNativeWindow(ClientSurface* surface);
 
 private:
-    static int query_static(const ANativeWindow* anw, int key, int* value); 
+    static int query_static(const ANativeWindow* anw, int key, int* value);
+
+    int query(int key, int* value) const;
+
+    /* todo: we should probably take ownership of the ClientSurface */
+    ClientSurface * surface; 
 };
 
 }

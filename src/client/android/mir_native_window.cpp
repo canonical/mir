@@ -20,13 +20,21 @@
 
 namespace mcl=mir::client;
 
-mcl::MirNativeWindow::MirNativeWindow(ClientSurface*)
+mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
+ : surface(client_surface)
 {
     ANativeWindow::query = &query_static;
 }
- 
-int mcl::MirNativeWindow::query_static(const ANativeWindow*, int, int*)
+
+int mcl::MirNativeWindow::query(int, int*) const
 {
+
     return 0;
+}
+ 
+int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
+{
+    auto self = static_cast<const mcl::MirNativeWindow*>(anw);
+    return self->query(key, value);
 } 
 
