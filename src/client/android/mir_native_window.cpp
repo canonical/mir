@@ -25,6 +25,12 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
+    ANativeWindow::setSwapInterval = &setSwapInterval_static;
+    ANativeWindow::dequeueBuffer = &dequeueBuffer_static;
+    ANativeWindow::lockBuffer = &lockBuffer_static;
+    ANativeWindow::queueBuffer = &queueBuffer_static;
+    ANativeWindow::cancelBuffer = &cancelBuffer_static;
+
 }
 
 int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
@@ -74,3 +80,28 @@ int mcl::MirNativeWindow::perform_static(ANativeWindow*, int, ...)
                    probably have to service these requests eventually */
     return 0;
 } 
+
+int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+{
+    return 0;
+}
+
+int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* /*window*/, struct ANativeWindowBuffer** /*buffer*/)
+{
+    return 0;
+}
+
+int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
+
+int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
+
+int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
