@@ -246,6 +246,65 @@ static int render_double()
     return 0;
 }
 
+static int render_accelerated()
+{
+    if (signal(SIGCONT, sig_handle) == SIG_ERR)
+        return -1;
+    pause();
+
+    /* only use C api */
+    MirConnection* connection = NULL;
+    MirSurface* surface;
+    MirSurfaceParameters surface_parameters;
+    MirGraphicsRegion graphics_region;
+
+     /* establish connection. wait for server to come up */
+    while (connection == NULL)
+    {
+        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                     &connected_callback, &connection));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    /* make surface */
+    surface_parameters.name = "testsurface";
+    surface_parameters.width = test_width;
+    surface_parameters.height = test_height;
+    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+
+    mir_wait_for(mir_surface_create_accelerated( connection, &surface_parameters,
+                                      &create_callback, &surface));
+    
+	int major, minor;
+	EGLDisplay disp;
+    EGLContext context;
+    EGLSurface surface;
+	EGLConfig egl_config;
+    EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE };
+    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+    EGLNativeWindowType * native_window = surface;
+	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(disp, &major, &minor);
+	
+	eglChooseConfig(disp, attribs, &egl_config, 1, &n); 
+	surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+    context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
+    eglMakeCurrent(disp, surface, surface, context);
+
+    glClearColor(1.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
+
+    /* release */
+    mir_connection_release(connection);
+    return 0;
+
+}
+
 static int exit_function()
 {
     return EXIT_SUCCESS;
@@ -404,6 +463,10 @@ struct TestClientIPCRender : public testing::Test
                             mt::TestClient::render_double,
                             mt::TestClient::exit_function);
 
+        render_accelerated_process 
+             = mp::fork_and_run_in_a_different_process(
+                            mt::TestClient::render_accelerated,
+                            mt::TestClient::exit_function);
     }
 
     void SetUp() {
@@ -448,10 +511,12 @@ struct TestClientIPCRender : public testing::Test
     static std::shared_ptr<mp::Process> render_single_client_process;
     static std::shared_ptr<mp::Process> render_double_client_process;
     static std::shared_ptr<mp::Process> second_render_with_same_buffer_client_process;
+    static std::shared_ptr<mp::Process> render_accelerated_process;
 };
 std::shared_ptr<mp::Process> TestClientIPCRender::render_single_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_double_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
+std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
@@ -510,6 +575,27 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
     /* wait for client to finish */
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
+
+    /* check content */
+    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+}
+
+TEST_F(TestClientIPCRender, test_accelerated_render)
+{
+    /* start a server */
+    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
+    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    test_server->comm.start();
+
+    /* activate client */
+    render_accelerated_process->cont();
+
+    /* wait for next buffer */
+    mock_server->wait_on_next_buffer();
+    mock_server->allow_next_continue();
+
+    /* wait for client to finish */
+    EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module));
