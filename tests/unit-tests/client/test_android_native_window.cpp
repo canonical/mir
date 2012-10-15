@@ -36,7 +36,11 @@ class AndroidNativeWindowTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        surf_params.width = 530;
+        surf_params.height = 715;
     }
+
+    MirSurfaceParameters surf_params;
 };
 
 TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
@@ -56,8 +60,9 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
     delete anw;
 }
 
-TEST_F(AndroidNativeWindowTest, native_window_query_hook)
+TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
 {
+    using namespace testing;
     MockMirSurface mock_surface;
     ANativeWindow* anw;
     int value;
@@ -65,9 +70,12 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook)
     anw = new mcl::MirNativeWindow(&mock_surface);
 
     EXPECT_CALL(mock_surface, get_parameters())
-        .Times(1);
+        .Times(AtLeast(0));
 
-    anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
+    auto rc = anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(value, surf_params.width);
 
     delete anw;
 }
