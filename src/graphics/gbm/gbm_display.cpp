@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <xf86drm.h>
 
+#include <GLES2/gl2.h>
+
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -92,6 +94,8 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform)
         throw std::runtime_error("Failed to make EGL surface current");
     }
 
+    clear();
+
     if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
         throw std::runtime_error("Failed to perform initial surface buffer swap");
 
@@ -113,6 +117,11 @@ geom::Rectangle mgg::GBMDisplay::view_area() const
 {
     return {{geom::X(0), geom::Y(0)},
             {geom::Width(kms.mode.hdisplay), geom::Height(kms.mode.vdisplay)}};
+}
+
+void mgg::GBMDisplay::clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 }
 
 bool mgg::GBMDisplay::post_update()

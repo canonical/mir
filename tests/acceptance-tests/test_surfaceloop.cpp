@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 
@@ -51,6 +52,13 @@ class StubBuffer : public mc::Buffer
     void bind_to_texture() {}
 };
 
+class StubDisplay : public mg::Display
+{
+ public:
+    geom::Rectangle view_area() const { return geom::Rectangle(); }
+    void clear() {}
+    bool post_update() { return true; }
+};
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
@@ -298,7 +306,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::shared_ptr<mg::Display>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -562,7 +570,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::shared_ptr<mg::Display>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()

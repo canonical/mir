@@ -43,6 +43,7 @@ public:
     ~AndroidDisplay();
 
     geometry::Rectangle view_area() const;
+    void clear();
     bool post_update();
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
