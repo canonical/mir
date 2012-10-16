@@ -285,7 +285,7 @@ static int render_accelerated()
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType native_window = (EGLNativeWindowType) surface;
+    EGLNativeWindowType native_window = mir_get_egl_type(surface);
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
 	

@@ -156,6 +156,10 @@ MirWaitHandle* mir_surface_next_buffer(
 
 void mir_wait_for(MirWaitHandle* wait_handle);
 
+/* todo: this should go away. MirSurface should be put directly into eglCreateWindowSurface */
+#include <EGL/egl.h>
+EGLNativeWindowType mir_get_egl_type(MirSurface *surface);
+
 /* Return the id of the surface. (Only useful for debug output.) */
 int mir_debug_surface_id(MirSurface *surface);
 

@@ -25,6 +25,8 @@
 
 #include "mir_protobuf.pb.h"
 
+#include "android/mir_native_window.h"
+
 #include <set>
 #include <unordered_set>
 #include <cstddef>
@@ -151,3 +153,8 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
+/* todo: go away */
+EGLNativeWindowType mir_get_egl_type(MirSurface *surface)
+{
+    return (EGLNativeWindowType) new mcl::MirNativeWindow(surface);
+}
