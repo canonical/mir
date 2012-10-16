@@ -206,10 +206,10 @@ void wait_for_surface_release(SurfaceSync* context)
     context->wait_for_surface_release();
 }
 
-class ErrorIpcFactory : public mf::ProtobufIpcFactory
+class StubIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    ErrorIpcFactory() :
+    StubIpcFactory() :
         server(std::make_shared<ErrorServer>()),
         cache(std::make_shared<mf::ResourceCache>())
     {
@@ -231,14 +231,15 @@ private:
 };
 }
 
-TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
+TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 {
+
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
             std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&)
         {
-            return std::make_shared<ErrorIpcFactory>();
+            return std::make_shared<StubIpcFactory>();
         }
     } server_config;
 
@@ -248,7 +249,9 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
     {
         void exec()
         {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_FALSE(mir_connection_is_valid(connection));
