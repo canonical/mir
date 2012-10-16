@@ -21,8 +21,6 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 
-#include <cassert>
-
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -116,11 +114,10 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
 }
 
 MirWaitHandle* MirSurface::release_surface(
-        MirSurface *surface,
         mir_surface_lifecycle_callback callback,
         void * context)
 {
-    return connection->release_surface(surface, callback, context); 
+    return connection->release_surface(this, callback, context); 
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)

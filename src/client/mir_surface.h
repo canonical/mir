@@ -26,7 +26,6 @@
 #include "mir_wait_handle.h"
 
 #include <memory>
-#include <map>
 
 namespace mir
 {
@@ -50,7 +49,6 @@ public:
         mir_surface_lifecycle_callback callback, void * context);
     ~MirSurface();
     MirWaitHandle* release_surface(
-            MirSurface *surface,
             mir_surface_lifecycle_callback callback,
             void *context);
 
