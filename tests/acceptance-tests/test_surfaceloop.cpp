@@ -221,6 +221,7 @@ void wait_for_surface_release(SurfaceSync* context)
 TEST_F(BespokeDisplayServerTestFixture,
        creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
+
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mc::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -267,6 +268,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
+
             mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
 
             wait_for_surface_release(ssync);
@@ -280,14 +282,16 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+namespace
+{
+
 /*
  * Need to declare outside method, because g++ 4.4 doesn't support local types
  * as template parameters (in std::make_shared<StubPlatform>()).
  */
-TEST_F(BespokeDisplayServerTestFixture,
-       creating_a_client_surface_allocates_buffers_on_server)
+struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 {
-    struct ServerConfig : TestingServerConfiguration
+    class StubPlatform : public mg::Platform
     {
      public:
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
@@ -300,8 +304,35 @@ TEST_F(BespokeDisplayServerTestFixture,
             return buffer_allocator;
         }
 
-        std::shared_ptr<MockGraphicBufferAllocator> buffer_allocator;
-    } server_config;
+        std::shared_ptr<mg::Display> create_display()
+        {
+            return std::make_shared<StubDisplay>();
+        }
+
+        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+        {
+            return std::make_shared<mg::PlatformIPCPackage>();
+        }
+    };
+
+    std::shared_ptr<mg::Platform> make_graphics_platform()
+    {
+        if (!platform)
+            platform = std::make_shared<StubPlatform>();
+
+        return platform;
+    }
+
+    std::shared_ptr<mg::Platform> platform;
+};
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture,
+       creating_a_client_surface_allocates_buffers_on_server)
+{
+
+    ServerConfigAllocatesBuffersOnServer server_config;
 
     launch_server_process(server_config);
 
@@ -471,6 +502,174 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
 
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_release(ssync+i);
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}
+
+namespace mir
+{
+namespace
+{
+struct BufferCounterConfig : TestingServerConfiguration
+{
+    class StubBuffer : public mc::Buffer
+    {
+    public:
+
+        StubBuffer()
+        {
+            int created = buffers_created.load();
+            while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
+        }
+        ~StubBuffer()
+        {
+            int destroyed = buffers_destroyed.load();
+            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
+        }
+
+        virtual geom::Size size() const { return geom::Size(); }
+
+        virtual geom::Stride stride() const { return geom::Stride(); }
+
+        virtual geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
+
+        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
+        {
+            return std::make_shared<mc::BufferIPCPackage>();
+        }
+
+        virtual void bind_to_texture() {}
+
+        static std::atomic<int> buffers_created;
+        static std::atomic<int> buffers_destroyed;
+    };
+
+    class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+    {
+     public:
+        virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+            geom::Size /*size*/,
+            geom::PixelFormat /*pf*/)
+        {
+            return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        }
+    };
+
+    class StubPlatform : public mg::Platform
+    {
+    public:
+        std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+        {
+            return std::make_shared<StubGraphicBufferAllocator>();
+        }
+
+        std::shared_ptr<mg::Display> create_display()
+        {
+            return std::make_shared<StubDisplay>();
+        }
+
+        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+        {
+            return std::make_shared<mg::PlatformIPCPackage>();
+        }
+    };
+
+    std::shared_ptr<mg::Platform> make_graphics_platform()
+    {
+        if (!platform)
+            platform = std::make_shared<StubPlatform>();
+
+        return platform;
+    }
+
+    std::shared_ptr<mg::Platform> platform;
+};
+
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
+std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
+}
+}
+using mir::BufferCounterConfig;
+
+TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
+{
+    struct ServerConfig : BufferCounterConfig
+    {
+        void on_exit(mir::DisplayServer*)
+        {
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+        }
+
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params =
+                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_create(ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_release(connection, ssync[i].surface, release_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_release(ssync+i);
+
+            mir_connection_release(connection);
+        }
+    } client_creates_surfaces;
+
+    launch_client_process(client_creates_surfaces);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
+{
+    struct ServerConfig : BufferCounterConfig
+    {
+        void on_exit(mir::DisplayServer*)
+        {
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+        }
+
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
+
+            MirSurfaceParameters request_params =
+                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
+            for (int i = 0; i != max_surface_count; ++i)
+                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+
+            for (int i = 0; i != max_surface_count; ++i)
+                wait_for_surface_create(ssync+i);
 
             mir_connection_release(connection);
         }
