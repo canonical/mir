@@ -24,7 +24,6 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
-#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -63,7 +62,8 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Communicator> communicator;
-    std::atomic<bool> exit;
+    std::mutex exit_guard;
+    bool exit;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
@@ -79,22 +79,29 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::start()
 {
     p->communicator->start();
-    while (!p->exit.load(std::memory_order_seq_cst))
+
+    std::unique_lock<std::mutex> lk(p->exit_guard);
+    while (!p->exit)
+    {
+        lk.unlock();
         do_stuff();
+        lk.lock();     
+    }
 }
 
 void mir::DisplayServer::do_stuff()
 {
-    render(p->display.get());
+    //TODO
+    std::this_thread::yield();
 }
 
 void mir::DisplayServer::stop()
 {
-    p->exit.store(true, std::memory_order_seq_cst);
+    std::unique_lock<std::mutex> lk(p->exit_guard);
+    p->exit=true;
 }
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    display->clear();
     p->compositor->render(display);
 }

@@ -49,8 +49,6 @@ struct TestingServerConfiguration : DefaultServerConfiguration
 
     // TODO can we remove this function and default to real graphics in tests?
     std::shared_ptr<graphics::Platform> make_graphics_platform();
-    std::shared_ptr<graphics::Renderer> make_renderer(
-            std::shared_ptr<graphics::Display> const& display);
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;

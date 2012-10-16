@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/geometry/rectangle.h"
+#include "mir/geometry/forward.h"
 
 namespace mir
 {
@@ -31,7 +31,6 @@ class Display
 {
 public:
     virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
     virtual bool post_update() = 0;
 
 protected:

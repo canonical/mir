@@ -37,9 +37,12 @@ namespace mir
 namespace client
 {
 class Logger;
+class ClientBufferFactory;
+
 }
 }
 
+struct SurfaceRelease;
 // TODO the connection should track all associated surfaces, and release them on
 // disconnection.
 class MirConnection
@@ -56,6 +59,10 @@ public:
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback,
         void * context);
+    MirWaitHandle* release_surface(
+            MirSurface *surface,
+            mir_surface_lifecycle_callback callback,
+            void *context);
 
     char const * get_error_message();
 
@@ -64,7 +71,8 @@ public:
         mir_connected_callback callback,
         void * context);
 
-    void disconnect();
+    MirWaitHandle* disconnect();
+
     void populate(MirPlatformPackage& platform_package);
 
     static bool is_valid(MirConnection *connection);
@@ -78,16 +86,19 @@ private:
     mir::protobuf::ConnectParameters connect_parameters;
 
     std::string error_message;
-    std::set<MirSurface*> surfaces;
 
     MirWaitHandle connect_wait_handle;
+    MirWaitHandle release_wait_handle;
     MirWaitHandle disconnect_wait_handle;
-
-    void done_disconnect();
-    void connected(mir_connected_callback callback, void * context);
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
+
+    void done_disconnect();
+    void connected(mir_connected_callback callback, void * context);
+    void released(SurfaceRelease );
+
+
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

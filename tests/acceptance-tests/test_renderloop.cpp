@@ -43,7 +43,6 @@ TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 
             using namespace testing;
 
-            EXPECT_CALL(display, clear()).Times(1);
             EXPECT_CALL(display, post_update()).Times(1);
 
             EXPECT_CALL(display, view_area()).Times(AtLeast(1))

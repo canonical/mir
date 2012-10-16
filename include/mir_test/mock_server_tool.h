@@ -39,7 +39,6 @@ struct MockServerTool : mir::protobuf::DisplayServer
         response->set_width(request->width());
         response->set_height(request->height());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer();
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
@@ -51,7 +50,7 @@ struct MockServerTool : mir::protobuf::DisplayServer
     virtual void next_buffer(
         ::google::protobuf::RpcController* /*controller*/,
         ::mir::protobuf::SurfaceId const* /*request*/,
-        ::mir::protobuf::Buffer* /*response*/,
+        ::mir::protobuf::Buffer* /* response */,
         ::google::protobuf::Closure* done)
     {
         std::unique_lock<std::mutex> lock(guard);
@@ -63,9 +62,9 @@ struct MockServerTool : mir::protobuf::DisplayServer
     virtual void release_surface(::google::protobuf::RpcController* /*controller*/,
                          const ::mir::protobuf::SurfaceId* /*request*/,
                          ::mir::protobuf::Void* /*response*/,
-                         ::google::protobuf::Closure* /*done*/)
+                         ::google::protobuf::Closure* done)
     {
-        // TODO need some tests for releasing surfaces
+        done->Run();
     }
 
 

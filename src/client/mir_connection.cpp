@@ -20,7 +20,6 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
-#include "mir_buffer_package.h"
 
 #include <cstddef>
 
@@ -40,6 +39,8 @@ namespace gp = google::protobuf;
     using std::this_thread::yield;
 #endif
 
+
+
 MirConnection::MirConnection(const std::string& socket_file,
     std::shared_ptr<mcl::Logger> const & log) :
       channel(socket_file, log)
@@ -55,10 +56,8 @@ MirConnection::MirConnection(const std::string& socket_file,
 
 MirConnection::~MirConnection()
 {
-    {
-        lock_guard<mutex> lock(connection_guard);
-        valid_connections.erase(this);
-    }
+    lock_guard<mutex> lock(connection_guard);
+    valid_connections.erase(this);
 }
 
 MirWaitHandle* MirConnection::create_surface(
@@ -66,8 +65,8 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto tmp = new MirSurface(server, params, callback, context);
-    return tmp->get_create_wait_handle();
+    auto surface = new MirSurface(server, params, callback, context);
+    return surface->get_create_wait_handle();
 }
 
 char const * MirConnection::get_error_message()
@@ -82,13 +81,49 @@ char const * MirConnection::get_error_message()
     }
 }
 
+/* struct exists to work around google protobuf being able to bind
+ "only 0, 1, or 2 arguments in the NewCallback function */
+struct SurfaceRelease
+{
+    MirSurface * surface;
+    mir_surface_lifecycle_callback callback;
+    void * context;
+};
+
+void MirConnection::released(SurfaceRelease data)
+{
+    data.callback(data.surface, data.context);
+    release_wait_handle.result_received();
+    delete data.surface;
+}
+
+MirWaitHandle* MirConnection::release_surface(
+        MirSurface *surface,
+        mir_surface_lifecycle_callback callback,
+        void * context)
+{
+    SurfaceRelease surf_release{surface, callback, context}; 
+ 
+    mir::protobuf::SurfaceId message;
+    message.set_value(surface->id());
+    server.release_surface(0, &message, &void_response,
+                    gp::NewCallback(this, &MirConnection::released, surf_release));
+    return &release_wait_handle; 
+}
+
+void MirConnection::connected(mir_connected_callback callback, void * context)
+{
+    callback(this, context);
+    connect_wait_handle.result_received();
+
+}
+
 MirWaitHandle* MirConnection::connect(
     const char* app_name,
     mir_connected_callback callback,
     void * context)
 {
     connect_parameters.set_application_name(app_name);
-    connect_wait_handle.result_requested();
     server.connect(
         0,
         &connect_parameters,
@@ -98,16 +133,20 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
-void MirConnection::disconnect()
+void MirConnection::done_disconnect()
 {
-    disconnect_wait_handle.result_requested();
+    disconnect_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::disconnect()
+{
     server.disconnect(
         0,
         &ignored,
         &ignored,
         google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
-    disconnect_wait_handle.wait_for_result();
+    return &disconnect_wait_handle;
 }
 
 bool MirConnection::is_valid(MirConnection *connection)
@@ -121,22 +160,8 @@ bool MirConnection::is_valid(MirConnection *connection)
     return !connection->connect_result.has_error();
 }
 
-void MirConnection::done_disconnect()
-{
-    disconnect_wait_handle.result_received();
-}
-
-void MirConnection::connected(mir_connected_callback callback, void * context)
-{
-    auto cast = (::MirConnection*) (this);
-    callback(cast, context);
-    connect_wait_handle.result_received();
-}
-
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    connect_wait_handle.wait_for_result();
-
     if (!connect_result.has_error())
     {
         platform_package.data_items = connect_result.data_size();
@@ -153,5 +178,3 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         platform_package.fd_items = 0;
     }
 }
-
-

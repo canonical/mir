@@ -22,7 +22,6 @@
 #include "mir_surface.h"
 
 #include "mir_rpc_channel.h"
-#include "mir_buffer_package.h" 
 
 #include "mir_protobuf.pb.h"
 
@@ -77,7 +76,9 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    connection->disconnect();
+    auto wait_handle = connection->disconnect();
+    wait_handle->wait_for_result();
+
     delete connection;
 }
 
@@ -98,10 +99,10 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 
 }
 
-MirWaitHandle* mir_surface_release(MirSurface * surface,
+MirWaitHandle* mir_surface_release(MirConnection * connection, MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    return surface->release(callback, context);
+    return connection->release_surface(surface, callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
@@ -134,9 +135,9 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-void mir_surface_get_graphics_region(MirSurface *surface, MirGraphicsRegion *graphics_region)
+void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
-    surface->populate(*graphics_region);
+    surface->get_cpu_region( *graphics_region);
 }
 
 MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
@@ -149,3 +150,4 @@ void mir_wait_for(MirWaitHandle* wait_handle)
     if (wait_handle)
         wait_handle->wait_for_result();
 }
+

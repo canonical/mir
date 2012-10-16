@@ -13,55 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Guest <thomas.guest@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir_wait_handle.h"
 
 MirWaitHandle::MirWaitHandle() :
-    waiting_threads(0),
     guard(),
     wait_condition(),
-    waiting_for_result(false) 
+    result_has_occurred(false)
 {
 }
 
 MirWaitHandle::~MirWaitHandle()
 {
-    // Delay destruction while there are waiting threads
-    while (waiting_threads.load()) yield();
-}
-
-void MirWaitHandle::result_requested()
-{
-    unique_lock<mutex> lock(guard);
-
-    while (waiting_for_result)
-        wait_condition.wait(lock);
-
-    waiting_for_result = true;
 }
 
 void MirWaitHandle::result_received()
 {
-    lock_guard<mutex> lock(guard);
-
-    waiting_for_result = false;
+    unique_lock<mutex> lock(guard);
+    result_has_occurred = true;
 
     wait_condition.notify_all();
+    lock.unlock();
 }
 
 void MirWaitHandle::wait_for_result()
 {
-    int tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp + 1)) yield();
-
-    {
-        unique_lock<mutex> lock(guard);
-        while (waiting_for_result)
-            wait_condition.wait(lock);
-    }
-
-    tmp = waiting_threads.load();
-    while (!waiting_threads.compare_exchange_weak(tmp, tmp - 1)) yield();
+    unique_lock<mutex> lock(guard);
+    while ( (!result_has_occurred) )
+        wait_condition.wait(lock);
+    result_has_occurred = false;
 }
+
+
