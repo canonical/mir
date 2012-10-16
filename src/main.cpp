@@ -20,10 +20,15 @@
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
 
+#include <boost/program_options/cmdline.hpp>
+#include <boost/program_options/config.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
+
 #include <csignal>
 #include <iostream>
 #include <stdexcept>
-#include <getopt.h>
 
 namespace
 {
@@ -38,7 +43,6 @@ namespace mir
 {
 extern "C"
 {
-void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
     while (!signal_display_server)
@@ -52,8 +56,8 @@ namespace
 {
 void run_mir()
 {
-    // TODO SIGTERM makes better long term sense - but Ctrl-C will do for now.
-    signal_prev_fn = signal(SIGINT, signal_terminate);
+    signal(SIGINT, signal_terminate);
+    signal(SIGTERM, signal_terminate);
 
     DefaultServerConfiguration config(socket_file);
     DisplayServer server(config);
@@ -68,25 +72,25 @@ void run_mir()
 int main(int argc, char* argv[])
 try
 {
-    int arg;
-    opterr = 0;
-    while ((arg = getopt (argc, argv, "hf:")) != -1)
-    {
-        switch (arg)
-        {
-        case 'f':
-            socket_file = optarg;
-            break;
+    namespace po = boost::program_options;
 
-        case '?':
-        case 'h':
-        default:
-            puts(argv[0]);
-            puts("Usage:");
-            puts("    -f <socket filename>");
-            puts("    -h: this help text");
-            return -1;
-        }
+    po::options_description desc("Options");
+    desc.add_options()
+        ("help,h", "this help text")
+        ("file,f", po::value<std::string>(), "<socket filename>");
+
+    po::variables_map options;
+    po::store(po::parse_command_line(argc, argv, desc), options);
+    po::notify(options);
+
+    if (options.empty() || options.count("help"))
+    {
+        std::cout << desc << "\n";
+        return 1;
+    }
+    else if (options.count("file"))
+    {
+        socket_file = options["file"].as<std::string>();
     }
 
     mir::run_mir();
