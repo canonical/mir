@@ -33,7 +33,6 @@ void DefaultDisplayServerTestFixture::SetUpTestCase()
     process_manager.launch_server_process(default_parameters);
 }
 
-
 void DefaultDisplayServerTestFixture::TearDown()
 {
     process_manager.tear_down_clients();
