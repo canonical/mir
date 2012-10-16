@@ -76,8 +76,8 @@ try
 
     po::options_description desc("Options");
     desc.add_options()
-        ("help,h", "this help text")
-        ("file,f", po::value<std::string>(), "<socket filename>");
+        ("file,f", po::value<std::string>(), "<socket filename>")
+        ("help,h", "this help text");
 
     po::variables_map options;
     po::store(po::parse_command_line(argc, argv, desc), options);
