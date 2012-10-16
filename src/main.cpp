@@ -32,8 +32,6 @@
 
 namespace
 {
-std::string socket_file{"/tmp/mir_socket"};
-
 // TODO: Get rid of the volatile-hack here and replace it with
 // some sane atomic-pointer once we have left GCC 4.4 behind.
 mir::DisplayServer* volatile signal_display_server;
@@ -54,7 +52,7 @@ void signal_terminate (int )
 
 namespace
 {
-void run_mir()
+void run_mir(std::string const& socket_file)
 {
     signal(SIGINT, signal_terminate);
     signal(SIGTERM, signal_terminate);
@@ -72,6 +70,8 @@ void run_mir()
 int main(int argc, char* argv[])
 try
 {
+    std::string socket_file{"/tmp/mir_socket"};
+
     namespace po = boost::program_options;
 
     po::options_description desc("Options");
@@ -93,7 +93,7 @@ try
         socket_file = options["file"].as<std::string>();
     }
 
-    mir::run_mir();
+    mir::run_mir(socket_file);
     return 0;
 }
 catch (std::exception const& error)
