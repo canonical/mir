@@ -31,7 +31,7 @@
 #include "mir_test/empty_deleter.h"
 
 #include <hardware/gralloc.h>
-
+#include <GLES2/gl2.h>
 #include <gmock/gmock.h>
 
 #include "mir/thread/all.h"
@@ -256,7 +256,6 @@ static int render_accelerated()
     MirConnection* connection = NULL;
     MirSurface* surface;
     MirSurfaceParameters surface_parameters;
-    MirGraphicsRegion graphics_region;
 
      /* establish connection. wait for server to come up */
     while (connection == NULL)
@@ -270,14 +269,15 @@ static int render_accelerated()
     surface_parameters.width = test_width;
     surface_parameters.height = test_height;
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+    surface_parameters.acceleration = mir_opengl_acceleration;
 
-    mir_wait_for(mir_surface_create_accelerated( connection, &surface_parameters,
+    mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
     
-	int major, minor;
+	int major, minor, n;
 	EGLDisplay disp;
     EGLContext context;
-    EGLSurface surface;
+    EGLSurface egl_surface;
 	EGLConfig egl_config;
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -285,12 +285,12 @@ static int render_accelerated()
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType * native_window = surface;
+    EGLNativeWindowType native_window = (EGLNativeWindowType) surface;
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
 	
 	eglChooseConfig(disp, attribs, &egl_config, 1, &n); 
-	surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+    egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
     eglMakeCurrent(disp, surface, surface, context);
 

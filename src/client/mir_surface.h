@@ -63,6 +63,8 @@ public:
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
 
+    MirAcceleration acceleration;
+
 private:
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);

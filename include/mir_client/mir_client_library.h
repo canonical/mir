@@ -45,12 +45,19 @@ typedef enum MirPixelFormat
     mir_pixel_format_rgba_8888 = 0
 } MirPixelFormat;
 
+typedef enum MirAcceleration
+{
+    mir_unaccelerated = 0,
+    mir_opengl_acceleration = 1
+} MirAcceleration;
+
 typedef struct MirSurfaceParameters
 {
     char const *name;
     int width;
     int height;
     MirPixelFormat pixel_format;
+    MirAcceleration acceleration;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };

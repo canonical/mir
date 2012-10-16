@@ -34,7 +34,8 @@ MirSurface::MirSurface(
     const std::shared_ptr<mcl::ClientBufferFactory>& factory, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
-    : server(server),
+    : acceleration(mir_unaccelerated),
+      server(server),
       last_buffer_id(-1),
       buffer_factory(factory)
 {
@@ -58,7 +59,8 @@ MirSurfaceParameters MirSurface::get_parameters() const
         0,
         surface.width(),
         surface.height(),
-        static_cast<MirPixelFormat>(surface.pixel_format())};
+        static_cast<MirPixelFormat>(surface.pixel_format()),
+        acceleration};
 }
 
 char const * MirSurface::get_error_message()
