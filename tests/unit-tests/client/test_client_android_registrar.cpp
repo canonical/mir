@@ -18,7 +18,6 @@
 
 #include "android/android_client_buffer.h"
 #include "android/android_registrar_gralloc.h"
-#include "mir_buffer_package.h"
 #include "mir_test/mock_android_alloc_device.h"
 
 #include <system/graphics.h>

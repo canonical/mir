@@ -17,23 +17,18 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
-#define MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
+#include "android/android_client_buffer_factory.h"
+#include "android/android_client_buffer.h"
 
-#include <vector>
+namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
-namespace mir
+mcl::AndroidClientBufferFactory::AndroidClientBufferFactory(const std::shared_ptr<AndroidRegistrar>& buffer_registrar)
+ : registrar(buffer_registrar)
 {
-namespace client
-{
-/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
-               maintain divide between client/server headers */
-struct MirBufferPackage
-{
-    std::vector<int> data;
-    std::vector<int> fd;
-};
-
 }
-}
-#endif /* MIR_CLIENT_MIR_BUFFER_PACKAGE_H_ */
+
+std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferFactory::create_buffer_from_ipc_message(std::shared_ptr<MirBufferPackage>&& package, geometry::Width w, geometry::Height h, geometry::PixelFormat pf)
+{
+    return std::make_shared<mcl::AndroidClientBuffer>(registrar, std::move(package), w, h, pf );
+} 

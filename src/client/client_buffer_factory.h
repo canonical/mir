@@ -17,27 +17,28 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-
-#include "mir/geometry/rectangle.h"
-#include <cutils/native_handle.h>
+#ifndef MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_
+#define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_
 
 #include <memory>
+#include <mir/geometry/pixel_format.h>
+#include <mir/geometry/dimensions.h>
+
+class MirBufferPackage;
+
 namespace mir
 {
+
 namespace client
 {
-class MemoryRegion;
+class ClientBuffer;
 
-class AndroidRegistrar
+class ClientBufferFactory
 {
 public:
-    virtual void register_buffer(const native_handle_t *handle) = 0;
-    virtual void unregister_buffer(const native_handle_t *handle) = 0;
-    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+    virtual std::shared_ptr<ClientBuffer> create_buffer_from_ipc_message(std::shared_ptr<MirBufferPackage> &&,
+                                geometry::Width, geometry::Height, geometry::PixelFormat) = 0;
 };
-
 }
 }
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_FACTORY_H_ */

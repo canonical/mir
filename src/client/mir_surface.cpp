@@ -19,18 +19,24 @@
 #include "mir_client/mir_client_library.h"
 
 #include "client_buffer.h"
+#include "client_buffer_factory.h"
 #include "mir_surface.h"
 
 #include <cassert>
 
+namespace geom = mir::geometry;
+namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
+    const std::shared_ptr<mcl::ClientBufferFactory>& factory, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
-    : server(server)
+    : server(server),
+      last_buffer_id(-1),
+      buffer_factory(factory)
 {
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -74,8 +80,15 @@ bool MirSurface::is_valid() const
     return !surface.has_error();
 }
 
-void MirSurface::get_cpu_region(MirGraphicsRegion& /*region_out*/)
+void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
+    auto buffer = buffer_cache[last_buffer_id];
+    secured_region = buffer->secure_for_cpu_write();
+    region_out.width = secured_region->width.as_uint32_t();
+    region_out.height = secured_region->height.as_uint32_t();
+    //todo: fix
+    region_out.pixel_format = mir_pixel_format_rgba_8888;
+    region_out.vaddr = secured_region->vaddr.get();
 }
 
 void MirSurface::release_cpu_region()
@@ -101,14 +114,64 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
+/* todo: all these conversion functions are a bit of a kludge, probably 
+         better to have a more developed geometry::PixelFormat that can handle this */
+geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+{
+    if ( pf == mir_pixel_format_rgba_8888 )
+        return geom::PixelFormat::rgba_8888;
+    return geom::PixelFormat::pixel_format_invalid;
+}
+
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
-    callback(this, context);
+    auto const& buffer = surface.buffer();
+    last_buffer_id = buffer.buffer_id();
+
+    auto surface_width = geom::Width(surface.width());
+    auto surface_height = geom::Height(surface.height());
+    auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format()); 
+
+    auto ipc_package = std::make_shared<MirBufferPackage>();
+    populate(*ipc_package);
+
+    try 
+    {
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(
+                                    ipc_package, surface_width, surface_height, surface_pf);
+        /* this is only called when surface is first created. if anything has been putting things 
+           in cache before this callback, its wrong */
+        assert(buffer_cache.empty());
+        buffer_cache[last_buffer_id] = new_buffer;
+
+        callback(this, context);
+    } catch (...)
+    {   
+        callback(NULL, context);
+    }
+
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+    auto const& buffer = surface.buffer();
+    last_buffer_id = buffer.buffer_id();
+
+    auto surface_width = geom::Width(surface.width());
+    auto surface_height = geom::Height(surface.height());
+    //todo: fix
+    auto surface_pf = geom::PixelFormat::rgba_8888; 
+
+    auto it = buffer_cache.find(last_buffer_id);
+    if (it == buffer_cache.end())
+    {
+        auto ipc_package = std::make_shared<MirBufferPackage>();
+        populate(*ipc_package);
+        auto new_buffer = buffer_factory->create_buffer_from_ipc_message(ipc_package, surface_width, surface_height, surface_pf);
+        buffer_cache[last_buffer_id] = new_buffer;
+    }
+    
     callback(this, context);
     next_buffer_wait_handle.result_received();
 }

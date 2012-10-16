@@ -80,6 +80,8 @@ void mir::frontend::ApplicationProxy::create_surface(
         auto const& ipc_package = surface->get_buffer_ipc_package();
         auto buffer = response->mutable_buffer();
 
+        /* todo: this should be unique to the buffer */
+        buffer->set_buffer_id(0);
         for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
             buffer->add_data(*p);
 
@@ -104,6 +106,8 @@ void mir::frontend::ApplicationProxy::next_buffer(
 
     auto const& ipc_package = surface->get_buffer_ipc_package();
 
+    /* todo: this should be unique to the buffer */
+    response->set_buffer_id(0);
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
         response->add_data(*p);
 

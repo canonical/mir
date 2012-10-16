@@ -21,10 +21,11 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
 #include "client_buffer.h"
-#include "mir_buffer_package.h"
+#include "mir_client/mir_client_library.h"
 #include "android/android_registrar.h"
 
 #include <memory>
+
 namespace mir
 {
 namespace client
@@ -33,8 +34,8 @@ namespace client
 class AndroidClientBuffer : public ClientBuffer
 {
 public:
-    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> &&,
-                        geometry::Width && width,  geometry::Height && height, geometry::PixelFormat && pf );
+    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> && ,
+                        geometry::Width width, geometry::Height height, geometry::PixelFormat pf );
     ~AndroidClientBuffer();
     
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
