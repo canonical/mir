@@ -44,10 +44,15 @@ public:
     MirSurface& operator=(MirSurface const &) = delete;
 
     MirSurface(
+        MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
     ~MirSurface();
+    MirWaitHandle* release_surface(
+            MirSurface *surface,
+            mir_surface_lifecycle_callback callback,
+            void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
@@ -68,6 +73,7 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
+    MirConnection *connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 

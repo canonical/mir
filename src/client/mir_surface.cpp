@@ -17,9 +17,9 @@
  */
 
 #include "mir_client/mir_client_library.h"
-
 #include "client_buffer.h"
 #include "mir_surface.h"
+#include "mir_connection.h"
 
 #include <cassert>
 
@@ -27,10 +27,12 @@ namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirSurface::MirSurface(
+    MirConnection * allocating_connection,
     mp::DisplayServer::Stub & server,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
-    : server(server)
+    : server(server),
+      connection(allocating_connection)
 {
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -111,6 +113,14 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
 {
     callback(this, context);
     next_buffer_wait_handle.result_received();
+}
+
+MirWaitHandle* MirSurface::release_surface(
+        MirSurface *surface,
+        mir_surface_lifecycle_callback callback,
+        void * context)
+{
+    return connection->release_surface(surface, callback, context); 
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)

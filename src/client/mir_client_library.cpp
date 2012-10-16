@@ -99,10 +99,10 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
 
 }
 
-MirWaitHandle* mir_surface_release(MirConnection * connection, MirSurface * surface,
+MirWaitHandle* mir_surface_release(MirSurface * surface,
                          mir_surface_lifecycle_callback callback, void * context)
 {
-    return connection->release_surface(surface, callback, context);
+    return surface->release_surface(surface, callback, context);
 }
 
 int mir_debug_surface_id(MirSurface * surface)
