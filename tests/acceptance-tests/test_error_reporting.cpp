@@ -254,6 +254,27 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
             EXPECT_FALSE(mir_connection_is_valid(connection));
             EXPECT_EQ(ErrorServer::test_exception_text, mir_connection_get_error_message(connection));
 
+            MirSurfaceParameters const request_params =
+                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+
+            wait_for_surface_create(ssync);
+
+            ASSERT_TRUE(ssync->surface != NULL);
+            EXPECT_FALSE(mir_surface_is_valid(ssync->surface));
+            EXPECT_EQ(ErrorServer::test_exception_text, mir_surface_get_error_message(ssync->surface));
+
+            EXPECT_NO_THROW({
+                MirSurfaceParameters response_params;
+                mir_surface_get_parameters(ssync->surface, &response_params);
+            });
+
+            mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
+
+            wait_for_surface_release(ssync);
+
+            ASSERT_TRUE(ssync->surface == NULL);
+
             mir_connection_release(connection);
         }
     } client_config;

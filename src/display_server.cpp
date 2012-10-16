@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -102,5 +103,6 @@ void mir::DisplayServer::stop()
 
 void mir::DisplayServer::render(mg::Display* display)
 {
+    display->clear();
     p->compositor->render(display);
 }
