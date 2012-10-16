@@ -61,7 +61,6 @@ struct MockServerFd : public MockServerTool
     {
         for (int i = 0; i != file_descriptors; ++i)
         {
-            buffer->set_buffer_id(22);
 
             static char const test_file_fmt[] = "fd_test_file%d";
             char test_file[sizeof test_file_fmt];

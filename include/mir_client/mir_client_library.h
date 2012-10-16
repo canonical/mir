@@ -38,11 +38,10 @@ typedef struct MirSurface MirSurface;
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
-
 /* Surface API */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_rgba_8888 = 0
+    mir_pixel_format_rgba_8888
 } MirPixelFormat;
 
 typedef struct MirSurfaceParameters

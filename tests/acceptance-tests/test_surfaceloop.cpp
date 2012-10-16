@@ -21,7 +21,6 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 
@@ -52,13 +51,6 @@ class StubBuffer : public mc::Buffer
     void bind_to_texture() {}
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
@@ -270,7 +262,6 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-
 
             mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
 

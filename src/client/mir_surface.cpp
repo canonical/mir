@@ -89,7 +89,6 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     //todo: fix
     region_out.pixel_format = mir_pixel_format_rgba_8888;
     region_out.vaddr = secured_region->vaddr.get();
-
 }
 
 void MirSurface::release_cpu_region()

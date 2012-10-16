@@ -22,8 +22,6 @@
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -116,9 +114,9 @@ mir::DefaultServerConfiguration::make_buffer_allocation_strategy(
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
-        std::shared_ptr<mg::Display> const& display)
+        std::shared_ptr<mg::Display> const& /*display*/)
 {
-    return std::make_shared<mg::GLRenderer>(display->view_area().size);
+    return std::make_shared<StubRenderer>();
 }
 
 std::shared_ptr<mf::Communicator>

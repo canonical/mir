@@ -24,10 +24,8 @@
 // We stub out the graphics - because real graphics cause all the
 // tests to fail. There must be a better way?
 
-#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/renderer.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -61,14 +59,6 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
-
 class StubGraphicPlatform : public mg::Platform
 {
     virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
@@ -79,20 +69,12 @@ class StubGraphicPlatform : public mg::Platform
 
     virtual std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::shared_ptr<mg::Display>();
     }
 
     virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
     {
         return std::make_shared<mg::PlatformIPCPackage>();
-    }
-};
-
-class StubRenderer : public mg::Renderer
-{
-public:
-    virtual void render(mg::Renderable&)
-    {
     }
 };
 }
@@ -105,13 +87,6 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
 
     return graphics_platform;
 }
-
-std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
-        std::shared_ptr<mg::Display> const& /*display*/)
-{
-    return std::make_shared<StubRenderer>();
-}
-
 // ====>> TODO end of frig to stub out graphics from tests <<==== //
 /////////////////////////////////////////////////////////////////////
 #endif
