@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
         render_pattern(&graphics_region, 0xFF000000 | (color) );
     }
 
-    mir_wait_for(mir_surface_release(connection, surface, surface_release_callback, 0));
+    mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
     puts("Surface released");
 
     mir_connection_release(connection);

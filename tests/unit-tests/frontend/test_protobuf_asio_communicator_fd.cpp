@@ -118,6 +118,7 @@ TEST_F(ProtobufAsioCommunicatorFD, test_file_descriptors)
 
     mock_client->display_server.test_file_descriptors(0, &mock_client->ignored, &fds,
         google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::tfd_done));
+
     mock_client->wait_for_tfd_done();
 
     ASSERT_EQ(mock_server_tool->file_descriptors, fds.fd_size());

@@ -206,10 +206,10 @@ void wait_for_surface_release(SurfaceSync* context)
     context->wait_for_surface_release();
 }
 
-class ErrorIpcFactory : public mf::ProtobufIpcFactory
+class StubIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    ErrorIpcFactory() :
+    StubIpcFactory() :
         server(std::make_shared<ErrorServer>()),
         cache(std::make_shared<mf::ResourceCache>())
     {
@@ -231,14 +231,15 @@ private:
 };
 }
 
-TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
+TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 {
+
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
             std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&)
         {
-            return std::make_shared<ErrorIpcFactory>();
+            return std::make_shared<StubIpcFactory>();
         }
     } server_config;
 
@@ -248,11 +249,34 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error_on_connection_error)
     {
         void exec()
         {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_FALSE(mir_connection_is_valid(connection));
             EXPECT_EQ(ErrorServer::test_exception_text, mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+
+            wait_for_surface_create(ssync);
+
+            ASSERT_TRUE(ssync->surface != NULL);
+            EXPECT_FALSE(mir_surface_is_valid(ssync->surface));
+            EXPECT_EQ(ErrorServer::test_exception_text, mir_surface_get_error_message(ssync->surface));
+
+            EXPECT_NO_THROW({
+                MirSurfaceParameters response_params;
+                mir_surface_get_parameters(ssync->surface, &response_params);
+            });
+
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
+
+            wait_for_surface_release(ssync);
+
+            ASSERT_TRUE(ssync->surface == NULL);
 
             mir_connection_release(connection);
         }

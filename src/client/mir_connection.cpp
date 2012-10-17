@@ -69,7 +69,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(server, factory, params, callback, context);
+    auto surface = new MirSurface(this, server, factory, params, callback, context);
     return surface->get_create_wait_handle();
 }
 
@@ -90,6 +90,7 @@ char const * MirConnection::get_error_message()
 struct SurfaceRelease
 {
     MirSurface * surface;
+    MirWaitHandle * handle;
     mir_surface_lifecycle_callback callback;
     void * context;
 };
@@ -97,7 +98,7 @@ struct SurfaceRelease
 void MirConnection::released(SurfaceRelease data)
 {
     data.callback(data.surface, data.context);
-    release_wait_handle.result_received();
+    data.handle->result_received();
     delete data.surface;
 }
 
@@ -106,13 +107,18 @@ MirWaitHandle* MirConnection::release_surface(
         mir_surface_lifecycle_callback callback,
         void * context)
 {
-    SurfaceRelease surf_release{surface, callback, context}; 
+    auto new_wait_handle = new MirWaitHandle;
+
+    SurfaceRelease surf_release{surface, new_wait_handle, callback, context}; 
  
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
     server.release_surface(0, &message, &void_response,
                     gp::NewCallback(this, &MirConnection::released, surf_release));
-    return &release_wait_handle; 
+
+    lock_guard<mutex> lock(release_wait_handle_guard);
+    release_wait_handles.push_back(new_wait_handle);
+    return new_wait_handle;
 }
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
@@ -139,6 +145,14 @@ MirWaitHandle* MirConnection::connect(
 
 void MirConnection::done_disconnect()
 {
+    /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
+       is a kludge until we have a better story about the lifetime of MirWaitHandles */
+    {
+        lock_guard<mutex> lock(release_wait_handle_guard);
+        for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
+            delete *it;
+    }
+
     disconnect_wait_handle.result_received();
 }
 
