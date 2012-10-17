@@ -241,3 +241,33 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_callable)
     
     delete anw;
 }
+
+/* incRef is reffable */
+TEST_F(AndroidNativeWindowTest, native_window_incref_hook_callable)
+{
+    ANativeWindow* anw;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    ASSERT_NE((int) anw->common.incRef, NULL);
+    EXPECT_NO_THROW({
+        anw->common.incRef(NULL);
+    });
+    
+    delete anw;
+}
+
+/* decRef is reffable */
+TEST_F(AndroidNativeWindowTest, native_window_decref_hook_callable)
+{
+    ANativeWindow* anw;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    ASSERT_NE((int) anw->common.decRef, NULL);
+    EXPECT_NO_THROW({
+        anw->common.decRef(NULL);
+    });
+    
+    delete anw;
+}
