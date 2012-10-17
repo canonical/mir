@@ -68,6 +68,7 @@ public:
 private:
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
+    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf );
 
     mir::protobuf::DisplayServer::Stub & server;
     mir::protobuf::Surface surface;
@@ -77,7 +78,12 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
+    int last_buffer_id;
+    std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_cache;
+
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
+    std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
+
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

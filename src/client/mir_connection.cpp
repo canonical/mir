@@ -21,6 +21,8 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 
+#include "client_buffer_factory.h"
+
 #include <cstddef>
 
 namespace mcl = mir::client;
@@ -88,7 +90,7 @@ char const * MirConnection::get_error_message()
 struct SurfaceRelease
 {
     MirSurface * surface;
-    MirWaitHandle *handle;
+    MirWaitHandle * handle;
     mir_surface_lifecycle_callback callback;
     void * context;
 };
@@ -116,13 +118,14 @@ MirWaitHandle* MirConnection::release_surface(
 
     lock_guard<mutex> lock(release_wait_handle_guard);
     release_wait_handles.push_back(new_wait_handle);
-    return new_wait_handle; 
+    return new_wait_handle;
 }
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     callback(this, context);
     connect_wait_handle.result_received();
+
 }
 
 MirWaitHandle* MirConnection::connect(
@@ -148,7 +151,8 @@ void MirConnection::done_disconnect()
         lock_guard<mutex> lock(release_wait_handle_guard);
         for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
             delete *it;
-    } 
+    }
+
     disconnect_wait_handle.result_received();
 }
 
