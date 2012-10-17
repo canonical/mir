@@ -104,7 +104,6 @@ MirWaitHandle* MirConnection::release_surface(
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;
-    release_wait_handles.push_back(new_wait_handle);
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context}; 
  
@@ -113,6 +112,8 @@ MirWaitHandle* MirConnection::release_surface(
     server.release_surface(0, &message, &void_response,
                     gp::NewCallback(this, &MirConnection::released, surf_release));
 
+    lock_guard<mutex> lock(release_wait_handle_guard);
+    release_wait_handles.push_back(new_wait_handle);
     return new_wait_handle; 
 }
 
@@ -139,9 +140,11 @@ MirWaitHandle* MirConnection::connect(
 
 void MirConnection::done_disconnect()
 {
-    for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
-        delete *it;
- 
+    {
+        lock_guard<mutex> lock(release_wait_handle_guard);
+        for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
+            delete *it;
+    } 
     disconnect_wait_handle.result_received();
 }
 

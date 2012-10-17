@@ -89,6 +89,8 @@ private:
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
+
+    mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
     static mutex connection_guard;
