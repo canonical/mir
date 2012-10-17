@@ -49,41 +49,51 @@ void signal_terminate (int )
     signal_display_server->stop();
 }
 }
+}
 
 namespace
 {
 void run_mir(std::string const& socket_file)
 {
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
+    signal(SIGINT, mir::signal_terminate);
+    signal(SIGTERM, mir::signal_terminate);
 
-    DefaultServerConfiguration config(socket_file);
-    DisplayServer server(config);
+    mir::DefaultServerConfiguration config(socket_file);
+    mir::DisplayServer server(config);
 
     signal_display_server = &server;
 
     server.start();
 }
 }
-}
 
 int main(int argc, char* argv[])
 try
 {
-    std::string socket_file{"/tmp/mir_socket"};
-
     namespace po = boost::program_options;
 
     po::options_description desc("Options");
-    desc.add_options()
-        ("file,f", po::value<std::string>(), "<socket filename>")
-        ("help,h", "this help text");
-
     po::variables_map options;
-    po::store(po::parse_command_line(argc, argv, desc), options);
-    po::notify(options);
 
-    if (options.empty() || options.count("help"))
+    std::string socket_file{"/tmp/mir_socket"};
+
+    try
+    {
+        desc.add_options()
+            ("file,f", po::value<std::string>(), "<socket filename>")
+            ("help,h", "this help text");
+
+        po::store(po::parse_command_line(argc, argv, desc), options);
+        po::notify(options);
+    }
+    catch (po::error const& error)
+    {
+        std::cerr << "ERROR: " << error.what() << std::endl;
+        std::cerr << desc << "\n";
+        return 1;
+    }
+
+    if (options.count("help"))
     {
         std::cout << desc << "\n";
         return 1;
@@ -93,7 +103,7 @@ try
         socket_file = options["file"].as<std::string>();
     }
 
-    mir::run_mir(socket_file);
+    run_mir(socket_file);
     return 0;
 }
 catch (std::exception const& error)
