@@ -114,18 +114,30 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
     MirGraphicsRegion graphics_region;
-    int i=0; 
+    int i=0;
+    unsigned char color = 0x00;
+    int dir = -1; 
     while (1)
     {
         mir_wait_for(mir_surface_next_buffer(surface, surface_next_callback, 0 ));
         mir_surface_get_graphics_region( surface, &graphics_region);
-        if ((i++ % 2) == 0)
-            render_pattern(&graphics_region, 0xFF00FF00);
-        else 
-            render_pattern(&graphics_region, 0xFFFF0000);
+
+        if (dir < 0)
+            color++;
+        else
+            color--;
+
+        if ((color == 0xFF) || (color == 0))
+        {
+            printf("COLOR %x\n", color);
+            dir *= -1;
+        }
+            printf("COLOR %x\n", color);
+
+        render_pattern(&graphics_region, 0xFF000000 | (color) );
     }
 
-    mir_wait_for(mir_surface_release(connection, surface, surface_release_callback, 0));
+    mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
     puts("Surface released");
 
     mir_connection_release(connection);

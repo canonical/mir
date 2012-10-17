@@ -100,6 +100,18 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
     std::shared_ptr<mt::TestServer> mock_server;
 };
 
+TEST_F(ProtobufAsioCommunicatorCounter, server_creates_surface_on_create_surface_call)
+{
+    mock_client->display_server.create_surface(
+        0,
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+    mock_client->wait_for_create_surface();
+
+    mock_server_tool->expect_surface_count(1);
+}
+
 TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
 {
     using namespace testing;
@@ -113,22 +125,6 @@ TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
     mock_client->wait_for_connect_done();
 
     mock_server_tool->expect_surface_count(0);
-}
-
-TEST_F(ProtobufAsioCommunicatorCounter, connection_results_in_a_callback)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(AtLeast(0));
-
-    mock_client->display_server.create_surface(
-        0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
-
-    mock_client->wait_for_create_surface();
-
-    mock_server_tool->expect_surface_count(1);
 }
 
 TEST_F(ProtobufAsioCommunicatorCounter,
@@ -145,8 +141,7 @@ TEST_F(ProtobufAsioCommunicatorCounter,
             &mock_client->surface_parameters,
             &mock_client->surface,
             google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
-    
-        /* sync on each create */
+
         mock_client->wait_for_create_surface();
     }
 
@@ -167,13 +162,12 @@ TEST_F(ProtobufAsioCommunicatorCounter,
             &mock_client->surface_parameters,
             &mock_client->surface,
             google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
-
-        /* no sync before calling next create */
     }
 
     mock_server_tool->expect_surface_count(surface_count);
     mock_client->wait_for_surface_count(surface_count);
 }
+
 
 /* start Multi test cases */
 struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
@@ -194,7 +188,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
         for(int i=0; i<number_of_clients; i++)
         {
             auto client_tmp = std::make_shared<mt::TestClient>("./test_socket"); 
-            mock_clients.push_back(client_tmp);
+            clients.push_back(client_tmp);
         }
     }
 
@@ -203,7 +197,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
         mock_server->comm.stop();
     }
 
-    std::vector<std::shared_ptr<mt::TestClient>> mock_clients;
+    std::vector<std::shared_ptr<mt::TestClient>> clients;
     std::shared_ptr<mt::MockServerSurfaceCounter> mock_server_tool;
 
     std::shared_ptr<mt::TestServer> mock_server;
@@ -214,26 +208,26 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
 {
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(*mock_clients[i], create_surface_done()).Times(1);
-        mock_clients[i]->display_server.create_surface(
+        EXPECT_CALL(*clients[i], create_surface_done()).Times(1);
+        clients[i]->display_server.create_surface(
             0,
-            &mock_clients[i]->surface_parameters,
-            &mock_clients[i]->surface,
-            google::protobuf::NewCallback(mock_clients[i].get(), &mt::TestClient::create_surface_done));
-        mock_clients[i]->wait_for_create_surface();
+            &clients[i]->surface_parameters,
+            &clients[i]->surface,
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::create_surface_done));
+        clients[i]->wait_for_create_surface();
     }
 
     mock_server_tool->expect_surface_count(number_of_clients);
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(*mock_clients[i], disconnect_done()).Times(1);
-        mock_clients[i]->display_server.disconnect(
+        EXPECT_CALL(*clients[i], disconnect_done()).Times(1);
+        clients[i]->display_server.disconnect(
             0,
-            &mock_clients[i]->ignored,
-            &mock_clients[i]->ignored,
-            google::protobuf::NewCallback(mock_clients[i].get(), &mt::TestClient::disconnect_done));
-        mock_clients[i]->wait_for_disconnect_done();
+            &clients[i]->ignored,
+            &clients[i]->ignored,
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::disconnect_done));
+        clients[i]->wait_for_disconnect_done();
     }
 
     mock_server_tool->expect_surface_count(number_of_clients);
@@ -244,34 +238,34 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
 {
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(*mock_clients[i], create_surface_done()).Times(1);
-        mock_clients[i]->display_server.create_surface(
+        EXPECT_CALL(*clients[i], create_surface_done()).Times(1);
+        clients[i]->display_server.create_surface(
             0,
-            &mock_clients[i]->surface_parameters,
-            &mock_clients[i]->surface,
-            google::protobuf::NewCallback(mock_clients[i].get(), &mt::TestClient::create_surface_done));
+            &clients[i]->surface_parameters,
+            &clients[i]->surface,
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::create_surface_done));
     }
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        mock_clients[i]->wait_for_create_surface();
+        clients[i]->wait_for_create_surface();
     }
 
     mock_server_tool->expect_surface_count(number_of_clients);
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        EXPECT_CALL(*mock_clients[i], disconnect_done()).Times(1);
-        mock_clients[i]->display_server.disconnect(
+        EXPECT_CALL(*clients[i], disconnect_done()).Times(1);
+        clients[i]->display_server.disconnect(
             0,
-            &mock_clients[i]->ignored,
-            &mock_clients[i]->ignored,
-            google::protobuf::NewCallback(mock_clients[i].get(), &mt::TestClient::disconnect_done));
+            &clients[i]->ignored,
+            &clients[i]->ignored,
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::disconnect_done));
     }
 
     for (int i = 0; i != number_of_clients; ++i)
     {
-        mock_clients[i]->wait_for_disconnect_done();
+        clients[i]->wait_for_disconnect_done();
     }
 
     mock_server_tool->expect_surface_count(number_of_clients);

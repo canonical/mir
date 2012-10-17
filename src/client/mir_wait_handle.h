@@ -43,8 +43,8 @@ public:
     void wait_for_result();
 
 private:
-    mir::std::mutex guard;
-    mir::std::condition_variable wait_condition;
+    mutex guard;
+    condition_variable wait_condition;
 
     bool result_has_occurred;
 };

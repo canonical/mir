@@ -61,7 +61,6 @@ struct MockServerFd : public MockServerTool
     {
         for (int i = 0; i != file_descriptors; ++i)
         {
-            buffer->set_buffer_id(22);
 
             static char const test_file_fmt[] = "fd_test_file%d";
             char test_file[sizeof test_file_fmt];
@@ -119,6 +118,7 @@ TEST_F(ProtobufAsioCommunicatorFD, test_file_descriptors)
 
     mock_client->display_server.test_file_descriptors(0, &mock_client->ignored, &fds,
         google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::tfd_done));
+
     mock_client->wait_for_tfd_done();
 
     ASSERT_EQ(mock_server_tool->file_descriptors, fds.fd_size());

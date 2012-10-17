@@ -90,10 +90,12 @@ private:
     std::string error_message;
 
     MirWaitHandle connect_wait_handle;
-    MirWaitHandle release_wait_handle;
     MirWaitHandle disconnect_wait_handle;
 
     std::shared_ptr<mir::client::ClientBufferFactory> factory;
+
+    mutex release_wait_handle_guard;
+    std::vector<MirWaitHandle*> release_wait_handles;
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;

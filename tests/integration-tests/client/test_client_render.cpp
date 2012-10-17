@@ -72,6 +72,7 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
     }
     return true;
 }
+
 bool render_second_pattern(MirGraphicsRegion *region, bool check)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
@@ -157,15 +158,18 @@ static void create_callback(MirSurface *surface, void*context)
     MirSurface** surf = (MirSurface**) context;
     *surf = surface;
 }
+
 static void next_callback(MirSurface *, void*)
 {
 }
 
 struct TestClient
 {
+
 static void sig_handle(int)
 {
 }
+
 static int render_single()
 {
     if (signal(SIGCONT, sig_handle) == SIG_ERR)
@@ -198,7 +202,7 @@ static int render_single()
     /* render pattern */
     render_pattern(&graphics_region, false);
 
-    mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
+    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
     /* release */
     mir_connection_release(connection);
@@ -239,7 +243,7 @@ static int render_double()
     mir_surface_get_graphics_region( surface, &graphics_region);
     render_second_pattern(&graphics_region, false);
 
-    mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
+    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
     /* release */
     mir_connection_release(connection);
@@ -305,7 +309,7 @@ static int render_accelerated()
     glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    mir_wait_for(mir_surface_release(connection, surface, &create_callback, &surface));
+    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
     /* release */
     mir_connection_release(connection);
@@ -445,6 +449,7 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     auto valid = render_pattern(&region, true);
     auto valid2 = render_second_pattern(&region, true);
     grmod->unlock(grmod, handle);
+
     return valid || valid2; 
 }
 
@@ -493,6 +498,7 @@ struct TestClientIPCRender : public testing::Test
 
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+
         package = android_buffer->get_ipc_package();
         second_package = second_android_buffer->get_ipc_package();
 
@@ -511,6 +517,7 @@ struct TestClientIPCRender : public testing::Test
     const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf; 
+    std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;

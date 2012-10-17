@@ -271,8 +271,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
-
-            mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
 
             wait_for_surface_release(ssync);
 
@@ -285,12 +284,14 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
+namespace
+{
+
 /*
  * Need to declare outside method, because g++ 4.4 doesn't support local types
  * as template parameters (in std::make_shared<StubPlatform>()).
  */
-TEST_F(BespokeDisplayServerTestFixture,
-       creating_a_client_surface_allocates_buffers_on_server)
+struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 {
 #ifndef ANDROID
     struct ServerConfig : TestingServerConfiguration
@@ -311,6 +312,48 @@ TEST_F(BespokeDisplayServerTestFixture,
 #else
     TestingServerConfiguration server_config;
 #endif
+
+    class StubPlatform : public mg::Platform
+    {
+        std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+        {
+            using testing::AtLeast;
+
+            auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
+            EXPECT_CALL(*buffer_allocator,alloc_buffer(size, format)).Times(AtLeast(2));
+            return buffer_allocator;
+        }
+
+        std::shared_ptr<mg::Display> create_display()
+        {
+            return std::make_shared<StubDisplay>();
+        }
+
+        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+        {
+            return std::make_shared<mg::PlatformIPCPackage>();
+        }
+    };
+
+    std::shared_ptr<mg::Platform> make_graphics_platform()
+    {
+        if (!platform)
+            platform = std::make_shared<StubPlatform>();
+
+        return platform;
+    }
+
+    std::shared_ptr<mg::Platform> platform;
+};
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture,
+       creating_a_client_surface_allocates_buffers_on_server)
+{
+
+    ServerConfigAllocatesBuffersOnServer server_config;
 
     launch_server_process(server_config);
 
@@ -343,7 +386,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
 
 
-            mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
 
             wait_for_surface_release(ssync);
 
@@ -389,10 +432,10 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
 
-            mir_surface_release(connection, ssync[1].surface, release_surface_callback, ssync+1);
+            mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
             wait_for_surface_release(ssync+1);
 
-            mir_surface_release(connection, ssync->surface, release_surface_callback, ssync);
+            mir_surface_release(ssync->surface, release_surface_callback, ssync);
             wait_for_surface_release(ssync);
 
             mir_connection_release(connection);
@@ -428,10 +471,10 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
                 mir_debug_surface_id(ssync[0].surface),
                 mir_debug_surface_id(ssync[1].surface));
 
-            mir_surface_release(connection, ssync[1].surface, release_surface_callback, ssync+1);
+            mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
             wait_for_surface_release(ssync+1);
 
-            mir_surface_release(connection, ssync[0].surface, release_surface_callback, ssync);
+            mir_surface_release(ssync[0].surface, release_surface_callback, ssync);
             wait_for_surface_release(ssync);
 
             mir_connection_release(connection);
@@ -476,7 +519,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
             }
 
             for (int i = 0; i != max_surface_count; ++i)
-                mir_surface_release(connection, ssync[i].surface, release_surface_callback, ssync+i);
+                mir_surface_release( ssync[i].surface, release_surface_callback, ssync+i);
 
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_release(ssync+i);

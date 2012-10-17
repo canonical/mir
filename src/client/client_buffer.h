@@ -25,10 +25,13 @@
 
 #include <memory>
 
+class MirBufferPackage;
+
 namespace mir
 {
 namespace client
 {
+
 /* vaddr is valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * PixelOperation.bytes_per_pixel(format)] */
 struct MemoryRegion
 {

@@ -43,7 +43,6 @@ struct TestClient
         create_surface_done_count(0),
         disconnect_done_count(0)
     {
-
         surface_parameters.set_width(640);
         surface_parameters.set_height(480);
         surface_parameters.set_pixel_format(0);

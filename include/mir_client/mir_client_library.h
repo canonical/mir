@@ -38,11 +38,10 @@ typedef struct MirSurface MirSurface;
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
-
 /* Surface API */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_rgba_8888 = 0
+    mir_pixel_format_rgba_8888
 } MirPixelFormat;
 
 typedef enum MirAcceleration
@@ -122,13 +121,6 @@ MirWaitHandle* mir_surface_create(
     mir_surface_lifecycle_callback callback,
     void *client_context);
 
-/* Release the supplied surface and any associated buffer. */
-MirWaitHandle* mir_surface_release(
-    MirConnection *connection,
-    MirSurface *surface,
-    mir_surface_lifecycle_callback callback,
-    void *context);
-
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);
 
@@ -153,6 +145,11 @@ MirWaitHandle* mir_surface_next_buffer(
     mir_surface_lifecycle_callback callback,
     void *context);
 
+/* Release the supplied surface and any associated buffer. */
+MirWaitHandle* mir_surface_release(
+    MirSurface *surface,
+    mir_surface_lifecycle_callback callback,
+    void *context);
 
 void mir_wait_for(MirWaitHandle* wait_handle);
 

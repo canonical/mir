@@ -23,17 +23,16 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
+#include "client_buffer_factory.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
 
 #include <memory>
-#include <map>
 
 namespace mir
 {
 namespace client
 {
-class ClientBufferFactory;
 class ClientBuffer;
 class MemoryRegion;
 }
@@ -46,11 +45,15 @@ public:
     MirSurface& operator=(MirSurface const &) = delete;
 
     MirSurface(
+        MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
-        const std::shared_ptr<mir::client::ClientBufferFactory>& factory, 
+        const std::shared_ptr<mir::client::ClientBufferFactory>& factory,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
     ~MirSurface();
+    MirWaitHandle* release_surface(
+            mir_surface_lifecycle_callback callback,
+            void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
@@ -74,6 +77,7 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
+    MirConnection *connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
@@ -82,6 +86,7 @@ private:
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferFactory> buffer_factory;
+
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

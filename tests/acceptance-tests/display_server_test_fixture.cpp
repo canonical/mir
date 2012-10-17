@@ -22,6 +22,7 @@ namespace mc = mir::compositor;
 
 mir::TestingProcessManager mir::DefaultDisplayServerTestFixture::process_manager;
 
+
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
     process_manager.launch_client_process(config);

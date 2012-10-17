@@ -96,6 +96,7 @@ public:
     }
 };
 }
+
 std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()
 {
     if (!graphics_platform)

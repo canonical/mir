@@ -20,10 +20,15 @@
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
 
+#include <boost/program_options/cmdline.hpp>
+#include <boost/program_options/config.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
+
 #include <csignal>
 #include <iostream>
 #include <stdexcept>
-#include <getopt.h>
 
 namespace
 {
@@ -38,7 +43,6 @@ namespace mir
 {
 extern "C"
 {
-void (*signal_prev_fn)(int);
 void signal_terminate (int )
 {
     while (!signal_display_server)
@@ -47,49 +51,61 @@ void signal_terminate (int )
     signal_display_server->stop();
 }
 }
+}
 
 namespace
 {
-void run_mir()
+void run_mir(std::string const& socket_file)
 {
-    // TODO SIGTERM makes better long term sense - but Ctrl-C will do for now.
-    signal_prev_fn = signal(SIGINT, signal_terminate);
+    signal(SIGINT, mir::signal_terminate);
+    signal(SIGTERM, mir::signal_terminate);
 
-    DefaultServerConfiguration config(socket_file);
-    DisplayServer server(config);
+    mir::DefaultServerConfiguration config(socket_file);
+    mir::DisplayServer server(config);
 
     signal_display_server = &server;
 
     server.start();
 }
 }
-}
 
 int main(int argc, char* argv[])
 try
 {
-    int arg;
-    opterr = 0;
-    while ((arg = getopt (argc, argv, "hf:")) != -1)
-    {
-        switch (arg)
-        {
-        case 'f':
-            socket_file = optarg;
-            break;
+    namespace po = boost::program_options;
 
-        case '?':
-        case 'h':
-        default:
-            puts(argv[0]);
-            puts("Usage:");
-            puts("    -f <socket filename>");
-            puts("    -h: this help text");
-            return -1;
-        }
+    po::options_description desc("Options");
+    po::variables_map options;
+
+    std::string socket_file{"/data/tmp/mir_socket"};
+
+    try
+    {
+        desc.add_options()
+            ("file,f", po::value<std::string>(), "<socket filename>")
+            ("help,h", "this help text");
+
+        po::store(po::parse_command_line(argc, argv, desc), options);
+        po::notify(options);
+    }
+    catch (po::error const& error)
+    {
+        std::cerr << "ERROR: " << error.what() << std::endl;
+        std::cerr << desc << "\n";
+        return 1;
     }
 
-    mir::run_mir();
+    if (options.count("help"))
+    {
+        std::cout << desc << "\n";
+        return 1;
+    }
+    else if (options.count("file"))
+    {
+        socket_file = options["file"].as<std::string>();
+    }
+
+    run_mir(socket_file);
     return 0;
 }
 catch (std::exception const& error)
