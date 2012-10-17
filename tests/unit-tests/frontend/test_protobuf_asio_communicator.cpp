@@ -202,28 +202,25 @@ TEST_F(ProtobufAsioCommunicatorBasic, buffer_advances_on_each_call_to_next_buffe
     }
 }
 
-#if 0
-// what are we testing? the callback of disconnect? 
-TEST_F(ProtobufAsioCommunicatorTestFixture,
+TEST_F(ProtobufAsioCommunicatorBasic,
        connect_create_surface_then_disconnect_a_session)
 {
-    EXPECT_CALL(*client, create_surface_done()).Times(1);
-    client->display_server.create_surface(
+    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+    mock_client->display_server.create_surface(
         0,
-        &client->surface_parameters,
-        &client->surface,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::create_surface_done));
+        &mock_client->surface_parameters,
+        &mock_client->surface,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
 
-    client->wait_for_create_surface();
+    mock_client->wait_for_create_surface();
 
-    EXPECT_CALL(*client, disconnect_done()).Times(1);
-    client->display_server.disconnect(
+    EXPECT_CALL(*mock_client, disconnect_done()).Times(1);
+    mock_client->display_server.disconnect(
         0,
-        &client->ignored,
-        &client->ignored,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::disconnect_done));
+        &mock_client->ignored,
+        &mock_client->ignored,
+        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::disconnect_done));
 
-    client->wait_for_disconnect_done();
+    mock_client->wait_for_disconnect_done();
 }
-#endif
 }
