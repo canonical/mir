@@ -140,6 +140,8 @@ MirWaitHandle* MirConnection::connect(
 
 void MirConnection::done_disconnect()
 {
+    /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
+       is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
         lock_guard<mutex> lock(release_wait_handle_guard);
         for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
