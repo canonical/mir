@@ -23,6 +23,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
+#include "client_buffer_factory.h"
 #include "mir_wait_handle.h"
 
 #include <memory>
@@ -45,6 +46,7 @@ public:
     MirSurface(
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
+        const std::shared_ptr<mir::client::ClientBufferFactory>& factory,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
     ~MirSurface();

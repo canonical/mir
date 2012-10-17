@@ -23,10 +23,12 @@
 
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+namespace mcl = mir::client;
 
 MirSurface::MirSurface(
     MirConnection * allocating_connection,
     mp::DisplayServer::Stub & server,
+    const std::shared_ptr<mcl::ClientBufferFactory>&,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),

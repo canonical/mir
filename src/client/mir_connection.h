@@ -92,6 +92,8 @@ private:
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
 
+    std::shared_ptr<mir::client::ClientBufferFactory> factory;
+
     mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 

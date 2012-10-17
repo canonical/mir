@@ -47,6 +47,8 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
+    factory = mir::client::create_platform_factory();
+
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -65,7 +67,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, params, callback, context);
+    auto surface = new MirSurface(this, server, factory, params, callback, context);
     return surface->get_create_wait_handle();
 }
 
