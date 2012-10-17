@@ -39,6 +39,8 @@ namespace client
 class Logger;
 class ClientBufferFactory;
 
+std::shared_ptr<ClientBufferFactory> create_platform_factory ();
+
 }
 }
 

@@ -57,7 +57,9 @@ set(
   CLIENT_SOURCES
 
   android/android_client_buffer.cpp
+  android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
+  android/android_client_platform.cpp
   ${CLIENT_SOURCES}
 )
 endif()
