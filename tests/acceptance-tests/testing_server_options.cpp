@@ -18,11 +18,6 @@
 
 #include "testing_process_manager.h"
 
-/////////////////////////////////////////////////////////////////////
-// ===>> TODO start of frig to stub out graphics from tests <<=== //
-// We stub out the graphics - because real graphics cause all the
-// tests to fail. There must be a better way?
-
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -30,6 +25,15 @@
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+
+#include <boost/program_options/config.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
+
+#include <cstdlib>
+
+#include <fstream>
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -106,14 +110,54 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
-        std::shared_ptr<mg::Display> const& /*display*/)
+namespace
 {
-    return std::make_shared<StubRenderer>();
+// Load config from ~/.ubuntu_display_server.config
+// 1. The only config currently supported is "stub_graphics_in_tests".
+// 2. This is a temporary home for this functionality, but it suffices for now.
+boost::program_options::variables_map get_config()
+{
+    namespace po = boost::program_options;
+    po::variables_map options;
+    try
+    {
+        std::string filename;
+        if (const char* home = getenv("HOME")) (filename += home) += "/";
+        filename += ".ubuntu_display_server.config";
+
+        std::ifstream file(filename);
+        po::options_description desc("Options");
+        desc.add_options()
+            ("stub_graphics_in_tests", po::value<bool>(), "stub graphics in tests");
+
+        po::store(po::parse_config_file(file, desc), options, true);
+        po::notify(options);
+    }
+    catch (const po::error& error)
+    {
+        std::cerr << "ERROR: " << error.what() << std::endl;
+    }
+    return options;
+}
 }
 
-// ====>> TODO end of frig to stub out graphics from tests <<==== //
-/////////////////////////////////////////////////////////////////////
+std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
+        std::shared_ptr<mg::Display> const& display)
+{
+    auto options = get_config();
+
+    bool stub_graphics{true};
+
+    if (options.count("stub_graphics_in_tests"))
+    {
+        stub_graphics = options["stub_graphics_in_tests"].as<bool>();
+    }
+
+    if (stub_graphics)
+        return std::make_shared<StubRenderer>();
+    else
+        return DefaultServerConfiguration::make_renderer(display);
+}
 
 void mir::TestingServerConfiguration::exec(DisplayServer* )
 {
