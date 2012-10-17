@@ -281,18 +281,26 @@ static int render_accelerated()
 	EGLConfig egl_config;
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_GREEN_SIZE, 8,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
     EGLNativeWindowType native_window = mir_get_egl_type(surface);
+    
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    printf("Here 1\n");
     eglInitialize(disp, &major, &minor);
+    printf("Here 2\n");
 	
-	eglChooseConfig(disp, attribs, &egl_config, 1, &n); 
+	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+    printf("chooseconfig %i\n", n);
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+    printf("Here 4\n");
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
+    printf("Here 5\n");
     eglMakeCurrent(disp, surface, surface, context);
+    printf("Here 6\n");
 
     glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);

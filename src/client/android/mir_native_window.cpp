@@ -38,12 +38,14 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
     switch(mir_pixel_format)
     {
         case mir_pixel_format_rgba_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888; 
+//            return HAL_PIXEL_FORMAT_RGBA_8888;
+            return 5; 
         default:
             return 0;
     }
 }
 
+#include <iostream> 
 int mcl::MirNativeWindow::query(int key, int* value ) const
 {
     int ret = 0;
@@ -65,11 +67,13 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
             ret = -1;
             break;
     }
+    printf("VALUE %i\n", *value);
     return ret;
 }
- 
+
 int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
 {
+    printf("QUERY: %i\n", key);
     auto self = static_cast<const mcl::MirNativeWindow*>(anw);
     return self->query(key, value);
 } 
@@ -78,30 +82,36 @@ int mcl::MirNativeWindow::perform_static(ANativeWindow*, int, ...)
 {
     /* todo: kdub: the driver will send us requests sometimes via this hook. we will 
                    probably have to service these requests eventually */
+    printf("perform!\n");
     return 0;
 } 
 
 int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
 {
+    printf("setswapinterval!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* /*window*/, struct ANativeWindowBuffer** /*buffer*/)
 {
+    printf("dequeue!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
+    printf("lock!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
+    printf("queue!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
+    printf("cancel!\n");
     return 0;
 }
