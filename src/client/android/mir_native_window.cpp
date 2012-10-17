@@ -20,6 +20,10 @@
 
 namespace mcl=mir::client;
 
+static void incRef(android_native_base_t*)
+{
+}
+
 mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
  : surface(client_surface)
 {
@@ -31,6 +35,8 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
     ANativeWindow::queueBuffer = &queueBuffer_static;
     ANativeWindow::cancelBuffer = &cancelBuffer_static;
 
+    ANativeWindow::common.incRef = &incRef;
+    ANativeWindow::common.decRef = &incRef;
 }
 
 int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
