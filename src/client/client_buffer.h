@@ -29,6 +29,8 @@ namespace mir
 {
 namespace client
 {
+class MirBufferPackage;
+
 /* vaddr is valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * PixelOperation.bytes_per_pixel(format)] */
 struct MemoryRegion
 {

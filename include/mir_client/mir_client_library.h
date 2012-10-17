@@ -116,7 +116,6 @@ MirWaitHandle* mir_surface_create(
 
 /* Release the supplied surface and any associated buffer. */
 MirWaitHandle* mir_surface_release(
-    MirConnection *connection,
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);

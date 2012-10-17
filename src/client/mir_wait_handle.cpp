@@ -35,7 +35,6 @@ void MirWaitHandle::result_received()
     result_has_occurred = true;
 
     wait_condition.notify_all();
-    lock.unlock();
 }
 
 void MirWaitHandle::wait_for_result()

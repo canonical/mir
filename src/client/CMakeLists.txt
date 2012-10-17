@@ -57,18 +57,7 @@ set(
   CLIENT_SOURCES
 
   android/android_client_buffer.cpp
-  android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
-  android/android_client_platform.cpp
-  ${CLIENT_SOURCES}
-)
-endif()
-
-if( MIR_PLATFORM STREQUAL "gbm")
-set(
-  CLIENT_SOURCES
-
-  gbm/gbm_client_platform.cpp 
   ${CLIENT_SOURCES}
 )
 endif()
@@ -96,7 +85,6 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${LIBHARDWARE_LIBRARIES}
 )
 
 add_executable(
