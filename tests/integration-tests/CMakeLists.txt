@@ -14,7 +14,7 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-#add_subdirectory(client/)
+add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
 add_subdirectory(frontend/)
