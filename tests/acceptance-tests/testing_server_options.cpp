@@ -112,26 +112,37 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
 
 namespace
 {
-// Load config from ~/.ubuntu_display_server.config
+// Load config from XDG conforming config locations
 // 1. The only config currently supported is "stub_graphics_in_tests".
 // 2. This is a temporary home for this functionality, but it suffices for now.
 boost::program_options::variables_map get_config()
 {
+    std::string config_roots;
+
+    if (auto config_home = getenv("XDG_CONFIG_HOME")) (config_roots = config_home) += ":";
+    else if (auto home = getenv("HOME")) (config_roots = home) += "/.config:";
+
+    if (auto config_dirs = getenv("XDG_CONFIG_DIRS")) config_roots += config_dirs;
+    else config_roots += "/etc/xdg";
+
+    std::istringstream config_stream(config_roots);
+
     namespace po = boost::program_options;
     po::variables_map options;
     try
     {
-        std::string filename;
-        if (const char* home = getenv("HOME")) (filename += home) += "/";
-        filename += ".ubuntu_display_server.config";
-
-        std::ifstream file(filename);
         po::options_description desc("Options");
         desc.add_options()
             ("stub_graphics_in_tests", po::value<bool>(), "stub graphics in tests");
 
-        po::store(po::parse_config_file(file, desc), options, true);
-        po::notify(options);
+        for (std::string config_root; getline(config_stream, config_root, ':');)
+        {
+            auto const& filename = config_root + "/ubuntu_display_server/uds.config";
+
+            std::ifstream file(filename);
+            po::store(po::parse_config_file(file, desc), options, true);
+            po::notify(options);
+        }
     }
     catch (const po::error& error)
     {
