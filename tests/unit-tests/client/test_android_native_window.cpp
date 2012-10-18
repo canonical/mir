@@ -22,9 +22,17 @@
 #include <gtest/gtest.h>
 #include <memory>
 namespace mcl=mir::client;
+namespace geom=mir::geometry;
 
 namespace
 {
+struct MockClientBuffer : public mcl::ClientBuffer
+{
+    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<MemoryRegion>());
+    MOCK_CONST_METHOD0(width, geom::Width());
+    MOCK_CONST_METHOD0(width, geom::Height());
+    MOCK_CONST_METHOD0(width, geom::PixelFormat());
+};
 struct MockMirSurface : public mcl::ClientSurface
 {
     MockMirSurface(MirSurfaceParameters params)
@@ -51,10 +59,12 @@ protected:
         surf_params.pixel_format = mir_pixel_format_rgba_8888; 
 
         mock_surface = std::make_shared<MockMirSurface>(surf_params);
+        mock_client_buffer = std::make_shared<MockClientBuffer>();
     }
 
     MirSurfaceParameters surf_params;
     std::shared_ptr<MockMirSurface> mock_surface;
+    std::shared_ptr<MockClientBuffer> mock_client_buffer;
 };
 
 /* Query hook tests */
@@ -216,6 +226,24 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp;
  
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    ASSERT_NE((int) anw->dequeueBuffer, NULL);
+    EXPECT_NO_THROW({
+        anw->dequeueBuffer(anw, &tmp);
+    });
+    
+    delete anw;
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_calls_surface_get_current)
+{
+    ANativeWindow* anw;
+    ANativeWindowBuffer* tmp;
+
+    EXPECT_CALL(*mock_surface, get_current_buffer())
+        .Times(1)
+        .WillOnce(Return(mock_client_buffer)); 
     anw = new mcl::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->dequeueBuffer, NULL);
