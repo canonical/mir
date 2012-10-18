@@ -17,6 +17,10 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+// Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
 message Buffer {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
@@ -25,6 +29,10 @@ message Buffer {
   optional string error = 127;
 }
 
+// Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
 message Connection {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
@@ -33,6 +41,10 @@ message Connection {
   optional string error = 127;
 }
 
+// Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
 message Surface {
   optional SurfaceId id = 1;
   optional int32 width = 2;
@@ -43,6 +55,10 @@ message Surface {
   optional string error = 127;
 }
 
+// Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
 message Void {
   optional string error = 127;
 }
