@@ -214,3 +214,8 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         buffer_package.fd_items = 0;
     }
 }
+
+std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
+{
+    return std::shared_ptr<mcl::ClientBuffer>();
+}

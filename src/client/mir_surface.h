@@ -66,6 +66,7 @@ public:
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
 
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     MirAcceleration acceleration;
 
 private:

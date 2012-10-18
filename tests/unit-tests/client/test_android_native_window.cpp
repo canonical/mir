@@ -18,6 +18,7 @@
 
 #include "mir_client_surface.h"
 #include "android/mir_native_window.h"
+#include "client_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -28,11 +29,12 @@ namespace
 {
 struct MockClientBuffer : public mcl::ClientBuffer
 {
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<MemoryRegion>());
+    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(width, geom::Height());
-    MOCK_CONST_METHOD0(width, geom::PixelFormat());
+    MOCK_CONST_METHOD0(height, geom::Height());
+    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 };
+
 struct MockMirSurface : public mcl::ClientSurface
 {
     MockMirSurface(MirSurfaceParameters params)
@@ -44,6 +46,7 @@ struct MockMirSurface : public mcl::ClientSurface
     }
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
 
     MirSurfaceParameters params;
 };
@@ -238,6 +241,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_calls_surface_get_current)
 {
+    using namespace testing;
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp;
 
