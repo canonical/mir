@@ -63,9 +63,11 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
     switch (key)
     {
         case NATIVE_WINDOW_WIDTH:
+        case NATIVE_WINDOW_DEFAULT_WIDTH:
             *value = surface->get_parameters().width;
             break;
         case NATIVE_WINDOW_HEIGHT:
+        case NATIVE_WINDOW_DEFAULT_HEIGHT:
             *value = surface->get_parameters().height;
             break;
         case NATIVE_WINDOW_FORMAT:
