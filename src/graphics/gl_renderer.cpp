@@ -44,23 +44,30 @@ struct VertexAttributes
     glm::vec2 texcoord;
 };
 
+/*
+ * The texture coordinates are y-inverted to account for the difference in the
+ * texture and renderable pixel data row order. In particular, GL textures
+ * expect pixel data in rows starting from the bottom and moving up the image,
+ * whereas our renderables provide data in rows starting from the top and
+ * moving down the image.
+ */
 VertexAttributes vertex_attribs[4] =
 {
     {
         glm::vec3{-0.5f, -0.5f, 0.0f},
-        glm::vec2{0.0f, 1.0f}
+        glm::vec2{0.0f, 0.0f}
     },
     {
         glm::vec3{-0.5f, 0.5f, 0.0f},
-        glm::vec2{0.0f, 0.0f},
+        glm::vec2{0.0f, 1.0f},
     },
     {
         glm::vec3{0.5f, -0.5f, 0.0f},
-        glm::vec2{1.0f, 1.0f},
+        glm::vec2{1.0f, 0.0f},
     },
     {
         glm::vec3{0.5f, 0.5f, 0.0f},
-        glm::vec2{1.0f, 0.0f}
+        glm::vec2{1.0f, 1.0f}
     }
 };
 
