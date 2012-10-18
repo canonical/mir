@@ -25,7 +25,7 @@
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
-#include "mir_test/mock_server_tool.h"
+#include "mir_test/stub_server_tool.h"
 #include "mir_test/test_client.h"
 #include "mir_test/test_server.h"
 
@@ -45,188 +45,188 @@ struct ProtobufAsioCommunicatorBasic : public ::testing::Test
 {
     void SetUp()
     {
-        mock_server_tool = std::make_shared<mt::MockServerTool>();
-        mock_server = std::make_shared<mt::TestServer>("./test_socket", mock_server_tool);
+        stub_server_tool = std::make_shared<mt::StubServerTool>();
+        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
  
-        ::testing::Mock::VerifyAndClearExpectations(mock_server->factory.get());
-        EXPECT_CALL(*mock_server->factory, make_ipc_server()).Times(1);
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        mock_server->comm.start();
+        stub_server->comm.start();
 
-        mock_client = std::make_shared<mt::TestClient>("./test_socket");
-        mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+        stub_client = std::make_shared<mt::TestClient>("./test_socket");
+        stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
-        mock_server->comm.stop();
+        stub_server->comm.stop();
     }
 
-    std::shared_ptr<mt::TestClient> mock_client;
-    std::shared_ptr<mt::MockServerTool> mock_server_tool;
+    std::shared_ptr<mt::TestClient> stub_client;
+    std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
-    std::shared_ptr<mt::TestServer> mock_server;
+    std::shared_ptr<mt::TestServer> stub_server;
 };
 
 TEST_F(ProtobufAsioCommunicatorBasic, connection_results_in_a_callback)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
 
-    mock_client->display_server.create_surface(
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 }
 
 TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
 {
-    EXPECT_CALL(*mock_client, connect_done()).Times(1);
+    EXPECT_CALL(*stub_client, connect_done()).Times(1);
 
-    mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+    stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
-    mock_client->display_server.connect(
+    stub_client->display_server.connect(
         0,
-        &mock_client->connect_parameters,
-        &mock_client->connection,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
+        &stub_client->connect_parameters,
+        &stub_client->connection,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::connect_done));
 
-    mock_client->wait_for_connect_done();
+    stub_client->wait_for_connect_done();
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->app_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
 
 TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
 {
-    EXPECT_CALL(*mock_client, connect_done()).Times(1);
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+    EXPECT_CALL(*stub_client, connect_done()).Times(1);
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
 
-    mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+    stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
-    mock_client->display_server.connect(
+    stub_client->display_server.connect(
         0,
-        &mock_client->connect_parameters,
-        &mock_client->connection,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::connect_done));
+        &stub_client->connect_parameters,
+        &stub_client->connection,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::connect_done));
 
-    mock_client->wait_for_connect_done();
+    stub_client->wait_for_connect_done();
 
-    mock_client->surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
+    stub_client->surface_parameters.set_surface_name(__PRETTY_FUNCTION__);
 
-    mock_client->display_server.create_surface(
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, mock_server_tool->surface_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->surface_name);
 }
 
 
 TEST_F(ProtobufAsioCommunicatorBasic,
         create_surface_results_in_a_surface_being_created)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
 
-    mock_client->display_server.create_surface(
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 }
 
 TEST_F(ProtobufAsioCommunicatorBasic,
        double_disconnection_attempt_has_no_effect)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
-    mock_client->display_server.create_surface(
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 
-    EXPECT_CALL(*mock_client, disconnect_done()).Times(1);
-    mock_client->display_server.disconnect(
+    EXPECT_CALL(*stub_client, disconnect_done()).Times(1);
+    stub_client->display_server.disconnect(
         0,
-        &mock_client->ignored,
-        &mock_client->ignored,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::disconnect_done));
+        &stub_client->ignored,
+        &stub_client->ignored,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
 
-    mock_client->wait_for_disconnect_done();
+    stub_client->wait_for_disconnect_done();
 
-    EXPECT_CALL(*mock_client->logger, error()).Times(testing::AtLeast(1));
+    EXPECT_CALL(*stub_client->logger, error()).Times(testing::AtLeast(1));
 
     // We don't expect this to be called, so it can't auto destruct
-    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(mock_client.get(), &mt::TestClient::disconnect_done));
-    mock_client->display_server.disconnect(0, &mock_client->ignored, &mock_client->ignored, new_callback.get());
-    mock_client->wait_for_disconnect_done();
+    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(stub_client.get(), &mt::TestClient::disconnect_done));
+    stub_client->display_server.disconnect(0, &stub_client->ignored, &stub_client->ignored, new_callback.get());
+    stub_client->wait_for_disconnect_done();
 }
 
 TEST_F(ProtobufAsioCommunicatorBasic,
        getting_and_advancing_buffers)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(testing::AtLeast(0));
-    EXPECT_CALL(*mock_client, disconnect_done()).Times(testing::AtLeast(0));
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(0));
+    EXPECT_CALL(*stub_client, disconnect_done()).Times(testing::AtLeast(0));
 
-    mock_client->display_server.create_surface(
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 
-    EXPECT_TRUE(mock_client->surface.has_buffer());
-    EXPECT_CALL(*mock_client, next_buffer_done()).Times(8);
+    EXPECT_TRUE(stub_client->surface.has_buffer());
+    EXPECT_CALL(*stub_client, next_buffer_done()).Times(8);
 
     for (int i = 0; i != 8; ++i)
     {
-        mock_client->display_server.next_buffer(
+        stub_client->display_server.next_buffer(
             0,
-            &mock_client->surface.id(),
-            mock_client->surface.mutable_buffer(),
-            google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::next_buffer_done));
+            &stub_client->surface.id(),
+            stub_client->surface.mutable_buffer(),
+            google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::next_buffer_done));
 
-        mock_client->wait_for_next_buffer();
-        EXPECT_TRUE(mock_client->surface.has_buffer());
+        stub_client->wait_for_next_buffer();
+        EXPECT_TRUE(stub_client->surface.has_buffer());
     }
 
-    mock_client->display_server.disconnect(
+    stub_client->display_server.disconnect(
         0,
-        &mock_client->ignored,
-        &mock_client->ignored,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::disconnect_done));
+        &stub_client->ignored,
+        &stub_client->ignored,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
 
-    mock_client->wait_for_disconnect_done();
+    stub_client->wait_for_disconnect_done();
 }
 
 TEST_F(ProtobufAsioCommunicatorBasic,
        connect_create_surface_then_disconnect_a_session)
 {
-    EXPECT_CALL(*mock_client, create_surface_done()).Times(1);
-    mock_client->display_server.create_surface(
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
+    stub_client->display_server.create_surface(
         0,
-        &mock_client->surface_parameters,
-        &mock_client->surface,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::create_surface_done));
+        &stub_client->surface_parameters,
+        &stub_client->surface,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
 
-    mock_client->wait_for_create_surface();
+    stub_client->wait_for_create_surface();
 
-    EXPECT_CALL(*mock_client, disconnect_done()).Times(1);
-    mock_client->display_server.disconnect(
+    EXPECT_CALL(*stub_client, disconnect_done()).Times(1);
+    stub_client->display_server.disconnect(
         0,
-        &mock_client->ignored,
-        &mock_client->ignored,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::disconnect_done));
+        &stub_client->ignored,
+        &stub_client->ignored,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
 
-    mock_client->wait_for_disconnect_done();
+    stub_client->wait_for_disconnect_done();
 }
 }

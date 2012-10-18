@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_TEST_SERVER_H_
 #define MIR_TEST_TEST_SERVER_H_
 
-#include "mir_test/mock_server_tool.h"
+#include "mir_test/stub_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 
