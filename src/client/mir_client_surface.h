@@ -21,15 +21,17 @@
 
 #include "mir_client/mir_client_library.h"
 
+#include <memory>
 namespace mir
 {
 namespace client
 {
-
+class ClientBuffer;
 class ClientSurface
 {
 public:
     virtual MirSurfaceParameters get_parameters() const = 0;
+    virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
 };
 
 }
