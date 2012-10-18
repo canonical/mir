@@ -164,6 +164,22 @@ TEST_F(AndroidNativeWindowTest, native_window_default_width_query_hook)
     delete anw;
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_default_height_query_hook)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+    int value;
+
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    auto rc = anw->query(anw, NATIVE_WINDOW_DEFAULT_HEIGHT ,&value);
+
+    EXPECT_EQ(rc, 0);
+    EXPECT_EQ(value, surf_params.height);
+
+    delete anw;
+}
+
 /* perform hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
 {
