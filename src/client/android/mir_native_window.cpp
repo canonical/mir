@@ -17,7 +17,7 @@
  */
 
 #include "android/mir_native_window.h"
-
+#include "mir/thread/all.h"
 namespace mcl=mir::client;
 
 static void incRef(android_native_base_t*)
@@ -37,6 +37,11 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
 
     ANativeWindow::common.incRef = &incRef;
     ANativeWindow::common.decRef = &incRef;
+
+    const_cast<int&>(ANativeWindow::minSwapInterval) = 0;
+    const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
+
+    printf("PIDcreat %i\n", gettid()); 
 }
 
 int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
@@ -70,6 +75,7 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
             *value = 0; /* transform hint is a bitmask. 0 means no transform */
             break;
         default:
+            printf("ERROR\n");
             ret = -1;
             break;
     }
@@ -84,17 +90,23 @@ int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* v
     return self->query(key, value);
 } 
 
-int mcl::MirNativeWindow::perform_static(ANativeWindow*, int, ...)
+int mcl::MirNativeWindow::perform_static(ANativeWindow*, int key, ...)
 {
+    va_list vl;
+    va_start(vl,key);
     /* todo: kdub: the driver will send us requests sometimes via this hook. we will 
                    probably have to service these requests eventually */
-    printf("perform!\n");
+    
+    auto arg1 = va_arg(vl, int);
+    printf("perform! %i %i\n", key, arg1);
+    va_end(vl);
     return 0;
 } 
 
-int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* window, int interval)
 {
-    printf("setswapinterval!\n");
+    printf("int is %i\n", window->maxSwapInterval);
+    printf("setswapinterval! %i\n", interval);
     return 0;
 }
 
