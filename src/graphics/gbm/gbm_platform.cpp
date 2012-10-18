@@ -17,14 +17,21 @@
  */
 
 #include "mir/graphics/gbm/gbm_platform.h"
+
+#include "mir/exception.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_display.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/logging/logger.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <xf86drm.h>
 
+#include <stdexcept>
+
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
+namespace ml=mir::logging;
 namespace mc=mir::compositor;
 
 namespace
@@ -44,6 +51,8 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     }
 };
 
+std::shared_ptr<mgg::GBMDisplayReporter> reporter;
+
 }
 
 mgg::GBMPlatform::GBMPlatform()
@@ -61,7 +70,9 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
 
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
-    return std::make_shared<mgg::GBMDisplay>(this->shared_from_this());
+    return std::make_shared<mgg::GBMDisplay>(
+        this->shared_from_this(), 
+        reporter);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
@@ -69,7 +80,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform()
+std::shared_ptr<mg::Platform> mg::create_platform(const std::shared_ptr<ml::Logger>& logger)
 {
+    reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
     return std::make_shared<mgg::GBMPlatform>();
 }

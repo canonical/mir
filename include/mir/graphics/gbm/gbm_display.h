@@ -22,10 +22,15 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 
+#include <iostream>
 #include <memory>
 
 namespace mir
 {
+namespace logging
+{
+class Logger;
+}
 namespace geometry
 {
 class Rectangle;
@@ -35,13 +40,42 @@ namespace graphics
 namespace gbm
 {
 
+class GBMDisplay;
 class GBMPlatform;
 class BufferObject;
+
+class GBMDisplayReporter
+{
+  public:
+
+    static const char* component()
+    {
+        static const char* s = "GBMDisplay";
+        return s;
+    }
+
+    GBMDisplayReporter(const std::shared_ptr<logging::Logger>& logger);
+    virtual ~GBMDisplayReporter();
+    
+    virtual void report_successful_setup_of_native_resources(const GBMDisplay& display);
+    virtual void report_successful_egl_make_current_on_construction(const GBMDisplay& display);
+    virtual void report_successful_egl_buffer_swap_on_construction(const GBMDisplay& display);
+    virtual void report_successful_drm_mode_set_crtc_on_construction(const GBMDisplay& display);
+    virtual void report_successful_display_construction(const GBMDisplay& display);
+    
+  protected:
+    GBMDisplayReporter(const GBMDisplayReporter&) = delete;
+    GBMDisplayReporter& operator=(const GBMDisplayReporter&) = delete;
+  
+  private:
+    std::shared_ptr<logging::Logger> logger;
+};
 
 class GBMDisplay : public Display
 {
 public:
-    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform);
+    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<GBMDisplayReporter>& reporter);
+    
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
@@ -49,11 +83,14 @@ public:
     bool post_update();
 
 private:
+    friend class GBMDisplayReporter;
+    
     BufferObject* get_front_buffer_object();
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<GBMPlatform> platform;
+    std::shared_ptr<GBMDisplayReporter> reporter;
     /* DRM and GBM helpers from GBMPlatform */
     helpers::DRMHelper& drm;
     helpers::GBMHelper& gbm;

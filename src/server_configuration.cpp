@@ -19,6 +19,9 @@
 #include "mir/server_configuration.h"
 
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
@@ -27,9 +30,8 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/logging/logger.h"
+#include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -38,6 +40,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 
 namespace
@@ -83,8 +86,9 @@ private:
 };
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
-socket_file(socket_file)
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) 
+        : socket_file(socket_file),
+          logger(std::make_shared<ml::DumbConsoleLogger>())
 {
 }
 
@@ -96,7 +100,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_pla
         // mg::create_platform() - we just need to move the implementation
         // of DefaultServerConfiguration::make_graphics_platform() to the
         // graphics libraries.
-        graphics_platform = mg::create_platform();
+        graphics_platform = mg::create_platform(logger);
     }
 
     return graphics_platform;

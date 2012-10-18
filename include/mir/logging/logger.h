@@ -25,31 +25,32 @@ namespace mir
 {
 namespace logging
 {
-// A facade to shield the inner core of mir to prevent an actual
-// logging framework from leaking implementation detail.
 class Logger
 {
-public:   
+public:
+    
     enum Severity
     {
-        critical = 0,
-        error = 1,
-        warning = 2,
-        informational = 3,
-        debug = 4
+        emergency = 0,
+        alert = 1,
+        critical = 2,
+        error = 3,
+        warning = 4,
+        notice = 5,
+        informational = 6,
+        debug = 7
     };
 
+    static const char* unknown_component_name()
+    {
+        static const char* name = "UnknownComponent";
+        return name;
+    }
+    
     virtual ~Logger() {}
 
     template<Severity severity>
-    void log(const std::string& message)
-    {
-        static const std::string unknown_component("UnknownComponent");
-        log(severity, message, unknown_component);
-    }
-
-    template<Severity severity>
-    void log(const std::string& message, const std::string& component)
+    void log(const std::string& message, const std::string& component = Logger::unknown_component_name())
     {
         log(severity, message, component);
     }

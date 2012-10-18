@@ -33,6 +33,7 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirinput
+  mirlogging
   mirsurfaces
   mirplatformgraphics
   mirprocess

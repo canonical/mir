@@ -16,10 +16,14 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
-#include "mir/geometry/rectangle.h"
 
+#include "mir/exception.h"
+#include "mir/graphics/gbm/gbm_platform.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/logging/logger.h"
+
+#include <exception>
 #include <stdexcept>
 #include <xf86drm.h>
 
@@ -27,6 +31,7 @@
 
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
+namespace ml=mir::logging;
 namespace geom=mir::geometry;
 
 class mgg::BufferObject {
@@ -80,13 +85,72 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform)
-    : last_flipped_bufobj{0}, platform(platform), drm(platform->drm), gbm(platform->gbm)
+mgg::GBMDisplayReporter::GBMDisplayReporter(const std::shared_ptr<ml::Logger>& logger) : logger(logger)
+{
+}
+
+mgg::GBMDisplayReporter::~GBMDisplayReporter()
+{
+}
+
+void mgg::GBMDisplayReporter::report_successful_setup_of_native_resources(const mgg::GBMDisplay& /*display*/)
+{
+    logger->log<ml::Logger::informational>("Successfully setup native resources.", GBMDisplayReporter::component());
+}
+
+void mgg::GBMDisplayReporter::report_successful_egl_make_current_on_construction(const GBMDisplay& /*display*/)
+{
+    logger->log<ml::Logger::informational>("Successfully made egl context current on construction.", GBMDisplayReporter::component());
+}
+
+void mgg::GBMDisplayReporter::report_successful_egl_buffer_swap_on_construction(const GBMDisplay& /*display*/)
+{
+    logger->log<ml::Logger::informational>("Successfully performed egl buffer swap on construction.", GBMDisplayReporter::component());
+}
+
+void mgg::GBMDisplayReporter::report_successful_drm_mode_set_crtc_on_construction(const GBMDisplay& /*display*/)
+{
+    logger->log<ml::Logger::informational>("Successfully performed drm mode setup on construction.", GBMDisplayReporter::component());
+}
+
+void mgg::GBMDisplayReporter::report_successful_display_construction(const GBMDisplay&)
+{
+    logger->log<ml::Logger::informational>("Successfully finished construction.", GBMDisplayReporter::component());
+}
+mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, 
+                            const std::shared_ptr<GBMDisplayReporter>& reporter)
+    : last_flipped_bufobj{0}, 
+    platform(platform),
+    reporter(reporter),
+    drm(platform->drm), 
+    gbm(platform->gbm)
 {
     /* Set up all native resources */
-    kms.setup(drm);
-    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
-    egl.setup(gbm);
+    try
+    {
+        kms.setup(drm);
+    } catch(...)
+    {
+        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+    }
+    
+    try
+    {
+        gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
+    } catch(...)
+    {
+        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+    }
+
+    try
+    {
+        egl.setup(gbm);
+    } catch(...)
+    {
+        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+    }
+    
+    reporter->report_successful_setup_of_native_resources(*this);
 
     if (eglMakeCurrent(egl.display, egl.surface,
                        egl.surface, egl.context) == EGL_FALSE)
@@ -95,9 +159,12 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform)
     }
 
     clear();
+    reporter->report_successful_egl_make_current_on_construction(*this);
 
     if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
         throw std::runtime_error("Failed to perform initial surface buffer swap");
+
+    reporter->report_successful_egl_buffer_swap_on_construction(*this);
 
     last_flipped_bufobj = get_front_buffer_object();
     auto ret = drmModeSetCrtc(drm.fd, kms.encoder->crtc_id,
@@ -105,6 +172,9 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform)
                               &kms.connector->connector_id, 1, &kms.mode);
     if (ret)
         throw std::runtime_error("Failed to set DRM crtc");
+
+    reporter->report_successful_drm_mode_set_crtc_on_construction(*this);
+    reporter->report_successful_display_construction(*this);
 }
 
 mgg::GBMDisplay::~GBMDisplay()

@@ -30,6 +30,10 @@ namespace compositor
 {
 class GraphicBufferAllocator;
 }
+namespace logging
+{
+class Logger;
+}
 
 namespace graphics
 {
@@ -52,7 +56,7 @@ public:
 };
 
 // Create and return a new graphics platform.
-std::shared_ptr<Platform> create_platform();
+std::shared_ptr<Platform> create_platform(const std::shared_ptr<logging::Logger>& logger);
 
 }
 }
