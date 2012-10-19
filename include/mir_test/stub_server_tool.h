@@ -17,8 +17,8 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_STUB_SERVER_H_
-#define MIR_TEST_STUB_SERVER_H_
+#ifndef MIR_TEST_STUB_SERVER_TOOL_H_
+#define MIR_TEST_STUB_SERVER_TOOL_H_
 
 #include "mir_protobuf.pb.h"
 #include "mir/thread/all.h" 
@@ -28,7 +28,7 @@ namespace mir
 namespace test
 {
 
-struct MockServerTool : mir::protobuf::DisplayServer
+struct StubServerTool : mir::protobuf::DisplayServer
 {
     virtual void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
@@ -97,4 +97,4 @@ struct MockServerTool : mir::protobuf::DisplayServer
 
 }
 }
-#endif /* MIR_TEST_STUB_SERVER_H_ */
+#endif /* MIR_TEST_STUB_SERVER_TOOL_H_ */
