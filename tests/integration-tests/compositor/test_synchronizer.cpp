@@ -48,10 +48,7 @@ TEST(Synchronizer, thread_stop_start) {
 
     t1.join();
 }
-}
 
-namespace
-{
 void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
     bool wait_request;
     for(;;)
@@ -63,12 +60,10 @@ void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
         {
             if (synchronizer->child_enter_wait()) break;
         }
+        std::this_thread::yield();
     }
 }
-}
 
-namespace mir
-{
 TEST(Synchronizer, thread_pause_req) {
     int data = 0, old_data = 0;
 
