@@ -86,8 +86,8 @@ private:
 };
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) 
-        : socket_file(socket_file)
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
+    socket_file(socket_file)
 {
 }
 

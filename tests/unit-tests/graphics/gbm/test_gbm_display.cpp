@@ -35,32 +35,26 @@ namespace ml=mir::logging;
 
 namespace
 {
-
 struct MockLogger : public ml::Logger
 {
     MOCK_METHOD3(log,
                  void(ml::Logger::Severity, const std::string&, const std::string&));
 };
 
-struct MockGBMDisplayReporter : public mgg::GBMDisplayReporter
+struct MockGBMDisplayReporter : public mg::DisplayListener
 {
-    MockGBMDisplayReporter(const std::shared_ptr<ml::Logger>& ml) : mgg::GBMDisplayReporter(ml)
-    {
-    }
-
-    MOCK_METHOD1(report_successful_setup_of_native_resources, void(const mgg::GBMDisplay&));
-    MOCK_METHOD1(report_successful_egl_make_current_on_construction, void(const mgg::GBMDisplay&));
-    MOCK_METHOD1(report_successful_egl_buffer_swap_on_construction, void(const mgg::GBMDisplay&));
-    MOCK_METHOD1(report_successful_drm_mode_set_crtc_on_construction, void(const mgg::GBMDisplay&));
-    MOCK_METHOD1(report_successful_display_construction, void(const mgg::GBMDisplay&));
+    MOCK_METHOD0(report_successful_setup_of_native_resources, void());
+    MOCK_METHOD0(report_successful_egl_make_current_on_construction, void());
+    MOCK_METHOD0(report_successful_egl_buffer_swap_on_construction, void());
+    MOCK_METHOD0(report_successful_drm_mode_set_crtc_on_construction, void());
+    MOCK_METHOD0(report_successful_display_construction, void());
 };
 
 class GBMDisplayTest : public ::testing::Test
 {
 public:
-    GBMDisplayTest() 
-            : logger(std::make_shared<ml::DumbConsoleLogger>()),
-              mock_reporter(new ::testing::NiceMock<MockGBMDisplayReporter>(logger))
+    GBMDisplayTest() :
+        mock_reporter(new ::testing::NiceMock<MockGBMDisplayReporter>())
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -136,7 +130,6 @@ public:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<testing::NiceMock<MockGBMDisplayReporter> > mock_reporter;
 };
 
@@ -391,22 +384,22 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
 
     EXPECT_CALL(
         *mock_reporter, 
-        report_successful_setup_of_native_resources(_)).Times(Exactly(1));
+        report_successful_setup_of_native_resources()).Times(Exactly(1));
     EXPECT_CALL(
         *mock_reporter, 
-        report_successful_egl_make_current_on_construction(_)).Times(Exactly(1));
+        report_successful_egl_make_current_on_construction()).Times(Exactly(1));
     
     EXPECT_CALL(
         *mock_reporter, 
-        report_successful_egl_buffer_swap_on_construction(_)).Times(Exactly(1));
+        report_successful_egl_buffer_swap_on_construction()).Times(Exactly(1));
 
     EXPECT_CALL(
         *mock_reporter, 
-        report_successful_drm_mode_set_crtc_on_construction(_)).Times(Exactly(1));
+        report_successful_drm_mode_set_crtc_on_construction()).Times(Exactly(1));
 
     EXPECT_CALL(
         *mock_reporter, 
-        report_successful_display_construction(_)).Times(Exactly(1));
+        report_successful_display_construction()).Times(Exactly(1));
 
     EXPECT_NO_THROW(
     {
