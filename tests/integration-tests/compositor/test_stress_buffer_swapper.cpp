@@ -105,7 +105,7 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
         swapper->client_release(*buf);
         if (synchronizer->child_enter_wait()) return;
 
-        mir::std::this_thread::yield();
+        std::this_thread::yield();
     }
 }
 
@@ -121,7 +121,7 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
         swapper->compositor_release(*buf);
         if (synchronizer->child_enter_wait()) return;
 
-        mir::std::this_thread::yield();
+        std::this_thread::yield();
     }
 
 }
