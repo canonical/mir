@@ -19,12 +19,11 @@
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 #include "mir/exception.h"
 
-#include <xf86drm.h>
 
 #include <cstring>
-#include <exception>
 #include <sstream>
 #include <stdexcept>
+#include <xf86drm.h>
 
 namespace mggh=mir::graphics::gbm::helpers;
 
@@ -35,6 +34,9 @@ namespace mggh=mir::graphics::gbm::helpers;
 void mggh::DRMHelper::setup()
 {
     fd = open_drm_device();
+
+    if (fd < 0)
+        throw std::runtime_error("Failed to open DRM device\n");
 }
 
 int mggh::DRMHelper::get_authenticated_fd()
