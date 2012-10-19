@@ -12,36 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-include_directories(
-    ${Boost_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_integration.cpp
 )
 
 set(
-  TEST_UTILS_SRCS
-
-  graphics_utils.cpp 
-  config.cpp
-)
-
-if (MIR_PLATFORM STREQUAL "android")
-  set(
-    TEST_UTILS_SRCS
-
-    android_graphics.cpp
-    ${TEST_UTILS_SRCS} 
-)
-endif()
-
-add_library(
-  test-utils STATIC 
-  ${TEST_UTILS_SRCS})
-
-target_link_libraries(
-  test-utils 
-
-  ${Boost_LIBRARIES}
-  ${GLESv2_LIBRARIES}
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE
 )

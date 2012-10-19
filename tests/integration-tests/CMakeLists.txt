@@ -23,6 +23,16 @@ if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
+if(MIR_PLATFORM STREQUAL "gbm")
+  include_directories(
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
+  )
+  add_subdirectory(graphics/gbm)
+endif()
+
 add_executable(
   integration-tests 
   ${INTEGRATION_TESTS_SRCS})
