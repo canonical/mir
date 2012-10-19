@@ -23,15 +23,10 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 
-#include <iostream>
 #include <memory>
 
 namespace mir
 {
-namespace logging
-{
-class Logger;
-}
 namespace geometry
 {
 class Rectangle;
@@ -41,7 +36,6 @@ namespace graphics
 namespace gbm
 {
 
-class GBMDisplay;
 class GBMPlatform;
 class BufferObject;
 
@@ -80,8 +74,6 @@ public:
     bool post_update();
 
 private:
-    friend class GBMDisplayReporter;
-    
     BufferObject* get_front_buffer_object();
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
