@@ -135,7 +135,8 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     try
     {
         kms.setup(drm);
-    } catch(...)
+    }
+    catch(...)
     {
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
@@ -143,7 +144,8 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     try
     {
         gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
-    } catch(...)
+    }
+    catch(...)
     {
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
@@ -151,7 +153,8 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     try
     {
         egl.setup(gbm);
-    } catch(...)
+    }
+    catch(...)
     {
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
