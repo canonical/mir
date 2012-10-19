@@ -23,27 +23,8 @@
 
 #include <exception>
 
-#define MIR_THROW_EXCEPTION(e) BOOST_THROW_EXCEPTION(e)
-
 namespace mir
 {
-
-using boost::error_info;
-
-using boost::current_exception_diagnostic_information;
-using boost::diagnostic_information;
-using boost::diagnostic_information_what;
-using boost::enable_error_info;
-using boost::current_exception;
-
-// Inject pre-defined error infos
-using boost::errinfo_nested_exception;
-using boost::errinfo_api_function;
-using boost::errinfo_errno;
-using boost::errinfo_file_handle;
-using boost::errinfo_file_name;
-using boost::errinfo_file_open_mode;
-
 class Exception : public boost::exception, public std::exception
 {
   public:
@@ -65,6 +46,12 @@ class Exception : public boost::exception, public std::exception
     {
         return boost::get_error_info<ErrorInfoType>(*this);
     }
+
+    virtual const char* what() const throw()
+    {
+        return boost::diagnostic_information_what(*this);
+    }
+
 };
 }
 

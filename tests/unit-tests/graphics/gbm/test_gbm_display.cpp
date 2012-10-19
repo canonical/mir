@@ -282,8 +282,8 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
     }
     catch(const mir::Exception& e)
     {
-        e.has_error_info<mir::errinfo_errno>();
-        std::cout << mir::diagnostic_information_what(e) << std::endl;
+        e.has_error_info<boost::errinfo_errno>();
+        std::cout << boost::diagnostic_information_what(e) << std::endl;
         return;
     }
 
@@ -310,7 +310,7 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
         //auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
     } catch(...)
     {
-        std::cout << mir::current_exception_diagnostic_information() << std::endl;
+        std::cout << boost::current_exception_diagnostic_information() << std::endl;
         return;
     }
     FAIL() << "Expected c'tor of GBMDisplay to throw an exception";

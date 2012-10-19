@@ -131,7 +131,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
         kms.setup(drm);
     } catch(...)
     {
-        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
     
     try
@@ -139,7 +139,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
         gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
     } catch(...)
     {
-        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
 
     try
@@ -147,7 +147,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
         egl.setup(gbm);
     } catch(...)
     {
-        MIR_THROW_EXCEPTION(mir::Exception() << mir::errinfo_nested_exception(mir::current_exception()));
+        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
     
     reporter->report_successful_setup_of_native_resources(*this);
