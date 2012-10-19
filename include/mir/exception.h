@@ -21,7 +21,7 @@
 
 #include <boost/exception/all.hpp>
 
-#include <exception>
+#include <stdexcept>
 
 namespace mir
 {
