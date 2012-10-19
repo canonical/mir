@@ -24,8 +24,6 @@
 
 #include <gtest/gtest.h>
 
-#include <stdexcept>
-
 namespace mg = mir::graphics;
 
 namespace
@@ -33,10 +31,6 @@ namespace
 class GBMGraphicsPlatform : public ::testing::Test
 {
 public:
-    GBMGraphicsPlatform()
-    {
-    }
-
     void SetUp()
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
