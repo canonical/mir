@@ -63,7 +63,8 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Communicator> communicator;
-    std::atomic<bool> exit;
+    std::mutex exit_guard;
+    bool exit;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
@@ -79,8 +80,14 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::start()
 {
     p->communicator->start();
-    while (!p->exit.load(std::memory_order_seq_cst))
+
+    std::unique_lock<std::mutex> lk(p->exit_guard);
+    while (!p->exit)
+    {
+        lk.unlock();
         do_stuff();
+        lk.lock();     
+    }
 }
 
 void mir::DisplayServer::do_stuff()
@@ -90,7 +97,8 @@ void mir::DisplayServer::do_stuff()
 
 void mir::DisplayServer::stop()
 {
-    p->exit.store(true, std::memory_order_seq_cst);
+    std::unique_lock<std::mutex> lk(p->exit_guard);
+    p->exit=true;
 }
 
 void mir::DisplayServer::render(mg::Display* display)
