@@ -106,10 +106,10 @@ protected:
     {
         mt::Config config;
 
-        if (config.stub_graphics())
-            platform = std::make_shared<StubGraphicPlatform>();
-        else
+        if (config.use_real_graphics())
             platform = mg::create_platform();
+        else
+            platform = std::make_shared<StubGraphicPlatform>();
 
         display = platform->create_display();
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();

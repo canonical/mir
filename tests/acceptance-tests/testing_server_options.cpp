@@ -108,10 +108,10 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
 {
     mt::Config config;
 
-    if (config.stub_graphics())
-        return std::make_shared<StubRenderer>();
-    else
+    if (config.use_real_graphics())
         return DefaultServerConfiguration::make_renderer(display);
+    else
+        return std::make_shared<StubRenderer>();
 }
 
 void mir::TestingServerConfiguration::exec(DisplayServer* )

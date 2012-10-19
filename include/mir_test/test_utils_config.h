@@ -31,7 +31,7 @@ class Config
 public:
     Config();
 
-    bool stub_graphics();
+    bool use_real_graphics();
 
 private:
     boost::program_options::variables_map options;

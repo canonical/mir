@@ -44,33 +44,47 @@ mt::Config::Config()
 
     namespace po = boost::program_options;
 
+    po::options_description config_file_desc("Config file options");
+
+    po::options_description env_desc("Environment options");
+    env_desc.add_options()
+        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
+
+    /* Read options from config files */
+    for (std::string config_root; getline(config_stream, config_root, ':');)
+    {
+        auto const& filename = config_root + "/ubuntu_display_server/uds.config";
+
+        try
+        {
+            std::ifstream file(filename);
+            po::store(po::parse_config_file(file, config_file_desc), options, true);
+        }
+        catch (const po::error& error)
+        {
+            std::cerr << "ERROR in " << filename << ": " << error.what() << std::endl;
+        }
+    }
+
+    /* Read options from environment */
     try
     {
-        po::options_description desc("Options");
-        desc.add_options()
-            ("stub_graphics_in_tests", po::value<bool>(), "stub graphics in tests");
-
-        for (std::string config_root; getline(config_stream, config_root, ':');)
-        {
-            auto const& filename = config_root + "/ubuntu_display_server/uds.config";
-
-            std::ifstream file(filename);
-            po::store(po::parse_config_file(file, desc), options, true);
-            po::notify(options);
-        }
+        po::store(po::parse_environment(env_desc, "MIR_"), options, true);
     }
     catch (const po::error& error)
     {
-        std::cerr << "ERROR: " << error.what() << std::endl;
+        std::cerr << "ERROR in environment variables: " << error.what() << std::endl;
     }
+
+    po::notify(options);
 }
 
-bool mt::Config::stub_graphics()
+bool mt::Config::use_real_graphics()
 {
-    bool stub_graphics_value{true};
+    bool use_real_graphics_value{false};
 
-    if (options.count("stub_graphics_in_tests"))
-        stub_graphics_value = options["stub_graphics_in_tests"].as<bool>();
+    if (options.count("tests_use_real_graphics"))
+        use_real_graphics_value = options["tests_use_real_graphics"].as<bool>();
 
-    return stub_graphics_value;
+    return use_real_graphics_value;
 }
