@@ -18,7 +18,6 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -28,14 +27,13 @@
 #include <stdexcept>
 
 namespace mg = mir::graphics;
-namespace ml = mir::logging;
 
 namespace
 {
 class GBMGraphicsPlatform : public ::testing::Test
 {
 public:
-    GBMGraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
+    GBMGraphicsPlatform()
     {
     }
 
@@ -44,7 +42,6 @@ public:
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
     }
-    std::shared_ptr<ml::Logger> logger;
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 };

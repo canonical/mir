@@ -18,7 +18,6 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include "mir_test/test_utils_graphics.h"
 
@@ -26,7 +25,6 @@
 #define HEIGHT 720
 
 namespace mg=mir::graphics;
-namespace ml=mir::logging;
 namespace mt=mir::test;
 
 int main(int, char**)
