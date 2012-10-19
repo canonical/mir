@@ -44,11 +44,10 @@ using boost::errinfo_file_handle;
 using boost::errinfo_file_name;
 using boost::errinfo_file_open_mode;
 
-class Exception : virtual public boost::exception,
-                  virtual public std::exception
+class Exception : public boost::exception, public std::exception
 {
   public:
-    
+
     template<typename ErrorInfoType>
     bool has_error_info() const
     {

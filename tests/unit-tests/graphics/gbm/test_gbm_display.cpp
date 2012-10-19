@@ -275,16 +275,18 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
         .Times(Exactly(1));
 
     auto platform = std::make_shared<mgg::GBMPlatform>(); 
-    
+
     try
     {
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);        
-    } catch(const mir::Exception& e)
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    }
+    catch(const mir::Exception& e)
     {
+        e.has_error_info<mir::errinfo_errno>();
         std::cout << mir::diagnostic_information_what(e) << std::endl;
         return;
     }
-    
+
     FAIL() << "Expected that c'tor of GBMDisplay throws";
 }
 
