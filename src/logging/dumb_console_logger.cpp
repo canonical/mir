@@ -22,10 +22,6 @@
 
 namespace ml = mir::logging;
 
-ml::DumbConsoleLogger::DumbConsoleLogger()
-{
-}
-
 void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
                                 const std::string& message,
                                 const std::string& component)
