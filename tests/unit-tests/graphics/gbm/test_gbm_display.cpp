@@ -19,7 +19,6 @@
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
 #include "mir/logging/logger.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include "mir_test/egl_mock.h"
 #include "mock_drm.h"

@@ -23,7 +23,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/logging/logger.h"
 
-#include <exception>
 #include <stdexcept>
 #include <xf86drm.h>
 
