@@ -37,6 +37,18 @@ namespace mc=mir::compositor;
 namespace
 {
 
+// TODO not the best place, but convenient for refactoring
+class NullDisplayListener : public mg::DisplayListener
+{
+  public:
+
+    virtual void report_successful_setup_of_native_resources() {}
+    virtual void report_successful_egl_make_current_on_construction() {}
+    virtual void report_successful_egl_buffer_swap_on_construction() {}
+    virtual void report_successful_drm_mode_set_crtc_on_construction() {}
+    virtual void report_successful_display_construction() {}
+};
+
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
     GBMPlatformIPCPackage(int drm_auth_fd)
