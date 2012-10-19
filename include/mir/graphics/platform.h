@@ -30,10 +30,6 @@ namespace compositor
 {
 class GraphicBufferAllocator;
 }
-namespace logging
-{
-class Logger;
-}
 
 namespace graphics
 {

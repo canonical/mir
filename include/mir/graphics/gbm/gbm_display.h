@@ -31,6 +31,11 @@ namespace geometry
 {
 class Rectangle;
 }
+namespace logging
+{
+class Logger;
+}
+
 namespace graphics
 {
 namespace gbm

@@ -44,10 +44,6 @@ namespace surfaces
 {
 class ApplicationSurfaceOrganiser;
 }
-namespace logging
-{
-class Logger;
-}
 
 class ServerConfiguration
 {
