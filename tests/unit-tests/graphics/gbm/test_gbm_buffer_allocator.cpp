@@ -43,7 +43,7 @@ protected:
     {
         using namespace testing;
 
-        platform = std::make_shared<mgg::GBMPlatform>();
+        platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayListener>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
         allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
 

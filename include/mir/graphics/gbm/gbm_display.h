@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 
 #include <iostream>
@@ -44,29 +45,25 @@ class GBMDisplay;
 class GBMPlatform;
 class BufferObject;
 
-class GBMDisplayReporter
+class GBMDisplayReporter : public DisplayListener
 {
   public:
 
-    static const char* component()
-    {
-        static const char* s = "GBMDisplay";
-        return s;
-    }
+    static const char* component();
 
     GBMDisplayReporter(const std::shared_ptr<logging::Logger>& logger);
     virtual ~GBMDisplayReporter();
-    
-    virtual void report_successful_setup_of_native_resources(const GBMDisplay& display);
-    virtual void report_successful_egl_make_current_on_construction(const GBMDisplay& display);
-    virtual void report_successful_egl_buffer_swap_on_construction(const GBMDisplay& display);
-    virtual void report_successful_drm_mode_set_crtc_on_construction(const GBMDisplay& display);
-    virtual void report_successful_display_construction(const GBMDisplay& display);
-    
+
+    virtual void report_successful_setup_of_native_resources();
+    virtual void report_successful_egl_make_current_on_construction();
+    virtual void report_successful_egl_buffer_swap_on_construction();
+    virtual void report_successful_drm_mode_set_crtc_on_construction();
+    virtual void report_successful_display_construction();
+
   protected:
     GBMDisplayReporter(const GBMDisplayReporter&) = delete;
     GBMDisplayReporter& operator=(const GBMDisplayReporter&) = delete;
-  
+
   private:
     std::shared_ptr<logging::Logger> logger;
 };
@@ -74,8 +71,8 @@ class GBMDisplayReporter
 class GBMDisplay : public Display
 {
 public:
-    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<GBMDisplayReporter>& reporter);
-    
+    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<DisplayListener>& reporter);
+
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
@@ -90,7 +87,7 @@ private:
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<GBMPlatform> platform;
-    std::shared_ptr<GBMDisplayReporter> reporter;
+    std::shared_ptr<DisplayListener> listener;
     /* DRM and GBM helpers from GBMPlatform */
     helpers::DRMHelper& drm;
     helpers::GBMHelper& gbm;

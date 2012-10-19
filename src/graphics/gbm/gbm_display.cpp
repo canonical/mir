@@ -93,35 +93,42 @@ mgg::GBMDisplayReporter::~GBMDisplayReporter()
 {
 }
 
-void mgg::GBMDisplayReporter::report_successful_setup_of_native_resources(const mgg::GBMDisplay& /*display*/)
+const char* mgg::GBMDisplayReporter::component()
 {
-    logger->log<ml::Logger::informational>("Successfully setup native resources.", GBMDisplayReporter::component());
+    static const char* s = "GBMDisplay";
+    return s;
 }
 
-void mgg::GBMDisplayReporter::report_successful_egl_make_current_on_construction(const GBMDisplay& /*display*/)
+
+void mgg::GBMDisplayReporter::report_successful_setup_of_native_resources()
 {
-    logger->log<ml::Logger::informational>("Successfully made egl context current on construction.", GBMDisplayReporter::component());
+    logger->log<ml::Logger::informational>("Successfully setup native resources.", component());
 }
 
-void mgg::GBMDisplayReporter::report_successful_egl_buffer_swap_on_construction(const GBMDisplay& /*display*/)
+void mgg::GBMDisplayReporter::report_successful_egl_make_current_on_construction()
 {
-    logger->log<ml::Logger::informational>("Successfully performed egl buffer swap on construction.", GBMDisplayReporter::component());
+    logger->log<ml::Logger::informational>("Successfully made egl context current on construction.", component());
 }
 
-void mgg::GBMDisplayReporter::report_successful_drm_mode_set_crtc_on_construction(const GBMDisplay& /*display*/)
+void mgg::GBMDisplayReporter::report_successful_egl_buffer_swap_on_construction()
 {
-    logger->log<ml::Logger::informational>("Successfully performed drm mode setup on construction.", GBMDisplayReporter::component());
+    logger->log<ml::Logger::informational>("Successfully performed egl buffer swap on construction.", component());
 }
 
-void mgg::GBMDisplayReporter::report_successful_display_construction(const GBMDisplay&)
+void mgg::GBMDisplayReporter::report_successful_drm_mode_set_crtc_on_construction()
 {
-    logger->log<ml::Logger::informational>("Successfully finished construction.", GBMDisplayReporter::component());
+    logger->log<ml::Logger::informational>("Successfully performed drm mode setup on construction.", component());
+}
+
+void mgg::GBMDisplayReporter::report_successful_display_construction()
+{
+    logger->log<ml::Logger::informational>("Successfully finished construction.", component());
 }
 mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, 
-                            const std::shared_ptr<GBMDisplayReporter>& reporter)
+                            const std::shared_ptr<DisplayListener>& listener)
     : last_flipped_bufobj{0}, 
     platform(platform),
-    reporter(reporter),
+    listener(listener),
     drm(platform->drm), 
     gbm(platform->gbm)
 {
@@ -150,7 +157,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
     
-    reporter->report_successful_setup_of_native_resources(*this);
+    listener->report_successful_setup_of_native_resources();
 
     if (eglMakeCurrent(egl.display, egl.surface,
                        egl.surface, egl.context) == EGL_FALSE)
@@ -159,12 +166,12 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     }
 
     clear();
-    reporter->report_successful_egl_make_current_on_construction(*this);
+    listener->report_successful_egl_make_current_on_construction();
 
     if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
         throw std::runtime_error("Failed to perform initial surface buffer swap");
 
-    reporter->report_successful_egl_buffer_swap_on_construction(*this);
+    listener->report_successful_egl_buffer_swap_on_construction();
 
     last_flipped_bufobj = get_front_buffer_object();
     auto ret = drmModeSetCrtc(drm.fd, kms.encoder->crtc_id,
@@ -173,8 +180,8 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     if (ret)
         throw std::runtime_error("Failed to set DRM crtc");
 
-    reporter->report_successful_drm_mode_set_crtc_on_construction(*this);
-    reporter->report_successful_display_construction(*this);
+    listener->report_successful_drm_mode_set_crtc_on_construction();
+    listener->report_successful_display_construction();
 }
 
 mgg::GBMDisplay::~GBMDisplay()

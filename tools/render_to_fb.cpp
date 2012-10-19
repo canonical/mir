@@ -31,8 +31,7 @@ namespace mt=mir::test;
 
 int main(int, char**)
 {
-    auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(logger);
+    auto platform = mg::create_platform();
     auto display = platform->create_display();
 
     mt::glAnimationBasic gl_animation;

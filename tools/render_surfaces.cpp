@@ -167,8 +167,7 @@ struct Moveable
 int main(int argc, char **argv)
 {
     /* Create and set up all the components we need */
-    auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(logger);
+    auto platform = mg::create_platform();
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
     auto buffer_initializer = std::make_shared<RenderResourcesBufferInitializer>();

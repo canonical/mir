@@ -85,7 +85,6 @@ public:
 
 private:
     std::string socket_file;
-    std::shared_ptr<logging::Logger> logger;
     std::shared_ptr<graphics::Platform> graphics_platform;
 
     // the communications interface to use

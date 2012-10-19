@@ -51,11 +51,17 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     }
 };
 
-std::shared_ptr<mgg::GBMDisplayReporter> reporter;
-
 }
 
-mgg::GBMPlatform::GBMPlatform()
+mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayListener> const& listener) :
+    listener(listener)
+{
+    drm.setup();
+    gbm.setup(drm);
+}
+
+mgg::GBMPlatform::GBMPlatform() :
+    listener(std::make_shared<NullDisplayListener>())
 {
     drm.setup();
     gbm.setup(drm);
@@ -72,7 +78,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(), 
-        reporter);
+        listener);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
@@ -80,8 +86,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(const std::shared_ptr<ml::Logger>& logger)
+std::shared_ptr<mg::Platform> mg::create_platform()
 {
-    reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
-    return std::make_shared<mgg::GBMPlatform>();
+    const std::shared_ptr<ml::Logger>  logger(std::make_shared<ml::DumbConsoleLogger>());
+    return std::make_shared<mgg::GBMPlatform>(std::make_shared<mgg::GBMDisplayReporter>(logger));
 }

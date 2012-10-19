@@ -63,7 +63,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     using namespace testing;
 
     EXPECT_NO_THROW (
-        auto platform = mg::create_platform(logger);
+        auto platform = mg::create_platform();
         auto allocator = platform->create_buffer_allocator(buffer_initializer);
 
         EXPECT_TRUE(allocator.get());
@@ -73,7 +73,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
 TEST_F(GraphicsPlatform, buffer_creation)
 {
-    auto platform = mg::create_platform(logger);
+    auto platform = mg::create_platform();
     auto allocator = platform->create_buffer_allocator(buffer_initializer);
     geom::Size size{geom::Width{320}, geom::Height{240}};
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
@@ -88,7 +88,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
 TEST_F(GraphicsPlatform, get_ipc_package)
 {
-    auto platform = mg::create_platform(logger);
+    auto platform = mg::create_platform();
     auto pkg = platform->get_ipc_package();
 
     ASSERT_TRUE(pkg.get() != NULL); 

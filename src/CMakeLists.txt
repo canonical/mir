@@ -58,7 +58,6 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirlogging
   mirprocess
   mirsurfaces
   mirplatformgraphics

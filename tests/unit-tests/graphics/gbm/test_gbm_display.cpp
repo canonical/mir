@@ -199,7 +199,7 @@ TEST_F(GBMDisplayTest, create_display)
 
     EXPECT_NO_THROW(
     {
-        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto platform = std::make_shared<mgg::GBMPlatform>();
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
     });
 }
@@ -237,7 +237,7 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
 
     EXPECT_NO_THROW(
     {
-        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto platform = std::make_shared<mgg::GBMPlatform>();
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
     });
 }
@@ -255,7 +255,7 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
 
     EXPECT_THROW(
     {
-        auto platform = std::make_shared<mgg::GBMPlatform>(); 
+        auto platform = std::make_shared<mgg::GBMPlatform>();
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
     }, std::runtime_error);
 }
@@ -274,7 +274,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(1));
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(); 
+    auto platform = std::make_shared<mgg::GBMPlatform>();
 
     try
     {
@@ -421,7 +421,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
     
     auto platform = std::make_shared<mgg::GBMPlatform>(); 
     auto logger = std::make_shared<MockLogger>();
-    
+
     auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
@@ -431,16 +431,16 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
             StrEq("Successfully setup native resources."),
             StrEq("GBMDisplay"))).Times(Exactly(1));
 
-    reporter->report_successful_setup_of_native_resources(*display);
+    reporter->report_successful_setup_of_native_resources();
 }
 
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on_construction)
 {
     using namespace ::testing;
-    
+
     auto platform = std::make_shared<mgg::GBMPlatform>();
     auto logger = std::make_shared<MockLogger>();
-    
+
     auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
@@ -450,7 +450,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on
             StrEq("Successfully made egl context current on construction."),
             StrEq("GBMDisplay"))).Times(Exactly(1));
 
-    reporter->report_successful_egl_make_current_on_construction(*display);        
+    reporter->report_successful_egl_make_current_on_construction();
 }
 
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_construction)
@@ -469,7 +469,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
             StrEq("Successfully performed egl buffer swap on construction."),
             StrEq("GBMDisplay"))).Times(Exactly(1));
  
-    reporter->report_successful_egl_buffer_swap_on_construction(*display);
+    reporter->report_successful_egl_buffer_swap_on_construction();
 }
 
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_on_construction)
@@ -488,5 +488,5 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
             StrEq("Successfully performed drm mode setup on construction."),
             StrEq("GBMDisplay"))).Times(Exactly(1));
 
-    reporter->report_successful_drm_mode_set_crtc_on_construction(*display);
+    reporter->report_successful_drm_mode_set_crtc_on_construction();
 }

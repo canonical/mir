@@ -87,8 +87,7 @@ private:
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) 
-        : socket_file(socket_file),
-          logger(std::make_shared<ml::DumbConsoleLogger>())
+        : socket_file(socket_file)
 {
 }
 
@@ -100,7 +99,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_pla
         // mg::create_platform() - we just need to move the implementation
         // of DefaultServerConfiguration::make_graphics_platform() to the
         // graphics libraries.
-        graphics_platform = mg::create_platform(logger);
+        graphics_platform = mg::create_platform();
     }
 
     return graphics_platform;

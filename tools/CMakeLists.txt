@@ -36,7 +36,6 @@ target_link_libraries(
     mircompositor
     mirsurfaces
     mirgraphics
-    mirlogging
     mirplatformgraphics
     ${Boost_LIBRARIES}
 )

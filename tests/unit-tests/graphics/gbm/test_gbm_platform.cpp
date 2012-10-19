@@ -71,7 +71,7 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
     EXPECT_CALL(mock_drm, drmClose(auth_fd));
 
     EXPECT_NO_THROW (
-        auto platform = mg::create_platform(logger);
+        auto platform = mg::create_platform();
         auto pkg = platform->get_ipc_package();
 
         ASSERT_TRUE(pkg.get());
@@ -89,7 +89,7 @@ TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
 
     try
     {
-        auto platform = mg::create_platform(logger);
+        auto platform = mg::create_platform();
     } catch(...)
     {
         return;
