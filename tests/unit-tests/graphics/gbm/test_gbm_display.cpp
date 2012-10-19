@@ -41,7 +41,7 @@ struct MockLogger : public ml::Logger
                  void(ml::Logger::Severity, const std::string&, const std::string&));
 };
 
-struct MockGBMDisplayReporter : public mg::DisplayListener
+struct MockGBMDisplayListener : public mg::DisplayListener
 {
     MOCK_METHOD0(report_successful_setup_of_native_resources, void());
     MOCK_METHOD0(report_successful_egl_make_current_on_construction, void());
@@ -54,7 +54,7 @@ class GBMDisplayTest : public ::testing::Test
 {
 public:
     GBMDisplayTest() :
-        mock_reporter(new ::testing::NiceMock<MockGBMDisplayReporter>())
+        mock_reporter(new ::testing::NiceMock<MockGBMDisplayListener>())
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -130,7 +130,7 @@ public:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<testing::NiceMock<MockGBMDisplayReporter> > mock_reporter;
+    std::shared_ptr<testing::NiceMock<MockGBMDisplayListener> > mock_reporter;
 };
 
 }
