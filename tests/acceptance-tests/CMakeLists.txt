@@ -45,7 +45,8 @@ target_link_libraries(
   mirclient
   mirplatformgraphics
   mirprotobuf
-  
+
+  test-utils
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

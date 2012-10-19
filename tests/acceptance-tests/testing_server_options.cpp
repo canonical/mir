@@ -17,6 +17,7 @@
  */
 
 #include "testing_process_manager.h"
+#include "mir_test/test_utils_config.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -26,18 +27,10 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
-#include <boost/program_options/config.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
-#include <boost/program_options/parsers.hpp>
-
-#include <cstdlib>
-
-#include <fstream>
-
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mt = mir::test;
 
 namespace
 {
@@ -110,61 +103,12 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
     return graphics_platform;
 }
 
-namespace
-{
-// Load config from XDG conforming config locations
-// 1. The only config currently supported is "stub_graphics_in_tests".
-// 2. This is a temporary home for this functionality, but it suffices for now.
-boost::program_options::variables_map get_config()
-{
-    std::string config_roots;
-
-    if (auto config_home = getenv("XDG_CONFIG_HOME")) (config_roots = config_home) += ":";
-    else if (auto home = getenv("HOME")) (config_roots = home) += "/.config:";
-
-    if (auto config_dirs = getenv("XDG_CONFIG_DIRS")) config_roots += config_dirs;
-    else config_roots += "/etc/xdg";
-
-    std::istringstream config_stream(config_roots);
-
-    namespace po = boost::program_options;
-    po::variables_map options;
-    try
-    {
-        po::options_description desc("Options");
-        desc.add_options()
-            ("stub_graphics_in_tests", po::value<bool>(), "stub graphics in tests");
-
-        for (std::string config_root; getline(config_stream, config_root, ':');)
-        {
-            auto const& filename = config_root + "/ubuntu_display_server/uds.config";
-
-            std::ifstream file(filename);
-            po::store(po::parse_config_file(file, desc), options, true);
-            po::notify(options);
-        }
-    }
-    catch (const po::error& error)
-    {
-        std::cerr << "ERROR: " << error.what() << std::endl;
-    }
-    return options;
-}
-}
-
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    auto options = get_config();
+    mt::Config config;
 
-    bool stub_graphics{true};
-
-    if (options.count("stub_graphics_in_tests"))
-    {
-        stub_graphics = options["stub_graphics_in_tests"].as<bool>();
-    }
-
-    if (stub_graphics)
+    if (config.stub_graphics())
         return std::make_shared<StubRenderer>();
     else
         return DefaultServerConfiguration::make_renderer(display);

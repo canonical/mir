@@ -14,12 +14,16 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-include_directories(${GLESv2_INCLUDE_DIRS})
+include_directories(
+    ${Boost_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
+)
 
 set(
   TEST_UTILS_SRCS
 
   graphics_utils.cpp 
+  config.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -38,6 +42,6 @@ add_library(
 target_link_libraries(
   test-utils 
 
+  ${Boost_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
-
