@@ -24,17 +24,27 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-TEST(ProgramOption, parse_command_line_long)
+namespace bpo = boost::program_options;
+
+namespace
 {
-    namespace bpo = boost::program_options;
+struct ProgramOption : testing::Test
+{
+    ProgramOption() :
+        desc("Options")
+    {
+        desc.add_options()
+            ("file,f", bpo::value<std::string>(), "<socket filename>")
+            ("help,h", "this help text");
+    }
 
+    bpo::options_description desc;
+};
+}
+
+TEST_F(ProgramOption, parse_command_line_long)
+{
     mir::choice::ProgramOption po;
-
-    bpo::options_description desc("Options");
-
-    desc.add_options()
-        ("file,f", bpo::value<std::string>(), "<socket filename>")
-        ("help,h", "this help text");
 
     char const* argv[] = {
         __PRETTY_FUNCTION__,
@@ -45,5 +55,19 @@ TEST(ProgramOption, parse_command_line_long)
 
     EXPECT_EQ("test_file", po.get("file", "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));
+}
 
+TEST_F(ProgramOption, parse_command_line_short)
+{
+    mir::choice::ProgramOption po;
+
+    char const* argv[] = {
+        __PRETTY_FUNCTION__,
+        "-f", "test_file"
+    };
+
+    po.parse_arguments(desc, 3, argv);
+
+    EXPECT_EQ("test_file", po.get("file", "default"));
+    EXPECT_EQ("default", po.get("garbage", "default"));
 }
