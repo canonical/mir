@@ -21,6 +21,8 @@
 #include <boost/program_options/cmdline.hpp>
 #include <boost/program_options/parsers.hpp>
 
+#include <cstdlib>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -92,3 +94,24 @@ TEST_F(ProgramOption, parse_command_line_help)
 
     EXPECT_TRUE(po.is_set("help"));
 }
+
+TEST_F(ProgramOption, parse_environment)
+{
+    mir::choice::ProgramOption po;
+
+    std::string const prefix(__PRETTY_FUNCTION__);
+    char const* key = "some_key";
+    char const* value = "test_value";
+
+    std::string const env = prefix + key;
+
+    setenv(env.c_str(), value, true);
+
+    po.parse_environment(desc, __PRETTY_FUNCTION__);
+
+    EXPECT_EQ(value, po.get(key, "default"));
+    EXPECT_EQ("default", po.get("garbage", "default"));
+    EXPECT_TRUE(po.is_set(key));
+    EXPECT_FALSE(po.is_set("garbage"));
+}
+
