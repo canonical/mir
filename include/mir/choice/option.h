@@ -19,6 +19,8 @@
 #ifndef MIR_CHOICE_OPTION_H_
 #define MIR_CHOICE_OPTION_H_
 
+#include <string>
+
 namespace mir
 {
 namespace choice
@@ -27,7 +29,7 @@ class Option
 {
 public:
     virtual bool get(char const* name, bool default_) const = 0;
-    virtual char const* get(char const* name, char const* default_) const = 0;
+    virtual std::string get(char const* name, char const* default_) const = 0;
 
 protected:
     Option() = default;

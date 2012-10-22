@@ -43,7 +43,7 @@ TEST(ProgramOption, parse_command_line_long)
 
     po.parse_arguments(desc, 3, argv);
 
-    EXPECT_STREQ("test_file", po.get("file", "default"));
-    EXPECT_STREQ("default", po.get("garbage", "default"));
+    EXPECT_EQ("test_file", po.get("file", "default"));
+    EXPECT_EQ("default", po.get("garbage", "default"));
 
 }

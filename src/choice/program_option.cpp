@@ -56,7 +56,12 @@ bool mch::ProgramOption::get(char const* /*name*/, bool default_) const
     return default_;
 }
 
-char const* mch::ProgramOption::get(char const* /*name*/, char const* default_) const
+std::string mch::ProgramOption::get(char const* name, char const* default_) const
 {
+    if (options.count(name))
+    {
+        return options[name].as<std::string>();
+    }
+
     return default_;
 }

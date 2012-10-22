@@ -48,7 +48,7 @@ public:
         std::string const& filename);
 
     bool get(char const* name, bool default_) const;
-    char const* get(char const*, char const* default_) const;
+    std::string get(char const*, char const* default_) const;
 
 private:
     boost::program_options::variables_map options;
