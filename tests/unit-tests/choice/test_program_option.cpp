@@ -97,10 +97,9 @@ TEST_F(ProgramOption, parse_command_line_help)
 
 TEST(ProgramOptionEnv, parse_environment)
 {
-    std::string const prefix(__PRETTY_FUNCTION__);
     char const* key = "some_key";
     char const* value = "test_value";
-    std::string const env = prefix + key;
+    auto const env = std::string(__PRETTY_FUNCTION__) + key;
     setenv(env.c_str(), value, true);
 
     bpo::options_description desc;
