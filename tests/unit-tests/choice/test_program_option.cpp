@@ -46,28 +46,49 @@ TEST_F(ProgramOption, parse_command_line_long)
 {
     mir::choice::ProgramOption po;
 
-    char const* argv[] = {
+    const int argc = 3;
+    char const* argv[argc] = {
         __PRETTY_FUNCTION__,
         "--file", "test_file"
     };
 
-    po.parse_arguments(desc, 3, argv);
+    po.parse_arguments(desc, argc, argv);
 
     EXPECT_EQ("test_file", po.get("file", "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));
+    EXPECT_TRUE(po.is_set("file"));
+    EXPECT_FALSE(po.is_set("garbage"));
 }
 
 TEST_F(ProgramOption, parse_command_line_short)
 {
     mir::choice::ProgramOption po;
 
-    char const* argv[] = {
+    const int argc = 3;
+    char const* argv[argc] = {
         __PRETTY_FUNCTION__,
         "-f", "test_file"
     };
 
-    po.parse_arguments(desc, 3, argv);
+    po.parse_arguments(desc, argc, argv);
 
     EXPECT_EQ("test_file", po.get("file", "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));
+    EXPECT_TRUE(po.is_set("file"));
+    EXPECT_FALSE(po.is_set("garbage"));
+}
+
+TEST_F(ProgramOption, parse_command_line_help)
+{
+    mir::choice::ProgramOption po;
+
+    const int argc = 2;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--help"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_TRUE(po.is_set("help"));
 }

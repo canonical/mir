@@ -47,6 +47,7 @@ public:
         boost::program_options::options_description const& options,
         std::string const& filename);
 
+    bool is_set(char const* name) const;
     bool get(char const* name, bool default_) const;
     std::string get(char const*, char const* default_) const;
 

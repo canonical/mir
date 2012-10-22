@@ -51,6 +51,12 @@ void mch::ProgramOption::parse_file(
 
 }
 
+bool mch::ProgramOption::is_set(char const* name) const
+{
+    return options.count(name);
+}
+
+
 bool mch::ProgramOption::get(char const* /*name*/, bool default_) const
 {
     return default_;

@@ -55,6 +55,7 @@ target_link_libraries(
   ubuntu_display_server
   
   mir
+  mirchoice
   mircompositor
   mirfrontend
   mirgraphics
