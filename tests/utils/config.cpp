@@ -53,7 +53,7 @@ mt::Config::Config()
     /* Read options from config files */
     for (std::string config_root; getline(config_stream, config_root, ':');)
     {
-        auto const& filename = config_root + "/mirds/mirds.config";
+        auto const& filename = config_root + "/mir/mir.config";
 
         try
         {

@@ -50,6 +50,8 @@ add_executable(
   ${MIR_3RD_PARTY_SOURCES}
 )
 
+set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
+
 target_link_libraries(
   mirds
   
