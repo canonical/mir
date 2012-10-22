@@ -58,7 +58,7 @@ mt::Config::Config()
         try
         {
             std::ifstream file(filename);
-            po::store(po::parse_config_file(file, config_file_desc), options, true);
+            po::store(po::parse_config_file(file, config_file_desc, true), options);
         }
         catch (const po::error& error)
         {
