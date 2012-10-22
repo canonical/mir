@@ -18,7 +18,10 @@
 
 #include "mir/choice/program_option.h"
 
+#include <boost/program_options/parsers.hpp>
+
 namespace mch = mir::choice;
+namespace po = boost::program_options;
 
 
 mch::ProgramOption::ProgramOption()
@@ -26,21 +29,23 @@ mch::ProgramOption::ProgramOption()
 }
 
 void mch::ProgramOption::parse_arguments(
-    boost::program_options::options_description const& /*options*/,
-    int /*argc*/,
-    char const* /*argv*/[])
+    po::options_description const& desc,
+    int argc,
+    char const* argv[])
 {
+    po::store(po::parse_command_line(argc, argv, desc), options);
+    po::notify(options);
 }
 
 void mch::ProgramOption::parse_environment(
-    boost::program_options::options_description const& /*options*/,
+    po::options_description const& /*options*/,
     char const* /*prefix*/)
 {
 
 }
 
 void mch::ProgramOption::parse_file(
-    boost::program_options::options_description const& /*options*/,
+    po::options_description const& /*options*/,
     std::string const& /*filename*/)
 {
 
