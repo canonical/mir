@@ -92,9 +92,6 @@ struct ThreadFixture {
 void main_test_loop_pause(std::chrono::microseconds duration) {
     std::this_thread::sleep_for(duration);
 }
-}
-using mir::main_test_loop_pause;
-using mir::ThreadFixture;
 
 void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
@@ -107,6 +104,8 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
 
         swapper->client_release(*buf);
         if (synchronizer->child_enter_wait()) return;
+
+        std::this_thread::yield();
     }
 }
 
@@ -122,9 +121,16 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
         swapper->compositor_release(*buf);
         if (synchronizer->child_enter_wait()) return;
 
+        std::this_thread::yield();
     }
 
 }
+} /* namespace mir */
+
+using mir::ThreadFixture;
+using mir::main_test_loop_pause;
+using mir::client_request_loop;
+using mir::compositor_grab_loop;
 
 /* test that the compositor and the client are never in ownership of the same
    buffer */
@@ -223,6 +229,8 @@ TEST(buffer_swapper_double_stress, test_wait)
 
 }
 
+namespace mir
+{
 void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -237,6 +245,8 @@ void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> syn
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
+
+        std::this_thread::yield();
     }
 }
 
@@ -259,11 +269,11 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
 
         if (wait_request)
             if (synchronizer->child_enter_wait()) return;
+
+        std::this_thread::yield();
     }
 }
 
-namespace mir
-{
 void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -284,8 +294,10 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
     }
 
 }
-}
+} /* namespace mir */
 
+using mir::client_request_loop_with_wait;
+using mir::client_request_loop_stress_wait;
 using mir::compositor_grab_loop_with_wait;
 
 /* test normal situation, with moderate amount of waits */
