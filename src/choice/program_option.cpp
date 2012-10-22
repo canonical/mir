@@ -38,9 +38,10 @@ void mch::ProgramOption::parse_arguments(
 }
 
 void mch::ProgramOption::parse_environment(
-    po::options_description const& /*options*/,
-    char const* /*prefix*/)
+    po::options_description const& desc,
+    char const* prefix)
 {
+    po::store(po::parse_environment(desc, prefix), options);
 
 }
 

@@ -95,18 +95,19 @@ TEST_F(ProgramOption, parse_command_line_help)
     EXPECT_TRUE(po.is_set("help"));
 }
 
-TEST_F(ProgramOption, parse_environment)
+TEST(ProgramOptionEnv, parse_environment)
 {
-    mir::choice::ProgramOption po;
-
     std::string const prefix(__PRETTY_FUNCTION__);
     char const* key = "some_key";
     char const* value = "test_value";
-
     std::string const env = prefix + key;
-
     setenv(env.c_str(), value, true);
 
+    bpo::options_description desc;
+    desc.add_options()
+        (key, bpo::value<std::string>());
+
+    mir::choice::ProgramOption po;
     po.parse_environment(desc, __PRETTY_FUNCTION__);
 
     EXPECT_EQ(value, po.get(key, "default"));
