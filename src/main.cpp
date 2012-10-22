@@ -92,9 +92,7 @@ try
         return 1;
     }
 
-    std::string socket_file{options.get("file", "/tmp/mir_socket")};
-
-    run_mir(socket_file);
+    run_mir(options.get("file", "/tmp/mir_socket"));
     return 0;
 }
 catch (std::exception const& error)
