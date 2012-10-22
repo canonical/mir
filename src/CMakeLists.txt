@@ -25,6 +25,7 @@ add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(process/)
 add_subdirectory(surfaces/)
+add_subdirectory(choice/)
 add_subdirectory(client/)
 add_subdirectory(frontend/)
 
