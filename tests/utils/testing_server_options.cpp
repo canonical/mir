@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "testing_process_manager.h"
+#include "mir_test/testing_server_configuration.h"
 #include "mir_test/test_utils_config.h"
 
 #include "mir/graphics/display.h"
@@ -127,3 +127,8 @@ mir::TestingServerConfiguration::TestingServerConfiguration() :
 {
 }
 
+std::string const& mir::test_socket_file()
+{
+    static const std::string socket_file{"./mir_socket_test"};
+    return socket_file;
+}

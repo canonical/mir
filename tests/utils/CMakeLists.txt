@@ -24,6 +24,7 @@ set(
 
   graphics_utils.cpp 
   config.cpp
+  testing_server_options.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")
