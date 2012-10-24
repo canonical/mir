@@ -103,9 +103,12 @@ class GBMBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mir::TestingServerConfiguration config;
+        auto options = mir::TestingServerConfiguration().make_options();
 
-        platform = config.make_graphics_platform();
+        if (options->get("tests_use_real_graphics", false))
+            platform = mg::create_platform();
+        else
+            platform = std::make_shared<StubGraphicPlatform>();
 
         display = platform->create_display();
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
