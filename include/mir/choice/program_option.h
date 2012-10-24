@@ -35,16 +35,16 @@ public:
     ProgramOption();
 
     void parse_arguments(
-        boost::program_options::options_description const& options,
+        boost::program_options::options_description const& description,
         int argc,
         char const* argv[]);
 
     void parse_environment(
-        boost::program_options::options_description const& options,
+        boost::program_options::options_description const& description,
         char const* prefix);
 
     void parse_file(
-        boost::program_options::options_description const& options,
+        boost::program_options::options_description const& description,
         std::string const& filename);
 
     bool is_set(char const* name) const;

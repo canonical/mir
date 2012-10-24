@@ -115,3 +115,12 @@ TEST(ProgramOptionEnv, parse_environment)
     EXPECT_FALSE(po.is_set("garbage"));
 }
 
+// TODO need to parse something
+TEST(ProgramOptionFile, parse_files)
+{
+    bpo::options_description desc("Config file options");
+
+    mir::choice::ProgramOption po;
+
+    po.parse_file(desc, "test.config");
+}

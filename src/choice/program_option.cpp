@@ -19,6 +19,7 @@
 #include "mir/choice/program_option.h"
 
 #include <boost/program_options/parsers.hpp>
+#include <fstream>
 
 namespace mch = mir::choice;
 namespace po = boost::program_options;
@@ -46,10 +47,40 @@ void mch::ProgramOption::parse_environment(
 }
 
 void mch::ProgramOption::parse_file(
-    po::options_description const& /*options*/,
-    std::string const& /*filename*/)
+    po::options_description const& config_file_desc,
+    std::string const& name)
 {
+    std::string config_roots;
 
+    if (auto config_home = getenv("XDG_CONFIG_HOME"))
+        (config_roots = config_home) += ":";
+    else if (auto home = getenv("HOME"))
+        (config_roots = home) += "/.config:";
+
+    if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+        config_roots += config_dirs;
+    else
+        config_roots += "/etc/xdg";
+
+    std::istringstream config_stream(config_roots);
+
+    /* Read options from config files */
+    for (std::string config_root; getline(config_stream, config_root, ':');)
+    {
+        auto const& filename = config_root + name;
+
+        try
+        {
+            std::ifstream file(filename);
+            po::store(po::parse_config_file(file, config_file_desc, true), options);
+        }
+        catch (const po::error& error)
+        {
+            std::cerr << "ERROR in " << filename << ": " << error.what() << std::endl;
+        }
+    }
+
+    po::notify(options);
 }
 
 bool mch::ProgramOption::is_set(char const* name) const
