@@ -106,9 +106,9 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    mt::Config config;
+    auto options = make_options();
 
-    if (config.use_real_graphics())
+    if (options->get("tests_use_real_graphics", false))
         return DefaultServerConfiguration::make_renderer(display);
     else
         return std::make_shared<StubRenderer>();

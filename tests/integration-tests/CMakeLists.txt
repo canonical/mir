@@ -40,6 +40,7 @@ add_executable(
 target_link_libraries(
   integration-tests
 
+  mirchoice
   mircompositor
   mirfrontend
   mirinput
