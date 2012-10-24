@@ -40,16 +40,22 @@ add_executable(
 target_link_libraries(
   integration-tests
 
+  test-utils
+
+  mir
   mirchoice
   mircompositor
   mirfrontend
+  mirgraphics
   mirinput
+  mirprocess
   mirsurfaces
   mirplatformgraphics
-  mirprocess
+  mirprotobuf
 
-  test-utils
+  3rd_party
 
+  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

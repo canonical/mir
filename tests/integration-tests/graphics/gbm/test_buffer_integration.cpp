@@ -23,7 +23,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/test_utils_config.h"
+#include "mir_test/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -31,7 +31,6 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
-namespace mt = mir::test;
 
 namespace
 {
@@ -104,15 +103,9 @@ class GBMBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        // TODO this use of config should be reworked to use
-        // TODO TestingServerConfiguration::make_graphics_platform()!
-        // TODO after that Config can die.
-        mt::Config config;
+        mir::TestingServerConfiguration config;
 
-        if (config.use_real_graphics())
-            platform = mg::create_platform();
-        else
-            platform = std::make_shared<StubGraphicPlatform>();
+        platform = config.make_graphics_platform();
 
         display = platform->create_display();
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
