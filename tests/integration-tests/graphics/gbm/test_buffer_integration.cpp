@@ -104,6 +104,9 @@ class GBMBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        // TODO this use of config should be reworked to use
+        // TODO TestingServerConfiguration::make_graphics_platform()!
+        // TODO after that Config can die.
         mt::Config config;
 
         if (config.use_real_graphics())
