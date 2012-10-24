@@ -23,7 +23,6 @@ set(
   TEST_UTILS_SRCS
 
   graphics_utils.cpp 
-  config.cpp
   testing_server_options.cpp
 )
 

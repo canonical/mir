@@ -17,7 +17,6 @@
  */
 
 #include "mir_test/testing_server_configuration.h"
-#include "mir_test/test_utils_config.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -30,7 +29,6 @@
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace mt = mir::test;
 
 namespace
 {
