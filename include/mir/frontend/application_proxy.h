@@ -42,33 +42,7 @@ class Platform;
 namespace frontend
 {
 class ResourceCache;
-class ApplicationListener
-{
-public:
-    virtual void application_method_call(
-        std::string const& app_name,
-        char const* method,
-        std::string const& comment) = 0;
-
-    virtual void application_error(
-        std::string const& app_name,
-        char const* method,
-        std::string const& what) = 0;
-};
-
-class NullApplicationListener : public ApplicationListener
-{
-public:
-    virtual void application_method_call(
-        std::string const&,
-        char const*,
-        std::string const&) {}
-
-    virtual void application_error(
-        std::string const&,
-        char const* ,
-        std::string const& ) {}
-};
+class ApplicationListener;
 
 // ApplicationProxy relays requests from the client into the server process.
 class ApplicationProxy : public mir::protobuf::DisplayServer

@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_listener.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"

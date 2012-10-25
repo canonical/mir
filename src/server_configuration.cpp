@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/display.h"
