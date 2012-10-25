@@ -134,7 +134,12 @@ mir::DefaultServerConfiguration::make_ipc_factory(
 {
     return std::make_shared<DefaultIpcFactory>(
         surface_organiser,
-        std::make_shared<mf::NullApplicationListener>(),
+        make_application_listener(),
         make_graphics_platform());
 }
 
+std::shared_ptr<mf::ApplicationListener>
+mir::DefaultServerConfiguration::make_application_listener()
+{
+    return std::make_shared<mf::NullApplicationListener>();
+}

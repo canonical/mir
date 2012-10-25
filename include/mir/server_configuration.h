@@ -32,6 +32,7 @@ namespace frontend
 {
 class Communicator;
 class ProtobufIpcFactory;
+class ApplicationListener;
 }
 namespace graphics
 {
@@ -82,10 +83,13 @@ public:
 private:
     std::string socket_file;
     std::shared_ptr<graphics::Platform> graphics_platform;
+    std::shared_ptr<frontend::ApplicationListener> application_listener;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
             std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+
+    virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
 };
 }
 
