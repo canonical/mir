@@ -46,15 +46,6 @@ namespace ms = mir::surfaces;
 
 namespace
 {
-// TODO replace with a real renderer appropriate to the platform default
-class StubRenderer : public mg::Renderer
-{
-public:
-    virtual void render(mg::Renderable&)
-    {
-    }
-};
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
