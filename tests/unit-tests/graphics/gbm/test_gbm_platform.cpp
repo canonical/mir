@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+
 #include "mock_drm.h"
 #include "mock_gbm.h"
 
@@ -25,12 +26,20 @@
 
 namespace mg = mir::graphics;
 
+namespace
+{
 class GBMGraphicsPlatform : public ::testing::Test
 {
 public:
+    void SetUp()
+    {
+        ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
+        ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
+    }
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 };
+}
 
 TEST_F(GBMGraphicsPlatform, get_ipc_package)
 {
@@ -60,4 +69,22 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
         ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size()); 
         ASSERT_EQ(auth_fd, pkg->ipc_fds[0]); 
     );
+}
+
+TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_error)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_drm, drmOpen(_,_))
+            .WillRepeatedly(Return(-1));
+
+    try
+    {
+        auto platform = mg::create_platform();
+    } catch(...)
+    {
+        return;
+    }
+
+    FAIL() << "Expected an exception to be thrown.";
 }

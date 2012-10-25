@@ -38,6 +38,23 @@ class Display;
 class PlatformIPCPackage;
 class BufferInitializer;
 
+class DisplayListener
+{
+  public:
+
+    virtual void report_successful_setup_of_native_resources() = 0;
+    virtual void report_successful_egl_make_current_on_construction() = 0;
+    virtual void report_successful_egl_buffer_swap_on_construction() = 0;
+    virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
+    virtual void report_successful_display_construction() = 0;
+
+  protected:
+    DisplayListener() = default;
+    ~DisplayListener() = default;
+    DisplayListener(const DisplayListener&) = delete;
+    DisplayListener& operator=(const DisplayListener&) = delete;
+};
+
 class Platform
 {
 public:

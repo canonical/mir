@@ -16,13 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/chrono/chrono.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/logging/logger.h"
+#include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -30,6 +34,7 @@
 #include "mir_test/mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
+
 #include <csignal>
 #include <iostream>
 #include <sstream>
@@ -39,6 +44,7 @@
 
 namespace mg=mir::graphics;
 namespace mc=mir::compositor;
+namespace ml=mir::logging;
 namespace ms=mir::surfaces;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;

@@ -24,6 +24,7 @@ target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
+    mirlogging
     test-utils
 )
 
