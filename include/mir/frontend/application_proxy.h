@@ -42,7 +42,35 @@ class Platform;
 namespace frontend
 {
 class ResourceCache;
+class ApplicationListener
+{
+public:
+    virtual void method_called(
+        std::string const& app_name,
+        char const* method,
+        std::string const& comment) = 0;
 
+    virtual void error_report(
+        std::string const& app_name,
+        char const* method,
+        std::string const& what) = 0;
+};
+
+class NullApplicationListener : public ApplicationListener
+{
+public:
+    virtual void method_called(
+        std::string const&,
+        char const*,
+        std::string const&) {}
+
+    virtual void error_report(
+        std::string const&,
+        char const* ,
+        std::string const& ) {}
+};
+
+// ApplicationProxy relays requests from the client into the server process.
 class ApplicationProxy : public mir::protobuf::DisplayServer
 {
 public:
@@ -50,6 +78,7 @@ public:
     ApplicationProxy(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
+        std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     std::string const& name() const { return app_name; }
@@ -92,6 +121,7 @@ private:
     std::string app_name;
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
     std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<ApplicationListener> const& listener;
 
     std::atomic<int> next_surface_id;
 

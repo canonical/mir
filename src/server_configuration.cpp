@@ -76,6 +76,7 @@ private:
         return std::make_shared<mf::ApplicationProxy>(
             surface_organiser,
             graphics_platform,
+            std::make_shared<mf::NullApplicationListener>(),
             resource_cache());
     }
 
