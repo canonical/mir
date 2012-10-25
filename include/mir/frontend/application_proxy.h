@@ -45,12 +45,12 @@ class ResourceCache;
 class ApplicationListener
 {
 public:
-    virtual void method_called(
+    virtual void application_method_call(
         std::string const& app_name,
         char const* method,
         std::string const& comment) = 0;
 
-    virtual void error_report(
+    virtual void application_error(
         std::string const& app_name,
         char const* method,
         std::string const& what) = 0;
@@ -59,12 +59,12 @@ public:
 class NullApplicationListener : public ApplicationListener
 {
 public:
-    virtual void method_called(
+    virtual void application_method_call(
         std::string const&,
         char const*,
         std::string const&) {}
 
-    virtual void error_report(
+    virtual void application_error(
         std::string const&,
         char const* ,
         std::string const& ) {}
