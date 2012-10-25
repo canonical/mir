@@ -51,8 +51,10 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform) :
         surface_organiser(surface_organiser),
+        listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform)
     {
@@ -60,6 +62,7 @@ public:
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
 
@@ -68,7 +71,7 @@ private:
         return std::make_shared<mf::ApplicationProxy>(
             surface_organiser,
             graphics_platform,
-            std::make_shared<mf::NullApplicationListener>(),
+            listener,
             resource_cache());
     }
 
@@ -129,6 +132,9 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
-    return std::make_shared<DefaultIpcFactory>(surface_organiser, make_graphics_platform());
+    return std::make_shared<DefaultIpcFactory>(
+        surface_organiser,
+        std::make_shared<mf::NullApplicationListener>(),
+        make_graphics_platform());
 }
 
