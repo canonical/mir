@@ -21,7 +21,7 @@
 
 #include "mir/process/process.h"
 
-#include "testing_process_manager.h"
+#include "mir_test/testing_process_manager.h"
 #include <gtest/gtest.h>
 
 #include <memory>

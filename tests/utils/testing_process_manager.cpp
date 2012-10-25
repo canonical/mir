@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "testing_process_manager.h"
+#include "mir_test/testing_process_manager.h"
 
 #include "mir/display_server.h"
 

@@ -26,7 +26,6 @@ add_executable(
   test_renderloop.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
-  testing_process_manager.cpp
   test_server_startup.cpp
   test_error_reporting.cpp
 )
