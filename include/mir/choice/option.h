@@ -13,31 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_TEST_UTILS_CONFIG_
-#define MIR_TEST_TEST_UTILS_CONFIG_
+#ifndef MIR_CHOICE_OPTION_H_
+#define MIR_CHOICE_OPTION_H_
 
-#include <boost/program_options/variables_map.hpp>
+#include <string>
 
 namespace mir
 {
-namespace test
+namespace choice
 {
-
-class Config
+class Option
 {
 public:
-    Config();
+    virtual bool is_set(char const* name) const = 0;
 
-    bool use_real_graphics();
+    virtual bool get(char const* name, bool default_) const = 0;
+    virtual std::string get(char const* name, char const* default_) const = 0;
 
-private:
-    boost::program_options::variables_map options;
+protected:
+    Option() = default;
+    ~Option() = default;
+    Option(Option const&) = delete;
+    Option& operator=(Option const&) = delete;
 };
-
 }
 }
 
-#endif /* MIR_TEST_TEST_UTILS_CONFIG_ */
+
+#endif /* MIR_CHOICE_OPTION_H_ */
