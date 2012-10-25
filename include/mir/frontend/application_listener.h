@@ -30,10 +30,15 @@ namespace frontend
 class ApplicationListener
 {
 public:
-    virtual void application_method_call(
-        std::string const& app_name,
-        char const* method,
-        std::string const& comment) = 0;
+    virtual void application_connect_called(std::string const& app_name) = 0;
+
+    virtual void application_create_surface_called(std::string const& app_name) = 0;
+
+    virtual void application_next_buffer_called(std::string const& app_name) = 0;
+
+    virtual void application_release_surface_called(std::string const& app_name) = 0;
+
+    virtual void application_disconnect_called(std::string const& app_name) = 0;
 
     virtual void application_error(
         std::string const& app_name,
@@ -44,11 +49,15 @@ public:
 // Do-nothing implementation to satisfy dependencies
 class NullApplicationListener : public ApplicationListener
 {
-public:
-    virtual void application_method_call(
-        std::string const&,
-        char const*,
-        std::string const&) {}
+    virtual void application_connect_called(std::string const&) {}
+
+    virtual void application_create_surface_called(std::string const&) {}
+
+    virtual void application_next_buffer_called(std::string const&) {}
+
+    virtual void application_release_surface_called(std::string const&) {}
+
+    virtual void application_disconnect_called(std::string const&) {}
 
     virtual void application_error(
         std::string const&,

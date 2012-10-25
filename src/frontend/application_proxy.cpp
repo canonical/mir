@@ -47,7 +47,7 @@ void mir::frontend::ApplicationProxy::connect(
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
+    listener->application_connect_called(app_name);
 
     auto ipc_package = graphics_platform->get_ipc_package();
 
@@ -67,7 +67,7 @@ void mir::frontend::ApplicationProxy::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
+    listener->application_create_surface_called(app_name);
 
     auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
@@ -107,7 +107,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
+    listener->application_next_buffer_called(app_name);
 
     auto surface = surfaces[request->value()].lock();
 
@@ -137,7 +137,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
+    listener->application_release_surface_called(app_name);
 
     auto const id = request->value();
 
@@ -165,7 +165,7 @@ void mir::frontend::ApplicationProxy::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
+    listener->application_disconnect_called(app_name);
 
     for (auto p = surfaces.begin(); p != surfaces.end(); ++p)
     {
@@ -181,7 +181,6 @@ void mir::frontend::ApplicationProxy::test_file_descriptors(
     ::mir::protobuf::Buffer*,
     ::google::protobuf::Closure* done)
 {
-    listener->application_method_call(app_name, __FUNCTION__, std::string());
   // TODO
 
   done->Run();
