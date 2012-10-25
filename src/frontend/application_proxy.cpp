@@ -46,6 +46,8 @@ void mir::frontend::ApplicationProxy::connect(
                      ::google::protobuf::Closure* done)
 {
     app_name = request->application_name();
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
+
     auto ipc_package = graphics_platform->get_ipc_package();
 
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
@@ -64,6 +66,8 @@ void mir::frontend::ApplicationProxy::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
+
     auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
@@ -102,6 +106,8 @@ void mir::frontend::ApplicationProxy::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
+
     auto surface = surfaces[request->value()].lock();
 
     auto const& ipc_package = surface->get_buffer_ipc_package();
@@ -130,6 +136,8 @@ void mir::frontend::ApplicationProxy::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
+
     auto const id = request->value();
 
     auto p = surfaces.find(id);
@@ -141,8 +149,10 @@ void mir::frontend::ApplicationProxy::release_surface(
     }
     else
     {
-        //TODO proper error logging
-        // std::cerr << "ERROR trying to destroy unknown surface" << std::endl;
+        listener->application_error(
+            app_name,
+            __FUNCTION__,
+            "trying to destroy unknown surface");
     }
 
     done->Run();
@@ -154,6 +164,8 @@ void mir::frontend::ApplicationProxy::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
+
     for (auto p = surfaces.begin(); p != surfaces.end(); ++p)
     {
         surface_organiser->destroy_surface(p->second);
@@ -168,6 +180,7 @@ void mir::frontend::ApplicationProxy::test_file_descriptors(
     ::mir::protobuf::Buffer*,
     ::google::protobuf::Closure* done)
 {
+    listener->application_method_call(app_name, __FUNCTION__, std::string());
   // TODO
 
   done->Run();
