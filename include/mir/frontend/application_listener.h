@@ -49,20 +49,20 @@ public:
 // Do-nothing implementation to satisfy dependencies
 class NullApplicationListener : public ApplicationListener
 {
-    virtual void application_connect_called(std::string const&);
+    virtual void application_connect_called(std::string const& app_name);
 
-    virtual void application_create_surface_called(std::string const&);
+    virtual void application_create_surface_called(std::string const& app_name);
 
-    virtual void application_next_buffer_called(std::string const&);
+    virtual void application_next_buffer_called(std::string const& app_name);
 
-    virtual void application_release_surface_called(std::string const&);
+    virtual void application_release_surface_called(std::string const& app_name);
 
-    virtual void application_disconnect_called(std::string const&);
+    virtual void application_disconnect_called(std::string const& app_name);
 
     virtual void application_error(
-        std::string const&,
-        char const* ,
-        std::string const& );
+        std::string const& app_name,
+        char const* method,
+        std::string const& what);
 };
 }
 }
