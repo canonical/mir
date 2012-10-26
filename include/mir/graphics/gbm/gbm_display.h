@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_listener.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 
@@ -44,28 +45,7 @@ namespace gbm
 class GBMPlatform;
 class BufferObject;
 
-class GBMDisplayReporter : public DisplayListener
-{
-  public:
-
-    static const char* component();
-
-    GBMDisplayReporter(const std::shared_ptr<logging::Logger>& logger);
-    virtual ~GBMDisplayReporter();
-
-    virtual void report_successful_setup_of_native_resources();
-    virtual void report_successful_egl_make_current_on_construction();
-    virtual void report_successful_egl_buffer_swap_on_construction();
-    virtual void report_successful_drm_mode_set_crtc_on_construction();
-    virtual void report_successful_display_construction();
-
-  protected:
-    GBMDisplayReporter(const GBMDisplayReporter&) = delete;
-    GBMDisplayReporter& operator=(const GBMDisplayReporter&) = delete;
-
-  private:
-    std::shared_ptr<logging::Logger> logger;
-};
+class GBMDisplayReporter;
 
 class GBMDisplay : public Display
 {
