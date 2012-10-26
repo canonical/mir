@@ -200,8 +200,147 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
                 google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
 
             client.wait_for_next_buffer();
-            EXPECT_TRUE(client.surface.has_buffer());
+        }
+    } client_process;
 
+    launch_client_process(client_process);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_notified)
+{
+    struct Server : TestingServerConfiguration
+    {
+        std::shared_ptr<mf::ApplicationListener>
+        make_application_listener()
+        {
+            auto result = std::make_shared<MockApplicationListener>();
+
+            EXPECT_CALL(*result, application_release_surface_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
+    } server_processing;
+
+    launch_server_process(server_processing);
+
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestClient client(mir::test_socket_file());
+
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, create_surface_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, next_buffer_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, release_surface_done()).Times(testing::AtLeast(0));
+
+            client.display_server.connect(
+                0,
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+
+            client.wait_for_connect_done();
+
+            client.display_server.create_surface(
+                0,
+                &client.surface_parameters,
+                &client.surface,
+                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+            client.wait_for_create_surface();
+
+            client.display_server.next_buffer(
+                0,
+                &client.surface.id(),
+                client.surface.mutable_buffer(),
+                google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
+
+            client.wait_for_next_buffer();
+
+            client.display_server.release_surface(
+                0,
+                &client.surface.id(),
+                &client.ignored,
+                google::protobuf::NewCallback(&client, &mt::TestClient::release_surface_done));
+
+            client.wait_for_release_surface();
+        }
+    } client_process;
+
+    launch_client_process(client_process);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notified)
+{
+    struct Server : TestingServerConfiguration
+    {
+        std::shared_ptr<mf::ApplicationListener>
+        make_application_listener()
+        {
+            auto result = std::make_shared<MockApplicationListener>();
+
+            EXPECT_CALL(*result, application_disconnect_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
+    } server_processing;
+
+    launch_server_process(server_processing);
+
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestClient client(mir::test_socket_file());
+
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, create_surface_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, next_buffer_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, release_surface_done()).Times(testing::AtLeast(0));
+            EXPECT_CALL(client, disconnect_done()).Times(testing::AtLeast(0));
+
+            client.display_server.connect(
+                0,
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+
+            client.wait_for_connect_done();
+
+            client.display_server.create_surface(
+                0,
+                &client.surface_parameters,
+                &client.surface,
+                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+            client.wait_for_create_surface();
+
+            client.display_server.next_buffer(
+                0,
+                &client.surface.id(),
+                client.surface.mutable_buffer(),
+                google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
+
+            client.wait_for_next_buffer();
+
+            client.display_server.release_surface(
+                0,
+                &client.surface.id(),
+                &client.ignored,
+                google::protobuf::NewCallback(&client, &mt::TestClient::release_surface_done));
+
+            client.wait_for_release_surface();
+
+            client.display_server.disconnect(
+                0,
+                &client.ignored,
+                &client.ignored,
+                google::protobuf::NewCallback(&client, &mt::TestClient::disconnect_done));
+
+            client.wait_for_disconnect_done();
         }
     } client_process;
 

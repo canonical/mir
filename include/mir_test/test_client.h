@@ -38,6 +38,7 @@ struct TestClient
         connect_done_called(false),
         create_surface_called(false),
         next_buffer_called(false),
+        release_surface_called(false),
         disconnect_done_called(false),
         tfd_done_called(false),
         connect_done_count(0),
@@ -51,6 +52,7 @@ struct TestClient
         ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_connect_done));
         ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_create_surface_done));
         ON_CALL(*this, next_buffer_done()).WillByDefault(testing::Invoke(this, &TestClient::on_next_buffer_done));
+        ON_CALL(*this, release_surface_done()).WillByDefault(testing::Invoke(this, &TestClient::on_release_surface_done));
         ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestClient::on_disconnect_done));
     }
 
@@ -66,6 +68,7 @@ struct TestClient
     MOCK_METHOD0(connect_done, void ());
     MOCK_METHOD0(create_surface_done, void ());
     MOCK_METHOD0(next_buffer_done, void ());
+    MOCK_METHOD0(release_surface_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
 
     void on_connect_done()
@@ -89,6 +92,11 @@ struct TestClient
     void on_next_buffer_done()
     {
         next_buffer_called.store(true);
+    }
+
+    void on_release_surface_done()
+    {
+        release_surface_called.store(true);
     }
 
     void on_disconnect_done()
@@ -128,6 +136,16 @@ struct TestClient
             std::this_thread::yield();
         }
         next_buffer_called.store(false);
+    }
+
+    void wait_for_release_surface()
+    {
+        for (int i = 0; !release_surface_called.load() && i < 100; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
+        }
+        release_surface_called.store(false);
     }
 
     void wait_for_disconnect_done()
@@ -174,6 +192,7 @@ struct TestClient
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
     std::atomic<bool> next_buffer_called;
+    std::atomic<bool> release_surface_called;
     std::atomic<bool> disconnect_done_called;
     std::atomic<bool> tfd_done_called;
 
