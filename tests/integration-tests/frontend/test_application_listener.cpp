@@ -16,42 +16,39 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/renderer.h"
-#include "mir/display_server.h"
+#include "mir_client/mir_client_library.h"
+#include "mir/frontend/application_listener.h"
 
 #include "mir_test/display_server_test_fixture.h"
-#include "mir_test/mock_display.h"
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
-namespace mg = mir::graphics;
-namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 
-TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
+TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
 {
     struct Server : TestingServerConfiguration
     {
-        void exec(mir::DisplayServer* display_server)
-        {
-            mg::MockDisplay display;
-
-            using namespace testing;
-
-            EXPECT_CALL(display, clear()).Times(1);
-            EXPECT_CALL(display, post_update()).Times(1);
-
-            EXPECT_CALL(display, view_area()).Times(AtLeast(1))
-                    .WillRepeatedly(Return(geom::Rectangle()));
-
-            display_server->render(&display);
-        }
+//        void exec(mir::DisplayServer* display_server)
+//        {
+//        }
     } server_processing;
 
     launch_server_process(server_processing);
+
+//    struct ClientConfig : ClientConfigCommon
+//    {
+//        void exec()
+//        {
+//            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+//
+//            ASSERT_TRUE(connection != NULL);
+//            EXPECT_TRUE(mir_connection_is_valid(connection));
+//            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+//
+//            mir_connection_release(connection);
+//        }
+//    } client_config;
+//
+//    launch_client_process(client_config);
 }

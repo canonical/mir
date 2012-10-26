@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "display_server_test_fixture.h"
+#include "mir_test/display_server_test_fixture.h"
 
 namespace mc = mir::compositor;
 

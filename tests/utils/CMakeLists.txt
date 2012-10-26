@@ -25,6 +25,7 @@ set(
   graphics_utils.cpp 
   testing_server_options.cpp
   testing_process_manager.cpp
+  display_server_test_fixture.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")

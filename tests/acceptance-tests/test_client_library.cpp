@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "display_server_test_fixture.h"
+#include "mir_test/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
 #include "client_buffer.h"
