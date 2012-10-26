@@ -29,16 +29,21 @@ namespace mt = mir::test;
 
 namespace
 {
-// If we didn't support g++4.4 this could be nested in
-//  application_listener_is_notified::Server::make_applicaton_listener
-// where it belongs (and could have a shorter name)
+// If we didn't support g++4.4 these could be nested in
+//  application_listener_XXX_is_notified::Server::make_applicaton_listener
+// where it belongs (and could have shorter names)
 struct MockApplicationListenerForConnect : mf::NullApplicationListener
 {
     MOCK_METHOD1(application_connect_called, void (std::string const&));
 };
+
+struct MockApplicationListenerForCreateSurface : mf::NullApplicationListener
+{
+    MOCK_METHOD1(application_create_surface_called, void (std::string const&));
+};
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
+TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified)
 {
     struct Server : TestingServerConfiguration
     {
@@ -60,19 +65,70 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
     {
         void exec()
         {
-            mt::TestClient stub_client(mir::test_socket_file());
+            mt::TestClient client(mir::test_socket_file());
 
-            stub_client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
-            EXPECT_CALL(stub_client, connect_done()).
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).
                 Times(testing::AtLeast(0));
 
-            stub_client.display_server.connect(
+            client.display_server.connect(
                 0,
-                &stub_client.connect_parameters,
-                &stub_client.connection,
-                google::protobuf::NewCallback(&stub_client, &mt::TestClient::connect_done));
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
 
-            stub_client.wait_for_connect_done();
+            client.wait_for_connect_done();
+        }
+    } client_process;
+
+    launch_client_process(client_process);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_notified)
+{
+    struct Server : TestingServerConfiguration
+    {
+        std::shared_ptr<mf::ApplicationListener>
+        make_application_listener()
+        {
+            auto result = std::make_shared<MockApplicationListenerForCreateSurface>();
+
+            EXPECT_CALL(*result, application_create_surface_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
+    } server_processing;
+
+    launch_server_process(server_processing);
+
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestClient client(mir::test_socket_file());
+
+            client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(client, connect_done()).
+                Times(testing::AtLeast(0));
+            EXPECT_CALL(client, create_surface_done()).
+                Times(testing::AtLeast(0));
+
+            client.display_server.connect(
+                0,
+                &client.connect_parameters,
+                &client.connection,
+                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+
+            client.wait_for_connect_done();
+
+            client.display_server.create_surface(
+                0,
+                &client.surface_parameters,
+                &client.surface,
+                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+            client.wait_for_create_surface();
+
         }
     } client_process;
 
