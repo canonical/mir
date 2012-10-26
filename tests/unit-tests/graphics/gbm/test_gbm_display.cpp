@@ -18,6 +18,7 @@
 #include "mir/exception.h"
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/graphics/gbm/gbm_display.h"
+#include "mir/graphics/gbm/gbm_display_reporter.h"
 #include "mir/logging/logger.h"
 
 #include "mir_test/egl_mock.h"

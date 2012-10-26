@@ -21,6 +21,7 @@
 #include "mir/exception.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_display.h"
+#include "mir/graphics/gbm/gbm_display_reporter.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"

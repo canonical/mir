@@ -34,6 +34,7 @@ add_library(
   gbm_buffer.cpp
   gbm_display_helpers.cpp
   gbm_display.cpp
+  gbm_display_reporter.cpp
 )
 
 target_link_libraries(

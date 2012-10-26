@@ -21,7 +21,6 @@
 #include "mir/exception.h"
 #include "mir/graphics/gbm/gbm_platform.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/logging/logger.h"
 
 #include <stdexcept>
 #include <xf86drm.h>
@@ -84,45 +83,6 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgg::GBMDisplayReporter::GBMDisplayReporter(const std::shared_ptr<ml::Logger>& logger) : logger(logger)
-{
-}
-
-mgg::GBMDisplayReporter::~GBMDisplayReporter()
-{
-}
-
-const char* mgg::GBMDisplayReporter::component()
-{
-    static const char* s = "GBMDisplay";
-    return s;
-}
-
-
-void mgg::GBMDisplayReporter::report_successful_setup_of_native_resources()
-{
-    logger->log<ml::Logger::informational>("Successfully setup native resources.", component());
-}
-
-void mgg::GBMDisplayReporter::report_successful_egl_make_current_on_construction()
-{
-    logger->log<ml::Logger::informational>("Successfully made egl context current on construction.", component());
-}
-
-void mgg::GBMDisplayReporter::report_successful_egl_buffer_swap_on_construction()
-{
-    logger->log<ml::Logger::informational>("Successfully performed egl buffer swap on construction.", component());
-}
-
-void mgg::GBMDisplayReporter::report_successful_drm_mode_set_crtc_on_construction()
-{
-    logger->log<ml::Logger::informational>("Successfully performed drm mode setup on construction.", component());
-}
-
-void mgg::GBMDisplayReporter::report_successful_display_construction()
-{
-    logger->log<ml::Logger::informational>("Successfully finished construction.", component());
-}
 mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, 
                             const std::shared_ptr<DisplayListener>& listener)
     : last_flipped_bufobj{0}, 
