@@ -27,6 +27,17 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
+namespace
+{
+// If we didn't support g++4.4 this could be nested in
+//  application_listener_is_notified::Server::make_applicaton_listener
+// where it belongs (and could have a shorter name)
+struct MockApplicationListenerForConnect : mf::NullApplicationListener
+{
+    MOCK_METHOD1(application_connect_called, void (std::string const&));
+};
+}
+
 TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
 {
     struct Server : TestingServerConfiguration
@@ -34,12 +45,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
         std::shared_ptr<mf::ApplicationListener>
         make_application_listener()
         {
-            struct MockApplicationListener : mf::NullApplicationListener
-            {
-                MOCK_METHOD1(application_connect_called, void (std::string const&));
-            };
-
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationListenerForConnect>();
 
             EXPECT_CALL(*result, application_connect_called(testing::_)).
                 Times(1);
