@@ -29,6 +29,7 @@ namespace graphics
 {
 
 class Renderer;
+class Renderview;
 
 }
 namespace surfaces
@@ -45,13 +46,13 @@ class Compositor : public Drawer
 {
 public:
     explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
+	graphics::Renderview* renderview,
         const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
-    surfaces::Scenegraph* const scenegraph;
+    graphics::Renderview* const render_view;
     std::shared_ptr<graphics::Renderer> renderer;
 };
 

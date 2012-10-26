@@ -45,6 +45,7 @@ struct MockScenegraph : ms::Scenegraph
 {
 public:
     MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::SurfaceCollection> (geom::Rectangle const&));
+    MOCK_METHOD1(get_renderables_in, std::shared_ptr<mg::RenderableCollection> (geom::Rectangle const&));
 };
 
 

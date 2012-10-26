@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_RENDERABLE_COLLECTION_H
 #define MIR_GRAPHICS_RENDERABLE_COLLECTION_H
 
+#include "mir/geometry/forward.h"
+
 #include <memory>
 
 namespace mir
@@ -48,12 +50,27 @@ public:
 
     virtual void invoke_for_each_renderable(RenderableEnumerator& enumerator) = 0;
 
-  protected:    
+protected:    
     RenderableCollection() = default;
     RenderableCollection(const RenderableCollection&) = delete;
     RenderableCollection& operator=(const RenderableCollection&) = delete;
 
 };
+
+class Renderview
+{
+public:
+    virtual ~Renderview() {}  
+    virtual std::shared_ptr<RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area) = 0;
+
+protected:
+    Renderview() = default;
+    
+private:
+    Renderview(Renderview const&) = delete;
+    Renderview& operator=(Renderview const&) = delete;
+};
+
 }
 }
 

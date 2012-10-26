@@ -55,6 +55,19 @@ struct LockGuardDeleter
     Lockable& lockable;
 };
 
+struct SurfaceStackRenderableCollection : public mg::RenderableCollection
+{
+    void invoke_for_each_renderable(mg::RenderableEnumerator& f)
+    {
+        for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
+        {
+            f(**it);
+        }
+    }
+
+    std::set<std::shared_ptr<ms::Surface>> surfaces;
+};
+
 struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
 {
 public:
@@ -70,6 +83,7 @@ public:
 };
 }
 
+
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
@@ -81,6 +95,14 @@ std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometr
     SurfaceStackSurfaceCollection* view = new SurfaceStackSurfaceCollection();
     view->surfaces = surfaces;
     return std::shared_ptr<ms::SurfaceCollection>(view, lgd);
+}
+
+std::shared_ptr<mg::RenderableCollection> ms::SurfaceStack::get_renderables_in(geometry::Rectangle const& /*display_area*/)
+{
+    LockGuardDeleter<std::mutex> lgd(guard);
+    SurfaceStackRenderableCollection* view = new SurfaceStackRenderableCollection();
+    view->surfaces = surfaces;
+    return std::shared_ptr<mg::RenderableCollection>(view, lgd);
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)

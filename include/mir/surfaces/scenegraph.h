@@ -20,8 +20,11 @@
 #define MIR_SURFACES_SCENEGRAPH_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/graphics/renderview.h"
 
 #include <memory>
+
+namespace mg = mir::graphics;
 
 namespace mir
 {
@@ -58,7 +61,7 @@ public:
 };
 
 // scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph
+class Scenegraph : public mg::Renderview
 {
 public:
     

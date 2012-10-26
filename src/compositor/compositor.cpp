@@ -33,12 +33,12 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
-    ms::Scenegraph* scenegraph,
+    mg::Renderview *view,
     const std::shared_ptr<mg::Renderer>& renderer)
-        : scenegraph(scenegraph),
-          renderer(renderer)
+    : render_view(view),
+      renderer(renderer)
 {
-    assert(scenegraph);
+    assert(render_view);
     assert(renderer);
 }
 
@@ -46,25 +46,25 @@ void mc::Compositor::render(graphics::Display* display)
 {
     assert(display);
 
-    auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
-    assert(surfaces_in_view_area);
+    auto renderables_in_view_area = render_view->get_renderables_in(display->view_area());
+    assert(renderables_in_view_area);
 
-    struct RenderingSurfaceEnumerator : public ms::SurfaceEnumerator
+    struct RenderingRenderableEnumerator : public mg::RenderableEnumerator
     {
-        RenderingSurfaceEnumerator(mg::Renderer& renderer)
+        RenderingRenderableEnumerator(mg::Renderer& renderer)
                 : renderer(renderer)
         {
         }
         
-        void operator()(ms::Surface& surface)
+        void operator()(mg::Renderable& renderable)
         {
-            renderer.render(surface);
+            renderer.render(renderable);
         }
         
         mg::Renderer& renderer;
     } enumerator(*renderer);
     
-    surfaces_in_view_area->invoke_for_each_surface(
+    renderables_in_view_area->invoke_for_each_renderable(
         enumerator);
     
     display->post_update();
