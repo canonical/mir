@@ -18,6 +18,7 @@
 
 #include "mir/server_configuration.h"
 
+#include "mir/choice/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
@@ -33,6 +34,7 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
+#include <boost/program_options/parsers.hpp>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -86,6 +88,26 @@ private:
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
 socket_file(socket_file)
 {
+}
+
+std::shared_ptr<mir::choice::Option> mir::DefaultServerConfiguration::make_options()
+{
+    if (!options)
+    {
+        namespace po = boost::program_options;
+
+        po::options_description desc("Environment options");
+        desc.add_options()
+            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
+
+        auto options = std::make_shared<mir::choice::ProgramOption>();
+
+        options->parse_environment(desc, "MIR_");
+
+        this->options = options;
+    }
+
+    return options;
 }
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_platform()

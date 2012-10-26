@@ -251,8 +251,3 @@ bool mir::detect_server(
     return !error;
 }
 
-std::string const& mir::test_socket_file()
-{
-    static const std::string socket_file{"./mir_socket_test"};
-    return socket_file;
-}

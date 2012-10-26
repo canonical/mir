@@ -16,8 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "testing_process_manager.h"
-#include "mir_test/test_utils_config.h"
+#include "mir_test/testing_server_configuration.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -30,7 +29,6 @@
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace mt = mir::test;
 
 namespace
 {
@@ -106,9 +104,9 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
 std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    mt::Config config;
+    auto options = make_options();
 
-    if (config.use_real_graphics())
+    if (options->get("tests_use_real_graphics", false))
         return DefaultServerConfiguration::make_renderer(display);
     else
         return std::make_shared<StubRenderer>();
@@ -127,3 +125,8 @@ mir::TestingServerConfiguration::TestingServerConfiguration() :
 {
 }
 
+std::string const& mir::test_socket_file()
+{
+    static const std::string socket_file{"./mir_socket_test"};
+    return socket_file;
+}

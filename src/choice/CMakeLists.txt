@@ -12,36 +12,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-include_directories(
-    ${Boost_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-)
 
 set(
-  TEST_UTILS_SRCS
+  CHOICE_SOURCES
 
-  graphics_utils.cpp 
-  testing_server_options.cpp
+  program_option.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-  set(
-    TEST_UTILS_SRCS
-
-    android_graphics.cpp
-    ${TEST_UTILS_SRCS} 
-)
-endif()
-
-add_library(
-  test-utils STATIC 
-  ${TEST_UTILS_SRCS})
-
-target_link_libraries(
-  test-utils 
-
-  ${Boost_LIBRARIES}
-  ${GLESv2_LIBRARIES}
+add_library( 
+  mirchoice STATIC
+  
+  ${CHOICE_SOURCES}
 )

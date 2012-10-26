@@ -13,20 +13,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
- *              Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_utils_config.h"
+#include "mir/choice/program_option.h"
 
-#include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
-
 #include <fstream>
 
-namespace mt = mir::test;
+namespace mch = mir::choice;
+namespace po = boost::program_options;
 
-mt::Config::Config()
+
+mch::ProgramOption::ProgramOption()
+{
+}
+
+void mch::ProgramOption::parse_arguments(
+    po::options_description const& desc,
+    int argc,
+    char const* argv[])
+{
+    po::store(po::parse_command_line(argc, argv, desc), options);
+    po::notify(options);
+}
+
+void mch::ProgramOption::parse_environment(
+    po::options_description const& desc,
+    char const* prefix)
+{
+    po::store(po::parse_environment(desc, prefix), options);
+
+}
+
+void mch::ProgramOption::parse_file(
+    po::options_description const& config_file_desc,
+    std::string const& name)
 {
     std::string config_roots;
 
@@ -42,23 +64,15 @@ mt::Config::Config()
 
     std::istringstream config_stream(config_roots);
 
-    namespace po = boost::program_options;
-
-    po::options_description config_file_desc("Config file options");
-
-    po::options_description env_desc("Environment options");
-    env_desc.add_options()
-        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
-
     /* Read options from config files */
     for (std::string config_root; getline(config_stream, config_root, ':');)
     {
-        auto const& filename = config_root + "/mir/mir.config";
+        auto const& filename = config_root + name;
 
         try
         {
             std::ifstream file(filename);
-            po::store(po::parse_config_file(file, config_file_desc), options, true);
+            po::store(po::parse_config_file(file, config_file_desc, true), options);
         }
         catch (const po::error& error)
         {
@@ -66,25 +80,26 @@ mt::Config::Config()
         }
     }
 
-    /* Read options from environment */
-    try
-    {
-        po::store(po::parse_environment(env_desc, "MIR_"), options, true);
-    }
-    catch (const po::error& error)
-    {
-        std::cerr << "ERROR in environment variables: " << error.what() << std::endl;
-    }
-
     po::notify(options);
 }
 
-bool mt::Config::use_real_graphics()
+bool mch::ProgramOption::is_set(char const* name) const
 {
-    bool use_real_graphics_value{false};
+    return options.count(name);
+}
 
-    if (options.count("tests_use_real_graphics"))
-        use_real_graphics_value = options["tests_use_real_graphics"].as<bool>();
 
-    return use_real_graphics_value;
+bool mch::ProgramOption::get(char const* /*name*/, bool default_) const
+{
+    return default_;
+}
+
+std::string mch::ProgramOption::get(char const* name, char const* default_) const
+{
+    if (options.count(name))
+    {
+        return options[name].as<std::string>();
+    }
+
+    return default_;
 }

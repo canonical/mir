@@ -24,6 +24,8 @@
 #include "mir/chrono/chrono.h"
 #include "mir/process/process.h"
 
+#include "mir_test/testing_server_configuration.h"
+
 #include <memory>
 #include <list>
 
@@ -37,24 +39,6 @@ struct TestingClientConfiguration
     virtual void exec() = 0;
 };
 
-struct TestingServerConfiguration : DefaultServerConfiguration
-{
-    TestingServerConfiguration();
-
-    // Code to run in server process
-    virtual void exec(DisplayServer* display_server);
-
-    // Code to run in server process after server exits
-    virtual void on_exit(DisplayServer* display_server);
-
-    // TODO can we remove this function and default to real graphics in tests?
-    std::shared_ptr<graphics::Platform> make_graphics_platform();
-    std::shared_ptr<graphics::Renderer> make_renderer(
-            std::shared_ptr<graphics::Display> const& display);
-
-private:
-    std::shared_ptr<graphics::Platform> graphics_platform;
-};
 
 class TestingProcessManager
 {
