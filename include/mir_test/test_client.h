@@ -29,6 +29,7 @@ namespace mir
 {
 namespace test
 {
+const int maxwait = 100000;
 struct TestClient
 {
     TestClient(std::string socket_file) :
@@ -110,17 +111,18 @@ struct TestClient
 
     void wait_for_connect_done()
     {
-        for (int i = 0; !connect_done_called.load() && i < 100; ++i)
+        for (int i = 0; !connect_done_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
         }
+
         connect_done_called.store(false);
     }
 
     void wait_for_create_surface()
     {
-        for (int i = 0; !create_surface_called.load() && i < 100; ++i)
+        for (int i = 0; !create_surface_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
@@ -130,7 +132,7 @@ struct TestClient
 
     void wait_for_next_buffer()
     {
-        for (int i = 0; !next_buffer_called.load() && i < 100; ++i)
+        for (int i = 0; !next_buffer_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
@@ -140,7 +142,7 @@ struct TestClient
 
     void wait_for_release_surface()
     {
-        for (int i = 0; !release_surface_called.load() && i < 100; ++i)
+        for (int i = 0; !release_surface_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
@@ -150,7 +152,7 @@ struct TestClient
 
     void wait_for_disconnect_done()
     {
-        for (int i = 0; !disconnect_done_called.load() && i < 100; ++i)
+        for (int i = 0; !disconnect_done_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             std::this_thread::yield();
@@ -182,7 +184,7 @@ struct TestClient
 
     void wait_for_tfd_done()
     {
-        for (int i = 0; !tfd_done_called.load() && i < 100; ++i)
+        for (int i = 0; !tfd_done_called.load() && i < maxwait; ++i)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
