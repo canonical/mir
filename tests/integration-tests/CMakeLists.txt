@@ -29,6 +29,7 @@ if(MIR_PLATFORM STREQUAL "gbm")
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
   )
   add_subdirectory(graphics/gbm)
 endif()

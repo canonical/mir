@@ -20,35 +20,55 @@
 #include "mir/frontend/application_listener.h"
 
 #include "mir_test/display_server_test_fixture.h"
+#include "mir_test/test_client.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mt = mir::test;
 
 TEST_F(BespokeDisplayServerTestFixture, application_listener_is_notified)
 {
     struct Server : TestingServerConfiguration
     {
-//        void exec(mir::DisplayServer* display_server)
-//        {
-//        }
+        std::shared_ptr<mf::ApplicationListener>
+        make_application_listener()
+        {
+            struct MockApplicationListener : mf::NullApplicationListener
+            {
+                MOCK_METHOD1(application_connect_called, void (std::string const&));
+            };
+
+            auto result = std::make_shared<MockApplicationListener>();
+
+            EXPECT_CALL(*result, application_connect_called(testing::_)).
+                Times(1);
+
+            return result;
+        }
     } server_processing;
 
     launch_server_process(server_processing);
 
-//    struct ClientConfig : ClientConfigCommon
-//    {
-//        void exec()
-//        {
-//            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-//
-//            ASSERT_TRUE(connection != NULL);
-//            EXPECT_TRUE(mir_connection_is_valid(connection));
-//            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-//
-//            mir_connection_release(connection);
-//        }
-//    } client_config;
-//
-//    launch_client_process(client_config);
+    struct Client: TestingClientConfiguration
+    {
+        void exec()
+        {
+            mt::TestClient stub_client(mir::test_socket_file());
+
+            stub_client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+            EXPECT_CALL(stub_client, connect_done()).
+                Times(testing::AtLeast(0));
+
+            stub_client.display_server.connect(
+                0,
+                &stub_client.connect_parameters,
+                &stub_client.connection,
+                google::protobuf::NewCallback(&stub_client, &mt::TestClient::connect_done));
+
+            stub_client.wait_for_connect_done();
+        }
+    } client_process;
+
+    launch_client_process(client_process);
 }
