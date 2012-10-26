@@ -24,17 +24,19 @@
 #include "gbm/mock_gbm.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace geom = mir::geometry;
 
 class GraphicsPlatform : public ::testing::Test
 {
 public:
-    GraphicsPlatform()
+    GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
     {
         using namespace testing;
         buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
@@ -47,7 +49,8 @@ public:
         .WillByDefault(Return(240));
 #endif
     }
-
+    
+    std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 #ifndef ANDROID
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;

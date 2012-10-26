@@ -17,18 +17,38 @@
  */
 
 #include "mir/graphics/gbm/gbm_platform.h"
+
+#include "mir/exception.h"
 #include "mir/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/gbm/gbm_display.h"
+#include "mir/graphics/gbm/gbm_display_reporter.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/logging/logger.h"
+#include "mir/logging/dumb_console_logger.h"
 
 #include <xf86drm.h>
 
+#include <stdexcept>
+
 namespace mgg=mir::graphics::gbm;
 namespace mg=mir::graphics;
+namespace ml=mir::logging;
 namespace mc=mir::compositor;
 
 namespace
 {
+
+// TODO not the best place, but convenient for refactoring
+class NullDisplayListener : public mg::DisplayListener
+{
+  public:
+
+    virtual void report_successful_setup_of_native_resources() {}
+    virtual void report_successful_egl_make_current_on_construction() {}
+    virtual void report_successful_egl_buffer_swap_on_construction() {}
+    virtual void report_successful_drm_mode_set_crtc_on_construction() {}
+    virtual void report_successful_display_construction() {}
+};
 
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
@@ -46,7 +66,15 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 
 }
 
-mgg::GBMPlatform::GBMPlatform()
+mgg::GBMPlatform::GBMPlatform() :
+    listener(std::make_shared<NullDisplayListener>())
+{
+    drm.setup();
+    gbm.setup(drm);
+}
+
+mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayListener> const& listener) :
+    listener(listener)
 {
     drm.setup();
     gbm.setup(drm);
@@ -61,7 +89,9 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
 
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
-    return std::make_shared<mgg::GBMDisplay>(this->shared_from_this());
+    return std::make_shared<mgg::GBMDisplay>(
+        this->shared_from_this(), 
+        listener);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
@@ -71,5 +101,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 
 std::shared_ptr<mg::Platform> mg::create_platform()
 {
-    return std::make_shared<mgg::GBMPlatform>();
+    const std::shared_ptr<ml::Logger>  logger(std::make_shared<ml::DumbConsoleLogger>());
+    return std::make_shared<mgg::GBMPlatform>(std::make_shared<mgg::GBMDisplayReporter>(logger));
 }

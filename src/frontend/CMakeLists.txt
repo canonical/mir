@@ -32,3 +32,9 @@ add_library(
   
   ${FRONTEND_SOURCES}
 )
+
+target_link_libraries(
+  mirfrontend
+
+  mirlogging
+)

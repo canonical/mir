@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_listener.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/gbm/gbm_display_helpers.h"
 
 #include <memory>
@@ -30,6 +32,11 @@ namespace geometry
 {
 class Rectangle;
 }
+namespace logging
+{
+class Logger;
+}
+
 namespace graphics
 {
 namespace gbm
@@ -38,10 +45,13 @@ namespace gbm
 class GBMPlatform;
 class BufferObject;
 
+class GBMDisplayReporter;
+
 class GBMDisplay : public Display
 {
 public:
-    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform);
+    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<DisplayListener>& reporter);
+
     ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
@@ -54,6 +64,7 @@ private:
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<GBMPlatform> platform;
+    std::shared_ptr<DisplayListener> listener;
     /* DRM and GBM helpers from GBMPlatform */
     helpers::DRMHelper& drm;
     helpers::GBMHelper& gbm;
