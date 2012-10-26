@@ -29,16 +29,18 @@ namespace mt = mir::test;
 
 namespace
 {
-// If we didn't support g++4.4 these could be nested in
-//  application_listener_XXX_is_notified::Server::make_applicaton_listener
-// where it belongs (and could have shorter names)
-struct MockApplicationListenerForConnect : mf::NullApplicationListener
+struct MockApplicationListener : mf::NullApplicationListener
 {
-    MOCK_METHOD1(application_connect_called, void (std::string const&));
-};
+    MockApplicationListener()
+    {
+        EXPECT_CALL(*this, application_connect_called(testing::_)).
+            Times(testing::AtLeast(0));
 
-struct MockApplicationListenerForCreateSurface : mf::NullApplicationListener
-{
+        EXPECT_CALL(*this, application_create_surface_called(testing::_)).
+            Times(testing::AtLeast(0));
+    }
+
+    MOCK_METHOD1(application_connect_called, void (std::string const&));
     MOCK_METHOD1(application_create_surface_called, void (std::string const&));
 };
 }
@@ -50,7 +52,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
         std::shared_ptr<mf::ApplicationListener>
         make_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListenerForConnect>();
+            auto result = std::make_shared<MockApplicationListener>();
 
             EXPECT_CALL(*result, application_connect_called(testing::_)).
                 Times(1);
@@ -91,7 +93,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
         std::shared_ptr<mf::ApplicationListener>
         make_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListenerForCreateSurface>();
+            auto result = std::make_shared<MockApplicationListener>();
 
             EXPECT_CALL(*result, application_create_surface_called(testing::_)).
                 Times(1);
