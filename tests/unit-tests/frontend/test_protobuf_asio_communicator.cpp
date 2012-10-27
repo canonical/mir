@@ -53,7 +53,7 @@ struct ProtobufAsioCommunicatorBasic : public ::testing::Test
 
         stub_server->comm.start();
 
-        stub_client = std::make_shared<mt::TestClient>("./test_socket");
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -62,7 +62,7 @@ struct ProtobufAsioCommunicatorBasic : public ::testing::Test
         stub_server->comm.stop();
     }
 
-    std::shared_ptr<mt::TestClient> stub_client;
+    std::shared_ptr<mt::TestProtobufClient> stub_client;
     std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
     std::shared_ptr<mt::TestServer> stub_server;
@@ -76,7 +76,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, connection_results_in_a_callback)
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 }
@@ -91,7 +91,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
         0,
         &stub_client->connect_parameters,
         &stub_client->connection,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::connect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::connect_done));
 
     stub_client->wait_for_connect_done();
 
@@ -109,7 +109,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
         0,
         &stub_client->connect_parameters,
         &stub_client->connection,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::connect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::connect_done));
 
     stub_client->wait_for_connect_done();
 
@@ -119,7 +119,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 
@@ -136,7 +136,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 }
@@ -149,7 +149,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 
@@ -158,14 +158,14 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->ignored,
         &stub_client->ignored,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::disconnect_done));
 
     stub_client->wait_for_disconnect_done();
 
     EXPECT_CALL(*stub_client->logger, error()).Times(testing::AtLeast(1));
 
     // We don't expect this to be called, so it can't auto destruct
-    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(stub_client.get(), &mt::TestClient::disconnect_done));
+    std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(stub_client.get(), &mt::TestProtobufClient::disconnect_done));
     stub_client->display_server.disconnect(0, &stub_client->ignored, &stub_client->ignored, new_callback.get());
     stub_client->wait_for_disconnect_done();
 }
@@ -180,7 +180,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 
@@ -193,7 +193,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
             0,
             &stub_client->surface.id(),
             stub_client->surface.mutable_buffer(),
-            google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::next_buffer_done));
+            google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::next_buffer_done));
 
         stub_client->wait_for_next_buffer();
         EXPECT_TRUE(stub_client->surface.has_buffer());
@@ -203,7 +203,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->ignored,
         &stub_client->ignored,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::disconnect_done));
 
     stub_client->wait_for_disconnect_done();
 }
@@ -216,7 +216,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
     stub_client->wait_for_create_surface();
 
@@ -225,7 +225,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
         0,
         &stub_client->ignored,
         &stub_client->ignored,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::disconnect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::disconnect_done));
 
     stub_client->wait_for_disconnect_done();
 }

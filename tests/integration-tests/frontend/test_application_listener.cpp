@@ -79,7 +79,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
     {
         void exec()
         {
-            mt::TestClient client(mir::test_socket_file());
+            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -89,7 +89,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
                 0,
                 &client.connect_parameters,
                 &client.connection,
-                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
 
             client.wait_for_connect_done();
         }
@@ -120,7 +120,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
     {
         void exec()
         {
-            mt::TestClient client(mir::test_socket_file());
+            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -132,7 +132,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
                 0,
                 &client.connect_parameters,
                 &client.connection,
-                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
 
             client.wait_for_connect_done();
 
@@ -140,7 +140,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
                 0,
                 &client.surface_parameters,
                 &client.surface,
-                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::create_surface_done));
             client.wait_for_create_surface();
 
         }
@@ -171,7 +171,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
     {
         void exec()
         {
-            mt::TestClient client(mir::test_socket_file());
+            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -182,7 +182,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
                 0,
                 &client.connect_parameters,
                 &client.connection,
-                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
 
             client.wait_for_connect_done();
 
@@ -190,14 +190,14 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
                 0,
                 &client.surface_parameters,
                 &client.surface,
-                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::create_surface_done));
             client.wait_for_create_surface();
 
             client.display_server.next_buffer(
                 0,
                 &client.surface.id(),
                 client.surface.mutable_buffer(),
-                google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::next_buffer_done));
 
             client.wait_for_next_buffer();
         }
@@ -228,7 +228,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
     {
         void exec()
         {
-            mt::TestClient client(mir::test_socket_file());
+            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -240,7 +240,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
                 0,
                 &client.connect_parameters,
                 &client.connection,
-                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
 
             client.wait_for_connect_done();
 
@@ -248,14 +248,14 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
                 0,
                 &client.surface_parameters,
                 &client.surface,
-                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::create_surface_done));
             client.wait_for_create_surface();
 
             client.display_server.next_buffer(
                 0,
                 &client.surface.id(),
                 client.surface.mutable_buffer(),
-                google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::next_buffer_done));
 
             client.wait_for_next_buffer();
 
@@ -263,7 +263,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
                 0,
                 &client.surface.id(),
                 &client.ignored,
-                google::protobuf::NewCallback(&client, &mt::TestClient::release_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::release_surface_done));
 
             client.wait_for_release_surface();
         }
@@ -294,7 +294,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
     {
         void exec()
         {
-            mt::TestClient client(mir::test_socket_file());
+            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -307,7 +307,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
                 0,
                 &client.connect_parameters,
                 &client.connection,
-                google::protobuf::NewCallback(&client, &mt::TestClient::connect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::connect_done));
 
             client.wait_for_connect_done();
 
@@ -315,14 +315,14 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
                 0,
                 &client.surface_parameters,
                 &client.surface,
-                google::protobuf::NewCallback(&client, &mt::TestClient::create_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::create_surface_done));
             client.wait_for_create_surface();
 
             client.display_server.next_buffer(
                 0,
                 &client.surface.id(),
                 client.surface.mutable_buffer(),
-                google::protobuf::NewCallback(&client, &mt::TestClient::next_buffer_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::next_buffer_done));
 
             client.wait_for_next_buffer();
 
@@ -330,7 +330,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
                 0,
                 &client.surface.id(),
                 &client.ignored,
-                google::protobuf::NewCallback(&client, &mt::TestClient::release_surface_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::release_surface_done));
 
             client.wait_for_release_surface();
 
@@ -338,7 +338,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
                 0,
                 &client.ignored,
                 &client.ignored,
-                google::protobuf::NewCallback(&client, &mt::TestClient::disconnect_done));
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::disconnect_done));
 
             client.wait_for_disconnect_done();
         }

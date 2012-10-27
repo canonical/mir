@@ -106,7 +106,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
     void SetUp()
     {
         server = std::make_shared<mt::TestErrorServer>("./test_error_fixture");
-        client = std::make_shared<mt::TestClient>("./test_error_fixture");
+        client = std::make_shared<mt::TestProtobufClient>("./test_error_fixture", 100);
 
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
@@ -119,7 +119,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
     }
 
     std::shared_ptr<mt::TestErrorServer> server;
-    std::shared_ptr<mt::TestClient>  client;
+    std::shared_ptr<mt::TestProtobufClient>  client;
 };
 
 TEST_F(ProtobufErrorTestFixture, connect_exception)
@@ -132,7 +132,7 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
         0,
         &client->connect_parameters,
         &result,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::connect_done));
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::connect_done));
 
     client->wait_for_connect_done();
 
@@ -148,7 +148,7 @@ TEST_F(ProtobufErrorTestFixture, create_surface_exception)
         0,
         &client->surface_parameters,
         &client->surface,
-        google::protobuf::NewCallback(client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::create_surface_done));
 
     client->wait_for_create_surface();
 

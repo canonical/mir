@@ -17,6 +17,7 @@
 include_directories(
     ${Boost_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
 )
 
 set(
@@ -26,6 +27,7 @@ set(
   testing_server_options.cpp
   testing_process_manager.cpp
   display_server_test_fixture.cpp
+  test_protobuf_client.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")
