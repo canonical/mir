@@ -22,7 +22,7 @@
 
 #include "mir_test/test_server.h"
 #include "mir_test/mock_ipc_factory.h"
-#include "mir_test/test_client.h"
+#include "mir_test/test_protobuf_client.h"
 
 namespace mt = mir::test;
 

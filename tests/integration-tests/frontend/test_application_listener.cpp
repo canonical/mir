@@ -20,7 +20,8 @@
 #include "mir/frontend/application_listener.h"
 
 #include "mir_test/display_server_test_fixture.h"
-#include "mir_test/test_client.h"
+#include "mir_test/test_protobuf_client.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
