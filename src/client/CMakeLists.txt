@@ -63,7 +63,7 @@ set(
 endif()
 
 add_library( 
-  mirclient SHARED
+  mirclient STATIC
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
