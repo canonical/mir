@@ -83,7 +83,6 @@ public:
 };
 }
 
-
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
