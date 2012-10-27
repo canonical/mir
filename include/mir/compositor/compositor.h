@@ -46,7 +46,7 @@ class Compositor : public Drawer
 {
 public:
     explicit Compositor(
-	graphics::Renderview* renderview,
+    graphics::Renderview* renderview,
         const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
