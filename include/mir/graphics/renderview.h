@@ -50,7 +50,7 @@ public:
 
     virtual void invoke_for_each_renderable(RenderableEnumerator& enumerator) = 0;
 
-protected:    
+  protected:    
     RenderableCollection() = default;
     RenderableCollection(const RenderableCollection&) = delete;
     RenderableCollection& operator=(const RenderableCollection&) = delete;
@@ -59,14 +59,14 @@ protected:
 
 class Renderview
 {
-public:
-    virtual ~Renderview() {}  
-    virtual std::shared_ptr<RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area) = 0;
-
-protected:
+ public:
+  virtual ~Renderview() {}
+  
+  virtual std::shared_ptr<RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area) = 0;
+ protected:
     Renderview() = default;
     
-private:
+ private:
     Renderview(Renderview const&) = delete;
     Renderview& operator=(Renderview const&) = delete;
 };
