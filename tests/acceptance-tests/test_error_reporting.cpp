@@ -26,7 +26,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "display_server_test_fixture.h"
+#include "mir_test/display_server_test_fixture.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

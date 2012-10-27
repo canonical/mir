@@ -43,6 +43,7 @@ target_link_libraries(
   miroptions
   mirclient
   mirprotobuf
+  test-utils
 
   3rd_party
   mirtest_eglmock

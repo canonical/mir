@@ -26,7 +26,7 @@
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
-#include "mir_test/test_client.h"
+#include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_server.h"
 
 #include <gtest/gtest.h>
@@ -85,7 +85,7 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
 
         stub_server->comm.start();
 
-        stub_client = std::make_shared<mt::TestClient>("./test_socket");
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -94,7 +94,7 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
         stub_server->comm.stop();
     }
 
-    std::shared_ptr<mt::TestClient> stub_client;
+    std::shared_ptr<mt::TestProtobufClient> stub_client;
     std::shared_ptr<mt::StubServerSurfaceCounter> stub_server_tool;
 
     std::shared_ptr<mt::TestServer> stub_server;
@@ -106,7 +106,7 @@ TEST_F(ProtobufAsioCommunicatorCounter, server_creates_surface_on_create_surface
         0,
         &stub_client->surface_parameters,
         &stub_client->surface,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
     stub_client->wait_for_create_surface();
 
     stub_server_tool->expect_surface_count(1);
@@ -121,7 +121,7 @@ TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
         0,
         &stub_client->connect_parameters,
         &stub_client->connection,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::connect_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::connect_done));
     stub_client->wait_for_connect_done();
 
     stub_server_tool->expect_surface_count(0);
@@ -140,7 +140,7 @@ TEST_F(ProtobufAsioCommunicatorCounter,
             0,
             &stub_client->surface_parameters,
             &stub_client->surface,
-            google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+            google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
 
         stub_client->wait_for_create_surface();
     }
@@ -161,7 +161,7 @@ TEST_F(ProtobufAsioCommunicatorCounter,
             0,
             &stub_client->surface_parameters,
             &stub_client->surface,
-            google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::create_surface_done));
+            google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
     }
 
     stub_server_tool->expect_surface_count(surface_count);
@@ -187,7 +187,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
 
         for(int i=0; i<number_of_clients; i++)
         {
-            auto client_tmp = std::make_shared<mt::TestClient>("./test_socket"); 
+            auto client_tmp = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
             clients.push_back(client_tmp);
         }
     }
@@ -197,7 +197,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
         stub_server->comm.stop();
     }
 
-    std::vector<std::shared_ptr<mt::TestClient>> clients;
+    std::vector<std::shared_ptr<mt::TestProtobufClient>> clients;
     std::shared_ptr<mt::StubServerSurfaceCounter> stub_server_tool;
 
     std::shared_ptr<mt::TestServer> stub_server;
@@ -213,7 +213,7 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
             0,
             &clients[i]->surface_parameters,
             &clients[i]->surface,
-            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::create_surface_done));
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::create_surface_done));
         clients[i]->wait_for_create_surface();
     }
 
@@ -226,7 +226,7 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
             0,
             &clients[i]->ignored,
             &clients[i]->ignored,
-            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::disconnect_done));
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::disconnect_done));
         clients[i]->wait_for_disconnect_done();
     }
 
@@ -243,7 +243,7 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
             0,
             &clients[i]->surface_parameters,
             &clients[i]->surface,
-            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::create_surface_done));
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::create_surface_done));
     }
 
     for (int i = 0; i != number_of_clients; ++i)
@@ -260,7 +260,7 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
             0,
             &clients[i]->ignored,
             &clients[i]->ignored,
-            google::protobuf::NewCallback(clients[i].get(), &mt::TestClient::disconnect_done));
+            google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::disconnect_done));
     }
 
     for (int i = 0; i != number_of_clients; ++i)

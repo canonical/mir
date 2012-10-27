@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/display.h"
@@ -47,22 +48,15 @@ namespace ms = mir::surfaces;
 
 namespace
 {
-// TODO replace with a real renderer appropriate to the platform default
-class StubRenderer : public mg::Renderer
-{
-public:
-    virtual void render(mg::Renderable&)
-    {
-    }
-};
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform) :
         surface_organiser(surface_organiser),
+        listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform)
     {
@@ -70,6 +64,7 @@ public:
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
 
@@ -78,6 +73,7 @@ private:
         return std::make_shared<mf::ApplicationProxy>(
             surface_organiser,
             graphics_platform,
+            listener,
             resource_cache());
     }
 
@@ -158,6 +154,14 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
-    return std::make_shared<DefaultIpcFactory>(surface_organiser, make_graphics_platform());
+    return std::make_shared<DefaultIpcFactory>(
+        surface_organiser,
+        make_application_listener(),
+        make_graphics_platform());
 }
 
+std::shared_ptr<mf::ApplicationListener>
+mir::DefaultServerConfiguration::make_application_listener()
+{
+    return std::make_shared<mf::NullApplicationListener>();
+}

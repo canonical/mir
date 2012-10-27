@@ -26,7 +26,7 @@
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
-#include "mir_test/test_client.h"
+#include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_server.h"
 
 #include <gtest/gtest.h>
@@ -96,7 +96,7 @@ struct ProtobufAsioCommunicatorFD : public ::testing::Test
 
         stub_server->comm.start();
 
-        stub_client = std::make_shared<mt::TestClient>("./test_socket");
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -105,7 +105,7 @@ struct ProtobufAsioCommunicatorFD : public ::testing::Test
         stub_server->comm.stop();
     }
 
-    std::shared_ptr<mt::TestClient> stub_client;
+    std::shared_ptr<mt::TestProtobufClient> stub_client;
     std::shared_ptr<mt::StubServerFd> stub_server_tool;
 
 private:
@@ -117,7 +117,7 @@ TEST_F(ProtobufAsioCommunicatorFD, test_file_descriptors)
     mir::protobuf::Buffer fds;
 
     stub_client->display_server.test_file_descriptors(0, &stub_client->ignored, &fds,
-        google::protobuf::NewCallback(stub_client.get(), &mt::TestClient::tfd_done));
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::tfd_done));
 
     stub_client->wait_for_tfd_done();
 
