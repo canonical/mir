@@ -191,6 +191,10 @@ void mir::TestingProcessManager::tear_down_clients()
     }
     else
     {
+        // Exiting here in the child processes causes "memory leaks",
+        // however, not exiting allows the client processes to continue
+        // executing tests (which spawn further child processes)
+        // with worse results.
         exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
     }
 }
