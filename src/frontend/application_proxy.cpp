@@ -185,30 +185,3 @@ void mir::frontend::ApplicationProxy::test_file_descriptors(
 
   done->Run();
 }
-
-void mir::frontend::NullApplicationListener::application_connect_called(std::string const&)
-{
-}
-
-void mir::frontend::NullApplicationListener::application_create_surface_called(std::string const&)
-{
-}
-
-void mir::frontend::NullApplicationListener::application_next_buffer_called(std::string const&)
-{
-}
-
-void mir::frontend::NullApplicationListener::application_release_surface_called(std::string const&)
-{
-}
-
-void mir::frontend::NullApplicationListener::application_disconnect_called(std::string const&)
-{
-}
-
-void mir::frontend::NullApplicationListener::application_error(
-        std::string const&,
-        char const* ,
-        std::string const& )
-{
-}
