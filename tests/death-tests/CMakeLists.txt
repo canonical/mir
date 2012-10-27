@@ -26,7 +26,7 @@ target_link_libraries(
   death-tests
   
   mir
-  mirchoice
+  miroptions
   mircompositor
   mirfrontend
   mirinput

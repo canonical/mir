@@ -19,7 +19,7 @@ include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
 set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 
-add_subdirectory(choice/)
+add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
@@ -40,7 +40,7 @@ target_link_libraries(
   mirlogging
   mirsurfaces
   mirprocess
-  mirchoice
+  miroptions
   mirclient
   mirprotobuf
 

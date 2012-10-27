@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/choice/program_option.h"
+#include "mir/options/program_option.h"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
@@ -67,7 +67,7 @@ try
 {
     namespace po = boost::program_options;
 
-    mir::choice::ProgramOption options;
+    mir::options::ProgramOption options;
 
     po::options_description desc("Options");
 
