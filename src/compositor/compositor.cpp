@@ -33,7 +33,7 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
-    mg::Renderview *view,
+    Renderview *view,
     const std::shared_ptr<mg::Renderer>& renderer)
     : render_view(view),
       renderer(renderer)
@@ -49,7 +49,7 @@ void mc::Compositor::render(graphics::Display* display)
     auto renderables_in_view_area = render_view->get_renderables_in(display->view_area());
     assert(renderables_in_view_area);
 
-    struct RenderingRenderableEnumerator : public mg::RenderableEnumerator
+    struct RenderingRenderableEnumerator : public RenderableEnumerator
     {
         RenderingRenderableEnumerator(mg::Renderer& renderer)
                 : renderer(renderer)

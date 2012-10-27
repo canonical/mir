@@ -27,15 +27,17 @@ namespace mir
 {
 namespace graphics
 {
-
 class Renderable;
+}
 
+namespace compositor
+{
 class RenderableEnumerator
 {
 public:
     virtual ~RenderableEnumerator() {}
 
-    virtual void operator()(Renderable& renderable) = 0;
+    virtual void operator()(graphics::Renderable& renderable) = 0;
 
 protected:
     RenderableEnumerator() = default;
@@ -73,5 +75,6 @@ class Renderview
 
 }
 }
+
 
 #endif /* MIR_GRAPHICS_RENDERABLE_COLLECTION_H */

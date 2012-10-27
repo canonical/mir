@@ -31,6 +31,7 @@ namespace mir
 namespace compositor
 {
 class BufferBundleFactory;
+class RenderableCollection;
 }
 
 namespace surfaces
@@ -47,7 +48,7 @@ public:
     // From Scenegraph
     virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);
     // From Renderview
-    virtual std::shared_ptr<mg::RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area);
+    virtual std::shared_ptr<mc::RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);

@@ -41,15 +41,15 @@ struct MockSurfaceRenderer : public mg::Renderer
     MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
-struct MockRenderview : mg::Renderview
+struct MockRenderview : mc::Renderview
 {
-    MOCK_METHOD1(get_renderables_in, std::shared_ptr<mg::RenderableCollection> (geom::Rectangle const&));
+    MOCK_METHOD1(get_renderables_in, std::shared_ptr<mc::RenderableCollection> (geom::Rectangle const&));
 };
 
 
-struct MockRenderableCollection : public mg::RenderableCollection
+struct MockRenderableCollection : public mc::RenderableCollection
 {
-    MOCK_METHOD1(invoke_for_each_renderable, void(mg::RenderableEnumerator&));
+    MOCK_METHOD1(invoke_for_each_renderable, void(mc::RenderableEnumerator&));
 };
 
 }
