@@ -18,7 +18,7 @@
 #ifndef MIR_SERVER_CONFIGURATION_H_
 #define MIR_SERVER_CONFIGURATION_H_
 
-#include "mir/choice/program_option.h"
+#include "mir/options/program_option.h"
 
 #include <memory>
 #include <string>
@@ -51,7 +51,7 @@ class ApplicationSurfaceOrganiser;
 class ServerConfiguration
 {
 public:
-    virtual std::shared_ptr<choice::Option> make_options() = 0;
+    virtual std::shared_ptr<options::Option> make_options() = 0;
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -74,7 +74,7 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(std::string const& socket_file);
 
-    virtual std::shared_ptr<choice::Option> make_options();
+    virtual std::shared_ptr<options::Option> make_options();
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -86,7 +86,7 @@ public:
 
 private:
     std::string socket_file;
-    std::shared_ptr<choice::Option> options;
+    std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
     std::shared_ptr<frontend::ApplicationListener> application_listener;
 

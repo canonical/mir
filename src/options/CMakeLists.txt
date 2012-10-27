@@ -14,11 +14,15 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_program_option.cpp
-)
 
 set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+  CHOICE_SOURCES
+
+  program_option.cpp
+)
+
+add_library(
+  miroptions STATIC
+
+  ${CHOICE_SOURCES}
+)

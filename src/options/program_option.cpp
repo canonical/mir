@@ -16,20 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/choice/program_option.h"
+#include "mir/options/program_option.h"
 
 #include <boost/program_options/parsers.hpp>
 #include <fstream>
 
-namespace mch = mir::choice;
+namespace mo = mir::options;
 namespace po = boost::program_options;
 
 
-mch::ProgramOption::ProgramOption()
+mo::ProgramOption::ProgramOption()
 {
 }
 
-void mch::ProgramOption::parse_arguments(
+void mo::ProgramOption::parse_arguments(
     po::options_description const& desc,
     int argc,
     char const* argv[])
@@ -38,7 +38,7 @@ void mch::ProgramOption::parse_arguments(
     po::notify(options);
 }
 
-void mch::ProgramOption::parse_environment(
+void mo::ProgramOption::parse_environment(
     po::options_description const& desc,
     char const* prefix)
 {
@@ -46,7 +46,7 @@ void mch::ProgramOption::parse_environment(
 
 }
 
-void mch::ProgramOption::parse_file(
+void mo::ProgramOption::parse_file(
     po::options_description const& config_file_desc,
     std::string const& name)
 {
@@ -83,18 +83,18 @@ void mch::ProgramOption::parse_file(
     po::notify(options);
 }
 
-bool mch::ProgramOption::is_set(char const* name) const
+bool mo::ProgramOption::is_set(char const* name) const
 {
     return options.count(name);
 }
 
 
-bool mch::ProgramOption::get(char const* /*name*/, bool default_) const
+bool mo::ProgramOption::get(char const* /*name*/, bool default_) const
 {
     return default_;
 }
 
-std::string mch::ProgramOption::get(char const* name, char const* default_) const
+std::string mo::ProgramOption::get(char const* name, char const* default_) const
 {
     if (options.count(name))
     {

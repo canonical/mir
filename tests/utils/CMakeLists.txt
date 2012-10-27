@@ -47,7 +47,7 @@ target_link_libraries(
   test-utils 
 
   mir
-  mirchoice
+  miroptions
   mircompositor
   mirfrontend
   mirgraphics
