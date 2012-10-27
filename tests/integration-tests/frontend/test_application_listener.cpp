@@ -56,6 +56,8 @@ struct MockApplicationListener : mf::NullApplicationListener
     MOCK_METHOD1(application_release_surface_called, void (std::string const&));
     MOCK_METHOD1(application_disconnect_called, void (std::string const&));
 };
+
+const int rpc_timeout_ms{100000};
 }
 
 TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified)
@@ -80,7 +82,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
+            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -121,7 +123,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
+            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -172,7 +174,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
+            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -229,7 +231,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
+            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -295,7 +297,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), 100000);
+            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
