@@ -49,9 +49,7 @@ struct StubCommunicator : public mf::Communicator
 
 }
 
-//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
-#ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
-TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
+TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 {
     struct Server : TestingServerConfiguration
     {
@@ -65,10 +63,9 @@ TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
     launch_server_process(fail);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, failing_without_server)
+TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_without_server)
 {
 }
-#endif
 
 TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
 {
