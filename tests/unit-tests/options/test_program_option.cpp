@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/choice/program_option.h"
+#include "mir/options/program_option.h"
 
 #include <boost/program_options/cmdline.hpp>
 #include <boost/program_options/parsers.hpp>
@@ -46,7 +46,7 @@ struct ProgramOption : testing::Test
 
 TEST_F(ProgramOption, parse_command_line_long)
 {
-    mir::choice::ProgramOption po;
+    mir::options::ProgramOption po;
 
     const int argc = 3;
     char const* argv[argc] = {
@@ -64,7 +64,7 @@ TEST_F(ProgramOption, parse_command_line_long)
 
 TEST_F(ProgramOption, parse_command_line_short)
 {
-    mir::choice::ProgramOption po;
+    mir::options::ProgramOption po;
 
     const int argc = 3;
     char const* argv[argc] = {
@@ -82,7 +82,7 @@ TEST_F(ProgramOption, parse_command_line_short)
 
 TEST_F(ProgramOption, parse_command_line_help)
 {
-    mir::choice::ProgramOption po;
+    mir::options::ProgramOption po;
 
     const int argc = 2;
     char const* argv[argc] = {
@@ -106,7 +106,7 @@ TEST(ProgramOptionEnv, parse_environment)
     desc.add_options()
         (key, bpo::value<std::string>());
 
-    mir::choice::ProgramOption po;
+    mir::options::ProgramOption po;
     po.parse_environment(desc, __PRETTY_FUNCTION__);
 
     EXPECT_EQ(value, po.get(key, "default"));
@@ -120,7 +120,7 @@ TEST(ProgramOptionFile, parse_files)
 {
     bpo::options_description desc("Config file options");
 
-    mir::choice::ProgramOption po;
+    mir::options::ProgramOption po;
 
     po.parse_file(desc, "test.config");
 }

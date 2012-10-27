@@ -18,7 +18,7 @@
 
 #include "mir/server_configuration.h"
 
-#include "mir/choice/program_option.h"
+#include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
@@ -93,7 +93,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& s
 {
 }
 
-std::shared_ptr<mir::choice::Option> mir::DefaultServerConfiguration::make_options()
+std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_options()
 {
     if (!options)
     {
@@ -103,7 +103,7 @@ std::shared_ptr<mir::choice::Option> mir::DefaultServerConfiguration::make_optio
         desc.add_options()
             ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
 
-        auto options = std::make_shared<mir::choice::ProgramOption>();
+        auto options = std::make_shared<mir::options::ProgramOption>();
 
         options->parse_environment(desc, "MIR_");
 

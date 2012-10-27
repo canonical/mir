@@ -16,14 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_CHOICE_OPTION_H_
-#define MIR_CHOICE_OPTION_H_
+#ifndef MIR_OPTIONS_OPTION_H_
+#define MIR_OPTIONS_OPTION_H_
 
 #include <string>
 
 namespace mir
 {
-namespace choice
+namespace options
 {
 class Option
 {
@@ -43,4 +43,4 @@ protected:
 }
 
 
-#endif /* MIR_CHOICE_OPTION_H_ */
+#endif /* MIR_OPTIONS_OPTION_H_ */

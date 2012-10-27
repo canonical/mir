@@ -35,7 +35,7 @@ target_link_libraries(
   acceptance-tests
   
   mir
-  mirchoice
+  miroptions
   mircompositor
   mirfrontend
   mirgraphics

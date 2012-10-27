@@ -17,8 +17,8 @@
  */
 
 
-#ifndef PROGRAM_OPTION_H_
-#define PROGRAM_OPTION_H_
+#ifndef MIR_OPTIONS_PROGRAM_OPTION_H_
+#define MIR_OPTIONS_PROGRAM_OPTION_H_
 
 #include "option.h"
 
@@ -27,7 +27,7 @@
 
 namespace mir
 {
-namespace choice
+namespace options
 {
 class ProgramOption : public Option
 {
@@ -58,4 +58,4 @@ private:
 }
 
 
-#endif /* PROGRAM_OPTION_H_ */
+#endif /* MIR_OPTIONS_PROGRAM_OPTION_H_ */
