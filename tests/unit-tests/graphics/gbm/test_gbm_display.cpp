@@ -269,18 +269,9 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     auto platform = std::make_shared<mgg::GBMPlatform>();
 
-    try
-    {
+    EXPECT_THROW({
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }
-    catch(const mir::Exception& e)
-    {
-        e.has_error_info<boost::errinfo_errno>();
-        std::cout << boost::diagnostic_information_what(e) << std::endl;
-        return;
-    }
-
-    FAIL() << "Expected that c'tor of GBMDisplay throws";
+    }, mir::Exception) << "Expected that c'tor of GBMDisplay throws";
 }
 
 TEST_F(GBMDisplayTest, create_display_gbm_failure)
@@ -296,17 +287,10 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(1));
-    
-    try
-    {
+
+    EXPECT_THROW({
         auto platform = std::make_shared<mgg::GBMPlatform>();
-        //auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    } catch(...)
-    {
-        std::cout << boost::current_exception_diagnostic_information() << std::endl;
-        return;
-    }
-    FAIL() << "Expected c'tor of GBMDisplay to throw an exception";
+    }, std::runtime_error) << "Expected c'tor of GBMDisplay to throw an exception";
 }
 
 TEST_F(GBMDisplayTest, post_update)
