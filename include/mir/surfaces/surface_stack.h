@@ -46,7 +46,7 @@ public:
     virtual ~SurfaceStack() {}
 
     // From Renderview
-    virtual std::shared_ptr<mc::RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area);
+	virtual void apply(RenderableFilter &filter, RenderableOperator &operator);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
