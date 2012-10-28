@@ -20,6 +20,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/renderview.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
@@ -84,12 +85,12 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 
 
 struct MockSurfaceRenderer : public mg::Renderer,
-                             public ms::SurfaceEnumerator
+                             public mc::RenderableEnumerator
 {
     MOCK_METHOD1(render, void(mg::Renderable&));
-    void operator()(ms::Surface& s)
+    void operator()(mg::Renderable& r)
     {
-        render(s);
+        render(r);
     }
 };
 
@@ -131,7 +132,7 @@ TEST(
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
-        std::shared_ptr<ms::SurfaceCollection> surfaces_in_view = stack.get_surfaces_in(geom::Rectangle());
+        std::shared_ptr<mc::RenderableCollection> renderables_in_view = stack.get_renderables_in(geom::Rectangle());
     }
 }
 
@@ -163,8 +164,8 @@ TEST(
     EXPECT_CALL(renderer,
                 render(Ref(*surface3.lock()))).Times(Exactly(1));
     
-    auto view = stack.get_surfaces_in(geom::Rectangle());
+    auto view = stack.get_renderables_in(geom::Rectangle());
 
-    view->invoke_for_each_surface(renderer);
+    view->invoke_for_each_renderable(renderer);
 }
 

@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
 #include "mir/compositor/drawer.h"
+#include "mir/compositor/renderview.h"
 
 #include <memory>
 
@@ -41,17 +42,18 @@ class Scenegraph;
 
 namespace compositor
 {
+
 class Compositor : public Drawer
 {
 public:
     explicit Compositor(
-        surfaces::Scenegraph* scenegraph,
+        Renderview* renderview,
         const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
-    surfaces::Scenegraph* const scenegraph;
+    Renderview* const render_view;
     std::shared_ptr<graphics::Renderer> renderer;
 };
 

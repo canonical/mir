@@ -41,16 +41,15 @@ struct MockSurfaceRenderer : public mg::Renderer
     MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
-struct MockScenegraph : ms::Scenegraph
+struct MockRenderview : mc::Renderview
 {
-public:
-    MOCK_METHOD1(get_surfaces_in, std::shared_ptr<ms::SurfaceCollection> (geom::Rectangle const&));
+    MOCK_METHOD1(get_renderables_in, std::shared_ptr<mc::RenderableCollection> (geom::Rectangle const&));
 };
 
 
-struct MockSurfaceCollection : public ms::SurfaceCollection
+struct MockRenderableCollection : public mc::RenderableCollection
 {
-    MOCK_METHOD1(invoke_for_each_surface, void(ms::SurfaceEnumerator&));
+    MOCK_METHOD1(invoke_for_each_renderable, void(mc::RenderableEnumerator&));
 };
 
 }
@@ -64,13 +63,13 @@ TEST(Compositor, render)
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
-    MockScenegraph scenegraph;
+    MockRenderview render_view;
     mg::MockDisplay display;
-    MockSurfaceCollection view;
+    MockRenderableCollection view;
 
-    mc::Compositor comp(&scenegraph, renderer);
+    mc::Compositor comp(&render_view, renderer);
 
-    EXPECT_CALL(view, invoke_for_each_surface(_)).Times(1);
+    EXPECT_CALL(view, invoke_for_each_renderable(_)).Times(1);
 
     EXPECT_CALL(mock_renderer, render(_)).Times(0);
 
@@ -78,11 +77,11 @@ TEST(Compositor, render)
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
 
-    EXPECT_CALL(scenegraph, get_surfaces_in(_))
+    EXPECT_CALL(render_view, get_renderables_in(_))
             .Times(1)
             .WillRepeatedly(
                 Return(
-                    std::shared_ptr<MockSurfaceCollection>(&view, mir::EmptyDeleter())));
+                    std::shared_ptr<MockRenderableCollection>(&view, mir::EmptyDeleter())));
 
     EXPECT_CALL(display, post_update())
             .Times(1);
