@@ -61,12 +61,12 @@ protected:
 
 class Renderview
 {
- public:
-  virtual ~Renderview() {}
+public:
+    virtual ~Renderview() {}
   
-	virtual void apply(RenderableFilter& filter, RenderableOperator& renderable_operator);
+	virtual void apply(RenderableFilter& filter, RenderableOperator& renderable_operator) = 0;
 
- protected:
+protected:
     Renderview() = default;
     
  private:
