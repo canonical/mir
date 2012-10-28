@@ -102,6 +102,8 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
 
 TEST_F(ProtobufAsioCommunicatorCounter, server_creates_surface_on_create_surface_call)
 {
+    EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(1));
+
     stub_client->display_server.create_surface(
         0,
         &stub_client->surface_parameters,
