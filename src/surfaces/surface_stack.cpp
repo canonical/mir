@@ -42,10 +42,10 @@ ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bun
 void ms::SurfaceStack::apply(mc::RenderableFilter& filter, mc::RenderableOperator& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto it = surfaces.begin(); it != surafces.end(); ++it)
+    for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
     {
-	    auto surface = **it;
-		if (filter(surface)) renderable_operator(surface);
+	    mg::Renderable& renderable = **it;
+		if (filter(renderable)) renderable_operator(renderable);
 	}
 }
 
