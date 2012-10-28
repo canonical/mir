@@ -67,33 +67,11 @@ struct SurfaceStackRenderableCollection : public mc::RenderableCollection
 
     std::set<std::shared_ptr<ms::Surface>> surfaces;
 };
-
-struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
-{
-public:
-    void invoke_for_each_surface(ms::SurfaceEnumerator& f)
-    {
-        for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            f(**it);
-        }
-    }
-
-    std::set<std::shared_ptr<ms::Surface>> surfaces;
-};
 }
 
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
-}
-
-std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
-{
-    LockGuardDeleter<std::mutex> lgd(guard);
-    SurfaceStackSurfaceCollection* view = new SurfaceStackSurfaceCollection();
-    view->surfaces = surfaces;
-    return std::shared_ptr<ms::SurfaceCollection>(view, lgd);
 }
 
 std::shared_ptr<mc::RenderableCollection> ms::SurfaceStack::get_renderables_in(geometry::Rectangle const& /*display_area*/)

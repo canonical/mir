@@ -45,8 +45,6 @@ public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
-    // From Scenegraph
-    virtual std::shared_ptr<SurfaceCollection> get_surfaces_in(geometry::Rectangle const& display_area);
     // From Renderview
     virtual std::shared_ptr<mc::RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area);
 
