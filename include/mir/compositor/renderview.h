@@ -32,30 +32,30 @@ class Renderable;
 
 namespace compositor
 {
-class RenderableEnumerator
+class RenderableFilter
 {
 public:
-    virtual ~RenderableEnumerator() {}
+    virtual ~RenderableFilter() {}
 
     virtual void operator()(graphics::Renderable& renderable) = 0;
 
 protected:
-    RenderableEnumerator() = default;
-    RenderableEnumerator(const RenderableEnumerator&) = delete;
-    RenderableEnumerator& operator=(const RenderableEnumerator&) = delete;
+    RenderableFilter() = default;
+    RenderableFilter(const RenderableFilter&) = delete;
+    RenderableFilter& operator=(const RenderableFilter&) = delete;
 };
 
-class RenderableCollection
+class RenderableOperator
 {
 public:
-    virtual ~RenderableCollection() {}
+    virtual ~RenderableOperator() {}
 
-    virtual void invoke_for_each_renderable(RenderableEnumerator& enumerator) = 0;
+    virtual void operator()(graphics::Renderable& renderable) = 0;
 
-  protected:    
-    RenderableCollection() = default;
-    RenderableCollection(const RenderableCollection&) = delete;
-    RenderableCollection& operator=(const RenderableCollection&) = delete;
+protected:
+    RenderableOperator() = default;
+    RenderableOperator(const RenderableOperator&) = delete;
+    RenderableOperator& operator=(const RenderableOperator&) = delete;
 
 };
 
@@ -64,7 +64,8 @@ class Renderview
  public:
   virtual ~Renderview() {}
   
-  virtual std::shared_ptr<RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area) = 0;
+	virtual void apply(RenderableFilter& filter, RenderableOperator& operator);
+
  protected:
     Renderview() = default;
     
