@@ -18,6 +18,7 @@ set(
   INTEGRATION_TESTS_SRCS
   test_renderloop.cpp
   test_surfaceloop.cpp
+  test_error_reporting.cpp
 )
 
 add_subdirectory(frontend/)
