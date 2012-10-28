@@ -68,7 +68,7 @@ private:
     std::shared_ptr<mt::TestServer> stub_server;
 };
 
-TEST_F(ProtobufAsioCommunicatorBasic, connection_results_in_a_callback)
+TEST_F(ProtobufAsioCommunicatorBasic, create_surface_results_in_a_callback)
 {
     EXPECT_CALL(*stub_client, create_surface_done()).Times(1);
 
