@@ -42,30 +42,38 @@ mc::Compositor::Compositor(
     assert(renderer);
 }
 
+struct RegionRenderableFilter : public mc::RenderableFilter
+{
+	GeometryRenderableFilter(geometry::Rectangle enclosing_region)
+		: enclosing_region(enclosing_region)
+	{
+	}
+	bool operator()(mg::Renderable& /*renderable*/)
+	{
+		return true;
+	}
+	geometry::Rectangle& enclosing_region;
+};
+
+struct RenderingRenderableOperator : public mc::RenderableOperator
+{
+	RenderingRenderingOperator(mg::Renderer& renderer)
+		: renderer(renderer)
+	{
+	}
+	void operator()(mg::Renderable& renderable)
+	{
+		renderer.render(renderable);
+	}
+	mg::Renderer& renderer;
+};
+
 void mc::Compositor::render(graphics::Display* display)
 {
-    assert(display);
+	RegionRenderableFilter filter(display->view_area);
+	RegionRenderableOperator rendering_operator(*renderer);
 
-    auto renderables_in_view_area = render_view->get_renderables_in(display->view_area());
-    assert(renderables_in_view_area);
-
-    struct RenderingRenderableEnumerator : public RenderableEnumerator
-    {
-        RenderingRenderableEnumerator(mg::Renderer& renderer)
-                : renderer(renderer)
-        {
-        }
-        
-        void operator()(mg::Renderable& renderable)
-        {
-            renderer.render(renderable);
-        }
-        
-        mg::Renderer& renderer;
-    } enumerator(*renderer);
-    
-    renderables_in_view_area->invoke_for_each_renderable(
-        enumerator);
+	render_view.apply(filter, rendering_operator);
     
     display->post_update();
 }
