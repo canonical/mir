@@ -82,16 +82,36 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
             geom::PixelFormat pf));
 };
 
-
-
-struct MockSurfaceRenderer : public mg::Renderer,
-                             public mc::RenderableEnumerator
+struct MockSurfaceRenderer : public mg::Renderer
 {
     MOCK_METHOD1(render, void(mg::Renderable&));
-    void operator()(mg::Renderable& r)
-    {
-        render(r);
-    }
+};
+
+struct MockRenderableFilter : public mc::RenderableFilter
+{
+	// Can not mock operator overload so need to forward
+	MOCK_METHOD1(filter, bool(mg::Renderable&));
+	bool operator()(mg::Renderable& r)
+	{
+		return filter(r);
+	}
+};
+
+struct MockRenderableOperator : public mc::RenderableOperator
+{
+	MockRenderableOperator(mg::Renderer *renderer) :
+		renderer(renderer)
+	{
+	}
+
+	MOCK_METHOD1(renderable_operator, void(mg::Renderable&));
+	void operator()(mg::Renderable& r)
+	{
+		// We just use this for expectations
+		renderable_operator(r);
+		renderer->render(r);
+	}
+	mg::Renderer* renderer;
 };
 
 }
@@ -118,6 +138,7 @@ TEST(
     stack.destroy_surface(surface);
 }
 
+/* FIXME: This test doesn't do what it says! */
 TEST(
     SurfaceStack,
     scenegraph_query_locks_the_stack)
@@ -125,17 +146,26 @@ TEST(
     using namespace ::testing;
 
     MockBufferBundleFactory buffer_bundle_factory;
+	MockSurfaceRenderer renderer;
+	MockRenderableFilter filter;
+	MockRenderableOperator renderable_operator(&renderer);
+	
+	EXPECT_CALL(filter, filter(_)).Times(0);
+	EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(0);
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_, _)).Times(0);
+	EXPECT_CALL(renderer, render(_)).Times(0);
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
-        std::shared_ptr<mc::RenderableCollection> renderables_in_view = stack.get_renderables_in(geom::Rectangle());
+		stack.apply(filter, renderable_operator);
     }
 }
 
+/* FIXME: Why is this test working in terms of a renderer which is unrelated
+   to the functionality of SurfaceStack? */
 TEST(
     SurfaceStack,
     view_applies_renderer_to_all_surfaces_in_view)
@@ -157,6 +187,14 @@ TEST(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     MockSurfaceRenderer renderer;
+	MockRenderableFilter filter;
+	MockRenderableOperator renderable_operator(&renderer);
+	
+	ON_CALL(filter, filter(_)).WillByDefault(Return(true));
+
+	EXPECT_CALL(filter, filter(_)).Times(3);
+	EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(3);
+
     EXPECT_CALL(renderer,
                 render(Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
@@ -164,8 +202,6 @@ TEST(
     EXPECT_CALL(renderer,
                 render(Ref(*surface3.lock()))).Times(Exactly(1));
     
-    auto view = stack.get_renderables_in(geom::Rectangle());
-
-    view->invoke_for_each_renderable(renderer);
+	stack.apply(filter, renderable_operator);
 }
 
