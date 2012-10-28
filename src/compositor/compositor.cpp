@@ -42,9 +42,12 @@ mc::Compositor::Compositor(
     assert(renderer);
 }
 
+namespace
+{
+
 struct RegionRenderableFilter : public mc::RenderableFilter
 {
-	GeometryRenderableFilter(geometry::Rectangle enclosing_region)
+    RegionRenderableFilter(mir::geometry::Rectangle enclosing_region)
 		: enclosing_region(enclosing_region)
 	{
 	}
@@ -52,12 +55,12 @@ struct RegionRenderableFilter : public mc::RenderableFilter
 	{
 		return true;
 	}
-	geometry::Rectangle& enclosing_region;
+    mir::geometry::Rectangle& enclosing_region;
 };
 
 struct RenderingRenderableOperator : public mc::RenderableOperator
 {
-	RenderingRenderingOperator(mg::Renderer& renderer)
+	RenderingRenderableOperator(mg::Renderer& renderer)
 		: renderer(renderer)
 	{
 	}
@@ -67,13 +70,14 @@ struct RenderingRenderableOperator : public mc::RenderableOperator
 	}
 	mg::Renderer& renderer;
 };
+}
 
 void mc::Compositor::render(graphics::Display* display)
 {
-	RegionRenderableFilter filter(display->view_area);
-	RegionRenderableOperator rendering_operator(*renderer);
+    RegionRenderableFilter filter(display->view_area());
+	RenderingRenderableOperator rendering_operator(*renderer);
 
-	render_view.apply(filter, rendering_operator);
+	render_view->apply(filter, rendering_operator);
     
     display->post_update();
 }
