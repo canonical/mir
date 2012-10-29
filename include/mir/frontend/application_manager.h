@@ -19,42 +19,45 @@
 #ifndef MIR_FRONTEND_APPLICATION_MANAGER_H_
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
-#include "mir/frontend/services/surface_factory.h"
+#include "mir/frontend/application_session_model.h"
+#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/application_focus_strategy.h"
 
 #include <memory>
+#include <set>
+
+namespace ms = mir::surfaces;
+namespace mf = mir::frontend;
 
 namespace mir
 {
 
-namespace surfaces
-{
-
-class ApplicationSurfaceOrganiser;
-class SurfaceCreationParameters;
-
-}
-
 namespace frontend
 {
 
-namespace ms = mir::surfaces;
+class ApplicationSessionModel;
 
 class ApplicationManager
 {
  public:
-    explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser);
+    explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser,
+                                mf::ApplicationSessionContainer* session_model,
+                                mf::ApplicationFocusStrategy* focus_strategy);
     virtual ~ApplicationManager() {}
 
-    // From SurfaceFactory
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params);
-    void destroy_surface(std::weak_ptr<ms::Surface> surface);
+    std::weak_ptr<ApplicationSession> open_session(std::string name);
+    void close_session(std::shared_ptr<ApplicationSession> surface);
 
-  protected:
+protected:
     ApplicationManager(const ApplicationManager&) = delete;
     ApplicationManager& operator=(const ApplicationManager&) = delete;
 
-  private:
+private:
     ms::ApplicationSurfaceOrganiser* surface_organiser;
+    std::shared_ptr<mf::ApplicationSessionContainer> app_model;
+    std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy;
+
+    std::weak_ptr<mf::ApplicationSession> focus_application;
 };
 
 }
