@@ -20,7 +20,7 @@
 #define MIR_SURFACES_SCENEGRAPH_H_
 
 #include "mir/geometry/forward.h"
-#include "mir/compositor/renderview.h"
+#include "mir/compositor/render_view.h"
 
 #include <memory>
 
@@ -34,7 +34,7 @@ namespace surfaces
 class Surface;
 
 // scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph : public mc::Renderview
+class Scenegraph : public mc::RenderView
 {
 public:
     

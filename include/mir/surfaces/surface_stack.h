@@ -45,7 +45,7 @@ public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
-    // From Renderview
+    // From RenderView
     virtual void for_each_if(mc::RenderSelector &filter, mc::RenderApplicator &renderable_operator);
 
     // From SurfaceStackModel

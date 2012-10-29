@@ -20,7 +20,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/renderview.h"
+#include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"

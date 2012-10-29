@@ -41,7 +41,7 @@ struct MockSurfaceRenderer : public mg::Renderer
     MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
-struct MockRenderview : mc::Renderview
+struct MockRenderView : mc::RenderView
 {
     MOCK_METHOD2(for_each_if, void(mc::RenderSelector&, mc::RenderApplicator&));
 };
@@ -58,7 +58,7 @@ TEST(Compositor, render)
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
-    MockRenderview render_view;
+    MockRenderView render_view;
     mg::MockDisplay display;
 
     mc::Compositor comp(&render_view, renderer);

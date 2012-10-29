@@ -59,19 +59,19 @@ protected:
 
 };
 
-class Renderview
+class RenderView
 {
 public:
-    virtual ~Renderview() {}
+    virtual ~RenderView() {}
   
     virtual void for_each_if(RenderSelector& filter, RenderApplicator& renderable_operator) = 0;
 
 protected:
-    Renderview() = default;
+    RenderView() = default;
     
  private:
-    Renderview(Renderview const&) = delete;
-    Renderview& operator=(Renderview const&) = delete;
+    RenderView(RenderView const&) = delete;
+    RenderView& operator=(RenderView const&) = delete;
 };
 
 }
