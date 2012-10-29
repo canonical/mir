@@ -74,10 +74,10 @@ struct RenderingRenderApplicator : public mc::RenderApplicator
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    RenderSelectorForRegion filter(display->view_area());
-    RenderingRenderApplicator rendering_operator(*renderer);
+    RenderSelectorForRegion selector(display->view_area());
+    RenderingRenderApplicator applicator(*renderer);
 
-    render_view->for_each_if(filter, rendering_operator);
+    render_view->for_each_if(selector, applicator);
     
     display->post_update();
 }
