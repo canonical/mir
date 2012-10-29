@@ -44,9 +44,9 @@ void ms::SurfaceStack::apply(mc::RenderableFilter& filter, mc::RenderableOperato
     std::lock_guard<std::mutex> lock(guard);
     for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
     {
-	    mg::Renderable& renderable = **it;
-		if (filter(renderable)) renderable_operator(renderable);
-	}
+        mg::Renderable& renderable = **it;
+        if (filter(renderable)) renderable_operator(renderable);
+    }
 }
 
 
