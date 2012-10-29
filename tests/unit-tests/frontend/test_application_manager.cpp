@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_manager.h"
+#include "mir/frontend/application_session_container.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
@@ -38,28 +39,33 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
 };
 
+  struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
+  {
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD0(lock, void());
+    MOCK_METHOD0(unlock, void());
+    MOCK_METHOD0(iterator, std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator>());
+  };
+
+  struct MockFocusStrategy: public mf::ApplicationFocusStrategy
+  {
+    MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
+  };
+
 }
 
-TEST(ApplicationManager, create_and_destroy_surface)
+TEST(ApplicationManager, open_and_close_session)
 {
     using namespace ::testing;
-
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            ms::a_surface().name,
-            buffer_bundle));
-
     MockApplicationSurfaceOrganiser organizer;
-    mf::ApplicationManager app_manager(&organizer);
-    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
-    EXPECT_CALL(organizer, create_surface(_));
-    EXPECT_CALL(organizer, destroy_surface(_));
+    MockApplicationSessionModel *model = new MockApplicationSessionModel();
+    MockFocusStrategy *strategy = new MockFocusStrategy();
 
-    ms::SurfaceCreationParameters params;
-    std::weak_ptr<ms::Surface> surface{app_manager.create_surface(params)};
-    ASSERT_TRUE(surface.lock().get());
+    mf::ApplicationManager app_manager(&organizer, model, strategy);
 
-    app_manager.destroy_surface(surface);
+    EXPECT_CALL(*model, insert_session(_)).Times(1);
+    EXPECT_CALL(*model, remove_session(_)).Times(1);
+    auto session = app_manager.open_session();
+    app_manager.close_session(session.lock());
 }
