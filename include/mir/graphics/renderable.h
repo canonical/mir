@@ -44,6 +44,7 @@ public:
     virtual std::shared_ptr<compositor::GraphicRegion> texture() const = 0;
     virtual glm::mat4 transformation() const = 0;
     virtual float alpha() const = 0;
+    virtual bool visible() const = 0;
 
 protected:
     Renderable() = default;
