@@ -63,6 +63,7 @@ struct FakeRenderView : mc::RenderView
     {
     }
 
+    // Ugly...should we use delegation?
     void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
     {
         for (auto it = renderables.begin(); it != renderables.end(); it++)
