@@ -66,6 +66,6 @@ TEST(ApplicationManager, open_and_close_session)
 
     EXPECT_CALL(*model, insert_session(_)).Times(1);
     EXPECT_CALL(*model, remove_session(_)).Times(1);
-    auto session = app_manager.open_session();
+    auto session = app_manager.open_session("Visual Basic Studio");
     app_manager.close_session(session.lock());
 }
