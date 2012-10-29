@@ -87,7 +87,7 @@ struct MockSurfaceRenderer : public mg::Renderer
     MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
-struct MockRenderableFilter : public mc::RenderableFilter
+struct MockRenderSelector : public mc::RenderSelector
 {
     // Can not mock operator overload so need to forward
     MOCK_METHOD1(filter, bool(mg::Renderable&));
@@ -147,7 +147,7 @@ TEST(
 
     MockBufferBundleFactory buffer_bundle_factory;
     MockSurfaceRenderer renderer;
-    MockRenderableFilter filter;
+    MockRenderSelector filter;
     MockRenderApplicator renderable_operator(&renderer);
     
     EXPECT_CALL(filter, filter(_)).Times(0);
@@ -187,7 +187,7 @@ TEST(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     MockSurfaceRenderer renderer;
-    MockRenderableFilter filter;
+    MockRenderSelector filter;
     MockRenderApplicator renderable_operator(&renderer);
     
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
