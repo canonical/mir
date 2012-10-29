@@ -64,7 +64,7 @@ class Renderview
 public:
     virtual ~Renderview() {}
   
-    virtual void apply(RenderableFilter& filter, RenderableOperator& renderable_operator) = 0;
+    virtual void for_each_if(RenderableFilter& filter, RenderableOperator& renderable_operator) = 0;
 
 protected:
     Renderview() = default;
