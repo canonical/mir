@@ -42,8 +42,8 @@ class SurfaceFactory
  public:
     virtual ~SurfaceFactory() {}
 
-    virtual std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params) = 0;
-    virtual void destroy_surface(std::weak_ptr<ms::Surface> surface) = 0;
+    virtual int create_surface(const ms::SurfaceCreationParameters& params) = 0;
+    virtual void destroy_surface(int surface_id) = 0;
 
  protected:
     SurfaceFactory() = default;

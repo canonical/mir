@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -43,31 +44,31 @@ namespace frontend
 
 namespace ms = mir::surfaces;
 
-namespace detail
-{
-    class Session;
-}
-
-namespace mfd = mir::frontend::detail;
-
-class ApplicationSession : public frontend::services::SurfaceFactory
+class ApplicationSession : public services::SurfaceFactory
 {
  public:
-    explicit ApplicationSession(ms::ApplicationSurfaceOrganiser* surface_organiser, std::weak_ptr<mfd::Session> session);
+    explicit ApplicationSession(ms::ApplicationSurfaceOrganiser* surface_organiser, std::string application_name);
     virtual ~ApplicationSession() {}
 
     // From SurfaceFactory
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params);
-    void destroy_surface(std::weak_ptr<ms::Surface> surface);
+    int create_surface(const ms::SurfaceCreationParameters& params);
+    void destroy_surface(int surface_id);
+    
+    std::string get_name();
     
   protected:
     ApplicationSession(const ApplicationSession&) = delete;
     ApplicationSession& operator=(const ApplicationSession&) = delete;
 
   private:
-    std::weak_ptr<mfd::Session> session;
-    std::vector<std::weak_ptr<ms::Surface>> surfaces;
     ms::ApplicationSurfaceOrganiser* surface_organiser;
+
+    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
+    Surfaces surfaces;
+    
+    std::string name;
+
+    int next_surface_id;
 };
 
 }

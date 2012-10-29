@@ -20,6 +20,7 @@ set(
 
   application.cpp
   application_proxy.cpp
+  application_session.cpp
   null_application_listener.cpp
   application_manager.cpp
   protobuf_asio_communicator.cpp

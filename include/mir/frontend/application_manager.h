@@ -39,7 +39,7 @@ namespace frontend
 
 namespace ms = mir::surfaces;
 
-class ApplicationManager : public frontend::services::SurfaceFactory
+class ApplicationManager
 {
  public:
     explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser);
