@@ -22,6 +22,7 @@ set(
   application_proxy.cpp
   application_session.cpp
   application_session_model.cpp
+  registration_order_focus_strategy.cpp
   null_application_listener.cpp
   application_manager.cpp
   protobuf_asio_communicator.cpp
