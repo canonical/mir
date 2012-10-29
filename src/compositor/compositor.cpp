@@ -45,15 +45,15 @@ mc::Compositor::Compositor(
 namespace
 {
 
-struct FilterForRenderablesInRegion : public mc::FilterForRenderables
+struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 {
-    FilterForRenderablesInRegion(mir::geometry::Rectangle enclosing_region)
+    FilterForVisibleRenderablesInRegion(mir::geometry::Rectangle enclosing_region)
         : enclosing_region(enclosing_region)
     {
     }
-    bool operator()(mg::Renderable& /*renderable*/)
+    bool operator()(mg::Renderable& renderable)
     {
-        return true;
+        return renderable.visible();
     }
     mir::geometry::Rectangle& enclosing_region;
 };
@@ -74,7 +74,7 @@ struct RenderingOperatorForRenderables : public mc::OperatorForRenderables
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    FilterForRenderablesInRegion selector(display->view_area());
+    FilterForVisibleRenderablesInRegion selector(display->view_area());
     RenderingOperatorForRenderables applicator(*renderer);
 
     render_view->for_each_if(selector, applicator);

@@ -43,12 +43,12 @@ struct MockSurfaceRenderer : public mg::Renderer
 
 struct MockRenderable : mg::Renderable
 {
-    MOCK_METHOD0(top_left, geom::Point());
-    MOCK_METHOD0(size, geom::Size());
-    MOCK_METHOD0(texture, std::shared_ptr<compositor::GraphicRegion>());
-    MOCK_METHOD0(transformation, glm::mat4());
-    MOCK_METHOD0(alpha, float());
-    MOCK_METHOD0(visible, bool());
+    MOCK_CONST_METHOD0(top_left, geom::Point());
+    MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
+    MOCK_CONST_METHOD0(transformation, glm::mat4());
+    MOCK_CONST_METHOD0(alpha, float());
+    MOCK_CONST_METHOD0(visible, bool());
 };
 
 struct MockRenderView : mc::RenderView
@@ -58,21 +58,21 @@ struct MockRenderView : mc::RenderView
 
 struct FakeRenderView : mc::RenderView
 {
-    FakeRenderView(std::vector<mg::Renderable> renderables) :
+    FakeRenderView(std::vector<mg::Renderable*> renderables) :
         renderables(renderables)
     {
     }
 
     void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
     {
-        for (auto it = renderables.begin(); it = renderables.end(); it++)
+        for (auto it = renderables.begin(); it != renderables.end(); it++)
         {
-            auto renderable = **it;
+            mg::Renderable &&renderable = **it;
             if (filter(renderable)) renderable_operator(renderable);
         }
     }
 
-    std::vector<mg::Renderable> renderables;
+    std::vector<mg::Renderable*> renderables;
 };
 
 
@@ -108,28 +108,34 @@ TEST(Compositor, render)
 
 TEST(Compositor, skips_invisible_rendererables)
 {
+    using namespace testing;
+
     MockSurfaceRenderer mock_renderer;
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
     mg::MockDisplay display;
+
+    EXPECT_CALL(display, view_area())
+            .Times(1)
+            .WillRepeatedly(Return(geom::Rectangle()));
     
-    mg::MockRenderable mr1, mr2, mr3;
+    MockRenderable mr1, mr2, mr3;
     
     ON_CALL(mr1, visible()).WillByDefault(Return(true));
     ON_CALL(mr2, visible()).WillByDefault(Return(false));
     ON_CALL(mr3, visible()).WillByDefault(Return(true));
     
-    std::vector<mg::Renderable> renderables;
-    renderables.push_back(mr1);
-    renderables.push_back(mr2);
-    renderables.push_back(mr3);
+    std::vector<mg::Renderable*> renderables;
+    renderables.push_back(&mr1);
+    renderables.push_back(&mr2);
+    renderables.push_back(&mr3);
     
-    EXPECT_CALL(mock_renderer, render(mr1)).Times(1);
-    EXPECT_CALL(mock_renderer, render(mr2)).Times(0);
-    EXPECT_CALL(mock_renderer, render(mr3)).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
+    EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);
     
-    mg::FakeRenderView render_view(renderables);
+    FakeRenderView render_view(renderables);
 
     mc::Compositor comp(&render_view, renderer);
     
