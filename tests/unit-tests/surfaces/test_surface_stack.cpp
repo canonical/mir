@@ -191,16 +191,15 @@ TEST(
     MockRenderableOperator renderable_operator(&renderer);
     
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
+    ON_CALL(filter, filter(Ref(*surface3.lock()))).WillByDefault(Return(false));
 
     EXPECT_CALL(filter, filter(_)).Times(3);
-    EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(3);
+    EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(2);
 
     EXPECT_CALL(renderer,
                 render(Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
                 render(Ref(*surface2.lock()))).Times(Exactly(1));
-    EXPECT_CALL(renderer,
-                render(Ref(*surface3.lock()))).Times(Exactly(1));
     
     stack.apply(filter, renderable_operator);
 }
