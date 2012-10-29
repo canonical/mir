@@ -32,45 +32,46 @@ class Renderable;
 
 namespace compositor
 {
-class RenderableEnumerator
+class FilterForRenderables
 {
 public:
-    virtual ~RenderableEnumerator() {}
+    virtual ~FilterForRenderables() {}
+
+    virtual bool operator()(graphics::Renderable& renderable) = 0;
+
+protected:
+    FilterForRenderables() = default;
+    FilterForRenderables(const FilterForRenderables&) = delete;
+    FilterForRenderables& operator=(const FilterForRenderables&) = delete;
+};
+
+class OperatorForRenderables
+{
+public:
+    virtual ~OperatorForRenderables() {}
 
     virtual void operator()(graphics::Renderable& renderable) = 0;
 
 protected:
-    RenderableEnumerator() = default;
-    RenderableEnumerator(const RenderableEnumerator&) = delete;
-    RenderableEnumerator& operator=(const RenderableEnumerator&) = delete;
+    OperatorForRenderables() = default;
+    OperatorForRenderables(const OperatorForRenderables&) = delete;
+    OperatorForRenderables& operator=(const OperatorForRenderables&) = delete;
+
 };
 
-class RenderableCollection
+class RenderView
 {
 public:
-    virtual ~RenderableCollection() {}
-
-    virtual void invoke_for_each_renderable(RenderableEnumerator& enumerator) = 0;
-
-  protected:    
-    RenderableCollection() = default;
-    RenderableCollection(const RenderableCollection&) = delete;
-    RenderableCollection& operator=(const RenderableCollection&) = delete;
-
-};
-
-class Renderview
-{
- public:
-  virtual ~Renderview() {}
+    virtual ~RenderView() {}
   
-  virtual std::shared_ptr<RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area) = 0;
- protected:
-    Renderview() = default;
+    virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
+
+protected:
+    RenderView() = default;
     
  private:
-    Renderview(Renderview const&) = delete;
-    Renderview& operator=(Renderview const&) = delete;
+    RenderView(RenderView const&) = delete;
+    RenderView& operator=(RenderView const&) = delete;
 };
 
 }
