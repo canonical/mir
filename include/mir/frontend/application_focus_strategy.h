@@ -29,12 +29,12 @@ class ApplicationSession;
 
 class ApplicationFocusStrategy
 {
- public:
+public:
     virtual ~ApplicationFocusStrategy() {}
 
     virtual std::weak_ptr<ApplicationSession> next_focus_app (std::shared_ptr<ApplicationSession> focused_app) = 0;
 
- protected:
+protected:
     ApplicationFocusStrategy() = default;
     ApplicationFocusStrategy(const ApplicationFocusStrategy&) = delete;
     ApplicationFocusStrategy& operator=(const ApplicationFocusStrategy&) = delete;
