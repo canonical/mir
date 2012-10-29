@@ -41,14 +41,42 @@ struct MockSurfaceRenderer : public mg::Renderer
     MOCK_METHOD1(render, void(mg::Renderable&));
 };
 
+struct MockRenderable : mg::Renderable
+{
+    MOCK_METHOD0(top_left, geom::Point());
+    MOCK_METHOD0(size, geom::Size());
+    MOCK_METHOD0(texture, std::shared_ptr<compositor::GraphicRegion>());
+    MOCK_METHOD0(transformation, glm::mat4());
+    MOCK_METHOD0(alpha, float());
+    MOCK_METHOD0(visible, bool());
+};
+
 struct MockRenderView : mc::RenderView
 {
     MOCK_METHOD2(for_each_if, void(mc::FilterForRenderables&, mc::OperatorForRenderables&));
 };
 
+struct FakeRenderView : mc::RenderView
+{
+    FakeRenderView(std::vector<mg::Renderable> renderables) :
+        renderables(renderables)
+    {
+    }
+
+    void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+    {
+        for (auto it = renderables.begin(); it = renderables.end(); it++)
+        {
+            auto renderable = **it;
+            if (filter(renderable)) renderable_operator(renderable);
+        }
+    }
+
+    std::vector<mg::Renderable> renderables;
+};
+
 
 }
-
 
 TEST(Compositor, render)
 {
@@ -75,5 +103,35 @@ TEST(Compositor, render)
     EXPECT_CALL(display, post_update())
             .Times(1);
 
+    comp.render(&display);
+}
+
+TEST(Compositor, skips_invisible_rendererables)
+{
+    MockSurfaceRenderer mock_renderer;
+    std::shared_ptr<mg::Renderer> renderer(
+        &mock_renderer,
+        mir::EmptyDeleter());
+    mg::MockDisplay display;
+    
+    mg::MockRenderable mr1, mr2, mr3;
+    
+    ON_CALL(mr1, visible()).WillByDefault(Return(true));
+    ON_CALL(mr2, visible()).WillByDefault(Return(false));
+    ON_CALL(mr3, visible()).WillByDefault(Return(true));
+    
+    std::vector<mg::Renderable> renderables;
+    renderables.push_back(mr1);
+    renderables.push_back(mr2);
+    renderables.push_back(mr3);
+    
+    EXPECT_CALL(mock_renderer, render(mr1)).Times(1);
+    EXPECT_CALL(mock_renderer, render(mr2)).Times(0);
+    EXPECT_CALL(mock_renderer, render(mr3)).Times(1);
+    
+    mg::FakeRenderView render_view(renderables);
+
+    mc::Compositor comp(&render_view, renderer);
+    
     comp.render(&display);
 }
