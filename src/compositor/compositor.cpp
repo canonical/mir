@@ -48,36 +48,36 @@ namespace
 struct RegionRenderableFilter : public mc::RenderableFilter
 {
     RegionRenderableFilter(mir::geometry::Rectangle enclosing_region)
-		: enclosing_region(enclosing_region)
-	{
-	}
-	bool operator()(mg::Renderable& /*renderable*/)
-	{
-		return true;
-	}
+        : enclosing_region(enclosing_region)
+    {
+    }
+    bool operator()(mg::Renderable& /*renderable*/)
+    {
+        return true;
+    }
     mir::geometry::Rectangle& enclosing_region;
 };
 
 struct RenderingRenderableOperator : public mc::RenderableOperator
 {
-	RenderingRenderableOperator(mg::Renderer& renderer)
-		: renderer(renderer)
-	{
-	}
-	void operator()(mg::Renderable& renderable)
-	{
-		renderer.render(renderable);
-	}
-	mg::Renderer& renderer;
+    RenderingRenderableOperator(mg::Renderer& renderer)
+        : renderer(renderer)
+    {
+    }
+    void operator()(mg::Renderable& renderable)
+    {
+        renderer.render(renderable);
+    }
+    mg::Renderer& renderer;
 };
 }
 
 void mc::Compositor::render(graphics::Display* display)
 {
     RegionRenderableFilter filter(display->view_area());
-	RenderingRenderableOperator rendering_operator(*renderer);
+    RenderingRenderableOperator rendering_operator(*renderer);
 
-	render_view->apply(filter, rendering_operator);
+    render_view->apply(filter, rendering_operator);
     
     display->post_update();
 }
