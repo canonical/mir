@@ -1,0 +1,38 @@
+Mir hacking guide
+=================
+
+Building mir
+
+Mir is built using cmake. There are other options, but here's one way to
+build the system:
+
+  $ mkdir build
+  $ cd build
+  $ cmake ..
+  $ make -j 8
+  $ ctest
+
+
+Coding mir
+
+There's a coding style guide in the guides subdirectory. To build it into an
+html file:
+
+  $ make guides
+
+
+Documentation
+
+There are design notes and an architecture diagram (.dia) in the design
+subdirectory.
+
+
+Getting mir
+
+If you're reading this file then you've probably solved this one. ;)
+
+However, for completeness mir is a project on LaunchPad (https://launchpad.net/mir)
+to grab a copy use the command:
+
+  $ bzr branch lp:mir
+
