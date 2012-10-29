@@ -46,7 +46,7 @@ public:
     virtual ~SurfaceStack() {}
 
     // From Renderview
-	virtual void apply(mc::RenderableFilter &filter, mc::RenderableOperator &renderable_operator);
+    virtual void apply(mc::RenderableFilter &filter, mc::RenderableOperator &renderable_operator);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
