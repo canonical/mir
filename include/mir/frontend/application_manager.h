@@ -45,7 +45,7 @@ class ApplicationManager
                                 mf::ApplicationFocusStrategy* focus_strategy);
     virtual ~ApplicationManager() {}
 
-    std::weak_ptr<ApplicationSession> open_session(std::string name);
+    std::shared_ptr<ApplicationSession> open_session(std::string name);
     void close_session(std::shared_ptr<ApplicationSession> surface);
 
 protected:

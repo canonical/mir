@@ -48,7 +48,7 @@ class ApplicationSession : public services::SurfaceFactory
 {
  public:
     explicit ApplicationSession(ms::ApplicationSurfaceOrganiser* surface_organiser, std::string application_name);
-    virtual ~ApplicationSession() {}
+    virtual ~ApplicationSession();
 
     // From SurfaceFactory
     int create_surface(const ms::SurfaceCreationParameters& params);

@@ -35,6 +35,15 @@ mf::ApplicationSession::ApplicationSession(ms::ApplicationSurfaceOrganiser* orga
     assert(surface_organiser);
 }
 
+mf::ApplicationSession::~ApplicationSession()
+{
+    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    {
+        auto surface = it->second;
+        surface_organiser->destroy_surface(surface);
+    }
+}
+
 int mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);

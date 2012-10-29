@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_manager.h"
 #include "mir/frontend/application_session_container.h"
+#include "mir/frontend/application_session.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
@@ -29,6 +30,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -58,14 +60,46 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 TEST(ApplicationManager, open_and_close_session)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organizer;
+    MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel *model = new MockApplicationSessionModel();
     MockFocusStrategy *strategy = new MockFocusStrategy();
 
-    mf::ApplicationManager app_manager(&organizer, model, strategy);
+    mf::ApplicationManager app_manager(&organiser, model, strategy);
 
     EXPECT_CALL(*model, insert_session(_)).Times(1);
     EXPECT_CALL(*model, remove_session(_)).Times(1);
     auto session = app_manager.open_session("Visual Basic Studio");
-    app_manager.close_session(session.lock());
+    app_manager.close_session(session);
+}
+
+TEST(ApplicationManager, closing_session_removes_surfaces)
+{
+    using namespace ::testing;
+    MockApplicationSurfaceOrganiser organiser;
+    MockApplicationSessionModel *model = new MockApplicationSessionModel();
+    MockFocusStrategy *strategy = new MockFocusStrategy();
+
+    mf::ApplicationManager app_manager(&organiser, model, strategy);
+    
+    EXPECT_CALL(organiser, create_surface(_)).Times(1);
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(
+        new mc::MockBufferBundle());
+    std::shared_ptr<ms::Surface> dummy_surface(
+        new ms::Surface(
+            ms::a_surface().name,
+            buffer_bundle));
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+
+    EXPECT_CALL(*model, insert_session(_)).Times(1);
+    EXPECT_CALL(*model, remove_session(_)).Times(1);
+    auto session = app_manager.open_session("Visual Basic Studio");
+    
+    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    
+    
+    // TODO: Would be nice to set an expectation on surf but surf is ID type for integration with IPC layer...
+    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
+
+
+    app_manager.close_session(session);
 }

@@ -34,7 +34,7 @@ mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* orga
     assert(surface_organiser);
 }
 
-std::weak_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
+std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
 {
     std::shared_ptr<mf::ApplicationSession> session(new mf::ApplicationSession(surface_organiser, name));
   
