@@ -45,9 +45,9 @@ mc::Compositor::Compositor(
 namespace
 {
 
-struct RenderableSelectorForRegion : public mc::RenderSelector
+struct RenderSelectorForRegion : public mc::RenderSelector
 {
-    RenderableSelectorForRegion(mir::geometry::Rectangle enclosing_region)
+    RenderSelectorForRegion(mir::geometry::Rectangle enclosing_region)
         : enclosing_region(enclosing_region)
     {
     }
@@ -74,7 +74,7 @@ struct RenderingRenderApplicator : public mc::RenderApplicator
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    RenderableSelectorForRegion filter(display->view_area());
+    RenderSelectorForRegion filter(display->view_area());
     RenderingRenderApplicator rendering_operator(*renderer);
 
     render_view->for_each_if(filter, rendering_operator);
