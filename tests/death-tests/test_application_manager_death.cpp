@@ -29,7 +29,7 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                mir::frontend::ApplicationManager app(NULL),
+                mir::frontend::ApplicationManager app(NULL, NULL, NULL),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }
