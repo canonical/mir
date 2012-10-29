@@ -58,9 +58,9 @@ struct RegionRenderableFilter : public mc::RenderableFilter
     mir::geometry::Rectangle& enclosing_region;
 };
 
-struct RenderingRenderableOperator : public mc::RenderableOperator
+struct RenderingRenderApplicator : public mc::RenderApplicator
 {
-    RenderingRenderableOperator(mg::Renderer& renderer)
+    RenderingRenderApplicator(mg::Renderer& renderer)
         : renderer(renderer)
     {
     }
@@ -75,7 +75,7 @@ struct RenderingRenderableOperator : public mc::RenderableOperator
 void mc::Compositor::render(graphics::Display* display)
 {
     RegionRenderableFilter filter(display->view_area());
-    RenderingRenderableOperator rendering_operator(*renderer);
+    RenderingRenderApplicator rendering_operator(*renderer);
 
     render_view->for_each_if(filter, rendering_operator);
     

@@ -97,9 +97,9 @@ struct MockRenderableFilter : public mc::RenderableFilter
     }
 };
 
-struct MockRenderableOperator : public mc::RenderableOperator
+struct MockRenderApplicator : public mc::RenderApplicator
 {
-    MockRenderableOperator(mg::Renderer *renderer) :
+    MockRenderApplicator(mg::Renderer *renderer) :
         renderer(renderer)
     {
     }
@@ -148,7 +148,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     MockSurfaceRenderer renderer;
     MockRenderableFilter filter;
-    MockRenderableOperator renderable_operator(&renderer);
+    MockRenderApplicator renderable_operator(&renderer);
     
     EXPECT_CALL(filter, filter(_)).Times(0);
     EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(0);
@@ -188,7 +188,7 @@ TEST(
 
     MockSurfaceRenderer renderer;
     MockRenderableFilter filter;
-    MockRenderableOperator renderable_operator(&renderer);
+    MockRenderApplicator renderable_operator(&renderer);
     
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
     ON_CALL(filter, filter(Ref(*surface3.lock()))).WillByDefault(Return(false));

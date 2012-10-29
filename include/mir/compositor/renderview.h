@@ -45,17 +45,17 @@ protected:
     RenderableFilter& operator=(const RenderableFilter&) = delete;
 };
 
-class RenderableOperator
+class RenderApplicator
 {
 public:
-    virtual ~RenderableOperator() {}
+    virtual ~RenderApplicator() {}
 
     virtual void operator()(graphics::Renderable& renderable) = 0;
 
 protected:
-    RenderableOperator() = default;
-    RenderableOperator(const RenderableOperator&) = delete;
-    RenderableOperator& operator=(const RenderableOperator&) = delete;
+    RenderApplicator() = default;
+    RenderApplicator(const RenderApplicator&) = delete;
+    RenderApplicator& operator=(const RenderApplicator&) = delete;
 
 };
 
@@ -64,7 +64,7 @@ class Renderview
 public:
     virtual ~Renderview() {}
   
-    virtual void for_each_if(RenderableFilter& filter, RenderableOperator& renderable_operator) = 0;
+    virtual void for_each_if(RenderableFilter& filter, RenderApplicator& renderable_operator) = 0;
 
 protected:
     Renderview() = default;
