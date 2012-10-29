@@ -17,27 +17,34 @@
  */
 
 #include "mir/frontend/application_manager.h"
-
-#include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_controller.h"
+#include "mir/frontend/application_session.h"
 
 #include <memory>
 #include <cassert>
+#include <algorithm>
 
 namespace mf = mir::frontend;
-namespace ms = mir::surfaces;
 
-mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* organiser) : surface_organiser(organiser)
+mf::ApplicationManager::ApplicationManager(ms::ApplicationSurfaceOrganiser* organiser, mf::ApplicationSessionContainer* model,
+					   mf::ApplicationFocusStrategy *strategy) : surface_organiser(organiser)
+															     
 {
+    app_model = std::shared_ptr<mf::ApplicationSessionContainer>(model);
+    focus_strategy = std::shared_ptr<mf::ApplicationFocusStrategy>(strategy);
     assert(surface_organiser);
 }
 
-std::weak_ptr<ms::Surface> mf::ApplicationManager::create_surface(const ms::SurfaceCreationParameters& params)
+std::weak_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
 {
-    return surface_organiser->create_surface(params);
+    std::shared_ptr<mf::ApplicationSession> session(new mf::ApplicationSession(surface_organiser, name));
+  
+    app_model->insert_session(session);
+    focus_application = session;
+  
+    return session;
 }
 
-void mf::ApplicationManager::destroy_surface(std::weak_ptr<ms::Surface> surface)
+void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> session)
 {
-    surface_organiser->destroy_surface(surface);
+    app_model->remove_session(session);
 }
