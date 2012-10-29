@@ -42,7 +42,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 }
 
-TEST(ApplicationSession, iterate_registration_order)
+TEST(ApplicationSessionModel, iterate_registration_order)
 {
     using namespace ::testing;
     MockApplicationSurfaceOrganiser organiser;
