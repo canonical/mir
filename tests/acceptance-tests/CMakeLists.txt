@@ -22,11 +22,9 @@ add_executable(
   acceptance-tests
   
   test_client_library.cpp
-  test_renderloop.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_server_startup.cpp
-  test_error_reporting.cpp
 )
 
 target_link_libraries(
