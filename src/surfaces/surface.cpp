@@ -90,6 +90,12 @@ float ms::Surface::alpha() const
     return alpha_value;
 }
 
+bool ms::Surface::visible() const
+{
+  // FIXME: This is a member variable. Just getting the test compiling for now
+    return true;
+}
+
 //note: not sure the surface should be aware of pixel format. might be something that the 
 //texture (which goes to compositor should be aware of though
 //todo: kdub remove 

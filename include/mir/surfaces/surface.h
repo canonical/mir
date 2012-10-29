@@ -73,6 +73,7 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::GraphicRegion> texture() const;
     glm::mat4 transformation() const;
     float alpha() const;
+    bool visible() const;
 
     geometry::PixelFormat pixel_format() const;
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
