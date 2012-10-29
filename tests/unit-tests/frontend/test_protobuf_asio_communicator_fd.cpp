@@ -96,7 +96,7 @@ struct ProtobufAsioCommunicatorFD : public ::testing::Test
 
         stub_server->comm.start();
 
-        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 500);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
