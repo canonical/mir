@@ -77,7 +77,7 @@ void mc::Compositor::render(graphics::Display* display)
     RegionRenderableFilter filter(display->view_area());
     RenderingRenderableOperator rendering_operator(*renderer);
 
-    render_view->apply(filter, rendering_operator);
+    render_view->for_each_if(filter, rendering_operator);
     
     display->post_update();
 }
