@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
 #include "mir/compositor/drawer.h"
-#include "mir/compositor/renderview.h"
+#include "mir/compositor/render_view.h"
 
 #include <memory>
 
@@ -47,13 +47,13 @@ class Compositor : public Drawer
 {
 public:
     explicit Compositor(
-        Renderview* renderview,
+        RenderView* render_view,
         const std::shared_ptr<graphics::Renderer>& renderer);
 
     virtual void render(graphics::Display* display);
 
 private:
-    Renderview* const render_view;
+    RenderView* const render_view;
     std::shared_ptr<graphics::Renderer> renderer;
 };
 

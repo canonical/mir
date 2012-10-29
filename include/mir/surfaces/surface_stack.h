@@ -45,8 +45,8 @@ public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
-    // From Renderview
-    virtual std::shared_ptr<mc::RenderableCollection> get_renderables_in(geometry::Rectangle const& display_area);
+    // From RenderView
+    virtual void for_each_if(mc::FilterForRenderables &filter, mc::OperatorForRenderables &renderable_operator);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
