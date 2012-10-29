@@ -91,3 +91,28 @@ TEST(ApplicationSession, surface_ids_increment)
     app_session.destroy_surface(surface_id);
     app_session.destroy_surface(surface_id2);
 }
+
+TEST(ApplicationSession, hide_hides_surfaces)
+{
+    using namespace ::testing;
+
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(
+        new mc::MockBufferBundle());
+    std::shared_ptr<ms::Surface> dummy_surface(
+        new ms::Surface(
+            ms::a_surface().name,
+            buffer_bundle));
+
+    MockApplicationSurfaceOrganiser organizer;
+    mf::ApplicationSession app_session(&organizer, "TurboPascal");
+    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organizer, create_surface(_));
+
+    ms::SurfaceCreationParameters params;
+    app_session.create_surface(params);
+
+    EXPECT_CALL(dummy_surface, hide(_)).Times(1);
+    app_session.hide();
+    assert(dummy_surface.visible() == false);
+
+}
