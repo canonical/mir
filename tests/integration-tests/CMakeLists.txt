@@ -14,6 +14,13 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+set(
+  INTEGRATION_TESTS_SRCS
+  test_renderloop.cpp
+  test_surfaceloop.cpp
+  test_error_reporting.cpp
+)
+
 add_subdirectory(frontend/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
