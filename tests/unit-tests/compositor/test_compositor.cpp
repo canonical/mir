@@ -43,7 +43,7 @@ struct MockSurfaceRenderer : public mg::Renderer
 
 struct MockRenderview : mc::Renderview
 {
-    MOCK_METHOD2(apply, void(mc::RenderableFilter&, mc::RenderableOperator&));
+    MOCK_METHOD2(for_each_if, void(mc::RenderableFilter&, mc::RenderableOperator&));
 };
 
 
@@ -69,7 +69,7 @@ TEST(Compositor, render)
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
 
-    EXPECT_CALL(render_view, apply(_,_))
+    EXPECT_CALL(render_view, for_each_if(_,_))
 		.Times(1);
 
     EXPECT_CALL(display, post_update())

@@ -160,7 +160,7 @@ TEST(
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     {
-        stack.apply(filter, renderable_operator);
+        stack.for_each_if(filter, renderable_operator);
     }
 }
 
@@ -201,6 +201,6 @@ TEST(
     EXPECT_CALL(renderer,
                 render(Ref(*surface2.lock()))).Times(Exactly(1));
     
-    stack.apply(filter, renderable_operator);
+    stack.for_each_if(filter, renderable_operator);
 }
 
