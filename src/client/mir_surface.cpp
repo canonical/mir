@@ -17,9 +17,9 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "client_buffer.h"
-#include "mir_surface.h"
-#include "mir_connection.h"
+#include "mir_client/client_buffer.h"
+#include "mir_client/mir_surface.h"
+#include "mir_client/mir_connection.h"
 
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
