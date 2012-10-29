@@ -21,7 +21,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
 
 #include "mir/geometry/pixel_format.h"
-#include "android/android_registrar.h"
+#include "mir_client/android/android_registrar.h"
 #include <hardware/gralloc.h>
 
 namespace mir

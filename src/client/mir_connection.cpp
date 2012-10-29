@@ -18,8 +18,8 @@
 
 #include "mir_client/mir_logger.h"
 
-#include "mir_connection.h"
-#include "mir_surface.h"
+#include "mir_client/mir_connection.h"
+#include "mir_client/mir_surface.h"
 
 #include <cstddef>
 

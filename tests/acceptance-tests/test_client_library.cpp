@@ -19,7 +19,7 @@
 #include "mir_test/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
-#include "client_buffer.h"
+#include "mir_client/client_buffer.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"

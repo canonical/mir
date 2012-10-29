@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "android/android_client_buffer.h"
-#include "mir_buffer_package.h"
+#include "mir_client/android/android_client_buffer.h"
+#include "mir_client/mir_buffer_package.h"
 
 #include <memory>
 #include <algorithm>

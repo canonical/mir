@@ -20,9 +20,9 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
-#include "client_buffer.h"
-#include "mir_buffer_package.h"
-#include "android/android_registrar.h"
+#include "mir_client/client_buffer.h"
+#include "mir_client/mir_buffer_package.h"
+#include "mir_client/android/android_registrar.h"
 
 #include <memory>
 namespace mir
