@@ -32,30 +32,30 @@ class Renderable;
 
 namespace compositor
 {
-class RenderSelector
+class FilterForRenderables
 {
 public:
-    virtual ~RenderSelector() {}
+    virtual ~FilterForRenderables() {}
 
     virtual bool operator()(graphics::Renderable& renderable) = 0;
 
 protected:
-    RenderSelector() = default;
-    RenderSelector(const RenderSelector&) = delete;
-    RenderSelector& operator=(const RenderSelector&) = delete;
+    FilterForRenderables() = default;
+    FilterForRenderables(const FilterForRenderables&) = delete;
+    FilterForRenderables& operator=(const FilterForRenderables&) = delete;
 };
 
-class RenderApplicator
+class OperatorForRenderables
 {
 public:
-    virtual ~RenderApplicator() {}
+    virtual ~OperatorForRenderables() {}
 
     virtual void operator()(graphics::Renderable& renderable) = 0;
 
 protected:
-    RenderApplicator() = default;
-    RenderApplicator(const RenderApplicator&) = delete;
-    RenderApplicator& operator=(const RenderApplicator&) = delete;
+    OperatorForRenderables() = default;
+    OperatorForRenderables(const OperatorForRenderables&) = delete;
+    OperatorForRenderables& operator=(const OperatorForRenderables&) = delete;
 
 };
 
@@ -64,7 +64,7 @@ class RenderView
 public:
     virtual ~RenderView() {}
   
-    virtual void for_each_if(RenderSelector& filter, RenderApplicator& renderable_operator) = 0;
+    virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
 protected:
     RenderView() = default;

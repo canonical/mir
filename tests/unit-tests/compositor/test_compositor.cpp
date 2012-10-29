@@ -43,7 +43,7 @@ struct MockSurfaceRenderer : public mg::Renderer
 
 struct MockRenderView : mc::RenderView
 {
-    MOCK_METHOD2(for_each_if, void(mc::RenderSelector&, mc::RenderApplicator&));
+    MOCK_METHOD2(for_each_if, void(mc::FilterForRenderables&, mc::OperatorForRenderables&));
 };
 
 

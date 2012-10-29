@@ -39,7 +39,7 @@ ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bun
     assert(buffer_bundle_factory);
 }
 
-void ms::SurfaceStack::for_each_if(mc::RenderSelector& filter, mc::RenderApplicator& renderable_operator)
+void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
     for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
