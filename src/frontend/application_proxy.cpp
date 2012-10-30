@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
@@ -30,10 +31,12 @@
 mir::frontend::ApplicationProxy::ApplicationProxy(
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
+    std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     surface_organiser(surface_organiser),
     graphics_platform(graphics_platform),
+    graphics_display(graphics_display),
     listener(listener),
     next_surface_id(0),
     resource_cache(resource_cache)
