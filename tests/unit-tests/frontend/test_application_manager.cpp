@@ -118,3 +118,20 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
 
     app_manager.close_session(session);
 }
+
+TEST(ApplicationManager, new_sessions_receive_focus)
+{
+    using namespace ::testing;
+    MockApplicationSurfaceOrganiser organiser;
+    MockApplicationSessionModel model;
+    MockFocusStrategy strategy;
+    MockFocusMechanism mechanism;
+
+    mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+                                       std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
+    
+    auto session = app_manager.open_session("Visual Basic Studio");
+    EXPECT_CALL(mechanism, focus(_,session));
+}
