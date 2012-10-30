@@ -23,10 +23,14 @@
 #include "mir/surfaces/surface.h"
 #include "mir/frontend/services/surface_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/frontend/registration_order_focus_strategy.h"
+#include "mir/frontend/application_session_model.h"
+
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/empty_deleter.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -35,32 +39,46 @@ namespace ms = mir::surfaces;
 
 namespace
 {
-
-struct MockSurfaceStack : public ms::SurfaceStackModel
+struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
-    MockSurfaceStack() {}
-    
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_CONST_METHOD0(surface_count, std::size_t());
+    MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
+};
+
+struct MockFocusMechanism: public mf::ApplicationFocusMechanism
+{
+  MOCK_METHOD2(focus, void(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
 };
 
 }
 
-TEST(TestApplicationManagerAndSurfaceController, create_surface_dispatches_to_surface_stack)
+TEST(TestApplicationManagerAndFocusStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
+    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
+    mf::RegistrationOrderFocusStrategy strategy(model);
+    MockFocusMechanism mechanism;
+    std::shared_ptr<mf::ApplicationSession> new_session;
 
-    MockSurfaceStack surface_stack;
-    ms::SurfaceController controller(&surface_stack);
-    mf::ApplicationManager app_manager(&controller);
+    mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+                                       model,
+                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
+    
+    EXPECT_CALL(mechanism, focus(_,_)).Times(3);
 
-    ON_CALL(surface_stack, create_surface(_)).WillByDefault(Return(std::weak_ptr<ms::Surface>()));
-    EXPECT_CALL(surface_stack, create_surface(_)).Times(AtLeast(1));
-    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(AtLeast(1));
-
-    mfs::SurfaceFactory* surface_factory = &app_manager;
-    std::weak_ptr<ms::Surface> surface = surface_factory->create_surface(ms::a_surface());
-
-    surface_factory->destroy_surface(surface);
+    auto session1 = app_manager.open_session("Visual Basic Studio");
+    auto session2 = app_manager.open_session("Microsoft Access");
+    auto session3 = app_manager.open_session("WordPerfect");
+    
+    {
+      InSequence seq;
+      EXPECT_CALL(mechanism, focus(_,session2)).Times(1);
+      EXPECT_CALL(mechanism, focus(_,session1)).Times(1);
+    }
+    
+    app_manager.close_session(session3);
+    app_manager.close_session(session2);
 }

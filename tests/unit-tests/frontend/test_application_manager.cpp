@@ -150,34 +150,3 @@ TEST(ApplicationManager, new_applications_receive_focus)
     auto session = app_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
-
-TEST(ApplicationManager, closing_applications_transfers_focus)
-{
-    using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
-    MockApplicationSessionModel model;
-    MockFocusStrategy strategy;
-    MockFocusMechanism mechanism;
-    std::shared_ptr<mf::ApplicationSession> new_session;
-
-    mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
-                                       std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
-    
-    EXPECT_CALL(model, insert_session(_)).Times(3);
-    EXPECT_CALL(mechanism, focus(_,_)).Times(3);
-
-    auto session1 = app_manager.open_session("Visual Basic Studio");
-    auto session2 = app_manager.open_session("Microsoft Access");
-    auto session3 = app_manager.open_session("WordPerfect");
-    
-    {
-      InSequence seq;
-      EXPECT_CALL(mechanism, focus(_,session2)).Times(1);
-      EXPECT_CALL(mechanism, focus(_,session1)).Times(1);
-    }
-    
-    app_manager.close_session(session3);
-    app_manager.close_session(session2);
-}
