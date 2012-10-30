@@ -179,15 +179,17 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    if (!connect_result.has_error())
+    if (!connect_result.has_error() && connect_result.has_platform())
     {
-        platform_package.data_items = connect_result.data_size();
-        for (int i = 0; i != connect_result.data_size(); ++i)
-            platform_package.data[i] = connect_result.data(i);
+        auto const& platform = connect_result.platform();
 
-        platform_package.fd_items = connect_result.fd_size();
-        for (int i = 0; i != connect_result.fd_size(); ++i)
-            platform_package.fd[i] = connect_result.fd(i);
+        platform_package.data_items = platform.data_size();
+        for (int i = 0; i != platform.data_size(); ++i)
+            platform_package.data[i] = platform.data(i);
+
+        platform_package.fd_items = platform.fd_size();
+        for (int i = 0; i != platform.fd_size(); ++i)
+            platform_package.fd[i] = platform.fd(i);
     }
     else
     {

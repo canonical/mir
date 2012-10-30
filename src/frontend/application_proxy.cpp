@@ -50,12 +50,13 @@ void mir::frontend::ApplicationProxy::connect(
     listener->application_connect_called(app_name);
 
     auto ipc_package = graphics_platform->get_ipc_package();
+    auto platform = response->mutable_platform();
 
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        response->add_data(*p);
+        platform->add_data(*p);
 
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        response->add_fd(*p);
+        platform->add_fd(*p);
 
     resource_cache->save_resource(response, ipc_package);
     done->Run();

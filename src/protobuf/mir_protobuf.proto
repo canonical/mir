@@ -34,7 +34,7 @@ message Buffer {
 // But for the following result messages we either populate the "real"
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
-message Connection {
+message Platform {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
   optional int32  fds_on_side_channel = 3;
@@ -43,6 +43,16 @@ message Connection {
 }
 
 // Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
+message Connection {
+  optional Platform platform = 1;
+
+  optional string error = 127;
+}
+
+// Outside of the IPC code no-one should care as this is all wrapped up.
 // But for the following result messages we either populate the "real"
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
