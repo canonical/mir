@@ -53,7 +53,7 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
     }
     bool operator()(mg::Renderable& renderable)
     {
-        return renderable.visible();
+        return !renderable.hidden();
     }
     mir::geometry::Rectangle& enclosing_region;
 };

@@ -90,10 +90,10 @@ float ms::Surface::alpha() const
     return alpha_value;
 }
 
-bool ms::Surface::visible() const
+bool ms::Surface::hidden() const
 {
   // FIXME: This is a member variable. Just getting the test compiling for now
-    return true;
+    return false;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 

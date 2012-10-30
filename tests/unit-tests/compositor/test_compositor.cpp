@@ -48,7 +48,7 @@ struct MockRenderable : mg::Renderable
     MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(visible, bool());
+    MOCK_CONST_METHOD0(hidden, bool());
 };
 
 struct MockRenderView : mc::RenderView
@@ -123,9 +123,9 @@ TEST(Compositor, skips_invisible_rendererables)
     
     MockRenderable mr1, mr2, mr3;
     
-    ON_CALL(mr1, visible()).WillByDefault(Return(true));
-    ON_CALL(mr2, visible()).WillByDefault(Return(false));
-    ON_CALL(mr3, visible()).WillByDefault(Return(true));
+    ON_CALL(mr1, hidden()).WillByDefault(Return(false));
+    ON_CALL(mr2, hidden()).WillByDefault(Return(true));
+    ON_CALL(mr3, hidden()).WillByDefault(Return(false));
     
     std::vector<mg::Renderable*> renderables;
     renderables.push_back(&mr1);
