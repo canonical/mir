@@ -24,6 +24,7 @@
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
+#include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -43,17 +44,31 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
     MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
 };
 
+struct MockApplicationSession : public mf::ApplicationSession
+{
+  MockApplicationSession(ms::ApplicationSurfaceOrganiser* organiser,
+                         std::string name) : ApplicationSession(organiser, name)
+  {
+  }
+  MOCK_METHOD0(hide,void());
+  MOCK_METHOD0(show,void());
+};
+
 }
 
-TEST(RegistrationOrderFocusStrategy, mechanism_hides_unfocused_apps)
+TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
     MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(&organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(&organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(&organiser, std::string("Visual Studio 9")));
+    MockApplicationSession m1(&organiser, "Visual Studio 7");
+    MockApplicationSession m2(&organiser, "Visual Studio 8");
+    MockApplicationSession m3(&organiser, "Visual Studio 9");
+    
+    std::shared_ptr<mf::ApplicationSession> app1(&m1, mir::EmptyDeleter());
+    std::shared_ptr<mf::ApplicationSession> app2(&m2, mir::EmptyDeleter());
+    std::shared_ptr<mf::ApplicationSession> app3(&m3, mir::EmptyDeleter());
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -61,9 +76,9 @@ TEST(RegistrationOrderFocusStrategy, mechanism_hides_unfocused_apps)
 
     mf::SingleVisibilityFocusMechanism focus_mechanism;
     
-    EXPECT_CALL(organiser, hide_surface(_, false)).Times(1);
-    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1);
-    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1);
+    EXPECT_CALL(m1, show()).Times(1);
+    EXPECT_CALL(m2, hide()).Times(1);
+    EXPECT_CALL(m3, hide()).Times(1);
     
     focus_mechanism.focus(model, app1);
 }

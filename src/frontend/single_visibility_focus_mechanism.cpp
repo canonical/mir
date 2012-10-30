@@ -25,6 +25,8 @@
 #include <cassert>
 #include <algorithm>
 
+#include <stdio.h>
+
 
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
@@ -39,11 +41,11 @@ void mf::SingleVisibilityFocusMechanism::focus(std::shared_ptr<mf::ApplicationSe
         auto session = **it;
         if (session == focus_session)
         {
-            focus_session->hide();
+            session->show();
         }
         else
         {
-            focus_session->show();
+            session->hide();
         }
         it->advance();
     }
