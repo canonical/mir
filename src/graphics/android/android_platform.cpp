@@ -17,11 +17,11 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include <mir/graphics/android/android_platform.h>
-#include <mir/graphics/android/android_buffer_allocator.h>
-#include <mir/graphics/android/android_display.h>
-#include <mir/graphics/android/android_framebuffer_window.h>
-#include <mir/graphics/platform_ipc_package.h>
+#include "android_platform.h"
+#include "android_buffer_allocator.h"
+#include "android_display.h"
+#include "android_framebuffer_window.h"
+#include "mir/graphics/platform_ipc_package.h"
 
 #include <ui/FramebufferNativeWindow.h>
 

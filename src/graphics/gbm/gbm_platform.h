@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/gbm/gbm_display_helpers.h"
+#include "gbm_display_helpers.h"
 
 namespace mir
 {

@@ -14,7 +14,8 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(client/)
+include_directories(${CMAKE_SOURCE_DIR})
+
 set(
   INTEGRATION_TESTS_SRCS
   test_renderloop.cpp
@@ -22,6 +23,7 @@ set(
   test_error_reporting.cpp
 )
 
+add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
 add_subdirectory(frontend/)

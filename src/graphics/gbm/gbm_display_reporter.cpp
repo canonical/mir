@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/gbm/gbm_display_reporter.h"
+#include "gbm_display_reporter.h"
 #include "mir/logging/logger.h"
 
 

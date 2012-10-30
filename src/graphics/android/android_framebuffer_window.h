@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_FRAMEBUFFER_WINDOW_H_
 
-#include "mir/graphics/android/android_framebuffer_window_query.h"
+#include "android_framebuffer_window_query.h"
 #include <system/window.h>
 #include <memory>
 

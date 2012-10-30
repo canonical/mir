@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_display.h"
+#include "gbm_display.h"
 
 #include "mir/exception.h"
-#include "mir/graphics/gbm/gbm_platform.h"
+#include "gbm_platform.h"
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>

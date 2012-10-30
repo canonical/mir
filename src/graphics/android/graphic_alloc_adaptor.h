@@ -16,44 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
+#define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "mir/graphics/display.h"
-#include "mir/graphics/android/android_framebuffer_window.h"
+#include "android_buffer_handle.h"
 
-#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
 {
-namespace geometry
-{
-class Rectangle;
-}
 namespace graphics
 {
 namespace android
 {
 
-class AndroidDisplay : public Display
+/* note: we will need a new concrete class implementing this interface whenever gralloc interface changes (or for hw specific quirks) */
+class GraphicAllocAdaptor
 {
 public:
-    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
-    ~AndroidDisplay();
-
-    geometry::Rectangle view_area() const;
-    void clear();
-    bool post_update();
-private:
-    std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContext egl_context;
-    EGLSurface egl_surface;
+    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Size size,
+        geometry::PixelFormat, BufferUsage usage) = 0;
+protected:
+    GraphicAllocAdaptor() = default;
+    virtual ~GraphicAllocAdaptor() {}
+    GraphicAllocAdaptor(const GraphicAllocAdaptor&) = delete;
+    GraphicAllocAdaptor& operator=(const GraphicAllocAdaptor&) = delete;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_ */

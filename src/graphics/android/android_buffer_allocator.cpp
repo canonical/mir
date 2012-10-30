@@ -18,9 +18,9 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/android/android_buffer_allocator.h"
-#include "mir/graphics/android/android_alloc_adaptor.h"
-#include "mir/graphics/android/android_buffer.h"
+#include "android_buffer_allocator.h"
+#include "android_alloc_adaptor.h"
+#include "android_buffer.h"
 
 #include <stdexcept>
 

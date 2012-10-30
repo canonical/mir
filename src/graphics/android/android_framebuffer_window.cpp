@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_framebuffer_window.h"
+#include "android_framebuffer_window.h"
 #include <stdexcept>
 namespace mga = mir::graphics::android;
 
