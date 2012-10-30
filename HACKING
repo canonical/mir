@@ -39,8 +39,8 @@ are normally implementations of interfaces they do not use these types.)
 Code structure: src
 
 This comprises the implementation of mir. Header files for use within the component
-should be put here. The only headers from the source tree that should be one from
-the current component (and not require a path component).
+should be put here. The only headers from the source tree that should be included are
+ones from the current component (ones that do not require a path component).
 
 
 Code structure: test
