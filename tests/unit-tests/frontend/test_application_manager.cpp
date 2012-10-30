@@ -56,6 +56,11 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
   {
     MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
   };
+  
+  struct MockFocusMechanism: public mf::ApplicationFocusMechanism
+  {
+    MOCK_METHOD2(focus, void(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
+  };
 
 }
 
@@ -65,10 +70,12 @@ TEST(ApplicationManager, open_and_close_session)
     MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
+    MockFocusMechanism mechanism;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
 
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
@@ -82,10 +89,12 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
+    MockFocusMechanism mechanism;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
     std::shared_ptr<mc::BufferBundle> buffer_bundle(

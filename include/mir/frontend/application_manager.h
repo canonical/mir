@@ -22,6 +22,7 @@
 #include "mir/frontend/application_session_model.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/frontend/application_focus_strategy.h"
+#include "mir/frontend/application_focus_mechanism.h"
 
 #include <memory>
 #include <set>
@@ -42,7 +43,8 @@ class ApplicationManager
  public:
     explicit ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser,
                                 std::shared_ptr<mf::ApplicationSessionContainer> session_model,
-                                std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy);
+                                std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy,
+                                std::shared_ptr<mf::ApplicationFocusMechanism> focus_mechanism);
     virtual ~ApplicationManager() {}
 
     std::shared_ptr<ApplicationSession> open_session(std::string name);
@@ -56,6 +58,7 @@ private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
     std::shared_ptr<mf::ApplicationSessionContainer> app_model;
     std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy;
+    std::shared_ptr<mf::ApplicationFocusMechanism> focus_mechanism;
 
     std::weak_ptr<mf::ApplicationSession> focus_application;
 };

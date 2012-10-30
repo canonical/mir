@@ -27,14 +27,17 @@ namespace mf = mir::frontend;
 
 mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, 
                                            std::shared_ptr<mf::ApplicationSessionContainer> model,
-                                           std::shared_ptr<mf::ApplicationFocusStrategy> strategy) : surface_organiser(organiser),
-                                                                                                     app_model(model),
-                                                                                                     focus_strategy(strategy)
+                                           std::shared_ptr<mf::ApplicationFocusStrategy> strategy,
+                                           std::shared_ptr<mf::ApplicationFocusMechanism> mechanism) : surface_organiser(organiser),
+                                                                                                       app_model(model),
+                                                                                                       focus_strategy(strategy),
+                                                                                                       focus_mechanism(mechanism)
 															     
 {
     assert(surface_organiser);
     assert(strategy);
     assert(model);
+    assert(mechanism);
 }
 
 std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
