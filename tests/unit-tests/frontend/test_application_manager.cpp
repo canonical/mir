@@ -79,6 +79,7 @@ TEST(ApplicationManager, open_and_close_session)
 
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
+    EXPECT_CALL(mechanism, focus(_,_));
     auto session = app_manager.open_session("Visual Basic Studio");
     app_manager.close_session(session);
 }
@@ -107,10 +108,12 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
 
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
+
+    EXPECT_CALL(mechanism, focus(_,_)).Times(1);
+    
     auto session = app_manager.open_session("Visual Basic Studio");
     
     session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    
     
     // TODO: Would be nice to set an expectation on surf but surf is ID type for integration with IPC layer...
     EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
@@ -119,19 +122,23 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     app_manager.close_session(session);
 }
 
-TEST(ApplicationManager, new_sessions_receive_focus)
+TEST(ApplicationManager, new_applications_receive_focus)
 {
     using namespace ::testing;
     MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
     MockFocusMechanism mechanism;
+    std::shared_ptr<mf::ApplicationSession> new_session;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
+    EXPECT_CALL(model, insert_session(_)).Times(1);
+    EXPECT_CALL(mechanism, focus(_,_)).WillOnce(SaveArg<1>(&new_session));
+
     auto session = app_manager.open_session("Visual Basic Studio");
-    EXPECT_CALL(mechanism, focus(_,session));
+    EXPECT_EQ(session, new_session);
 }

@@ -46,6 +46,7 @@ std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std
   
     app_model->insert_session(session);
     focus_application = session;
+    focus_mechanism->focus(app_model, session);
   
     return session;
 }
