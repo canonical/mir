@@ -66,3 +66,21 @@ std::string mf::ApplicationSession::get_name()
 {
     return name;
 }
+
+void mf::ApplicationSession::hide()
+{
+   for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    {
+        auto surface = it->second;
+        surface.lock()->set_hidden(true);
+    }
+}
+
+void mf::ApplicationSession::show()
+{
+   for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    {
+        auto surface = it->second;
+        surface.lock()->set_hidden(false);
+    }
+}

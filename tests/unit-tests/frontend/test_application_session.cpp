@@ -110,12 +110,12 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     EXPECT_CALL(organizer, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
-    app_session.create_surface(params);
+    int surface_id = app_session.create_surface(params);
     
     app_session.hide();
-    assert(surface->hidden == TRUE);
+    assert(dummy_surface->hidden() == true);
     app_session.show();
-    assert(surface->hidden == FALSE);
+    assert(dummy_surface->hidden() == false);
     
     app_session.destroy_surface(surface_id);
 }

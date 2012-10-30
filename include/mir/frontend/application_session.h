@@ -56,6 +56,8 @@ class ApplicationSession : public services::SurfaceFactory
     
     std::string get_name();
     
+    void hide();
+    void show();
   protected:
     ApplicationSession(const ApplicationSession&) = delete;
     ApplicationSession& operator=(const ApplicationSession&) = delete;
