@@ -91,3 +91,31 @@ TEST(ApplicationSession, surface_ids_increment)
     app_session.destroy_surface(surface_id);
     app_session.destroy_surface(surface_id2);
 }
+
+TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
+{
+    using namespace ::testing;
+
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(
+        new mc::MockBufferBundle());
+    std::shared_ptr<ms::Surface> dummy_surface(
+        new ms::Surface(
+            ms::a_surface().name,
+            buffer_bundle));
+
+    MockApplicationSurfaceOrganiser organizer;
+    mf::ApplicationSession app_session(&organizer, "Foo");
+    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organizer, create_surface(_));
+    EXPECT_CALL(organizer, destroy_surface(_));
+
+    ms::SurfaceCreationParameters params;
+    app_session.create_surface(params);
+    
+    app_session.hide();
+    assert(surface->hidden == TRUE);
+    app_session.show();
+    assert(surface->hidden == FALSE);
+    
+    app_session.destroy_surface(surface_id);
+}

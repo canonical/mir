@@ -35,7 +35,8 @@ ms::Surface::Surface(
     std::shared_ptr<mc::BufferBundle> buffer_bundle) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
-    alpha_value(1.0f)
+    alpha_value(1.0f),
+    is_hidden(false)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -92,8 +93,12 @@ float ms::Surface::alpha() const
 
 bool ms::Surface::hidden() const
 {
-  // FIXME: This is a member variable. Just getting the test compiling for now
-    return false;
+    return is_hidden;
+}
+
+void ms::Surface::set_hidden(bool hide)
+{
+  is_hidden = hide;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 
