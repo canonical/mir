@@ -54,12 +54,17 @@ void mir::frontend::ApplicationProxy::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
+    auto display_info = response->mutable_display_info();
 
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
         platform->add_data(*p);
 
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
         platform->add_fd(*p);
+
+    auto view_area = graphics_display->view_area();
+    display_info->set_width(view_area.size.width.as_uint32_t());
+    display_info->set_height(view_area.size.height.as_uint32_t());
 
     resource_cache->save_resource(response, ipc_package);
     done->Run();

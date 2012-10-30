@@ -197,3 +197,19 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
         platform_package.fd_items = 0;
     }
 }
+
+void MirConnection::populate(MirDisplayInfo& display_info)
+{
+    if (!connect_result.has_error() && connect_result.has_display_info())
+    {
+        auto const& connection_display_info = connect_result.display_info();
+
+        display_info.width = connection_display_info.width();
+        display_info.height = connection_display_info.height();
+    }
+    else
+    {
+        display_info.width = 0;
+        display_info.height = 0;
+    }
+}
