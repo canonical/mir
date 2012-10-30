@@ -53,6 +53,38 @@ struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 
 }
 
+TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
+{
+    using namespace ::testing;
+    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
+    mf::RegistrationOrderFocusStrategy strategy(model);
+    MockFocusMechanism mechanism;
+    std::shared_ptr<mf::ApplicationSession> new_session;
+
+    mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+                                       model,
+                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
+    
+    EXPECT_CALL(mechanism, focus(_,_)).Times(3);
+
+    auto session1 = app_manager.open_session("Visual Basic Studio");
+    auto session2 = app_manager.open_session("Microsoft Access");
+    auto session3 = app_manager.open_session("WordPerfect");
+    
+    {
+      InSequence seq;
+      EXPECT_CALL(mechanism, focus(_,session1)).Times(1);
+      EXPECT_CALL(mechanism, focus(_,session2)).Times(1);
+      EXPECT_CALL(mechanism, focus(_,session3)).Times(1);
+    }
+    
+    app_manager.focus_next();
+    app_manager.focus_next();
+    app_manager.focus_next();
+}
+
 TEST(TestApplicationManagerAndFocusStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
