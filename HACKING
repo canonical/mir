@@ -47,7 +47,7 @@ Code structure: test
 
 This contains unit, integration and acceptance tests written using gtest/gmock. Tests
 largely depend upon the pubic interfaces of components - but tests of units within
-a component will include headers from withing the source tree.
+a component will include headers from within the source tree.
 
 
 Code structure: 3rd_party
