@@ -53,5 +53,10 @@ std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std
 
 void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> session)
 {
+    if (session == focus_application.lock())
+    {
+        focus_application = focus_strategy->previous_focus_app(session);
+        focus_mechanism->focus(app_model, focus_application.lock());
+    }
     app_model->remove_session(session);
 }

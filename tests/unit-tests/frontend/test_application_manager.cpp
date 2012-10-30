@@ -55,6 +55,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
   struct MockFocusStrategy: public mf::ApplicationFocusStrategy
   {
     MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD1(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
   };
   
   struct MockFocusMechanism: public mf::ApplicationFocusMechanism
@@ -76,10 +77,14 @@ TEST(ApplicationManager, open_and_close_session)
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
-
+    
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
     EXPECT_CALL(mechanism, focus(_,_));
+    EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
+
+    EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
+
     auto session = app_manager.open_session("Visual Basic Studio");
     app_manager.close_session(session);
 }
@@ -110,6 +115,9 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(model, remove_session(_)).Times(1);
 
     EXPECT_CALL(mechanism, focus(_,_)).Times(1);
+    EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
+
+    EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
     auto session = app_manager.open_session("Visual Basic Studio");
     
