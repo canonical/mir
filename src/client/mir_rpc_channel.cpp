@@ -306,4 +306,14 @@ std::ostream& c::ConsoleLogger::debug()
     return null;
 }
 
+std::ostream& c::NullLogger::error()
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
+}
 
+std::ostream& c::NullLogger::debug()
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
+}
