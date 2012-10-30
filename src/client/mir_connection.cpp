@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/client_buffer_depository.h"
 
 #include <cstddef>
 
@@ -65,7 +66,9 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, params, callback, context);
+    auto depository = mir::client::create_platform_depository();
+    auto null_log = std::make_shared<mir::client::NullLogger>();
+    auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();
 }
 
@@ -86,7 +89,7 @@ char const * MirConnection::get_error_message()
 struct SurfaceRelease
 {
     MirSurface * surface;
-    MirWaitHandle *handle;
+    MirWaitHandle * handle;
     mir_surface_lifecycle_callback callback;
     void * context;
 };
@@ -114,13 +117,14 @@ MirWaitHandle* MirConnection::release_surface(
 
     lock_guard<mutex> lock(release_wait_handle_guard);
     release_wait_handles.push_back(new_wait_handle);
-    return new_wait_handle; 
+    return new_wait_handle;
 }
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     callback(this, context);
     connect_wait_handle.result_received();
+
 }
 
 MirWaitHandle* MirConnection::connect(
@@ -146,7 +150,8 @@ void MirConnection::done_disconnect()
         lock_guard<mutex> lock(release_wait_handle_guard);
         for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
             delete *it;
-    } 
+    }
+
     disconnect_wait_handle.result_received();
 }
 

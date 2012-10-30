@@ -45,6 +45,14 @@ public:
     virtual std::ostream& debug();
 };
 
+class NullLogger : public Logger
+{
+public:
+    NullLogger() {}
+    virtual std::ostream& error();
+    virtual std::ostream& debug();
+};
+
 }
 }
 

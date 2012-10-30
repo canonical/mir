@@ -21,15 +21,16 @@
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
 #include "mir/geometry/pixel_format.h"
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 
 #include <memory>
+
+class MirBufferPackage;
 
 namespace mir
 {
 namespace client
 {
-class MirBufferPackage;
 
 /* vaddr is valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * PixelOperation.bytes_per_pixel(format)] */
 struct MemoryRegion
@@ -44,9 +45,9 @@ class ClientBuffer
 {
 public:
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
-    virtual geometry::Width width() const = 0;
-    virtual geometry::Height height() const = 0;
+    virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
 };
 
 }
