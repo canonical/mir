@@ -34,6 +34,12 @@ mf::RegistrationOrderFocusStrategy::RegistrationOrderFocusStrategy (std::shared_
 std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_focus_app (std::shared_ptr<mf::ApplicationSession> focused_app)
 {
     auto it = app_container->iterator();
+
+    if (focused_app == NULL)
+    {
+        return **it;
+    }
+
     bool found = false;
 
     while (it->is_valid())
