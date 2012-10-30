@@ -17,27 +17,27 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#ifndef MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
+#define MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
 
-#include "mir/geometry/rectangle.h"
-#include <cutils/native_handle.h>
+#include <gmock/gmock.h>
+#include "mir_client/android/android_registrar.h"
 
-#include <memory>
 namespace mir
 {
-namespace client
+namespace geometry
 {
-class MemoryRegion;
-
-class AndroidRegistrar
+class Rectangle;
+}
+namespace test
 {
-public:
-    virtual void register_buffer(const native_handle_t *handle) = 0;
-    virtual void unregister_buffer(const native_handle_t *handle) = 0;
-    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+struct MockAndroidRegistrar : public client::AndroidRegistrar
+{
+    MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
+    MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
+    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geometry::Rectangle));
 };
+}
+}
 
-}
-}
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_TEST_MOCK_ANDROID_REGISTRAR_H_ */

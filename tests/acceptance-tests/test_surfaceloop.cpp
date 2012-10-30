@@ -21,7 +21,12 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
+#include "mir_client/mir_rpc_channel.h"
+#include "mir_client/mir_connection.h"
+
 #include "mir/thread/all.h"
+
+#include "mir_protobuf.pb.h"
 
 #include "mir_test/display_server_test_fixture.h"
 
@@ -30,6 +35,7 @@
 #include "mir_test/gmock_fixes.h"
 
 namespace geom = mir::geometry;
+namespace mcl = mir::client;
 
 namespace
 {

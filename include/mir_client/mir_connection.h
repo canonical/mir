@@ -37,7 +37,9 @@ namespace mir
 namespace client
 {
 class Logger;
-class ClientBufferFactory;
+class ClientBufferDepository;
+
+std::shared_ptr<ClientBufferDepository> create_platform_depository ();
 
 }
 }
@@ -99,8 +101,6 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
-
-
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

@@ -17,23 +17,25 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
-#define MIR_CLIENT_MIR_BUFFER_PACKAGE_H_
+#include "mir_client/gbm/gbm_client_buffer_depository.h"
+#include "mir_client/gbm/gbm_client_buffer.h"
 
-#include <vector>
+#include <stdexcept>
+#include <map>
 
-namespace mir
-{
-namespace client
-{
-/* note: kdub: this is the same thing as BufferIPCPackage on the server side. duplicated to 
-               maintain divide between client/server headers */
-struct MirBufferPackage
-{
-    std::vector<int> data;
-    std::vector<int> fd;
-};
+namespace mcl=mir::client;
 
+mcl::GBMClientBufferDepository::GBMClientBufferDepository()
+{
 }
+
+void mcl::GBMClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> && package, int, geometry::Size size, geometry::PixelFormat pf)
+{
+    buffer = std::make_shared<mcl::GBMClientBuffer>(std::move(package), size, pf);
 }
-#endif /* MIR_CLIENT_MIR_BUFFER_PACKAGE_H_ */
+
+std::shared_ptr<mcl::ClientBuffer> mcl::GBMClientBufferDepository::access_buffer(int)
+{
+    return buffer;
+}
+

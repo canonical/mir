@@ -17,20 +17,30 @@
  */
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/mir_logger.h"
 #include "mir_client/client_buffer.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_connection.h"
 
+#include <cassert>
+
+namespace geom = mir::geometry;
+namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirSurface::MirSurface(
-    MirConnection * allocating_connection,
+    MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
+    const std::shared_ptr<mir::client::Logger>& logger,
+    const std::shared_ptr<mcl::ClientBufferDepository>& depository, 
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
-      connection(allocating_connection)
+      connection(allocating_connection),
+      last_buffer_id(-1),
+      buffer_depository(depository),
+      logger(logger)
 {
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -74,8 +84,17 @@ bool MirSurface::is_valid() const
     return !surface.has_error();
 }
 
-void MirSurface::get_cpu_region(MirGraphicsRegion& /*region_out*/)
+void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
+    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+
+    secured_region = buffer->secure_for_cpu_write();
+    region_out.width = secured_region->width.as_uint32_t();
+    region_out.height = secured_region->height.as_uint32_t();
+    //todo: fix
+    region_out.pixel_format = mir_pixel_format_rgba_8888;
+
+    region_out.vaddr = secured_region->vaddr.get();
 }
 
 void MirSurface::release_cpu_region()
@@ -101,14 +120,51 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
+/* todo: all these conversion functions are a bit of a kludge, probably 
+         better to have a more developed geometry::PixelFormat that can handle this */
+geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+{
+    if ( pf == mir_pixel_format_rgba_8888 )
+        return geom::PixelFormat::rgba_8888;
+    return geom::PixelFormat::pixel_format_invalid;
+}
+
+void MirSurface::process_incoming_buffer()
+{
+    auto const& buffer = surface.buffer();
+    last_buffer_id = buffer.buffer_id();
+
+    auto surface_width = geom::Width(surface.width());
+    auto surface_height = geom::Height(surface.height());
+    auto surface_size = geom::Size{surface_width, surface_height}; 
+    auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format());
+
+    auto ipc_package = std::make_shared<MirBufferPackage>();
+    populate(*ipc_package);
+
+    try 
+    {
+        buffer_depository->deposit_package(std::move(ipc_package), 
+                                last_buffer_id,
+                                surface_size, surface_pf);
+    } catch (const std::runtime_error& err)
+    {
+        logger->error() << err.what(); 
+    }
+}
+
 void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
+    process_incoming_buffer();
+
     callback(this, context);
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
+    process_incoming_buffer();
+
     callback(this, context);
     next_buffer_wait_handle.result_received();
 }
@@ -117,7 +173,13 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_lifecycle_callback callback,
         void * context)
 {
-    return connection->release_surface(this, callback, context); 
+    return connection->release_surface(this, callback, context);
+}
+
+std::shared_ptr<MirBufferPackage> MirSurface::get_current_buffer_package()
+{
+    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+    return buffer->get_buffer_package();
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)
