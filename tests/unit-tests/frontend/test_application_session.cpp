@@ -36,6 +36,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
+    MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
 };
 
 }
@@ -51,11 +52,11 @@ TEST(ApplicationSession, create_and_destroy_surface)
             ms::a_surface().name,
             buffer_bundle));
 
-    MockApplicationSurfaceOrganiser organizer;
-    mf::ApplicationSession app_session(&organizer, "Foo");
-    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
-    EXPECT_CALL(organizer, create_surface(_));
-    EXPECT_CALL(organizer, destroy_surface(_));
+    MockApplicationSurfaceOrganiser organiser;
+    mf::ApplicationSession app_session(&organiser, "Foo");
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organiser, create_surface(_));
+    EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
     int surface_id = app_session.create_surface(params);
@@ -76,11 +77,11 @@ TEST(ApplicationSession, surface_ids_increment)
             ms::a_surface().name,
             buffer_bundle));
 
-    MockApplicationSurfaceOrganiser organizer;
-    mf::ApplicationSession app_session(&organizer, "Foo");
-    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
-    EXPECT_CALL(organizer, create_surface(_)).Times(2);
-    EXPECT_CALL(organizer, destroy_surface(_)).Times(2);
+    MockApplicationSurfaceOrganiser organiser;
+    mf::ApplicationSession app_session(&organiser, "Foo");
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organiser, create_surface(_)).Times(2);
+    EXPECT_CALL(organiser, destroy_surface(_)).Times(2);
 
     ms::SurfaceCreationParameters params;
     int surface_id = app_session.create_surface(params);
@@ -103,19 +104,19 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
             ms::a_surface().name,
             buffer_bundle));
 
-    MockApplicationSurfaceOrganiser organizer;
-    mf::ApplicationSession app_session(&organizer, "Foo");
-    ON_CALL(organizer, create_surface(_)).WillByDefault(Return(dummy_surface));
-    EXPECT_CALL(organizer, create_surface(_));
-    EXPECT_CALL(organizer, destroy_surface(_));
+    MockApplicationSurfaceOrganiser organiser;
+    mf::ApplicationSession app_session(&organiser, "Foo");
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organiser, create_surface(_));
+    EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
     int surface_id = app_session.create_surface(params);
-    
+
+    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1); 
     app_session.hide();
-    assert(dummy_surface->hidden() == true);
+    EXPECT_CALL(organiser, hide_surface(_, false)).Times(1); 
     app_session.show();
-    assert(dummy_surface->hidden() == false);
     
     app_session.destroy_surface(surface_id);
 }

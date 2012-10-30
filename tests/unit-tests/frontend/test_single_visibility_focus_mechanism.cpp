@@ -20,6 +20,8 @@
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_model.h"
 #include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/registration_order_focus_strategy.h"
+#include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 
@@ -43,26 +45,26 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 }
 
-TEST(ApplicationSessionModel, iterate_registration_order)
+TEST(RegistrationOrderFocusStrategy, mechanism_hides_unfocused_apps)
 {
     using namespace ::testing;
     MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSessionModel model;
+    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     
     std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(&organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(&organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(&organiser, std::string("Visual Studio 9")));
 
-    model.insert_session(app1);
-    model.insert_session(app2);
-    
-    auto it = model.iterator();
-    
-    assert((**it)->get_name() == "Visual Studio 7");
-    it->advance();
-    assert((**it)->get_name() == "Visual Studio 8");
-    it->advance();
-    assert(it->is_valid() == false);
-    it->reset();
-    assert((**it)->get_name() == "Visual Studio 7");
+    model->insert_session(app1);
+    model->insert_session(app2);
+    model->insert_session(app3);
 
+    mf::SingleVisibilityFocusMechanism focus_mechanism;
+    
+    EXPECT_CALL(organiser, hide_surface(_, false)).Times(1);
+    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1);
+    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1);
+    
+    focus_mechanism.focus(model, app1);
 }
+

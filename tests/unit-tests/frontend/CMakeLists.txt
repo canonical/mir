@@ -19,6 +19,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_session_model.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_strategy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_single_visibility_focus_mechanism.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_asio_communicator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_asio_communicator_surface_counter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_asio_communicator_fd.cpp
