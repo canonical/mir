@@ -33,6 +33,7 @@ public:
     virtual ~ApplicationFocusStrategy() {}
 
     virtual std::weak_ptr<ApplicationSession> next_focus_app (std::shared_ptr<ApplicationSession> focused_app) = 0;
+    std::weak_ptr<ApplicationSession> previous_focus_app (std::shared_ptr<ApplicationSession> focused_app);
 
 protected:
     ApplicationFocusStrategy() = default;

@@ -60,3 +60,29 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_f
     return **it;
 }
 
+std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::previous_focus_app (std::shared_ptr<mf::ApplicationSession> focused_app)
+{
+    auto it = app_container->iterator();
+    
+    if (focused_app == NULL)
+    {
+        return **it;
+    }
+    
+    std::weak_ptr<mf::ApplicationSession> last_app = **it;
+
+    it->advance();
+    while (it->is_valid())
+    {
+        auto stacked_app = **it;
+        
+        if (stacked_app == focused_app)
+        {
+            return last_app;
+        }
+        last_app = stacked_app;
+        it->advance();
+    }
+    // If we didn't focus_app it was the first app so we happily return the last app
+    return last_app;
+}

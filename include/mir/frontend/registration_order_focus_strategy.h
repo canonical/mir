@@ -33,6 +33,7 @@ public:
     virtual ~RegistrationOrderFocusStrategy() {}
 
     std::weak_ptr<ApplicationSession> next_focus_app (std::shared_ptr<ApplicationSession> focused_app);
+    std::weak_ptr<ApplicationSession> previous_focus_app (std::shared_ptr<ApplicationSession> focused_app);
 
 protected:
     RegistrationOrderFocusStrategy() = default;
