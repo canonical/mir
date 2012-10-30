@@ -49,6 +49,8 @@ class ApplicationManager
 
     std::shared_ptr<ApplicationSession> open_session(std::string name);
     void close_session(std::shared_ptr<ApplicationSession> surface);
+    
+    void focus_next();
 
 protected:
     ApplicationManager(const ApplicationManager&) = delete;

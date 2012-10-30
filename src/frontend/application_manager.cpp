@@ -60,3 +60,15 @@ void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSessio
     }
     app_model->remove_session(session);
 }
+
+void mf::ApplicationManager::focus_next()
+{
+    auto focused = focus_application.lock();
+    if (focused == NULL)
+    {
+        return;
+    }
+    auto next_focus = focus_strategy->next_focus_app(focused).lock();
+    focus_application = next_focus;
+    focus_mechanism->focus(app_model, next_focus);
+}
