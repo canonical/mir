@@ -143,6 +143,11 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
+{
+    connection->populate(*display_info);
+}
+
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
     surface->get_cpu_region( *graphics_region);

@@ -59,7 +59,8 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
             std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -82,7 +83,8 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
             std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display);
 
 private:
     std::string socket_file;
@@ -92,7 +94,8 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display);
 
     virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
 };
