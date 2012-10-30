@@ -16,7 +16,6 @@
 
 list(
   APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_listener.cpp
 )
 
