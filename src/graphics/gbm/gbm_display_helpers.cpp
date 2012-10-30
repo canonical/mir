@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_display_helpers.h"
+#include "gbm_display_helpers.h"
 #include "mir/exception.h"
 
 

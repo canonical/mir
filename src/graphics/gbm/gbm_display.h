@@ -22,7 +22,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_listener.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/gbm/gbm_display_helpers.h"
+#include "gbm_display_helpers.h"
 
 #include <memory>
 
