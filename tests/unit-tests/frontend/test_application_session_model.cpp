@@ -22,6 +22,7 @@
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
+#include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -46,11 +47,11 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 TEST(ApplicationSessionModel, iterate_registration_order)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser(), mir::EmptyDeleter());
     mf::ApplicationSessionModel model;
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(&organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(&organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
 
     model.insert_session(app1);
     model.insert_session(app2);

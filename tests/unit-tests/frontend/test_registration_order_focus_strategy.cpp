@@ -47,13 +47,13 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 TEST(RegistrationOrderFocusStrategy, focus_order)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     mf::RegistrationOrderFocusStrategy focus_strategy(model);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(&organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(&organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(&organiser, std::string("Visual Studio 9")));
+    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(organiser, std::string("Visual Studio 9")));
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -67,11 +67,11 @@ TEST(RegistrationOrderFocusStrategy, focus_order)
 TEST(RegistrationOrderFocusStrategy, no_focus)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     mf::RegistrationOrderFocusStrategy focus_strategy(model);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(&organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
 
     model->insert_session(app1);
 

@@ -47,7 +47,7 @@ namespace ms = mir::surfaces;
 class ApplicationSession : public services::SurfaceFactory
 {
  public:
-    explicit ApplicationSession(ms::ApplicationSurfaceOrganiser* surface_organiser, std::string application_name);
+    explicit ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
     virtual ~ApplicationSession();
 
     // From SurfaceFactory
@@ -63,7 +63,7 @@ class ApplicationSession : public services::SurfaceFactory
     ApplicationSession& operator=(const ApplicationSession&) = delete;
 
   private:
-    ms::ApplicationSurfaceOrganiser* surface_organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
 
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;

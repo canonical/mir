@@ -28,7 +28,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationSession::ApplicationSession(ms::ApplicationSurfaceOrganiser* organiser, std::string application_name) : surface_organiser(organiser),
+mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, std::string application_name) : surface_organiser(organiser),
                                                                                                                        name(application_name)
 {
     next_surface_id = 0;

@@ -21,6 +21,7 @@
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
+#include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,7 +54,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
             buffer_bundle));
 
     MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(&organiser, "Foo");
+    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
@@ -78,7 +79,7 @@ TEST(ApplicationSession, surface_ids_increment)
             buffer_bundle));
 
     MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(&organiser, "Foo");
+    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_)).Times(2);
     EXPECT_CALL(organiser, destroy_surface(_)).Times(2);
@@ -105,7 +106,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
             buffer_bundle));
 
     MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(&organiser, "Foo");
+    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));

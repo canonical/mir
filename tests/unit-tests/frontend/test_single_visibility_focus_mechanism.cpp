@@ -46,7 +46,7 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 
 struct MockApplicationSession : public mf::ApplicationSession
 {
-  MockApplicationSession(ms::ApplicationSurfaceOrganiser* organiser,
+  MockApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser,
                          std::string name) : ApplicationSession(organiser, name)
   {
   }
@@ -59,12 +59,12 @@ struct MockApplicationSession : public mf::ApplicationSession
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser);
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     
-    MockApplicationSession m1(&organiser, "Visual Studio 7");
-    MockApplicationSession m2(&organiser, "Visual Studio 8");
-    MockApplicationSession m3(&organiser, "Visual Studio 9");
+    MockApplicationSession m1(organiser, "Visual Studio 7");
+    MockApplicationSession m2(organiser, "Visual Studio 8");
+    MockApplicationSession m3(organiser, "Visual Studio 9");
     
     std::shared_ptr<mf::ApplicationSession> app1(&m1, mir::EmptyDeleter());
     std::shared_ptr<mf::ApplicationSession> app2(&m2, mir::EmptyDeleter());

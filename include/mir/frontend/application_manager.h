@@ -40,9 +40,9 @@ class ApplicationSessionModel;
 class ApplicationManager
 {
  public:
-    explicit ApplicationManager(ms::ApplicationSurfaceOrganiser* surface_organiser,
-                                mf::ApplicationSessionContainer* session_model,
-                                mf::ApplicationFocusStrategy* focus_strategy);
+    explicit ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser,
+                                std::shared_ptr<mf::ApplicationSessionContainer> session_model,
+                                std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy);
     virtual ~ApplicationManager() {}
 
     std::shared_ptr<ApplicationSession> open_session(std::string name);
@@ -53,7 +53,7 @@ protected:
     ApplicationManager& operator=(const ApplicationManager&) = delete;
 
 private:
-    ms::ApplicationSurfaceOrganiser* surface_organiser;
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
     std::shared_ptr<mf::ApplicationSessionContainer> app_model;
     std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy;
 
