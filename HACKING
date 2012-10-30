@@ -46,7 +46,7 @@ ones from the current component (ones that do not require a path component).
 Code structure: test
 
 This contains unit, integration and acceptance tests written using gtest/gmock. Tests
-largely depend upon the pubic interfaces of components - but tests of units within
+largely depend upon the public interfaces of components - but tests of units within
 a component will include headers from within the source tree.
 
 
