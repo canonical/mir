@@ -72,7 +72,7 @@ void mf::ApplicationSession::hide()
    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
         auto surface = it->second;
-        surface.lock()->set_hidden(true);
+        surface_organiser->hide_surface(surface, true);
     }
 }
 
@@ -81,6 +81,6 @@ void mf::ApplicationSession::show()
    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
         auto surface = it->second;
-        surface.lock()->set_hidden(false);
+        surface_organiser->hide_surface(surface, false);
     }
 }
