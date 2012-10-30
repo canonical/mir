@@ -14,6 +14,8 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 set(
   INTEGRATION_TESTS_SRCS
   test_renderloop.cpp
@@ -21,9 +23,10 @@ set(
   test_error_reporting.cpp
 )
 
-add_subdirectory(frontend/)
+add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(input/)
+add_subdirectory(frontend/)
 add_subdirectory(process/)
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -48,6 +51,7 @@ add_executable(
 target_link_libraries(
   integration-tests
 
+  mirclient
   test-utils
 
   mir
@@ -59,9 +63,12 @@ target_link_libraries(
   mirprocess
   mirsurfaces
   mirplatformgraphics
+  mirprocess
   mirprotobuf
 
   3rd_party
+
+  test-utils
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

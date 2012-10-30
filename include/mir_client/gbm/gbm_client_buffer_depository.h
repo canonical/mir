@@ -17,31 +17,32 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
+#ifndef MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_DEPOSITORY_H_
+#define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_DEPOSITORY_H_
 
-#include "mir/geometry/pixel_format.h"
-#include "android/android_registrar.h"
-#include <hardware/gralloc.h>
+#include "mir_client/client_buffer_depository.h"
+
+#include <stdexcept>
+#include <map>
 
 namespace mir
 {
 namespace client
 {
+class ClientBuffer;
 
-class AndroidRegistrarGralloc : public AndroidRegistrar 
+class GBMClientBufferDepository : public ClientBufferDepository
 {
 public:
-    AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
+    GBMClientBufferDepository();
 
-    void register_buffer(const native_handle_t *handle);
-    void unregister_buffer(const native_handle_t *handle);
-    std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
+    void deposit_package(std::shared_ptr<MirBufferPackage> && package, int, geometry::Size size, geometry::PixelFormat pf);
 
+    std::shared_ptr<ClientBuffer> access_buffer(int id);
 private:
-    std::shared_ptr<const gralloc_module_t> gralloc_module;
+    std::shared_ptr<ClientBuffer> buffer;
 };
 
 }
 }
-#endif /* MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_ */
+#endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_DEPOSITORY_H_ */

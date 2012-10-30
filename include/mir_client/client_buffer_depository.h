@@ -17,35 +17,29 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
+#ifndef MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
+#define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 
-#include <hardware/hardware.h>
+#include <memory>
+#include <mir/geometry/pixel_format.h>
+#include <mir/geometry/size.h>
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/graphics/android/graphic_alloc_adaptor.h"
+class MirBufferPackage;
 
 namespace mir
 {
-namespace graphics
-{
-namespace android
-{
 
-class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
+namespace client
+{
+class ClientBuffer;
+
+class ClientBufferDepository
 {
 public:
-    AndroidBufferAllocator();
-
-    virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Size size, geometry::PixelFormat pf);
-private:
-    const hw_module_t    *hw_module;
-    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
+    virtual void deposit_package(std::shared_ptr<MirBufferPackage> &&, int id,
+                                geometry::Size, geometry::PixelFormat) = 0;
+    virtual std::shared_ptr<ClientBuffer> access_buffer(int id) = 0;
 };
-
 }
 }
-}
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */
+#endif /* MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_ */

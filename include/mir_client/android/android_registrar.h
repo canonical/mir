@@ -17,39 +17,27 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_BUFFER_H_
-#define MIR_CLIENT_CLIENT_BUFFER_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
 
-#include "mir/geometry/pixel_format.h"
-#include "mir/geometry/dimensions.h"
+#include "mir/geometry/rectangle.h"
+#include <cutils/native_handle.h>
 
 #include <memory>
-
 namespace mir
 {
 namespace client
 {
-class MirBufferPackage;
+class MemoryRegion;
 
-/* vaddr is valid from vaddr[0] to vaddr[width.as_uint32_t()* height.as_uint32_t() * PixelOperation.bytes_per_pixel(format)] */
-struct MemoryRegion
-{
-    geometry::Width width;
-    geometry::Height height;
-    geometry::PixelFormat format;
-    std::shared_ptr<char> vaddr;
-};
-
-class ClientBuffer
+class AndroidRegistrar
 {
 public:
-    virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
-    virtual geometry::Width width() const = 0;
-    virtual geometry::Height height() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual void register_buffer(const native_handle_t *handle) = 0;
+    virtual void unregister_buffer(const native_handle_t *handle) = 0;
+    virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
 };
 
 }
 }
-
-#endif /* MIR_CLIENT_CLIENT_BUFFER_H_ */
+#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */

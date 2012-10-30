@@ -21,8 +21,8 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/graphics/android/graphic_alloc_adaptor.h"
-#include "mir/graphics/android/android_buffer_handle.h"
+#include "graphic_alloc_adaptor.h"
+#include "android_buffer_handle.h"
 
 #include <map>
 #include <stdexcept>

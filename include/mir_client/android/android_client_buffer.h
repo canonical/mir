@@ -20,11 +20,11 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
-#include "client_buffer.h"
-#include "mir_buffer_package.h"
-#include "android/android_registrar.h"
+#include "mir_client/client_buffer.h"
+#include "mir_client/android/android_registrar.h"
 
 #include <memory>
+
 namespace mir
 {
 namespace client
@@ -33,20 +33,21 @@ namespace client
 class AndroidClientBuffer : public ClientBuffer
 {
 public:
-    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> &&,
-                        geometry::Width && width,  geometry::Height && height, geometry::PixelFormat && pf );
+    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> && ,
+                        geometry::Size size, geometry::PixelFormat pf );
     ~AndroidClientBuffer();
     
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
-    geometry::Width width() const;
-    geometry::Height height() const;
+    geometry::Size size() const;
     geometry::PixelFormat pixel_format() const;
+    std::shared_ptr<MirBufferPackage> get_buffer_package() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 private:
     const native_handle_t* convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package);
 
+    std::shared_ptr<MirBufferPackage> creation_package;
     std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
 

@@ -12,33 +12,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+if( MIR_PLATFORM STREQUAL "android")
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_render.cpp
+)
 
 set(
-  FRONTEND_SOURCES
-
-  application.cpp
-  application_proxy.cpp
-  application_session.cpp
-  application_session_model.cpp
-  registration_order_focus_strategy.cpp
-  single_visibility_focus_mechanism.cpp
-  null_application_listener.cpp
-  protobuf_asio_communicator.cpp
-
-  resource_cache.cpp
-  ${PROTO_HDRS}
-)
-
-add_library( 
-  mirfrontend STATIC
-  
-  ${FRONTEND_SOURCES}
-)
-
-target_link_libraries(
-  mirfrontend
-
-  mirlogging
-)
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE)
+endif()

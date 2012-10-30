@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_buffer.h"
+#include "src/graphics/android/android_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test/mock_alloc_adaptor.h"
 

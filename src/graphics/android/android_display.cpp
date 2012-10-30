@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/android/android_display.h"
+#include "android_display.h"
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>

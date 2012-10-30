@@ -18,7 +18,7 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_buffer.h"
+#include "gbm_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <GLES2/gl2.h>

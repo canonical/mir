@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_platform.h"
-#include "mir/graphics/gbm/gbm_display.h"
-#include "mir/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/graphics/gbm/gbm_platform.h"
+#include "src/graphics/gbm/gbm_display.h"
+#include "src/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/thread/all.h"

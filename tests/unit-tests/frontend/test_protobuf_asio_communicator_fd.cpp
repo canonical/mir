@@ -21,7 +21,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
-#include "src/client/mir_rpc_channel.h"
+#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
@@ -96,7 +96,7 @@ struct ProtobufAsioCommunicatorFD : public ::testing::Test
 
         stub_server->comm.start();
 
-        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 500);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
