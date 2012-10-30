@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/android/android_framebuffer_window.h"
+#include "android_framebuffer_window.h"
 
 #include <EGL/egl.h>
 #include <memory>

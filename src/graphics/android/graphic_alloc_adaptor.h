@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "mir/graphics/android/android_buffer_handle.h"
+#include "android_buffer_handle.h"
 
 #include <memory>
 

@@ -14,6 +14,8 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 set(
   INTEGRATION_TESTS_SRCS
   test_renderloop.cpp
