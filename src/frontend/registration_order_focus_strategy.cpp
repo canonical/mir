@@ -48,7 +48,7 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_f
         
         if (found) return stacked_app;
 
-        if (stacked_app->get_name() == focused_app->get_name())
+        if (stacked_app == focused_app)
         {
             found = true;
         }
