@@ -56,6 +56,13 @@ Third party code imported into our source tree for use in mir. We try not to cha
 anything to avoid maintaining a fork.
 
 
+Error handling strategy
+
+If a function cannot meet its post-conditions it throws an exception and meets
+AT LEAST the basic exception safety guarantee. It is a good idea to document the
+strong and no-throw guarantees. http://www.boost.org/community/exception_safety.html
+
+
 Documentation
 
 There are design notes and an architecture diagram (.dia) in the design
