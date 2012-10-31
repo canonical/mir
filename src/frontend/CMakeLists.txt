@@ -22,6 +22,7 @@ set(
   application_proxy.cpp
   application_session.cpp
   application_session_model.cpp
+  application_manager.cpp
   registration_order_focus_strategy.cpp
   single_visibility_focus_mechanism.cpp
   null_application_listener.cpp
