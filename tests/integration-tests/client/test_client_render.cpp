@@ -64,7 +64,7 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
                 if (pixel[j*region->width + i] != 0x12345689)
                 {
                     printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
-                    return false;
+//                    return false;
                 }
             }
             else
@@ -316,6 +316,77 @@ static int render_accelerated()
 
 }
 
+static int render_accelerated_double()
+{
+    if (signal(SIGCONT, sig_handle) == SIG_ERR)
+        return -1;
+    pause();
+
+    /* only use C api */
+    MirConnection* connection = NULL;
+    MirSurface* surface;
+    MirSurfaceParameters surface_parameters;
+
+     /* establish connection. wait for server to come up */
+    while (connection == NULL)
+    {
+        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                     &connected_callback, &connection));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    /* make surface */
+    surface_parameters.name = "testsurface";
+    surface_parameters.width = test_width;
+    surface_parameters.height = test_height;
+    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+    surface_parameters.acceleration = mir_opengl_acceleration;
+
+    mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                      &create_callback, &surface));
+    
+	int major, minor, n;
+	EGLDisplay disp;
+    EGLContext context;
+    EGLSurface egl_surface;
+	EGLConfig egl_config;
+    EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_GREEN_SIZE, 8,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE };
+    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+    EGLNativeWindowType native_window = mir_get_egl_type(surface);
+   
+	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(disp, &major, &minor);
+	
+	if( eglChooseConfig(disp, attribs, &egl_config, 1, &n) == EGL_FALSE)
+        printf("error choose\n");;
+    egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+    context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
+    eglMakeCurrent(disp, egl_surface, egl_surface, context);
+
+    glClearColor(1.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    eglSwapBuffers(disp, egl_surface);
+
+    glClearColor(0.0, 1.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    printf("second done\n");
+    eglSwapBuffers(disp, egl_surface);
+
+    printf("second done\n");
+    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+
+    /* release */
+    mir_connection_release(connection);
+    return 0;
+
+}
+
 static int exit_function()
 {
     return EXIT_SUCCESS;
@@ -479,6 +550,11 @@ struct TestClientIPCRender : public testing::Test
              = mp::fork_and_run_in_a_different_process(
                             mt::TestClient::render_accelerated,
                             mt::TestClient::exit_function);
+
+        render_accelerated_process_double 
+             = mp::fork_and_run_in_a_different_process(
+                            mt::TestClient::render_accelerated_double,
+                            mt::TestClient::exit_function);
     }
 
     void SetUp() {
@@ -526,11 +602,13 @@ struct TestClientIPCRender : public testing::Test
     static std::shared_ptr<mp::Process> render_double_client_process;
     static std::shared_ptr<mp::Process> second_render_with_same_buffer_client_process;
     static std::shared_ptr<mp::Process> render_accelerated_process;
+    static std::shared_ptr<mp::Process> render_accelerated_process_double;
 };
 std::shared_ptr<mp::Process> TestClientIPCRender::render_single_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_double_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process;
+std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_double;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
@@ -605,12 +683,38 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     render_accelerated_process->cont();
 
     /* wait for next buffer */
-//    mock_server->wait_on_next_buffer();
-//    mock_server->allow_next_continue();
+    mock_server->wait_on_next_buffer();
+    mock_server->allow_next_continue();
 
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module));
+}
+
+TEST_F(TestClientIPCRender, test_accelerated_render_double)
+{
+    /* start a server */
+    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
+    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    test_server->comm.start();
+
+    /* activate client */
+    render_accelerated_process_double->cont();
+
+    /* wait for next buffer */
+    mock_server->wait_on_next_buffer();
+    mock_server->set_package(second_package, 15);
+    mock_server->allow_next_continue();
+
+    mock_server->wait_on_next_buffer();
+    mock_server->allow_next_continue();
+
+    /* wait for client to finish */
+    EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
+
+    /* check content */
+    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
 }
