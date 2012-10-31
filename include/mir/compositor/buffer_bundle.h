@@ -22,6 +22,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <memory>
 
@@ -39,11 +40,13 @@ struct GraphicBufferClientResource
     GraphicBufferClientResource() {}
     GraphicBufferClientResource(
         std::shared_ptr<BufferIPCPackage> const& ipc_package,
-        std::shared_ptr<Buffer> const& buffer) :
-            ipc_package(ipc_package), buffer(buffer)
+        std::shared_ptr<Buffer> const& buffer,
+        BufferID id) :
+            id(id), ipc_package(ipc_package), buffer(buffer)
     {
     }
 
+    const BufferID id;
     std::shared_ptr<BufferIPCPackage> const ipc_package;
     std::shared_ptr<Buffer> const buffer;
 };

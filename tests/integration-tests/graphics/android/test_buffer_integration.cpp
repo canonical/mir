@@ -123,7 +123,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
-    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 
     gl_animation.init_gl();
 
@@ -149,7 +150,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
-    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 
     gl_animation.init_gl();
 

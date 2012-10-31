@@ -98,14 +98,21 @@ geom::PixelFormat ms::Surface::pixel_format() const
     return buffer_bundle->get_bundle_pixel_format();
 }
 
-std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package()
+void ms::Surface::advance_client_buffer()
 {
+    /* we must hold a reference (graphics_resource) to the resource on behalf
+       of the client until it is returned to us */
     graphics_resource.reset();  // Release old client buffer
     graphics_resource = buffer_bundle->secure_client_buffer();
+}
 
-    /* at this point, the ipc code sends the data outside of the server.
-       we must hold a reference (graphics_resource) to the resource on behalf
-       of the client until it is returned to us */
+mc::BufferID ms::Surface::get_buffer_id() const
+{
+    return graphics_resource->id;
+}
+
+std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() const
+{
     return graphics_resource->ipc_package;
 }
 
