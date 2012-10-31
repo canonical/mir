@@ -17,13 +17,18 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/mir_connection.h"
+#include "mir_client/gbm/gbm_client_platform.h"
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
-std::shared_ptr<mcl::ClientBufferDepository> mcl::create_platform_depository()
+std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+{
+    return std::make_shared<mcl::GBMClientPlatform>();
+}
+
+std::shared_ptr<mcl::ClientBufferDepository> mcl::GBMClientPlatform::create_platform_depository ()
 {
     return std::make_shared<mcl::GBMClientBufferDepository>();
 }

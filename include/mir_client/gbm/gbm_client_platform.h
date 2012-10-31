@@ -15,26 +15,24 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
 #include "mir_client/client_platform.h"
-#include "mir_client/client_buffer_depository.h"
 
-#include <gtest/gtest.h>
-
-namespace mcl=mir::client;
-class ClientPlatformTest : public ::testing::Test
+namespace mir
 {
-protected:
-    virtual void SetUp()
-    {
-    }
+namespace client
+{
+class ClientBufferDepository;
 
+class GBMClientPlatform : public ClientPlatform
+{
+public:
+    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
 };
 
-TEST_F(ClientPlatformTest, platform_creates )
-{
-    auto platform = mcl::create_client_platform(); 
-    auto depository = platform->create_platform_depository(); 
-    EXPECT_NE(0, (int) depository.get());
+}
 }
 
+#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */

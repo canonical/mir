@@ -16,25 +16,5 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/client_platform.h"
-#include "mir_client/client_buffer_depository.h"
-
-#include <gtest/gtest.h>
-
-namespace mcl=mir::client;
-class ClientPlatformTest : public ::testing::Test
-{
-protected:
-    virtual void SetUp()
-    {
-    }
-
-};
-
-TEST_F(ClientPlatformTest, platform_creates )
-{
-    auto platform = mcl::create_client_platform(); 
-    auto depository = platform->create_platform_depository(); 
-    EXPECT_NE(0, (int) depository.get());
-}
-
+#include "mir_client/gbm_client_platform.h"
+ 
