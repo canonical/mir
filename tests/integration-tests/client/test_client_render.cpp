@@ -48,6 +48,48 @@ static int test_width  = 300;
 static int test_height = 200;
 
 /* used by both client/server for patterns */ 
+bool check_green_pattern(MirGraphicsRegion *region, bool /*check*/)
+{
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        return false;
+
+    int *pixel = (int*) region->vaddr; 
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            if (pixel[j*region->width + i] != (int) 0xFF00FF00)
+            {
+                printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
+                    return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool check_red_pattern(MirGraphicsRegion *region, bool /*check*/)
+{
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        return false;
+
+    int *pixel = (int*) region->vaddr; 
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            if (pixel[j*region->width + i] != (int)0xFF0000FF)
+            {
+                printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool render_pattern(MirGraphicsRegion *region, bool check)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
@@ -518,9 +560,11 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
 
     auto valid = render_pattern(&region, true);
     auto valid2 = render_second_pattern(&region, true);
+    auto valid3 = check_red_pattern(&region, true);
+    auto valid4 = check_green_pattern(&region, true);
     grmod->unlock(grmod, handle);
 
-    return valid || valid2; 
+    return valid || valid2 || valid3 || valid4; 
 }
 
 }
