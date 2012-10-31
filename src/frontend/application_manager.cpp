@@ -18,12 +18,17 @@
 
 #include "mir/frontend/application_manager.h"
 #include "mir/frontend/application_session.h"
+#include "mir/frontend/application_session_container.h"
+#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/application_focus_strategy.h"
+#include "mir/frontend/application_focus_mechanism.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
 namespace mf = mir::frontend;
+namespace ms = mir::surfaces;
 
 mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, 
                                            std::shared_ptr<mf::ApplicationSessionContainer> model,

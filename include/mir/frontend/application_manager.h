@@ -19,32 +19,31 @@
 #ifndef MIR_FRONTEND_APPLICATION_MANAGER_H_
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
-#include "mir/frontend/application_session_model.h"
-#include "mir/surfaces/application_surface_organiser.h"
-#include "mir/frontend/application_focus_strategy.h"
-#include "mir/frontend/application_focus_mechanism.h"
-
 #include <memory>
-#include <set>
-
-namespace ms = mir::surfaces;
-namespace mf = mir::frontend;
 
 namespace mir
 {
 
+namespace surfaces
+{
+class ApplicationSurfaceOrganiser;
+}
+
 namespace frontend
 {
 
-class ApplicationSessionModel;
+class ApplicationSession;
+class ApplicationSessionContainer;
+class ApplicationFocusStrategy;
+class ApplicationFocusMechanism;
 
 class ApplicationManager
 {
  public:
-    explicit ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser,
-                                std::shared_ptr<mf::ApplicationSessionContainer> session_model,
-                                std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy,
-                                std::shared_ptr<mf::ApplicationFocusMechanism> focus_mechanism);
+    explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser,
+                                std::shared_ptr<ApplicationSessionContainer> session_model,
+                                std::shared_ptr<ApplicationFocusStrategy> focus_strategy,
+                                std::shared_ptr<ApplicationFocusMechanism> focus_mechanism);
     virtual ~ApplicationManager() {}
 
     std::shared_ptr<ApplicationSession> open_session(std::string name);
@@ -57,12 +56,12 @@ protected:
     ApplicationManager& operator=(const ApplicationManager&) = delete;
 
 private:
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
-    std::shared_ptr<mf::ApplicationSessionContainer> app_model;
-    std::shared_ptr<mf::ApplicationFocusStrategy> focus_strategy;
-    std::shared_ptr<mf::ApplicationFocusMechanism> focus_mechanism;
+    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<ApplicationSessionContainer> app_model;
+    std::shared_ptr<ApplicationFocusStrategy> focus_strategy;
+    std::shared_ptr<ApplicationFocusMechanism> focus_mechanism;
 
-    std::weak_ptr<mf::ApplicationSession> focus_application;
+    std::weak_ptr<ApplicationSession> focus_application;
 };
 
 }

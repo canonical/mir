@@ -21,8 +21,10 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
-#include "mir/frontend/services/surface_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/frontend/services/surface_factory.h"
+#include "mir/frontend/application_focus_strategy.h"
+#include "mir/frontend/application_focus_mechanism.h"
 #include "mir/frontend/registration_order_focus_strategy.h"
 #include "mir/frontend/application_session_model.h"
 
