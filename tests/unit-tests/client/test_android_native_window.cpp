@@ -297,22 +297,6 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
     delete anw;
 }
 
-/* lock hook tests */
-TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
-{
-    ANativeWindow* anw;
-    ANativeWindowBuffer* tmp = 0x0;
- 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
-
-    ASSERT_NE((int) anw->lockBuffer, NULL);
-    EXPECT_NO_THROW({
-        anw->lockBuffer(anw, tmp);
-    });
-    
-    delete anw;
-}
-
 /* queue hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 {
@@ -326,6 +310,20 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
         anw->queueBuffer(anw, tmp);
     });
     
+    delete anw;
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_queue_advances_buffer)
+{
+    ANativeWindow* anw;
+    ANativeWindowBuffer* tmp = 0x0;
+
+    EXPECT_CALL(*mock_surface, next_buffer())
+        .Times(1);
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    anw->queueBuffer(anw, tmp);
+
     delete anw;
 }
 
@@ -345,6 +343,21 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_callable)
     delete anw;
 }
 
+/* lock hook tests */
+TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
+{
+    ANativeWindow* anw;
+    ANativeWindowBuffer* tmp = 0x0;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    ASSERT_NE((int) anw->lockBuffer, NULL);
+    EXPECT_NO_THROW({
+        anw->lockBuffer(anw, tmp);
+    });
+    
+    delete anw;
+}
 /* incRef is reffable */
 TEST_F(AndroidNativeWindowTest, native_window_incref_hook_callable)
 {
