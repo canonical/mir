@@ -26,7 +26,8 @@ static void incRef(android_native_base_t*)
 }
 
 mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
- : surface(client_surface)
+ : surface(client_surface),
+   driver_pixel_format(-1)
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
@@ -41,20 +42,6 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
 
     const_cast<int&>(ANativeWindow::minSwapInterval) = 0;
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
-}
-
-int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const
-{
-    switch(mir_pixel_format)
-    {
-        case mir_pixel_format_rgba_8888:
-//            return HAL_PIXEL_FORMAT_RGBA_8888;
-    /* todo: kdub: i think this magic number is opaque, passed via perform from driver. */
-//            return 5; 
-return 1;
-        default:
-            return 0;
-    }
 }
 
 int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
@@ -87,7 +74,7 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
             *value = surface->get_parameters().height;
             break;
         case NATIVE_WINDOW_FORMAT:
-            *value = convert_pixel_format(surface->get_parameters().pixel_format);
+            *value = driver_pixel_format;
             break;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             *value = 0; /* transform hint is a bitmask. 0 means no transform */
@@ -105,11 +92,28 @@ int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* v
     return self->query(key, value);
 } 
 
-int mcl::MirNativeWindow::perform_static(ANativeWindow*, int /* key */, ...)
+int mcl::MirNativeWindow::perform(int key, va_list args )
 {
-    /* todo: kdub: the driver will send us requests sometimes via this hook. we will 
-                   probably have to service these requests eventually */
-    return 0;
+    int ret = 0;
+    switch(key)
+    {
+        case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
+            driver_pixel_format = va_arg(args, int); 
+            break;
+        default:
+            break;
+    }
+
+    va_end(args);
+    return ret;
+}
+
+int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
+{
+    va_list args;
+    va_start(args, key);
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    return self->perform(key, args);
 } 
 
 int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)

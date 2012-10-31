@@ -43,14 +43,13 @@ private:
 
     /* anw functions */
     int query(int key, int* value) const;
+    int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer);
 
-    /* helpers */
-    int convert_pixel_format(MirPixelFormat mir_pixel_format) const;
-
     /* todo: we should probably take ownership of the ClientSurface */
-    ClientSurface * surface; 
+    ClientSurface * surface;
+    int driver_pixel_format; 
 };
 
 }
