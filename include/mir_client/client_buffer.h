@@ -46,6 +46,7 @@ class ClientBuffer
 public:
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
     virtual geometry::Size size() const = 0;
+    virtual geometry::Stride stride() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
 };

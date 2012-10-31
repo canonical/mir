@@ -40,6 +40,12 @@ geom::Size mcl::GBMClientBuffer::size() const
 {
     return rect.size;
 }
+
+geom::Stride mcl::GBMClientBuffer::stride() const
+{
+    return geom::Stride{creation_package->stride};
+}
+
 geom::PixelFormat mcl::GBMClientBuffer::pixel_format() const
 {
     return buffer_pf;

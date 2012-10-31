@@ -82,6 +82,11 @@ geom::Size mcl::AndroidClientBuffer::size() const
     return rect.size;
 }
 
+geom::Stride mcl::AndroidClientBuffer::stride() const
+{
+    return geom::Stride{creation_package->stride};
+}
+
 geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
 {
     return buffer_pf;

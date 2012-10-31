@@ -31,14 +31,17 @@ struct MirGBMBufferTest : public testing::Test
     {
         width = geom::Width(12);
         height =geom::Height(14);
+        stride = geom::Stride(66);
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{width, height};
 
         package = std::make_shared<MirBufferPackage>();
+        package->stride = stride.as_uint32_t();
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
     }
     geom::Width width;
     geom::Height height;
+    geom::Stride stride;
     geom::PixelFormat pf;
     geom::Size size;
 
@@ -56,6 +59,15 @@ TEST_F(MirGBMBufferTest, width_and_height)
     EXPECT_EQ(buffer.size().height, height); 
     EXPECT_EQ(buffer.size().width, width); 
     EXPECT_EQ(buffer.pixel_format(), pf); 
+}
+
+TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
+{
+    using namespace testing;
+
+    mcl::GBMClientBuffer buffer(std::move(package), size, pf);
+
+    EXPECT_EQ(buffer.stride(), stride);
 }
 
 TEST_F(MirGBMBufferTest, buffer_returns_set_package)
