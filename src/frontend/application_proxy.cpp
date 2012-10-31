@@ -102,6 +102,8 @@ void mir::frontend::ApplicationProxy::create_surface(
         for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
             buffer->add_fd(*p);
 
+        buffer->set_stride(ipc_package->stride);
+
         resource_cache->save_resource(response, ipc_package);
     }
 
@@ -127,6 +129,8 @@ void mir::frontend::ApplicationProxy::next_buffer(
 
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
         response->add_fd(*p);
+
+    response->set_stride(ipc_package->stride);
 
     resource_cache->save_resource(response, ipc_package);
     done->Run();

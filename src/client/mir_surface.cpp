@@ -200,10 +200,13 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         {
             buffer_package.fd[i] = buffer.fd(i);
         }
+
+        buffer_package.stride = buffer.stride();
     }
     else
     {
         buffer_package.data_items = 0;
         buffer_package.fd_items = 0;
+        buffer_package.stride = 0;
     }
 }
