@@ -51,6 +51,7 @@ struct MockMirSurface : public mcl::ClientSurface
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback callback, void * context));
 
     MirSurfaceParameters params;
 };
@@ -315,10 +316,11 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_queue_advances_buffer)
 {
+    using namespace testing;
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp = 0x0;
 
-    EXPECT_CALL(*mock_surface, next_buffer())
+    EXPECT_CALL(*mock_surface, next_buffer(_,_))
         .Times(1);
     anw = new mcl::MirNativeWindow(mock_surface.get());
 

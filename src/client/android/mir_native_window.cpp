@@ -64,6 +64,14 @@ int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_
     return ret;
 }
 
+static void empty(MirSurface * /*surface*/, void * /*client_context*/)
+{}
+int mcl::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* /*buffer*/)
+{
+    mir_wait_for(surface->next_buffer(empty, NULL));
+    return 0;
+}
+
 int mcl::MirNativeWindow::query(int key, int* value ) const
 {
     int ret = 0;
@@ -119,9 +127,10 @@ int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, st
     return 0;
 }
 
-int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer)
 {
-    return 0;
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    return self->queueBuffer(buffer);
 }
 
 int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)

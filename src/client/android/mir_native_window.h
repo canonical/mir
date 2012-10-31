@@ -44,6 +44,7 @@ private:
     /* anw functions */
     int query(int key, int* value) const;
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
+    int queueBuffer(struct ANativeWindowBuffer* buffer);
 
     /* helpers */
     int convert_pixel_format(MirPixelFormat mir_pixel_format) const;
