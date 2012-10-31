@@ -276,3 +276,19 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
     EXPECT_EQ(region->format, pf_copy);
 }
 
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
+        .Times(1)
+        .WillOnce(Return(empty_char));
+    auto native_handle = buffer->get_native_handle();
+
+    EXPECT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+}
+
