@@ -22,16 +22,8 @@
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
-class ClientPlatformTest : public ::testing::Test
-{
-protected:
-    virtual void SetUp()
-    {
-    }
 
-};
-
-TEST_F(ClientPlatformTest, platform_creates )
+TEST(ClientPlatformTest, platform_creates )
 {
     auto platform = mcl::create_client_platform(); 
     auto depository = platform->create_platform_depository(); 

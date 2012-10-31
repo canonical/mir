@@ -36,7 +36,6 @@ public:
     virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
 };
 
-// Create and return a new client platform.
 std::shared_ptr<ClientPlatform> create_client_platform();
 
 }
