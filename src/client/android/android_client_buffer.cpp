@@ -37,12 +37,16 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
     pack_native_window_buffer();
 }
 
+static void incRef(android_native_base_t*)
+{
+}
 void mcl::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer.height = (int) rect.size.height.as_uint32_t();
     native_window_buffer.width = (int) rect.size.width.as_uint32_t();
     native_window_buffer.handle = native_handle.get();
-
+    native_window_buffer.common.incRef = &incRef;
+    native_window_buffer.common.decRef = &incRef;
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
