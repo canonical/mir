@@ -41,6 +41,7 @@ void mcl::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer.height = (int) rect.size.height.as_uint32_t();
     native_window_buffer.width = (int) rect.size.width.as_uint32_t();
+    native_window_buffer.handle = native_handle.get();
 
 }
 
