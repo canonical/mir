@@ -217,5 +217,5 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 
 std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
 {
-    return std::shared_ptr<mcl::ClientBuffer>();
+    return buffer_cache[last_buffer_id];
 }

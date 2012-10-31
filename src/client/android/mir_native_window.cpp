@@ -41,8 +41,6 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
 
     const_cast<int&>(ANativeWindow::minSwapInterval) = 0;
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
-
-    printf("PIDcreat %i\n", gettid()); 
 }
 
 int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) const

@@ -61,6 +61,7 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
         {
             if (check)
             {
+                printf("BUFFER %X\n", pixel[j*region->width + i]);
                 if (pixel[j*region->width + i] != 0x12345689)
                     return false;
             }
@@ -312,6 +313,7 @@ static int render_accelerated()
     glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    eglSwapBuffers(disp, egl_surface);
     mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
     /* release */
@@ -611,8 +613,8 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     render_accelerated_process->cont();
 
     /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
+//    mock_server->wait_on_next_buffer();
+//    mock_server->allow_next_continue();
 
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
