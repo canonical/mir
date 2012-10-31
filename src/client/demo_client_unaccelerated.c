@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Kevin DuBois   <kevin.dubois@canonical.com>
  */
 
 #include "mir_client/mir_client_library.h"

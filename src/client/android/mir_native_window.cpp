@@ -58,7 +58,6 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
 
 int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
-    printf("dequeue buffer\n");
     int ret = 0;
     auto buffer = surface->get_current_buffer();
     *buffer_to_driver = buffer->get_native_handle();
@@ -69,7 +68,6 @@ static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
 int mcl::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* /*buffer*/)
 {
-    printf("queue buffer\n");
     mir_wait_for(surface->next_buffer(empty, NULL));
     return 0;
 }

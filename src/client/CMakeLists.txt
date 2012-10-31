@@ -134,6 +134,25 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+add_executable(
+  ubuntu_ds_demo_client_accelerated
+  
+  demo_client_accelerated.c
+)
+
+target_link_libraries(
+  ubuntu_ds_demo_client_accelerated
+  
+  mirclient
+  mirprotobuf
+  
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${EGL_LIBRARIES}
+  ${GLESv2_LIBRARIES}
+
+)
 
 
 install(

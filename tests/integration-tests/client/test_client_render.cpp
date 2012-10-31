@@ -61,8 +61,7 @@ bool check_green_pattern(MirGraphicsRegion *region, bool /*check*/)
         {
             if (pixel[j*region->width + i] != (int) 0xFF00FF00)
             {
-                printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
-                    return false;
+                return false;
             }
         }
     }
@@ -82,7 +81,6 @@ bool check_red_pattern(MirGraphicsRegion *region, bool /*check*/)
         {
             if (pixel[j*region->width + i] != (int)0xFF0000FF)
             {
-                printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
                 return false;
             }
         }
@@ -105,8 +103,7 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
             {
                 if (pixel[j*region->width + i] != 0x12345689)
                 {
-                    printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
-//                    return false;
+                    return false;
                 }
             }
             else
@@ -340,8 +337,7 @@ static int render_accelerated()
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
 	
-	if( eglChooseConfig(disp, attribs, &egl_config, 1, &n) == EGL_FALSE)
-        printf("error choose\n");;
+	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
     eglMakeCurrent(disp, egl_surface, egl_surface, context);
@@ -403,8 +399,7 @@ static int render_accelerated_double()
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
 	
-	if( eglChooseConfig(disp, attribs, &egl_config, 1, &n) == EGL_FALSE)
-        printf("error choose\n");;
+	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
     eglMakeCurrent(disp, egl_surface, egl_surface, context);
@@ -417,10 +412,8 @@ static int render_accelerated_double()
     glClearColor(0.0, 1.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    printf("second done\n");
     eglSwapBuffers(disp, egl_surface);
 
-    printf("second done\n");
     mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
     /* release */
@@ -535,7 +528,8 @@ struct MockServerGenerator : public mt::MockServerTool
     int package_id;
 };
 
-bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module)
+bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module,
+                bool (*fn)(MirGraphicsRegion*, bool) )
 {
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
@@ -558,13 +552,9 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     region.height = test_height;
     region.pixel_format = mir_pixel_format_rgba_8888; 
 
-    auto valid = render_pattern(&region, true);
-    auto valid2 = render_second_pattern(&region, true);
-    auto valid3 = check_red_pattern(&region, true);
-    auto valid4 = check_green_pattern(&region, true);
+    auto valid = fn(&region, true);
     grmod->unlock(grmod, handle);
-
-    return valid || valid2 || valid3 || valid4; 
+    return valid;
 }
 
 }
@@ -668,7 +658,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(mock_server->package, hw_module, render_pattern));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
@@ -683,7 +673,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(package, hw_module, render_pattern));
 
     mock_server->set_package(second_package, 15);
 
@@ -692,7 +682,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, render_second_pattern));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
@@ -713,7 +703,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(package, hw_module, render_second_pattern));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
@@ -734,7 +724,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(package, hw_module, check_red_pattern));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
@@ -759,6 +749,6 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module));
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module));
+    EXPECT_TRUE(mt::check_buffer(package, hw_module, check_red_pattern));
+    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, check_green_pattern));
 }
