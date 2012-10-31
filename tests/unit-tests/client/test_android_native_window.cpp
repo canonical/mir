@@ -129,24 +129,6 @@ TEST_F(AndroidNativeWindowTest, native_window_height_query_hook)
     delete anw;
 }
 
-TEST_F(AndroidNativeWindowTest, native_window_format_query_hook)
-{
-    using namespace testing;
-    ANativeWindow* anw;
-    int value;
-
-    anw = new mcl::MirNativeWindow(mock_surface.get());
-    EXPECT_CALL(*mock_surface, get_parameters())
-        .Times(1);
-
-    auto rc = anw->query(anw, NATIVE_WINDOW_FORMAT ,&value);
-
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, HAL_PIXEL_FORMAT_RGBA_8888);
-
-    delete anw;
-}
-
 TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
 {
     using namespace testing;
@@ -209,6 +191,24 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
     EXPECT_NO_THROW({
         anw->perform(anw, NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS , 40, 22);
     });
+    
+    delete anw;
+}
+
+/* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */
+TEST_F(AndroidNativeWindowTest, native_window_perform_remembers_format)
+{
+    ANativeWindow* anw;
+    int format = 945;
+ 
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    anw->perform(anw, NATIVE_WINDOW_SET_BUFFERS_FORMAT , format);
+
+    int tmp_format = 0;
+    anw->query(anw, NATIVE_WINDOW_FORMAT, &tmp_format);
+
+    EXPECT_EQ(format, tmp_format);
     
     delete anw;
 }
