@@ -65,6 +65,8 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
     MockBufferBundleFactory()
     {
         using namespace ::testing;
+        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+
         ON_CALL(
             *this,
             create_buffer_bundle(_, _))
@@ -72,7 +74,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
-                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
+                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()), generator ))));
     }
 
     MOCK_METHOD2(
@@ -123,7 +125,8 @@ TEST(
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle), generator );
     MockBufferBundleFactory buffer_bundle_factory;
 
     EXPECT_CALL(

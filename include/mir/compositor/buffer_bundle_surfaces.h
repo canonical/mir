@@ -22,20 +22,25 @@
 
 #include "mir/compositor/buffer_bundle.h"
 
+#include <map>
+
 namespace mir
 {
-
 namespace compositor
 {
+
+class BufferIDUniqueGenerator;
 
 class BufferBundleSurfaces : public BufferBundle
 {
 public:
-    explicit BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper);
+    BufferBundleSurfaces(
+        std::unique_ptr<BufferSwapper>&& swapper, 
+        std::shared_ptr<BufferIDUniqueGenerator> generator );
 
     BufferBundleSurfaces(
         std::unique_ptr<BufferSwapper>&& swapper,
+        std::shared_ptr<BufferIDUniqueGenerator> generator,
         geometry::Size size,
         geometry::PixelFormat pixel_format);
 
@@ -53,7 +58,9 @@ protected:
     BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
 
 private:
+    std::shared_ptr<BufferIDUniqueGenerator> generator;
     std::unique_ptr<BufferSwapper> swapper;
+    std::map<Buffer*, BufferID> buffer_to_id_map;
     geometry::Size size;
     geometry::PixelFormat pixel_format;
 };
