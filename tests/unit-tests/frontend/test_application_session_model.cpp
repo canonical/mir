@@ -58,12 +58,12 @@ TEST(ApplicationSessionModel, iterate_registration_order)
     
     auto it = model.iterator();
     
-    assert((**it)->get_name() == "Visual Studio 7");
+    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
     it->advance();
-    assert((**it)->get_name() == "Visual Studio 8");
+    EXPECT_EQ((**it)->get_name(), "Visual Studio 8");
     it->advance();
-    assert(it->is_valid() == false);
+    EXPECT_EQ(it->is_valid(),false);
     it->reset();
-    assert((**it)->get_name() == "Visual Studio 7");
+    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
 
 }
