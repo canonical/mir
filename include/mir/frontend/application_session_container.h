@@ -27,8 +27,6 @@ namespace frontend
 {
 class ApplicationSession;
 
-namespace mf = mir::frontend;
-
 class ApplicationSessionContainer
 {
  public:
