@@ -57,6 +57,13 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
 }
 
 #include <iostream> 
+int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** /*buffer*/)
+{
+    int ret = -1000;
+    surface->get_current_buffer();
+    return ret;
+}
+
 int mcl::MirNativeWindow::query(int key, int* value ) const
 {
     int ret = 0;
@@ -112,10 +119,10 @@ int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* window, 
     return 0;
 }
 
-int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* /*window*/, struct ANativeWindowBuffer** /*buffer*/)
+int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer)
 {
-    printf("dequeue!\n");
-    return 0;
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    return self->dequeueBuffer(buffer);
 }
 
 int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)

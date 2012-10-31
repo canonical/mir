@@ -43,6 +43,8 @@ struct MockMirSurface : public mcl::ClientSurface
         using namespace testing;
         ON_CALL(*this, get_parameters())
             .WillByDefault(Return(params)); 
+        ON_CALL(*this, get_current_buffer())
+            .WillByDefault(Return(std::make_shared<MockClientBuffer>())); 
     }
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
