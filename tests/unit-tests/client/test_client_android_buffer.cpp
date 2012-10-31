@@ -310,3 +310,21 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
     EXPECT_EQ(native_handle->height, (int) height_copy.as_uint32_t());
 }
 
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        std::move(width), std::move(height), std::move(pf));
+
+    auto native_handle = buffer->get_native_handle();
+
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE((int) native_handle->common.incRef,  NULL);
+    ASSERT_NE((int) native_handle->common.decRef,  NULL);
+
+    native_handle->common.incRef(NULL);
+    native_handle->common.decRef(NULL);
+}
+
