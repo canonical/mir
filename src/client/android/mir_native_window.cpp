@@ -17,6 +17,7 @@
  */
 
 #include "android/mir_native_window.h"
+#include "client_buffer.h"
 #include "mir/thread/all.h"
 namespace mcl=mir::client;
 
@@ -57,10 +58,11 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
 }
 
 #include <iostream> 
-int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** /*buffer*/)
+int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     int ret = -1000;
-    surface->get_current_buffer();
+    auto buffer = surface->get_current_buffer();
+    *buffer_to_driver = buffer->get_native_handle();
     return ret;
 }
 
