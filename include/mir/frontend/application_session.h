@@ -26,8 +26,6 @@
 #include <map>
 #include <vector>
 
-namespace mf = mir::frontend;
-
 namespace mir
 {
 
@@ -42,16 +40,14 @@ class SurfaceCreationParameters;
 namespace frontend
 {
 
-namespace ms = mir::surfaces;
-
 class ApplicationSession : public services::SurfaceFactory
 {
  public:
-    explicit ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
+    explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
     virtual ~ApplicationSession();
 
     // From SurfaceFactory
-    int create_surface(const ms::SurfaceCreationParameters& params);
+    int create_surface(const surfaces::SurfaceCreationParameters& params);
     void destroy_surface(int surface_id);
     
     std::string get_name();
@@ -63,7 +59,7 @@ class ApplicationSession : public services::SurfaceFactory
     ApplicationSession& operator=(const ApplicationSession&) = delete;
 
   private:
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
 
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;

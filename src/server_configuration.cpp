@@ -165,3 +165,4 @@ mir::DefaultServerConfiguration::make_application_listener()
 {
     return std::make_shared<mf::NullApplicationListener>();
 }
+
