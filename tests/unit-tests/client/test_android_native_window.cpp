@@ -282,6 +282,21 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
     delete anw;
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+ 
+    ANativeWindowBuffer* tmp;
+
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    auto ret = anw->dequeueBuffer(anw, &tmp);
+    EXPECT_EQ(ret, 0);
+     
+    delete anw;
+}
+
 /* lock hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
 {
