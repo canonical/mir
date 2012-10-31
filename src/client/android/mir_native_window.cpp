@@ -51,6 +51,7 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
     {
         case mir_pixel_format_rgba_8888:
 //            return HAL_PIXEL_FORMAT_RGBA_8888;
+    /* todo: kdub: i think this magic number is opaque, passed via perform from driver. */
             return 5; 
         default:
             return 0;
@@ -60,7 +61,7 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
 #include <iostream> 
 int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
-    int ret = -1000;
+    int ret = 0;
     auto buffer = surface->get_current_buffer();
     *buffer_to_driver = buffer->get_native_handle();
     return ret;
