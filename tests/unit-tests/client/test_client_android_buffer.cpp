@@ -286,7 +286,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
 
     auto native_handle = buffer->get_native_handle();
 
-    EXPECT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    EXPECT_EQ(native_handle->handle, 
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)

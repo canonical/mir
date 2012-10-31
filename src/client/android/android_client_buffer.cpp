@@ -33,6 +33,15 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(buffer_package));
 
     buffer_registrar->register_buffer(native_handle.get());
+    
+    pack_native_window_buffer();
+}
+
+void mcl::AndroidClientBuffer::pack_native_window_buffer()
+{
+    native_window_buffer.height = (int) rect.size.height.as_uint32_t();
+    native_window_buffer.width = (int) rect.size.width.as_uint32_t();
+
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()

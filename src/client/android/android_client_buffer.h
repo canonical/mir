@@ -47,6 +47,7 @@ public:
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 private:
+    void pack_native_window_buffer();
     const native_handle_t* convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package);
 
     std::shared_ptr<const native_handle_t> native_handle;
