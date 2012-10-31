@@ -23,6 +23,9 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 
+/* go away */
+#include <system/window.h>
+
 #include <memory>
 
 class MirBufferPackage;
@@ -48,6 +51,9 @@ public:
     virtual geometry::Width width() const = 0;
     virtual geometry::Height height() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
+
+    /* todo: this has to go away during generic client refactor */
+    virtual ANativeWindowBuffer* get_native_handle() const = 0;
 };
 
 }

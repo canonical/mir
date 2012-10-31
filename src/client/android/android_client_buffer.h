@@ -42,6 +42,7 @@ public:
     geometry::Width width() const;
     geometry::Height height() const;
     geometry::PixelFormat pixel_format() const;
+    ANativeWindowBuffer* get_native_handle() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;

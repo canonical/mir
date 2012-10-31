@@ -33,6 +33,8 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(width, geom::Width());
     MOCK_CONST_METHOD0(height, geom::Height());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+
+    MOCK_CONST_METHOD0(get_native_handle, ANativeWindowBuffer*());
 };
 
 struct MockMirSurface : public mcl::ClientSurface
@@ -252,11 +254,31 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_calls_surface_get_current)
         .WillOnce(Return(mock_client_buffer)); 
     anw = new mcl::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE((int) anw->dequeueBuffer, NULL);
-    EXPECT_NO_THROW({
-        anw->dequeueBuffer(anw, &tmp);
-    });
+    anw->dequeueBuffer(anw, &tmp);
     
+    delete anw;
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
+{
+    using namespace testing;
+    ANativeWindow* anw;
+    ANativeWindowBuffer* native_window_ptr = (ANativeWindowBuffer*) 0x4849;
+ 
+    ANativeWindowBuffer* tmp;
+
+    EXPECT_CALL(*mock_client_buffer, get_native_handle())
+        .Times(1)
+        .WillOnce(Return(native_window_ptr)); 
+    EXPECT_CALL(*mock_surface, get_current_buffer())
+        .Times(1)
+        .WillOnce(Return(mock_client_buffer));
+
+    anw = new mcl::MirNativeWindow(mock_surface.get());
+
+    anw->dequeueBuffer(anw, &tmp);
+   
+    EXPECT_EQ(native_window_ptr, tmp); 
     delete anw;
 }
 
