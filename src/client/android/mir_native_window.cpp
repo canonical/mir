@@ -56,7 +56,6 @@ int mcl::MirNativeWindow::convert_pixel_format(MirPixelFormat mir_pixel_format) 
     }
 }
 
-#include <iostream> 
 int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     int ret = 0;
@@ -85,38 +84,27 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
             *value = 0; /* transform hint is a bitmask. 0 means no transform */
             break;
         default:
-            printf("ERROR\n");
             ret = -1;
             break;
     }
-    printf("VALUE %i\n", *value);
     return ret;
 }
 
 int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
 {
-    printf("QUERY: %i\n", key);
     auto self = static_cast<const mcl::MirNativeWindow*>(anw);
     return self->query(key, value);
 } 
 
-int mcl::MirNativeWindow::perform_static(ANativeWindow*, int key, ...)
+int mcl::MirNativeWindow::perform_static(ANativeWindow*, int /* key */, ...)
 {
-    va_list vl;
-    va_start(vl,key);
     /* todo: kdub: the driver will send us requests sometimes via this hook. we will 
                    probably have to service these requests eventually */
-    
-    auto arg1 = va_arg(vl, int);
-    printf("perform! %i %i\n", key, arg1);
-    va_end(vl);
     return 0;
 } 
 
-int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* window, int interval)
+int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
 {
-    printf("int is %i\n", window->maxSwapInterval);
-    printf("setswapinterval! %i\n", interval);
     return 0;
 }
 
@@ -128,18 +116,15 @@ int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, st
 
 int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
-    printf("lock!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
-    printf("queue!\n");
     return 0;
 }
 
 int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
-    printf("cancel!\n");
     return 0;
 }

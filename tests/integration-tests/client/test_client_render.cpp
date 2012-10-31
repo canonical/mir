@@ -61,9 +61,11 @@ bool render_pattern(MirGraphicsRegion *region, bool check)
         {
             if (check)
             {
-                printf("BUFFER %X\n", pixel[j*region->width + i]);
                 if (pixel[j*region->width + i] != 0x12345689)
+                {
+                    printf("FALSE! 0x%X\n", (int)pixel[j*region->width + i]);
                     return false;
+                }
             }
             else
             {
@@ -293,22 +295,14 @@ static int render_accelerated()
 
     EGLNativeWindowType native_window = mir_get_egl_type(surface);
    
-    printf("PID %i\n", gettid()); 
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    printf("Here 1 %i\n", (int) disp);
     eglInitialize(disp, &major, &minor);
-    printf("Here 2 %i %i\n", major, minor);
 	
 	if( eglChooseConfig(disp, attribs, &egl_config, 1, &n) == EGL_FALSE)
         printf("error choose\n");;
-    printf("chooseconfig %i\n", n);
-    printf("chooseconfig num %i\n", (int) egl_config);
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-    printf("Here 4 EGL SURFACE: 0x%X\n",(int) egl_surface);
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    printf("Here 5 EGL CONTEXT: 0x%X\n", (int) context);
-    auto rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
-    printf("Here 6 %i\n", rc);
+    eglMakeCurrent(disp, egl_surface, egl_surface, context);
 
     glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -505,8 +499,6 @@ struct TestClientIPCRender : public testing::Test
         second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
 
         package = android_buffer->get_ipc_package();
-        for(auto it = package->ipc_data.begin(); it != package->ipc_data.end();it++)
-            printf("data: %i\n", *it);
         second_package = second_android_buffer->get_ipc_package();
 
     }
