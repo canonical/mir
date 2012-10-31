@@ -53,7 +53,7 @@ public:
     virtual geometry::PixelFormat pixel_format() const = 0;
 
     /* todo: this has to go away during generic client refactor */
-    virtual ANativeWindowBuffer* get_native_handle() const = 0;
+    virtual ANativeWindowBuffer* get_native_handle() = 0;
 };
 
 }

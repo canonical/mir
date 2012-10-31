@@ -89,7 +89,8 @@ geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-ANativeWindowBuffer* mcl::AndroidClientBuffer::get_native_handle() const
+ANativeWindowBuffer* mcl::AndroidClientBuffer::get_native_handle()
 {
-    return NULL;
+    printf("RETURNING\n");
+    return &native_window_buffer;
 }

@@ -135,7 +135,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(width, geom::Width());
     MOCK_CONST_METHOD0(height, geom::Height());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_CONST_METHOD0(get_native_handle, ANativeWindowBuffer*());
+    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
 };
 
 struct MockClientFactory : public mcl::ClientBufferFactory

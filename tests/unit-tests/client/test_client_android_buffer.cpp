@@ -284,9 +284,6 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
     buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
                                                         std::move(width), std::move(height), std::move(pf));
 
-    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
-        .Times(1)
-        .WillOnce(Return(empty_char));
     auto native_handle = buffer->get_native_handle();
 
     EXPECT_NE(native_handle, (ANativeWindowBuffer*) NULL);

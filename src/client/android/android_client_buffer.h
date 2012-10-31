@@ -42,7 +42,7 @@ public:
     geometry::Width width() const;
     geometry::Height height() const;
     geometry::PixelFormat pixel_format() const;
-    ANativeWindowBuffer* get_native_handle() const;
+    ANativeWindowBuffer* get_native_handle();
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
@@ -54,6 +54,8 @@ private:
 
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
+
+    ANativeWindowBuffer native_window_buffer;
 };
 
 }
