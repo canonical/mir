@@ -37,6 +37,7 @@ struct MemoryRegion
 {
     geometry::Width width;
     geometry::Height height;
+    geometry::Stride stride;
     geometry::PixelFormat format;
     std::shared_ptr<char> vaddr;
 };

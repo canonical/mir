@@ -262,6 +262,21 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_height)
     EXPECT_EQ(region->height, height_copy);
 }
 
+TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_stride)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+
+    EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
+        .Times(1)
+        .WillOnce(Return(empty_char));
+    auto region = buffer->secure_for_cpu_write();
+
+    EXPECT_EQ(region->stride, stride);
+}
+
 TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
 {
     using namespace testing;

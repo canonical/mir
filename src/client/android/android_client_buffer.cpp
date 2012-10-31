@@ -72,6 +72,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
     region->vaddr = vaddr;
     region->width = rect.size.width;
     region->height = rect.size.height;
+    region->stride = geom::Stride{creation_package->stride};
     region->format = buffer_pf;
 
     return region;

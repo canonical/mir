@@ -80,6 +80,7 @@ typedef struct MirGraphicsRegion
 {
     int width;
     int height;
+    int stride;
     MirPixelFormat pixel_format;
     char *vaddr;
 
