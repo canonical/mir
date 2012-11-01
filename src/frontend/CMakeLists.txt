@@ -28,7 +28,7 @@ set(
 )
 
 add_library( 
-  mirfrontend STATIC
+  mirfrontend SHARED
   
   ${FRONTEND_SOURCES}
 )
