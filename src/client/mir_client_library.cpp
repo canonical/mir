@@ -166,8 +166,8 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
-EGLNativeWindowType mir_get_egl_type(MirSurface *surface)
+MirEGLNativeWindowType mir_get_egl_type(MirSurface *surface)
 {
     auto platform = mcl::create_client_platform(); 
-    return platform->create_egl_window(surface);
+    return (MirEGLNativeWindowType) platform->create_egl_window(surface);
 }

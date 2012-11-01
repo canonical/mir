@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 
-#include <EGL/eglplatform.h>
 
 /* This header defines the MIR client library's C API.
  *
@@ -33,6 +32,7 @@ extern "C" {
  */
 
 /* Display server connection API */
+typedef void* MirEGLNativeWindowType;
 typedef struct MirConnection MirConnection;
 typedef struct MirWaitHandle MirWaitHandle;
 typedef struct MirSurface MirSurface;
@@ -129,7 +129,7 @@ MirWaitHandle* mir_surface_create(
 
 /* returns an EGLNativeWindowType for a surface that the client can use for 
    OpenGL ES 2.0 acceleration */
-EGLNativeWindowType mir_get_egl_type(MirSurface *surface);
+MirEGLNativeWindowType mir_get_egl_type(MirSurface *surface);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);

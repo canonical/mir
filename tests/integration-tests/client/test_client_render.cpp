@@ -126,61 +126,19 @@ bool render_second_pattern(MirGraphicsRegion *region, bool check)
     {
         for(j=0; j<region->height; j++)
         {
-            //should render red/blue/teal/white square
-            //lsb
-            if (j < region->height/2)
-            { 
-                if (i < region->width/2)
-                {
-                    if (check)
-                    {   
-                        if (pixel[j*region->width + i] != (int) 0xFFFF0000) return false;
-                    }
-                    else
-                    {
-                        pixel[j*region->width + i] = 0xFFFF0000;
-                    }
-                } 
-                else
-                { 
-                    if (check)
-                    {
-                        if (pixel[j*region->width + i] != (int)0xFFFFFF00) return false;
-                    }
-                    else
-                    {
-                        pixel[j*region->width + i] = 0xFFFFFF00;
-                    }
+            if (check)
+            {
+                if (pixel[j*region->width + i] != 0x78787878)
+               {
+                    return false;
                 }
             }
             else
-            { 
-                if (i < region->width/2)
-                {
-                    if (check)
-                    {
-                        if (pixel[j*region->width + i] != (int)0xFFFFFFFF) return false;
-                    }
-                    else
-                    {
-                        pixel[j*region->width + i] = 0xFFFFFFFF;
-                    }
-                } 
-                else
-                { 
-                    if (check)
-                    {
-                        if (pixel[j*region->width + i] != (int)0xFF0000FF) return false;
-                    }
-                    else
-                    {
-                        pixel[j*region->width + i] = 0xFF0000FF;
-                    }
-                }
+            {
+                pixel[j*region->width + i] = 0x78787878;
             }
         }
     }
-
     return true;
 }
 }
@@ -331,7 +289,7 @@ static int render_accelerated()
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType native_window = mir_get_egl_type(surface);
+    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
    
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
@@ -392,7 +350,7 @@ static int render_accelerated_double()
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    EGLNativeWindowType native_window = mir_get_egl_type(surface);
+    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
    
 	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
