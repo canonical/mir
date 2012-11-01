@@ -19,6 +19,7 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/android/android_client_buffer.h"
 
+#include <hardware/gralloc.h>
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
@@ -46,8 +47,7 @@ void mcl::AndroidClientBuffer::pack_native_window_buffer()
     native_window_buffer.height = (int) rect.size.height.as_uint32_t();
     native_window_buffer.width = (int) rect.size.width.as_uint32_t();
     native_window_buffer.stride = (int) rect.size.width.as_uint32_t();
-    native_window_buffer.format = 5;
-    native_window_buffer.usage = 0x300;
+    native_window_buffer.usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
 
     native_window_buffer.handle = native_handle.get();
     native_window_buffer.common.incRef = &incRef;

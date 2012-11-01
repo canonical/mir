@@ -20,6 +20,7 @@
 #include "mir_client/client_buffer_depository.h"
 #include "mir_client/mir_client_surface.h"
 
+#include <memory>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -36,7 +37,7 @@ TEST(ClientPlatformTest, platform_creates )
 {
     auto platform = mcl::create_client_platform(); 
     auto depository = platform->create_platform_depository(); 
-    EXPECT_NE(0, (int) depository.get());
+    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_native_window )
@@ -44,5 +45,5 @@ TEST(ClientPlatformTest, platform_creates_native_window )
     auto platform = mcl::create_client_platform();
     auto mock_client_surface = std::make_shared<MockClientSurface>();
     auto native_window = platform->create_egl_window(mock_client_surface.get()); 
-    EXPECT_NE(0, (int) native_window);
+    EXPECT_NE( native_window, (EGLNativeWindowType) NULL);
 }

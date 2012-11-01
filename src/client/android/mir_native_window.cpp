@@ -49,6 +49,7 @@ int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_
     int ret = 0;
     auto buffer = surface->get_current_buffer();
     *buffer_to_driver = buffer->get_native_handle();
+    (*buffer_to_driver)->format = driver_pixel_format;
     return ret;
 }
 

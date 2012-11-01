@@ -74,6 +74,7 @@ public:
     MirWaitHandle* disconnect();
 
     void populate(MirPlatformPackage& platform_package);
+    void populate(MirDisplayInfo& display_info);
 
     static bool is_valid(MirConnection *connection);
 private:

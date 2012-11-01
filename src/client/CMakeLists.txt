@@ -103,13 +103,13 @@ target_link_libraries(
 )
 
 add_executable(
-  ubuntu_ds_demo_client
+  mir_demo_client
   
   demo_client.c
 )
 
 target_link_libraries(
-  ubuntu_ds_demo_client
+  mir_demo_client
   
   mirclient
   mirprotobuf
@@ -137,13 +137,13 @@ target_link_libraries(
 )
 
 add_executable(
-  ubuntu_ds_demo_client_accelerated
+  mir_demo_client_accelerated
   
   demo_client_accelerated.c
 )
 
 target_link_libraries(
-  ubuntu_ds_demo_client_accelerated
+  mir_demo_client_accelerated
   
   mirclient
   mirprotobuf
@@ -157,7 +157,7 @@ target_link_libraries(
 )
 
 install(
-  TARGETS ubuntu_ds_demo_client
+  TARGETS mir_demo_client
   RUNTIME DESTINATION bin)
 
 set_target_properties(
