@@ -19,10 +19,10 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_model.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/frontend/registration_order_focus_strategy.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
+#include "mir_test/mock_application_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,23 +32,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-namespace
-{
-
-struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
-{
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
-};
-
-}
-
 TEST(RegistrationOrderFocusStrategy, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser());
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     mf::RegistrationOrderFocusStrategy focus_strategy(model);
     
@@ -68,7 +55,7 @@ TEST(RegistrationOrderFocusStrategy, focus_order)
 TEST(RegistrationOrderFocusStrategy, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser());
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     mf::RegistrationOrderFocusStrategy focus_strategy(model);
     
@@ -88,7 +75,7 @@ TEST(RegistrationOrderFocusStrategy, reverse_focus_order)
 TEST(RegistrationOrderFocusStrategy, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser());
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     mf::RegistrationOrderFocusStrategy focus_strategy(model);
     

@@ -19,12 +19,12 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_model.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/frontend/registration_order_focus_strategy.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_application_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,14 +36,6 @@ namespace ms = mir::surfaces;
 
 namespace
 {
-
-struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
-{
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
-};
 
 struct MockApplicationSession : public mf::ApplicationSession
 {
@@ -60,7 +52,7 @@ struct MockApplicationSession : public mf::ApplicationSession
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser);
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser);
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");

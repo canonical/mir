@@ -19,10 +19,10 @@
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_model.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_application_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,23 +32,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-namespace
-{
-
-struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
-{
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
-};
-
-}
-
 TEST(ApplicationSessionModel, iterate_registration_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new MockApplicationSurfaceOrganiser(), mir::EmptyDeleter());
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser(), mir::EmptyDeleter());
     mf::ApplicationSessionModel model;
     
     std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));

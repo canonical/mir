@@ -22,10 +22,10 @@
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_focus_strategy.h"
 #include "mir/frontend/application_focus_mechanism.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_application_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,14 +37,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
-{
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
-};
 
 struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
 {
@@ -71,7 +63,7 @@ struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 TEST(ApplicationManager, open_and_close_session)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
     MockFocusMechanism mechanism;
@@ -95,7 +87,7 @@ TEST(ApplicationManager, open_and_close_session)
 TEST(ApplicationManager, closing_session_removes_surfaces)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
     MockFocusMechanism mechanism;
@@ -134,7 +126,7 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
 TEST(ApplicationManager, new_applications_receive_focus)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusStrategy strategy;
     MockFocusMechanism mechanism;
