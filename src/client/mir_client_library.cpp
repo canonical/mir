@@ -166,7 +166,6 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
-/* fixme: does this leak? */
 EGLNativeWindowType mir_get_egl_type(MirSurface *surface)
 {
     auto platform = mcl::create_client_platform(); 
