@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#include <EGL/eglplatform.h>
+
 /* This header defines the MIR client library's C API.
  *
  * This API comprises a suite of free functions. The functions are asynchronous:
@@ -125,7 +127,6 @@ MirWaitHandle* mir_surface_create(
     mir_surface_lifecycle_callback callback,
     void *client_context);
 
-#include <EGL/eglplatform.h>
 /* returns an EGLNativeWindowType for a surface that the client can use for 
    OpenGL ES 2.0 acceleration */
 EGLNativeWindowType mir_get_egl_type(MirSurface *surface);
