@@ -23,7 +23,6 @@
 extern "C" {
 #endif
 
-
 /* This header defines the MIR client library's C API.
  *
  * This API comprises a suite of free functions. The functions are asynchronous:

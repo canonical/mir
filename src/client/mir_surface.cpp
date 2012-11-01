@@ -42,7 +42,6 @@ MirSurface::MirSurface(
       buffer_depository(depository),
       logger(logger)
 {
-
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
