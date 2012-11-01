@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
@@ -31,10 +32,12 @@
 mir::frontend::ApplicationProxy::ApplicationProxy(
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
+    std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     surface_organiser(surface_organiser),
     graphics_platform(graphics_platform),
+    graphics_display(graphics_display),
     listener(listener),
     next_surface_id(0),
     resource_cache(resource_cache)
@@ -51,12 +54,18 @@ void mir::frontend::ApplicationProxy::connect(
     listener->application_connect_called(app_name);
 
     auto ipc_package = graphics_platform->get_ipc_package();
+    auto platform = response->mutable_platform();
+    auto display_info = response->mutable_display_info();
 
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        response->add_data(*p);
+        platform->add_data(*p);
 
     for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        response->add_fd(*p);
+        platform->add_fd(*p);
+
+    auto view_area = graphics_display->view_area();
+    display_info->set_width(view_area.size.width.as_uint32_t());
+    display_info->set_height(view_area.size.height.as_uint32_t());
 
     resource_cache->save_resource(response, ipc_package);
     done->Run();

@@ -39,7 +39,6 @@ public:
     virtual EGLNativeWindowType create_egl_window(ClientSurface *surface) = 0;
 };
 
-// Create and return a new client platform.
 std::shared_ptr<ClientPlatform> create_client_platform();
 
 }

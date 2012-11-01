@@ -83,6 +83,12 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
+typedef struct MirDisplayInfo
+{
+    int width;
+    int height;
+} MirDisplayInfo;
+
 /*
  * Request a connection to the MIR server.
  * The supplied callback is called when the connection is established, or fails.
@@ -107,12 +113,19 @@ void mir_connection_release(MirConnection *connection);
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 MirWaitHandle* mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_lifecycle_callback callback,
     void *client_context);
+
+#include <EGL/eglplatform.h>
+/* returns an EGLNativeWindowType for a surface that the client can use for 
+   OpenGL ES 2.0 acceleration */
+EGLNativeWindowType mir_get_egl_type(MirSurface *surface);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);
@@ -145,10 +158,6 @@ MirWaitHandle* mir_surface_release(
     void *context);
 
 void mir_wait_for(MirWaitHandle* wait_handle);
-
-/* todo: this should go away. MirSurface should be put directly into eglCreateWindowSurface */
-#include <EGL/egl.h>
-EGLNativeWindowType mir_get_egl_type(MirSurface *surface);
 
 /* Return the id of the surface. (Only useful for debug output.) */
 int mir_debug_surface_id(MirSurface *surface);

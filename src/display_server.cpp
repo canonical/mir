@@ -48,7 +48,7 @@ struct mir::DisplayServer::Private
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          communicator{config.make_communicator(surface_controller)},
+          communicator{config.make_communicator(surface_controller, display)},
           exit(false)
     {
     }
