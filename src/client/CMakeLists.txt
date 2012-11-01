@@ -136,6 +136,8 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+
+if( MIR_PLATFORM STREQUAL "android")
 add_executable(
   mir_demo_client_accelerated
   
@@ -155,6 +157,7 @@ target_link_libraries(
   ${GLESv2_LIBRARIES}
 
 )
+endif()
 
 install(
   TARGETS mir_demo_client
