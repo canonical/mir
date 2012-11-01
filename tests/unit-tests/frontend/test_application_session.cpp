@@ -60,39 +60,11 @@ TEST(ApplicationSession, create_and_destroy_surface)
     EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
-    int surface_id = app_session.create_surface(params);
-    assert(surface_id >= 0);
+    auto surf = app_session.create_surface(params);
 
-    app_session.destroy_surface(surface_id);
+    app_session.destroy_surface(surf.lock());
 }
 
-
-TEST(ApplicationSession, surface_ids_increment)
-{
-    using namespace ::testing;
-
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            ms::a_surface().name,
-            buffer_bundle));
-
-    MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
-    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
-    EXPECT_CALL(organiser, create_surface(_)).Times(2);
-    EXPECT_CALL(organiser, destroy_surface(_)).Times(2);
-
-    ms::SurfaceCreationParameters params;
-    int surface_id = app_session.create_surface(params);
-    assert(surface_id >= 0);
-    int surface_id2 = app_session.create_surface(params);
-    assert(surface_id2 > surface_id);
-
-    app_session.destroy_surface(surface_id);
-    app_session.destroy_surface(surface_id2);
-}
 
 TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
@@ -112,12 +84,12 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
-    int surface_id = app_session.create_surface(params);
+    auto surf = app_session.create_surface(params);
 
     EXPECT_CALL(organiser, hide_surface(_, true)).Times(1); 
     app_session.hide();
     EXPECT_CALL(organiser, hide_surface(_, false)).Times(1); 
     app_session.show();
     
-    app_session.destroy_surface(surface_id);
+    app_session.destroy_surface(surf.lock());
 }

@@ -122,12 +122,10 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
     auto session = app_manager.open_session("Visual Basic Studio");
-    
-    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    
-    // TODO: Would be nice to set an expectation on surf but surf is ID type for integration with IPC layer...
-    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
+    auto surf = session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    
+    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
     app_manager.close_session(session);
 }

@@ -62,8 +62,7 @@ class ApplicationSession
   private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
 
-    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
-    Surfaces surfaces;
+    std::vector<std::shared_ptr<surfaces::Surface>> surfaces;
     
     std::string name;
 };

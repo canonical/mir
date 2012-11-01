@@ -39,7 +39,7 @@ mf::ApplicationSession::~ApplicationSession()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = it->second;
+        auto surface = *it;
         surface_organiser->destroy_surface(surface);
     }
 }
@@ -47,18 +47,18 @@ mf::ApplicationSession::~ApplicationSession()
 std::weak_ptr<ms::Surface> mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
-    surfaces.push_back(surf);
+    surfaces.push_back(surf.lock());
     
     return surf;
 }
 
 void mf::ApplicationSession::destroy_surface(std::shared_ptr<ms::Surface> surface)
 {
-  auto it = std::find(surfaces.begin(), surfaces.end(), surface);
+    auto it = std::find(surfaces.begin(), surfaces.end(), surface);
 
-  // FIXME: What goes on with no surface ID?
-  surfaces.erase(it);
-  surface_organiser->destroy_surface(surface);
+    // FIXME: What goes on with no surface ID?
+    surfaces.erase(it);
+    surface_organiser->destroy_surface(surface);
 }
 
 std::string mf::ApplicationSession::get_name()
@@ -68,18 +68,18 @@ std::string mf::ApplicationSession::get_name()
 
 void mf::ApplicationSession::hide()
 {
-   for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = it->second;
+        auto surface = *it;
         surface_organiser->hide_surface(surface, true);
     }
 }
 
 void mf::ApplicationSession::show()
 {
-   for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = it->second;
+        auto surface = *it;
         surface_organiser->hide_surface(surface, false);
     }
 }

@@ -35,6 +35,7 @@ namespace frontend
 class Communicator;
 class ProtobufIpcFactory;
 class ApplicationListener;
+class ApplicationManager;
 }
 namespace graphics
 {
@@ -60,6 +61,7 @@ public:
             std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
             std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -83,6 +85,8 @@ public:
             std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
             std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+    virtual std::shared_ptr<frontend::ApplicationManager>
+      make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
 
 private:
     std::string socket_file;
