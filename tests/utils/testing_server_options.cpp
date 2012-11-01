@@ -25,11 +25,14 @@
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
+namespace mir
+{
 namespace
 {
 class StubBuffer : public mc::Buffer
@@ -59,7 +62,7 @@ class StubDisplay : public mg::Display
 {
  public:
     geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
+    void clear() { std::this_thread::yield(); }
     bool post_update() { return true; }
 };
 
@@ -89,6 +92,7 @@ public:
     {
     }
 };
+}
 }
 
 std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()
