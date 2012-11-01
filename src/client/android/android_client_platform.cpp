@@ -57,3 +57,8 @@ EGLNativeWindowType mcl::AndroidClientPlatform::create_egl_window(ClientSurface 
 {
     return new mcl::MirNativeWindow(surface);
 }
+
+void mcl::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
+{
+    delete window;
+}

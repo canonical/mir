@@ -42,6 +42,7 @@ MirSurface::MirSurface(
       buffer_depository(depository),
       logger(logger)
 {
+
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
@@ -54,6 +55,7 @@ MirSurface::MirSurface(
 MirSurface::~MirSurface()
 {
     release_cpu_region();
+    platform->destroy_egl_window(accelerated_window);
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -158,6 +160,9 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 {
     process_incoming_buffer();
 
+    platform = mcl::create_client_platform();
+    accelerated_window = platform->create_egl_window(this);
+
     callback(this, context);
     create_wait_handle.result_received();
 }
@@ -215,4 +220,9 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         buffer_package.fd_items = 0;
         buffer_package.stride = 0;
     }
+}
+    
+EGLNativeWindowType MirSurface::generate_native_window()
+{
+    return accelerated_window;
 }

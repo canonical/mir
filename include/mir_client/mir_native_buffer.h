@@ -20,7 +20,11 @@
 #ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
+#ifdef ANDROID
 struct ANativeWindowBuffer;
 typedef ANativeWindowBuffer* MirNativeBuffer;
+#else
+typedef void* MirNativeBuffer;
+#endif
 
 #endif /* MIR_CLIENT_MIR_NATIVE_BUFFER_H_ */

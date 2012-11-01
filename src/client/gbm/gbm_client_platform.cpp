@@ -35,5 +35,9 @@ std::shared_ptr<mcl::ClientBufferDepository> mcl::GBMClientPlatform::create_plat
 
 EGLNativeWindowType mcl::GBMClientPlatform::create_egl_window(ClientSurface *)
 {
-    return (EGLNativeWindowType) NULL;
+    return (EGLNativeWindowType) -1;
+}
+
+void mcl::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
+{
 }
