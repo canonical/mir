@@ -36,15 +36,15 @@ void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::Application
   std::unique_lock<std::mutex> lk(guard);
   auto name = session->get_name();
 
-  apps[name] = session;
-  apps_as_added.push_back(name);
+  apps.push_back(session);
 }
 
 void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::ApplicationSession> session)
 {
   std::unique_lock<std::mutex> lk(guard);
 
-  apps.erase(session->get_name());
+  auto it = std::find(apps.begin(), apps.end(), session);
+  apps.erase(it);
 }
 
 void mf::ApplicationSessionModel::lock()
@@ -81,7 +81,7 @@ bool mf::ApplicationSessionModel::LockingIterator::is_valid() const
 
 const std::shared_ptr<mf::ApplicationSession> mf::ApplicationSessionModel::LockingIterator::operator*()
 {
-  auto app = model->apps[model->apps_as_added[it]];
+  auto app = model->apps[it];
   return app;
 }
 
