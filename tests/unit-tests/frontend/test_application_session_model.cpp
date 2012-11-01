@@ -35,7 +35,7 @@ namespace ms = mir::surfaces;
 TEST(ApplicationSessionModel, iterate_registration_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser(), mir::EmptyDeleter());
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     mf::ApplicationSessionModel model;
     
     std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
