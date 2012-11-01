@@ -22,7 +22,6 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/services/surface_factory.h"
 #include "mir/frontend/application_focus_strategy.h"
 #include "mir/frontend/application_focus_mechanism.h"
 #include "mir/frontend/registration_order_focus_strategy.h"
@@ -33,20 +32,14 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_application_surface_organiser.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
-namespace mfs = mir::frontend::services;
 namespace ms = mir::surfaces;
 
 namespace
 {
-struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
-{
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
-};
 
 struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 {
@@ -58,9 +51,9 @@ struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
-    mf::RegistrationOrderFocusStrategy strategy();
+    mf::RegistrationOrderFocusStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 
@@ -90,9 +83,9 @@ TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
 TEST(TestApplicationManagerAndFocusStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    MockApplicationSurfaceOrganiser organiser;
+    ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
-    mf::RegistrationOrderFocusStrategy strategy(model);
+    mf::RegistrationOrderFocusStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 
