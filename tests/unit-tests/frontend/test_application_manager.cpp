@@ -49,8 +49,8 @@ struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
 
 struct MockFocusStrategy: public mf::ApplicationFocusStrategy
 {
-    MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
-    MOCK_METHOD1(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD2(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD2(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
 };
   
 struct MockFocusMechanism: public mf::ApplicationFocusMechanism
@@ -78,7 +78,7 @@ TEST(ApplicationManager, open_and_close_session)
     EXPECT_CALL(mechanism, focus(_,_));
     EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
 
-    EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
+    EXPECT_CALL(strategy, previous_focus_app(_, _)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
 
     auto session = app_manager.open_session("Visual Basic Studio");
     app_manager.close_session(session);
@@ -112,7 +112,7 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(mechanism, focus(_,_)).Times(1);
     EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
 
-    EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
+    EXPECT_CALL(strategy, previous_focus_app(_, _)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
     auto session = app_manager.open_session("Visual Basic Studio");
 

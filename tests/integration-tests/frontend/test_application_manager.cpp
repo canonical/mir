@@ -60,7 +60,7 @@ TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
     using namespace ::testing;
     MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
-    mf::RegistrationOrderFocusStrategy strategy(model);
+    mf::RegistrationOrderFocusStrategy strategy();
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 

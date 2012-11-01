@@ -20,7 +20,6 @@
 #define MIR_FRONTEND_REGISTRATION_FOCUS_STRATEGY_H_
 
 #include "mir/frontend/application_focus_strategy.h"
-#include "mir/frontend/application_session_container.h"
 
 namespace mir
 {
@@ -29,18 +28,15 @@ namespace frontend
 class RegistrationOrderFocusStrategy : public ApplicationFocusStrategy
 {
 public:
-    explicit RegistrationOrderFocusStrategy(std::shared_ptr<ApplicationSessionContainer> app_container);
+    explicit RegistrationOrderFocusStrategy();
     virtual ~RegistrationOrderFocusStrategy() {}
 
-    std::weak_ptr<ApplicationSession> next_focus_app (std::shared_ptr<ApplicationSession> focused_app);
-    std::weak_ptr<ApplicationSession> previous_focus_app (std::shared_ptr<ApplicationSession> focused_app);
+    virtual std::weak_ptr<ApplicationSession> next_focus_app (std::shared_ptr<ApplicationSessionContainer> container, std::shared_ptr<ApplicationSession> focused_app);
+    virtual std::weak_ptr<ApplicationSession> previous_focus_app (std::shared_ptr<ApplicationSessionContainer> container, std::shared_ptr<ApplicationSession> focused_app);
 
 protected:
-    RegistrationOrderFocusStrategy() = default;
     RegistrationOrderFocusStrategy(const RegistrationOrderFocusStrategy&) = delete;
     RegistrationOrderFocusStrategy& operator=(const RegistrationOrderFocusStrategy&) = delete;
-private:
-    std::shared_ptr<ApplicationSessionContainer> app_container;
 };
 
 }
