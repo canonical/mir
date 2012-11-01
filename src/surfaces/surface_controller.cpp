@@ -39,7 +39,12 @@ void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> surface)
     surface_stack->destroy_surface(surface);
 }
 
-void ms::SurfaceController::hide_surface(std::weak_ptr<ms::Surface> surface, bool hidden)
+void ms::SurfaceController::hide_surface(std::weak_ptr<ms::Surface> surface)
 {
-  surface.lock()->set_hidden(hidden);
+  surface.lock()->set_hidden(true);
+}
+
+void ms::SurfaceController::show_surface(std::weak_ptr<ms::Surface> surface)
+{
+  surface.lock()->set_hidden(false);
 }

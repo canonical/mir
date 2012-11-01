@@ -42,28 +42,29 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
+    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
+    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
 };
 
-  struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
-  {
+struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
+{
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::ApplicationSession>));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::ApplicationSession>));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
     MOCK_METHOD0(iterator, std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator>());
-  };
+};
 
-  struct MockFocusStrategy: public mf::ApplicationFocusStrategy
-  {
+struct MockFocusStrategy: public mf::ApplicationFocusStrategy
+{
     MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
     MOCK_METHOD1(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession>));
-  };
+};
   
-  struct MockFocusMechanism: public mf::ApplicationFocusMechanism
-  {
+struct MockFocusMechanism: public mf::ApplicationFocusMechanism
+{
     MOCK_METHOD2(focus, void(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
-  };
+};
 
 }
 

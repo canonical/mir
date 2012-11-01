@@ -37,7 +37,8 @@ struct MockApplicationSurfaceOrganiser : public ms::ApplicationSurfaceOrganiser
 {
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(const ms::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> surface));
-    MOCK_METHOD2(hide_surface, void(std::weak_ptr<ms::Surface>,bool));
+    MOCK_METHOD1(hide_surface, void(std::weak_ptr<ms::Surface>));
+    MOCK_METHOD1(show_surface, void(std::weak_ptr<ms::Surface>));
 };
 
 }
@@ -86,9 +87,9 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     ms::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
-    EXPECT_CALL(organiser, hide_surface(_, true)).Times(1); 
+    EXPECT_CALL(organiser, hide_surface(_)).Times(1); 
     app_session.hide();
-    EXPECT_CALL(organiser, hide_surface(_, false)).Times(1); 
+    EXPECT_CALL(organiser, show_surface(_)).Times(1); 
     app_session.show();
     
     app_session.destroy_surface(surf.lock());

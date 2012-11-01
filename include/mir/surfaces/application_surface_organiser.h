@@ -37,7 +37,8 @@ class ApplicationSurfaceOrganiser
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
     virtual void destroy_surface(std::weak_ptr<Surface> surface) = 0;
     
-    virtual void hide_surface(std::weak_ptr<Surface> surface, bool hide) = 0;
+    virtual void hide_surface(std::weak_ptr<Surface> surface) = 0;
+    virtual void show_surface(std::weak_ptr<Surface> surface) = 0;
 
  protected:
     ApplicationSurfaceOrganiser() = default;
