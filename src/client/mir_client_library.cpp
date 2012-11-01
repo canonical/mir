@@ -136,6 +136,8 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buff
         buffer_package_out->data[i] = package->data[i]; 
         buffer_package_out->fd[i] = package->fd[i]; 
     }
+
+    buffer_package_out->stride = package->stride;
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
