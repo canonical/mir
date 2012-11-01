@@ -21,12 +21,12 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
-#include "mir_rpc_channel.h"
+#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"
-#include "mir_test/mock_server_tool.h"
-#include "mir_test/test_client.h"
+#include "mir_test/stub_server_tool.h"
+#include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_server.h"
 
 #include <gtest/gtest.h>
@@ -43,12 +43,12 @@ namespace mir
 {
 namespace test
 {
-struct MockServerFd : public MockServerTool
+struct StubServerFd : public StubServerTool
 {
     static const int file_descriptors = 5;
     int file_descriptor[file_descriptors];
 
-    MockServerFd()
+    StubServerFd()
     {
         for (auto i = file_descriptor; i != file_descriptor+file_descriptors; ++i)
             *i = 0;
@@ -81,61 +81,61 @@ struct MockServerFd : public MockServerTool
     }
 
 };
-const int MockServerFd::file_descriptors;
+const int StubServerFd::file_descriptors;
 }
 
 struct ProtobufAsioCommunicatorFD : public ::testing::Test
 {
     void SetUp()
     {
-        mock_server_tool = std::make_shared<mt::MockServerFd>();
-        mock_server = std::make_shared<mt::TestServer>("./test_socket", mock_server_tool);
+        stub_server_tool = std::make_shared<mt::StubServerFd>();
+        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
  
-        ::testing::Mock::VerifyAndClearExpectations(mock_server->factory.get());
-        EXPECT_CALL(*mock_server->factory, make_ipc_server()).Times(1);
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        mock_server->comm.start();
+        stub_server->comm.start();
 
-        mock_client = std::make_shared<mt::TestClient>("./test_socket");
-        mock_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 500);
+        stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
-        mock_server->comm.stop();
+        stub_server->comm.stop();
     }
 
-    std::shared_ptr<mt::TestClient> mock_client;
-    std::shared_ptr<mt::MockServerFd> mock_server_tool;
+    std::shared_ptr<mt::TestProtobufClient> stub_client;
+    std::shared_ptr<mt::StubServerFd> stub_server_tool;
 
 private:
-    std::shared_ptr<mt::TestServer> mock_server;
+    std::shared_ptr<mt::TestServer> stub_server;
 };
 
 TEST_F(ProtobufAsioCommunicatorFD, test_file_descriptors)
 {
     mir::protobuf::Buffer fds;
 
-    mock_client->display_server.test_file_descriptors(0, &mock_client->ignored, &fds,
-        google::protobuf::NewCallback(mock_client.get(), &mt::TestClient::tfd_done));
+    stub_client->display_server.test_file_descriptors(0, &stub_client->ignored, &fds,
+        google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::tfd_done));
 
-    mock_client->wait_for_tfd_done();
+    stub_client->wait_for_tfd_done();
 
-    ASSERT_EQ(mock_server_tool->file_descriptors, fds.fd_size());
+    ASSERT_EQ(stub_server_tool->file_descriptors, fds.fd_size());
 
-    for (int i  = 0; i != mock_server_tool->file_descriptors; ++i)
+    for (int i  = 0; i != stub_server_tool->file_descriptors; ++i)
     {
         int const fd = fds.fd(i);
         EXPECT_NE(-1, fd);
 
-        for (int j  = 0; j != mock_server_tool->file_descriptors; ++j)
+        for (int j  = 0; j != stub_server_tool->file_descriptors; ++j)
         {
-            EXPECT_NE(mock_server_tool->file_descriptor[j], fd);
+            EXPECT_NE(stub_server_tool->file_descriptor[j], fd);
         }
     }
 
-    mock_server_tool->close_files();
-    for (int i  = 0; i != mock_server_tool->file_descriptors; ++i)
+    stub_server_tool->close_files();
+    for (int i  = 0; i != stub_server_tool->file_descriptors; ++i)
         close(fds.fd(i));
 }
 }

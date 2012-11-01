@@ -16,8 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_display_helpers.h"
+#include "gbm_display_helpers.h"
+#include "mir/exception.h"
 
+
+#include <cstring>
+#include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
 
@@ -39,25 +43,32 @@ int mggh::DRMHelper::get_authenticated_fd()
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
-        throw std::runtime_error("Tried to get authenticated DRM fd before setting up the DRM master\n");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Tried to get authenticated DRM fd before setting up the DRM master"));
 
     int auth_fd = open_drm_device();
 
     if (auth_fd < 0)
-        throw std::runtime_error("Failed to open DRM device for authenticated fd\n");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to open DRM device for authenticated fd"));
 
     drm_magic_t magic;
-
-    if (drmGetMagic(auth_fd, &magic))
+    int ret = -1;
+    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
     {
         close(auth_fd);
-        throw std::runtime_error("Failed to get DRM device magic cookie\n");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(ret));
     }
 
-    if (drmAuthMagic(fd, magic))
+    if ((ret = drmAuthMagic(fd, magic)) < 0)
     {
         close(auth_fd);
-        throw std::runtime_error("Failed to authenticate DRM device magic cookie\n");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(ret));
     }
 
     return auth_fd;
@@ -76,6 +87,13 @@ int mggh::DRMHelper::open_drm_device()
     {
         tmp_fd = drmOpen(*driver, NULL);
         ++driver;
+    }
+
+    if (tmp_fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Problem opening DRM device")) << boost::errinfo_errno(-tmp_fd));
     }
 
     return tmp_fd;
@@ -97,7 +115,8 @@ void mggh::KMSHelper::setup(const DRMHelper& drm)
 
     resources = drmModeGetResources(drm.fd);
     if (!resources)
-        throw std::runtime_error("Couldn't get DRM resources\n");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Couldn't get DRM resources\n"));
 
     /* Find the first connected connector */
     for (i = 0; i < resources->count_connectors; i++)
@@ -117,7 +136,8 @@ void mggh::KMSHelper::setup(const DRMHelper& drm)
     }
 
     if (connector == NULL)
-        throw std::runtime_error("No active DRM connector found\n");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("No active DRM connector found\n"));
 
     /* Find the encoder connected to the selected connector */
     for (i = 0; i < resources->count_encoders; i++)
@@ -135,7 +155,8 @@ void mggh::KMSHelper::setup(const DRMHelper& drm)
     }
 
     if (encoder == NULL)
-        throw std::runtime_error("No connected DRM encoder found\n");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("No connected DRM encoder found\n"));
 
     mode = connector->modes[0];
 
@@ -169,7 +190,8 @@ void mggh::GBMHelper::setup(const DRMHelper& drm)
 {
     device = gbm_create_device(drm.fd);
     if (!device)
-        throw std::runtime_error("Failed to create GBM device");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create GBM device"));
 }
 
 void mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
@@ -178,7 +200,8 @@ void mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
                                  GBM_BO_FORMAT_XRGB8888,
                                  GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
     if (!surface)
-        throw std::runtime_error("Failed to create GBM scanout surface");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create GBM scanout surface"));
 }
 
 mggh::GBMHelper::~GBMHelper()
@@ -211,34 +234,45 @@ void mggh::EGLHelper::setup(const GBMHelper& gbm)
         EGL_NONE
     };
 
+    static const EGLint required_egl_version_major = 1;
+    static const EGLint required_egl_version_minor = 4;
+
     EGLint major, minor;
     EGLint num_configs;
 
     display = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm.device));
     if (display == EGL_NO_DISPLAY)
-        throw std::runtime_error("Failed to get EGL display");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to get EGL display"));
 
     if (eglInitialize(display, &major, &minor) == EGL_FALSE)
-        throw std::runtime_error("Failed to initialize EGL display");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to initialize EGL display"));
 
-    if ((major != 1) || (minor != 4))
-        throw std::runtime_error("Incompatible EGL version (!= 1.4) found");
-
+    if ((major != required_egl_version_major) || (minor != required_egl_version_minor))
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
+        // TODO: Insert egl version major and minor into exception
+    }
     eglBindAPI(EGL_OPENGL_ES_API);
-
+    
     if (!eglChooseConfig(display, config_attr, &config, 1, &num_configs) ||
         num_configs != 1)
     {
-        throw std::runtime_error("Failed to choose ARGB EGL config");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to choose ARGB EGL config"));
     }
 
     surface = eglCreateWindowSurface(display, config, gbm.surface, NULL);
     if(surface == EGL_NO_SURFACE)
-        throw std::runtime_error("Failed to create EGL window surface");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create EGL window surface"));
 
     context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);
     if (context == EGL_NO_CONTEXT)
-        throw std::runtime_error("Failed to create EGL context");
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create EGL context"));
 }
 
 mggh::EGLHelper::~EGLHelper()

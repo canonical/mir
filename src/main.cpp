@@ -16,15 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/options/program_option.h"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
-
-#include <boost/program_options/cmdline.hpp>
-#include <boost/program_options/config.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
-#include <boost/program_options/parsers.hpp>
 
 #include <csignal>
 #include <iostream>
@@ -69,15 +64,14 @@ void run_mir(std::string const& socket_file)
 }
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char const* argv[])
 try
 {
     namespace po = boost::program_options;
 
-    po::options_description desc("Options");
-    po::variables_map options;
+    mir::options::ProgramOption options;
 
-    std::string socket_file{"/data/tmp/mir_socket"};
+    po::options_description desc("Options");
 
     try
     {
@@ -85,8 +79,7 @@ try
             ("file,f", po::value<std::string>(), "<socket filename>")
             ("help,h", "this help text");
 
-        po::store(po::parse_command_line(argc, argv, desc), options);
-        po::notify(options);
+        options.parse_arguments(desc, argc, argv);
     }
     catch (po::error const& error)
     {
@@ -95,17 +88,13 @@ try
         return 1;
     }
 
-    if (options.count("help"))
+    if (options.is_set("help"))
     {
         std::cout << desc << "\n";
         return 1;
     }
-    else if (options.count("file"))
-    {
-        socket_file = options["file"].as<std::string>();
-    }
 
-    run_mir(socket_file);
+    run_mir(options.get("file", "/tmp/mir_socket"));
     return 0;
 }
 catch (std::exception const& error)

@@ -16,10 +16,10 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "display_server_test_fixture.h"
+#include "mir_test/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
-#include "client_buffer.h"
+#include "mir_client/client_buffer.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
@@ -280,6 +280,30 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
             mir_connection_get_platform(connection, &platform_package);
             EXPECT_GE(0, platform_package.data_items);
             EXPECT_GE(0, platform_package.fd_items);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+            ASSERT_TRUE(connection != NULL);
+
+            MirDisplayInfo display_info;
+            display_info.width = -1;
+            display_info.height = -1;
+
+            mir_connection_get_display_info(connection, &display_info);
+            EXPECT_GE(0, display_info.width);
+            EXPECT_GE(0, display_info.height);
 
             mir_connection_release(connection);
         }

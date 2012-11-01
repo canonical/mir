@@ -57,7 +57,7 @@ set(
   CLIENT_SOURCES
 
   android/android_client_buffer.cpp
-  android/android_client_buffer_factory.cpp
+  android/android_client_buffer_depository.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
   android/mir_native_window.cpp
@@ -69,7 +69,9 @@ if( MIR_PLATFORM STREQUAL "gbm")
 set(
   CLIENT_SOURCES
 
-  gbm/gbm_client_platform.cpp 
+  gbm/gbm_client_platform.cpp
+  gbm/gbm_client_buffer_depository.cpp
+  gbm/gbm_client_buffer.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -101,13 +103,13 @@ target_link_libraries(
 )
 
 add_executable(
-  ubuntu_ds_demo_client
+  mir_demo_client
   
   demo_client.c
 )
 
 target_link_libraries(
-  ubuntu_ds_demo_client
+  mir_demo_client
   
   mirclient
   mirprotobuf
@@ -156,7 +158,7 @@ target_link_libraries(
 
 
 install(
-  TARGETS ubuntu_ds_demo_client
+  TARGETS mir_demo_client
   RUNTIME DESTINATION bin)
 
 set_target_properties(

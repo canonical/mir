@@ -24,8 +24,15 @@ if(MIR_PLATFORM STREQUAL "android")
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_registrar.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_client_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_native_window.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_client_depository.cpp
+)
+endif()
+
+if(MIR_PLATFORM STREQUAL "gbm")
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_depository.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_buffer.cpp
 )
 endif()
 

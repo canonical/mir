@@ -20,7 +20,7 @@ set(
 
   application.cpp
   application_proxy.cpp
-  application_manager.cpp
+  null_application_listener.cpp
   protobuf_asio_communicator.cpp
 
   resource_cache.cpp
@@ -31,4 +31,10 @@ add_library(
   mirfrontend STATIC
   
   ${FRONTEND_SOURCES}
+)
+
+target_link_libraries(
+  mirfrontend
+
+  mirlogging
 )

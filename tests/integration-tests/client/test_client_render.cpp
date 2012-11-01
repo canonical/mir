@@ -22,11 +22,11 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/graphics/android/android_buffer.h"
-#include "mir/graphics/android/android_alloc_adaptor.h"
+#include "src/graphics/android/android_buffer.h"
+#include "src/graphics/android/android_alloc_adaptor.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
-#include "mir_test/mock_server_tool.h"
+#include "mir_test/stub_server_tool.h"
 #include "mir_test/test_server.h"
 #include "mir_test/empty_deleter.h"
 
@@ -429,7 +429,7 @@ static int exit_function()
 };
 
 /* server code */
-struct MockServerGenerator : public mt::MockServerTool
+struct MockServerGenerator : public mt::StubServerTool
 {
     MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
      : package(pack),

@@ -18,10 +18,9 @@
 
 #include "mir_client/mir_logger.h"
 
-#include "mir_connection.h"
-#include "mir_surface.h"
-
-#include "client_buffer_factory.h"
+#include "mir_client/mir_connection.h"
+#include "mir_client/mir_surface.h"
+#include "mir_client/client_buffer_depository.h"
 
 #include <cstddef>
 
@@ -49,8 +48,6 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
-    factory = mir::client::create_platform_factory();
-
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -69,7 +66,9 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, factory, params, callback, context);
+    auto depository = mir::client::create_platform_depository();
+    auto null_log = std::make_shared<mir::client::NullLogger>();
+    auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();
 }
 
@@ -180,19 +179,37 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    if (!connect_result.has_error())
+    if (!connect_result.has_error() && connect_result.has_platform())
     {
-        platform_package.data_items = connect_result.data_size();
-        for (int i = 0; i != connect_result.data_size(); ++i)
-            platform_package.data[i] = connect_result.data(i);
+        auto const& platform = connect_result.platform();
 
-        platform_package.fd_items = connect_result.fd_size();
-        for (int i = 0; i != connect_result.fd_size(); ++i)
-            platform_package.fd[i] = connect_result.fd(i);
+        platform_package.data_items = platform.data_size();
+        for (int i = 0; i != platform.data_size(); ++i)
+            platform_package.data[i] = platform.data(i);
+
+        platform_package.fd_items = platform.fd_size();
+        for (int i = 0; i != platform.fd_size(); ++i)
+            platform_package.fd[i] = platform.fd(i);
     }
     else
     {
         platform_package.data_items = 0;
         platform_package.fd_items = 0;
+    }
+}
+
+void MirConnection::populate(MirDisplayInfo& display_info)
+{
+    if (!connect_result.has_error() && connect_result.has_display_info())
+    {
+        auto const& connection_display_info = connect_result.display_info();
+
+        display_info.width = connection_display_info.width();
+        display_info.height = connection_display_info.height();
+    }
+    else
+    {
+        display_info.width = 0;
+        display_info.height = 0;
     }
 }

@@ -18,14 +18,14 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir_connection.h"
-#include "mir_surface.h"
+#include "mir_client/mir_connection.h"
+#include "mir_client/mir_surface.h"
 
-#include "mir_rpc_channel.h"
+#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"
 
-#include "android/mir_native_window.h"
+#include "mir_client/android/mir_native_window.h"
 
 #include <set>
 #include <unordered_set>
@@ -127,14 +127,27 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package)
+void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
 {
-    surface->populate(*buffer_package);
+    auto package = surface->get_current_buffer_package();
+
+    buffer_package_out->data_items = package->data_items;
+    buffer_package_out->fd_items = package->fd_items;
+    for(auto i=0; i<mir_buffer_package_max; i++)
+    {
+        buffer_package_out->data[i] = package->data[i]; 
+        buffer_package_out->fd[i] = package->fd[i]; 
+    }
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
 {
     connection->populate(*platform_package);
+}
+
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
+{
+    connection->populate(*display_info);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

@@ -18,7 +18,7 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_buffer.h"
+#include "gbm_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <GLES2/gl2.h>
@@ -107,7 +107,7 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 mgg::GBMBuffer::GBMBuffer(
     std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
         : gbm_handle(std::move(handle)), egl_image(EGL_NO_IMAGE_KHR),
-          gem_flink_name(0)
+          egl_display(EGL_NO_DISPLAY), gem_flink_name(0)
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
@@ -124,7 +124,7 @@ mgg::GBMBuffer::GBMBuffer(
 mgg::GBMBuffer::~GBMBuffer()
 {
     if (egl_image != EGL_NO_IMAGE_KHR)
-        (*eglDestroyImageKHR_)(eglGetCurrentDisplay(), egl_image);
+        (*eglDestroyImageKHR_)(egl_display, egl_image);
 }
 
 geom::Size mgg::GBMBuffer::size() const
@@ -172,7 +172,9 @@ void mgg::GBMBuffer::ensure_egl_image()
     {
         ensure_egl_image_extensions();
 
-        egl_image = (*eglCreateImageKHR_)(eglGetCurrentDisplay(), EGL_NO_CONTEXT,
+        egl_display = eglGetCurrentDisplay();
+
+        egl_image = (*eglCreateImageKHR_)(egl_display, EGL_NO_CONTEXT,
                                           EGL_NATIVE_PIXMAP_KHR, gbm_handle.get(),
                                           image_attrs);
         if (egl_image == EGL_NO_IMAGE_KHR)

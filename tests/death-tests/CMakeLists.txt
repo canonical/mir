@@ -18,7 +18,6 @@
 add_executable(
   death-tests
   test_buffer_allocation_strategy.cpp
-  test_application_manager_death.cpp
   test_process_death.cpp
 )
 
@@ -26,6 +25,7 @@ target_link_libraries(
   death-tests
   
   mir
+  miroptions
   mircompositor
   mirfrontend
   mirinput

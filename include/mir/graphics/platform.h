@@ -38,6 +38,8 @@ class Display;
 class PlatformIPCPackage;
 class BufferInitializer;
 
+class DisplayListener;
+
 class Platform
 {
 public:

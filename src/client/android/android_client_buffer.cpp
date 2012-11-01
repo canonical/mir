@@ -17,20 +17,21 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "android/android_client_buffer.h"
+#include "mir_client/android/android_client_buffer.h"
 
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
 mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                         std::shared_ptr<MirBufferPackage> && package, geom::Width w,
-                         geom::Height h, geom::PixelFormat pf)
- : buffer_registrar(registrar),
-   rect({{geom::X(0),geom::Y(0)}, geom::Size{ w, h}}),
+                         std::shared_ptr<MirBufferPackage> && package, geom::Size size,
+                         geom::PixelFormat pf)
+ : creation_package(package),
+   buffer_registrar(registrar),
+   rect({{geom::X(0),geom::Y(0)}, size}),
    buffer_pf(pf)
 {
-    auto buffer_package = std::move(package);
-    native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(buffer_package));
+    creation_package = std::move(package);
+    native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
     buffer_registrar->register_buffer(native_handle.get());
     
@@ -94,17 +95,19 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
     return region;
 }
 
-geom::Width mcl::AndroidClientBuffer::width() const
+geom::Size mcl::AndroidClientBuffer::size() const
 {
-    return rect.size.width;
+    return rect.size;
 }
-geom::Height mcl::AndroidClientBuffer::height() const
-{
-    return rect.size.height;
-}
+
 geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
 {
     return buffer_pf;
+}
+
+std::shared_ptr<MirBufferPackage> mcl::AndroidClientBuffer::get_buffer_package() const
+{
+    return creation_package;
 }
 
 ANativeWindowBuffer* mcl::AndroidClientBuffer::get_native_handle()

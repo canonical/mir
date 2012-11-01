@@ -152,12 +152,13 @@ TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
     auto mock_buffer = std::make_shared<mc::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
-
-    ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(AtLeast(0))
         .WillOnce(Return(graphics_resource));
+
+    ms::Surface surf(surface_name, mock_buffer_bundle );
+
     surf.advance_client_buffer();
 
     auto ret_id = surf.get_buffer_id();

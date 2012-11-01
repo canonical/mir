@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_rpc_channel.h"
+#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -149,15 +149,23 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
         }
     }
 
-    if (auto connection = dynamic_cast<mir::protobuf::Connection*>(response))
+    auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
+    if (!platform)
     {
-        connection->clear_fd();
+        auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
+        if (connection && connection->has_platform())
+            platform = connection->mutable_platform();
+    }
 
-        if (connection->fds_on_side_channel() > 0)
+    if (platform)
+    {
+        platform->clear_fd();
+
+        if (platform->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << connection->fds_on_side_channel() << " file descriptors" << std::endl;
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << platform->fds_on_side_channel() << " file descriptors" << std::endl;
 
-            std::vector<int32_t> buf(connection->fds_on_side_channel());
+            std::vector<int32_t> buf(platform->fds_on_side_channel());
 
             int received = 0;
             while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
@@ -166,7 +174,7 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
             log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
 
             for (int i = 0; i != received; ++i)
-                connection->add_fd(buf[i]);
+                platform->add_fd(buf[i]);
         }
     }
 
@@ -306,4 +314,14 @@ std::ostream& c::ConsoleLogger::debug()
     return null;
 }
 
+std::ostream& c::NullLogger::error()
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
+}
 
+std::ostream& c::NullLogger::debug()
+{
+    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
+    return null;
+}

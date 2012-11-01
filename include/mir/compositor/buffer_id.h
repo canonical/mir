@@ -50,25 +50,15 @@ class BufferIDUniqueGenerator
 {
 public:
     virtual BufferID generate_unique_id() = 0;
-
 };
 
 class BufferIDMonotonicIncreaseGenerator : public BufferIDUniqueGenerator
 {
 public:
-    BufferIDMonotonicIncreaseGenerator() : id_counter(0) {}
-   
-    BufferID generate_unique_id()
-    {
-        /* saturate at int max */
-        if (id_counter == 0xFFFFFFFF )
-            return BufferID{0};
-        return BufferID{++id_counter};
-    } 
+    BufferIDMonotonicIncreaseGenerator();   
+    BufferID generate_unique_id();
 private:
     uint32_t id_counter;
-
-
 };
 
 }

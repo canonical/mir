@@ -90,6 +90,12 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
+typedef struct MirDisplayInfo
+{
+    int width;
+    int height;
+} MirDisplayInfo;
+
 /*
  * Request a connection to the MIR server.
  * The supplied callback is called when the connection is established, or fails.
@@ -113,6 +119,8 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 void mir_connection_release(MirConnection *connection);
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 MirWaitHandle* mir_surface_create(

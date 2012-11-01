@@ -18,8 +18,13 @@
 
 #include "mir/server_configuration.h"
 
+#include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/graphics/display.h"
@@ -27,52 +32,52 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/logging/logger.h"
+#include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
+#include <boost/program_options/parsers.hpp>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 
 namespace
 {
-// TODO replace with a real renderer appropriate to the platform default
-class StubRenderer : public mg::Renderer
-{
-public:
-    virtual void render(mg::Renderable&)
-    {
-    }
-};
-
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
-        std::shared_ptr<mg::Platform> const& graphics_platform) :
+        std::shared_ptr<mf::ApplicationListener> const& listener,
+        std::shared_ptr<mg::Platform> const& graphics_platform,
+        std::shared_ptr<mg::Display> const& graphics_display) :
         surface_organiser(surface_organiser),
+        listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
-        graphics_platform(graphics_platform)
+        graphics_platform(graphics_platform),
+        graphics_display(graphics_display)
     {
     }
 
 private:
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
+    std::shared_ptr<mg::Display> const graphics_display;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationProxy>(
             surface_organiser,
             graphics_platform,
+            graphics_display,
+            listener,
             resource_cache());
     }
 
@@ -84,8 +89,30 @@ private:
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
-socket_file(socket_file)
+    socket_file(socket_file)
 {
+}
+
+std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_options()
+{
+    if (!options)
+    {
+        namespace po = boost::program_options;
+
+        po::options_description desc("Environment options");
+        desc.add_options()
+            ("android_sdk_dir", po::value<std::string>(), "dummy")
+            ("android_ndk_dir", po::value<std::string>(), "dummy")
+            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
+
+        auto options = std::make_shared<mir::options::ProgramOption>();
+
+        options->parse_environment(desc, "MIR_");
+
+        this->options = options;
+    }
+
+    return options;
 }
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_platform()
@@ -123,16 +150,27 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(
-        socket_file, make_ipc_factory(surface_organiser));
+        socket_file, make_ipc_factory(surface_organiser, display));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mg::Display> const& display)
 {
-    return std::make_shared<DefaultIpcFactory>(surface_organiser, make_graphics_platform());
+    return std::make_shared<DefaultIpcFactory>(
+        surface_organiser,
+        make_application_listener(),
+        make_graphics_platform(),
+        display);
 }
 
+std::shared_ptr<mf::ApplicationListener>
+mir::DefaultServerConfiguration::make_application_listener()
+{
+    return std::make_shared<mf::NullApplicationListener>();
+}

@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "android/android_registrar_gralloc.h"
-#include "android/android_client_buffer_factory.h"
-#include "mir_connection.h"
+#include "mir_client/android/android_registrar_gralloc.h"
+#include "mir_client/android/android_client_buffer_depository.h"
+#include "mir_client/mir_connection.h"
 
 namespace mcl=mir::client;
 
@@ -29,7 +29,7 @@ struct EmptyDeleter
     }
 };
 
-std::shared_ptr<mcl::ClientBufferFactory> mcl::create_platform_factory()
+std::shared_ptr<mcl::ClientBufferDepository> mcl::create_platform_depository()
 {
     const hw_module_t *hw_module;
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
@@ -43,5 +43,5 @@ std::shared_ptr<mcl::ClientBufferFactory> mcl::create_platform_factory()
     EmptyDeleter empty_del;
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
     auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
-    return std::make_shared<mcl::AndroidClientBufferFactory>(registrar);
+    return std::make_shared<mcl::AndroidClientBufferDepository>(registrar);
 }

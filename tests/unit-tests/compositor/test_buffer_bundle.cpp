@@ -147,10 +147,10 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same
     EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(num_iteration)
         .WillRepeatedly(Return(mock_buffer.get()));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
- 
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(1);
+
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
     for(auto i=0; i<num_iteration; i++)
     {
         auto buffer_resource = buffer_bundle.secure_client_buffer();
@@ -168,10 +168,11 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_th
         .WillOnce(Return(second_mock_buffer.get()))
         .WillRepeatedly(Return(third_mock_buffer.get()));
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
- 
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(3);
+
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+ 
     for(auto i=0; i<num_iteration; i++)
     {
         buffer_bundle.secure_client_buffer();

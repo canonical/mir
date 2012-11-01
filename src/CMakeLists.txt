@@ -25,6 +25,7 @@ add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(process/)
 add_subdirectory(surfaces/)
+add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(frontend/)
 
@@ -44,16 +45,19 @@ add_library(
 add_dependencies(mir mirprotobuf)
 
 add_executable(
-  ubuntu_display_server
+  mirds
   
   main.cpp
   ${MIR_3RD_PARTY_SOURCES}
 )
 
+set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
+
 target_link_libraries(
-  ubuntu_display_server
+  mirds
   
   mir
+  miroptions
   mircompositor
   mirfrontend
   mirgraphics
@@ -72,7 +76,7 @@ target_link_libraries(
 )
 
 install(
-  TARGETS ubuntu_display_server
+  TARGETS mirds
   RUNTIME DESTINATION bin)
   
 set(

@@ -17,9 +17,9 @@
  *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/graphics/gbm/gbm_buffer.h"
-#include "mir/graphics/gbm/gbm_platform.h"
+#include "gbm_buffer_allocator.h"
+#include "gbm_buffer.h"
+#include "gbm_platform.h"
 #include "mir/graphics/buffer_initializer.h"
 
 #include <stdexcept>

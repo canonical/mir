@@ -16,8 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "android/android_client_buffer.h"
 #include "mir_test/mock_android_registrar.h"
+#include "mir_client/android/android_client_buffer.h"
+#include "mir_client/mir_client_library.h"
 
 #include <memory>
 #include <algorithm>
@@ -41,6 +42,8 @@ protected:
         width = geom::Width(248);
         width_copy = geom::Width(width);
 
+        size = geom::Size{width, height};
+
         pf = geom::PixelFormat::rgba_8888;
         pf_copy = geom::PixelFormat(pf);
 
@@ -53,8 +56,10 @@ protected:
         EXPECT_CALL(*mock_android_registrar, unregister_buffer(_))
             .Times(AtLeast(0));
     }
+
     std::shared_ptr<MirBufferPackage> package;
     std::shared_ptr<MirBufferPackage> package_copy;
+    geom::Size size;
     geom::Height height, height_copy;
     geom::Width width, width_copy;
     geom::PixelFormat pf, pf_copy;
@@ -64,8 +69,7 @@ protected:
 
 TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
     EXPECT_EQ((int) package.get(), NULL);
 }
 
@@ -78,8 +82,7 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
         .Times(1)
         .WillOnce(SaveArg<0>(&handle));
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     ASSERT_NE((int)handle, NULL);
     ASSERT_EQ(handle->numFds, (int) package_copy->fd_items);
@@ -96,8 +99,7 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
         .Times(1)
         .WillOnce(SaveArg<0>(&handle));
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     ASSERT_NE((int)handle, NULL);
     ASSERT_EQ(handle->numInts, (int) package_copy->data_items);
@@ -114,8 +116,7 @@ TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, unregister_buffer(buffer_handle))
         .Times(1);
@@ -130,8 +131,7 @@ TEST_F(ClientAndroidBufferTest, client_sets_correct_version)
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
  
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     int total = 3 + buffer_handle->numFds + buffer_handle->numInts;
     EXPECT_EQ(buffer_handle->version, total);
@@ -140,8 +140,7 @@ TEST_F(ClientAndroidBufferTest, client_sets_correct_version)
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
 {
     using namespace testing;
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     std::shared_ptr<char> empty_char = std::make_shared<char>();
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
@@ -161,8 +160,7 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
     EXPECT_CALL(*mock_android_registrar, register_buffer(_))
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
@@ -175,30 +173,26 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_width_without_modifying)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
-    EXPECT_EQ(buffer->width(), width_copy);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+    EXPECT_EQ(buffer->size().width, width_copy);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_height_without_modifying)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
-    EXPECT_EQ(buffer->height(), height_copy);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+    EXPECT_EQ(buffer->size().height, height_copy);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_pf_without_modifying)
 {
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
     EXPECT_EQ(buffer->pixel_format(), pf_copy);
 }
 
 TEST_F(ClientAndroidBufferTest, check_bounds_on_secure)
 {
     using namespace testing;
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     geom::Point point{ geom::X(0), geom::Y(0)};
     geom::Size size{width_copy, height_copy};
@@ -217,8 +211,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_vaddr)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
@@ -233,8 +226,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_width)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
@@ -249,8 +241,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_height)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
@@ -265,8 +256,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     EXPECT_CALL(*mock_android_registrar, secure_for_cpu(_,_))
         .Times(1)
@@ -286,8 +276,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     auto native_handle = buffer->get_native_handle();
 
@@ -300,8 +289,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     auto native_handle = buffer->get_native_handle();
 
@@ -315,8 +303,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
-                                                        std::move(width), std::move(height), std::move(pf));
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     auto native_handle = buffer->get_native_handle();
 
@@ -326,5 +313,22 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
 
     native_handle->common.incRef(NULL);
     native_handle->common.decRef(NULL);
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_returns_creation_package)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+
+    auto package_return = buffer->get_buffer_package();
+
+    EXPECT_EQ(package_return->data_items, package_copy->data_items);
+    EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
+    for(auto i=0; i<mir_buffer_package_max; i++)
+        EXPECT_EQ(package_return->data[i], package_copy->data[i]);
+    for(auto i=0; i<mir_buffer_package_max; i++)
+        EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
 }
 

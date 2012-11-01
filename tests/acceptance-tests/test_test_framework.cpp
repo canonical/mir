@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "display_server_test_fixture.h"
+#include "mir_test/display_server_test_fixture.h"
 
 #include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
@@ -49,9 +49,7 @@ struct StubCommunicator : public mf::Communicator
 
 }
 
-//#define MIR_INCLUDE_TESTS_MEANT_TO_FAIL
-#ifdef MIR_INCLUDE_TESTS_MEANT_TO_FAIL
-TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
+TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 {
     struct Server : TestingServerConfiguration
     {
@@ -65,47 +63,12 @@ TEST_F(BespokeDisplayServerTestFixture, failing_server_side_test)
     launch_server_process(fail);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, failing_without_server)
+TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_without_server)
 {
 }
-#endif
 
-TEST_F(BespokeDisplayServerTestFixture, demonstrate_multiple_clients)
+TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
 {
-    struct Server : TestingServerConfiguration
-    {
-        void exec(mir::DisplayServer* )
-        {
-            // empty function
-        }
-    } empty_function;
-
-    launch_server_process(empty_function);
-
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            SCOPED_TRACE("Demo Client");
-        }
-    } demo;
-
-    for(int i = 0; i != 10; ++i)
-    {
-        launch_client_process(demo);
-    }
-}
-
-TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
-{
-    struct Server : TestingServerConfiguration
-    {
-        void exec(mir::DisplayServer* )
-        {
-            // empty function
-        }
-    } empty_function;
-
     struct Client : TestingClientConfiguration
     {
         void exec()
@@ -117,8 +80,6 @@ TEST_F(BespokeDisplayServerTestFixture, client_connects_and_disconnects)
             EXPECT_NO_THROW(application.disconnect());
         }
     } client_connects_and_disconnects;
-
-    launch_server_process(empty_function);
 
     launch_client_process(client_connects_and_disconnects);
 }

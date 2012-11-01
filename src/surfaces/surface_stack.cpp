@@ -34,54 +34,21 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-template<typename Lockable>
-struct LockGuardDeleter
-{
-    LockGuardDeleter(Lockable& lockable) : lockable(lockable)
-    {
-        lockable.lock();
-    }
-
-    template<typename T>
-    void operator()(T* t)
-    {
-        lockable.unlock();
-        delete t;
-    }
-
-    Lockable& lockable;
-};
-
-struct SurfaceStackSurfaceCollection : public ms::SurfaceCollection
-{
-public:
-    void invoke_for_each_surface(ms::SurfaceEnumerator& f)
-    {
-        for(auto it = surfaces.begin(); it != surfaces.end(); ++it)
-        {
-            f(**it);
-        }
-    }
-
-    std::set<std::shared_ptr<ms::Surface>> surfaces;
-};
-}
-
 ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
 }
 
-std::shared_ptr<ms::SurfaceCollection> ms::SurfaceStack::get_surfaces_in(geometry::Rectangle const& /*display_area*/)
+void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
-    LockGuardDeleter<std::mutex> lgd(guard);
-    SurfaceStackSurfaceCollection* view = new SurfaceStackSurfaceCollection();
-    view->surfaces = surfaces;
-    return std::shared_ptr<ms::SurfaceCollection>(view, lgd);
+    std::lock_guard<std::mutex> lock(guard);
+    for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
+    {
+        mg::Renderable& renderable = **it;
+        if (filter(renderable)) renderable_operator(renderable);
+    }
 }
+
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCreationParameters& params)
 {

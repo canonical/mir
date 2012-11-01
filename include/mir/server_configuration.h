@@ -18,6 +18,8 @@
 #ifndef MIR_SERVER_CONFIGURATION_H_
 #define MIR_SERVER_CONFIGURATION_H_
 
+#include "mir/options/program_option.h"
+
 #include <memory>
 #include <string>
 
@@ -32,6 +34,7 @@ namespace frontend
 {
 class Communicator;
 class ProtobufIpcFactory;
+class ApplicationListener;
 }
 namespace graphics
 {
@@ -48,6 +51,7 @@ class ApplicationSurfaceOrganiser;
 class ServerConfiguration
 {
 public:
+    virtual std::shared_ptr<options::Option> make_options() = 0;
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -55,7 +59,8 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
             std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -70,6 +75,7 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(std::string const& socket_file);
 
+    virtual std::shared_ptr<options::Option> make_options();
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -77,15 +83,21 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
             std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display);
 
 private:
     std::string socket_file;
+    std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
+    std::shared_ptr<frontend::ApplicationListener> application_listener;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+            std::shared_ptr<graphics::Display> const& display);
+
+    virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
 };
 }
 

@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client_surface.h"
-#include "android/mir_native_window.h"
-#include "client_buffer.h"
+#include "mir_client/mir_client_surface.h"
+#include "mir_client/android/mir_native_window.h"
+#include "mir_client/client_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -30,11 +30,11 @@ namespace
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(width, geom::Width());
-    MOCK_CONST_METHOD0(height, geom::Height());
+    MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 
     MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
+    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
 };
 
 struct MockMirSurface : public mcl::ClientSurface

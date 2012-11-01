@@ -33,39 +33,51 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
-    ms::Scenegraph* scenegraph,
+    RenderView *view,
     const std::shared_ptr<mg::Renderer>& renderer)
-        : scenegraph(scenegraph),
-          renderer(renderer)
+    : render_view(view),
+      renderer(renderer)
 {
-    assert(scenegraph);
+    assert(render_view);
     assert(renderer);
+}
+
+namespace
+{
+
+struct FilterForRenderablesInRegion : public mc::FilterForRenderables
+{
+    FilterForRenderablesInRegion(mir::geometry::Rectangle enclosing_region)
+        : enclosing_region(enclosing_region)
+    {
+    }
+    bool operator()(mg::Renderable& /*renderable*/)
+    {
+        return true;
+    }
+    mir::geometry::Rectangle& enclosing_region;
+};
+
+struct RenderingOperatorForRenderables : public mc::OperatorForRenderables
+{
+    RenderingOperatorForRenderables(mg::Renderer& renderer)
+        : renderer(renderer)
+    {
+    }
+    void operator()(mg::Renderable& renderable)
+    {
+        renderer.render(renderable);
+    }
+    mg::Renderer& renderer;
+};
 }
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    assert(display);
+    FilterForRenderablesInRegion selector(display->view_area());
+    RenderingOperatorForRenderables applicator(*renderer);
 
-    auto surfaces_in_view_area = scenegraph->get_surfaces_in(display->view_area());
-    assert(surfaces_in_view_area);
-
-    struct RenderingSurfaceEnumerator : public ms::SurfaceEnumerator
-    {
-        RenderingSurfaceEnumerator(mg::Renderer& renderer)
-                : renderer(renderer)
-        {
-        }
-        
-        void operator()(ms::Surface& surface)
-        {
-            renderer.render(surface);
-        }
-        
-        mg::Renderer& renderer;
-    } enumerator(*renderer);
-    
-    surfaces_in_view_area->invoke_for_each_surface(
-        enumerator);
+    render_view->for_each_if(selector, applicator);
     
     display->post_update();
 }
