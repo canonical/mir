@@ -24,6 +24,7 @@
 #include <memory>
 #include <cassert>
 #include <algorithm>
+#include <stdio.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
@@ -31,7 +32,6 @@ namespace ms = mir::surfaces;
 mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, std::string application_name) : surface_organiser(organiser),
                                                                                                                        name(application_name)
 {
-    next_surface_id = 0;
     assert(surface_organiser);
 }
 
@@ -44,22 +44,21 @@ mf::ApplicationSession::~ApplicationSession()
     }
 }
 
-int mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
-    surfaces[next_surface_id] = surf;
-    next_surface_id++;
+    surfaces.push_back(surf);
     
-    return (next_surface_id-1);
+    return surf;
 }
 
-void mf::ApplicationSession::destroy_surface(int surface_id)
+void mf::ApplicationSession::destroy_surface(std::shared_ptr<ms::Surface> surface)
 {
-    auto surface = surfaces[surface_id];
-    surface_organiser->destroy_surface(surface);
+  auto it = std::find(surfaces.begin(), surfaces.end(), surface);
 
-    // FIXME: What goes on with no surface ID?
-    surfaces.erase(surface_id);
+  // FIXME: What goes on with no surface ID?
+  surfaces.erase(it);
+  surface_organiser->destroy_surface(surface);
 }
 
 std::string mf::ApplicationSession::get_name()

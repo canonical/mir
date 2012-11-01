@@ -34,21 +34,22 @@ namespace surfaces
 
 class ApplicationSurfaceOrganiser;
 class SurfaceCreationParameters;
+class Surface;
 
 }
 
 namespace frontend
 {
 
-class ApplicationSession : public services::SurfaceFactory
+class ApplicationSession 
 {
  public:
     explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
     virtual ~ApplicationSession();
 
     // From SurfaceFactory
-    int create_surface(const surfaces::SurfaceCreationParameters& params);
-    void destroy_surface(int surface_id);
+    std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params);
+    void destroy_surface(std::shared_ptr<surfaces::Surface> surface);
     
     std::string get_name();
     
@@ -65,8 +66,6 @@ class ApplicationSession : public services::SurfaceFactory
     Surfaces surfaces;
     
     std::string name;
-
-    int next_surface_id;
 };
 
 }
