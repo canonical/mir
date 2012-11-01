@@ -142,7 +142,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
     auto buffer = allocator->alloc_buffer(size, pf);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_TRUE(ipc_package->ipc_fds.empty());
-    ASSERT_EQ(size_t(2), ipc_package->ipc_data.size());
+    ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
@@ -177,7 +177,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
         auto buffer = allocator->alloc_buffer(size, pf);
         auto ipc_package = buffer->get_ipc_package();
         ASSERT_EQ(gem_flink_name, static_cast<uint32_t>(ipc_package->ipc_data[0]));
-        ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->ipc_data[1]));
+        ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->stride));
     });
 }
 

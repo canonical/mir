@@ -31,14 +31,17 @@ struct MirGBMBufferTest : public testing::Test
     {
         width = geom::Width(12);
         height =geom::Height(14);
+        stride = geom::Stride(66);
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{width, height};
 
         package = std::make_shared<MirBufferPackage>();
+        package->stride = stride.as_uint32_t();
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
     }
     geom::Width width;
     geom::Height height;
+    geom::Stride stride;
     geom::PixelFormat pf;
     geom::Size size;
 
@@ -58,6 +61,15 @@ TEST_F(MirGBMBufferTest, width_and_height)
     EXPECT_EQ(buffer.pixel_format(), pf); 
 }
 
+TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
+{
+    using namespace testing;
+
+    mcl::GBMClientBuffer buffer(std::move(package), size, pf);
+
+    EXPECT_EQ(buffer.stride(), stride);
+}
+
 TEST_F(MirGBMBufferTest, buffer_returns_set_package)
 {
     using namespace testing;
@@ -67,6 +79,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
     auto package_return = buffer.get_buffer_package();
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
     EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
+    EXPECT_EQ(package_return->stride, package_copy->stride);
     for(auto i=0; i<mir_buffer_package_max; i++)
         EXPECT_EQ(package_return->data[i], package_copy->data[i]);
     for(auto i=0; i<mir_buffer_package_max; i++)

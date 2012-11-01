@@ -91,6 +91,7 @@ void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
     region_out.height = secured_region->height.as_uint32_t();
+    region_out.stride = secured_region->stride.as_uint32_t();
     //todo: fix
     region_out.pixel_format = mir_pixel_format_rgba_8888;
 
@@ -205,10 +206,13 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         {
             buffer_package.fd[i] = buffer.fd(i);
         }
+
+        buffer_package.stride = buffer.stride();
     }
     else
     {
         buffer_package.data_items = 0;
         buffer_package.fd_items = 0;
+        buffer_package.stride = 0;
     }
 }

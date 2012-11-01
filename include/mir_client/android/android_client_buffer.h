@@ -41,6 +41,7 @@ public:
     
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
+    geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     MirNativeBuffer get_native_handle();
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;

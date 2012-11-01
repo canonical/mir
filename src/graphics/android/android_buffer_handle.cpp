@@ -53,6 +53,9 @@ void mga::AndroidBufferHandleDefault::pack_ipc_package()
     {
         *it = native_handle->data[offset++];
     }
+
+    /* pack platform independent data */
+    ipc_package->stride = anw_buffer.stride;
 }
 
 EGLClientBuffer mga::AndroidBufferHandleDefault::get_egl_client_buffer() const

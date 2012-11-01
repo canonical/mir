@@ -90,6 +90,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
     region->vaddr = vaddr;
     region->width = rect.size.width;
     region->height = rect.size.height;
+    region->stride = geom::Stride{creation_package->stride};
     region->format = buffer_pf;
 
     return region;
@@ -98,6 +99,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::AndroidClientBuffer::secure_for_cpu_writ
 geom::Size mcl::AndroidClientBuffer::size() const
 {
     return rect.size;
+}
+
+geom::Stride mcl::AndroidClientBuffer::stride() const
+{
+    return geom::Stride{creation_package->stride};
 }
 
 geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
