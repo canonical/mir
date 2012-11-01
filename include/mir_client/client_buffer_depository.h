@@ -21,8 +21,8 @@
 #define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 
 #include <memory>
-#include <mir/geometry/pixel_format.h>
-#include <mir/geometry/size.h>
+#include "mir/geometry/pixel_format.h"
+#include "mir/geometry/size.h"
 
 class MirBufferPackage;
 

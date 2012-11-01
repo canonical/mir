@@ -287,4 +287,28 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
     launch_client_process(client_config);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+            ASSERT_TRUE(connection != NULL);
+
+            MirDisplayInfo display_info;
+            display_info.width = -1;
+            display_info.height = -1;
+
+            mir_connection_get_display_info(connection, &display_info);
+            EXPECT_GE(0, display_info.width);
+            EXPECT_GE(0, display_info.height);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
 }

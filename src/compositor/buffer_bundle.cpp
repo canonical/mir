@@ -62,15 +62,22 @@ struct ClientReleaseDeleter
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
+    std::shared_ptr<BufferIDUniqueGenerator> gen, 
     geometry::Size size,
-    geometry::PixelFormat pixel_format) :
-    swapper(std::move(swapper)), size(size), pixel_format(pixel_format)
+    geometry::PixelFormat pixel_format)
+     : generator(gen),
+       swapper(std::move(swapper)),
+       size(size),
+       pixel_format(pixel_format)
 {
 }
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
-    std::unique_ptr<BufferSwapper>&& swapper) :
-    swapper(std::move(swapper)), size(), pixel_format(geometry::PixelFormat::rgba_8888)
+    std::unique_ptr<BufferSwapper>&& swapper, std::shared_ptr<BufferIDUniqueGenerator> gen)
+     : generator(gen),
+       swapper(std::move(swapper)),
+       size(),
+       pixel_format(geometry::PixelFormat::rgba_8888)
 {
 }
 
@@ -89,7 +96,16 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
 {
     std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
 
-    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr);
+    auto it = buffer_to_id_map.find(bptr.get());
+    if (it == buffer_to_id_map.end())
+    {
+        auto new_id = generator->generate_unique_id();
+        buffer_to_id_map[bptr.get()] = new_id;
+    }
+
+    auto id = buffer_to_id_map[bptr.get()];
+    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr, id);
+
 }
 
 geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()

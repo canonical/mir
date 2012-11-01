@@ -36,6 +36,7 @@ class Surface;
 namespace graphics
 {
 class Platform;
+class Display;
 }
 
 namespace frontend
@@ -53,6 +54,7 @@ public:
     ApplicationProxy(
         std::shared_ptr<frontend::ApplicationManager> const& application_manager,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
+        std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -96,6 +98,7 @@ private:
     std::string app_name;
     std::shared_ptr<frontend::ApplicationManager> application_manager;
     std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;
 
     std::atomic<int> next_surface_id;

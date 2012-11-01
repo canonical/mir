@@ -136,11 +136,18 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buff
         buffer_package_out->data[i] = package->data[i]; 
         buffer_package_out->fd[i] = package->fd[i]; 
     }
+
+    buffer_package_out->stride = package->stride;
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
 {
     connection->populate(*platform_package);
+}
+
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
+{
+    connection->populate(*display_info);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

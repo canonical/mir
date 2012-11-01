@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 
@@ -48,8 +49,10 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
             size,
             pf));
 
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>(); 
     return std::make_shared<mc::BufferBundleSurfaces>(
         std::move(swapper),
+        generator,
         size,
         pf);
 }

@@ -33,6 +33,7 @@ class BufferBundle;
 class GraphicBufferClientResource;
 class GraphicRegion;
 struct BufferIPCPackage;
+class BufferID;
 }
 
 namespace surfaces
@@ -77,7 +78,10 @@ class Surface : public graphics::Renderable
     void set_hidden(bool is_hidden);
 
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package();
+
+    void advance_client_buffer();
+    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package() const;
+    compositor::BufferID get_buffer_id() const;
 
  private:
     std::string surface_name;

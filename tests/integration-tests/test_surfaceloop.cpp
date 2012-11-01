@@ -52,14 +52,6 @@ class StubBuffer : public mc::Buffer
     void bind_to_texture() {}
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
-
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MockBufferAllocationStrategy()
@@ -111,6 +103,15 @@ namespace mir
 {
 namespace
 {
+
+class StubDisplay : public mg::Display
+{
+ public:
+    geom::Rectangle view_area() const { return geom::Rectangle(); }
+    void clear() { std::this_thread::yield(); }
+    bool post_update() { return true; }
+};
+
 struct SurfaceSync
 {
     SurfaceSync() :
@@ -189,6 +190,7 @@ const int ClientConfigCommon::max_surface_count;
 }
 }
 
+using mir::StubDisplay;
 using mir::SurfaceSync;
 using mir::TestingClientConfiguration;
 using mir::ClientConfigCommon;

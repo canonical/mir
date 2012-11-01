@@ -13,29 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- * Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
+#include <limits>
+#include "mir/compositor/buffer_id.h"
 
-#include <vector>
+namespace mc=mir::compositor;
 
-namespace mir
+mc::BufferIDMonotonicIncreaseGenerator::BufferIDMonotonicIncreaseGenerator()
+ : id_counter(0) 
+{}
+
+mc::BufferID mc::BufferIDMonotonicIncreaseGenerator::generate_unique_id()
 {
-namespace compositor
-{
-
-struct BufferIPCPackage
-{
-    virtual ~BufferIPCPackage() {}
-    std::vector<int32_t> ipc_data;
-    std::vector<int32_t> ipc_fds;
-    int32_t stride;
-};
-
-}
-}
-
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_ */
+    if (id_counter == std::numeric_limits<uint32_t>::max() )
+        return mc::BufferID{0};
+    return mc::BufferID{++id_counter};
+} 

@@ -22,8 +22,8 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/graphics/android/android_buffer.h"
-#include "mir/graphics/android/android_alloc_adaptor.h"
+#include "src/graphics/android/android_buffer.h"
+#include "src/graphics/android/android_alloc_adaptor.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_test/stub_server_tool.h"
