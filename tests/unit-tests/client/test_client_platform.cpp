@@ -18,23 +18,31 @@
 
 #include "mir_client/client_platform.h"
 #include "mir_client/client_buffer_depository.h"
+#include "mir_client/mir_client_surface.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
-class ClientPlatformTest : public ::testing::Test
+
+struct MockClientSurface : public mcl::ClientSurface
 {
-protected:
-    virtual void SetUp()
-    {
-    }
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
+}; 
 
-};
-
-TEST_F(ClientPlatformTest, platform_creates )
+TEST(ClientPlatformTest, platform_creates )
 {
     auto platform = mcl::create_client_platform(); 
     auto depository = platform->create_platform_depository(); 
     EXPECT_NE(0, (int) depository.get());
 }
 
+TEST(ClientPlatformTest, platform_creates_native_window )
+{
+    auto platform = mcl::create_client_platform();
+    auto mock_client_surface = std::make_shared<MockClientSurface>();
+    auto native_window = platform->generate_egl_window(); 
+    EXPECT_NE(0, (int) native_window.get());
+}
