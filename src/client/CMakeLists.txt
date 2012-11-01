@@ -136,29 +136,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-
-if( MIR_PLATFORM STREQUAL "android")
-add_executable(
-  mir_demo_client_accelerated
-  
-  demo_client_accelerated.c
-)
-
-target_link_libraries(
-  mir_demo_client_accelerated
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-
-)
-endif()
-
 install(
   TARGETS mir_demo_client
   RUNTIME DESTINATION bin)
