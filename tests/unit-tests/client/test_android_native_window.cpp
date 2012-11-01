@@ -33,8 +33,8 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 
-    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
+    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
 };
 
 struct MockMirSurface : public mcl::ClientSurface

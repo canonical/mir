@@ -49,3 +49,8 @@ std::shared_ptr<MirBufferPackage> mcl::GBMClientBuffer::get_buffer_package() con
 {
     return creation_package;
 }
+
+MirNativeBuffer mcl::GBMClientBuffer::get_native_handle()
+{
+    return NULL;
+}

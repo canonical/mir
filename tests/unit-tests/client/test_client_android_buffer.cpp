@@ -276,7 +276,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
         .Times(1)
         .WillOnce(SaveArg<0>(&buffer_handle));
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        size, pf);
 
     auto native_handle = buffer->get_native_handle();
 
@@ -289,7 +290,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
     using namespace testing;
     std::shared_ptr<char> empty_char = std::make_shared<char>();
 
-    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        size, pf);
 
     auto native_handle = buffer->get_native_handle();
 

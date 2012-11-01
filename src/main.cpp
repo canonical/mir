@@ -27,8 +27,6 @@
 
 namespace
 {
-std::string socket_file{"/data/tmp/mir_socket"};
-
 // TODO: Get rid of the volatile-hack here and replace it with
 // some sane atomic-pointer once we have left GCC 4.4 behind.
 mir::DisplayServer* volatile signal_display_server;

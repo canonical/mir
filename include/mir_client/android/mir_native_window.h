@@ -41,13 +41,11 @@ private:
     static int queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer);
     static int cancelBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer);
 
-    /* anw functions */
     int query(int key, int* value) const;
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer);
 
-    /* todo: we should probably take ownership of the ClientSurface */
     ClientSurface * surface;
     int driver_pixel_format; 
 };

@@ -24,7 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_buffer_depository.h"
-#include "mir_wait_handle.h"
+#include "mir_client/mir_wait_handle.h"
 #include "mir_client/mir_client_surface.h"
 
 #include <memory>
@@ -65,11 +65,9 @@ public:
     MirWaitHandle* get_create_wait_handle();
 
     std::shared_ptr<MirBufferPackage> get_current_buffer_package();
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
-
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
-    MirAcceleration acceleration;
 
 private:
     void process_incoming_buffer();

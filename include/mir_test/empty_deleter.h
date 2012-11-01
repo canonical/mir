@@ -19,6 +19,12 @@
 #ifndef MIR_TEST_EMPTY_DELETER_H_
 #define MIR_TEST_EMPTY_DELETER_H_
 
+#include "mir/frontend/protobuf_asio_communicator.h"
+
+#include <gmock/gmock.h>
+
+namespace mf = mir::frontend;
+
 namespace mir
 {
 

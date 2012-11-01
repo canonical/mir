@@ -30,7 +30,7 @@ add_subdirectory(frontend/)
 add_subdirectory(process/)
 
 if (MIR_PLATFORM STREQUAL "android")
-#  add_subdirectory(graphics/android)
+  add_subdirectory(graphics/android)
 endif()
 
 if(MIR_PLATFORM STREQUAL "gbm")
@@ -67,6 +67,8 @@ target_link_libraries(
   mirprotobuf
 
   3rd_party
+
+  test-utils
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

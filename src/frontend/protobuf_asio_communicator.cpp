@@ -92,22 +92,9 @@ struct mfd::Session
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response)
-    {
-        const auto& fd = extract_fds_from(response);
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds(fd);
-        resource_cache->free_resource(response);
-    }
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
     {
-        const auto& fd = response->has_platform() ?
-            extract_fds_from(response->mutable_platform()) :
-            std::vector<int32_t>();
-
+        const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
         send_fds(fd);
         resource_cache->free_resource(response);

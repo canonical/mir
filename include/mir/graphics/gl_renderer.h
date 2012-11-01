@@ -19,8 +19,8 @@
 #ifndef MIR_GRAPHICS_GL_RENDERER_H_
 #define MIR_GRAPHICS_GL_RENDERER_H_
 
-#include "mir/graphics/renderer.h"
-#include "mir/geometry/size.h"
+#include <mir/graphics/renderer.h>
+#include <mir/geometry/size.h>
 #include <GLES2/gl2.h>
 
 namespace mir

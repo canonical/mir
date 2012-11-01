@@ -44,19 +44,12 @@ typedef enum MirPixelFormat
     mir_pixel_format_rgba_8888
 } MirPixelFormat;
 
-typedef enum MirAcceleration
-{
-    mir_unaccelerated = 0,
-    mir_opengl_acceleration = 1
-} MirAcceleration;
-
 typedef struct MirSurfaceParameters
 {
     char const *name;
     int width;
     int height;
     MirPixelFormat pixel_format;
-    MirAcceleration acceleration;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };
@@ -90,12 +83,6 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-typedef struct MirDisplayInfo
-{
-    int width;
-    int height;
-} MirDisplayInfo;
-
 /*
  * Request a connection to the MIR server.
  * The supplied callback is called when the connection is established, or fails.
@@ -119,8 +106,6 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 void mir_connection_release(MirConnection *connection);
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
-
-void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
 /* Request a new MIR surface on the supplied connection with the supplied parameters. */
 MirWaitHandle* mir_surface_create(

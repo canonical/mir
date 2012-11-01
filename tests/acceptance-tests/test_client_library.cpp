@@ -136,7 +136,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params =
-                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_unaccelerated};
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
 
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 
@@ -205,7 +205,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
                 old_surface_count = current_surface_count();
 
                 MirSurfaceParameters const request_params =
-                    {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_unaccelerated};
+                    {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
                 mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 
                 ASSERT_EQ(old_surface_count + 1, current_surface_count());
@@ -247,7 +247,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params =
-                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_unaccelerated};
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
             ASSERT_TRUE(surface != NULL);
 
@@ -280,30 +280,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
             mir_connection_get_platform(connection, &platform_package);
             EXPECT_GE(0, platform_package.data_items);
             EXPECT_GE(0, platform_package.fd_items);
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
-TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
-{
-    struct ClientConfig : ClientConfigCommon
-    {
-        void exec()
-        {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-            ASSERT_TRUE(connection != NULL);
-
-            MirDisplayInfo display_info;
-            display_info.width = -1;
-            display_info.height = -1;
-
-            mir_connection_get_display_info(connection, &display_info);
-            EXPECT_GE(0, display_info.width);
-            EXPECT_GE(0, display_info.height);
 
             mir_connection_release(connection);
         }

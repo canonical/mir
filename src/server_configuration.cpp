@@ -54,13 +54,11 @@ public:
     explicit DefaultIpcFactory(
         std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
         std::shared_ptr<mf::ApplicationListener> const& listener,
-        std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display) :
+        std::shared_ptr<mg::Platform> const& graphics_platform) :
         surface_organiser(surface_organiser),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
-        graphics_platform(graphics_platform),
-        graphics_display(graphics_display)
+        graphics_platform(graphics_platform)
     {
     }
 
@@ -69,14 +67,12 @@ private:
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationProxy>(
             surface_organiser,
             graphics_platform,
-            graphics_display,
             listener,
             resource_cache());
     }
@@ -101,8 +97,6 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
 
         po::options_description desc("Environment options");
         desc.add_options()
-            ("android_sdk_dir", po::value<std::string>(), "dummy")
-            ("android_ndk_dir", po::value<std::string>(), "dummy")
             ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
 
         auto options = std::make_shared<mir::options::ProgramOption>();
@@ -150,23 +144,20 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
-    std::shared_ptr<mg::Display> const& display)
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
     return std::make_shared<mf::ProtobufAsioCommunicator>(
-        socket_file, make_ipc_factory(surface_organiser, display));
+        socket_file, make_ipc_factory(surface_organiser));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
-    std::shared_ptr<mg::Display> const& display)
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
     return std::make_shared<DefaultIpcFactory>(
         surface_organiser,
         make_application_listener(),
-        make_graphics_platform(),
-        display);
+        make_graphics_platform());
 }
 
 std::shared_ptr<mf::ApplicationListener>

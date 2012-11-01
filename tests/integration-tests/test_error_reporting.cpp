@@ -237,9 +237,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&,
-            std::shared_ptr<mg::Display> const&)
-
+            std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&)
         {
             return std::make_shared<StubIpcFactory>();
         }
@@ -260,7 +258,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
             EXPECT_EQ(ErrorServer::test_exception_text, mir_connection_get_error_message(connection));
 
             MirSurfaceParameters const request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_unaccelerated};
+                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);

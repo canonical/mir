@@ -133,10 +133,10 @@ struct MockBuffer : public mcl::ClientBuffer
     }
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
+    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
 };
 
 struct MockClientDepository : public mcl::ClientBufferDepository
@@ -186,7 +186,7 @@ struct MirClientSurfaceTest : public testing::Test
 
         mock_depository = std::make_shared<mt::MockClientDepository>();
 
-        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888, mir_opengl_acceleration};
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
  
         /* connect dummy server */
         connect_parameters.set_application_name("test");

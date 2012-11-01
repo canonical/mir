@@ -20,11 +20,9 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include "mir_client/mir_native_buffer.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
-
-/* go away */
-#include <system/window.h>
 
 #include <memory>
 
@@ -51,8 +49,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
 
-    /* todo: this has to go away during generic client refactor */
-    virtual ANativeWindowBuffer* get_native_handle() = 0;
+    virtual MirNativeBuffer get_native_handle() = 0;
     virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
 };
 

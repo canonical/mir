@@ -145,11 +145,6 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
-{
-    connection->populate(*display_info);
-}
-
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
     surface->get_cpu_region( *graphics_region);
@@ -166,8 +161,8 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
-/* todo: go away */
+/* does this leak? */
 EGLNativeWindowType mir_get_egl_type(MirSurface *surface)
 {
-    return (EGLNativeWindowType) new mcl::MirNativeWindow(surface);
+    return new mcl::MirNativeWindow(surface);
 }

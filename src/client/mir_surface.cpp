@@ -62,8 +62,7 @@ MirSurfaceParameters MirSurface::get_parameters() const
         0,
         surface.width(),
         surface.height(),
-        static_cast<MirPixelFormat>(surface.pixel_format()),
-        acceleration};
+        static_cast<MirPixelFormat>(surface.pixel_format())};
 }
 
 char const * MirSurface::get_error_message()
@@ -213,4 +212,3 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         buffer_package.fd_items = 0;
     }
 }
-

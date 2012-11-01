@@ -116,10 +116,6 @@ int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
     return self->perform(key, args);
 } 
 
-int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
-{
-    return 0;
-}
 
 int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer)
 {   
@@ -127,15 +123,21 @@ int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, st
     return self->dequeueBuffer(buffer);
 }
 
-int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
-{
-    return 0;
-}
-
 int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<const mcl::MirNativeWindow*>(window);
     return self->queueBuffer(buffer);
+}
+
+/* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
+int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+{
+    return 0;
+}
+
+int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
 }
 
 int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)

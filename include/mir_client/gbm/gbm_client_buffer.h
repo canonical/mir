@@ -42,6 +42,7 @@ public:
     geometry::Size size() const;
     geometry::PixelFormat pixel_format() const;
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;
+    MirNativeBuffer get_native_handle();
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;

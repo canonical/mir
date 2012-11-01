@@ -44,7 +44,6 @@ struct MockIDGenerator: public mc::BufferIDUniqueGenerator
     mc::BufferID id;
 };
 
-
 class BufferBundleTest : public ::testing::Test
 {
 protected:
@@ -138,7 +137,6 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }
 
-
 TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same_buffer)
 {
     using namespace testing;
@@ -146,7 +144,7 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same
     int num_iteration = 5;
     EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(num_iteration)
-        .WillRepeatedly(Return(mock_buffer.get()));
+        .WillRepeatedly(Return(mock_buffer.get())); 
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(1);
 
@@ -167,7 +165,6 @@ TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_th
         .WillOnce(Return(mock_buffer.get()))
         .WillOnce(Return(second_mock_buffer.get()))
         .WillRepeatedly(Return(third_mock_buffer.get()));
-
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(3);
 

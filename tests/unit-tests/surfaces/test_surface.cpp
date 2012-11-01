@@ -136,7 +136,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
-        .Times(AtLeast(0))
+        .Times(1)
         .WillOnce(Return(graphics_resource));
     surf.advance_client_buffer();
 

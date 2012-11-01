@@ -19,15 +19,22 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/client_buffer_depository.h"
 
-#include <memory>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
+class ClientPlatformTest : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+    }
 
-TEST(ClientPlatformTest, platform_creates )
+};
+
+TEST_F(ClientPlatformTest, platform_creates )
 {
     auto platform = mcl::create_client_platform(); 
     auto depository = platform->create_platform_depository(); 
-    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
+    EXPECT_NE(0, (int) depository.get());
 }
 

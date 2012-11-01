@@ -39,6 +39,7 @@ struct TestingClientConfiguration
     virtual void exec() = 0;
 };
 
+
 class TestingProcessManager
 {
 public:

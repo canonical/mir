@@ -105,12 +105,12 @@ geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
+MirNativeBuffer mcl::AndroidClientBuffer::get_native_handle()
+{
+    return &native_window_buffer;
+}
+
 std::shared_ptr<MirBufferPackage> mcl::AndroidClientBuffer::get_buffer_package() const
 {
     return creation_package;
-}
-
-ANativeWindowBuffer* mcl::AndroidClientBuffer::get_native_handle()
-{
-    return &native_window_buffer;
 }

@@ -30,8 +30,8 @@
 #include "mir_test/test_server.h"
 #include "mir_test/empty_deleter.h"
 
-#include <hardware/gralloc.h>
 #include <GLES2/gl2.h>
+#include <hardware/gralloc.h>
 #include <gmock/gmock.h>
 
 #include "mir/thread/all.h"
@@ -315,7 +315,6 @@ static int render_accelerated()
     surface_parameters.width = test_width;
     surface_parameters.height = test_height;
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
-    surface_parameters.acceleration = mir_opengl_acceleration;
 
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
@@ -377,7 +376,6 @@ static int render_accelerated_double()
     surface_parameters.width = test_width;
     surface_parameters.height = test_height;
     surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
-    surface_parameters.acceleration = mir_opengl_acceleration;
 
     mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                       &create_callback, &surface));
@@ -429,9 +427,9 @@ static int exit_function()
 };
 
 /* server code */
-struct MockServerGenerator : public mt::StubServerTool
+struct StubServerGenerator : public mt::StubServerTool
 {
-    MockServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
+    StubServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
      : package(pack),
         next_received(false),
         next_allowed(false),
@@ -611,6 +609,12 @@ struct TestClientIPCRender : public testing::Test
         package = android_buffer->get_ipc_package();
         second_package = second_android_buffer->get_ipc_package();
 
+        /* start a server */
+        mock_server = std::make_shared<mt::StubServerGenerator>(package, 14);
+        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+        EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
+
+        test_server->comm.start();
     }
 
     void TearDown()
@@ -621,7 +625,7 @@ struct TestClientIPCRender : public testing::Test
     mir::protobuf::Connection response;
 
     std::shared_ptr<mt::TestServer> test_server;
-    std::shared_ptr<mt::MockServerGenerator> mock_server;
+    std::shared_ptr<mt::StubServerGenerator> mock_server;
 
     const hw_module_t    *hw_module;
     geom::Size size;
@@ -646,11 +650,6 @@ std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_dou
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
-    /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
-    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-    test_server->comm.start();
-
     /* activate client */
     render_single_client_process->cont();
 
@@ -663,11 +662,6 @@ TEST_F(TestClientIPCRender, test_render_single)
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
-    /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
-    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-    test_server->comm.start();
-
     /* activate client */
     render_double_client_process->cont();
 
@@ -687,11 +681,6 @@ TEST_F(TestClientIPCRender, test_render_double)
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 {
-    /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
-    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-    test_server->comm.start();
-
     /* activate client */
     second_render_with_same_buffer_client_process->cont();
 
@@ -708,11 +697,6 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
-    /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
-    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-    test_server->comm.start();
-
     /* activate client */
     render_accelerated_process->cont();
 
@@ -729,11 +713,6 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
-    /* start a server */
-    mock_server = std::make_shared<mt::MockServerGenerator>(package, 14);
-    test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
-    test_server->comm.start();
-
     /* activate client */
     render_accelerated_process_double->cont();
 

@@ -149,23 +149,15 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
         }
     }
 
-    auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
-    if (!platform)
+    if (auto connection = dynamic_cast<mir::protobuf::Connection*>(response))
     {
-        auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
-        if (connection && connection->has_platform())
-            platform = connection->mutable_platform();
-    }
+        connection->clear_fd();
 
-    if (platform)
-    {
-        platform->clear_fd();
-
-        if (platform->fds_on_side_channel() > 0)
+        if (connection->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << platform->fds_on_side_channel() << " file descriptors" << std::endl;
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << connection->fds_on_side_channel() << " file descriptors" << std::endl;
 
-            std::vector<int32_t> buf(platform->fds_on_side_channel());
+            std::vector<int32_t> buf(connection->fds_on_side_channel());
 
             int received = 0;
             while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
@@ -174,7 +166,7 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
             log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
 
             for (int i = 0; i != received; ++i)
-                platform->add_fd(buf[i]);
+                connection->add_fd(buf[i]);
         }
     }
 
