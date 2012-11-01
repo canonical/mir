@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/client_platform.h"
 #include "mir_client/client_buffer_depository.h"
 
 #include <cstddef>
@@ -48,6 +49,8 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
+    platform = mcl::create_client_platform();
+ 
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -66,7 +69,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto depository = mir::client::create_platform_depository();
+    auto depository = platform->create_platform_depository();
     auto null_log = std::make_shared<mir::client::NullLogger>();
     auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();

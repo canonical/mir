@@ -17,6 +17,7 @@
 
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_mir_surface.cpp
 )
 

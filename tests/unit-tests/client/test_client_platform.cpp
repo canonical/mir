@@ -13,22 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
-#include "mir_client/gbm/gbm_client_platform.h"
-#include "mir_client/gbm/gbm_client_buffer_depository.h"
+#include "mir_client/client_platform.h"
+#include "mir_client/client_buffer_depository.h"
+
+#include <memory>
+#include <gtest/gtest.h>
 
 namespace mcl=mir::client;
-namespace geom=mir::geometry;
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+TEST(ClientPlatformTest, platform_creates )
 {
-    return std::make_shared<mcl::GBMClientPlatform>();
+    auto platform = mcl::create_client_platform(); 
+    auto depository = platform->create_platform_depository(); 
+    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mcl::GBMClientPlatform::create_platform_depository ()
-{
-    return std::make_shared<mcl::GBMClientBufferDepository>();
-}
