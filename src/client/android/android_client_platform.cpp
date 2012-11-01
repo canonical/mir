@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir_client/android/mir_native_window.h"
 #include "mir_client/android/android_client_platform.h"
 #include "mir_client/android/android_registrar_gralloc.h"
 #include "mir_client/android/android_client_buffer_depository.h"
@@ -50,4 +51,9 @@ std::shared_ptr<mcl::ClientBufferDepository> mcl::AndroidClientPlatform::create_
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
     auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
     return std::make_shared<mcl::AndroidClientBufferDepository>(registrar);
+}
+
+EGLNativeWindowType mcl::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+{
+    return new mcl::MirNativeWindow(surface);
 }

@@ -43,6 +43,6 @@ TEST(ClientPlatformTest, platform_creates_native_window )
 {
     auto platform = mcl::create_client_platform();
     auto mock_client_surface = std::make_shared<MockClientSurface>();
-    auto native_window = platform->generate_egl_window(); 
-    EXPECT_NE(0, (int) native_window.get());
+    auto native_window = platform->create_egl_window(mock_client_surface.get()); 
+    EXPECT_NE(0, (int) native_window);
 }

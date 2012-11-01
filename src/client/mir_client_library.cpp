@@ -25,7 +25,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_client/android/mir_native_window.h"
 
 #include <set>
 #include <unordered_set>
@@ -164,5 +163,6 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 /* does this leak? */
 EGLNativeWindowType mir_get_egl_type(MirSurface *surface)
 {
-    return new mcl::MirNativeWindow(surface);
+    auto platform = mcl::create_client_platform(); 
+    return platform->create_egl_window(surface);
 }
