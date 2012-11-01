@@ -19,11 +19,8 @@
 #ifndef MIR_FRONTEND_APPLICATION_SESSION_H_
 #define MIR_FRONTEND_APPLICATION_SESSION_H_
 
-#include "mir/frontend/services/surface_factory.h"
-
 #include <memory>
 #include <string>
-#include <map>
 #include <vector>
 
 namespace mir
