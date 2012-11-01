@@ -88,6 +88,7 @@ struct MockServerPackageGenerator : public StubServerTool
         {
             server_package.data[i] = i*2;
         }
+        server_package.stride = 66;
     }
  
     MirBufferPackage server_package;
@@ -113,6 +114,8 @@ struct MockServerPackageGenerator : public StubServerTool
         {
             response->add_fd(server_package.fd[i]);
         }
+
+        response->set_stride(server_package.stride);
     }
 
     void create_surface_response(mir::protobuf::Surface* response)
@@ -134,6 +137,7 @@ struct MockBuffer : public mcl::ClientBuffer
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
 };
@@ -275,6 +279,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     /* check for same contents */
     ASSERT_EQ(submitted_package->data_items, mock_server_tool->server_package.data_items);
     ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
+    ASSERT_EQ(submitted_package->stride,   mock_server_tool->server_package.stride);
     for(auto i=0; i< submitted_package->data_items; i++)
         EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
 }

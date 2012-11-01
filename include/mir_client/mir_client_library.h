@@ -72,12 +72,15 @@ typedef struct MirBufferPackage
 
     int data[mir_buffer_package_max];
     int fd[mir_buffer_package_max];
+
+    int stride;
 } MirBufferPackage;
 
 typedef struct MirGraphicsRegion
 {
     int width;
     int height;
+    int stride;
     MirPixelFormat pixel_format;
     char *vaddr;
 
