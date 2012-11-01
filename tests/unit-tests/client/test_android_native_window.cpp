@@ -29,6 +29,12 @@ namespace
 {
 struct MockClientBuffer : public mcl::ClientBuffer
 {
+    MockClientBuffer()
+    {
+        using namespace testing;
+        ON_CALL(*this, get_native_handle())
+            .WillByDefault(Return(&buffer));
+    }
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
@@ -36,6 +42,9 @@ struct MockClientBuffer : public mcl::ClientBuffer
 
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
     MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
+
+    ANativeWindowBuffer buffer;
+    native_handle_t handle;
 };
 
 struct MockMirSurface : public mcl::ClientSurface
@@ -265,13 +274,15 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
 {
     using namespace testing;
     ANativeWindow* anw;
-    ANativeWindowBuffer* native_window_ptr = (ANativeWindowBuffer*) 0x4849;
+    native_handle_t handle;
+    ANativeWindowBuffer buffer;
+    buffer.handle = &handle; 
  
     ANativeWindowBuffer* tmp;
 
     EXPECT_CALL(*mock_client_buffer, get_native_handle())
         .Times(1)
-        .WillOnce(Return(native_window_ptr)); 
+        .WillOnce(Return(&buffer)); 
     EXPECT_CALL(*mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
@@ -280,7 +291,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
 
     anw->dequeueBuffer(anw, &tmp);
    
-    EXPECT_EQ(native_window_ptr, tmp); 
+    EXPECT_EQ(&buffer, tmp); 
     delete anw;
 }
 
