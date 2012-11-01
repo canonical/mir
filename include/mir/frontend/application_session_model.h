@@ -77,8 +77,7 @@ class ApplicationSessionModel : public ApplicationSessionContainer
     ApplicationSessionModel& operator=(const ApplicationSessionModel&) = delete;
 
   private:
-    std::map<std::string, std::shared_ptr<ApplicationSession>> apps;
-    std::vector<std::string> apps_as_added;
+    std::vector<std::shared_ptr<ApplicationSession>> apps;
     std::mutex guard;
 };
 
