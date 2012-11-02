@@ -33,71 +33,70 @@ mf::ApplicationSessionModel::ApplicationSessionModel()
 
 void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::ApplicationSession> session)
 {
-  std::unique_lock<std::mutex> lk(guard);
-  auto name = session->get_name();
+    std::unique_lock<std::mutex> lk(guard);
+    auto name = session->get_name();
 
-  apps.push_back(session);
+    apps.push_back(session);
 }
 
 void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::ApplicationSession> session)
 {
-  std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock<std::mutex> lk(guard);
 
-  auto it = std::find(apps.begin(), apps.end(), session);
-  apps.erase(it);
+    auto it = std::find(apps.begin(), apps.end(), session);
+    apps.erase(it);
 }
 
 void mf::ApplicationSessionModel::lock()
 {
-  guard.lock();
+    guard.lock();
 }
 
 void mf::ApplicationSessionModel::unlock()
 {
-  guard.unlock();
+    guard.unlock();
 }
 
-mf::ApplicationSessionModel::LockingIterator::LockingIterator(ApplicationSessionModel *model,
-							      size_t index) : model(model),
-									      it(index)
+mf::ApplicationSessionModel::LockingIterator::LockingIterator(ApplicationSessionModel *model, size_t index) : model(model),
+                                                                                                              it(index)
 {
   
 }
 
 void mf::ApplicationSessionModel::LockingIterator::advance()
 {
-  it += 1;
+    it += 1;
 }
 
 void mf::ApplicationSessionModel::LockingIterator::reset()
 {
-  it = 0;
+    it = 0;
 }
 
 bool mf::ApplicationSessionModel::LockingIterator::is_valid() const
 {
-  return it < model->apps.size();
+    return it < model->apps.size();
 }
 
 const std::shared_ptr<mf::ApplicationSession> mf::ApplicationSessionModel::LockingIterator::operator*()
 {
-  auto app = model->apps[it];
-  return app;
+    auto app = model->apps[it];
+    return app;
 }
 
 mf::ApplicationSessionModel::LockingIterator::~LockingIterator()
 {
-  model->unlock();
+    model->unlock();
 }
 
 std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator> mf::ApplicationSessionModel::iterator()
 {
-  lock();
+    lock();
   
-  std::shared_ptr<mf::ApplicationSessionModel::LockingIterator> it(
-								   new mf::ApplicationSessionModel::LockingIterator(this, 0));
+    std::shared_ptr<mf::ApplicationSessionModel::LockingIterator> it(
+        new mf::ApplicationSessionModel::LockingIterator(this, 0));
   
-  return it;
+    return it;
 }
 
 
