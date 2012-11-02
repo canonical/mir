@@ -40,7 +40,7 @@ namespace frontend
 
 class ApplicationSession 
 {
- public:
+public:
     explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
     virtual ~ApplicationSession();
 
@@ -52,15 +52,13 @@ class ApplicationSession
     
     virtual void hide();
     virtual void show();
-  protected:
+protected:
     ApplicationSession(const ApplicationSession&) = delete;
     ApplicationSession& operator=(const ApplicationSession&) = delete;
 
-  private:
+private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
-
     std::vector<std::shared_ptr<surfaces::Surface>> surfaces;
-    
     std::string name;
 };
 

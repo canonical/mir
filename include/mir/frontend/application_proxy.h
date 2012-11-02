@@ -103,6 +103,8 @@ private:
 
     std::atomic<int> next_surface_id;
 
+    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
+    Surfaces surfaces;
     std::shared_ptr<ResourceCache> resource_cache;
 
     std::shared_ptr<frontend::ApplicationSession> application_session;
