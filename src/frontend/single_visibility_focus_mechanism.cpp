@@ -31,7 +31,6 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-// Probably dont need the organiser here
 void mf::SingleVisibilityFocusMechanism::focus(std::shared_ptr<mf::ApplicationSessionContainer> session_model,
                                                std::shared_ptr<mf::ApplicationSession> focus_session)
 {
