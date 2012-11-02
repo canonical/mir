@@ -41,10 +41,10 @@ void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> surface)
 
 void ms::SurfaceController::hide_surface(std::weak_ptr<ms::Surface> surface)
 {
-  surface.lock()->set_hidden(true);
+    surface.lock()->set_hidden(true);
 }
 
 void ms::SurfaceController::show_surface(std::weak_ptr<ms::Surface> surface)
 {
-  surface.lock()->set_hidden(false);
+    surface.lock()->set_hidden(false);
 }
