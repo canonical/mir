@@ -139,7 +139,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
                 { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
 
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
-            
+
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
