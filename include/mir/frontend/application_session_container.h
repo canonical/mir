@@ -29,7 +29,7 @@ class ApplicationSession;
 
 class ApplicationSessionContainer
 {
- public:
+public:
     virtual ~ApplicationSessionContainer() {}
 
     virtual void insert_session(std::shared_ptr<ApplicationSession> session) = 0;
@@ -41,21 +41,20 @@ class ApplicationSessionContainer
     class LockingIterator
     {
     public:
-      virtual void advance() = 0;
-      virtual bool is_valid() const = 0;
-      virtual void reset() = 0;
-      virtual const std::shared_ptr<ApplicationSession> operator*() = 0;
-      virtual ~LockingIterator() {};
+        virtual void advance() = 0;
+        virtual bool is_valid() const = 0;
+        virtual void reset() = 0;
+        virtual const std::shared_ptr<ApplicationSession> operator*() = 0;
+        virtual ~LockingIterator() {};
     protected:
-      //      friend class ApplicationSessionContainer;
-
-      LockingIterator() = default;
+        friend class ApplicationSessionContainer;
+        LockingIterator() = default;
     };
 
     virtual std::shared_ptr<ApplicationSessionContainer::LockingIterator> iterator() = 0;
 
 
- protected:
+protected:
     ApplicationSessionContainer() = default;
     ApplicationSessionContainer(const ApplicationSessionContainer&) = delete;
     ApplicationSessionContainer& operator=(const ApplicationSessionContainer&) = delete;
