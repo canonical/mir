@@ -98,7 +98,7 @@ bool ms::Surface::hidden() const
 
 void ms::Surface::set_hidden(bool hide)
 {
-  is_hidden = hide;
+    is_hidden = hide;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the 
