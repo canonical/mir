@@ -47,7 +47,7 @@ class ApplicationManager
     virtual ~ApplicationManager() {}
 
     std::shared_ptr<ApplicationSession> open_session(std::string name);
-    void close_session(std::shared_ptr<ApplicationSession> surface);
+    void close_session(std::shared_ptr<ApplicationSession> session);
     
     void focus_next();
 
