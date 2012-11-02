@@ -37,7 +37,7 @@ class ApplicationSession;
 
 class ApplicationSessionModel : public ApplicationSessionContainer
 {
- public:
+public:
     explicit ApplicationSessionModel();
     virtual ~ApplicationSessionModel() {}
     
@@ -50,17 +50,16 @@ class ApplicationSessionModel : public ApplicationSessionContainer
     class LockingIterator : public ApplicationSessionContainer::LockingIterator
     {
     public:
-      void advance();
-      bool is_valid() const;
-      void reset();
-      const std::shared_ptr<ApplicationSession> operator*();
-      virtual ~LockingIterator();
+        void advance();
+        bool is_valid() const;
+        void reset();
+        const std::shared_ptr<ApplicationSession> operator*();
+        virtual ~LockingIterator();
     protected:
-      friend class ApplicationSessionModel;
+        friend class ApplicationSessionModel;
       
-      LockingIterator(
-		      ApplicationSessionModel *model,
-		      size_t index);
+        LockingIterator(ApplicationSessionModel *model,
+                        size_t index);
 
       
     private:
@@ -72,11 +71,11 @@ class ApplicationSessionModel : public ApplicationSessionContainer
     std::shared_ptr<ApplicationSessionContainer::LockingIterator> iterator();
     
 
-  protected:
+protected:
     ApplicationSessionModel(const ApplicationSessionModel&) = delete;
     ApplicationSessionModel& operator=(const ApplicationSessionModel&) = delete;
 
-  private:
+private:
     std::vector<std::shared_ptr<ApplicationSession>> apps;
     std::mutex guard;
 };
