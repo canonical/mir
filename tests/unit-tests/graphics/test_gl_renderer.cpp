@@ -16,6 +16,7 @@
  * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
+#include <functional>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
@@ -54,29 +55,51 @@ class TestSetupGLRenderer :
 {
 public:
 
-    void SetUpMockVertexShader()
+    void ExpectShaderCompileFailure(const GLint shader)
+    {
+        EXPECT_CALL (gl_mock, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
+                .WillOnce(SetArgPointee<2>(GL_FALSE));
+    }
+
+    void ExpectShaderCompileSuccess(const GLint shader)
+    {
+        EXPECT_CALL (gl_mock, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
+                .WillOnce(SetArgPointee<2>(GL_TRUE));
+    }
+
+    void SetUpMockVertexShader(const std::function <void (const GLint)> &shader_compile_expectation)
     {
         /* Vertex Shader */
         EXPECT_CALL (gl_mock, glCreateShader(GL_VERTEX_SHADER))
                 .WillOnce(Return(stub_v_shader));
         EXPECT_CALL (gl_mock, glShaderSource(stub_v_shader, 1, _, 0));
         EXPECT_CALL (gl_mock, glCompileShader (stub_v_shader));
-        EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_COMPILE_STATUS, _))
-                .WillOnce(SetArgPointee<2>(GL_TRUE));
+        shader_compile_expectation(stub_v_shader);
     }
 
-    void SetUpMockFragmentShader()
+    void SetUpMockFragmentShader(const std::function <void (const GLint)> &shader_compile_expectation)
     {
         /* Fragment Shader */
         EXPECT_CALL (gl_mock, glCreateShader(GL_FRAGMENT_SHADER))
                 .WillOnce(Return(stub_f_shader));
         EXPECT_CALL (gl_mock, glShaderSource(stub_f_shader, 1, _, 0));
         EXPECT_CALL (gl_mock, glCompileShader (stub_f_shader));
-        EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_COMPILE_STATUS, _))
-                .WillOnce(SetArgPointee<2>(GL_TRUE));
+        shader_compile_expectation(stub_f_shader);
     }
 
-    void SetUpMockGraphicsProgram()
+    void ExpectProgramLinkFailure(const GLint program)
+    {
+        EXPECT_CALL (gl_mock, glGetProgramiv (program, GL_LINK_STATUS, _))
+                .WillOnce (SetArgPointee<2>(GL_FALSE));
+    }
+
+    void ExpectProgramLinkSuccess(const GLint program)
+    {
+        EXPECT_CALL (gl_mock, glGetProgramiv (program, GL_LINK_STATUS, _))
+                .WillOnce (SetArgPointee<2>(GL_TRUE));
+    }
+
+    void SetUpMockGraphicsProgram(const std::function <void (const GLint)> &program_link_expectation)
     {
         /* Graphics Program */
         EXPECT_CALL (gl_mock, glCreateProgram())
@@ -84,8 +107,7 @@ public:
         EXPECT_CALL (gl_mock, glAttachShader (stub_program, stub_v_shader));
         EXPECT_CALL (gl_mock, glAttachShader (stub_program, stub_f_shader));
         EXPECT_CALL (gl_mock, glLinkProgram (stub_program));
-        EXPECT_CALL (gl_mock, glGetProgramiv (stub_program, GL_LINK_STATUS, _))
-                .WillOnce (SetArgPointee<2>(GL_TRUE));
+        program_link_expectation (stub_program);
     }
 
     void SetUpMockProgramData()
@@ -136,11 +158,13 @@ public:
 
     TestSetupGLRenderer()
     {
+        using namespace std::placeholders;
+
         InSequence s;
 
-        SetUpMockVertexShader();
-        SetUpMockFragmentShader();
-        SetUpMockGraphicsProgram();
+        SetUpMockVertexShader(std::bind (&TestSetupGLRenderer::ExpectShaderCompileSuccess, this, _1));
+        SetUpMockFragmentShader(std::bind (&TestSetupGLRenderer::ExpectShaderCompileSuccess, this, _1));
+        SetUpMockGraphicsProgram(std::bind (&TestSetupGLRenderer::ExpectProgramLinkSuccess, this, _1));
         SetUpMockProgramData();
         SetUpMockRenderTexture();
         EXPECT_CALL(gl_mock, glUniform1i (tex_uniform_location, 0));
