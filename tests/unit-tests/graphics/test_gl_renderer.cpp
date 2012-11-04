@@ -170,7 +170,7 @@ ACTION_P2(CopyString, str, len)
     arg3[len] = '\0';
 }
 
-TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAndThrows)
+TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndThrows)
 {
     using namespace std::placeholders;
 
@@ -179,6 +179,25 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader, stub_info_log_length + 1, _, _));
+            // Nothing at the moment, valgrind errors lie here ...
+            //.WillOnce(CopyString (stub_info_log.c_str(),
+              //                    stub_info_log.size()));
+
+    std::unique_ptr<mg::GLRenderer> r;
+
+    EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
+}
+
+TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAndThrows)
+{
+    using namespace std::placeholders;
+
+    SetUpMockVertexShader(gl_mock, std::bind (ExpectShaderCompileSuccess, _1, _2));
+    SetUpMockFragmentShader(gl_mock, std::bind (ExpectShaderCompileFailure, _1, _2));
+
+    EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_INFO_LOG_LENGTH, _))
+            .WillOnce(SetArgPointee<2>(stub_info_log_length));
+    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader, stub_info_log_length + 1, _, _));
             // Nothing at the moment, valgrind errors lie here ...
             //.WillOnce(CopyString (stub_info_log.c_str(),
               //                    stub_info_log.size()));
