@@ -207,6 +207,26 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
     EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
 }
 
+TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramCompilerFailRecoverAndThrows)
+{
+    using namespace std::placeholders;
+
+    SetUpMockVertexShader(gl_mock, std::bind (ExpectShaderCompileSuccess, _1, _2));
+    SetUpMockFragmentShader(gl_mock, std::bind (ExpectShaderCompileSuccess, _1, _2));
+    SetUpMockGraphicsProgram(gl_mock, std::bind (ExpectProgramLinkFailure, _1, _2));
+
+    EXPECT_CALL (gl_mock, glGetProgramiv(stub_program, GL_INFO_LOG_LENGTH, _))
+            .WillOnce(SetArgPointee<2>(stub_info_log_length));
+    EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program, stub_info_log_length + 1, _, _));
+            // Nothing at the moment, valgrind errors lie here ...
+            //.WillOnce(CopyString (stub_info_log.c_str(),
+              //                    stub_info_log.size()));
+
+    std::unique_ptr<mg::GLRenderer> r;
+
+    EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
+}
+
 class TestSetupGLRenderer :
     public testing::Test
 {
