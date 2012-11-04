@@ -54,7 +54,7 @@ class TestSetupGLRenderer :
 {
 public:
 
-    TestSetupGLRenderer()
+    void SetUpMockVertexShader()
     {
         /* Vertex Shader */
         EXPECT_CALL (gl_mock, glCreateShader(GL_VERTEX_SHADER))
@@ -63,7 +63,10 @@ public:
         EXPECT_CALL (gl_mock, glCompileShader (stub_v_shader));
         EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_COMPILE_STATUS, _))
                 .WillOnce(SetArgPointee<2>(GL_TRUE));
+    }
 
+    void SetUpMockFragmentShader()
+    {
         /* Fragment Shader */
         EXPECT_CALL (gl_mock, glCreateShader(GL_FRAGMENT_SHADER))
                 .WillOnce(Return(stub_f_shader));
@@ -71,7 +74,10 @@ public:
         EXPECT_CALL (gl_mock, glCompileShader (stub_f_shader));
         EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_COMPILE_STATUS, _))
                 .WillOnce(SetArgPointee<2>(GL_TRUE));
+    }
 
+    void SetUpMockGraphicsProgram()
+    {
         /* Graphics Program */
         EXPECT_CALL (gl_mock, glCreateProgram())
                 .WillOnce (Return (stub_program));
@@ -80,11 +86,12 @@ public:
         EXPECT_CALL (gl_mock, glLinkProgram (stub_program));
         EXPECT_CALL (gl_mock, glGetProgramiv (stub_program, GL_LINK_STATUS, _))
                 .WillOnce (SetArgPointee<2>(GL_TRUE));
+    }
 
+    void SetUpMockProgramData()
+    {
         /* Uniforms and Attributes */
         EXPECT_CALL (gl_mock, glUseProgram(stub_program));
-
-        InSequence s;
 
         EXPECT_CALL(gl_mock, glGetUniformLocation(stub_program, _))
                 .WillOnce(Return(screen_to_gl_coords_uniform_location));
@@ -100,7 +107,10 @@ public:
                 .WillOnce(Return(texcoord_attr_location));
 
         EXPECT_CALL(gl_mock, glUniformMatrix4fv(screen_to_gl_coords_uniform_location, 1, GL_FALSE, _));
+    }
 
+    void SetUpMockRenderTexture()
+    {
         /* Set up the render texture */
         EXPECT_CALL(gl_mock, glGenTextures(1, _))
                 .WillOnce(SetArgPointee<1>(stub_texture));
@@ -109,9 +119,10 @@ public:
         EXPECT_CALL(gl_mock, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
         EXPECT_CALL(gl_mock, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
         EXPECT_CALL(gl_mock, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    }
 
-        EXPECT_CALL(gl_mock, glUniform1i (tex_uniform_location, 0));
-
+    void FillMockVertexBuffer()
+    {
         /* Set up VBO */
         EXPECT_CALL(gl_mock, glGenBuffers(1, _))
                 .WillOnce(SetArgPointee<1>(stub_vbo));
@@ -121,6 +132,19 @@ public:
         /* These should go away */
         EXPECT_CALL(gl_mock, glBindBuffer(GL_ARRAY_BUFFER, 0));
         EXPECT_CALL(gl_mock, glUseProgram(0));
+    }
+
+    TestSetupGLRenderer()
+    {
+        InSequence s;
+
+        SetUpMockVertexShader();
+        SetUpMockFragmentShader();
+        SetUpMockGraphicsProgram();
+        SetUpMockProgramData();
+        SetUpMockRenderTexture();
+        EXPECT_CALL(gl_mock, glUniform1i (tex_uniform_location, 0));
+        FillMockVertexBuffer ();
 
         renderer.reset (new mg::GLRenderer (display_size));
     }
