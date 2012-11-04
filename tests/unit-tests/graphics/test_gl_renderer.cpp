@@ -178,10 +178,9 @@ TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndTh
 
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader, stub_info_log_length + 1, _, _));
-            // Nothing at the moment, valgrind errors lie here ...
-            //.WillOnce(CopyString (stub_info_log.c_str(),
-              //                    stub_info_log.size()));
+    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader, stub_info_log_length + 1, _, _))
+            .WillOnce(CopyString (stub_info_log.c_str(),
+                                  stub_info_log.size()));
 
     std::unique_ptr<mg::GLRenderer> r;
 
@@ -197,10 +196,9 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
 
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader, stub_info_log_length + 1, _, _));
-            // Nothing at the moment, valgrind errors lie here ...
-            //.WillOnce(CopyString (stub_info_log.c_str(),
-              //                    stub_info_log.size()));
+    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader, stub_info_log_length + 1, _, _))
+            .WillOnce(CopyString (stub_info_log.c_str(),
+                                  stub_info_log.size()));
 
     std::unique_ptr<mg::GLRenderer> r;
 
@@ -217,10 +215,9 @@ TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramLinkFailRecoverAndThr
 
     EXPECT_CALL (gl_mock, glGetProgramiv(stub_program, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program, stub_info_log_length + 1, _, _));
-            // Nothing at the moment, valgrind errors lie here ...
-            //.WillOnce(CopyString (stub_info_log.c_str(),
-              //                    stub_info_log.size()));
+    EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program, stub_info_log_length + 1, _, _))
+            .WillOnce(CopyString (stub_info_log.c_str(),
+                                  stub_info_log.size()));
 
     std::unique_ptr<mg::GLRenderer> r;
 
