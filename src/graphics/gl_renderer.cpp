@@ -44,6 +44,36 @@ struct VertexAttributes
     glm::vec2 texcoord;
 };
 
+class GLCharArray
+{
+public:
+
+    GLCharArray (unsigned int n) :
+        buf (new GLchar [n + 1])
+    {
+        buf[0] = '\0';
+    }
+
+    ~GLCharArray ()
+    {
+        delete[] buf;
+    }
+
+    GLchar * raw()
+    {
+        return buf;
+    }
+
+    std::string str()
+    {
+        return std::string(buf);
+    }
+
+private:
+
+    GLchar *buf;
+};
+
 /*
  * The texture coordinates are y-inverted to account for the difference in the
  * texture and renderable pixel data row order. In particular, GL textures
@@ -73,6 +103,19 @@ VertexAttributes vertex_attribs[4] =
 
 }
 
+mg::GLRenderer::Resources::Resources() :
+    vertex_shader(0),
+    fragment_shader(0),
+    program(0),
+    position_attr_loc(0),
+    texcoord_attr_loc(0),
+    transform_uniform_loc(0),
+    alpha_uniform_loc(0),
+    vertex_attribs_vbo(0),
+    texture(0)
+{
+}
+
 mg::GLRenderer::Resources::~Resources()
 {
     if (vertex_shader)
@@ -99,10 +142,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     if (param == GL_FALSE)
     {
         glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
+        GLCharArray info_log (param);
+        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.raw());
         std::string info_str{"Failed to compile vertex shader:"};
-        info_str += info_log.get();
+        info_str += info_log.str();
         throw new std::runtime_error(info_str);
     }
 
