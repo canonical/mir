@@ -207,7 +207,7 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
     EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
 }
 
-TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramCompilerFailRecoverAndThrows)
+TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramLinkFailRecoverAndThrows)
 {
     using namespace std::placeholders;
 
