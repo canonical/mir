@@ -73,6 +73,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
+  ${GLESv2_LIBRARIES}
 )
 
 install(

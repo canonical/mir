@@ -36,6 +36,4 @@ target_link_libraries(
   mirgraphics
 
   mirlogging
-  
-  ${GLESv2_LIBRARIES}
 )

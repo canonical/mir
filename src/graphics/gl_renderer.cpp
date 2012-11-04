@@ -112,9 +112,9 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
+        glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &param);
         auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
+        glGetShaderInfoLog(fragment_shader, param + 1, NULL, info_log.get());
         std::string info_str{"Failed to compile fragment shader:"};
         info_str += info_log.get();
         throw new std::runtime_error(info_str);
@@ -214,14 +214,14 @@ void mg::GLRenderer::render(Renderable& renderable)
     pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
     pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
-    /* Apply the renderable's custom transformation */
-    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
-
     glUseProgram(resources.program);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
+
+    /* Apply the renderable's custom transformation */
+    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
 
     glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transformation));
     glUniform1f(resources.alpha_uniform_loc, renderable.alpha());
@@ -234,7 +234,9 @@ void mg::GLRenderer::render(Renderable& renderable)
 
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
-    renderable.texture()->bind_to_texture();
+
+    auto renderableTexture (renderable.texture ());
+    renderableTexture->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);

@@ -6,9 +6,9 @@ set -e
 
 CMAKE_TOOLCHAIN_FILE=cmake/Toolchain-Ubuntu-GCC44.cmake
 
-if [ ! -e build-native ]; then
-    mkdir build-native
-    ( cd build-native && cmake -DCMAKE_TOOLCHAIN_FILE=../$CMAKE_TOOLCHAIN_FILE ..)
-fi
+#if [ ! -e build-native ]; then
+    mkdir -p build-native
+    ( cd build-native && cmake -DCMAKE_TOOLCHAIN_FILE=../$CMAKE_TOOLCHAIN_FILE -DCMAKE_BUILD_TYPE=RelWithDebInfo ..)
+#fi
 
 cmake --build build-native
