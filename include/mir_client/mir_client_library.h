@@ -13,7 +13,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
 #ifndef MIR_CLIENT_LIBRARY_H
@@ -25,9 +24,11 @@ extern "C" {
 
 /* This header defines the MIR client library's C API.
  *
- * This API comprises a suite of free functions. The functions are asynchronous:
- * callers must pass in a callback function to determine when the call completes,
- * and should check any object returned by the callback is valid before use.
+ * This API comprises a suite of free functions. The functions are
+ * asynchronous: callers must pass in a callback function to determine
+ * when the call completes, and should check any object returned by
+ * the callback is valid before use. Alternatively, callers can rely
+ * on MirWaitHandle to wait for a request to complete.
  */
 
 /* Display server connection API */
@@ -35,7 +36,16 @@ typedef struct MirConnection MirConnection;
 typedef struct MirWaitHandle MirWaitHandle;
 typedef struct MirSurface MirSurface;
 
+/* Callback to be passed when issueing a connect request. The new
+ * connection is passed as an argument.*/ 
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
+
+/* Callback to be passed when a request for:
+ *   - creating a surface
+ *   - advancing a buffer
+ *   - destroying a surface
+ * is issued.
+ */ 
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
 /* Surface API */
@@ -43,7 +53,7 @@ typedef enum MirPixelFormat
 {
     mir_pixel_format_rgba_8888
 } MirPixelFormat;
-
+ 
 typedef struct MirSurfaceParameters
 {
     char const *name;
@@ -95,6 +105,7 @@ typedef struct MirDisplayInfo
 /*
  * Request a connection to the MIR server.
  * The supplied callback is called when the connection is established, or fails.
+ * The returned wait handle is owned by the library.
  */
 MirWaitHandle* mir_connect(
     char const *socket_file,
@@ -107,18 +118,23 @@ int mir_connection_is_valid(MirConnection *connection);
 
 /*
  * Returns a text description of any error resulting in an invalid connection,
- * or the empty string "" if the connection is valid.
+ * or the empty string "" if the connection is valid. 
+ * The returned string is owned by the library.
  */
 char const *mir_connection_get_error_message(MirConnection *connection);
 
 /* Release a connection to the MIR server. */
 void mir_connection_release(MirConnection *connection);
 
+/* Query platform specific data and/or fd's that are required to initialize gl/egl bits. */ 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
+/* Query the width and height of the primary display */
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
-/* Request a new MIR surface on the supplied connection with the supplied parameters. */
+/* Request a new MIR surface on the supplied connection with the supplied parameters. 
+ * The returned wait handle is owned by the library.
+ */
 MirWaitHandle* mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
@@ -128,33 +144,40 @@ MirWaitHandle* mir_surface_create(
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);
 
-/* Returns a text description of any error resulting in an invalid surface,
-   or the empty string "" if the surface is valid. */
+/* Returns a text description of any error resulting in an invalid
+   surface, or the empty string "" if the surface is valid. 
+   The returned string is owned by the library.
+*/
 char const *mir_surface_get_error_message(MirSurface *surface);
 
 /* Get a valid surface's parameters. */
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
-/* Get a surface's buffer. */
+/* Get a surface's buffer in "raw" representation. */
 void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
 
-/* Get a surface's graphics_region. */
+/* Get a surface's graphics_region, i.e., map the graphics buffer to main memory. */
 void mir_surface_get_graphics_region(
     MirSurface *surface,
     MirGraphicsRegion *graphics_region);
 
-/* Advance a surface's buffer. */
+/* Advance a surface's buffer. 
+ * The returned wait handle is owned by the library.
+*/
 MirWaitHandle* mir_surface_next_buffer(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);
 
-/* Release the supplied surface and any associated buffer. */
+/* Release the supplied surface and any associated buffer. 
+ * The returned wait handle is owned by the library.
+*/
 MirWaitHandle* mir_surface_release(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);
 
+/* Wait on the supplied handle until the associated request has completed. */
 void mir_wait_for(MirWaitHandle* wait_handle);
 
 /* Return the id of the surface. (Only useful for debug output.) */
