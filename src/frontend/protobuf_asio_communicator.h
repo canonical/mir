@@ -49,7 +49,7 @@ class ProtobufIpcFactory;
 
 namespace detail
 {
-class Session;
+class AsioSession;
 }
 
 class ProtobufAsioCommunicator : public Communicator
@@ -65,7 +65,7 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(const std::shared_ptr<detail::Session>& session, const boost::system::error_code& ec);
+    void on_new_connection(const std::shared_ptr<detail::AsioSession>& session, const boost::system::error_code& ec);
     int next_id();
 
     const std::string socket_file;
@@ -74,7 +74,7 @@ private:
     std::thread io_service_thread;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
-    detail::ConnectedSessions<detail::Session> connected_sessions;
+    detail::ConnectedSessions<detail::AsioSession> connected_sessions;
 };
 
 }

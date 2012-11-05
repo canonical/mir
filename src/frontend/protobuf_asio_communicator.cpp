@@ -55,12 +55,12 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
-struct mfd::Session
+struct mfd::AsioSession
 {
-    Session(
+    AsioSession(
         boost::asio::io_service& io_service,
         int id_,
-        ConnectedSessions<Session>* connected_sessions,
+        ConnectedSessions<AsioSession>* connected_sessions,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -161,7 +161,7 @@ struct mfd::Session
         {
             std::unique_ptr<google::protobuf::Closure> callback(
                 google::protobuf::NewPermanentCallback(this,
-                    &Session::send_response,
+                    &AsioSession::send_response,
                     invocation.id(),
                     &result_message));
 
@@ -181,7 +181,7 @@ struct mfd::Session
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     int const id_;
-    ConnectedSessions<Session>* connected_sessions;
+    ConnectedSessions<AsioSession>* connected_sessions;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
@@ -203,7 +203,7 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
 
 void mf::ProtobufAsioCommunicator::start_accept()
 {
-    auto session = std::make_shared<detail::Session>(
+    auto session = std::make_shared<detail::AsioSession>(
         io_service,
         next_id(),
         &connected_sessions,
@@ -248,7 +248,7 @@ mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
 }
 
 void mf::ProtobufAsioCommunicator::on_new_connection(
-    std::shared_ptr<detail::Session> const& session,
+    std::shared_ptr<detail::AsioSession> const& session,
     const boost::system::error_code& ec)
 {
     if (!ec)
@@ -260,10 +260,10 @@ void mf::ProtobufAsioCommunicator::on_new_connection(
     start_accept();
 }
 
-mfd::Session::Session(
+mfd::AsioSession::AsioSession(
     boost::asio::io_service& io_service,
     int id_,
-    ConnectedSessions<Session>* connected_sessions,
+    ConnectedSessions<AsioSession>* connected_sessions,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache)
     : socket(io_service),
@@ -274,15 +274,15 @@ mfd::Session::Session(
 {
 }
 
-void mfd::Session::read_next_message()
+void mfd::AsioSession::read_next_message()
 {
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
-        boost::bind(&mfd::Session::on_read_size,
+        boost::bind(&mfd::AsioSession::on_read_size,
             this, ba::placeholders::error));
 }
 
-void mfd::Session::on_read_size(const boost::system::error_code& ec)
+void mfd::AsioSession::on_read_size(const boost::system::error_code& ec)
 {
     if (!ec)
     {
@@ -292,12 +292,12 @@ void mfd::Session::on_read_size(const boost::system::error_code& ec)
              socket,
              message,
              boost::asio::transfer_exactly(body_size),
-             boost::bind(&Session::on_new_message,
+             boost::bind(&AsioSession::on_new_message,
                          this, ba::placeholders::error));
     }
 }
 
-void mfd::Session::on_new_message(const boost::system::error_code& ec)
+void mfd::AsioSession::on_new_message(const boost::system::error_code& ec)
 {
     if (!ec)
     {
@@ -345,13 +345,13 @@ void mfd::Session::on_new_message(const boost::system::error_code& ec)
     read_next_message();
 }
 
-void mfd::Session::on_response_sent(bs::error_code const& error, std::size_t)
+void mfd::AsioSession::on_response_sent(bs::error_code const& error, std::size_t)
 {
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
 
-void mfd::Session::send_response(
+void mfd::AsioSession::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
@@ -380,7 +380,7 @@ void mfd::Session::send_response(
     ba::async_write(
         socket,
         ba::buffer(whole_message),
-        boost::bind(&Session::on_response_sent, this,
+        boost::bind(&AsioSession::on_response_sent, this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
 }
