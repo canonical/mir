@@ -18,6 +18,7 @@
 
 #include "mir/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 
@@ -230,10 +231,6 @@ void mf::ProtobufAsioCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
     io_service_thread = std::move(std::thread(run_io_service));
-}
-
-void mf::ProtobufAsioCommunicator::stop()
-{
 }
 
 mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()

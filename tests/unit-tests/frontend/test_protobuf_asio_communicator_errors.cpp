@@ -115,7 +115,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
 
     void TearDown()
     {
-        server->comm.stop();
+        server.reset();
     }
 
     std::shared_ptr<mt::TestErrorServer> server;

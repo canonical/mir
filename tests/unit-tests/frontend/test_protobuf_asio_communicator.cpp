@@ -59,7 +59,7 @@ struct ProtobufAsioCommunicatorBasic : public ::testing::Test
 
     void TearDown()
     {
-        stub_server->comm.stop();
+        stub_server.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;

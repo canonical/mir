@@ -43,6 +43,8 @@ namespace frontend
 {
 class ProtobufAsioCommunicator;
 class ResourceCache;
+class ProtobufIpcFactory;
+
 namespace detail
 {
 class Session;
@@ -68,20 +70,6 @@ private:
 };
 }
 
-class ProtobufIpcFactory
-{
-public:
-    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
-    virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
-
-protected:
-    ProtobufIpcFactory() {}
-    virtual ~ProtobufIpcFactory() {}
-    ProtobufIpcFactory(ProtobufIpcFactory const&) = delete;
-    ProtobufIpcFactory& operator =(ProtobufIpcFactory const&) = delete;
-};
-
-
 class ProtobufAsioCommunicator : public Communicator
 {
 public:
@@ -92,7 +80,6 @@ public:
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
     ~ProtobufAsioCommunicator();
     void start();
-    void stop();
 
 private:
     void start_accept();

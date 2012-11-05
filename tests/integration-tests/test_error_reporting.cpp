@@ -21,6 +21,7 @@
 #include "mir_client/mir_logger.h"
 
 #include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 

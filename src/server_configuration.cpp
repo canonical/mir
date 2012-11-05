@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
@@ -146,15 +146,6 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
-}
-
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
-    std::shared_ptr<mg::Display> const& display)
-{
-    return std::make_shared<mf::ProtobufAsioCommunicator>(
-        socket_file, make_ipc_factory(surface_organiser, display));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
