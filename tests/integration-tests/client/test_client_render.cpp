@@ -20,7 +20,7 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
