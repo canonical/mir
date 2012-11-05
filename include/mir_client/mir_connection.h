@@ -28,6 +28,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/client_platform.h"
 
 #include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
@@ -38,9 +39,6 @@ namespace client
 {
 class Logger;
 class ClientBufferDepository;
-
-std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-
 }
 }
 
@@ -87,6 +85,8 @@ private:
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
+
+    std::shared_ptr<mir::client::ClientPlatform> platform;
 
     std::string error_message;
 

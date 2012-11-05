@@ -248,6 +248,7 @@ TEST_F(TestClientIPCRender, test_render)
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
     test_server->comm.start();
 
     /* wait for client to finish */
