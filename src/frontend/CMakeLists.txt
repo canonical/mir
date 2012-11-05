@@ -28,8 +28,8 @@ set(
 
 if (MIR_TRANSPORT STREQUAL "asio")
 list(APPEND FRONTEND_SOURCES
-  protobuf_asio_communicator.cpp
-  make_protobuf_asio_communicator.cpp
+  protobuf_socket_communicator.cpp
+  make_protobuf_socket_communicator.cpp
 )
 elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND FRONTEND_SOURCES

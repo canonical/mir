@@ -22,7 +22,7 @@
 #include "mir_client/client_buffer.h"
 
 #include "mir/chrono/chrono.h"
-#include "src/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/thread/all.h"
 
 #include "mir_client/mir_logger.h"

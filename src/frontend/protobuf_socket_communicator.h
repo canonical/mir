@@ -43,7 +43,7 @@ namespace mir
 namespace protobuf { class DisplayServer; }
 namespace frontend
 {
-class ProtobufAsioCommunicator;
+class ProtobufSocketCommunicator;
 class ResourceCache;
 class ProtobufIpcFactory;
 
@@ -52,15 +52,15 @@ namespace detail
 class AsioSession;
 }
 
-class ProtobufAsioCommunicator : public Communicator
+class ProtobufSocketCommunicator : public Communicator
 {
 public:
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
-    explicit ProtobufAsioCommunicator(
+    explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
-    ~ProtobufAsioCommunicator();
+    ~ProtobufSocketCommunicator();
     void start();
 
 private:

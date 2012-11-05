@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "protobuf_asio_communicator.h"
+#include "protobuf_socket_communicator.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
@@ -190,7 +190,7 @@ struct mfd::AsioSession
 };
 
 
-mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
+mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
@@ -201,7 +201,7 @@ mf::ProtobufAsioCommunicator::ProtobufAsioCommunicator(
     start_accept();
 }
 
-void mf::ProtobufAsioCommunicator::start_accept()
+void mf::ProtobufSocketCommunicator::start_accept()
 {
     auto session = std::make_shared<detail::AsioSession>(
         io_service,
@@ -213,13 +213,13 @@ void mf::ProtobufAsioCommunicator::start_accept()
     acceptor.async_accept(
         session->socket,
         boost::bind(
-            &ProtobufAsioCommunicator::on_new_connection,
+            &ProtobufSocketCommunicator::on_new_connection,
             this,
             session,
             ba::placeholders::error));
 }
 
-int mf::ProtobufAsioCommunicator::next_id()
+int mf::ProtobufSocketCommunicator::next_id()
 {
     int id = next_session_id.load();
     while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
@@ -227,13 +227,13 @@ int mf::ProtobufAsioCommunicator::next_id()
 }
 
 
-void mf::ProtobufAsioCommunicator::start()
+void mf::ProtobufSocketCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
     io_service_thread = std::move(std::thread(run_io_service));
 }
 
-mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
+mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     io_service.stop();
 
@@ -247,7 +247,7 @@ mf::ProtobufAsioCommunicator::~ProtobufAsioCommunicator()
     std::remove(socket_file.c_str());
 }
 
-void mf::ProtobufAsioCommunicator::on_new_connection(
+void mf::ProtobufSocketCommunicator::on_new_connection(
     std::shared_ptr<detail::AsioSession> const& session,
     const boost::system::error_code& ec)
 {

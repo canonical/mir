@@ -18,7 +18,7 @@
 
 #include "mir/server_configuration.h"
 #include "mir/graphics/display.h"
-#include "protobuf_asio_communicator.h"
+#include "protobuf_socket_communicator.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -29,7 +29,7 @@ mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<mg::Display> const& display)
 {
-    return std::make_shared<mf::ProtobufAsioCommunicator>(
+    return std::make_shared<mf::ProtobufSocketCommunicator>(
         socket_file, make_ipc_factory(surface_organiser, display));
 }
 
