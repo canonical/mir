@@ -22,22 +22,18 @@
 extern "C" {
 #endif
 
-/* This header defines the MIR client library's C API.
- *
- * This API comprises a suite of free functions. The functions are
- * asynchronous: callers must pass in a callback function to determine
- * when the call completes, and should check any object returned by
- * the callback is valid before use. Alternatively, callers can rely
- * on MirWaitHandle to wait for a request to complete.
- */
+/* This header defines the MIR client library's C API. */
 
 /* Display server connection API */
 typedef struct MirConnection MirConnection;
-typedef struct MirWaitHandle MirWaitHandle;
 typedef struct MirSurface MirSurface;
 
+/* Returned by asynchronous functions and always owned by the library. */
+typedef struct MirWaitHandle MirWaitHandle;
+
 /* Callback to be passed when issueing a connect request. The new
- * connection is passed as an argument.*/ 
+ * connection is passed as an argument.
+ */ 
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 
 /* Callback to be passed when a request for:
@@ -103,85 +99,89 @@ typedef struct MirDisplayInfo
 } MirDisplayInfo;
 
 /*
- * Request a connection to the MIR server.
- * The supplied callback is called when the connection is established, or fails.
- * The returned wait handle is owned by the library.
+ * Request a connection to the MIR server. The supplied callback is
+ * called when the connection is established, or fails. The returned
+ * handle remains valid until the connection has been released.
  */
 MirWaitHandle* mir_connect(
-    char const *socket_file,
-    char const *app_name,
+    char const* socket_file,
+    char const* app_name,
     mir_connected_callback callback,
-    void *client_context);
+    void* client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
-int mir_connection_is_valid(MirConnection *connection);
+int mir_connection_is_valid(MirConnection* connection);
 
 /*
- * Returns a text description of any error resulting in an invalid connection,
- * or the empty string "" if the connection is valid. 
- * The returned string is owned by the library.
+ * Returns a text description of any error resulting in an invalid
+ * connection, or the empty string "" if the connection is valid. The
+ * returned string is owned by the library and remains valid until the next call to 
+ * mir_connection_get_error_message.
  */
-char const *mir_connection_get_error_message(MirConnection *connection);
+char const* mir_connection_get_error_message(MirConnection* connection);
 
 /* Release a connection to the MIR server. */
-void mir_connection_release(MirConnection *connection);
+void mir_connection_release(MirConnection* connection);
 
 /* Query platform specific data and/or fd's that are required to initialize gl/egl bits. */ 
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+void mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* platform_package);
 
 /* Query the width and height of the primary display */
-void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+void mir_connection_get_display_info(MirConnection* connection, MirDisplayInfo* display_info);
 
-/* Request a new MIR surface on the supplied connection with the supplied parameters. 
- * The returned wait handle is owned by the library.
+/* Request a new MIR surface on the supplied connection with the
+ * supplied parameters. The returned handle remains valid until
+ * the surface has been released.
  */
 MirWaitHandle* mir_surface_create(
-    MirConnection *connection,
-    MirSurfaceParameters const *surface_parameters,
+    MirConnection* connection,
+    MirSurfaceParameters const* surface_parameters,
     mir_surface_lifecycle_callback callback,
-    void *client_context);
+    void* client_context);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
-int mir_surface_is_valid(MirSurface *surface);
+int mir_surface_is_valid(MirSurface* surface);
 
 /* Returns a text description of any error resulting in an invalid
-   surface, or the empty string "" if the surface is valid. 
-   The returned string is owned by the library.
-*/
-char const *mir_surface_get_error_message(MirSurface *surface);
+ * surface, or the empty string "" if the surface is valid. The
+ * returned string is owned by the library remains valid until the
+ * next call to mir_surface_get_error_message.
+ */
+char const* mir_surface_get_error_message(MirSurface* surface);
 
 /* Get a valid surface's parameters. */
-void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
+void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters);
 
 /* Get a surface's buffer in "raw" representation. */
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+void mir_surface_get_current_buffer(MirSurface* surface, MirBufferPackage* buffer_package);
 
 /* Get a surface's graphics_region, i.e., map the graphics buffer to main memory. */
 void mir_surface_get_graphics_region(
-    MirSurface *surface,
-    MirGraphicsRegion *graphics_region);
+    MirSurface* surface,
+    MirGraphicsRegion* graphics_region);
 
-/* Advance a surface's buffer. 
- * The returned wait handle is owned by the library.
-*/
+/* Advance a surface's buffer. The returned handle remains valid until
+ * the next call to mir_surface_next_buffer.
+ */
 MirWaitHandle* mir_surface_next_buffer(
-    MirSurface *surface,
+    MirSurface* surface,
     mir_surface_lifecycle_callback callback,
-    void *context);
+    void* context);
 
-/* Release the supplied surface and any associated buffer. 
- * The returned wait handle is owned by the library.
-*/
+/* Release the supplied surface and any associated buffer. The
+ * returned wait handle remains valid until the release request has
+ * finished.
+ */
 MirWaitHandle* mir_surface_release(
-    MirSurface *surface,
+    MirSurface* surface,
     mir_surface_lifecycle_callback callback,
-    void *context);
+    void* context);
 
 /* Wait on the supplied handle until the associated request has completed. */
 void mir_wait_for(MirWaitHandle* wait_handle);
 
 /* Return the id of the surface. (Only useful for debug output.) */
-int mir_debug_surface_id(MirSurface *surface);
+int mir_debug_surface_id(MirSurface* surface);
 
 #ifdef __cplusplus
 }
