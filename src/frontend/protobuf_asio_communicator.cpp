@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "protobuf_asio_communicator.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"

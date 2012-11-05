@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
-#include "communicator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>

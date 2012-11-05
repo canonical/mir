@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_asio_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"

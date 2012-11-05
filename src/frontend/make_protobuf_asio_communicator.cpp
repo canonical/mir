@@ -18,7 +18,7 @@
 
 #include "mir/server_configuration.h"
 #include "mir/graphics/display.h"
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "protobuf_asio_communicator.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;

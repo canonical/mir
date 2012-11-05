@@ -21,7 +21,7 @@
 
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_asio_communicator.h"
 
 namespace mir
 {
