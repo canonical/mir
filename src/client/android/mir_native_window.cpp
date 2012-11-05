@@ -93,9 +93,12 @@ int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* v
     return self->query(key, value);
 } 
 
-int mcl::MirNativeWindow::perform(int key, va_list args )
+int mcl::MirNativeWindow::perform(int key, va_list arg_list )
 {
     int ret = 0;
+    va_list args;
+    va_copy(args, arg_list);
+
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
@@ -114,7 +117,10 @@ int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
     va_list args;
     va_start(args, key);
     auto self = static_cast<const mcl::MirNativeWindow*>(window);
-    return self->perform(key, args);
+    auto ret = self->perform(key, args);
+    va_end(args);
+
+    return ret;
 } 
 
 
