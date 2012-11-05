@@ -60,7 +60,7 @@ struct mfd::Session
     Session(
         boost::asio::io_service& io_service,
         int id_,
-        ConnectedSessions* connected_sessions,
+        ConnectedSessions<Session>* connected_sessions,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -181,7 +181,7 @@ struct mfd::Session
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     int const id_;
-    ConnectedSessions* connected_sessions;
+    ConnectedSessions<Session>* connected_sessions;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     unsigned char message_header_bytes[2];
@@ -263,7 +263,7 @@ void mf::ProtobufAsioCommunicator::on_new_connection(
 mfd::Session::Session(
     boost::asio::io_service& io_service,
     int id_,
-    ConnectedSessions* connected_sessions,
+    ConnectedSessions<Session>* connected_sessions,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache)
     : socket(io_service),
@@ -383,29 +383,4 @@ void mfd::Session::send_response(
         boost::bind(&Session::on_response_sent, this,
             boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
-}
-
-
-mfd::ConnectedSessions::~ConnectedSessions()
-{
-}
-
-void mfd::ConnectedSessions::add(std::shared_ptr<Session> const& session)
-{
-    sessions_list[session->id()] = session;
-}
-
-void mfd::ConnectedSessions::remove(int id)
-{
-    sessions_list.erase(id);
-}
-
-bool mfd::ConnectedSessions::includes(int id) const
-{
-    return sessions_list.find(id) != sessions_list.end();
-}
-
-void mfd::ConnectedSessions::clear()
-{
-    sessions_list.clear();
 }

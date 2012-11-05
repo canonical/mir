@@ -19,6 +19,8 @@
 #ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
+#include "connected_sessions.h"
+
 #include "mir/frontend/communicator.h"
 #include "mir/thread/all.h"
 
@@ -48,26 +50,6 @@ class ProtobufIpcFactory;
 namespace detail
 {
 class Session;
-class ConnectedSessions
-{
-public:
-    ConnectedSessions() {}
-    ~ConnectedSessions();
-
-    void add(std::shared_ptr<Session> const& session);
-
-    void remove(int id);
-
-    bool includes(int id) const;
-
-    void clear();
-
-private:
-    ConnectedSessions(ConnectedSessions const&) = delete;
-    ConnectedSessions& operator =(ConnectedSessions const&) = delete;
-
-    std::map<int, std::shared_ptr<Session>> sessions_list;
-};
 }
 
 class ProtobufAsioCommunicator : public Communicator
@@ -92,7 +74,7 @@ private:
     std::thread io_service_thread;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
-    detail::ConnectedSessions connected_sessions;
+    detail::ConnectedSessions<detail::Session> connected_sessions;
 };
 
 }
