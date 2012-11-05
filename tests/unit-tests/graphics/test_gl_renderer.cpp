@@ -170,6 +170,11 @@ ACTION_P2(CopyString, str, len)
     arg3[len] = '\0';
 }
 
+ACTION_P(ReturnByConstReference, cref)
+{
+    return cref;
+}
+
 TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndThrows)
 {
     using namespace std::placeholders;
@@ -274,12 +279,19 @@ public:
     MOCK_METHOD0(bind_to_texture, void ());
 };
 
+void NullGraphicRegionDeleter(MockGraphicRegion * /* gr */)
+{
+}
+
 }
 
 TEST_F(TestSetupGLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 {
+    using namespace std::placeholders;
+
     MockRenderable rd;
-    std::shared_ptr<MockGraphicRegion> gr (new MockGraphicRegion ());
+    MockGraphicRegion gr;
+    std::shared_ptr<MockGraphicRegion> gr_ptr (&gr, std::bind (NullGraphicRegionDeleter, _1));
     mir::geometry::Point tl;
     mir::geometry::Size  s;
     glm::mat4            transformation;
@@ -313,8 +325,8 @@ TEST_F(TestSetupGLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
     EXPECT_CALL(rd, texture())
-            .WillOnce(Return(gr));
-    EXPECT_CALL(*gr, bind_to_texture());
+            .WillOnce(Return(gr_ptr));
+    EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(texcoord_attr_location));
