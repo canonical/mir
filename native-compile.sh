@@ -7,7 +7,7 @@ set -e
 CMAKE_TOOLCHAIN_FILE=cmake/Toolchain-Ubuntu-GCC44.cmake
 
 if [ ! -e build-native ]; then
-    mkdir p build-native
+    mkdir build-native
     ( cd build-native && cmake -DCMAKE_TOOLCHAIN_FILE=../$CMAKE_TOOLCHAIN_FILE ..)
 fi
 
