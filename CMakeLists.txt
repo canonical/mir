@@ -74,10 +74,10 @@ set(
 )
 
 set (MIR_TRANSPORT
-  asio
+  socket
   CACHE
   STRING
-  "IPC transport to build (options are 'asio' or 'binder')"
+  "IPC transport to build (options are 'socket' or 'binder')"
 )
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)

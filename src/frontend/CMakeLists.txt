@@ -26,7 +26,7 @@ set(
   ${PROTO_HDRS}
 )
 
-if (MIR_TRANSPORT STREQUAL "asio")
+if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND FRONTEND_SOURCES
   protobuf_socket_communicator.cpp
   make_protobuf_socket_communicator.cpp
