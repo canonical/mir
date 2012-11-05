@@ -22,15 +22,13 @@
 
 #include "mir/chrono/chrono.h"
 
-#if (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
-#include <cstdatomic>
+#ifdef ANDROID
 // For std::this_thread::sleep_for etc.
 #define _GLIBCXX_USE_NANOSLEEP
 #define MIR_USING_BOOST_THREADS
-#else
-#include <atomic>
 #endif
 
+#include <atomic>
 #include <thread>
 #include <mutex>
 
