@@ -164,7 +164,8 @@ void mir_surface_get_graphics_region(
     MirGraphicsRegion *graphics_region);
 
 /* Advance a surface's buffer. The returned handle remains valid until
- * the next call to mir_surface_next_buffer.
+ * the next call to mir_surface_next_buffer, until the surface has
+ * been released or the connection to the server has been released.
  */
 MirWaitHandle *mir_surface_next_buffer(
     MirSurface *surface,
@@ -172,8 +173,8 @@ MirWaitHandle *mir_surface_next_buffer(
     void *context);
 
 /* Release the supplied surface and any associated buffer. The
- * returned wait handle remains valid until the release request has
- * finished.
+ * returned wait handle remains valid until the connection to the
+ * server is released.
  */
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
