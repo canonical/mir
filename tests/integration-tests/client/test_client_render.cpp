@@ -165,223 +165,222 @@ static void next_callback(MirSurface *, void*)
 
 struct TestClient
 {
-
-static void sig_handle(int)
-{
-}
-
-static int render_single()
-{
-    if (signal(SIGCONT, sig_handle) == SIG_ERR)
-        return -1;
-    pause();
-
-    /* only use C api */
-    MirConnection* connection = NULL;
-    MirSurface* surface;
-    MirSurfaceParameters surface_parameters;
-
-     /* establish connection. wait for server to come up */
-    while (connection == NULL)
+    static void sig_handle(int)
     {
-        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                     &connected_callback, &connection));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    /* make surface */
-    surface_parameters.name = "testsurface";
-    surface_parameters.width = test_width;
-    surface_parameters.height = test_height;
-    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
-    mir_wait_for(mir_surface_create( connection, &surface_parameters,
-                                      &create_callback, &surface));
-    MirGraphicsRegion graphics_region;
-    /* grab a buffer*/
-    mir_surface_get_graphics_region( surface, &graphics_region);
 
-    /* render pattern */
-    render_pattern(&graphics_region, false);
-
-    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-    /* release */
-    mir_connection_release(connection);
-    return 0;
-}
-
-static int render_double()
-{
-    if (signal(SIGCONT, sig_handle) == SIG_ERR)
-        return -1;
-    pause();
-
-    /* only use C api */
-    MirConnection* connection = NULL;
-    MirSurface* surface;
-    MirSurfaceParameters surface_parameters;
-    MirGraphicsRegion graphics_region;
-
-     /* establish connection. wait for server to come up */
-    while (connection == NULL)
+    static int render_single()
     {
-        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                     &connected_callback, &connection));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (signal(SIGCONT, sig_handle) == SIG_ERR)
+            return -1;
+        pause();
+
+        /* only use C api */
+        MirConnection* connection = NULL;
+        MirSurface* surface;
+        MirSurfaceParameters surface_parameters;
+
+         /* establish connection. wait for server to come up */
+        while (connection == NULL)
+        {
+            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                         &connected_callback, &connection));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        /* make surface */
+        surface_parameters.name = "testsurface";
+        surface_parameters.width = test_width;
+        surface_parameters.height = test_height;
+        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+        mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                          &create_callback, &surface));
+        MirGraphicsRegion graphics_region;
+        /* grab a buffer*/
+        mir_surface_get_graphics_region( surface, &graphics_region);
+
+        /* render pattern */
+        render_pattern(&graphics_region, false);
+
+        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+
+        /* release */
+        mir_connection_release(connection);
+        return 0;
     }
-    /* make surface */
-    surface_parameters.name = "testsurface";
-    surface_parameters.width = test_width;
-    surface_parameters.height = test_height;
-    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
 
-    mir_wait_for(mir_surface_create( connection, &surface_parameters,
-                                      &create_callback, &surface));
-    mir_surface_get_graphics_region( surface, &graphics_region);
-    render_pattern(&graphics_region, false);
-
-    mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
-    mir_surface_get_graphics_region( surface, &graphics_region);
-    render_second_pattern(&graphics_region, false);
-
-    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-    /* release */
-    mir_connection_release(connection);
-    return 0;
-}
-
-static int render_accelerated()
-{
-    if (signal(SIGCONT, sig_handle) == SIG_ERR)
-        return -1;
-    pause();
-
-    /* only use C api */
-    MirConnection* connection = NULL;
-    MirSurface* surface;
-    MirSurfaceParameters surface_parameters;
-
-     /* establish connection. wait for server to come up */
-    while (connection == NULL)
+    static int render_double()
     {
-        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                     &connected_callback, &connection));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (signal(SIGCONT, sig_handle) == SIG_ERR)
+            return -1;
+        pause();
+
+        /* only use C api */
+        MirConnection* connection = NULL;
+        MirSurface* surface;
+        MirSurfaceParameters surface_parameters;
+        MirGraphicsRegion graphics_region;
+
+         /* establish connection. wait for server to come up */
+        while (connection == NULL)
+        {
+            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                         &connected_callback, &connection));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        /* make surface */
+        surface_parameters.name = "testsurface";
+        surface_parameters.width = test_width;
+        surface_parameters.height = test_height;
+        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+
+        mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                          &create_callback, &surface));
+        mir_surface_get_graphics_region( surface, &graphics_region);
+        render_pattern(&graphics_region, false);
+
+        mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
+        mir_surface_get_graphics_region( surface, &graphics_region);
+        render_second_pattern(&graphics_region, false);
+
+        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+
+        /* release */
+        mir_connection_release(connection);
+        return 0;
     }
-    /* make surface */
-    surface_parameters.name = "testsurface";
-    surface_parameters.width = test_width;
-    surface_parameters.height = test_height;
-    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
 
-    mir_wait_for(mir_surface_create( connection, &surface_parameters,
-                                      &create_callback, &surface));
-    
-	int major, minor, n;
-	EGLDisplay disp;
-    EGLContext context;
-    EGLSurface egl_surface;
-	EGLConfig egl_config;
-    EGLint attribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_GREEN_SIZE, 8,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE };
-    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-
-    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
-   
-	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(disp, &major, &minor);
-	
-	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
-    egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-    context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    eglMakeCurrent(disp, egl_surface, egl_surface, context);
-
-    glClearColor(1.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    eglSwapBuffers(disp, egl_surface);
-    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
-
-    /* release */
-    mir_connection_release(connection);
-    return 0;
-
-}
-
-static int render_accelerated_double()
-{
-    if (signal(SIGCONT, sig_handle) == SIG_ERR)
-        return -1;
-    pause();
-
-    /* only use C api */
-    MirConnection* connection = NULL;
-    MirSurface* surface;
-    MirSurfaceParameters surface_parameters;
-
-     /* establish connection. wait for server to come up */
-    while (connection == NULL)
+    static int render_accelerated()
     {
-        mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
-                                     &connected_callback, &connection));
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (signal(SIGCONT, sig_handle) == SIG_ERR)
+            return -1;
+        pause();
+
+        /* only use C api */
+        MirConnection* connection = NULL;
+        MirSurface* surface;
+        MirSurfaceParameters surface_parameters;
+
+         /* establish connection. wait for server to come up */
+        while (connection == NULL)
+        {
+            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                         &connected_callback, &connection));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        /* make surface */
+        surface_parameters.name = "testsurface";
+        surface_parameters.width = test_width;
+        surface_parameters.height = test_height;
+        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+
+        mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                          &create_callback, &surface));
+        
+        int major, minor, n;
+        EGLDisplay disp;
+        EGLContext context;
+        EGLSurface egl_surface;
+        EGLConfig egl_config;
+        EGLint attribs[] = {
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_GREEN_SIZE, 8,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_NONE };
+        EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+        EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
+       
+        disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        eglInitialize(disp, &major, &minor);
+        
+        eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+        egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+        context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
+        eglMakeCurrent(disp, egl_surface, egl_surface, context);
+
+        glClearColor(1.0, 0.0, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        eglSwapBuffers(disp, egl_surface);
+        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+
+        /* release */
+        mir_connection_release(connection);
+        return 0;
+
     }
-    /* make surface */
-    surface_parameters.name = "testsurface";
-    surface_parameters.width = test_width;
-    surface_parameters.height = test_height;
-    surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
 
-    mir_wait_for(mir_surface_create( connection, &surface_parameters,
-                                      &create_callback, &surface));
-    
-	int major, minor, n;
-	EGLDisplay disp;
-    EGLContext context;
-    EGLSurface egl_surface;
-	EGLConfig egl_config;
-    EGLint attribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_GREEN_SIZE, 8,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE };
-    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    static int render_accelerated_double()
+    {
+        if (signal(SIGCONT, sig_handle) == SIG_ERR)
+            return -1;
+        pause();
 
-    EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
-   
-	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(disp, &major, &minor);
-	
-	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
-    egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
-    context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    eglMakeCurrent(disp, egl_surface, egl_surface, context);
+        /* only use C api */
+        MirConnection* connection = NULL;
+        MirSurface* surface;
+        MirSurfaceParameters surface_parameters;
 
-    glClearColor(1.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+         /* establish connection. wait for server to come up */
+        while (connection == NULL)
+        {
+            mir_wait_for(mir_connect("./test_socket_surface", "test_renderer",
+                                         &connected_callback, &connection));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        /* make surface */
+        surface_parameters.name = "testsurface";
+        surface_parameters.width = test_width;
+        surface_parameters.height = test_height;
+        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
 
-    eglSwapBuffers(disp, egl_surface);
+        mir_wait_for(mir_surface_create( connection, &surface_parameters,
+                                          &create_callback, &surface));
+        
+        int major, minor, n;
+        EGLDisplay disp;
+        EGLContext context;
+        EGLSurface egl_surface;
+        EGLConfig egl_config;
+        EGLint attribs[] = {
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_GREEN_SIZE, 8,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_NONE };
+        EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    glClearColor(0.0, 1.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+        EGLNativeWindowType native_window = (EGLNativeWindowType) mir_get_egl_type(surface);
+       
+        disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        eglInitialize(disp, &major, &minor);
+        
+        eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+        egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+        context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
+        eglMakeCurrent(disp, egl_surface, egl_surface, context);
 
-    eglSwapBuffers(disp, egl_surface);
+        glClearColor(1.0, 0.0, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-    mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+        eglSwapBuffers(disp, egl_surface);
 
-    /* release */
-    mir_connection_release(connection);
-    return 0;
+        glClearColor(0.0, 1.0, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-}
+        eglSwapBuffers(disp, egl_surface);
 
-static int exit_function()
-{
-    return EXIT_SUCCESS;
-}
+        mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
+
+        /* release */
+        mir_connection_release(connection);
+        return 0;
+
+    }
+
+    static int exit_function()
+    {
+        return EXIT_SUCCESS;
+    }
 };
 
 /* server code */
@@ -478,8 +477,6 @@ struct StubServerGenerator : public mt::StubServerTool
     std::condition_variable allow_cv;
     bool next_received;
     bool next_allowed;
-
-//    std::mutex allow_guard;
 
     int package_id;
 };
