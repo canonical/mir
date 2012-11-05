@@ -53,4 +53,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */
+#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */
