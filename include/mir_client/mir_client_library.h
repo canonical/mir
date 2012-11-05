@@ -128,7 +128,7 @@ MirWaitHandle* mir_surface_create(
 
 /* returns an EGLNativeWindowType for a surface that the client can use for 
    OpenGL ES 2.0 acceleration */
-MirEGLNativeWindowType mir_get_egl_type(MirSurface *surface);
+MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);
