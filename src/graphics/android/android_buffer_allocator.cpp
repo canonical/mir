@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/compositor/buffer_properties.h"
 #include "android_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "android_buffer.h"
@@ -61,7 +62,10 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
 }
 
 std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
-    geom::Size size, geom::PixelFormat pf)
+    mc::BufferProperties const& buffer_properties)
 {
-    return std::unique_ptr<mc::Buffer>(new AndroidBuffer(alloc_device, size, pf));
+    return std::unique_ptr<mc::Buffer>(
+        new AndroidBuffer(alloc_device,
+                          buffer_properties.size,
+                          buffer_properties.format));
 }
