@@ -20,7 +20,7 @@
 #include "mir/frontend/application_manager.h"
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_session.h"
-#include "mir/frontend/application_focus_strategy.h"
+#include "mir/frontend/application_focus_selection_strategy.h"
 #include "mir/frontend/application_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
@@ -47,7 +47,7 @@ struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
     MOCK_METHOD0(iterator, std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator>());
 };
 
-struct MockFocusStrategy: public mf::ApplicationFocusStrategy
+struct MockFocusSelectionStrategy: public mf::ApplicationFocusSelectionStrategy
 {
     MOCK_METHOD2(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
     MOCK_METHOD2(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
@@ -65,12 +65,12 @@ TEST(ApplicationManager, open_and_close_session)
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
-    MockFocusStrategy strategy;
+    MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(model, insert_session(_)).Times(1);
@@ -89,12 +89,12 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
-    MockFocusStrategy strategy;
+    MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
@@ -128,13 +128,13 @@ TEST(ApplicationManager, new_applications_receive_focus)
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
-    MockFocusStrategy strategy;
+    MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::ApplicationSessionContainer>(&model, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(model, insert_session(_)).Times(1);

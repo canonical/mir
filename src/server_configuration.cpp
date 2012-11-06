@@ -28,7 +28,7 @@
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/application_manager.h"
-#include "mir/frontend/registration_order_focus_strategy.h"
+#include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/frontend/application_session_model.h"
 #include "mir/graphics/display.h"
@@ -157,8 +157,8 @@ mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::Ap
 {
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>();
     auto session_model = std::make_shared<mf::ApplicationSessionModel>();
-    auto focus_strategy = std::make_shared<mf::RegistrationOrderFocusStrategy>();
-    return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_strategy, focus_mechanism);
+    auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSelectionStrategy>();
+    return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mf::Communicator>

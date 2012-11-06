@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/registration_order_focus_strategy.h"
+#include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_container.h"
 
@@ -27,12 +27,12 @@
 
 namespace mf = mir::frontend;
 
-mf::RegistrationOrderFocusStrategy::RegistrationOrderFocusStrategy()
+mf::RegistrationOrderFocusSelectionStrategy::RegistrationOrderFocusSelectionStrategy()
 {
 
 }
 
-std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_focus_app (std::shared_ptr<mf::ApplicationSessionContainer> app_container, std::shared_ptr<mf::ApplicationSession> focused_app)
+std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrategy::next_focus_app (std::shared_ptr<mf::ApplicationSessionContainer> app_container, std::shared_ptr<mf::ApplicationSession> focused_app)
 {
     auto it = app_container->iterator();
 
@@ -61,7 +61,7 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_f
     return **it;
 }
 
-std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::previous_focus_app (std::shared_ptr<mf::ApplicationSessionContainer> app_container, std::shared_ptr<mf::ApplicationSession> focused_app)
+std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrategy::previous_focus_app (std::shared_ptr<mf::ApplicationSessionContainer> app_container, std::shared_ptr<mf::ApplicationSession> focused_app)
 {
     auto it = app_container->iterator();
     

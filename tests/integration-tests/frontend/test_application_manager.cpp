@@ -22,9 +22,9 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/application_focus_strategy.h"
+#include "mir/frontend/application_focus_selection_strategy.h"
 #include "mir/frontend/application_focus_mechanism.h"
-#include "mir/frontend/registration_order_focus_strategy.h"
+#include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/application_session_model.h"
 
 
@@ -48,18 +48,18 @@ struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 
 }
 
-TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
+TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
-    mf::RegistrationOrderFocusStrategy strategy;
+    mf::RegistrationOrderFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, focus(_,_)).Times(3);
@@ -80,18 +80,18 @@ TEST(TestApplicationManagerAndFocusStrategy, cycle_focus)
     app_manager.focus_next();
 }
 
-TEST(TestApplicationManagerAndFocusStrategy, closing_applications_transfers_focus)
+TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel());
-    mf::RegistrationOrderFocusStrategy strategy;
+    mf::RegistrationOrderFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::ApplicationSession> new_session;
 
     mf::ApplicationManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
-                                       std::shared_ptr<mf::ApplicationFocusStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, focus(_,_)).Times(3);

@@ -34,7 +34,7 @@ namespace frontend
 
 class ApplicationSession;
 class ApplicationSessionContainer;
-class ApplicationFocusStrategy;
+class ApplicationFocusSelectionStrategy;
 class ApplicationFocusMechanism;
 
 class ApplicationManager
@@ -42,7 +42,7 @@ class ApplicationManager
  public:
     explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser,
                                 std::shared_ptr<ApplicationSessionContainer> session_model,
-                                std::shared_ptr<ApplicationFocusStrategy> focus_strategy,
+                                std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy,
                                 std::shared_ptr<ApplicationFocusMechanism> focus_mechanism);
     virtual ~ApplicationManager() {}
 
@@ -58,7 +58,7 @@ protected:
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
     std::shared_ptr<ApplicationSessionContainer> app_model;
-    std::shared_ptr<ApplicationFocusStrategy> focus_strategy;
+    std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy;
     std::shared_ptr<ApplicationFocusMechanism> focus_mechanism;
 
     std::weak_ptr<ApplicationSession> focus_application;
