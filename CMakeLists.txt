@@ -29,6 +29,8 @@ set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
 project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
@@ -77,6 +79,14 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 
 if (MIR_PLATFORM STREQUAL "android")
+  include (cmake/AndroidFlags.cmake)
+  get_android_flags()
+  add_definitions( ${ANDROID_DEFINITIONS} )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS ${ANDROID_LINKER_FLAGS})
+  set(CMAKE_SHARED_LINKER_FLAGS ${ANDROID_LINKER_FLAGS})
+  set(CMAKE_MODULE_LINKER_FLAGS ${ANDROID_LINKER_FLAGS})
+
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
 elseif (MIR_PLATFORM STREQUAL "gbm")
