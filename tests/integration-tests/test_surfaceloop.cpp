@@ -98,7 +98,8 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
-mc::BufferProperties const buffer_properties{size, format};
+mc::BufferUsage const usage{mc::BufferUsage::hardware};
+mc::BufferProperties const buffer_properties{size, format, usage};
 }
 
 namespace mir

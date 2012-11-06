@@ -116,7 +116,8 @@ protected:
         allocator = platform->create_buffer_allocator(buffer_initializer);
         size = geom::Size{geom::Width{100}, geom::Height{100}};
         pf = geom::PixelFormat::rgba_8888;
-        buffer_properties = mc::BufferProperties{size, pf};
+        usage = mc::BufferUsage::hardware;
+        buffer_properties = mc::BufferProperties{size, pf, usage};
     }
 
     std::shared_ptr<mg::Platform> platform;
@@ -124,6 +125,7 @@ protected:
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     geom::Size size;
     geom::PixelFormat pf;
+    mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
 };
 

@@ -50,7 +50,8 @@ protected:
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
-        buffer_properties = mc::BufferProperties{size, pf};
+        usage = mc::BufferUsage::hardware;
+        buffer_properties = mc::BufferProperties{size, pf, usage};
 
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
@@ -59,6 +60,7 @@ protected:
     // Defaults
     geom::Size size;
     geom::PixelFormat pf;
+    mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
@@ -84,7 +86,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888});
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
 }
 
 static bool has_hardware_rendering_flag_set(uint32_t flags) {
