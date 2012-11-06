@@ -82,6 +82,8 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
+    if (&error_connection == connection) return;
+
     auto wait_handle = connection->disconnect();
     wait_handle->wait_for_result();
 
@@ -93,6 +95,8 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
+    if (&error_connection == connection) return 0;
+
     try
     {
         return connection->create_surface(*params, callback, context);

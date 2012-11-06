@@ -327,4 +327,25 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
+
+            MirSurfaceParameters const request_params =
+                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+//            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+//            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
 }
