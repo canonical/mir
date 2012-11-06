@@ -16,8 +16,7 @@
 
 list(
   APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch1.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/fake_event_hub.cpp
 )
 
 set(

@@ -1,4 +1,4 @@
-#include "fake_event_hub.h"
+#include "mir_test/fake_event_hub.h"
 
 using android::AxisInfo;
 using android::InputDeviceIdentifier;
