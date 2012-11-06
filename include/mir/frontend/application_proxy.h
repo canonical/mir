@@ -43,7 +43,7 @@ namespace frontend
 {
 class ResourceCache;
 class ApplicationListener;
-class ApplicationManager;
+class ApplicationSessionFactory;
 class ApplicationSession;
 
 // ApplicationProxy relays requests from the client into the server process.
@@ -52,7 +52,7 @@ class ApplicationProxy : public mir::protobuf::DisplayServer
 public:
 
     ApplicationProxy(
-        std::shared_ptr<frontend::ApplicationManager> const& application_manager,
+        std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<ApplicationListener> const& listener,
@@ -90,7 +90,7 @@ private:
     int next_id();
 
     std::string app_name;
-    std::shared_ptr<frontend::ApplicationManager> application_manager;
+    std::shared_ptr<frontend::ApplicationSessionFactory> session_factory;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;

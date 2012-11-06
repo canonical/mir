@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
 #include <memory>
+#include "mir/frontend/application_session_factory.h"
 
 namespace mir
 {
@@ -37,7 +38,7 @@ class ApplicationSessionContainer;
 class ApplicationFocusSelectionStrategy;
 class ApplicationFocusMechanism;
 
-class ApplicationManager
+class ApplicationManager : public ApplicationSessionFactory
 {
  public:
     explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser,
@@ -46,8 +47,8 @@ class ApplicationManager
                                 std::shared_ptr<ApplicationFocusMechanism> focus_mechanism);
     virtual ~ApplicationManager() {}
 
-    std::shared_ptr<ApplicationSession> open_session(std::string name);
-    void close_session(std::shared_ptr<ApplicationSession> session);
+    virtual std::shared_ptr<ApplicationSession> open_session(std::string name);
+    virtual void close_session(std::shared_ptr<ApplicationSession> const& session);
     
     void focus_next();
 

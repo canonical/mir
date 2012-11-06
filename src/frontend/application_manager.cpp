@@ -56,7 +56,7 @@ std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std
     return new_session;
 }
 
-void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> session)
+void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> const& session)
 {
     if (session == focus_application.lock())
     {

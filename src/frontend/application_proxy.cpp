@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/application_session_factory.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/resource_cache.h"
 
@@ -32,12 +32,12 @@
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<frontend::ApplicationManager> const& manager,
+    std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    application_manager(manager),
+    session_factory(session_factory),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     listener(listener),
@@ -55,7 +55,7 @@ void mir::frontend::ApplicationProxy::connect(
     app_name = request->application_name();
     listener->application_connect_called(app_name);
     
-    application_session = application_manager->open_session(app_name);
+    application_session = session_factory->open_session(app_name);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -192,7 +192,7 @@ void mir::frontend::ApplicationProxy::disconnect(
 {
     listener->application_disconnect_called(app_name);
 
-    application_manager->close_session(application_session);
+    session_factory->close_session(application_session);
 
     done->Run();
 }
