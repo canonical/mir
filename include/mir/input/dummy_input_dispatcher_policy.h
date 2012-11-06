@@ -11,7 +11,8 @@ namespace android
 
 namespace mir
 {
-
+namespace input
+{
 /*
  Dummy implementation of a InputReaderPolicy
 
@@ -120,7 +121,7 @@ public:
         return true;
     }
 };
-
+}
 }
 
 #endif // MIR_DUMMY_INPUT_DISPATCHER_POLICY_H_
