@@ -27,7 +27,6 @@
 #include <cassert>
 #include <functional>
 #include <memory>
-#include <set>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
@@ -42,7 +41,7 @@ ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bun
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
+    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
     {
         mg::Renderable& renderable = **it;
         if (filter(renderable)) renderable_operator(renderable);
@@ -61,7 +60,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
                 geom::Size{params.size.width, params.size.height},
                 geom::PixelFormat::rgba_8888)));
 
-    surfaces.insert(surface);
+    surfaces.push_back(surface);
     return surface;
 }
 
@@ -75,3 +74,16 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
     // else; TODO error logging
 }
 
+void ms::SurfaceStack::raise_to_top(std::weak_ptr<ms::Surface> surface)
+{
+    std::lock_guard<std::mutex> lg(guard);
+    
+    auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+    
+    if (p != surfaces.end())
+    {
+        surfaces.push_back(*p);
+        surfaces.erase(p);
+    }
+
+}
