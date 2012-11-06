@@ -31,7 +31,7 @@ class Rectangle;
 }
 namespace test
 {
-struct MockAndroidRegistrar : public client::AndroidRegistrar
+struct MockAndroidRegistrar : public client::android::AndroidRegistrar
 {
     MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
     MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));

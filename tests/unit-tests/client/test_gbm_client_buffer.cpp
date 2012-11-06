@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mcl=mir::client;
+namespace mclg=mir::client::gbm;
 
 struct MirGBMBufferTest : public testing::Test
 {
@@ -54,7 +54,7 @@ TEST_F(MirGBMBufferTest, width_and_height)
 {
     using namespace testing;
 
-    mcl::GBMClientBuffer buffer(std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(std::move(package), size, pf);
 
     EXPECT_EQ(buffer.size().height, height); 
     EXPECT_EQ(buffer.size().width, width); 
@@ -65,7 +65,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)
 {
     using namespace testing;
 
-    mcl::GBMClientBuffer buffer(std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(std::move(package), size, pf);
 
     EXPECT_EQ(buffer.stride(), stride);
 }
@@ -74,7 +74,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
 {
     using namespace testing;
 
-    mcl::GBMClientBuffer buffer(std::move(package), size, pf);
+    mclg::GBMClientBuffer buffer(std::move(package), size, pf);
 
     auto package_return = buffer.get_buffer_package();
     EXPECT_EQ(package_return->data_items, package_copy->data_items);

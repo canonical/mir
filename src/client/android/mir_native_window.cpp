@@ -20,12 +20,13 @@
 #include "mir_client/client_buffer.h"
 #include "mir/thread/all.h"
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 
 static void incRef(android_native_base_t*)
 {
 }
 
-mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
+mcla::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
  : surface(client_surface),
    driver_pixel_format(-1)
 {
@@ -44,7 +45,7 @@ mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
 }
 
-int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
+int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     int ret = 0;
     auto buffer = surface->get_current_buffer();
@@ -55,13 +56,13 @@ int mcl::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-int mcl::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* /*buffer*/)
+int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* /*buffer*/)
 {
     mir_wait_for(surface->next_buffer(empty, NULL));
     return 0;
 }
 
-int mcl::MirNativeWindow::query(int key, int* value ) const
+int mcla::MirNativeWindow::query(int key, int* value ) const
 {
     int ret = 0;
     switch (key)
@@ -87,13 +88,13 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
     return ret;
 }
 
-int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
+int mcla::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
 {
-    auto self = static_cast<const mcl::MirNativeWindow*>(anw);
+    auto self = static_cast<const mcla::MirNativeWindow*>(anw);
     return self->query(key, value);
 } 
 
-int mcl::MirNativeWindow::perform(int key, va_list arg_list )
+int mcla::MirNativeWindow::perform(int key, va_list arg_list )
 {
     int ret = 0;
     va_list args;
@@ -112,11 +113,11 @@ int mcl::MirNativeWindow::perform(int key, va_list arg_list )
     return ret;
 }
 
-int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
+int mcla::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
 {
     va_list args;
     va_start(args, key);
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    auto self = static_cast<const mcla::MirNativeWindow*>(window);
     auto ret = self->perform(key, args);
     va_end(args);
 
@@ -124,30 +125,30 @@ int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
 } 
 
 
-int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer)
+int mcla::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer)
 {   
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    auto self = static_cast<const mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
-int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer)
+int mcla::MirNativeWindow::queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer)
 {
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    auto self = static_cast<const mcla::MirNativeWindow*>(window);
     return self->queueBuffer(buffer);
 }
 
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
-int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+int mcla::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
 {
     return 0;
 }
 
-int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+int mcla::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
     return 0;
 }
 
-int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
+int mcla::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
 {
     return 0;
 }

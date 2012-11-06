@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
 namespace
@@ -91,7 +92,7 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
     ANativeWindow* anw;
     int value;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->query, NULL);
     EXPECT_NO_THROW({
@@ -108,7 +109,7 @@ TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
     ANativeWindow* anw;
     int value;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     EXPECT_CALL(*mock_surface, get_parameters())
         .Times(1);
@@ -127,7 +128,7 @@ TEST_F(AndroidNativeWindowTest, native_window_height_query_hook)
     ANativeWindow* anw;
     int value;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
     EXPECT_CALL(*mock_surface, get_parameters())
         .Times(1);
 
@@ -148,7 +149,7 @@ TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
     int transform_hint_zero = 0;
     int value;
 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     auto rc = anw->query(anw, NATIVE_WINDOW_TRANSFORM_HINT ,&value);
 
@@ -164,7 +165,7 @@ TEST_F(AndroidNativeWindowTest, native_window_default_width_query_hook)
     ANativeWindow* anw;
     int value;
 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     auto rc = anw->query(anw, NATIVE_WINDOW_DEFAULT_WIDTH ,&value);
 
@@ -180,7 +181,7 @@ TEST_F(AndroidNativeWindowTest, native_window_default_height_query_hook)
     ANativeWindow* anw;
     int value;
 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     auto rc = anw->query(anw, NATIVE_WINDOW_DEFAULT_HEIGHT ,&value);
 
@@ -195,7 +196,7 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
 {
     ANativeWindow* anw;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->perform, NULL);
     EXPECT_NO_THROW({
@@ -211,7 +212,7 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_remembers_format)
     ANativeWindow* anw;
     int format = 945;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     anw->perform(anw, NATIVE_WINDOW_SET_BUFFERS_FORMAT , format);
 
@@ -228,7 +229,7 @@ TEST_F(AndroidNativeWindowTest, native_window_setswapinterval_hook_callable)
 {
     ANativeWindow* anw;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->setSwapInterval, NULL);
     EXPECT_NO_THROW({
@@ -244,7 +245,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->dequeueBuffer, NULL);
     EXPECT_NO_THROW({
@@ -263,7 +264,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_calls_surface_get_current)
     EXPECT_CALL(*mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer)); 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     anw->dequeueBuffer(anw, &tmp);
     
@@ -287,7 +288,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     anw->dequeueBuffer(anw, &tmp);
    
@@ -302,7 +303,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
  
     ANativeWindowBuffer* tmp;
 
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     auto ret = anw->dequeueBuffer(anw, &tmp);
     EXPECT_EQ(ret, 0);
@@ -316,7 +317,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp = 0x0;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->queueBuffer, NULL);
     EXPECT_NO_THROW({
@@ -334,7 +335,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_advances_buffer)
 
     EXPECT_CALL(*mock_surface, next_buffer(_,_))
         .Times(1);
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     anw->queueBuffer(anw, tmp);
 
@@ -347,7 +348,7 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_callable)
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp = 0x0;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->cancelBuffer, NULL);
     EXPECT_NO_THROW({
@@ -363,7 +364,7 @@ TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
     ANativeWindow* anw;
     ANativeWindowBuffer* tmp = 0x0;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->lockBuffer, NULL);
     EXPECT_NO_THROW({
@@ -377,7 +378,7 @@ TEST_F(AndroidNativeWindowTest, native_window_incref_hook_callable)
 {
     ANativeWindow* anw;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->common.incRef, NULL);
     EXPECT_NO_THROW({
@@ -392,7 +393,7 @@ TEST_F(AndroidNativeWindowTest, native_window_decref_hook_callable)
 {
     ANativeWindow* anw;
  
-    anw = new mcl::MirNativeWindow(mock_surface.get());
+    anw = new mcla::MirNativeWindow(mock_surface.get());
 
     ASSERT_NE((int) anw->common.decRef, NULL);
     EXPECT_NO_THROW({

@@ -24,7 +24,10 @@ namespace mir
 {
 namespace client
 {
+
 class ClientBufferDepository;
+namespace android
+{
 
 class AndroidClientPlatform : public ClientPlatform
 {
@@ -34,6 +37,7 @@ public:
     void destroy_egl_window(EGLNativeWindowType window);
 };
 
+}
 }
 }
 

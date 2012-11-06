@@ -30,6 +30,9 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+
+namespace android
+{
 class AndroidRegistrar;
 
 class AndroidClientBufferDepository : public ClientBufferDepository
@@ -46,6 +49,7 @@ private:
     std::map<int, std::shared_ptr<mir::client::ClientBuffer>> buffer_depository;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_DEPOSITORY_H_ */
