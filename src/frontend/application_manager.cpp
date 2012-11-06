@@ -31,17 +31,17 @@ namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
 mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, 
-                                           std::shared_ptr<mf::ApplicationSessionContainer> model,
+                                           std::shared_ptr<mf::ApplicationSessionContainer> container,
                                            std::shared_ptr<mf::ApplicationFocusSelectionStrategy> strategy,
                                            std::shared_ptr<mf::ApplicationFocusMechanism> mechanism) : surface_organiser(organiser),
-                                                                                                       app_model(model),
+                                                                                                       app_container(container),
                                                                                                        focus_selection_strategy(strategy),
                                                                                                        focus_mechanism(mechanism)
 															     
 {
     assert(surface_organiser);
     assert(strategy);
-    assert(model);
+    assert(container);
     assert(mechanism);
 }
 
@@ -49,9 +49,9 @@ std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std
 {
     std::shared_ptr<mf::ApplicationSession> session(new mf::ApplicationSession(surface_organiser, name));
   
-    app_model->insert_session(session);
+    app_container->insert_session(session);
     focus_application = session;
-    focus_mechanism->focus(app_model, session);
+    focus_mechanism->focus(app_container, session);
   
     return session;
 }
@@ -60,10 +60,10 @@ void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSessio
 {
     if (session == focus_application.lock())
     {
-        focus_application = focus_selection_strategy->previous_focus_app(app_model, session);
-        focus_mechanism->focus(app_model, focus_application.lock());
+        focus_application = focus_selection_strategy->previous_focus_app(app_container, session);
+        focus_mechanism->focus(app_container, focus_application.lock());
     }
-    app_model->remove_session(session);
+    app_container->remove_session(session);
 }
 
 void mf::ApplicationManager::focus_next()
@@ -73,7 +73,7 @@ void mf::ApplicationManager::focus_next()
     {
         return;
     }
-    auto next_focus = focus_selection_strategy->next_focus_app(app_model, focused).lock();
+    auto next_focus = focus_selection_strategy->next_focus_app(app_container, focused).lock();
     focus_application = next_focus;
-    focus_mechanism->focus(app_model, next_focus);
+    focus_mechanism->focus(app_container, next_focus);
 }

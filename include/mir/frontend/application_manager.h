@@ -41,7 +41,7 @@ class ApplicationManager
 {
  public:
     explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser,
-                                std::shared_ptr<ApplicationSessionContainer> session_model,
+                                std::shared_ptr<ApplicationSessionContainer> session_container,
                                 std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy,
                                 std::shared_ptr<ApplicationFocusMechanism> focus_mechanism);
     virtual ~ApplicationManager() {}
@@ -57,7 +57,7 @@ protected:
 
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
-    std::shared_ptr<ApplicationSessionContainer> app_model;
+    std::shared_ptr<ApplicationSessionContainer> app_container;
     std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy;
     std::shared_ptr<ApplicationFocusMechanism> focus_mechanism;
 
