@@ -17,6 +17,7 @@
  */
 
 #include "mir/input/event_filter.h"
+#include "mir/input/event_filter_dispatcher_policy.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,10 +42,16 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     auto ev = new android::KeyEvent();
     MockEventFilter filter;
     mi::EventFilterDispatcherPolicy policy(std::shared_ptr<MockEventFilter>(&filter, mir::EmptyDeleter()));
+    uint32_t policy_flags;
     
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, filter_event(_)).Times(1).WillOnce(Return(false));
     
+
+    // The policy filters ALL key events before queuing
+    policy.interceptKeyBeforeQueueing(ev, policy_flags);
+    EXPECT_EQ(policy_flags, android::POLICY_FLAG_FILTERED);
+
     // Android uses alternate notation...the policy returns true if the event was NOT handled (e.g. the EventFilter
     // returns false)
     EXPECT_EQ(policy.filterInputEvent(ev, 0), true);    
