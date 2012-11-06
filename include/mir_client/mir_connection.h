@@ -43,8 +43,7 @@ class ClientBufferDepository;
 }
 
 struct SurfaceRelease;
-// TODO the connection should track all associated surfaces, and release them on
-// disconnection.
+
 class MirConnection
 {
 public:
