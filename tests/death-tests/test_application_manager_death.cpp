@@ -20,7 +20,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assertion)
 {
 // Trying to avoid "[WARNING] /usr/src/gtest/src/gtest-death-test.cc:789::
@@ -36,7 +35,6 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
 
 
 
