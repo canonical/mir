@@ -244,7 +244,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
 
             MirSurfaceParameters const request_params =
                 { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
@@ -311,4 +311,20 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 
     launch_client_process(client_config);
 }
+
+TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_STREQ("connect: No such file or directory", mir_connection_get_error_message(connection));
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 }

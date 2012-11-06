@@ -47,6 +47,8 @@ struct SurfaceRelease;
 class MirConnection
 {
 public:
+    MirConnection();
+
     MirConnection(const std::string& socket_file,
                   std::shared_ptr<mir::client::Logger> const & log);
     ~MirConnection();
@@ -64,6 +66,7 @@ public:
             void *context);
 
     char const * get_error_message();
+    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,

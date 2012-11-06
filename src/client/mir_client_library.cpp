@@ -48,6 +48,11 @@ namespace gp = google::protobuf;
 mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
+namespace
+{
+MirConnection error_connection;
+}
+
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
@@ -57,10 +62,11 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         MirConnection * connection = new MirConnection(socket_file, log);
         return connection->connect(name, callback, context);
     }
-    catch (std::exception const& /*x*/)
+    catch (std::exception const& x)
     {
-        // TODO callback with an error connection
-        return 0; // TODO
+        error_connection.set_error_message(x.what());
+        callback(&error_connection, context);
+        return 0;
     }
 }
 
