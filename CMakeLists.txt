@@ -33,7 +33,7 @@ cmake_minimum_required(VERSION 2.8)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
