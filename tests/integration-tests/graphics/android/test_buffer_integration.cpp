@@ -23,6 +23,7 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include "mir_test/test_utils_android_graphics.h"
 #include "mir_test/test_utils_graphics.h"
@@ -56,6 +57,7 @@ protected:
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
         pf  = geom::PixelFormat::rgba_8888;
+        buffer_properties = mc::BufferProperties{size, pf};
     }
 
     mt::glAnimationBasic gl_animation;
@@ -63,6 +65,7 @@ protected:
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
     geom::Size size;
     geom::PixelFormat pf;
+    mc::BufferProperties buffer_properties;
 
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
@@ -100,7 +103,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
     using namespace testing;
 
     EXPECT_NO_THROW({ 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf); 
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
     });
 }
 
@@ -108,7 +111,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
 
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
@@ -122,7 +125,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
+    mc::BufferProperties buffer_properties{size, pf};
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 
@@ -149,7 +153,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(size, pf);
+    mc::BufferProperties buffer_properties{size, pf};
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 

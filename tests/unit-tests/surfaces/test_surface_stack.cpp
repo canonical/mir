@@ -20,6 +20,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/surfaces/surface_stack.h"
@@ -69,7 +70,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
 
         ON_CALL(
             *this,
-            create_buffer_bundle(_, _))
+            create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
@@ -77,11 +78,9 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()), generator ))));
     }
 
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         create_buffer_bundle,
-        std::shared_ptr<mc::BufferBundle>(
-            geom::Size size,
-            geom::PixelFormat pf));
+        std::shared_ptr<mc::BufferBundle>(mc::BufferProperties const&));
 };
 
 struct MockSurfaceRenderer : public mg::Renderer
@@ -131,7 +130,7 @@ TEST(
 
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _))
+        create_buffer_bundle(_))
             .Times(AtLeast(1));
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
@@ -157,7 +156,7 @@ TEST(
     EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(0);
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _)).Times(0);
+        create_buffer_bundle(_)).Times(0);
     EXPECT_CALL(renderer, render(_)).Times(0);
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
@@ -178,7 +177,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _)).Times(AtLeast(1));
+        create_buffer_bundle(_)).Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
@@ -216,7 +215,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _)).Times(AtLeast(1));
+        create_buffer_bundle(_)).Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
@@ -254,7 +253,7 @@ TEST(
     MockBufferBundleFactory buffer_bundle_factory;
     EXPECT_CALL(
         buffer_bundle_factory,
-        create_buffer_bundle(_, _)).Times(AtLeast(1));
+        create_buffer_bundle(_)).Times(AtLeast(1));
      
     ms::SurfaceStack stack(&buffer_bundle_factory);
 

@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -57,15 +58,15 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_,_))
+        ON_CALL(*this, create_swapper(_))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(
@@ -80,15 +81,15 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     MockGraphicBufferAllocator()
     {
         using testing::_;
-        ON_CALL(*this, alloc_buffer(_,_))
+        ON_CALL(*this, alloc_buffer(_))
             .WillByDefault(testing::Invoke(this, &MockGraphicBufferAllocator::on_create_swapper));
     }
 
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (geom::Size, geom::PixelFormat));
+        std::unique_ptr<mc::Buffer> (mc::BufferProperties const&));
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
@@ -97,6 +98,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+mc::BufferProperties const buffer_properties{size, format};
 }
 
 namespace mir
@@ -232,7 +234,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(size, format)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }
@@ -302,7 +304,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             using testing::AtLeast;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator,alloc_buffer(size, format)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator,alloc_buffer(buffer_properties)).Times(AtLeast(2));
             return buffer_allocator;
         }
 
@@ -422,8 +424,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     {
      public:
         virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-            geom::Size /*size*/,
-            geom::PixelFormat /*pf*/)
+            mc::BufferProperties const&)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());
         }

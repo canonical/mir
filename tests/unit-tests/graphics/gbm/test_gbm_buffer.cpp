@@ -26,6 +26,7 @@
 #include "src/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_properties.h"
 
 
 #include <gbm.h>
@@ -55,6 +56,7 @@ protected:
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
+        buffer_properties = mc::BufferProperties{size, pf};
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
@@ -95,6 +97,7 @@ protected:
     geom::PixelFormat pf;
     geom::Size size;
     geom::Stride stride;
+    mc::BufferProperties buffer_properties;
 };
 
 TEST_F(GBMGraphicBufferBasic, dimensions_test)
@@ -104,7 +107,7 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(size, pf);
+    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(buffer_properties);
     ASSERT_EQ(size, buffer->size());
 }
 
@@ -115,7 +118,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(size, pf));
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(buffer_properties));
     ASSERT_EQ(pf, buffer->pixel_format());
 }
 
@@ -130,7 +133,7 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     // TODO: is there a *maximum* sane value for stride?
     geom::Stride minimum(size.width.as_uint32_t() * 4);
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(size, pf));
+    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(buffer_properties));
 
     ASSERT_LE(minimum, buffer->stride());
 }
@@ -139,7 +142,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 {
     using namespace testing;
 
-    auto buffer = allocator->alloc_buffer(size, pf);
+    auto buffer = allocator->alloc_buffer(buffer_properties);
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_TRUE(ipc_package->ipc_fds.empty());
     ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
@@ -174,7 +177,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
             .WillOnce(DoAll(SetGEMFlinkName(gem_flink_name), Return(0)));
 
     EXPECT_NO_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         auto ipc_package = buffer->get_ipc_package();
         ASSERT_EQ(gem_flink_name, static_cast<uint32_t>(ipc_package->ipc_data[0]));
         ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->stride));
@@ -190,7 +193,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_gem_flink_failure)
             .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         auto ipc_package = buffer->get_ipc_package();
     }, std::runtime_error);
 }
@@ -206,7 +209,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
     EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         buffer->bind_to_texture();
     }, std::runtime_error);
 }
@@ -221,7 +224,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_gl_oes_egl_image_not_supported)
         .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 
     EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         buffer->bind_to_texture();
     }, std::runtime_error);
 }
@@ -234,7 +237,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_creation_failed)
         .WillByDefault(Return(EGL_NO_IMAGE_KHR));
 
     EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         buffer->bind_to_texture();
     }, std::runtime_error);
 }
@@ -257,7 +260,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
     }
 
     EXPECT_NO_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         buffer->bind_to_texture();
     });
 }

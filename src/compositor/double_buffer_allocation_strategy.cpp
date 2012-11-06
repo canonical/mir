@@ -35,11 +35,10 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
 }
 
 std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
-    geometry::Size size,
-    geometry::PixelFormat pf)
+    BufferProperties const& buffer_properties)
 {
     return std::unique_ptr<BufferSwapper>(
         new BufferSwapperDouble(
-            gr_allocator->alloc_buffer(size, pf),
-            gr_allocator->alloc_buffer(size, pf)));
+            gr_allocator->alloc_buffer(buffer_properties),
+            gr_allocator->alloc_buffer(buffer_properties)));
 }

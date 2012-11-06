@@ -22,8 +22,6 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/pixel_format.h"
 
 #include <memory>
 
@@ -33,6 +31,7 @@ namespace compositor
 {
 
 class BufferBundle;
+class BufferProperties;
 
 class BufferBundleFactory
 {
@@ -40,8 +39,7 @@ public:
     virtual ~BufferBundleFactory() {}
 
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        geometry::Size size,
-        geometry::PixelFormat pf) = 0;
+        BufferProperties const& buffer_properties) = 0;
 
 protected:
     BufferBundleFactory() = default;
