@@ -18,7 +18,6 @@
 set(
   FRONTEND_SOURCES
 
-  application.cpp
   application_proxy.cpp
   null_application_listener.cpp
 
