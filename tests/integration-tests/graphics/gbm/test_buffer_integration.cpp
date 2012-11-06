@@ -20,6 +20,7 @@
 #include "src/graphics/gbm/gbm_display.h"
 #include "src/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/thread/all.h"
 
@@ -70,7 +71,7 @@ private:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
@@ -115,6 +116,7 @@ protected:
         allocator = platform->create_buffer_allocator(buffer_initializer);
         size = geom::Size{geom::Width{100}, geom::Height{100}};
         pf = geom::PixelFormat::rgba_8888;
+        buffer_properties = mc::BufferProperties{size, pf};
     }
 
     std::shared_ptr<mg::Platform> platform;
@@ -122,27 +124,26 @@ protected:
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     geom::Size size;
     geom::PixelFormat pf;
-
+    mc::BufferProperties buffer_properties;
 };
 
 struct BufferCreatorThread
 {
     BufferCreatorThread(const std::shared_ptr<mc::GraphicBufferAllocator>& allocator,
-                        const geom::Size& size, const geom::PixelFormat& pf)
-        : allocator{allocator}, size{size}, pf{pf}
+                        mc::BufferProperties const& buffer_properties)
+        : allocator{allocator}, buffer_properties{buffer_properties}
     {
     }
 
     void operator()()
     {
         using namespace testing;
-        buffer = allocator->alloc_buffer(size, pf);
+        buffer = allocator->alloc_buffer(buffer_properties);
     }
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::unique_ptr<mc::Buffer> buffer;
-    geom::Size size;
-    geom::PixelFormat pf;
+    mc::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread
@@ -194,7 +195,7 @@ TEST_F(GBMBufferIntegration, buffer_creation_from_arbitrary_thread_works)
     using namespace testing;
 
     EXPECT_NO_THROW({
-        BufferCreatorThread creator(allocator, size, pf);
+        BufferCreatorThread creator(allocator, buffer_properties);
         std::thread t{std::ref(creator)};
         t.join();
         ASSERT_TRUE(creator.buffer.get() != 0);
@@ -206,7 +207,7 @@ TEST_F(GBMBufferIntegration, buffer_destruction_from_arbitrary_thread_works)
     using namespace testing;
 
     EXPECT_NO_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         buffer->bind_to_texture();
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
 
@@ -221,7 +222,7 @@ TEST_F(GBMBufferIntegration, buffer_lazy_texture_instantiation_from_arbitrary_th
     using namespace testing;
 
     EXPECT_NO_THROW({
-        auto buffer = allocator->alloc_buffer(size, pf);
+        auto buffer = allocator->alloc_buffer(buffer_properties);
         BufferTextureInstantiatorThread texture_instantiator{buffer};
         std::thread t{std::ref(texture_instantiator)};
         t.join();

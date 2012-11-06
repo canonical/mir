@@ -20,6 +20,7 @@
 #include "src/graphics/gbm/gbm_platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "src/graphics/gbm/gbm_buffer_allocator.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -49,6 +50,7 @@ protected:
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
+        buffer_properties = mc::BufferProperties{size, pf};
 
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
@@ -57,6 +59,7 @@ protected:
     // Defaults
     geom::Size size;
     geom::PixelFormat pf;
+    mc::BufferProperties buffer_properties;
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
@@ -71,7 +74,7 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    EXPECT_TRUE(allocator->alloc_buffer(size, pf).get() != NULL);
+    EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
@@ -81,7 +84,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(size, geom::PixelFormat::rgba_8888);
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888});
 }
 
 static bool has_hardware_rendering_flag_set(uint32_t flags) {
@@ -95,7 +98,7 @@ TEST_F(GBMBufferAllocatorTest, creates_hw_rendering_buffer_by_default)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,Truly(has_hardware_rendering_flag_set)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(size, pf);
+    allocator->alloc_buffer(buffer_properties);
 }
 
 TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
@@ -105,7 +108,7 @@ TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,size.width.as_uint32_t(),size.height.as_uint32_t(),_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(size, pf);
+    allocator->alloc_buffer(buffer_properties);
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
@@ -117,7 +120,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_handle_is_destroyed)
     .WillOnce(Return(bo));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(bo));
 
-    allocator->alloc_buffer(size, pf);
+    allocator->alloc_buffer(buffer_properties);
 }
 
 TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
@@ -127,7 +130,7 @@ TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
     EXPECT_CALL(*mock_buffer_initializer, operator_call(_,_))
         .Times(1);
 
-    allocator->alloc_buffer(size, pf);
+    allocator->alloc_buffer(buffer_properties);
 }
 
 TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
@@ -138,6 +141,6 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
 
     EXPECT_NO_THROW({
-        allocator->alloc_buffer(size, pf);
+        allocator->alloc_buffer(buffer_properties);
     });
 }

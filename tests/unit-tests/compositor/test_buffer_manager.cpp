@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,14 +40,15 @@ namespace
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&));
 };
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(size.width)};
 const geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+const mc::BufferProperties buffer_properties{size, pixel_format};
 
 }
 
@@ -64,12 +66,11 @@ TEST(buffer_manager, create_buffer)
             std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, mir::EmptyDeleter()));
 
 
-    EXPECT_CALL(allocation_strategy, create_swapper(Eq(size), Eq(pixel_format))).Times(AtLeast(1));
+    EXPECT_CALL(allocation_strategy, create_swapper(buffer_properties))
+        .Times(AtLeast(1));
 
     std::shared_ptr<mc::BufferBundle> bundle{
-        buffer_bundle_manager.create_buffer_bundle(
-            size,
-            pixel_format)};
+        buffer_bundle_manager.create_buffer_bundle(buffer_properties)};
 
     EXPECT_TRUE(bundle.get());
 }

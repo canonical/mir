@@ -19,6 +19,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_properties.h"
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
@@ -77,7 +78,9 @@ TEST_F(GraphicsPlatform, buffer_creation)
     auto allocator = platform->create_buffer_allocator(buffer_initializer);
     geom::Size size{geom::Width{320}, geom::Height{240}};
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
-    auto buffer = allocator->alloc_buffer(size, pf);
+    mc::BufferProperties buffer_properties{size, pf};
+
+    auto buffer = allocator->alloc_buffer(buffer_properties);
 
     ASSERT_TRUE(buffer.get() != NULL); 
 
