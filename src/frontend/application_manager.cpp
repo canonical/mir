@@ -47,13 +47,13 @@ mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfac
 
 std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
 {
-    std::shared_ptr<mf::ApplicationSession> session(new mf::ApplicationSession(surface_organiser, name));
+    auto new_session = std::make_shared<mf::ApplicationSession>(surface_organiser, name);
   
-    app_container->insert_session(session);
-    focus_application = session;
-    focus_mechanism->focus(app_container, session);
+    app_container->insert_session(new_session);
+    focus_application = new_session;
+    focus_mechanism->set_focus_to(new_session);
   
-    return session;
+    return new_session;
 }
 
 void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> session)
@@ -61,7 +61,7 @@ void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSessio
     if (session == focus_application.lock())
     {
         focus_application = focus_selection_strategy->previous_focus_app(app_container, session);
-        focus_mechanism->focus(app_container, focus_application.lock());
+        focus_mechanism->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
 }
@@ -75,5 +75,5 @@ void mf::ApplicationManager::focus_next()
     }
     auto next_focus = focus_selection_strategy->next_focus_app(app_container, focused).lock();
     focus_application = next_focus;
-    focus_mechanism->focus(app_container, next_focus);
+    focus_mechanism->set_focus_to(next_focus);
 }

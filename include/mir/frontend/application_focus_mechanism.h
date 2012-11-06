@@ -32,15 +32,13 @@ class ApplicationSurfaceOrganiser;
 namespace frontend
 {
 class ApplicationSession;
-class ApplicationSessionContainer;
 
 class ApplicationFocusMechanism
 {
 public:
     virtual ~ApplicationFocusMechanism() {}
 
-    virtual void focus (std::shared_ptr<ApplicationSessionContainer> model,
-                        std::shared_ptr<ApplicationSession> new_focus) = 0;
+    virtual void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus) = 0;
 
 protected:
     ApplicationFocusMechanism() = default;

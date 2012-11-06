@@ -43,7 +43,7 @@ namespace
 
 struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 {
-  MOCK_METHOD2(focus, void(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
+  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::ApplicationSession> const&));
 };
 
 }
@@ -62,7 +62,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
                                        std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
-    EXPECT_CALL(mechanism, focus(_,_)).Times(3);
+    EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
     auto session1 = app_manager.open_session("Visual Basic Studio");
     auto session2 = app_manager.open_session("Microsoft Access");
@@ -70,9 +70,9 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     
     {
       InSequence seq;
-      EXPECT_CALL(mechanism, focus(_,session1)).Times(1);
-      EXPECT_CALL(mechanism, focus(_,session2)).Times(1);
-      EXPECT_CALL(mechanism, focus(_,session3)).Times(1);
+      EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
+      EXPECT_CALL(mechanism, set_focus_to(session2)).Times(1);
+      EXPECT_CALL(mechanism, set_focus_to(session3)).Times(1);
     }
     
     app_manager.focus_next();
@@ -94,7 +94,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
                                        std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
-    EXPECT_CALL(mechanism, focus(_,_)).Times(3);
+    EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
     auto session1 = app_manager.open_session("Visual Basic Studio");
     auto session2 = app_manager.open_session("Microsoft Access");
@@ -102,8 +102,8 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     
     {
       InSequence seq;
-      EXPECT_CALL(mechanism, focus(_,session2)).Times(1);
-      EXPECT_CALL(mechanism, focus(_,session1)).Times(1);
+      EXPECT_CALL(mechanism, set_focus_to(session2)).Times(1);
+      EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
     }
     
     app_manager.close_session(session3);

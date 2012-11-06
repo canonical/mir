@@ -55,7 +55,7 @@ struct MockFocusSelectionStrategy: public mf::ApplicationFocusSelectionStrategy
   
 struct MockFocusMechanism: public mf::ApplicationFocusMechanism
 {
-    MOCK_METHOD2(focus, void(std::shared_ptr<mf::ApplicationSessionContainer>, std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::ApplicationSession> const&));
 };
 
 }
@@ -75,8 +75,8 @@ TEST(ApplicationManager, open_and_close_session)
     
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
-    EXPECT_CALL(mechanism, focus(_,_));
-    EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
+    EXPECT_CALL(mechanism, set_focus_to(_));
+    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<mf::ApplicationSession>())).Times(1);
 
     EXPECT_CALL(strategy, previous_focus_app(_, _)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
 
@@ -109,8 +109,8 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
 
-    EXPECT_CALL(mechanism, focus(_,_)).Times(1);
-    EXPECT_CALL(mechanism, focus(_,std::shared_ptr<mf::ApplicationSession>())).Times(1);
+    EXPECT_CALL(mechanism, set_focus_to(_)).Times(1);
+    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<mf::ApplicationSession>())).Times(1);
 
     EXPECT_CALL(strategy, previous_focus_app(_, _)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
@@ -138,7 +138,7 @@ TEST(ApplicationManager, new_applications_receive_focus)
                                        std::shared_ptr<mf::ApplicationFocusMechanism>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(model, insert_session(_)).Times(1);
-    EXPECT_CALL(mechanism, focus(_,_)).WillOnce(SaveArg<1>(&new_session));
+    EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
     auto session = app_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);

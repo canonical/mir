@@ -38,15 +38,16 @@ class ApplicationSessionContainer;
 class SingleVisibilityFocusMechanism : public ApplicationFocusMechanism
 {
 public:
-    explicit SingleVisibilityFocusMechanism() {}
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<ApplicationSessionContainer> const& app_container);
     virtual ~SingleVisibilityFocusMechanism() {}
 
-    void focus (std::shared_ptr<ApplicationSessionContainer> model, 
-                std::shared_ptr<ApplicationSession> new_focus);
+    void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus);
 
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
+private:
+    std::shared_ptr<ApplicationSessionContainer> app_container;
 };
 
 }

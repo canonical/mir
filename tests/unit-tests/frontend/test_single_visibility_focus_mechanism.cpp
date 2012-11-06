@@ -67,12 +67,12 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     model->insert_session(app2);
     model->insert_session(app3);
 
-    mf::SingleVisibilityFocusMechanism focus_mechanism;
+    mf::SingleVisibilityFocusMechanism focus_mechanism(model);
     
     EXPECT_CALL(m1, show()).Times(1);
     EXPECT_CALL(m2, hide()).Times(1);
     EXPECT_CALL(m3, hide()).Times(1);
     
-    focus_mechanism.focus(model, app1);
+    focus_mechanism.set_focus_to(app1);
 }
 

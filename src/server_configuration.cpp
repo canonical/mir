@@ -155,8 +155,8 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 std::shared_ptr<mf::ApplicationManager>
 mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
-    auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>();
     auto session_model = std::make_shared<mf::ApplicationSessionModel>();
+    auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
     auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSelectionStrategy>();
     return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
 }
