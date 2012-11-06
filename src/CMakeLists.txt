@@ -21,7 +21,7 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
-#add_subdirectory(input/)
+add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(process/)
 add_subdirectory(surfaces/)
