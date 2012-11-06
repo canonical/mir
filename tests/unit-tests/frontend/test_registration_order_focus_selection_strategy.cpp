@@ -47,9 +47,9 @@ TEST(RegistrationOrderFocusSelectionStrategy, focus_order)
     model->insert_session(app2);
     model->insert_session(app3);
 
-    assert(focus_selection_strategy.next_focus_app(app1).lock()->get_name() == app2->get_name());
-    assert(focus_selection_strategy.next_focus_app(app2).lock()->get_name() == app3->get_name());
-    assert(focus_selection_strategy.next_focus_app(app3).lock()->get_name() == app1->get_name());
+    EXPECT_EQ(focus_selection_strategy.next_focus_app(app1).lock()->get_name(), app2->get_name());
+    EXPECT_EQ(focus_selection_strategy.next_focus_app(app2).lock()->get_name(), app3->get_name());
+    EXPECT_EQ(focus_selection_strategy.next_focus_app(app3).lock()->get_name(), app1->get_name());
 }
 
 TEST(RegistrationOrderFocusSelectionStrategy, reverse_focus_order)
@@ -67,9 +67,9 @@ TEST(RegistrationOrderFocusSelectionStrategy, reverse_focus_order)
     model->insert_session(app2);
     model->insert_session(app3);
 
-    assert(focus_selection_strategy.previous_focus_app(app3).lock()->get_name() == app2->get_name());
-    assert(focus_selection_strategy.previous_focus_app(app2).lock()->get_name() == app1->get_name());
-    assert(focus_selection_strategy.previous_focus_app(app1).lock()->get_name() == app3->get_name());
+    EXPECT_EQ(focus_selection_strategy.previous_focus_app(app3).lock()->get_name(), app2->get_name());
+    EXPECT_EQ(focus_selection_strategy.previous_focus_app(app2).lock()->get_name(), app1->get_name());
+    EXPECT_EQ(focus_selection_strategy.previous_focus_app(app1).lock()->get_name(), app3->get_name());
 }
 
 TEST(RegistrationOrderFocusSelectionStrategy, no_focus)
@@ -83,5 +83,5 @@ TEST(RegistrationOrderFocusSelectionStrategy, no_focus)
 
     model->insert_session(app1);
 
-    assert(focus_selection_strategy.next_focus_app(std::shared_ptr<mf::ApplicationSession>()).lock()->get_name() == app1->get_name());
+    EXPECT_EQ(focus_selection_strategy.next_focus_app(std::shared_ptr<mf::ApplicationSession>()).lock()->get_name(), app1->get_name());
 }

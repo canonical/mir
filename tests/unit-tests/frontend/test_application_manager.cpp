@@ -105,6 +105,7 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
             ms::a_surface().name,
             buffer_bundle));
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
@@ -115,11 +116,8 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
     auto session = app_manager.open_session("Visual Basic Studio");
-
     auto surf = session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     
-    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
-
     app_manager.close_session(session);
 }
 

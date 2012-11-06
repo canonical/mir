@@ -71,12 +71,16 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 
+    {
+        InSequence seq;
+        EXPECT_CALL(organiser, hide_surface(_)).Times(1); 
+        EXPECT_CALL(organiser, show_surface(_)).Times(1); 
+    }
+
     ms::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
-    EXPECT_CALL(organiser, hide_surface(_)).Times(1); 
     app_session.hide();
-    EXPECT_CALL(organiser, show_surface(_)).Times(1); 
     app_session.show();
     
     app_session.destroy_surface(surf.lock());

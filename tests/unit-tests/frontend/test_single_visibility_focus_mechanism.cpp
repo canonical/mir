@@ -63,16 +63,16 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     std::shared_ptr<mf::ApplicationSession> app2(&m2, mir::EmptyDeleter());
     std::shared_ptr<mf::ApplicationSession> app3(&m3, mir::EmptyDeleter());
 
-    model->insert_session(app1);
-    model->insert_session(app2);
-    model->insert_session(app3);
-
     mf::SingleVisibilityFocusMechanism focus_mechanism(model);
     
     EXPECT_CALL(m1, show()).Times(1);
     EXPECT_CALL(m2, hide()).Times(1);
     EXPECT_CALL(m3, hide()).Times(1);
-    
+
+    model->insert_session(app1);
+    model->insert_session(app2);
+    model->insert_session(app3);
+
     focus_mechanism.set_focus_to(app1);
 }
 
