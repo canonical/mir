@@ -339,8 +339,9 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
                 { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
 
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
-//            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
-//            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+// TODO surface_create needs to fail safe too. After that is done we should add the following:
+// TODO    mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+// TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             mir_connection_release(connection);
         }
