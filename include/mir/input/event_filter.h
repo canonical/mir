@@ -36,7 +36,7 @@ class EventFilter
 public:
     virtual ~EventFilter() {}
 
-    virtual bool filter_event(android::InputEvent *event) = 0;
+    virtual bool filter_event(const android::InputEvent *event) = 0;
 
 protected:
     EventFilter() = default;

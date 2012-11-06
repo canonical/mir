@@ -16,7 +16,7 @@
 
 list(APPEND UNIT_TEST_SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_input_dispatch_policy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_input_dispatcher_policy.cpp
 )
 
 set(

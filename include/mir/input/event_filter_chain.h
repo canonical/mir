@@ -40,7 +40,7 @@ public:
     explicit EventFilterChain() {}
     virtual ~EventFilterChain() {}
 
-    virtual bool filter_event(android::InputEvent *event);
+    virtual bool filter_event(const android::InputEvent *event);
     virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
 
 protected:

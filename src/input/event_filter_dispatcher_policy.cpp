@@ -15,22 +15,21 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+#include "mir/input/event_filter_dispatcher_policy.h"
 
-#include "mir/input/event_filter_chain.h"
 namespace mi = mir::input;
 
-bool mi::EventFilterChain::filter_event(const android::InputEvent *event)
+mi::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
+  event_filter(event_filter)
 {
-    for (auto it = filters.begin(); it != filters.end(); it++)
-    {
-        auto filter = *it;
-        if (filter->filter_event(event)) return true;
-    }
-    return false;
-}
- 
-void mi::EventFilterChain::add_filter(std::shared_ptr<mi::EventFilter> const& filter)
-{
-    filters.push_back(filter);
 }
 
+bool mi::EventFilterDispatcherPolicy::filterInputEvent(const android::InputEvent* input_event, uint32_t /*policy_flags*/)
+{
+    return !event_filter->filter_event(input_event);
+}
+
+void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const android::KeyEvent* /*key_event*/, uint32_t& policy_flags)
+{
+    policy_flags = android::POLICY_FLAG_FILTERED;
+}
