@@ -60,7 +60,7 @@ void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSessio
 {
     if (session == focus_application.lock())
     {
-        focus_application = focus_selection_strategy->previous_focus_app(app_container, session);
+        focus_application = focus_selection_strategy->previous_focus_app(session);
         focus_mechanism->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
@@ -73,7 +73,7 @@ void mf::ApplicationManager::focus_next()
     {
         return;
     }
-    auto next_focus = focus_selection_strategy->next_focus_app(app_container, focused).lock();
+    auto next_focus = focus_selection_strategy->next_focus_app(focused).lock();
     focus_application = next_focus;
     focus_mechanism->set_focus_to(next_focus);
 }
