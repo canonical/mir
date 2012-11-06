@@ -15,26 +15,34 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+
+#include "mir_client/mir_client_surface.h"
+#include <system/window.h>
 
 namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
 
-class GBMClientPlatform : public ClientPlatform
+class MirNativeWindow : public ANativeWindow
 {
 public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
+    explicit MirNativeWindow(ClientSurface* surface);
+
+    int query(int key, int* value) const;
+    int perform(int key, va_list args );
+    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
+    int queueBuffer(struct ANativeWindowBuffer* buffer);
+private:
+
+    ClientSurface * surface;
+    int driver_pixel_format; 
 };
 
 }
 }
 
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */
