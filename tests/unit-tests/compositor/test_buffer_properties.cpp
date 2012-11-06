@@ -28,31 +28,36 @@ TEST(buffer_properties, default_create)
 {
     geom::Size size;
     geom::PixelFormat pixel_format{geom::PixelFormat::pixel_format_invalid};
+    mc::BufferUsage usage{mc::BufferUsage::undefined};
 
     mc::BufferProperties prop;
 
     EXPECT_EQ(size, prop.size);
     EXPECT_EQ(pixel_format, prop.format);
+    EXPECT_EQ(usage, prop.usage);
 }
 
 TEST(buffer_properties, custom_create)
 {
     geom::Size size{geom::Width{66}, geom::Height{166}};
     geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+    mc::BufferUsage usage{mc::BufferUsage::hardware};
 
-    mc::BufferProperties prop{size, pixel_format};
+    mc::BufferProperties prop{size, pixel_format, usage};
 
     EXPECT_EQ(size, prop.size);
     EXPECT_EQ(pixel_format, prop.format);
+    EXPECT_EQ(usage, prop.usage);
 }
 
 TEST(buffer_properties, equal_properties_test_equal)
 {
     geom::Size size{geom::Width{66}, geom::Height{166}};
     geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+    mc::BufferUsage usage{mc::BufferUsage::hardware};
 
-    mc::BufferProperties prop0{size, pixel_format};
-    mc::BufferProperties prop1{size, pixel_format};
+    mc::BufferProperties prop0{size, pixel_format, usage};
+    mc::BufferProperties prop1{size, pixel_format, usage};
 
     EXPECT_EQ(prop0, prop0);
     EXPECT_EQ(prop1, prop1);
@@ -74,22 +79,32 @@ TEST(buffer_properties, unequal_properties_test_unequal)
         geom::PixelFormat::rgb_888
     };
 
-    mc::BufferProperties prop00{size[0], pixel_format[0]};
+    mc::BufferUsage usage[2] =
+    {
+        mc::BufferUsage::hardware,
+        mc::BufferUsage::software
+    };
 
+    mc::BufferProperties prop000{size[0], pixel_format[0], usage[0]};
+
+    /* This approach doesn't really scale, but it's good enough for now */
     for (int s = 0; s < 2; s++)
     {
         for (int p = 0; p < 2; p++)
         {
-            mc::BufferProperties prop{size[s], pixel_format[p]};
-            if (s != 0 || p != 0)
+            for (int u = 0; u < 2; u++)
             {
-                EXPECT_NE(prop00, prop);
-                EXPECT_NE(prop, prop00);
-            }
-            else
-            {
-                EXPECT_EQ(prop00, prop);
-                EXPECT_EQ(prop, prop00);
+                mc::BufferProperties prop{size[s], pixel_format[p], usage[u]};
+                if (s != 0 || p != 0 || u != 0)
+                {
+                    EXPECT_NE(prop000, prop);
+                    EXPECT_NE(prop, prop000);
+                }
+                else
+                {
+                    EXPECT_EQ(prop000, prop);
+                    EXPECT_EQ(prop, prop000);
+                }
             }
         }
     }
