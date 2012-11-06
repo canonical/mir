@@ -16,34 +16,18 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-
-#include "mir/compositor/buffer.h"
+#include "mir_client/client_platform.h"
+#include "mir_client/client_buffer_depository.h"
 
 #include <memory>
+#include <gtest/gtest.h>
 
-namespace mir
+namespace mcl=mir::client;
+
+TEST(ClientPlatformTest, platform_creates )
 {
-namespace compositor
-{
-
-class BufferProperties;
-
-class GraphicBufferAllocator
-{
-public:
-    virtual ~GraphicBufferAllocator() {}
-
-    virtual std::unique_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
-
-protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
-};
-
+    auto platform = mcl::create_client_platform(); 
+    auto depository = platform->create_platform_depository(); 
+    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
-}
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+

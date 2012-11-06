@@ -203,7 +203,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     void TearDown()
     {
-        test_server->comm.stop();
+        test_server.reset();
     }
 
     std::shared_ptr<mcl::MirRpcChannel> channel;

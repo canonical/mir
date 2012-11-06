@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
@@ -91,7 +91,7 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
 
     void TearDown()
     {
-        stub_server->comm.stop();
+        stub_server.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> stub_client;
@@ -196,7 +196,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
 
     void TearDown()
     {
-        stub_server->comm.stop();
+        stub_server.reset();
     }
 
     std::vector<std::shared_ptr<mt::TestProtobufClient>> clients;

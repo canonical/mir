@@ -88,6 +88,11 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 }
 
 
+c::MirRpcChannel::MirRpcChannel() :
+    pending_calls(std::shared_ptr<Logger>()), work(io_service), socket(io_service)
+{
+}
+
 c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {

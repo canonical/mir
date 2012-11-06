@@ -87,12 +87,6 @@ private:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
-    void test_file_descriptors(
-        google::protobuf::RpcController* controller,
-        const mir::protobuf::Void* request,
-        ::mir::protobuf::Buffer* response,
-        ::google::protobuf::Closure* done);
-
     int next_id();
 
     std::string app_name;

@@ -24,7 +24,7 @@
 #include "mir/thread/all.h"
 
 #include <memory>
-#include <set>
+#include <vector>
 
 namespace mir
 {
@@ -52,13 +52,15 @@ public:
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> surface);
+    
+    virtual void raise_to_top(std::weak_ptr<Surface> surface);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
     std::mutex guard;
     compositor::BufferBundleFactory* const buffer_bundle_factory;
-    std::set<std::shared_ptr<Surface>> surfaces;
+    std::vector<std::shared_ptr<Surface>> surfaces;
 };
 
 }

@@ -20,7 +20,7 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
@@ -227,7 +227,7 @@ struct TestClientIPCRender : public testing::Test
 
     void TearDown()
     {
-        test_server->comm.stop();
+        test_server.reset();
     }
 
     mir::protobuf::Connection response;
@@ -248,6 +248,7 @@ TEST_F(TestClientIPCRender, test_render)
     /* start a server */
     mock_server = std::make_shared<mt::MockServerGenerator>(package);
     test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+    EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
     test_server->comm.start();
 
     /* wait for client to finish */

@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include <cassert>
 
@@ -63,12 +64,11 @@ struct ClientReleaseDeleter
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
     std::shared_ptr<BufferIDUniqueGenerator> gen, 
-    geometry::Size size,
-    geometry::PixelFormat pixel_format)
+    BufferProperties const& buffer_properties)
      : generator(gen),
        swapper(std::move(swapper)),
-       size(size),
-       pixel_format(pixel_format)
+       size(buffer_properties.size),
+       pixel_format(buffer_properties.format)
 {
 }
 

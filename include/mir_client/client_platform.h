@@ -15,35 +15,30 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-
-#include "mir/compositor/buffer.h"
+#ifndef MIR_CLIENT_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_CLIENT_PLATFORM_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace compositor
+namespace client
 {
+class ClientBufferDepository;
 
-class BufferProperties;
-
-class GraphicBufferAllocator
+class ClientPlatform
 {
 public:
-    virtual ~GraphicBufferAllocator() {}
+    ClientPlatform() = default;
+    ClientPlatform(const ClientPlatform& p) = delete;
+    ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
-    virtual std::unique_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
-
-protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
 };
 
+std::shared_ptr<ClientPlatform> create_client_platform();
+
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+
+#endif /* MIR_CLIENT_CLIENT_PLATFORM_H_ */

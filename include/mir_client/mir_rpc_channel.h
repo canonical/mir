@@ -86,6 +86,7 @@ private:
 class MirRpcChannel : public google::protobuf::RpcChannel
 {
 public:
+    MirRpcChannel();
     MirRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
     ~MirRpcChannel();
 

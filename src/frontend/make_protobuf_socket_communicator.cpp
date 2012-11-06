@@ -13,24 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_EMPTY_DELETER_H_
-#define MIR_TEST_EMPTY_DELETER_H_
+#include "mir/server_configuration.h"
+#include "mir/graphics/display.h"
+#include "protobuf_socket_communicator.h"
 
-#include <gmock/gmock.h>
+namespace mf = mir::frontend;
+namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
-
-namespace mir
+std::shared_ptr<mf::Communicator>
+mir::DefaultServerConfiguration::make_communicator(
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mg::Display> const& display)
 {
-
-struct EmptyDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
-
+    return std::make_shared<mf::ProtobufSocketCommunicator>(
+        socket_file, make_ipc_factory(surface_organiser, display));
 }
-#endif /* MIR_TEST_EMPTY_DELETER_H_ */
+

@@ -28,6 +28,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/client_platform.h"
 
 #include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
@@ -38,18 +39,16 @@ namespace client
 {
 class Logger;
 class ClientBufferDepository;
-
-std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-
 }
 }
 
 struct SurfaceRelease;
-// TODO the connection should track all associated surfaces, and release them on
-// disconnection.
+
 class MirConnection
 {
 public:
+    MirConnection();
+
     MirConnection(const std::string& socket_file,
                   std::shared_ptr<mir::client::Logger> const & log);
     ~MirConnection();
@@ -67,6 +66,7 @@ public:
             void *context);
 
     char const * get_error_message();
+    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,
@@ -87,6 +87,8 @@ private:
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
+
+    std::shared_ptr<mir::client::ClientPlatform> platform;
 
     std::string error_message;
 

@@ -22,10 +22,12 @@
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 
 static char const *socket_file = "/tmp/mir_socket";
+static int buffer_swap_count = 0;
 static MirConnection *connection = 0;
 static MirSurface *surface = 0;
 
@@ -41,6 +43,12 @@ static void surface_create_callback(MirSurface *new_surface, void *context)
     surface = new_surface;
 }
 
+static void surface_next_buffer_callback(MirSurface* surface, void *context)
+{
+    (void) surface;
+    (void) context;
+}
+
 static void surface_release_callback(MirSurface *old_surface, void *context)
 {
     (void)old_surface;
@@ -52,22 +60,25 @@ int main(int argc, char* argv[])
 {
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hf:")) != -1)
+    while ((arg = getopt (argc, argv, "c:hf:")) != -1)
     {
         switch (arg)
         {
-        case 'f':
-            socket_file = optarg;
-            break;
-
-        case '?':
-        case 'h':
-        default:
-            puts(argv[0]);
-            puts("Usage:");
-            puts("    -f <socket filename>");
-            puts("    -h: this help text");
-            return -1;
+            case 'c':
+                buffer_swap_count = atoi(optarg);
+                break;
+            case 'f':
+                socket_file = optarg;
+                break;
+                
+            case '?':
+            case 'h':
+            default:
+                puts(argv[0]);
+                puts("Usage:");
+                puts("    -f <socket filename>");
+                puts("    -h: this help text");
+                return -1;
         }
     }
 
@@ -111,6 +122,11 @@ int main(int argc, char* argv[])
     assert(0 <= buffer_package.data_items);
     assert(0 <= buffer_package.fd_items);
 
+    for(int i = 0; i < buffer_swap_count; i++)
+    {
+        mir_wait_for(mir_surface_next_buffer(surface, surface_next_buffer_callback, 0));
+    }
+    
     mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
     puts("Surface released");
 

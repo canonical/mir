@@ -23,8 +23,6 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_bundle_factory.h"
-#include "mir/geometry/pixel_format.h"
-#include "mir/geometry/size.h"
 
 #include <memory>
 
@@ -36,6 +34,7 @@ namespace compositor
 class BufferAllocationStrategy;
 class BufferBundle;
 class GraphicBufferAllocator;
+class BufferProperties;
 
 class BufferBundleManager : public BufferBundleFactory
 {
@@ -48,8 +47,7 @@ public:
 
     // From BufferBundleFactory
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        geometry::Size size,
-        geometry::PixelFormat pf);
+        BufferProperties const& buffer_properties);
 
 private:
     std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;

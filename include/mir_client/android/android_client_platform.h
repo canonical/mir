@@ -15,35 +15,24 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-
-#include "mir/compositor/buffer.h"
-
-#include <memory>
+#include "mir_client/client_platform.h"
 
 namespace mir
 {
-namespace compositor
+namespace client
 {
+class ClientBufferDepository;
 
-class BufferProperties;
-
-class GraphicBufferAllocator
+class AndroidClientPlatform : public ClientPlatform
 {
 public:
-    virtual ~GraphicBufferAllocator() {}
-
-    virtual std::unique_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
-
-protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+
+#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_ */

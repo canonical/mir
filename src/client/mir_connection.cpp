@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/client_platform.h"
 #include "mir_client/client_buffer_depository.h"
 
 #include <cstddef>
@@ -41,6 +42,12 @@ namespace gp = google::protobuf;
 #endif
 
 
+MirConnection::MirConnection() :
+    channel(),
+    server(&channel),
+    error_message("ERROR")
+{
+}
 
 MirConnection::MirConnection(const std::string& socket_file,
     std::shared_ptr<mcl::Logger> const & log) :
@@ -48,6 +55,8 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
+    platform = mcl::create_client_platform();
+ 
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -66,7 +75,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto depository = mir::client::create_platform_depository();
+    auto depository = platform->create_platform_depository();
     auto null_log = std::make_shared<mir::client::NullLogger>();
     auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();
@@ -83,6 +92,12 @@ char const * MirConnection::get_error_message()
     return error_message.c_str();
     }
 }
+
+void MirConnection::set_error_message(std::string const& error)
+{
+    error_message = error;
+}
+
 
 /* struct exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */

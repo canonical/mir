@@ -197,13 +197,3 @@ void mir::frontend::ApplicationProxy::disconnect(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::test_file_descriptors(
-    ::google::protobuf::RpcController*,
-    const ::mir::protobuf::Void*,
-    ::mir::protobuf::Buffer*,
-    ::google::protobuf::Closure* done)
-{
-  // TODO
-
-  done->Run();
-}
