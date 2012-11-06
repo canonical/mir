@@ -21,8 +21,73 @@
 #include "mir/thread/all.h"
 namespace mcl=mir::client;
 
+namespace
+{
+static int query_static(const ANativeWindow* anw, int key, int* value);
+static int perform_static(ANativeWindow* anw, int key, ...);
+static int setSwapInterval_static (struct ANativeWindow* window, int interval);
+static int dequeueBuffer_static (struct ANativeWindow* window,
+                                 struct ANativeWindowBuffer** buffer);
+static int lockBuffer_static(struct ANativeWindow* window,
+                             struct ANativeWindowBuffer* buffer);
+static int queueBuffer_static(struct ANativeWindow* window,
+                              struct ANativeWindowBuffer* buffer);
+static int cancelBuffer_static(struct ANativeWindow* window,
+                               struct ANativeWindowBuffer* buffer);
+
 static void incRef(android_native_base_t*)
 {
+}
+
+int query_static(const ANativeWindow* anw, int key, int* value)
+{
+    auto self = static_cast<const mcl::MirNativeWindow*>(anw);
+    return self->query(key, value);
+} 
+
+int perform_static(ANativeWindow* window, int key, ...)
+{
+    va_list args;
+    va_start(args, key);
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    auto ret = self->perform(key, args);
+    va_end(args);
+
+    return ret;
+} 
+
+int dequeueBuffer_static (struct ANativeWindow* window,
+                          struct ANativeWindowBuffer** buffer)
+{   
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    return self->dequeueBuffer(buffer);
+}
+
+int queueBuffer_static(struct ANativeWindow* window,
+                       struct ANativeWindowBuffer* buffer)
+{
+    auto self = static_cast<const mcl::MirNativeWindow*>(window);
+    return self->queueBuffer(buffer);
+}
+
+/* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
+int setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+{
+    return 0;
+}
+
+int lockBuffer_static(struct ANativeWindow* /*window*/,
+                      struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
+
+int cancelBuffer_static(struct ANativeWindow* /*window*/,
+                        struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
+
 }
 
 mcl::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
@@ -87,12 +152,6 @@ int mcl::MirNativeWindow::query(int key, int* value ) const
     return ret;
 }
 
-int mcl::MirNativeWindow::query_static(const ANativeWindow* anw, int key, int* value)
-{
-    auto self = static_cast<const mcl::MirNativeWindow*>(anw);
-    return self->query(key, value);
-} 
-
 int mcl::MirNativeWindow::perform(int key, va_list arg_list )
 {
     int ret = 0;
@@ -112,42 +171,3 @@ int mcl::MirNativeWindow::perform(int key, va_list arg_list )
     return ret;
 }
 
-int mcl::MirNativeWindow::perform_static(ANativeWindow* window, int key, ...)
-{
-    va_list args;
-    va_start(args, key);
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
-    auto ret = self->perform(key, args);
-    va_end(args);
-
-    return ret;
-} 
-
-
-int mcl::MirNativeWindow::dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer)
-{   
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
-}
-
-int mcl::MirNativeWindow::queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer)
-{
-    auto self = static_cast<const mcl::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer);
-}
-
-/* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
-int mcl::MirNativeWindow::setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
-{
-    return 0;
-}
-
-int mcl::MirNativeWindow::lockBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
-{
-    return 0;
-}
-
-int mcl::MirNativeWindow::cancelBuffer_static(struct ANativeWindow* /*window*/, struct ANativeWindowBuffer* /*buffer*/)
-{
-    return 0;
-}
