@@ -52,3 +52,25 @@ TEST(EventFilterChain, offers_events_to_filters)
     EXPECT_EQ(filter_chain.filter_event(ev), false);    
 }
 
+TEST(EventFilterChain, accepting_event_halts_emission)
+{
+    using namespace ::testing;
+    mi::EventFilterChain filter_chain;
+    auto filter = std::make_shared<MockEventFilter>();
+    auto ev = new android::KeyEvent();
+    
+    filter_chain.add_filter(filter);
+    filter_chain.add_filter(filter);
+    filter_chain.add_filter(filter);
+
+    // First filter will reject, second will accept, third one should not be asked.
+    {
+        InSequence seq;
+        EXPECT_CALL(*filter, filter_event(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*filter, filter_event(_)).Times(1).WillOnce(Return(true));
+    }
+    
+    // So the chain should accept
+    EXPECT_EQ(filter_chain.filter_event(ev), true);    
+}
+
