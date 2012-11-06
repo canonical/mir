@@ -89,18 +89,45 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
     allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
 }
 
-static bool has_hardware_rendering_flag_set(uint32_t flags) {
-    return flags & GBM_BO_USE_RENDERING;
+MATCHER_P(has_flag_set, flag, "")
+{
+    return arg & flag;
 }
 
-TEST_F(GBMBufferAllocatorTest, creates_hw_rendering_buffer_by_default)
+TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,Truly(has_hardware_rendering_flag_set)));
+    mc::BufferProperties properties{size, pf, mc::BufferUsage::hardware};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(buffer_properties);
+    allocator->alloc_buffer(properties);
+}
+
+TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
+{
+    using namespace testing;
+
+    mc::BufferProperties properties{size, pf, mc::BufferUsage::software};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE)));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    allocator->alloc_buffer(properties);
+}
+
+TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_usage)
+{
+    using namespace testing;
+
+    mc::BufferProperties properties{size, pf, mc::BufferUsage::undefined};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    allocator->alloc_buffer(properties);
 }
 
 TEST_F(GBMBufferAllocatorTest, requests_correct_buffer_dimensions)
