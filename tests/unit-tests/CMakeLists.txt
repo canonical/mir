@@ -45,9 +45,13 @@ target_link_libraries(
   mirprotobuf
   test-utils
 
+  android-input
+
+
+
   3rd_party
   mirtest_eglmock
-
+  
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

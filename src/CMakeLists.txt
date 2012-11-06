@@ -66,6 +66,8 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
+  
+  android-input
  
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
