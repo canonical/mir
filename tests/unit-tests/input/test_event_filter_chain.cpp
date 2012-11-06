@@ -21,7 +21,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "mir_test/empty_deleter"
+#include "mir_test/empty_deleter.h"
 
 #include <androidfw/Input.h>
 
@@ -32,22 +32,23 @@ namespace
 struct MockEventFilter : public mi::EventFilter
 {
     MOCK_METHOD1(filter_event, bool(android::InputEvent*));
-}
+};
 }
 
 TEST(EventFilterChain, offers_events_to_filters)
 {
     using namespace ::testing;
-    mi::FilterChain filter_chain;
-    auto filter = std::make_shared<MockEventFilter>(mir::EmptyDeleter());
-    auto ev = new android::InputEvent();
+    mi::EventFilterChain filter_chain;
+    auto filter = std::make_shared<MockEventFilter>();
+    auto ev = new android::KeyEvent();
     
     filter_chain.add_filter(filter);
     filter_chain.add_filter(filter);
 
-    ON_CALL(*filter, filter_event(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*filter, filter_event(_)).Times(2);
+    // Filter will pass the event on twice
+    EXPECT_CALL(*filter, filter_event(_)).Times(2).WillRepeatedly(Return(false));
     
-    filter_chain.filter_event(ev);    
+    // So the filter chain should also reject the event
+    EXPECT_EQ(filter_chain.filter_event(ev), false);    
 }
 
