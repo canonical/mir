@@ -21,11 +21,22 @@ set(
   application.cpp
   application_proxy.cpp
   null_application_listener.cpp
-  protobuf_asio_communicator.cpp
 
   resource_cache.cpp
   ${PROTO_HDRS}
 )
+
+if (MIR_TRANSPORT STREQUAL "socket")
+list(APPEND FRONTEND_SOURCES
+  protobuf_socket_communicator.cpp
+  make_protobuf_socket_communicator.cpp
+)
+elseif (MIR_TRANSPORT STREQUAL "binder")
+list(APPEND FRONTEND_SOURCES
+  protobuf_binder_communicator.cpp
+  make_protobuf_binder_communicator.cpp
+)
+endif()
 
 add_library( 
   mirfrontend STATIC

@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_server.h"
@@ -95,7 +95,7 @@ struct TestErrorServer
     // "Server" side
     mt::ErrorServer stub_services;
     std::shared_ptr<mt::MockIpcFactory> factory;
-    mf::ProtobufAsioCommunicator comm;
+    mf::ProtobufSocketCommunicator comm;
 };
 
 }
@@ -115,7 +115,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
 
     void TearDown()
     {
-        server->comm.stop();
+        server.reset();
     }
 
     std::shared_ptr<mt::TestErrorServer> server;

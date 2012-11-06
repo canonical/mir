@@ -73,6 +73,12 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
+set (MIR_TRANSPORT
+  socket
+  CACHE
+  STRING
+  "IPC transport to build (options are 'socket' or 'binder')"
+)
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 

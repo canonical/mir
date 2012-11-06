@@ -19,7 +19,9 @@
 #ifndef MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_ASIO_COMMUNICATOR_H_
 
-#include "communicator.h"
+#include "connected_sessions.h"
+
+#include "mir/frontend/communicator.h"
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
@@ -41,62 +43,29 @@ namespace mir
 namespace protobuf { class DisplayServer; }
 namespace frontend
 {
-class ProtobufAsioCommunicator;
+class ProtobufSocketCommunicator;
 class ResourceCache;
+class ProtobufIpcFactory;
+
 namespace detail
 {
-class Session;
-class ConnectedSessions
-{
-public:
-    ConnectedSessions() {}
-    ~ConnectedSessions();
-
-    void add(std::shared_ptr<Session> const& session);
-
-    void remove(int id);
-
-    bool includes(int id) const;
-
-    void clear();
-
-private:
-    ConnectedSessions(ConnectedSessions const&) = delete;
-    ConnectedSessions& operator =(ConnectedSessions const&) = delete;
-
-    std::map<int, std::shared_ptr<Session>> sessions_list;
-};
+class AsioSession;
 }
 
-class ProtobufIpcFactory
-{
-public:
-    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
-    virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
-
-protected:
-    ProtobufIpcFactory() {}
-    virtual ~ProtobufIpcFactory() {}
-    ProtobufIpcFactory(ProtobufIpcFactory const&) = delete;
-    ProtobufIpcFactory& operator =(ProtobufIpcFactory const&) = delete;
-};
-
-
-class ProtobufAsioCommunicator : public Communicator
+class ProtobufSocketCommunicator : public Communicator
 {
 public:
     // Create communicator based on Boost asio and Google protobufs
     // using the supplied socket.
-    explicit ProtobufAsioCommunicator(
+    explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
-    ~ProtobufAsioCommunicator();
+    ~ProtobufSocketCommunicator();
     void start();
-    void stop();
 
 private:
     void start_accept();
-    void on_new_connection(const std::shared_ptr<detail::Session>& session, const boost::system::error_code& ec);
+    void on_new_connection(const std::shared_ptr<detail::AsioSession>& session, const boost::system::error_code& ec);
     int next_id();
 
     const std::string socket_file;
@@ -105,7 +74,7 @@ private:
     std::thread io_service_thread;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
-    detail::ConnectedSessions connected_sessions;
+    detail::ConnectedSessions<detail::AsioSession> connected_sessions;
 };
 
 }
