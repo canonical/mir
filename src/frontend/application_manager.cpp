@@ -30,13 +30,14 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, 
-                                           std::shared_ptr<mf::ApplicationSessionContainer> container,
-                                           std::shared_ptr<mf::ApplicationFocusSelectionStrategy> strategy,
-                                           std::shared_ptr<mf::ApplicationFocusMechanism> mechanism) : surface_organiser(organiser),
-                                                                                                       app_container(container),
-                                                                                                       focus_selection_strategy(strategy),
-                                                                                                       focus_mechanism(mechanism)
+mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, 
+                                           std::shared_ptr<mf::ApplicationSessionContainer> const& container,
+                                           std::shared_ptr<mf::ApplicationFocusSelectionStrategy> const& strategy,
+                                           std::shared_ptr<mf::ApplicationFocusMechanism> const& mechanism) : 
+  surface_organiser(organiser),
+  app_container(container),
+  focus_selection_strategy(strategy),
+  focus_mechanism(mechanism)
 															     
 {
     assert(surface_organiser);

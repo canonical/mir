@@ -32,8 +32,8 @@ class ApplicationSessionContainer
 public:
     virtual ~ApplicationSessionContainer() {}
 
-    virtual void insert_session(std::shared_ptr<ApplicationSession> session) = 0;
-    virtual void remove_session(std::shared_ptr<ApplicationSession> session) = 0;
+    virtual void insert_session(std::shared_ptr<ApplicationSession> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<ApplicationSession> const& session) = 0;
 
     virtual void lock() = 0;
     virtual void unlock() = 0;

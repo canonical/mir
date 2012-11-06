@@ -41,10 +41,10 @@ class ApplicationFocusMechanism;
 class ApplicationManager : public ApplicationSessionFactory
 {
  public:
-    explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser,
-                                std::shared_ptr<ApplicationSessionContainer> session_container,
-                                std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy,
-                                std::shared_ptr<ApplicationFocusMechanism> focus_mechanism);
+    explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+                                std::shared_ptr<ApplicationSessionContainer> const& session_container,
+                                std::shared_ptr<ApplicationFocusSelectionStrategy> const& focus_selection_strategy,
+                                std::shared_ptr<ApplicationFocusMechanism> const& focus_mechanism);
     virtual ~ApplicationManager() {}
 
     virtual std::shared_ptr<ApplicationSession> open_session(std::string name);

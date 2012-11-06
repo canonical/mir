@@ -29,7 +29,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser, std::string application_name) : surface_organiser(organiser),
+mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, std::string application_name) : surface_organiser(organiser),
                                                                                                                        name(application_name)
 {
     assert(surface_organiser);
@@ -52,7 +52,7 @@ std::weak_ptr<ms::Surface> mf::ApplicationSession::create_surface(const ms::Surf
     return surf;
 }
 
-void mf::ApplicationSession::destroy_surface(std::shared_ptr<ms::Surface> surface)
+void mf::ApplicationSession::destroy_surface(std::shared_ptr<ms::Surface> const& surface)
 {
     auto it = std::find(surfaces.begin(), surfaces.end(), surface);
 

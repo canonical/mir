@@ -41,8 +41,8 @@ public:
     explicit ApplicationSessionModel();
     virtual ~ApplicationSessionModel() {}
     
-    void insert_session(std::shared_ptr<ApplicationSession> session);
-    void remove_session(std::shared_ptr<ApplicationSession> session);
+    void insert_session(std::shared_ptr<ApplicationSession> const& session);
+    void remove_session(std::shared_ptr<ApplicationSession> const& session);
     
     void lock();
     void unlock();

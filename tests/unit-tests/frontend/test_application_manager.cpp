@@ -40,8 +40,8 @@ namespace
 
 struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::ApplicationSession>));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::ApplicationSession>));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::ApplicationSession> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::ApplicationSession> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
     MOCK_METHOD0(iterator, std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator>());

@@ -31,7 +31,7 @@ mf::ApplicationSessionModel::ApplicationSessionModel()
 
 }
 
-void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::ApplicationSession> session)
+void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::ApplicationSession> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
     auto name = session->get_name();
@@ -39,7 +39,7 @@ void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::Application
     apps.push_back(session);
 }
 
-void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::ApplicationSession> session)
+void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::ApplicationSession> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
