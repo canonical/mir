@@ -7,11 +7,10 @@
 cwd=`pwd`
 mkdir $1
 cd $1
-export ANDROID_STANDALONE_TOOLCHAIN=$MIR_ANDROID_NDK_DIR
-cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/android.toolchain.cmake \
--DCMAKE_VERBOSE_MAKEFILE=ON \
+export MIR_NDK_PATH=$MIR_ANDROID_NDK_DIR
+
+cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/AndroidCrossCompile.cmake \
 -DBoost_COMPILER=-gcc \
--DBOOST_LIBRARYDIR=${MIR_ANDROID_NDK_DIR}/sysroot/usr/lib \
 -DMIR_ENABLE_DEATH_TESTS=NO \
 -DMIR_INPUT_ENABLE_EVEMU=NO \
 -DMIR_PLATFORM=android \
