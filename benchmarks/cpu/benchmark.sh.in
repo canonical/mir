@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Starting the server
+server_fn=@CMAKE_CURRENT_BINARY_DIR@/callgrind_$4
+@VALGRIND_EXECUTABLE@ --tool=callgrind --callgrind-out-file=`echo $server_fn`.out @EXECUTABLE_OUTPUT_PATH@/mir -f @CPU_BENCHMARKS_SOCKET@ &
+server_pid=$!
+
+sleep 5
+
+# Starting the clients
+fn=@CMAKE_CURRENT_BINARY_DIR@/callgrind_$3
+seq 1 $1 | xargs -I {} -n 1 -P $1 @VALGRIND_EXECUTABLE@ --tool=callgrind --callgrind-out-file=`echo $fn`.out.{} @EXECUTABLE_OUTPUT_PATH@/mir_demo_client -f @CPU_BENCHMARKS_SOCKET@ -c $2
+
+kill $server_pid
+
+# This is extremely ugly, but we need to introduce some latency to account
+# for the fact that we fire up multiple mir instances in rapid succession.
+sleep 5
