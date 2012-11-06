@@ -121,6 +121,7 @@ include_directories (
   ${GTEST_INCLUDE_DIR}
 )
 
+add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)
 add_subdirectory(guides/)
