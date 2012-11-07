@@ -94,10 +94,6 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
-        /*
-         * TODO: Actually get the buffer usage value from the surface,
-         * instead of assuming that everything succeeded.
-         */
         response->set_buffer_usage(request->buffer_usage());
 
 
