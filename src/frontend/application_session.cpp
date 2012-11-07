@@ -29,8 +29,8 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, std::string application_name) : surface_organiser(organiser),
-                                                                                                                       name(application_name)
+mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, std::string const& application_name) : 
+  surface_organiser(organiser), name(application_name)
 {
     assert(surface_organiser);
 }
