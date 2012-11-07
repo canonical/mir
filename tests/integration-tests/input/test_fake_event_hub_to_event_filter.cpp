@@ -57,13 +57,12 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     
     dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);
-    dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
-    reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
 
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
 
+    dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
+    reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    
-    reader_thread->requestExitAndWait();
 }
