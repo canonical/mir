@@ -31,7 +31,7 @@ namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(handles, bool(const *android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const android::InputEvent*));
 };
 }
 
