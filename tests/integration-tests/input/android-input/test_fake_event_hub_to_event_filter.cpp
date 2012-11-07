@@ -64,9 +64,6 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
 
-    event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(1);
-
 //    Blows up on dispatcher policy?  
 //    dispatcher_thread->requestExit();
 //    reader_thread->requestExit();
