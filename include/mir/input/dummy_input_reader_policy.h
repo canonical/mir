@@ -6,7 +6,8 @@
 
 namespace mir
 {
-
+namespace input
+{
 /*
  Dummy implementation of a InputReaderPolicy
 
@@ -58,7 +59,7 @@ public:
 
     android::sp<android::PointerController> pointer_controller;
 };
-
+}
 } // namespace mir
 
 #endif // MIR_DUMMY_INPUT_READER_POLICY_H_
