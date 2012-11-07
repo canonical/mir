@@ -190,7 +190,8 @@ struct MirClientSurfaceTest : public testing::Test
 
         mock_depository = std::make_shared<mt::MockClientDepository>();
 
-        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888,
+                                      mir_buffer_usage_hardware};
  
         /* connect dummy server */
         connect_parameters.set_application_name("test");

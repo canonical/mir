@@ -56,7 +56,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
 
     mc::BufferProperties buffer_properties{params.size,
                                            geom::PixelFormat::rgba_8888,
-                                           mc::BufferUsage::hardware};
+                                           params.buffer_usage};
 
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
