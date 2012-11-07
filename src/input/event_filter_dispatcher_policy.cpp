@@ -26,7 +26,7 @@ mi::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi:
 
 bool mi::EventFilterDispatcherPolicy::filterInputEvent(const android::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
-    return !event_filter->filter_event(input_event);
+    return !event_filter->handles(input_event);
 }
 
 void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const android::KeyEvent* /*key_event*/, uint32_t& policy_flags)
