@@ -14,38 +14,11 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-
-set(
-  FRONTEND_SOURCES
-
-  application.cpp
-  application_proxy.cpp
-  null_application_listener.cpp
-
-  resource_cache.cpp
-  ${PROTO_HDRS}
+add_custom_target(
+  benchmarks
 )
 
-if (MIR_TRANSPORT STREQUAL "socket")
-list(APPEND FRONTEND_SOURCES
-  protobuf_socket_communicator.cpp
-  make_protobuf_socket_communicator.cpp
-)
-elseif (MIR_TRANSPORT STREQUAL "binder")
-list(APPEND FRONTEND_SOURCES
-  protobuf_binder_communicator.cpp
-  make_protobuf_binder_communicator.cpp
-)
-endif()
+add_subdirectory(cpu)
+add_subdirectory(memory)
 
-add_library( 
-  mirfrontend STATIC
-  
-  ${FRONTEND_SOURCES}
-)
-
-target_link_libraries(
-  mirfrontend
-
-  mirlogging
-)
+add_dependencies(benchmarks cpu_benchmarks memory_benchmarks)

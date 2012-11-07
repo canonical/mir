@@ -33,14 +33,14 @@ namespace compositor
 class GraphicBufferAllocator;
 class BufferBundle;
 class BufferSwapper;
+class BufferProperties;
 
 class BufferAllocationStrategy
 {
 public:
 
     virtual std::unique_ptr<BufferSwapper> create_swapper(
-        geometry::Size size,
-        geometry::PixelFormat pf) = 0;
+        BufferProperties const& buffer_properties) = 0;
 
 protected:
     ~BufferAllocationStrategy() {}

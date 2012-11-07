@@ -13,37 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-
-#include "mir/compositor/buffer.h"
+#ifndef MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
+#define MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace compositor
+namespace protobuf { class DisplayServer; }
+namespace frontend
 {
+class ResourceCache;
 
-class BufferProperties;
-
-class GraphicBufferAllocator
+class ProtobufIpcFactory
 {
 public:
-    virtual ~GraphicBufferAllocator() {}
-
-    virtual std::unique_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
+    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
+    virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 
 protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    ProtobufIpcFactory() {}
+    virtual ~ProtobufIpcFactory() {}
+    ProtobufIpcFactory(ProtobufIpcFactory const&) = delete;
+    ProtobufIpcFactory& operator =(ProtobufIpcFactory const&) = delete;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+
+#endif // MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_

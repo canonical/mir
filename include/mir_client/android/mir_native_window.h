@@ -34,19 +34,11 @@ class MirNativeWindow : public ANativeWindow
 public:
     explicit MirNativeWindow(ClientSurface* surface);
 
-private:
-    static int query_static(const ANativeWindow* anw, int key, int* value);
-    static int perform_static(ANativeWindow* anw, int key, ...);
-    static int setSwapInterval_static (struct ANativeWindow* window, int interval);
-    static int dequeueBuffer_static (struct ANativeWindow* window, struct ANativeWindowBuffer** buffer);
-    static int lockBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer);
-    static int queueBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer);
-    static int cancelBuffer_static(struct ANativeWindow* window, struct ANativeWindowBuffer* buffer);
-
     int query(int key, int* value) const;
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
     int queueBuffer(struct ANativeWindowBuffer* buffer);
+private:
 
     ClientSurface * surface;
     int driver_pixel_format; 

@@ -20,7 +20,7 @@
 
 #include "mir_client/mir_client_library.h"
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
@@ -517,7 +517,7 @@ struct TestClientIPCRender : public testing::Test
 
     void TearDown()
     {
-        test_server->comm.stop();
+        test_server.reset();
     }
 
     mir::protobuf::Connection response;

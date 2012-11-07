@@ -13,24 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_EMPTY_DELETER_H_
-#define MIR_TEST_EMPTY_DELETER_H_
-
-#include <gmock/gmock.h>
-
-
-namespace mir
-{
-
-struct EmptyDeleter
-{
-    void operator()(void* )
-    {
-    }
-};
-
-}
-#endif /* MIR_TEST_EMPTY_DELETER_H_ */
+#error TODO - write the binder version

@@ -42,6 +42,12 @@ namespace gp = google::protobuf;
 #endif
 
 
+MirConnection::MirConnection() :
+    channel(),
+    server(&channel),
+    error_message("ERROR")
+{
+}
 
 MirConnection::MirConnection(const std::string& socket_file,
     std::shared_ptr<mcl::Logger> const & log) :
@@ -86,6 +92,12 @@ char const * MirConnection::get_error_message()
     return error_message.c_str();
     }
 }
+
+void MirConnection::set_error_message(std::string const& error)
+{
+    error_message = error;
+}
+
 
 /* struct exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
