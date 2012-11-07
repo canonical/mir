@@ -38,7 +38,7 @@ namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(filter_event, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const android::InputEvent*));
 };
 }
 
@@ -49,7 +49,7 @@ TEST(InputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_fi
     MockEventFilter event_filter;
     mi::InputManager input_manager;
     
-    EXPECT_CALL(event_filter, filter_event(_)).Times(1).WillOnce(Return(false));    
+    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
     
