@@ -47,7 +47,7 @@ class ApplicationManager
     virtual ~ApplicationManager() {}
 
     std::shared_ptr<ApplicationSession> open_session(std::string const& name);
-    void close_session(std::shared_ptr<ApplicationSession> session);
+    void close_session(std::shared_ptr<ApplicationSession> const& session);
     
     void focus_next();
 
