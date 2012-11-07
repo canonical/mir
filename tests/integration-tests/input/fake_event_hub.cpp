@@ -247,4 +247,28 @@ void FakeEventHub::monitor()
 {
 }
 
+void FakeEventHub::synthesize_builtin_keyboard_added()
+{
+    RawEvent event;
+    event.when = 0;
+    event.deviceId = android::BUILT_IN_KEYBOARD_ID;
+    event.type = EventHubInterface::DEVICE_ADDED;
+    events_available.push_back(event);
+
+    event.when = 0;
+    event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
+    events_available.push_back(event);
+}
+
+void FakeEventHub::synthesize_key_event(int keycode)
+{
+    RawEvent event;
+    event.when = 0;
+    event.type = EV_KEY;
+    event.code = keycode;
+    event.value = 1;
+    event.deviceId = android::BUILT_IN_KEYBOARD_ID;
+    events_available.push_back(event);
+}
+
 } // namespace mir

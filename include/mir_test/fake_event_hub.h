@@ -69,6 +69,9 @@ public:
     virtual void dump(android::String8& dump);
 
     virtual void monitor();
+    
+    void synthesize_builtin_keyboard_added();
+    void synthesize_key_event(int keycode);
 
     // list of RawEvents available for consumption via getEvents
     std::list<android::RawEvent> events_available;
