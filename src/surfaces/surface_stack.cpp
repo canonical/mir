@@ -67,7 +67,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     std::lock_guard<std::mutex> lg(guard);
 
