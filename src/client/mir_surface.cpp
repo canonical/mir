@@ -47,6 +47,7 @@ MirSurface::MirSurface(
     message.set_width(params.width);
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
+    message.set_buffer_usage(params.buffer_usage);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
@@ -64,8 +65,7 @@ MirSurfaceParameters MirSurface::get_parameters() const
         surface.width(),
         surface.height(),
         static_cast<MirPixelFormat>(surface.pixel_format()),
-        /* TODO: get the buffer usage value from the surface */
-        mir_buffer_usage_hardware};
+        static_cast<MirBufferUsage>(surface.buffer_usage())};
 }
 
 char const * MirSurface::get_error_message()

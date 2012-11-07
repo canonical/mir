@@ -188,11 +188,13 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_get_parameters(ssync[1].surface, &response_params);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
             wait_for_surface_release(ssync+1);
