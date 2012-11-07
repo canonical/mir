@@ -19,6 +19,7 @@ set(
 
   event_filter_chain.cpp
   event_filter_dispatcher_policy.cpp
+  input_manager.cpp
 )
 
 add_library( 
