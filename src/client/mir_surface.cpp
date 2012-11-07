@@ -63,7 +63,9 @@ MirSurfaceParameters MirSurface::get_parameters() const
         0,
         surface.width(),
         surface.height(),
-        static_cast<MirPixelFormat>(surface.pixel_format())};
+        static_cast<MirPixelFormat>(surface.pixel_format()),
+        /* TODO: get the buffer usage value from the surface */
+        mir_buffer_usage_hardware};
 }
 
 char const * MirSurface::get_error_message()

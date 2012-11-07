@@ -53,6 +53,12 @@ typedef enum MirPixelFormat
 {
     mir_pixel_format_rgba_8888
 } MirPixelFormat;
+
+typedef enum MirBufferUsage
+{
+    mir_buffer_usage_hardware = 1,
+    mir_buffer_usage_software
+} MirBufferUsage;
  
 typedef struct MirSurfaceParameters
 {
@@ -60,6 +66,7 @@ typedef struct MirSurfaceParameters
     int width;
     int height;
     MirPixelFormat pixel_format;
+    MirBufferUsage buffer_usage;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };

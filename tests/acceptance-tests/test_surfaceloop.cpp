@@ -167,7 +167,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
@@ -213,7 +218,12 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
@@ -252,7 +262,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
