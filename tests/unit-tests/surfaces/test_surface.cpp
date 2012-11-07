@@ -34,6 +34,7 @@ TEST(surface, default_creation_parameters)
 
     ASSERT_EQ(Width(0), params.size.width);
     ASSERT_EQ(Height(0), params.size.height);
+    ASSERT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
 
     ASSERT_EQ(ms::a_surface(), params);
 }
@@ -42,9 +43,10 @@ TEST(surface, builder_mutators)
 {
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
+    mc::BufferUsage const usage{mc::BufferUsage::hardware};
 
-    auto params = ms::a_surface().of_size(size); 
-    ms::SurfaceCreationParameters reference{std::string(), size};
+    auto params = ms::a_surface().of_size(size).of_buffer_usage(usage);
+    ms::SurfaceCreationParameters reference{std::string(), size, usage};
     ASSERT_EQ(
         reference,
         params
