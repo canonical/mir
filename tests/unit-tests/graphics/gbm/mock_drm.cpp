@@ -32,8 +32,8 @@ mgg::MockDRM* global_mock = NULL;
 
 mgg::FakeDRMResources::FakeDRMResources()
     : fd(-1), resources(), crtcs(), encoders(), connectors(), mode_info(),
-      crtc_ids({10, 11}), encoder_ids({20,21}), connector_ids({30, 31}),
-      pipe_fds({-1, -1})
+      crtc_ids{10, 11}, encoder_ids{20,21}, connector_ids{30, 31},
+      pipe_fds{-1, -1}
 {
     /* Use the read end of a pipe as the fake DRM fd */
     if (pipe(pipe_fds) < 0 || pipe_fds[0] < 0)

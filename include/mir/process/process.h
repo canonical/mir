@@ -20,6 +20,8 @@
 #ifndef MIR_PROCESS_PROCESS_H_
 #define MIR_PROCESS_PROCESS_H_
 
+#include <unistd.h>
+
 #include <cstdlib>
 #include <functional>
 #include <iosfwd>

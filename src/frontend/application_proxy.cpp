@@ -82,8 +82,10 @@ void mir::frontend::ApplicationProxy::create_surface(
     auto handle = surface_organiser->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_size(geometry::Size{geometry::Width{request->width()},
-                                geometry::Height{request->height()}})
+        .of_size(
+            geometry::Size{
+                geometry::Width{static_cast<geometry::Width::ValueType>(request->width())},
+                        geometry::Height{static_cast<geometry::Height::ValueType>(request->height())}})
         );
 
     auto const id = next_id();
