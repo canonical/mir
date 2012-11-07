@@ -22,7 +22,7 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
-#include <thread>
+#include "mir/thread/all.h"
 
 #include "mir/input/event_filter.h"
 #include "mir/input/event_filter_dispatcher_policy.h"
@@ -62,6 +62,8 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
 
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     
     dispatcher->dispatchOnce();
     reader_thread->requestExitAndWait();
