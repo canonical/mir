@@ -53,6 +53,7 @@ const GLint screen_to_gl_coords_uniform_location = 5;
 const GLint tex_uniform_location = 6;
 const std::string stub_info_log = "something failed!";
 const size_t stub_info_log_length = stub_info_log.size();
+const size_t stub_info_log_buffer_length = stub_info_log_length + 1;
 
 void ExpectShaderCompileFailure(const GLint shader, mir::GLMock &gl_mock)
 {
@@ -175,6 +176,11 @@ ACTION_P(ReturnByConstReference, cref)
     return cref;
 }
 
+MATCHER_P(NthCharacterIsNul, n, "specified character is the nul-byte")
+{
+    return arg[n] == '\0';
+}
+
 TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndThrows)
 {
     using namespace std::placeholders;
@@ -183,7 +189,10 @@ TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndTh
 
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader, stub_info_log_length + 1, _, _))
+    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader,
+					     stub_info_log_buffer_length,
+					     _,
+					     NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 
@@ -201,7 +210,10 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
 
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader, stub_info_log_length + 1, _, _))
+    EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader,
+					     stub_info_log_buffer_length,
+					     _,
+					     NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 
@@ -220,7 +232,10 @@ TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramLinkFailRecoverAndThr
 
     EXPECT_CALL (gl_mock, glGetProgramiv(stub_program, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
-    EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program, stub_info_log_length + 1, _, _))
+    EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program,
+					      stub_info_log_buffer_length,
+					      _,
+					      NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 

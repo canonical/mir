@@ -112,9 +112,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     if (param == GL_FALSE)
     {
         glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
+	const unsigned int info_log_length = param + 1;
         std::string info_log;
-        info_log.reserve(param + 1);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, const_cast <GLchar *> (info_log.data()));
+	info_log.resize(info_log_length);
+	glGetShaderInfoLog(vertex_shader, info_log_length, NULL, const_cast <GLchar *> (info_log.data()));
         std::string info_str{"Failed to compile vertex shader:"};
         info_str += info_log;
         throw std::runtime_error(info_str);
@@ -127,9 +128,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     if (param == GL_FALSE)
     {
         glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &param);
+	const unsigned int info_log_length = param + 1;
         std::string info_log;
-        info_log.reserve(param + 1);
-        glGetShaderInfoLog(fragment_shader, param + 1, NULL, const_cast <GLchar *> (info_log.data()));
+	info_log.resize(info_log_length);
+	glGetShaderInfoLog(fragment_shader, info_log_length, NULL, const_cast <GLchar *> (info_log.data()));
         std::string info_str{"Failed to compile fragment shader:"};
         info_str += info_log;
         throw std::runtime_error(info_str);
@@ -143,8 +145,9 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     if (param == GL_FALSE)
     {
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &param);
+	const unsigned int info_log_length = param + 1;
         std::string info_log;
-        info_log.reserve(param + 1);
+	info_log.resize(info_log_length);
         glGetProgramInfoLog(program, param + 1, NULL, const_cast <GLchar *> (info_log.data()));
         std::string info_str{"Failed to compile fragment shader:"};
         info_str += info_log;
