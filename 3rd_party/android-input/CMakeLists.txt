@@ -1,15 +1,10 @@
 # Don't be so strict on warnings etc as android code won't compile with them on.
-# A *big* number of warnings would ensue. Therefore redefine CMAKE_CXX_FLAGS without
-# things such as -Werror, -Wall, etc
-set(CMAKE_CXX_FLAGS "-fno-strict-aliasing --std=c++0x")
-
-# A bad hack (repeating this) but it fixes the build for CI
-IF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
-ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
+# A *big* number of warnings would ensue. Therefore locally define CMAKE_CXX_FLAGS
+# without things such as -Werror, -Wall, etc
+STRING(REGEX REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+STRING(REGEX REPLACE "-Wall" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+STRING(REGEX REPLACE "-Wextra" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 # FIXME: Do proper platform detection here.
 set(ANDROID_INPUT_COMPILE_FLAGS
