@@ -27,11 +27,12 @@ namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-TEST(surface, default_creation_parameters)
+TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
     using namespace geom;
     ms::SurfaceCreationParameters params;
 
+    ASSERT_EQ(std::string(), params.name);
     ASSERT_EQ(Width(0), params.size.width);
     ASSERT_EQ(Height(0), params.size.height);
     ASSERT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
@@ -39,18 +40,65 @@ TEST(surface, default_creation_parameters)
     ASSERT_EQ(ms::a_surface(), params);
 }
 
-TEST(surface, builder_mutators)
+TEST(SurfaceCreationParametersTest, builder_mutators)
+{
+    using namespace geom;
+    Size const size{Width{1024}, Height{768}};
+    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+    std::string name{"surface"};
+
+    auto params = ms::a_surface().of_name(name)
+                                 .of_size(size)
+                                 .of_buffer_usage(usage);
+
+    ASSERT_EQ(name, params.name);
+    ASSERT_EQ(size, params.size);
+    ASSERT_EQ(usage, params.buffer_usage);
+}
+
+TEST(SurfaceCreationParametersTest, equality)
 {
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
 
-    auto params = ms::a_surface().of_size(size).of_buffer_usage(usage);
-    ms::SurfaceCreationParameters reference{std::string(), size, usage};
-    ASSERT_EQ(
-        reference,
-        params
-        );
+    auto params0 = ms::a_surface().of_name("surface0")
+                                  .of_size(size)
+                                  .of_buffer_usage(usage);
+
+    auto params1 = ms::a_surface().of_name("surface1")
+                                  .of_size(size)
+                                  .of_buffer_usage(usage);
+
+    ASSERT_EQ(params0, params1);
+    ASSERT_EQ(params1, params0);
+}
+
+TEST(SurfaceCreationParametersTest, inequality)
+{
+    using namespace geom;
+    Size const size0{Width{1024}, Height{768}};
+    Size const size1{Width{1025}, Height{768}};
+    mc::BufferUsage const usage0{mc::BufferUsage::hardware};
+    mc::BufferUsage const usage2{mc::BufferUsage::software};
+
+    auto params0 = ms::a_surface().of_name("surface0")
+                                  .of_size(size0)
+                                  .of_buffer_usage(usage0);
+
+    auto params1 = ms::a_surface().of_name("surface0")
+                                  .of_size(size1)
+                                  .of_buffer_usage(usage0);
+
+    auto params2 = ms::a_surface().of_name("surface0")
+                                  .of_size(size0)
+                                  .of_buffer_usage(usage2);
+    ASSERT_NE(params0, params1);
+    ASSERT_NE(params1, params0);
+    ASSERT_NE(params0, params2);
+    ASSERT_NE(params2, params0);
+    ASSERT_NE(params1, params2);
+    ASSERT_NE(params2, params1);
 }
 
 namespace

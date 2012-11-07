@@ -42,6 +42,8 @@ namespace surfaces
 
 struct SurfaceCreationParameters
 {
+    SurfaceCreationParameters();
+
     SurfaceCreationParameters& of_name(std::string const& new_name);
 
     SurfaceCreationParameters& of_size(geometry::Size new_size);

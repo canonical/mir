@@ -116,6 +116,10 @@ std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() cons
     return graphics_resource->ipc_package;
 }
 
+ms::SurfaceCreationParameters::SurfaceCreationParameters()
+    : name(), size(), buffer_usage(mc::BufferUsage::undefined)
+{
+}
 
 /* todo: kdub: split into different file */
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
