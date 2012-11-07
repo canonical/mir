@@ -19,7 +19,12 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#define _GLIBCXX_USE_NANOSLEEP 1 // Wut
 #include <thread>
+
+// Needed implicitly for InputManager destructor because of android::sp :/
+#include <InputDispatcher.h>
+#include <InputReader.h>
 
 #include "mir/input/event_filter.h"
 #include "mir/input/input_manager.h"
@@ -37,7 +42,7 @@ struct MockEventFilter : public mi::EventFilter
 };
 }
 
-TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
+TEST(InputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
     android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
@@ -50,6 +55,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     
     input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
-    input_manager.start();
+    input_manager.start(event_hub);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     input_manager.stop();
 }

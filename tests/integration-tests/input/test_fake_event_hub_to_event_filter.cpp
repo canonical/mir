@@ -22,6 +22,7 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
+#define _GLIBCXX_USE_NANOSLEEP 1 // Wut
 #include <thread>
 
 #include "mir/input/event_filter.h"
@@ -62,7 +63,10 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
 
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
-    
-    dispatcher->dispatchOnce();
-    reader_thread->requestExitAndWait();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  
+//    Blows up on dispatcher policy?  
+//    dispatcher_thread->requestExit();
+//    reader_thread->requestExit();
 }

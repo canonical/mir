@@ -41,18 +41,16 @@ void mi::InputManager::add_filter(std::shared_ptr<mi::EventFilter> const& filter
 
 void mi::InputManager::stop()
 {
-    dispatcher->dispatchOnce();
-    reader_thread->requestExitAndWait();
-// This produces wild results in the integration test :/
-//    dispatcher_thread->requestExitAndWait();
+    dispatcher_thread->requestExit();
+    reader_thread->requestExit();
 }
 
-void mi::InputManager::start(std::shared_ptr<android::EventHubInterface> const& event_hub)
+void mi::InputManager::start(android::sp<android::EventHubInterface> event_hub)
 {
     android::sp<android::InputDispatcherPolicyInterface> dispatcher_policy = new mi::EventFilterDispatcherPolicy(filter_chain);
     android::sp<android::InputReaderPolicyInterface> reader_policy = new mi::DummyInputReaderPolicy();
     dispatcher = new android::InputDispatcher(dispatcher_policy);
-    reader = new android::InputReader(android::sp<android::EventHubInterface>(event_hub.get()), reader_policy, dispatcher); // oO :/
+    reader = new android::InputReader(event_hub, reader_policy, dispatcher); // oO :/
     reader_thread = new android::InputReaderThread(reader);
     dispatcher_thread = new android::InputDispatcherThread(dispatcher);
     

@@ -47,7 +47,7 @@ public:
     virtual ~InputManager() {}
 
     virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
-    virtual void start(std::shared_ptr<android::EventHubInterface> const& event_hub);
+    virtual void start(android::sp<android::EventHubInterface> event_hub);
     virtual void stop();
 protected:
     InputManager(const InputManager&) = delete;
