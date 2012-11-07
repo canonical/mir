@@ -22,11 +22,14 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
+#include <thread>
+
 #include "mir/input/event_filter.h"
 #include "mir/input/event_filter_dispatcher_policy.h"
+#include "mir/input/dummy_input_reader_policy.h"
 
-#include "mir_test/fake_event_hub.cpp"
-#include "mir_test/empty_delete.h"
+#include "mir_test/fake_event_hub.h"
+#include "mir_test/empty_deleter.h"
 
 namespace mi = mir::input;
 
@@ -41,25 +44,25 @@ struct MockEventFilter : public mi::EventFilter
 TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
-    android::sp<FakeEventHub> event_hub = new FakeEventHub();
+    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
     MockEventFilter event_filter;
     android::sp<android::InputDispatcherPolicyInterface> dispatcher_policy = new mi::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
     android::sp<android::InputReaderPolicyInterface> reader_policy = new mi::DummyInputReaderPolicy();
-    auto dispatcher = new InputDispatcher(dispatcher_policy);
-    auto reader = new InputReader(event_hub, reader_policy, dispatcher);
-    auto reader_thread = new InputReaderThread(reader);
-    auto dispatcher_thread = new InputDispatcherThread(dispatcher);
+    auto dispatcher = new android::InputDispatcher(dispatcher_policy);
+    auto reader = new android::InputReader(event_hub, reader_policy, dispatcher);
+    auto reader_thread = new android::InputReaderThread(reader);
+    auto dispatcher_thread = new android::InputDispatcherThread(dispatcher);
     
-    EXPECT_CALL(event_filter, filter_event(_)).Times(1).WillOnce(Return(f
-alse));    
+    EXPECT_CALL(event_filter, filter_event(_)).Times(1).WillOnce(Return(false));    
     
-    event_hub.synthesize_builtin_keyboard_adde();
-    event_hub.synthesize_key_event(1);
-    
-    dispacher->setInputDispatchMode(true, false);
+    dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);
     dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
-                       
-                       
+
+    event_hub->synthesize_builtin_keyboard_added();
+    event_hub->synthesize_key_event(1);
+    
+    dispatcher->dispatchOnce();
+    reader_thread->requestExitAndWait();
 }
