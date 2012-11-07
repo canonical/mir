@@ -22,8 +22,7 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
-#define _GLIBCXX_USE_NANOSLEEP 1 // Wut
-#include <thread>
+#include "mir/thread/all.h"
 
 #include "mir/input/event_filter.h"
 #include "mir/input/event_filter_dispatcher_policy.h"
@@ -58,15 +57,18 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     
     dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);
+
+    event_hub->synthesize_builtin_keyboard_added();
+    event_hub->synthesize_key_event(1);
+
     dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
 
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  
 //    Blows up on dispatcher policy?  
 //    dispatcher_thread->requestExit();
 //    reader_thread->requestExit();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
 }
