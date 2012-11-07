@@ -23,7 +23,7 @@
 extern "C" {
 
 #ifndef USING_STD_CPP11
-#if 0
+#if 0 // Mir changes
 typedef uint32_t char32_t;
 typedef uint16_t char16_t;
 #endif
