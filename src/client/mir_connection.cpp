@@ -228,3 +228,9 @@ void MirConnection::populate(MirDisplayInfo& display_info)
         display_info.height = 0;
     }
 }
+
+
+std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
+{
+    return platform;
+}
