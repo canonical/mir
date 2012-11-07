@@ -17,6 +17,7 @@
 list(
   APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/fake_event_hub.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_fake_event_hub_to_event_filter.cpp
 )
 
 set(
