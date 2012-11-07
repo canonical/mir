@@ -65,6 +65,5 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
 
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     
-    dispatcher->dispatchOnce();
     reader_thread->requestExitAndWait();
 }
