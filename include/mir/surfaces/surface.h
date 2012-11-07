@@ -80,6 +80,8 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::GraphicRegion> texture() const;
     glm::mat4 transformation() const;
     float alpha() const;
+    bool hidden() const;
+    void set_hidden(bool is_hidden);
 
     geometry::PixelFormat pixel_format() const;
 
@@ -94,6 +96,8 @@ class Surface : public graphics::Renderable
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;
+    
+    bool is_hidden;
 };
 
 }
