@@ -31,7 +31,7 @@ namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(filter_event, bool(android::InputEvent*));
+    MOCK_METHOD1(handles, bool(android::InputEvent*));
 };
 }
 
@@ -46,10 +46,10 @@ TEST(EventFilterChain, offers_events_to_filters)
     filter_chain.add_filter(filter);
 
     // Filter will pass the event on twice
-    EXPECT_CALL(*filter, filter_event(_)).Times(2).WillRepeatedly(Return(false));
+    EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
     
     // So the filter chain should also reject the event
-    EXPECT_EQ(filter_chain.filter_event(ev), false);    
+    EXPECT_EQ(filter_chain.handles(ev), false);    
 }
 
 TEST(EventFilterChain, accepting_event_halts_emission)
@@ -66,11 +66,11 @@ TEST(EventFilterChain, accepting_event_halts_emission)
     // First filter will reject, second will accept, third one should not be asked.
     {
         InSequence seq;
-        EXPECT_CALL(*filter, filter_event(_)).Times(1).WillOnce(Return(false));
-        EXPECT_CALL(*filter, filter_event(_)).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
     }
     
     // So the chain should accept
-    EXPECT_EQ(filter_chain.filter_event(ev), true);    
+    EXPECT_EQ(filter_chain.handles(ev), true);    
 }
 
