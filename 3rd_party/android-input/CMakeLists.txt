@@ -1,7 +1,7 @@
 # Don't be so strict on warnings etc as android code won't compile with them on.
 # A *big* number of warnings would ensue. Therefore redefine CMAKE_CXX_FLAGS without
 # things such as -Werror, -Wall, etc
-set(CMAKE_CXX_FLAGS "-fno-strict-aliasing")
+set(CMAKE_CXX_FLAGS "-fno-strict-aliasing --std=c++0x")
 
 # FIXME: Do proper platform detection here.
 set(ANDROID_INPUT_COMPILE_FLAGS
