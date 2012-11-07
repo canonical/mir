@@ -27,6 +27,7 @@
 #include "mir_test/mock_buffer_initializer.h"
 
 #include <memory>
+#include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -172,4 +173,18 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);
     });
+}
+
+TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_))
+        .WillOnce(Return(reinterpret_cast<gbm_bo*>(0)));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_))
+        .Times(0);
+
+    EXPECT_THROW({
+        allocator->alloc_buffer(buffer_properties);
+    }, std::runtime_error);
 }

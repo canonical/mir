@@ -116,6 +116,10 @@ std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() cons
     return graphics_resource->ipc_package;
 }
 
+ms::SurfaceCreationParameters::SurfaceCreationParameters()
+    : name(), size(), buffer_usage(mc::BufferUsage::undefined)
+{
+}
 
 /* todo: kdub: split into different file */
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
@@ -133,18 +137,27 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_buffer_usage(
+        mc::BufferUsage new_buffer_usage)
+{
+    buffer_usage = new_buffer_usage;
+
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
-    return lhs.size == rhs.size;
+    return lhs.size == rhs.size &&
+           lhs.buffer_usage == rhs.buffer_usage;
 }
 
 bool ms::operator!=(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
-    return lhs.size != rhs.size;
+    return !(lhs == rhs);
 }
 
 ms::SurfaceCreationParameters ms::a_surface()

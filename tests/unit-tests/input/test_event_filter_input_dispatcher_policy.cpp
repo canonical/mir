@@ -32,7 +32,7 @@ namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(filter_event, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const android::InputEvent*));
 };
 }
 
@@ -44,7 +44,7 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     mi::EventFilterDispatcherPolicy policy(std::shared_ptr<MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
     
-    EXPECT_CALL(filter, filter_event(_)).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));
 
     // The policy filters ALL key events before queuing
     policy.interceptKeyBeforeQueueing(ev, policy_flags);

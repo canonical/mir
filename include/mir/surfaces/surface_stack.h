@@ -51,7 +51,7 @@ public:
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
 
-    virtual void destroy_surface(std::weak_ptr<Surface> surface);
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
     
     virtual void raise_to_top(std::weak_ptr<Surface> surface);
 
