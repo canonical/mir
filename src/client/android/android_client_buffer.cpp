@@ -19,6 +19,7 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/android/android_client_buffer.h"
 
+#include <hardware/gralloc.h>
 namespace mcl=mir::client;
 namespace geom=mir::geometry;
 
@@ -34,6 +35,23 @@ mcl::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> 
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
     buffer_registrar->register_buffer(native_handle.get());
+    
+    pack_native_window_buffer();
+}
+
+static void incRef(android_native_base_t*)
+{
+}
+void mcl::AndroidClientBuffer::pack_native_window_buffer()
+{
+    native_window_buffer.height = static_cast<int32_t>(rect.size.height.as_uint32_t());
+    native_window_buffer.width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
+    native_window_buffer.stride = static_cast<int32_t>(rect.size.width.as_uint32_t());
+    native_window_buffer.usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+
+    native_window_buffer.handle = native_handle.get();
+    native_window_buffer.common.incRef = &incRef;
+    native_window_buffer.common.decRef = &incRef;
 }
 
 mcl::AndroidClientBuffer::~AndroidClientBuffer()
@@ -91,6 +109,11 @@ geom::Stride mcl::AndroidClientBuffer::stride() const
 geom::PixelFormat mcl::AndroidClientBuffer::pixel_format() const
 {
     return buffer_pf;
+}
+
+MirNativeBuffer mcl::AndroidClientBuffer::get_native_handle()
+{
+    return &native_window_buffer;
 }
 
 std::shared_ptr<MirBufferPackage> mcl::AndroidClientBuffer::get_buffer_package() const
