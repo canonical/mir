@@ -60,6 +60,7 @@ set(
   android/android_client_buffer_depository.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
+  android/mir_native_window.cpp
   ${CLIENT_SOURCES}
 )
 endif()

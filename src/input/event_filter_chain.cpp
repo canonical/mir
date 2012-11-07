@@ -19,12 +19,12 @@
 #include "mir/input/event_filter_chain.h"
 namespace mi = mir::input;
 
-bool mi::EventFilterChain::filter_event(const android::InputEvent *event)
+bool mi::EventFilterChain::handles(const android::InputEvent *event)
 {
     for (auto it = filters.begin(); it != filters.end(); it++)
     {
         auto filter = *it;
-        if (filter->filter_event(event)) return true;
+        if (filter->handles(event)) return true;
     }
     return false;
 }
