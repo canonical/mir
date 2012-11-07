@@ -20,10 +20,10 @@
 #define MIR_FRONTEND_APPLICATION_MODEL_H_
 
 #include "mir/frontend/application_session_container.h"
+#include "mir/thread/all.h"
 
 #include <memory>
 #include <set>
-#include <mutex>
 #include <map>
 #include <vector>
 
