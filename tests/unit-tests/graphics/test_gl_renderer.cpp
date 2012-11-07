@@ -19,6 +19,7 @@
 #include <functional>
 #include <string>
 #include <cstring>
+#include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
@@ -190,15 +191,16 @@ TEST_F(TestGLRendererSetupProcess, TestSetupVertexShaderCompilerFailRecoverAndTh
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_v_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_v_shader,
-					     stub_info_log_buffer_length,
+					     stub_info_log_length,
 					     _,
 					     NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 
-    std::unique_ptr<mg::GLRenderer> r;
-
-    EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
+    EXPECT_THROW({
+	std::unique_ptr<mg::GLRenderer> r;
+	r.reset(new mg::GLRenderer(display_size));
+    }, std::runtime_error);
 }
 
 TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAndThrows)
@@ -211,15 +213,16 @@ TEST_F(TestGLRendererSetupProcess, TestSetupFragmentShaderCompilerFailRecoverAnd
     EXPECT_CALL (gl_mock, glGetShaderiv(stub_f_shader, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL (gl_mock, glGetShaderInfoLog(stub_f_shader,
-					     stub_info_log_buffer_length,
+					     stub_info_log_length,
 					     _,
 					     NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 
-    std::unique_ptr<mg::GLRenderer> r;
-
-    EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
+    EXPECT_THROW({
+	std::unique_ptr<mg::GLRenderer> r;
+	r.reset(new mg::GLRenderer(display_size));
+    }, std::runtime_error);
 }
 
 TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramLinkFailRecoverAndThrows)
@@ -233,15 +236,16 @@ TEST_F(TestGLRendererSetupProcess, TestSetupGraphicsProgramLinkFailRecoverAndThr
     EXPECT_CALL (gl_mock, glGetProgramiv(stub_program, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL (gl_mock, glGetProgramInfoLog(stub_program,
-					      stub_info_log_buffer_length,
+					      stub_info_log_length,
 					      _,
 					      NthCharacterIsNul (stub_info_log_length)))
             .WillOnce(CopyString (stub_info_log.c_str(),
                                   stub_info_log.size()));
 
-    std::unique_ptr<mg::GLRenderer> r;
-
-    EXPECT_ANY_THROW (r.reset (new mg::GLRenderer (display_size)));
+    EXPECT_THROW({
+	std::unique_ptr<mg::GLRenderer> r;
+	r.reset(new mg::GLRenderer(display_size));
+    }, std::runtime_error);
 }
 
 class TestSetupGLRenderer :

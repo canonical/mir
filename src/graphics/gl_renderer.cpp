@@ -71,6 +71,29 @@ VertexAttributes vertex_attribs[4] =
     }
 };
 
+typedef void (*MirGLGetObjectInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
+typedef void (*MirGLGetObjectiv) (GLuint, GLenum, GLint *);
+
+void GetObjectLogAndThrow (MirGLGetObjectInfoLog getObjectInfoLog,
+			   MirGLGetObjectiv      getObjectiv,
+			   std::string const &   msg,
+			   GLuint                object)
+{
+    GLint object_log_length = 0;
+    (*getObjectiv) (object, GL_INFO_LOG_LENGTH, &object_log_length);
+
+    const GLuint object_log_buffer_length = object_log_length + 1;
+    std::string  object_info_log;
+
+    object_info_log.resize(object_log_buffer_length);
+    (*getObjectInfoLog) (object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
+
+    std::string object_info_err(msg + "\n");
+    object_info_err += object_info_log;
+
+    throw std::runtime_error (object_info_err);
+}
+
 }
 
 mg::GLRenderer::Resources::Resources() :
@@ -110,32 +133,20 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glCompileShader(vertex_shader);
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
-    {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-	const unsigned int info_log_length = param + 1;
-        std::string info_log;
-	info_log.resize(info_log_length);
-	glGetShaderInfoLog(vertex_shader, info_log_length, NULL, const_cast <GLchar *> (info_log.data()));
-        std::string info_str{"Failed to compile vertex shader:"};
-        info_str += info_log;
-        throw std::runtime_error(info_str);
-    }
+	GetObjectLogAndThrow(glGetShaderInfoLog,
+			     glGetShaderiv,
+			     "Failed to compile vertex shader:",
+			     vertex_shader);
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_src, 0);
     glCompileShader(fragment_shader);
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
-    {
-        glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &param);
-	const unsigned int info_log_length = param + 1;
-        std::string info_log;
-	info_log.resize(info_log_length);
-	glGetShaderInfoLog(fragment_shader, info_log_length, NULL, const_cast <GLchar *> (info_log.data()));
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log;
-        throw std::runtime_error(info_str);
-    }
+	GetObjectLogAndThrow(glGetShaderInfoLog,
+			     glGetShaderiv,
+			     "Failed to compile fragment shader:",
+			     fragment_shader);
 
     program = glCreateProgram();
     glAttachShader(program, vertex_shader);
@@ -143,16 +154,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glLinkProgram(program);
     glGetProgramiv(program, GL_LINK_STATUS, &param);
     if (param == GL_FALSE)
-    {
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &param);
-	const unsigned int info_log_length = param + 1;
-        std::string info_log;
-	info_log.resize(info_log_length);
-        glGetProgramInfoLog(program, param + 1, NULL, const_cast <GLchar *> (info_log.data()));
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log;
-        throw std::runtime_error(info_str);
-    }
+	GetObjectLogAndThrow(glGetProgramInfoLog,
+			     glGetProgramiv,
+			     "Failed to link program:",
+			     program);
 
     glUseProgram(program);
 
