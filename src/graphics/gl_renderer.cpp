@@ -260,11 +260,9 @@ void mg::GLRenderer::render(Renderable& renderable)
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
     /* We must release the renderableTexture as soon
-     * as the bind_to_texture operation is complete */
-    {
-        auto renderableTexture (renderable.texture ());
-        renderableTexture->bind_to_texture();
-    }
+     * as the bind_to_texture operation is complete
+     * so we are using it as a temporary */
+    renderable.texture()->bind_to_texture ();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
