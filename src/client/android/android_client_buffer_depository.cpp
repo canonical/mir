@@ -29,12 +29,12 @@ mcla::AndroidClientBufferDepository::AndroidClientBufferDepository(const std::sh
 {
 }
 
-void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> && package, int id, geom::Size size, geom::PixelFormat pf)
+void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage>&& package, int id, geom::Size size, geom::PixelFormat pf)
 {
     auto find_it = buffer_depository.find(id);
     if (find_it == buffer_depository.end())
     {
-        auto buffer = std::make_shared<mcla::AndroidClientBuffer>(registrar, std::move(package), size, pf );
+        auto buffer = std::make_shared<mcla::AndroidClientBuffer>(registrar, std::move(package), size, pf);
         buffer_depository[id] = buffer;
     }
 } 

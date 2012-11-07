@@ -29,12 +29,12 @@ std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
     return std::make_shared<mclg::GBMClientPlatform>();
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_platform_depository ()
+std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_platform_depository()
 {
     return std::make_shared<mclg::GBMClientBufferDepository>();
 }
 
-EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface *)
+EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface*)
 {
     return (EGLNativeWindowType) -1;
 }
