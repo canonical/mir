@@ -18,6 +18,7 @@
 #ifndef MIR_CLIENT_CLIENT_PLATFORM_H_
 #define MIR_CLIENT_CLIENT_PLATFORM_H_
 
+#include <EGL/eglplatform.h>
 #include <memory>
 
 namespace mir
@@ -25,6 +26,7 @@ namespace mir
 namespace client
 {
 class ClientBufferDepository;
+class ClientSurface;
 
 class ClientPlatform
 {
@@ -34,6 +36,8 @@ public:
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
     virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
+    virtual EGLNativeWindowType create_egl_window(ClientSurface *surface) = 0;
+    virtual void destroy_egl_window(EGLNativeWindowType window) = 0;
 };
 
 std::shared_ptr<ClientPlatform> create_client_platform();

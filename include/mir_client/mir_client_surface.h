@@ -15,26 +15,27 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_CLIENT_CLIENT_SURFACE_H_
+#define MIR_CLIENT_CLIENT_SURFACE_H_
 
+#include "mir_client/mir_client_library.h"
+
+#include <memory>
 namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
-
-class GBMClientPlatform : public ClientPlatform
+class ClientBuffer;
+class ClientSurface
 {
 public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
+    virtual MirSurfaceParameters get_parameters() const = 0;
+    virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
+    virtual MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context) = 0;
 };
 
 }
 }
 
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */

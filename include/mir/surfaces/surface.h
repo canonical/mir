@@ -21,6 +21,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include <memory>
 #include <string>
@@ -41,12 +42,17 @@ namespace surfaces
 
 struct SurfaceCreationParameters
 {
+    SurfaceCreationParameters();
+
     SurfaceCreationParameters& of_name(std::string const& new_name);
 
     SurfaceCreationParameters& of_size(geometry::Size new_size);
 
+    SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
+
     std::string name;
     geometry::Size size;
+    compositor::BufferUsage buffer_usage;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

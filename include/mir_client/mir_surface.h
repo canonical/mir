@@ -23,8 +23,10 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
-#include "client_buffer_depository.h"
-#include "mir_wait_handle.h"
+#include "mir_client/client_buffer_depository.h"
+#include "mir_client/mir_wait_handle.h"
+#include "mir_client/mir_client_surface.h"
+#include "mir_client/client_platform.h"
 
 #include <memory>
 
@@ -37,7 +39,7 @@ class MemoryRegion;
 }
 }
 
-class MirSurface
+class MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -64,8 +66,10 @@ public:
     MirWaitHandle* get_create_wait_handle();
 
     std::shared_ptr<MirBufferPackage> get_current_buffer_package();
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
+    EGLNativeWindowType generate_native_window();
 
 private:
     void process_incoming_buffer();
@@ -90,6 +94,8 @@ private:
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
 
     std::shared_ptr<mir::client::Logger> logger;
+    std::shared_ptr<mir::client::ClientPlatform> platform;
+    EGLNativeWindowType accelerated_window;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

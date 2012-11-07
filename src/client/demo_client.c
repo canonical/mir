@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 
 
     MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+        {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_buffer_usage_hardware};
     mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
     puts("Surface created");
 

@@ -56,7 +56,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
 
     mc::BufferProperties buffer_properties{params.size,
                                            geom::PixelFormat::rgba_8888,
-                                           mc::BufferUsage::hardware};
+                                           params.buffer_usage};
 
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
@@ -67,7 +67,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     std::lock_guard<std::mutex> lg(guard);
 
