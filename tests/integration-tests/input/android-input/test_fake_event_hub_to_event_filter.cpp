@@ -38,7 +38,7 @@ namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(filter_event, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const android::InputEvent*));
 };
 }
 
@@ -54,7 +54,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     auto reader_thread = new android::InputReaderThread(reader);
     auto dispatcher_thread = new android::InputDispatcherThread(dispatcher);
     
-    EXPECT_CALL(event_filter, filter_event(_)).Times(1).WillOnce(Return(false));    
+    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     
     dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);

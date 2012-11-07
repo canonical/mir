@@ -20,9 +20,11 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
+#include "mir_client/mir_client_library.h"
 #include "mir_client/client_buffer.h"
 #include "mir_client/android/android_registrar.h"
 
+#include <system/window.h>
 #include <memory>
 
 namespace mir
@@ -41,11 +43,13 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
+    MirNativeBuffer get_native_handle();
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 private:
+    void pack_native_window_buffer();
     const native_handle_t* convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package);
 
     std::shared_ptr<MirBufferPackage> creation_package;
@@ -54,6 +58,8 @@ private:
 
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
+
+    ANativeWindowBuffer native_window_buffer;
 };
 
 }

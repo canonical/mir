@@ -167,7 +167,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
@@ -183,11 +188,13 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_get_parameters(ssync[1].surface, &response_params);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
             EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
             wait_for_surface_release(ssync+1);
@@ -213,7 +220,12 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
@@ -252,7 +264,12 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
             wait_for_connect();
 
             MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);

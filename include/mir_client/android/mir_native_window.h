@@ -13,38 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_H_
-#define MIR_INPUT_EVENT_FILTER_H_
+#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
 
-#include <memory>
-
-namespace android
-{
-    class InputEvent;
-}
+#include "mir_client/mir_client_surface.h"
+#include <system/window.h>
 
 namespace mir
 {
-namespace input
+namespace client
 {
 
-class EventFilter
+class MirNativeWindow : public ANativeWindow
 {
 public:
-    virtual ~EventFilter() {}
+    explicit MirNativeWindow(ClientSurface* surface);
 
-    virtual bool handles(const android::InputEvent *event) = 0;
+    int query(int key, int* value) const;
+    int perform(int key, va_list args );
+    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
+    int queueBuffer(struct ANativeWindowBuffer* buffer);
+private:
 
-protected:
-    EventFilter() = default;
-    EventFilter(const EventFilter&) = delete;
-    EventFilter& operator=(const EventFilter&) = delete;
+    ClientSurface * surface;
+    int driver_pixel_format; 
 };
 
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */

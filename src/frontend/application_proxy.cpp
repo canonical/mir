@@ -84,6 +84,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         .of_name(request->surface_name())
         .of_size(geometry::Size{geometry::Width{request->width()},
                                 geometry::Height{request->height()}})
+        .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
         );
 
     auto const id = next_id();
@@ -93,6 +94,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
+        response->set_buffer_usage(request->buffer_usage());
 
 
         surface->advance_client_buffer();

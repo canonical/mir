@@ -13,23 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include "mir/input/event_filter_dispatcher_policy.h"
 
-namespace mi = mir::input;
+#ifndef MIR_CLIENT_CLIENT_SURFACE_H_
+#define MIR_CLIENT_CLIENT_SURFACE_H_
 
-mi::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
-  event_filter(event_filter)
+#include "mir_client/mir_client_library.h"
+
+#include <memory>
+namespace mir
 {
+namespace client
+{
+class ClientBuffer;
+class ClientSurface
+{
+public:
+    virtual MirSurfaceParameters get_parameters() const = 0;
+    virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
+    virtual MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context) = 0;
+};
+
+}
 }
 
-bool mi::EventFilterDispatcherPolicy::filterInputEvent(const android::InputEvent* input_event, uint32_t /*policy_flags*/)
-{
-    return !event_filter->handles(input_event);
-}
-
-void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const android::KeyEvent* /*key_event*/, uint32_t& policy_flags)
-{
-    policy_flags = android::POLICY_FLAG_FILTERED;
-}
+#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */
