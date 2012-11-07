@@ -45,7 +45,7 @@ mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfac
     assert(mechanism);
 }
 
-std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string name)
+std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string const& name)
 {
     std::shared_ptr<mf::ApplicationSession> session(new mf::ApplicationSession(surface_organiser, name));
   
