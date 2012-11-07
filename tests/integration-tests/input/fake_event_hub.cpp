@@ -25,6 +25,10 @@ FakeEventHub::~FakeEventHub()
 
 uint32_t FakeEventHub::getDeviceClasses(int32_t deviceId) const
 {
+    if (deviceId == android::BUILT_IN_KEYBOARD_ID)
+    {
+        return android::INPUT_DEVICE_CLASS_KEYBOARD;
+    }
     auto fake_device_iterator = device_from_id.find(deviceId);
 
     if (fake_device_iterator != device_from_id.end())
