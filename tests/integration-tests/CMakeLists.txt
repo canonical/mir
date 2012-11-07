@@ -65,6 +65,8 @@ target_link_libraries(
   mirplatformgraphics
   mirprocess
   mirprotobuf
+  
+  android-input
 
   3rd_party
 
