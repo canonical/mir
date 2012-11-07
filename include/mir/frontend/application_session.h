@@ -41,7 +41,7 @@ namespace frontend
 class ApplicationSession 
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser, std::string application_name);
+    explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser, std::string const& application_name);
     virtual ~ApplicationSession();
 
     std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params);

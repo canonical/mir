@@ -55,8 +55,10 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusStrategy::next_f
         }
         it->advance();
     }
-    // What if we didn't find the previous app?
     it->reset();
+    // This is programmer error if not found...
+    // later we can make this use LockingIterators?
+    assert(found);
 
     return **it;
 }
