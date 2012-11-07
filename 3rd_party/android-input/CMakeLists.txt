@@ -1,11 +1,8 @@
 # Don't be so strict on warnings etc as android code won't compile with them on.
 # A *big* number of warnings would ensue. Therefore locally define CMAKE_CXX_FLAGS
 # without things such as -Werror, -Wall, etc
-STRING(REGEX REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-STRING(REGEX REPLACE "-Wall" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-STRING(REGEX REPLACE "-Wextra" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-STRING(REGEX REPLACE "-fno-strict-aliasing" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+STRING(REGEX REPLACE "-W[^ ]*" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 # FIXME: Do proper platform detection here.
 set(ANDROID_INPUT_COMPILE_FLAGS
