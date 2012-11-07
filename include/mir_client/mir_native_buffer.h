@@ -13,28 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
+#define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
-namespace mir
-{
-namespace client
-{
-class ClientBufferDepository;
+#ifdef ANDROID
+struct ANativeWindowBuffer;
+typedef ANativeWindowBuffer* MirNativeBuffer;
+#else
+typedef void* MirNativeBuffer;
+#endif
 
-class GBMClientPlatform : public ClientPlatform
-{
-public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
-};
-
-}
-}
-
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_MIR_NATIVE_BUFFER_H_ */

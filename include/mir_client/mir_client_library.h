@@ -25,6 +25,7 @@ extern "C" {
 /* This header defines the MIR client library's C API. */
 
 /* Display server connection API */
+typedef void* MirEGLNativeWindowType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 
@@ -52,6 +53,12 @@ typedef enum MirPixelFormat
 {
     mir_pixel_format_rgba_8888
 } MirPixelFormat;
+
+typedef enum MirBufferUsage
+{
+    mir_buffer_usage_hardware = 1,
+    mir_buffer_usage_software
+} MirBufferUsage;
  
 typedef struct MirSurfaceParameters
 {
@@ -59,6 +66,7 @@ typedef struct MirSurfaceParameters
     int width;
     int height;
     MirPixelFormat pixel_format;
+    MirBufferUsage buffer_usage;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };
@@ -141,6 +149,10 @@ MirWaitHandle *mir_surface_create(
     MirSurfaceParameters const *surface_parameters,
     mir_surface_lifecycle_callback callback,
     void *client_context);
+
+/* returns an EGLNativeWindowType for a surface that the client can use for 
+   OpenGL ES 2.0 acceleration */
+MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 
 /* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
 int mir_surface_is_valid(MirSurface *surface);

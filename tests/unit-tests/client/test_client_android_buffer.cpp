@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -290,6 +291,70 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
     auto region = buffer->secure_for_cpu_write();
 
     EXPECT_EQ(region->format, pf_copy);
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    const native_handle_t* buffer_handle;
+    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&buffer_handle));
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        size, pf);
+
+    auto native_handle = buffer->get_native_handle();
+
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    EXPECT_EQ(native_handle->handle, buffer_handle); 
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package),
+                                                        size, pf);
+
+    auto native_handle = buffer->get_native_handle();
+
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    EXPECT_EQ(native_handle->width,  (int) width_copy.as_uint32_t());
+    EXPECT_EQ(native_handle->height, (int) height_copy.as_uint32_t());
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+
+    auto native_handle = buffer->get_native_handle();
+    int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    EXPECT_EQ(native_handle->usage,  correct_usage);
+}
+
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcl::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+
+    auto native_handle = buffer->get_native_handle();
+
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE((int) native_handle->common.incRef,  NULL);
+    ASSERT_NE((int) native_handle->common.decRef,  NULL);
+
+    native_handle->common.incRef(NULL);
+    native_handle->common.decRef(NULL);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_creation_package)
