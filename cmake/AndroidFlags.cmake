@@ -70,6 +70,6 @@ function(get_android_flags)
     )
 
   #linker flags
-  set(ANDROID_LINKER_FLAGS "-Wl,-rpath,${MIR_NDK_PATH}/sysroot/usr/lib:${MIR_NDK_PATH}/arm-linux-androideabi/lib -lgnustl_shared" PARENT_SCOPE)
+  set(ANDROID_LINKER_FLAGS "-Wl,-rpath,${MIR_NDK_PATH}/sysroot/usr/lib:${MIR_NDK_PATH}/arm-linux-androideabi/lib" PARENT_SCOPE)
 
 endfunction(get_android_flags)
