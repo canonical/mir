@@ -71,27 +71,27 @@ VertexAttributes vertex_attribs[4] =
     }
 };
 
-typedef void (*MirGLGetObjectInfoLog) (GLuint, GLsizei, GLsizei *, GLchar *);
-typedef void (*MirGLGetObjectiv) (GLuint, GLenum, GLint *);
+typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
+typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
 
-void GetObjectLogAndThrow (MirGLGetObjectInfoLog getObjectInfoLog,
+void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 			   MirGLGetObjectiv      getObjectiv,
 			   std::string const &   msg,
 			   GLuint                object)
 {
     GLint object_log_length = 0;
-    (*getObjectiv) (object, GL_INFO_LOG_LENGTH, &object_log_length);
+    (*getObjectiv)(object, GL_INFO_LOG_LENGTH, &object_log_length);
 
     const GLuint object_log_buffer_length = object_log_length + 1;
     std::string  object_info_log;
 
     object_info_log.resize(object_log_buffer_length);
-    (*getObjectInfoLog) (object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
+    (*getObjectInfoLog)(object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
 
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
 
-    throw std::runtime_error (object_info_err);
+    throw std::runtime_error(object_info_err);
 }
 
 }
@@ -111,15 +111,15 @@ mg::GLRenderer::Resources::Resources() :
 
 mg::GLRenderer::Resources::~Resources()
 {
-    if (vertex_shader)
+    if(vertex_shader)
         glDeleteShader(vertex_shader);
-    if (fragment_shader)
+    if(fragment_shader)
         glDeleteShader(fragment_shader);
-    if (program)
+    if(program)
         glDeleteProgram(program);
-    if (vertex_attribs_vbo)
+    if(vertex_attribs_vbo)
         glDeleteBuffers(1, &vertex_attribs_vbo);
-    if (texture)
+    if(texture)
         glDeleteTextures(1, &texture);
 }
 
@@ -132,7 +132,7 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glShaderSource(vertex_shader, 1, &vertex_shader_src, 0);
     glCompileShader(vertex_shader);
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
-    if (param == GL_FALSE)
+    if(param == GL_FALSE)
 	GetObjectLogAndThrow(glGetShaderInfoLog,
 			     glGetShaderiv,
 			     "Failed to compile vertex shader:",
@@ -142,7 +142,7 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glShaderSource(fragment_shader, 1, &fragment_shader_src, 0);
     glCompileShader(fragment_shader);
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
-    if (param == GL_FALSE)
+    if(param == GL_FALSE)
 	GetObjectLogAndThrow(glGetShaderInfoLog,
 			     glGetShaderiv,
 			     "Failed to compile fragment shader:",
@@ -153,7 +153,7 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
     glGetProgramiv(program, GL_LINK_STATUS, &param);
-    if (param == GL_FALSE)
+    if(param == GL_FALSE)
 	GetObjectLogAndThrow(glGetProgramInfoLog,
 			     glGetProgramiv,
 			     "Failed to link program:",
@@ -262,7 +262,7 @@ void mg::GLRenderer::render(Renderable& renderable)
     /* We must release the renderableTexture as soon
      * as the bind_to_texture operation is complete
      * so we are using it as a temporary */
-    renderable.texture()->bind_to_texture ();
+    renderable.texture()->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
