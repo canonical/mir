@@ -13,38 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_CLIENT_GBM_DRM_FD_HANDLER_
+#define MIR_CLIENT_GBM_DRM_FD_HANDLER_
+
+#include <sys/types.h>
 
 namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
-
 namespace gbm
 {
 
-class DRMFDHandler;
-
-class GBMClientPlatform : public ClientPlatform
+class DRMFDHandler
 {
 public:
-    GBMClientPlatform(std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
-
-private:
-    std::shared_ptr<DRMFDHandler> drm_fd_handler;
+    virtual int ioctl(unsigned long request, void* arg) = 0;
+    virtual void* map(size_t size, off_t offset) = 0;
+    virtual void unmap(void* addr, size_t size) = 0;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_GBM_DRM_FD_HANDLER_ */

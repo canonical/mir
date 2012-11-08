@@ -39,6 +39,7 @@ endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -100,6 +101,7 @@ target_link_libraries(
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
+  ${DRM_LIBRARIES}
 )
 
 add_executable(
