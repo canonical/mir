@@ -43,7 +43,7 @@ geom::Size mcl::GBMClientBuffer::size() const
 
 geom::Stride mcl::GBMClientBuffer::stride() const
 {
-    return geom::Stride{static_cast<geom::Stride::ValueType>(creation_package->stride)};
+    return geom::Stride{creation_package->stride};
 }
 
 geom::PixelFormat mcl::GBMClientBuffer::pixel_format() const

@@ -38,7 +38,8 @@ public:
     typedef uint32_t ValueType;
     
     IntWrapper() : value(0) {}
-    explicit IntWrapper(ValueType value) : value(value) {}
+    template<typename AnyInteger>
+    explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
 
     uint32_t as_uint32_t() const
     {
