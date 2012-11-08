@@ -54,6 +54,10 @@ public:
     status_t load(const InputDeviceIdentifier& deviceIdenfier,
             const PropertyMap* deviceConfiguration);
 
+    // <mir changes>
+    status_t loadGenericMaps();
+    // </mir changes>
+
     inline bool haveKeyLayout() const {
         return !keyLayoutFile.isEmpty();
     }

@@ -64,7 +64,7 @@ class KeyLayoutMap : public RefBase {
 public:
     static status_t load(const String8& filename, sp<KeyLayoutMap>* outMap);
     // <mir changes>
-    static status_t load(const String8& filename, const String8& contents, sp<KeyLayoutMap>* outMap);
+    static status_t load(const String8& filename, const char* contents, sp<KeyLayoutMap>* outMap);
     // </mir changes>
 
     status_t mapKey(int32_t scanCode, int32_t usageCode,

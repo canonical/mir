@@ -88,7 +88,7 @@ status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
     return status;
 }
 
-status_t KeyLayoutMap::load(const String8& filename, const String8& contents, sp<KeyLayoutMap>* outMap) {
+status_t KeyLayoutMap::load(const String8& filename, const char* contents, sp<KeyLayoutMap>* outMap) {
     outMap->clear();
 
     Tokenizer* tokenizer;
