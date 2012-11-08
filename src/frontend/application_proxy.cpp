@@ -86,10 +86,10 @@ void mir::frontend::ApplicationProxy::create_surface(
     auto handle = application_session->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_size(geometry::Size{geometry::Width{request->width()},
-              geometry::Height{request->height()}})
+        .of_size(request->width(), request->height())            
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
-                                                      );
+        );
+
     auto const id = next_id();
     {
         auto surface = handle.lock();

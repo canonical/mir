@@ -54,6 +54,7 @@ public:
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
+
     MirWaitHandle* release_surface(
             mir_surface_lifecycle_callback callback,
             void *context);
