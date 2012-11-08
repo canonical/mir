@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/event_filter_chain.h"
+#include "src/input/event_filter_chain.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
