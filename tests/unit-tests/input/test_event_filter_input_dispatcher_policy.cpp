@@ -17,7 +17,7 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "mir/input/event_filter_dispatcher_policy.h"
+#include "src/input/android/event_filter_dispatcher_policy.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,28 +27,30 @@
 #include <androidfw/Input.h>
 
 namespace mi = mir::input;
+namespace mia = mi::android;
+
 
 namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(handles, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
 }
 
 TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 {
     using namespace ::testing;
-    auto ev = new android::KeyEvent();
+    auto ev = new droidinput::KeyEvent();
     MockEventFilter filter;
-    mi::EventFilterDispatcherPolicy policy(std::shared_ptr<MockEventFilter>(&filter, mir::EmptyDeleter()));
+    mia::EventFilterDispatcherPolicy policy(std::shared_ptr<MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
     
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));
 
     // The policy filters ALL key events before queuing
     policy.interceptKeyBeforeQueueing(ev, policy_flags);
-    EXPECT_EQ(policy_flags, android::POLICY_FLAG_FILTERED);
+    EXPECT_EQ(policy_flags, droidinput::POLICY_FLAG_FILTERED);
 
     // Android uses alternate notation...the policy returns true if the event was NOT handled (e.g. the EventFilter
     // returns false)
