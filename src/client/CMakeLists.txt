@@ -157,15 +157,15 @@ target_link_libraries(
 
 )
 
+install(
+  TARGETS mir_demo_client
+  RUNTIME DESTINATION bin)
+
 set_target_properties(
   mirclient
   PROPERTIES 
   PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
 )
-
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
 
 install(
   TARGETS mirclient

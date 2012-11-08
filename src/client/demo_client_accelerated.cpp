@@ -13,8 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
- *              Kevin DuBois   <kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois   <kevin.dubois@canonical.com>
  */
 
 #include "mir_client/mir_client_library.h"
@@ -94,11 +93,11 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
     /* egl setup */
-	int major, minor, n;
-	EGLDisplay disp;
+    int major, minor, n;
+    EGLDisplay disp;
     EGLContext context;
     EGLSurface egl_surface;
-	EGLConfig egl_config;
+    EGLConfig egl_config;
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
@@ -111,10 +110,10 @@ int main(int argc, char* argv[])
 
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
    
-	disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(disp, &major, &minor);
-	
-	eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+
+    eglChooseConfig(disp, attribs, &egl_config, 1, &n);
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
     eglMakeCurrent(disp, egl_surface, egl_surface, context);
@@ -125,7 +124,7 @@ int main(int argc, char* argv[])
     for(;;)
     {
         gl_animation.render_gl();
-		eglSwapBuffers(disp, egl_surface);
+        eglSwapBuffers(disp, egl_surface);
 
         usleep(167);//60fps
 
