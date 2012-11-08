@@ -122,7 +122,8 @@ int main(int argc, char* argv[])
     assert(0 <= buffer_package.data_items);
     assert(0 <= buffer_package.fd_items);
 
-    for(int i = 0; i < buffer_swap_count; i++)
+    int i;
+    for(i = 0; i < buffer_swap_count; i++)
     {
         mir_wait_for(mir_surface_next_buffer(surface, surface_next_buffer_callback, 0));
     }
