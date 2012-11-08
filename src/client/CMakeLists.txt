@@ -120,13 +120,13 @@ target_link_libraries(
 )
 
 add_executable(
-  ubuntu_ds_demo_client_unaccelerated
+  mir_demo_client_unaccelerated
   
   demo_client_unaccelerated.c
 )
 
 target_link_libraries(
-  ubuntu_ds_demo_client_unaccelerated
+  mir_demo_client_unaccelerated
   
   mirclient
   mirprotobuf
@@ -136,15 +136,36 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
+add_executable(
+  mir_demo_client_accelerated
+  
+  demo_client_accelerated.cpp
+)
+
+target_link_libraries(
+  mir_demo_client_accelerated
+  
+  test-utils
+  mirclient
+  mirprotobuf
+  
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${EGL_LIBRARIES}
+  ${GLESv2_LIBRARIES}
+
+)
 
 set_target_properties(
   mirclient
   PROPERTIES 
   PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
 )
+
+install(
+  TARGETS mir_demo_client
+  RUNTIME DESTINATION bin)
 
 install(
   TARGETS mirclient
