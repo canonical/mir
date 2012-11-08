@@ -59,3 +59,25 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatche
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     input_manager.stop();
 }
+
+TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
+{
+    using namespace ::testing;
+    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    MockEventFilter event_filter;
+    mia::InputManager input_manager(event_hub);
+    const droidinput::InputEvent *filtered_event;
+    
+    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(DoAll(SaveArg<0>(&filtered_event),Return(false)));    
+    event_hub->synthesize_builtin_keyboard_added();
+    event_hub->synthesize_key_event(KEY_RIGHT);
+    
+    input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
+
+    input_manager.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    input_manager.stop();
+    
+    auto key_ev = static_cast<const android::KeyEvent*>(filtered_event);
+    EXPECT_EQ(key_ev->getKeyCode(), KEY_RIGHT);
+}
