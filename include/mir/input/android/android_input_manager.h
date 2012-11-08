@@ -17,32 +17,53 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_MANAGER_H_
-#define MIR_INPUT_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_ANDROID_INPUT_MANAGER_H_
+#define MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 
-#include <memory>
+#include "mir/input/input_manager.h"
+#include "mir/input/event_filter_chain.h"
 
-#include "mir/input/event_filter.h"
+namespace android
+{
+    class EventHub;
+    class EventHubInterface;
+    class InputDispatcher;
+    class InputDispatcherThread;
+    class InputReader;
+    class InputReaderThread;
+}
 
 namespace mir
 {
 namespace input
 {
+namespace android
+{
 
-class InputManager 
+class InputManager : mir::input::InputManager
 {
 public:
+    explicit InputManager(android::sp<android::EventHubInterface> event_hub);
     virtual ~InputManager() {}
 
     virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
     virtual void start();
     virtual void stop();
 protected:
-    InputManager() = default;
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
+
+private:
+    android::sp<android::EventHub> event_hub;
+    android::sp<android::InputDispatcher> dispatcher;
+    android::sp<android::InputReader> reader;
+    android::sp<android::InputDispatcherThread> dispatcher_thread;
+    android::sp<android::InputReaderThread> reader_thread;
+    
+    std::shared_ptr<EventFilterChain> filter_chain;
 };
 
+}
 }
 }
 

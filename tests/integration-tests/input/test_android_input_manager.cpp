@@ -26,12 +26,13 @@
 #include <InputReader.h>
 
 #include "mir/input/event_filter.h"
-#include "mir/input/input_manager.h"
+#include "mir/input/android/input_manager.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
 
 namespace mi = mir::input;
+namespace mia = mir::input::android;
 
 namespace
 {
@@ -41,12 +42,12 @@ struct MockEventFilter : public mi::EventFilter
 };
 }
 
-TEST(InputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
+TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
     android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
     MockEventFilter event_filter;
-    mi::InputManager input_manager;
+    mia::InputManager input_manager(event_hub);
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
@@ -54,7 +55,7 @@ TEST(InputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_fi
     
     input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
-    input_manager.start(event_hub);
+    input_manager.start();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     input_manager.stop();
 }

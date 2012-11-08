@@ -15,17 +15,13 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
 set(
-  INPUT_SOURCES
+  INPUT_ANDROID_SOURCES
 
-  event_filter_chain.cpp
-  event_filter_dispatcher_policy.cpp
-  input_manager.cpp
+  android_input_manager.cpp
 )
 
 add_library( 
-  mirinput STATIC
+  mirinputandroid STATIC
   
-  ${INPUT_SOURCES}
+  ${INPUT_ANDROID_SOURCES}
 )
-
-add_subdirectory(android)
