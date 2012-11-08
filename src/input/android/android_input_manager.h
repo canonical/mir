@@ -44,7 +44,7 @@ namespace input
 namespace android
 {
 
-class InputManager : mir::input::InputManager
+class InputManager : public mir::input::InputManager
 {
 public:
     explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub);

@@ -3,7 +3,7 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * pasfublished by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,7 +19,6 @@
 
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
-
 #include <memory>
 
 #include "mir/input/event_filter.h"
@@ -34,9 +33,9 @@ class InputManager
 public:
     virtual ~InputManager() {}
 
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
-    virtual void start();
-    virtual void stop();
+    virtual void add_filter(std::shared_ptr<EventFilter> const& filter) = 0;
+    virtual void start() = 0;
+    virtual void stop() = 0;
 protected:
     InputManager() = default;
     InputManager(const InputManager&) = delete;

@@ -26,7 +26,7 @@
 #include <InputReader.h>
 
 #include "mir/input/event_filter.h"
-#include "mir/input/android/input_manager.h"
+#include "src/input/android/android_input_manager.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
