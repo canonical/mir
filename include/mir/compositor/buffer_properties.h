@@ -46,9 +46,9 @@ struct BufferProperties
     BufferProperties(const geometry::Size& size,
                      const geometry::PixelFormat& format,
                      BufferUsage usage)
-            : size{size},
-              format{format},
-              usage{usage}
+        : size{size},
+          format{format},
+          usage{usage}
     {
     }
 
