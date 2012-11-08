@@ -54,6 +54,7 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    auto platform = connection->get_client_platform();
     release_cpu_region();
     platform->destroy_egl_window(accelerated_window);
 }
@@ -161,7 +162,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 {
     process_incoming_buffer();
 
-    platform = mcl::create_client_platform();
+    auto platform = connection->get_client_platform();
     accelerated_window = platform->create_egl_window(this);
 
     callback(this, context);

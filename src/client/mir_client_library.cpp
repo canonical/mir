@@ -178,6 +178,5 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
-    auto platform = mcl::create_client_platform(); 
-    return (MirEGLNativeWindowType) platform->create_egl_window(surface);
+    return surface->generate_native_window();
 }
