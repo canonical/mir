@@ -20,7 +20,8 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 
@@ -260,7 +261,13 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
             EXPECT_EQ(ErrorServer::test_exception_text, mir_connection_get_error_message(connection));
 
             MirSurfaceParameters const request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
+
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);

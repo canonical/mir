@@ -19,6 +19,7 @@
  */
 
 #include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
@@ -53,18 +54,20 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
 {
     std::lock_guard<std::mutex> lg(guard);
 
+    mc::BufferProperties buffer_properties{params.size,
+                                           geom::PixelFormat::rgba_8888,
+                                           params.buffer_usage};
+
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params.name,
-            buffer_bundle_factory->create_buffer_bundle(
-                geom::Size{params.size.width, params.size.height},
-                geom::PixelFormat::rgba_8888)));
+            buffer_bundle_factory->create_buffer_bundle(buffer_properties)));
 
     surfaces.push_back(surface);
     return surface;
 }
 
-void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> surface)
+void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     std::lock_guard<std::mutex> lg(guard);
 

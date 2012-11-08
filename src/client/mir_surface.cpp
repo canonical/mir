@@ -47,6 +47,7 @@ MirSurface::MirSurface(
     message.set_width(params.width);
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
+    message.set_buffer_usage(params.buffer_usage);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
@@ -54,6 +55,7 @@ MirSurface::MirSurface(
 MirSurface::~MirSurface()
 {
     release_cpu_region();
+    platform->destroy_egl_window(accelerated_window);
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -62,7 +64,8 @@ MirSurfaceParameters MirSurface::get_parameters() const
         0,
         surface.width(),
         surface.height(),
-        static_cast<MirPixelFormat>(surface.pixel_format())};
+        static_cast<MirPixelFormat>(surface.pixel_format()),
+        static_cast<MirBufferUsage>(surface.buffer_usage())};
 }
 
 char const * MirSurface::get_error_message()
@@ -158,6 +161,9 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
 {
     process_incoming_buffer();
 
+    platform = mcl::create_client_platform();
+    accelerated_window = platform->create_egl_window(this);
+
     callback(this, context);
     create_wait_handle.result_received();
 }
@@ -181,6 +187,11 @@ std::shared_ptr<MirBufferPackage> MirSurface::get_current_buffer_package()
 {
     auto buffer = buffer_depository->access_buffer(last_buffer_id);
     return buffer->get_buffer_package();
+}
+
+std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
+{
+    return buffer_depository->access_buffer(last_buffer_id);
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)
@@ -210,4 +221,9 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         buffer_package.fd_items = 0;
         buffer_package.stride = 0;
     }
+}
+    
+EGLNativeWindowType MirSurface::generate_native_window()
+{
+    return accelerated_window;
 }

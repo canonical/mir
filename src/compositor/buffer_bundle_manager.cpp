@@ -42,17 +42,13 @@ mc::BufferBundleManager::BufferBundleManager(
 
 
 std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
-    geometry::Size size,
-    geometry::PixelFormat pf)
+    mc::BufferProperties const& buffer_properties)
 {
-    auto swapper(buffer_allocation_strategy->create_swapper(
-            size,
-            pf));
+    auto swapper(buffer_allocation_strategy->create_swapper(buffer_properties));
 
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>(); 
     return std::make_shared<mc::BufferBundleSurfaces>(
         std::move(swapper),
         generator,
-        size,
-        pf);
+        buffer_properties);
 }

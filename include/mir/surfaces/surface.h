@@ -21,6 +21,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include <memory>
 #include <string>
@@ -41,12 +42,17 @@ namespace surfaces
 
 struct SurfaceCreationParameters
 {
+    SurfaceCreationParameters();
+
     SurfaceCreationParameters& of_name(std::string const& new_name);
 
     SurfaceCreationParameters& of_size(geometry::Size new_size);
 
+    SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
+
     std::string name;
     geometry::Size size;
+    compositor::BufferUsage buffer_usage;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
@@ -74,6 +80,8 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::GraphicRegion> texture() const;
     glm::mat4 transformation() const;
     float alpha() const;
+    bool hidden() const;
+    void set_hidden(bool is_hidden);
 
     geometry::PixelFormat pixel_format() const;
 
@@ -88,6 +96,8 @@ class Surface : public graphics::Renderable
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;
+    
+    bool is_hidden;
 };
 
 }
