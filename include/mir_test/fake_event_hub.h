@@ -4,6 +4,8 @@
 #include <list>
 #include <map>
 
+#include <androidfw/Keyboard.h>
+
 namespace mir
 {
 
@@ -84,6 +86,8 @@ public:
     } FakeDevice;
 
     std::map<int32_t, FakeDevice> device_from_id;
+    
+    android::KeyMap keymap;
 
 };
 

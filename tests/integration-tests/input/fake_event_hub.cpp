@@ -1,5 +1,7 @@
 #include "mir_test/fake_event_hub.h"
 
+#include <androidfw/Keyboard.h>
+
 using android::AxisInfo;
 using android::InputDeviceIdentifier;
 using android::PropertyMap;

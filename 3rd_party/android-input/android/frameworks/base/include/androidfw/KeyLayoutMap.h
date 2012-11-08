@@ -63,6 +63,9 @@ struct AxisInfo {
 class KeyLayoutMap : public RefBase {
 public:
     static status_t load(const String8& filename, sp<KeyLayoutMap>* outMap);
+    // <mir changes>
+    static status_t load(const String8& filename, const String8& contents, sp<KeyLayoutMap>* outMap);
+    // </mir changes>
 
     status_t mapKey(int32_t scanCode, int32_t usageCode,
             int32_t* outKeyCode, uint32_t* outFlags) const;
@@ -74,6 +77,9 @@ protected:
     virtual ~KeyLayoutMap();
 
 private:
+    // <mir changes>
+    static status_t load(Tokenizer* tokenizer, sp<KeyLayoutMap>* outMap);
+    // </mir changes>
     struct Key {
         int32_t keyCode;
         uint32_t flags;
