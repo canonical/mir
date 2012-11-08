@@ -50,8 +50,8 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     android::sp<android::InputReaderPolicyInterface> reader_policy = new mi::DummyInputReaderPolicy();
     auto dispatcher = new android::InputDispatcher(dispatcher_policy);
     auto reader = new android::InputReader(event_hub, reader_policy, dispatcher);
-    auto reader_thread = new android::InputReaderThread(reader);
-    auto dispatcher_thread = new android::InputDispatcherThread(dispatcher);
+    android::sp<android::InputReaderThread> reader_thread = new android::InputReaderThread(reader);
+    android::sp<android::InputDispatcherThread> dispatcher_thread = new android::InputDispatcherThread(dispatcher);
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     
@@ -64,8 +64,9 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
 
-//    Blows up on dispatcher policy?  
-//    dispatcher_thread->requestExit();
-//    reader_thread->requestExit();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    // Takes a long time in valgrind
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    reader_thread->requestExitAndWait();
+    dispatcher_thread->requestExitAndWait();
 }

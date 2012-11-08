@@ -156,6 +156,9 @@ bool Looper::getAllowNonCallbacks() const {
 
 int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData) {
     int result = 0;
+    // <mir changes>
+    if (mResponses.size() == 0) return result;
+    // </mir changes>
     for (;;) {
         while (mResponseIndex < mResponses.size()) {
             const Response& response = mResponses.itemAt(mResponseIndex++);

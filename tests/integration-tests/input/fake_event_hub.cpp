@@ -129,14 +129,14 @@ size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t buffe
 {
     (void) timeoutMillis;
     size_t num_events_obtained = 0;
-
+    
     for (size_t i = 0; i < bufferSize && events_available.size() > 0; ++i)
     {
         buffer[i] = events_available.front();
         events_available.pop_front();
         ++num_events_obtained;
     }
-
+    
     return num_events_obtained;
 }
 
