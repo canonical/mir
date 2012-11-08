@@ -53,7 +53,7 @@ public:
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
-    virtual ~MirSurface();
+    ~MirSurface();
 
     MirWaitHandle* release_surface(
             mir_surface_lifecycle_callback callback,

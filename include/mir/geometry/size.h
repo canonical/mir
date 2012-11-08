@@ -29,6 +29,20 @@ namespace geometry
 
 struct Size
 {
+    Size() {}
+    
+    Size(const Width& w, const Height& h) 
+            : width{w},
+              height{h}
+    {
+    }
+    
+    Size(const Size& rhs) 
+            : width{rhs.width},
+              height{rhs.height}
+    {
+    }
+        
     Width width;
     Height height;
 };
