@@ -22,7 +22,7 @@
 
 #ifdef ANDROID
 #define MIR_USING_BOOST_CHRONO
-#endif // (__GNUC__ == 4) && (__GNUC_MINOR__ == 4)
+#endif // ANDROID
 
 #ifndef MIR_USING_BOOST_CHRONO
 #include <chrono>

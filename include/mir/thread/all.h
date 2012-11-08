@@ -26,7 +26,7 @@
 // For std::this_thread::sleep_for etc.
 #define _GLIBCXX_USE_NANOSLEEP
 #define MIR_USING_BOOST_THREADS
-#endif
+#endif // ANDROID
 
 #include <atomic>
 #include <thread>
