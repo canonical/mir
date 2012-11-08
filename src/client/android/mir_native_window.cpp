@@ -50,7 +50,7 @@ int perform_static(ANativeWindow* window, int key, ...)
 {
     va_list args;
     va_start(args, key);
-    auto self = static_cast<const mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mcla::MirNativeWindow*>(window);
     auto ret = self->perform(key, args);
     va_end(args);
 
@@ -60,14 +60,14 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {   
-    auto self = static_cast<const mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
-    auto self = static_cast<const mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->queueBuffer(buffer);
 }
 
