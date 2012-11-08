@@ -68,7 +68,7 @@ struct FakeRenderView : mc::RenderView
     {
         for (auto it = renderables.begin(); it != renderables.end(); it++)
         {
-            mg::Renderable &&renderable = **it;
+            mg::Renderable &renderable = **it;
             if (filter(renderable)) renderable_operator(renderable);
         }
     }
