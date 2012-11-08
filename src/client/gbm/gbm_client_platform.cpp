@@ -24,7 +24,8 @@ namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
 namespace geom=mir::geometry;
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
+        std::shared_ptr<MirPlatformPackage> const& /*platform_package*/)
 {
     return std::make_shared<mclg::GBMClientPlatform>();
 }

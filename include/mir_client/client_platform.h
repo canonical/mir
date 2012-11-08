@@ -21,6 +21,8 @@
 #include <EGL/eglplatform.h>
 #include <memory>
 
+class MirPlatformPackage;
+
 namespace mir
 {
 namespace client
@@ -40,7 +42,8 @@ public:
     virtual void destroy_egl_window(EGLNativeWindowType window) = 0;
 };
 
-std::shared_ptr<ClientPlatform> create_client_platform();
+std::shared_ptr<ClientPlatform> create_client_platform(
+        std::shared_ptr<MirPlatformPackage> const& platform_package);
 
 }
 }
