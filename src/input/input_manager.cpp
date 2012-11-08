@@ -41,8 +41,8 @@ void mi::InputManager::add_filter(std::shared_ptr<mi::EventFilter> const& filter
 
 void mi::InputManager::stop()
 {
-    dispatcher_thread->requestExit();
     reader_thread->requestExit();
+    dispatcher_thread->requestExit();
 }
 
 void mi::InputManager::start(android::sp<android::EventHubInterface> event_hub)
