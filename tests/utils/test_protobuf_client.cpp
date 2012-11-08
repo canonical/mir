@@ -40,6 +40,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_width(640);
     surface_parameters.set_height(480);
     surface_parameters.set_pixel_format(0);
+    surface_parameters.set_buffer_usage(0);
 
     ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
     ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
