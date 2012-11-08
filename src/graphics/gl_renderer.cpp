@@ -111,15 +111,15 @@ mg::GLRenderer::Resources::Resources() :
 
 mg::GLRenderer::Resources::~Resources()
 {
-    if(vertex_shader)
+    if (vertex_shader)
         glDeleteShader(vertex_shader);
-    if(fragment_shader)
+    if (fragment_shader)
         glDeleteShader(fragment_shader);
-    if(program)
+    if (program)
         glDeleteProgram(program);
-    if(vertex_attribs_vbo)
+    if (vertex_attribs_vbo)
         glDeleteBuffers(1, &vertex_attribs_vbo);
-    if(texture)
+    if (texture)
         glDeleteTextures(1, &texture);
 }
 
@@ -132,32 +132,38 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glShaderSource(vertex_shader, 1, &vertex_shader_src, 0);
     glCompileShader(vertex_shader);
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
-    if(param == GL_FALSE)
+    if (param == GL_FALSE)
+    {
 	GetObjectLogAndThrow(glGetShaderInfoLog,
 			     glGetShaderiv,
 			     "Failed to compile vertex shader:",
 			     vertex_shader);
+    }
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_src, 0);
     glCompileShader(fragment_shader);
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
-    if(param == GL_FALSE)
+    if (param == GL_FALSE)
+    {
 	GetObjectLogAndThrow(glGetShaderInfoLog,
 			     glGetShaderiv,
 			     "Failed to compile fragment shader:",
 			     fragment_shader);
+    }
 
     program = glCreateProgram();
     glAttachShader(program, vertex_shader);
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
     glGetProgramiv(program, GL_LINK_STATUS, &param);
-    if(param == GL_FALSE)
+    if (param == GL_FALSE)
+    {
 	GetObjectLogAndThrow(glGetProgramInfoLog,
 			     glGetProgramiv,
 			     "Failed to link program:",
 			     program);
+    }
 
     glUseProgram(program);
 

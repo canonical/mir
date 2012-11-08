@@ -59,20 +59,20 @@ const size_t stub_info_log_buffer_length = stub_info_log_length + 1;
 void ExpectShaderCompileFailure(const GLint shader, mir::GLMock &gl_mock)
 {
     EXPECT_CALL(gl_mock, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
-            .WillOnce(SetArgPointee<2>(GL_FALSE));
+        .WillOnce(SetArgPointee<2>(GL_FALSE));
 }
 
 void ExpectShaderCompileSuccess(const GLint shader, mir::GLMock &gl_mock)
 {
     EXPECT_CALL(gl_mock, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
-            .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillOnce(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockVertexShader(mir::GLMock &gl_mock, const std::function<void(const GLint, mir::GLMock &)> &shader_compile_expectation)
 {
     /* Vertex Shader */
     EXPECT_CALL(gl_mock, glCreateShader(GL_VERTEX_SHADER))
-            .WillOnce(Return(stub_v_shader));
+        .WillOnce(Return(stub_v_shader));
     EXPECT_CALL(gl_mock, glShaderSource(stub_v_shader, 1, _, 0));
     EXPECT_CALL(gl_mock, glCompileShader(stub_v_shader));
     shader_compile_expectation(stub_v_shader, gl_mock);
@@ -82,7 +82,7 @@ void SetUpMockFragmentShader(mir::GLMock &gl_mock, const std::function<void(cons
 {
     /* Fragment Shader */
     EXPECT_CALL(gl_mock, glCreateShader(GL_FRAGMENT_SHADER))
-            .WillOnce(Return(stub_f_shader));
+        .WillOnce(Return(stub_f_shader));
     EXPECT_CALL(gl_mock, glShaderSource(stub_f_shader, 1, _, 0));
     EXPECT_CALL(gl_mock, glCompileShader(stub_f_shader));
     shader_compile_expectation(stub_f_shader, gl_mock);
@@ -91,13 +91,13 @@ void SetUpMockFragmentShader(mir::GLMock &gl_mock, const std::function<void(cons
 void ExpectProgramLinkFailure(const GLint program, mir::GLMock &gl_mock)
 {
     EXPECT_CALL(gl_mock, glGetProgramiv(program, GL_LINK_STATUS, _))
-	    .WillOnce(SetArgPointee<2>(GL_FALSE));
+        .WillOnce(SetArgPointee<2>(GL_FALSE));
 }
 
 void ExpectProgramLinkSuccess(const GLint program, mir::GLMock &gl_mock)
 {
     EXPECT_CALL(gl_mock, glGetProgramiv(program, GL_LINK_STATUS, _))
-	    .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillOnce(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockGraphicsProgram(mir::GLMock &gl_mock, const std::function<void(const GLint, mir::GLMock &)> &program_link_expectation)
@@ -117,17 +117,17 @@ void SetUpMockProgramData(mir::GLMock &gl_mock)
     EXPECT_CALL(gl_mock, glUseProgram(stub_program));
 
     EXPECT_CALL(gl_mock, glGetUniformLocation(stub_program, _))
-            .WillOnce(Return(screen_to_gl_coords_uniform_location));
+        .WillOnce(Return(screen_to_gl_coords_uniform_location));
     EXPECT_CALL(gl_mock, glGetUniformLocation(stub_program, _))
-            .WillOnce(Return(tex_uniform_location));
+        .WillOnce(Return(tex_uniform_location));
     EXPECT_CALL(gl_mock, glGetUniformLocation(stub_program, _))
-            .WillOnce(Return(transform_uniform_location));
+        .WillOnce(Return(transform_uniform_location));
     EXPECT_CALL(gl_mock, glGetUniformLocation(stub_program, _))
-            .WillOnce(Return(alpha_uniform_location));
+        .WillOnce(Return(alpha_uniform_location));
     EXPECT_CALL(gl_mock, glGetAttribLocation(stub_program, _))
-            .WillOnce(Return(position_attr_location));
+        .WillOnce(Return(position_attr_location));
     EXPECT_CALL(gl_mock, glGetAttribLocation(stub_program, _))
-            .WillOnce(Return(texcoord_attr_location));
+        .WillOnce(Return(texcoord_attr_location));
 
     EXPECT_CALL(gl_mock, glUniformMatrix4fv(screen_to_gl_coords_uniform_location, 1, GL_FALSE, _));
 }
@@ -136,7 +136,7 @@ void SetUpMockRenderTexture(mir::GLMock &gl_mock)
 {
     /* Set up the render texture */
     EXPECT_CALL(gl_mock, glGenTextures(1, _))
-            .WillOnce(SetArgPointee<1>(stub_texture));
+        .WillOnce(SetArgPointee<1>(stub_texture));
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(gl_mock, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     EXPECT_CALL(gl_mock, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
@@ -148,7 +148,7 @@ void FillMockVertexBuffer(mir::GLMock &gl_mock)
 {
     /* Set up VBO */
     EXPECT_CALL(gl_mock, glGenBuffers(1, _))
-            .WillOnce(SetArgPointee<1>(stub_vbo));
+        .WillOnce(SetArgPointee<1>(stub_vbo));
     EXPECT_CALL(gl_mock, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(gl_mock, glBufferData(GL_ARRAY_BUFFER, _, _, GL_STATIC_DRAW));
 
@@ -189,17 +189,17 @@ TEST_F(GLRendererSetupProcess, vertex_shader_compiler_failure_recovers_and_throw
     SetUpMockVertexShader(gl_mock, std::bind(ExpectShaderCompileFailure, _1, _2));
 
     EXPECT_CALL(gl_mock, glGetShaderiv(stub_v_shader, GL_INFO_LOG_LENGTH, _))
-            .WillOnce(SetArgPointee<2>(stub_info_log_length));
+        .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL(gl_mock, glGetShaderInfoLog(stub_v_shader,
-					     stub_info_log_length,
-					     _,
-					     NthCharacterIsNul(stub_info_log_length)))
-	    .WillOnce(CopyString(stub_info_log.c_str(),
-                                  stub_info_log.size()));
+        stub_info_log_length,
+        _,
+        NthCharacterIsNul(stub_info_log_length)))
+            .WillOnce(CopyString(stub_info_log.c_str(),
+                stub_info_log.size()));
 
     EXPECT_THROW({
-	std::unique_ptr<mg::GLRenderer> r;
-	r.reset(new mg::GLRenderer(display_size));
+    std::unique_ptr<mg::GLRenderer> r;
+    r.reset(new mg::GLRenderer(display_size));
     }, std::runtime_error);
 }
 
@@ -211,13 +211,13 @@ TEST_F(GLRendererSetupProcess, fragment_shader_compiler_failure_recovers_and_thr
     SetUpMockFragmentShader(gl_mock, std::bind(ExpectShaderCompileFailure, _1, _2));
 
     EXPECT_CALL(gl_mock, glGetShaderiv(stub_f_shader, GL_INFO_LOG_LENGTH, _))
-            .WillOnce(SetArgPointee<2>(stub_info_log_length));
+        .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL(gl_mock, glGetShaderInfoLog(stub_f_shader,
-					     stub_info_log_length,
-					     _,
-					     NthCharacterIsNul(stub_info_log_length)))
-	    .WillOnce(CopyString(stub_info_log.c_str(),
-                                  stub_info_log.size()));
+        stub_info_log_length,
+        _,
+        NthCharacterIsNul(stub_info_log_length)))
+            .WillOnce(CopyString(stub_info_log.c_str(),
+                stub_info_log.size()));
 
     EXPECT_THROW({
 	std::unique_ptr<mg::GLRenderer> r;
@@ -236,11 +236,11 @@ TEST_F(GLRendererSetupProcess, graphics_program_linker_failure_recovers_and_thro
     EXPECT_CALL(gl_mock, glGetProgramiv(stub_program, GL_INFO_LOG_LENGTH, _))
             .WillOnce(SetArgPointee<2>(stub_info_log_length));
     EXPECT_CALL(gl_mock, glGetProgramInfoLog(stub_program,
-					      stub_info_log_length,
-					      _,
-					      NthCharacterIsNul(stub_info_log_length)))
-	    .WillOnce(CopyString(stub_info_log.c_str(),
-                                  stub_info_log.size()));
+        stub_info_log_length,
+        _,
+        NthCharacterIsNul(stub_info_log_length)))
+            .WillOnce(CopyString(stub_info_log.c_str(),
+                stub_info_log.size()));
 
     EXPECT_THROW({
 	std::unique_ptr<mg::GLRenderer> r;
@@ -259,15 +259,15 @@ public:
 
         InSequence s;
 
-	SetUpMockVertexShader(gl_mock, std::bind(ExpectShaderCompileSuccess, _1, _2));
-	SetUpMockFragmentShader(gl_mock, std::bind(ExpectShaderCompileSuccess, _1, _2));
-	SetUpMockGraphicsProgram(gl_mock, std::bind(ExpectProgramLinkSuccess, _1,_2));
+        SetUpMockVertexShader(gl_mock, std::bind(ExpectShaderCompileSuccess, _1, _2));
+        SetUpMockFragmentShader(gl_mock, std::bind(ExpectShaderCompileSuccess, _1, _2));
+        SetUpMockGraphicsProgram(gl_mock, std::bind(ExpectProgramLinkSuccess, _1,_2));
         SetUpMockProgramData(gl_mock);
         SetUpMockRenderTexture(gl_mock);
-	EXPECT_CALL(gl_mock, glUniform1i(tex_uniform_location, 0));
-	FillMockVertexBuffer(gl_mock);
+        EXPECT_CALL(gl_mock, glUniform1i(tex_uniform_location, 0));
+        FillMockVertexBuffer(gl_mock);
 
-	renderer.reset(new mg::GLRenderer(display_size));
+        renderer.reset(new mg::GLRenderer(display_size));
     }
 
     mir::GLMock         gl_mock;
@@ -333,10 +333,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glActiveTexture(GL_TEXTURE0));
 
     EXPECT_CALL(rd, transformation())
-            .WillOnce(Return(transformation));
+        .WillOnce(Return(transformation));
     EXPECT_CALL(gl_mock, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(rd, alpha())
-            .WillOnce(Return(0));
+        .WillOnce(Return(0));
     EXPECT_CALL(gl_mock, glUniform1f(alpha_uniform_location, _));
     EXPECT_CALL(gl_mock, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(gl_mock, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
@@ -345,7 +345,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
     EXPECT_CALL(rd, texture())
-            .WillOnce(Return(gr_ptr));
+        .WillOnce(Return(gr_ptr));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
