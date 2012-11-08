@@ -30,7 +30,6 @@ namespace mir
 {
 namespace surfaces
 {
-class ApplicationSurfaceOrganiser;
 class Surface;
 }
 
@@ -44,6 +43,8 @@ namespace frontend
 {
 class ResourceCache;
 class ApplicationListener;
+class ApplicationSessionFactory;
+class ApplicationSession;
 
 // ApplicationProxy relays requests from the client into the server process.
 class ApplicationProxy : public mir::protobuf::DisplayServer
@@ -51,7 +52,7 @@ class ApplicationProxy : public mir::protobuf::DisplayServer
 public:
 
     ApplicationProxy(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<ApplicationListener> const& listener,
@@ -86,16 +87,10 @@ private:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
-    void test_file_descriptors(
-        google::protobuf::RpcController* controller,
-        const mir::protobuf::Void* request,
-        ::mir::protobuf::Buffer* response,
-        ::google::protobuf::Closure* done);
-
     int next_id();
 
     std::string app_name;
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<frontend::ApplicationSessionFactory> session_factory;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;
@@ -105,6 +100,8 @@ private:
     typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;
     std::shared_ptr<ResourceCache> resource_cache;
+
+    std::shared_ptr<frontend::ApplicationSession> application_session;
 };
 
 }

@@ -21,24 +21,25 @@
 #include "mir_client/android/android_client_buffer.h"
 
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcl::AndroidClientBufferDepository::AndroidClientBufferDepository(const std::shared_ptr<AndroidRegistrar>& buffer_registrar)
+mcla::AndroidClientBufferDepository::AndroidClientBufferDepository(const std::shared_ptr<AndroidRegistrar>& buffer_registrar)
  : registrar(buffer_registrar)
 {
 }
 
-void mcl::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> && package, int id, geom::Size size, geom::PixelFormat pf)
+void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage>&& package, int id, geom::Size size, geom::PixelFormat pf)
 {
     auto find_it = buffer_depository.find(id);
     if (find_it == buffer_depository.end())
     {
-        auto buffer = std::make_shared<mcl::AndroidClientBuffer>(registrar, std::move(package), size, pf );
+        auto buffer = std::make_shared<mcla::AndroidClientBuffer>(registrar, std::move(package), size, pf);
         buffer_depository[id] = buffer;
     }
 } 
 
-std::shared_ptr<mcl::ClientBuffer> mcl::AndroidClientBufferDepository::access_buffer(int id)
+std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_buffer(int id)
 {
     auto find_it = buffer_depository.find(id);
     if (find_it == buffer_depository.end())

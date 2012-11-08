@@ -30,6 +30,7 @@ namespace compositor
 {
 
 class BufferIDUniqueGenerator;
+class BufferProperties;
 
 class BufferBundleSurfaces : public BufferBundle
 {
@@ -41,8 +42,7 @@ public:
     BufferBundleSurfaces(
         std::unique_ptr<BufferSwapper>&& swapper,
         std::shared_ptr<BufferIDUniqueGenerator> generator,
-        geometry::Size size,
-        geometry::PixelFormat pixel_format);
+        BufferProperties const& buffer_properties);
 
     ~BufferBundleSurfaces();
 

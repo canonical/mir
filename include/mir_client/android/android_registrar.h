@@ -30,6 +30,8 @@ namespace client
 {
 class MemoryRegion;
 
+namespace android
+{
 class AndroidRegistrar
 {
 public:
@@ -38,6 +40,7 @@ public:
     virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */

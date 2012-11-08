@@ -21,7 +21,7 @@
 #define MIR_TEST_MOCK_IPC_FACTORY_H_
 
 #include "mir_test/empty_deleter.h"
-#include "mir/frontend/protobuf_asio_communicator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 
 #include <gmock/gmock.h>
 

@@ -30,6 +30,7 @@ project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
 
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
@@ -75,6 +76,12 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
+set (MIR_TRANSPORT
+  socket
+  CACHE
+  STRING
+  "IPC transport to build (options are 'socket' or 'binder')"
+)
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 
@@ -93,6 +100,7 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
@@ -114,10 +122,10 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 set(
   GTEST_INCLUDE_DIR 
 
-  gmock-1.6.0/include
-  gmock-1.6.0/gtest/include)
+  3rd_party/gmock-1.6.0/include
+  3rd_party/gmock-1.6.0/gtest/include)
 
-add_subdirectory(gmock-1.6.0/)
+add_subdirectory(3rd_party/gmock-1.6.0/)
 set(GMOCK_LIBRARY gmock)
 set(GMOCK_MAIN_LIBRARY gmock_main)
 set(
@@ -131,6 +139,7 @@ include_directories (
   ${GTEST_INCLUDE_DIR}
 )
 
+add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)
 add_subdirectory(guides/)

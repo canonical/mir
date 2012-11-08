@@ -41,7 +41,7 @@ public:
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Size size, geometry::PixelFormat pf);
+        compositor::BufferProperties const& buffer_properties);
 
 private:
     std::shared_ptr<GBMPlatform> platform;

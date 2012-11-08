@@ -38,7 +38,7 @@ public:
     AndroidBufferAllocator();
 
     virtual std::unique_ptr<compositor::Buffer> alloc_buffer(
-        geometry::Size size, geometry::PixelFormat pf);
+        compositor::BufferProperties const& buffer_properties);
 private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;

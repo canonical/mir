@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 
 include_directories(
- ${CMAKE_SOURCE_DIR}/src/client
+include_directories(${CMAKE_SOURCE_DIR})
 )
 
 add_executable(

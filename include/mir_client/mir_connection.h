@@ -43,11 +43,12 @@ class ClientBufferDepository;
 }
 
 struct SurfaceRelease;
-// TODO the connection should track all associated surfaces, and release them on
-// disconnection.
+
 class MirConnection
 {
 public:
+    MirConnection();
+
     MirConnection(const std::string& socket_file,
                   std::shared_ptr<mir::client::Logger> const & log);
     ~MirConnection();
@@ -65,6 +66,7 @@ public:
             void *context);
 
     char const * get_error_message();
+    void set_error_message(std::string const& error);
 
     MirWaitHandle* connect(
         const char* app_name,
@@ -75,6 +77,8 @@ public:
 
     void populate(MirPlatformPackage& platform_package);
     void populate(MirDisplayInfo& display_info);
+
+    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
     static bool is_valid(MirConnection *connection);
 private:

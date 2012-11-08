@@ -21,14 +21,24 @@
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 
 namespace mcl=mir::client;
+namespace mclg=mir::client::gbm;
 namespace geom=mir::geometry;
 
 std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
 {
-    return std::make_shared<mcl::GBMClientPlatform>();
+    return std::make_shared<mclg::GBMClientPlatform>();
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mcl::GBMClientPlatform::create_platform_depository ()
+std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_platform_depository()
 {
-    return std::make_shared<mcl::GBMClientBufferDepository>();
+    return std::make_shared<mclg::GBMClientBufferDepository>();
+}
+
+EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface*)
+{
+    return (EGLNativeWindowType) -1;
+}
+
+void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
+{
 }

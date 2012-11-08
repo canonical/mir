@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -57,15 +58,15 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_,_))
+        ON_CALL(*this, create_swapper(_))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(geom::Size, geom::PixelFormat));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(
@@ -80,15 +81,15 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     MockGraphicBufferAllocator()
     {
         using testing::_;
-        ON_CALL(*this, alloc_buffer(_,_))
+        ON_CALL(*this, alloc_buffer(_))
             .WillByDefault(testing::Invoke(this, &MockGraphicBufferAllocator::on_create_swapper));
     }
 
-    MOCK_METHOD2(
+    MOCK_METHOD1(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (geom::Size, geom::PixelFormat));
+        std::unique_ptr<mc::Buffer> (mc::BufferProperties const&));
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
@@ -97,6 +98,8 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+mc::BufferUsage const usage{mc::BufferUsage::hardware};
+mc::BufferProperties const buffer_properties{size, format, usage};
 }
 
 namespace mir
@@ -232,7 +235,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(size, format)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }
@@ -255,7 +258,13 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params =
-                { __PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
+
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);
@@ -269,6 +278,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+            EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
 
 
             mir_surface_release(ssync->surface, release_surface_callback, ssync);
@@ -302,7 +312,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             using testing::AtLeast;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator,alloc_buffer(size, format)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator,alloc_buffer(buffer_properties)).Times(AtLeast(2));
             return buffer_allocator;
         }
 
@@ -351,7 +361,12 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
             MirSurfaceParameters const request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);
@@ -365,6 +380,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             EXPECT_EQ(request_params.width, response_params.width);
             EXPECT_EQ(request_params.height, response_params.height);
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
+            EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
 
 
             mir_surface_release(ssync->surface, release_surface_callback, ssync);
@@ -422,8 +438,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     {
      public:
         virtual std::unique_ptr<mc::Buffer> alloc_buffer(
-            geom::Size /*size*/,
-            geom::PixelFormat /*pf*/)
+            mc::BufferProperties const&)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());
         }
@@ -488,8 +503,13 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 
             wait_for_connect();
 
-            MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
@@ -532,8 +552,13 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
 
             wait_for_connect();
 
-            MirSurfaceParameters request_params =
-                {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888};
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_rgba_8888,
+                mir_buffer_usage_hardware
+            };
 
             for (int i = 0; i != max_surface_count; ++i)
                 mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);

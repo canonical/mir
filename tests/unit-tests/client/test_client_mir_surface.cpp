@@ -140,6 +140,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
+    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
 };
 
 struct MockClientDepository : public mcl::ClientBufferDepository
@@ -189,7 +190,8 @@ struct MirClientSurfaceTest : public testing::Test
 
         mock_depository = std::make_shared<mt::MockClientDepository>();
 
-        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888};
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888,
+                                      mir_buffer_usage_hardware};
  
         /* connect dummy server */
         connect_parameters.set_application_name("test");
@@ -203,7 +205,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     void TearDown()
     {
-        test_server->comm.stop();
+        test_server.reset();
     }
 
     std::shared_ptr<mcl::MirRpcChannel> channel;

@@ -31,6 +31,8 @@ namespace client
 {
 class ClientBuffer;
 
+namespace gbm
+{
 class GBMClientBufferDepository : public ClientBufferDepository
 {
 public:
@@ -43,6 +45,7 @@ private:
     std::shared_ptr<ClientBuffer> buffer;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_DEPOSITORY_H_ */

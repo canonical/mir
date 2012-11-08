@@ -52,7 +52,7 @@ class StubBuffer : public mc::Buffer
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(geom::Size, geom::PixelFormat)
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
