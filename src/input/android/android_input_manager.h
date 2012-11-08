@@ -21,7 +21,9 @@
 #define MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
-#include "mir/input/event_filter_chain.h"
+#include "../event_filter_chain.h"
+
+#include <EventHub.h>
 
 namespace android
 {
@@ -33,6 +35,8 @@ namespace android
     class InputReaderThread;
 }
 
+namespace droidinput = android;
+
 namespace mir
 {
 namespace input
@@ -43,7 +47,7 @@ namespace android
 class InputManager : mir::input::InputManager
 {
 public:
-    explicit InputManager(android::sp<android::EventHubInterface> event_hub);
+    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub);
     virtual ~InputManager() {}
 
     virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
@@ -54,11 +58,11 @@ protected:
     InputManager& operator=(const InputManager&) = delete;
 
 private:
-    android::sp<android::EventHub> event_hub;
-    android::sp<android::InputDispatcher> dispatcher;
-    android::sp<android::InputReader> reader;
-    android::sp<android::InputDispatcherThread> dispatcher_thread;
-    android::sp<android::InputReaderThread> reader_thread;
+    droidinput::sp<droidinput::EventHubInterface> event_hub;
+    droidinput::sp<droidinput::InputDispatcher> dispatcher;
+    droidinput::sp<droidinput::InputReader> reader;
+    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
+    droidinput::sp<droidinput::InputReaderThread> reader_thread;
     
     std::shared_ptr<EventFilterChain> filter_chain;
 };

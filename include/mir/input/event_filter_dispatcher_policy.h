@@ -33,9 +33,9 @@ public:
     EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter);
     virtual ~EventFilterDispatcherPolicy() {}
 
-    virtual bool filterInputEvent(const android::InputEvent* input_event,
+    virtual bool filterInputEvent(const droidinput::InputEvent* input_event,
                           uint32_t policy_flags);
-    virtual void interceptKeyBeforeQueueing(const android::KeyEvent* key_event,
+    virtual void interceptKeyBeforeQueueing(const droidinput::KeyEvent* key_event,
                                     uint32_t& policy_flags);
 protected:
     EventFilterDispatcherPolicy(const EventFilterDispatcherPolicy&) = delete;

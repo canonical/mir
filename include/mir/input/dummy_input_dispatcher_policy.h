@@ -9,6 +9,8 @@ namespace android
     class InputEvent;
 }
 
+namespace droidinput = android;
+
 namespace mir
 {
 namespace input
@@ -18,7 +20,7 @@ namespace input
 
  Delete it once we have a real implementation.
  */
-class DummyInputDispatcherPolicy : public android::InputDispatcherPolicyInterface
+class DummyInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
 {
 public:
     DummyInputDispatcherPolicy() {}
@@ -30,8 +32,8 @@ public:
     }
 
     virtual nsecs_t notifyANR(
-            const android::sp<android::InputApplicationHandle>& inputApplicationHandle,
-            const android::sp<android::InputWindowHandle>& inputWindowHandle)
+            const droidinput::sp<droidinput::InputApplicationHandle>& inputApplicationHandle,
+            const droidinput::sp<droidinput::InputWindowHandle>& inputWindowHandle)
     {
         (void)inputApplicationHandle;
         (void)inputWindowHandle;
@@ -39,13 +41,13 @@ public:
     }
 
     virtual void notifyInputChannelBroken(
-            const android::sp<android::InputWindowHandle>& inputWindowHandle)
+            const droidinput::sp<droidinput::InputWindowHandle>& inputWindowHandle)
     {
         (void)inputWindowHandle;
     }
 
     virtual void getDispatcherConfiguration(
-            android::InputDispatcherConfiguration* outConfig)
+            droidinput::InputDispatcherConfiguration* outConfig)
     {
         (void)outConfig;
     }
@@ -55,7 +57,7 @@ public:
         return true;
     }
 
-    virtual bool filterInputEvent(const android::InputEvent* inputEvent,
+    virtual bool filterInputEvent(const droidinput::InputEvent* inputEvent,
                                   uint32_t policyFlags)
     {
         (void)inputEvent;
@@ -63,22 +65,22 @@ public:
         return true;
     }
 
-    virtual void interceptKeyBeforeQueueing(const android::KeyEvent* keyEvent,
+    virtual void interceptKeyBeforeQueueing(const droidinput::KeyEvent* keyEvent,
                                             uint32_t& policyFlags)
     {
         (void)keyEvent;
-        policyFlags = android::POLICY_FLAG_PASS_TO_USER;
+        policyFlags = droidinput::POLICY_FLAG_PASS_TO_USER;
     }
 
     virtual void interceptMotionBeforeQueueing(nsecs_t when, uint32_t& policyFlags)
     {
         (void)when;
-        policyFlags = android::POLICY_FLAG_PASS_TO_USER;
+        policyFlags = droidinput::POLICY_FLAG_PASS_TO_USER;
     }
 
     virtual nsecs_t interceptKeyBeforeDispatching(
-            const android::sp<android::InputWindowHandle>& inputWindowHandle,
-            const android::KeyEvent* keyEvent, uint32_t policyFlags)
+            const droidinput::sp<droidinput::InputWindowHandle>& inputWindowHandle,
+            const droidinput::KeyEvent* keyEvent, uint32_t policyFlags)
     {
         (void)inputWindowHandle;
         (void)keyEvent;
@@ -87,9 +89,9 @@ public:
     }
 
     virtual bool dispatchUnhandledKey(
-            const android::sp<android::InputWindowHandle>& inputWindowHandle,
-            const android::KeyEvent* keyEvent, uint32_t policyFlags,
-            android::KeyEvent* outFallbackKeyEvent)
+            const droidinput::sp<droidinput::InputWindowHandle>& inputWindowHandle,
+            const droidinput::KeyEvent* keyEvent, uint32_t policyFlags,
+            droidinput::KeyEvent* outFallbackKeyEvent)
     {
         (void)inputWindowHandle;
         (void)keyEvent;

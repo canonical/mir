@@ -4,6 +4,8 @@
 // from android
 #include <InputReader.h>
 
+namespace droidinput = android;
+
 namespace mir
 {
 namespace input
@@ -13,51 +15,51 @@ namespace input
 
  Delete it once we have a real implementation.
  */
-class DummyInputReaderPolicy : public android::InputReaderPolicyInterface
+class DummyInputReaderPolicy : public droidinput::InputReaderPolicyInterface
 {
 public:
     DummyInputReaderPolicy()
     {
-        pointer_controller = new android::PointerController;
+        pointer_controller = new droidinput::PointerController;
         pointer_controller->setDisplaySize(1280, 1024);
-        pointer_controller->setDisplayOrientation(android::DISPLAY_ORIENTATION_0);
+        pointer_controller->setDisplayOrientation(droidinput::DISPLAY_ORIENTATION_0);
     }
 
-    virtual void getReaderConfiguration(android::InputReaderConfiguration* out_config)
+    virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
     {
         out_config->setDisplayInfo(0, /* id */
                                    false, /* external  */
                                    1280, /* width */
                                    1024, /*height*/
-                                   android::DISPLAY_ORIENTATION_0 /* orientation */);
+                                   droidinput::DISPLAY_ORIENTATION_0 /* orientation */);
     }
 
-    virtual android::sp<android::PointerControllerInterface> obtainPointerController(int32_t device_id)
+    virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id)
     {
         (void)device_id;
         return pointer_controller;
     }
 
     virtual void notifyInputDevicesChanged(
-            const android::Vector<android::InputDeviceInfo>& input_devices)
+            const droidinput::Vector<droidinput::InputDeviceInfo>& input_devices)
     {
         (void)input_devices;
     }
 
-    virtual android::sp<android::KeyCharacterMap> getKeyboardLayoutOverlay(
-            const android::String8& input_device_descriptor)
+    virtual droidinput::sp<droidinput::KeyCharacterMap> getKeyboardLayoutOverlay(
+            const droidinput::String8& input_device_descriptor)
     {
         (void)input_device_descriptor;
-        return android::KeyCharacterMap::empty();
+        return droidinput::KeyCharacterMap::empty();
     }
 
-    virtual android::String8 getDeviceAlias(const android::InputDeviceIdentifier& identifier)
+    virtual droidinput::String8 getDeviceAlias(const droidinput::InputDeviceIdentifier& identifier)
     {
         (void)identifier;
-        return android::String8();
+        return droidinput::String8();
     }
 
-    android::sp<android::PointerController> pointer_controller;
+    droidinput::sp<droidinput::PointerController> pointer_controller;
 };
 }
 } // namespace mir

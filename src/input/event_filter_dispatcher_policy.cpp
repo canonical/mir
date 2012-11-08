@@ -24,12 +24,12 @@ mi::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi:
 {
 }
 
-bool mi::EventFilterDispatcherPolicy::filterInputEvent(const android::InputEvent* input_event, uint32_t /*policy_flags*/)
+bool mi::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
     return !event_filter->handles(input_event);
 }
 
-void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const android::KeyEvent* /*key_event*/, uint32_t& policy_flags)
+void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
 {
-    policy_flags = android::POLICY_FLAG_FILTERED;
+    policy_flags = droidinput::POLICY_FLAG_FILTERED;
 }
