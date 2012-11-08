@@ -148,6 +148,13 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
+    geometry::Width::ValueType width, 
+    geometry::Height::ValueType height)
+{
+    return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
+}
+
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_buffer_usage(
         mc::BufferUsage new_buffer_usage)
 {

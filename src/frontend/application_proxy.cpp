@@ -87,9 +87,8 @@ void mir::frontend::ApplicationProxy::create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(
-            geometry::Size{
-                geometry::Width{static_cast<geometry::Width::ValueType>(request->width())},
-                        geometry::Height{static_cast<geometry::Height::ValueType>(request->height())}})
+            static_cast<geometry::Width::ValueType>(request->width()),
+            static_cast<geometry::Height::ValueType>(request->height()))
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
         );
 
