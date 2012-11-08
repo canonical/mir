@@ -57,6 +57,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
 )
 
-if (MIR_PLATFORM STREQUAL "gbm")
 mir_discover_tests(unit-tests)
-endif ()
