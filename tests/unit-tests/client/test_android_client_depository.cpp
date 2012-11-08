@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace mt=mir::test;
 
 
@@ -58,7 +58,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
@@ -77,7 +77,7 @@ TEST_F(MirBufferDepositoryTest, depository_does_not_create_a_buffer_its_seen_bef
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
@@ -93,7 +93,7 @@ TEST_F(MirBufferDepositoryTest, depository_creates_two_buffers_with_distinct_id 
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -109,7 +109,7 @@ TEST_F(MirBufferDepositoryTest, depository_returns_same_accessed_buffer_for_same
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -130,7 +130,7 @@ TEST_F(MirBufferDepositoryTest, depository_returns_different_accessed_buffer_for
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -151,7 +151,7 @@ TEST_F(MirBufferDepositoryTest, depository_throws_for_uncreated_id )
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 

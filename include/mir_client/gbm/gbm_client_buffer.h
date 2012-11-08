@@ -30,6 +30,8 @@ namespace mir
 {
 namespace client
 {
+namespace gbm
+{
 
 class GBMClientBuffer : public ClientBuffer
 {
@@ -54,6 +56,7 @@ private:
     const geometry::PixelFormat buffer_pf;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_ */

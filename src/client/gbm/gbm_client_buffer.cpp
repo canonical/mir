@@ -20,9 +20,10 @@
 #include "mir_client/gbm/gbm_client_buffer.h"
 
 namespace mcl=mir::client;
+namespace mclg=mir::client::gbm;
 namespace geom=mir::geometry;
 
-mcl::GBMClientBuffer::GBMClientBuffer(
+mclg::GBMClientBuffer::GBMClientBuffer(
                         std::shared_ptr<MirBufferPackage> && package,
                         geom::Size size, geom::PixelFormat pf)
  : creation_package(std::move(package)),
@@ -31,32 +32,32 @@ mcl::GBMClientBuffer::GBMClientBuffer(
 {
 }
 
-std::shared_ptr<mcl::MemoryRegion> mcl::GBMClientBuffer::secure_for_cpu_write()
+std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()
 {
     return std::shared_ptr<mcl::MemoryRegion>();
 }
 
-geom::Size mcl::GBMClientBuffer::size() const
+geom::Size mclg::GBMClientBuffer::size() const
 {
     return rect.size;
 }
 
-geom::Stride mcl::GBMClientBuffer::stride() const
+geom::Stride mclg::GBMClientBuffer::stride() const
 {
     return geom::Stride{creation_package->stride};
 }
 
-geom::PixelFormat mcl::GBMClientBuffer::pixel_format() const
+geom::PixelFormat mclg::GBMClientBuffer::pixel_format() const
 {
     return buffer_pf;
 }
 
-std::shared_ptr<MirBufferPackage> mcl::GBMClientBuffer::get_buffer_package() const
+std::shared_ptr<MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() const
 {
     return creation_package;
 }
 
-MirNativeBuffer mcl::GBMClientBuffer::get_native_handle()
+MirNativeBuffer mclg::GBMClientBuffer::get_native_handle()
 {
     return NULL;
 }

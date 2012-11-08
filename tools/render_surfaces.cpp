@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sa, NULL);  
 
     /* Parse the command line */
-    int num_moveables = 5;
+    unsigned int num_moveables = 5;
 
     if (argc > 1)
     {
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 
     const uint32_t surface_size{300};
 
-    for (int i = 0; i < num_moveables; ++i)
+    for (unsigned int i = 0; i < num_moveables; ++i)
     {
         const float w = display_size.width.as_uint32_t();
         const float h = display_size.height.as_uint32_t();
@@ -248,7 +248,7 @@ int main(int argc, char **argv)
 #endif
 
         /* Update surface state */
-        for (int i = 0; i < num_moveables; ++i)
+        for (unsigned int i = 0; i < num_moveables; ++i)
             m[i].step();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

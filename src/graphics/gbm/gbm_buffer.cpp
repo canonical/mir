@@ -176,10 +176,10 @@ void mgg::GBMBuffer::ensure_egl_image()
         const EGLint image_attrs[] =
         {
             EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-            EGL_WIDTH, width,
-            EGL_HEIGHT, height,
+            EGL_WIDTH, static_cast<EGLint>(width),
+            EGL_HEIGHT, static_cast<EGLint>(height),
             EGL_DRM_BUFFER_FORMAT_MESA, EGL_DRM_BUFFER_FORMAT_ARGB32_MESA,
-            EGL_DRM_BUFFER_STRIDE_MESA, stride / 4,
+            EGL_DRM_BUFFER_STRIDE_MESA, static_cast<EGLint>(stride) / 4,
             EGL_NONE
         };
 

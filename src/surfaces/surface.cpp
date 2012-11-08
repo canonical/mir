@@ -35,7 +35,8 @@ ms::Surface::Surface(
     std::shared_ptr<mc::BufferBundle> buffer_bundle) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
-    alpha_value(1.0f)
+    alpha_value(1.0f),
+    is_hidden(false)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -90,6 +91,16 @@ float ms::Surface::alpha() const
     return alpha_value;
 }
 
+bool ms::Surface::hidden() const
+{
+    return is_hidden;
+}
+
+void ms::Surface::set_hidden(bool hide)
+{
+    is_hidden = hide;
+}
+
 //note: not sure the surface should be aware of pixel format. might be something that the 
 //texture (which goes to compositor should be aware of though
 //todo: kdub remove 
@@ -135,6 +146,13 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
     size = new_size;
 
     return *this;
+}
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
+    geometry::Width::ValueType width, 
+    geometry::Height::ValueType height)
+{
+    return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
 }
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_buffer_usage(
