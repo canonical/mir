@@ -31,6 +31,8 @@ namespace mir
 {
 namespace client
 {
+namespace android
+{
 
 class AndroidClientBuffer : public ClientBuffer
 {
@@ -62,6 +64,7 @@ private:
     ANativeWindowBuffer native_window_buffer;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_ */

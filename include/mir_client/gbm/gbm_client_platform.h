@@ -26,6 +26,8 @@ namespace client
 {
 class ClientBufferDepository;
 
+namespace gbm
+{
 class GBMClientPlatform : public ClientPlatform
 {
 public:
@@ -34,6 +36,7 @@ public:
     void destroy_egl_window(EGLNativeWindowType window);
 };
 
+}
 }
 }
 

@@ -26,6 +26,8 @@ namespace mir
 {
 namespace client
 {
+namespace android
+{
 
 class MirNativeWindow : public ANativeWindow
 {
@@ -42,6 +44,7 @@ private:
     int driver_pixel_format; 
 };
 
+}
 }
 }
 

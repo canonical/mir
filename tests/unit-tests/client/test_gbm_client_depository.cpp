@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mcl=mir::client;
+namespace mclg=mir::client::gbm;
 
 struct MirGBMBufferDepositoryTest : public testing::Test
 {
@@ -49,7 +49,7 @@ TEST_F(MirGBMBufferDepositoryTest, depository_sets_width_and_height)
 {
     using namespace testing;
 
-    mcl::GBMClientBufferDepository depository;
+    mclg::GBMClientBufferDepository depository;
     
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer = depository.access_buffer(8);
@@ -63,7 +63,7 @@ TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_buffer )
 {
     using namespace testing;
 
-    mcl::GBMClientBufferDepository depository;
+    mclg::GBMClientBufferDepository depository;
    
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer1 = depository.access_buffer(8);
