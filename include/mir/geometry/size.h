@@ -37,12 +37,6 @@ struct Size
     {
     }
 
-    Size(const Size& rhs)
-            : width{rhs.width},
-              height{rhs.height}
-    {
-    }
-
     Width width;
     Height height;
 };
