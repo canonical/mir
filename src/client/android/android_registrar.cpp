@@ -22,20 +22,21 @@
 #include <stdexcept>
 
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcl::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
+mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
 : gralloc_module(gr_module)
 {
 }
 
-void mcl::AndroidRegistrarGralloc::register_buffer(const native_handle_t * handle)
+void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
 {
     if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
         throw std::runtime_error("error registering graphics buffer for client use\n");
 }
 
-void mcl::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t * handle)
+void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
 {
     gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
 }
@@ -58,7 +59,7 @@ private:
     const std::shared_ptr<const gralloc_module_t> module;
 };
 
-std::shared_ptr<char> mcl::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
+std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
 {
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

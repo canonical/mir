@@ -26,6 +26,8 @@
 #include <memory>
 #include <stdexcept>
 
+#include <unistd.h>
+
 namespace mir
 {
 namespace process

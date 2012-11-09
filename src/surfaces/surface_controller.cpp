@@ -17,6 +17,7 @@
  */
 
 #include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack_model.h"
 
 #include <cassert>
@@ -33,7 +34,17 @@ std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(const ms::Surfa
     return surface_stack->create_surface(params);
 }
 
-void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> surface)
+void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     surface_stack->destroy_surface(surface);
+}
+
+void ms::SurfaceController::hide_surface(std::weak_ptr<ms::Surface> const& surface)
+{
+    surface.lock()->set_hidden(true);
+}
+
+void ms::SurfaceController::show_surface(std::weak_ptr<ms::Surface> const& surface)
+{
+    surface.lock()->set_hidden(false);
 }

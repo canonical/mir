@@ -21,6 +21,8 @@
 
 #include "mir_test/test_utils_graphics.h"
 
+#include <unistd.h>
+
 #define WIDTH 1280
 #define HEIGHT 720
 

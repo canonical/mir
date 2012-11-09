@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include "mir_client/mir_native_buffer.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
@@ -49,6 +50,8 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
+
+    virtual MirNativeBuffer get_native_handle() = 0;
     virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
 };
 

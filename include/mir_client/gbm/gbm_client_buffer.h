@@ -30,6 +30,8 @@ namespace mir
 {
 namespace client
 {
+namespace gbm
+{
 
 class GBMClientBuffer : public ClientBuffer
 {
@@ -43,6 +45,7 @@ public:
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;
+    MirNativeBuffer get_native_handle();
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
@@ -53,6 +56,7 @@ private:
     const geometry::PixelFormat buffer_pf;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_ */

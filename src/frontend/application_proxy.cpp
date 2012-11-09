@@ -18,6 +18,8 @@
 
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_session_factory.h"
+#include "mir/frontend/application_session.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -30,12 +32,12 @@
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    surface_organiser(surface_organiser),
+    session_factory(session_factory),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     listener(listener),
@@ -52,6 +54,8 @@ void mir::frontend::ApplicationProxy::connect(
 {
     app_name = request->application_name();
     listener->application_connect_called(app_name);
+    
+    application_session = session_factory->open_session(app_name);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -79,11 +83,11 @@ void mir::frontend::ApplicationProxy::create_surface(
 {
     listener->application_create_surface_called(app_name);
 
-    auto handle = surface_organiser->create_surface(
+    auto handle = application_session->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_size(geometry::Size{geometry::Width{request->width()},
-                                geometry::Height{request->height()}})
+        .of_size(request->width(), request->height())            
+        .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
         );
 
     auto const id = next_id();
@@ -93,6 +97,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
+        response->set_buffer_usage(request->buffer_usage());
 
 
         surface->advance_client_buffer();
@@ -166,7 +171,7 @@ void mir::frontend::ApplicationProxy::release_surface(
 
     if (p != surfaces.end())
     {
-        surface_organiser->destroy_surface(p->second);
+        application_session->destroy_surface((p->second).lock());
         surfaces.erase(p);
     }
     else
@@ -188,21 +193,8 @@ void mir::frontend::ApplicationProxy::disconnect(
 {
     listener->application_disconnect_called(app_name);
 
-    for (auto p = surfaces.begin(); p != surfaces.end(); ++p)
-    {
-        surface_organiser->destroy_surface(p->second);
-    }
+    session_factory->close_session(application_session);
 
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::test_file_descriptors(
-    ::google::protobuf::RpcController*,
-    const ::mir::protobuf::Void*,
-    ::mir::protobuf::Buffer*,
-    ::google::protobuf::Closure* done)
-{
-  // TODO
-
-  done->Run();
-}

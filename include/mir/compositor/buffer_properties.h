@@ -27,28 +27,41 @@ namespace mir
 namespace compositor
 {
 
+enum class BufferUsage
+{
+    undefined,
+    hardware,
+    software
+};
+
 struct BufferProperties
 {
     BufferProperties()
         : size(),
-          format(geometry::PixelFormat::pixel_format_invalid)
+          format(geometry::PixelFormat::pixel_format_invalid),
+          usage(BufferUsage::undefined)
     {
     }
 
     BufferProperties(const geometry::Size& size,
-                     const geometry::PixelFormat& format)
+                     const geometry::PixelFormat& format,
+                     BufferUsage usage)
         : size{size},
-          format{format}
+          format{format},
+          usage{usage}
     {
     }
 
     geometry::Size size;
     geometry::PixelFormat format;
+    BufferUsage usage;
 };
 
 inline bool operator==(BufferProperties const& lhs, BufferProperties const& rhs)
 {
-    return lhs.size == rhs.size && lhs.format == rhs.format;
+    return lhs.size == rhs.size &&
+           lhs.format == rhs.format &&
+           lhs.usage == rhs.usage;
 }
 
 inline bool operator!=(BufferProperties const& lhs, BufferProperties const& rhs)

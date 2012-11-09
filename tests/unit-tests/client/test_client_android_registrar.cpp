@@ -27,6 +27,7 @@
 #include <gmock/gmock.h>
 
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
 class ICSRegistrarInterface
@@ -121,7 +122,7 @@ protected:
 TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, registerBuffer_interface(mock_addr, _))
         .Times(1);
@@ -132,7 +133,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, registerBuffer_interface(_, fake_handle.get()))
         .Times(1);
@@ -143,7 +144,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
 TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, unregisterBuffer_interface(mock_addr, _))
         .Times(1);
@@ -154,7 +155,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
 TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, unregisterBuffer_interface(_, fake_handle.get()))
         .Times(1);
@@ -165,7 +166,7 @@ TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
 TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     const gralloc_module_t *gralloc_dev_alloc, *gralloc_dev_freed;
     const native_handle_t *handle_alloc, *handle_freed;
@@ -192,7 +193,7 @@ TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
 TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
 
@@ -206,7 +207,7 @@ TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
 TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_corner)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,top,_,_,_,_))
         .Times(1);
@@ -217,7 +218,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_corner)
 TEST_F(ClientAndroidRegistrarTest, region_locks_from_left_corner)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,left,_,_,_))
         .Times(1);
@@ -228,7 +229,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_left_corner)
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,width,_,_))
         .Times(1);
@@ -239,7 +240,7 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
 TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
 {
     using namespace testing;
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,height,_))
         .Times(1);
@@ -255,7 +256,7 @@ TEST_F(ClientAndroidRegistrarTest, register_failure)
         .Times(1)
         .WillOnce(Return(-1));
     
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
     EXPECT_THROW({
         registrar.register_buffer(fake_handle.get());
     }, std::runtime_error);
@@ -269,7 +270,7 @@ TEST_F(ClientAndroidRegistrarTest, lock_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_THROW({
         registrar.secure_for_cpu(fake_handle, rect );
@@ -284,7 +285,7 @@ TEST_F(ClientAndroidRegistrarTest, unregister_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_NO_THROW({
         registrar.unregister_buffer(fake_handle.get());
@@ -299,7 +300,7 @@ TEST_F(ClientAndroidRegistrarTest, unlock_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mcl::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     auto region = registrar.secure_for_cpu(fake_handle, rect );
 

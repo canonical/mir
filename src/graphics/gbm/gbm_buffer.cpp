@@ -162,20 +162,30 @@ void mgg::GBMBuffer::bind_to_texture()
 
 void mgg::GBMBuffer::ensure_egl_image()
 {
-    static const EGLint image_attrs[] =
-    {
-        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_NONE
-    };
-
     if (egl_image == EGL_NO_IMAGE_KHR)
     {
         ensure_egl_image_extensions();
 
         egl_display = eglGetCurrentDisplay();
+        struct gbm_bo* bo{gbm_handle.get()};
+
+        auto stride = gbm_bo_get_stride(bo);
+        auto width = gbm_bo_get_width(bo);
+        auto height = gbm_bo_get_height(bo);
+
+        const EGLint image_attrs[] =
+        {
+            EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+            EGL_WIDTH, static_cast<EGLint>(width),
+            EGL_HEIGHT, static_cast<EGLint>(height),
+            EGL_DRM_BUFFER_FORMAT_MESA, EGL_DRM_BUFFER_FORMAT_ARGB32_MESA,
+            EGL_DRM_BUFFER_STRIDE_MESA, static_cast<EGLint>(stride) / 4,
+            EGL_NONE
+        };
 
         egl_image = (*eglCreateImageKHR_)(egl_display, EGL_NO_CONTEXT,
-                                          EGL_NATIVE_PIXMAP_KHR, gbm_handle.get(),
+                                          EGL_DRM_BUFFER_MESA,
+                                          reinterpret_cast<void*>(gem_flink_name),
                                           image_attrs);
         if (egl_image == EGL_NO_IMAGE_KHR)
             throw std::runtime_error("Failed to create EGLImage from GBM bo");

@@ -48,6 +48,11 @@ namespace gp = google::protobuf;
 mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
+namespace
+{
+MirConnection error_connection;
+}
+
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
@@ -57,10 +62,11 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         MirConnection * connection = new MirConnection(socket_file, log);
         return connection->connect(name, callback, context);
     }
-    catch (std::exception const& /*x*/)
+    catch (std::exception const& x)
     {
-        // TODO callback with an error connection
-        return 0; // TODO
+        error_connection.set_error_message(x.what());
+        callback(&error_connection, context);
+        return 0;
     }
 }
 
@@ -76,6 +82,8 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
+    if (&error_connection == connection) return;
+
     auto wait_handle = connection->disconnect();
     wait_handle->wait_for_result();
 
@@ -87,6 +95,8 @@ MirWaitHandle* mir_surface_create(MirConnection * connection,
                         mir_surface_lifecycle_callback callback,
                         void * context)
 {
+    if (&error_connection == connection) return 0;
+
     try
     {
         return connection->create_surface(*params, callback, context);
@@ -166,3 +176,7 @@ void mir_wait_for(MirWaitHandle* wait_handle)
         wait_handle->wait_for_result();
 }
 
+MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
+{
+    return surface->generate_native_window();
+}

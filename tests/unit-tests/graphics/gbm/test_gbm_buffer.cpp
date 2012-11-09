@@ -56,7 +56,8 @@ protected:
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
-        buffer_properties = mc::BufferProperties{size, pf};
+        usage = mc::BufferUsage::hardware;
+        buffer_properties = mc::BufferProperties{size, pf, usage};
 
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
@@ -97,6 +98,7 @@ protected:
     geom::PixelFormat pf;
     geom::Size size;
     geom::Stride stride;
+    mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
 };
 
@@ -249,7 +251,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
     {
         InSequence seq;
 
-        EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,EGL_NATIVE_PIXMAP_KHR,_,_))
+        EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,EGL_DRM_BUFFER_MESA,_,_))
             .Times(Exactly(1));
 
         EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))

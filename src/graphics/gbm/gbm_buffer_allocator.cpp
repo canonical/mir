@@ -44,21 +44,27 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
 std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
+    uint32_t bo_flags{0};
+
+    if (buffer_properties.usage == mc::BufferUsage::software)
+        bo_flags |= GBM_BO_USE_WRITE;
+    else
+        bo_flags |= GBM_BO_USE_RENDERING;
+
     gbm_bo *handle = gbm_bo_create(
         platform->gbm.device, 
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
         mgg::mir_format_to_gbm_format(buffer_properties.format),
-        GBM_BO_USE_RENDERING);
+        bo_flags);
     
-    if (handle != NULL)
-    {
-        auto buffer = std::unique_ptr<mc::Buffer>(new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
+    if (!handle)
+        throw std::runtime_error("Failed to create GBM buffer object");
 
-        (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
+    auto buffer = std::unique_ptr<mc::Buffer>(
+        new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
 
-        return buffer;
-    }
+    (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
 
-    return std::unique_ptr<mc::Buffer>();
+    return buffer;
 }
