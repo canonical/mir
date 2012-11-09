@@ -19,9 +19,6 @@
 #ifndef MIR_GRAPHICS_BUFFER_INITIALIZER_H_
 #define MIR_GRAPHICS_BUFFER_INITIALIZER_H_
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 namespace mir
 {
 namespace compositor
