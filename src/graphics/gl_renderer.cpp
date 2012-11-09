@@ -75,9 +75,9 @@ typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
 typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
 
 void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
-			   MirGLGetObjectiv      getObjectiv,
-			   std::string const &   msg,
-			   GLuint                object)
+                          MirGLGetObjectiv      getObjectiv,
+                          std::string const &   msg,
+                          GLuint                object)
 {
     GLint object_log_length = 0;
     (*getObjectiv)(object, GL_INFO_LOG_LENGTH, &object_log_length);
@@ -134,10 +134,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-	GetObjectLogAndThrow(glGetShaderInfoLog,
-			     glGetShaderiv,
-			     "Failed to compile vertex shader:",
-			     vertex_shader);
+        GetObjectLogAndThrow(glGetShaderInfoLog,
+            glGetShaderiv,
+            "Failed to compile vertex shader:",
+            vertex_shader);
     }
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -146,10 +146,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-	GetObjectLogAndThrow(glGetShaderInfoLog,
-			     glGetShaderiv,
-			     "Failed to compile fragment shader:",
-			     fragment_shader);
+        GetObjectLogAndThrow(glGetShaderInfoLog,
+            glGetShaderiv,
+            "Failed to compile fragment shader:",
+            fragment_shader);
     }
 
     program = glCreateProgram();
@@ -159,10 +159,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetProgramiv(program, GL_LINK_STATUS, &param);
     if (param == GL_FALSE)
     {
-	GetObjectLogAndThrow(glGetProgramInfoLog,
-			     glGetProgramiv,
-			     "Failed to link program:",
-			     program);
+        GetObjectLogAndThrow(glGetProgramInfoLog,
+            glGetProgramiv,
+            "Failed to link program:",
+            program);
     }
 
     glUseProgram(program);
