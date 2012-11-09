@@ -68,7 +68,7 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_fi
     event_hub->synthesize_key_event(1);
 
     input_manager.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(60));
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
     input_manager.stop();
 }
 
