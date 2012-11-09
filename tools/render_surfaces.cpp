@@ -109,9 +109,9 @@ public:
     {
     }
 
-    void operator()(mc::Buffer& buffer, EGLClientBuffer client_buffer)
+    void operator()(mc::Buffer& buffer)
     {
-        mt::BufferRenderTarget brt{buffer, client_buffer};
+        mt::BufferRenderTarget brt{buffer};
         brt.make_current();
         img_renderer.render();
     }

@@ -157,7 +157,7 @@ TEST_F(GBMBufferAllocatorTest, buffer_initializer_is_called)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_initializer, operator_call(_,_))
+    EXPECT_CALL(*mock_buffer_initializer, operator_call(_))
         .Times(1);
 
     allocator->alloc_buffer(buffer_properties);
