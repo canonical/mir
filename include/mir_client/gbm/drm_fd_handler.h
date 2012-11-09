@@ -31,6 +31,8 @@ namespace gbm
 class DRMFDHandler
 {
 public:
+    virtual ~DRMFDHandler() {}
+
     virtual int ioctl(unsigned long request, void* arg) = 0;
     virtual void* map(size_t size, off_t offset) = 0;
     virtual void unmap(void* addr, size_t size) = 0;
