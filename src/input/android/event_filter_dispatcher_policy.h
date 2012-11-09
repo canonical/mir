@@ -18,12 +18,14 @@
 #ifndef MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
 #define MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
 
-#include "mir/input/dummy_input_dispatcher_policy.h"
+#include "dummy_input_dispatcher_policy.h"
 #include "mir/input/event_filter.h"
 
 namespace mir
 {
 namespace input
+{
+namespace android
 {
 //class EventFilter;
 
@@ -43,6 +45,8 @@ protected:
 private:
     std::shared_ptr<EventFilter> event_filter;
 };
+
+}
 }
 }
 

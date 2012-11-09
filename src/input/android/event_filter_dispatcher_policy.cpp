@@ -15,21 +15,22 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "mir/input/event_filter_dispatcher_policy.h"
+#include "event_filter_dispatcher_policy.h"
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 
-mi::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
+mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
   event_filter(event_filter)
 {
 }
 
-bool mi::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
+bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
     return !event_filter->handles(input_event);
 }
 
-void mi::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
+void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
 {
     policy_flags = droidinput::POLICY_FLAG_FILTERED;
 }

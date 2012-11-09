@@ -21,12 +21,11 @@
 #define MIR_INPUT_INPUT_MANAGER_H_
 #include <memory>
 
-#include "mir/input/event_filter.h"
-
 namespace mir
 {
 namespace input
 {
+class EventFilter;
 
 class InputManager 
 {

@@ -18,6 +18,7 @@ set(
   INPUT_ANDROID_SOURCES
 
   android_input_manager.cpp
+  event_filter_dispatcher_policy.cpp
 )
 
 add_library( 

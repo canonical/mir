@@ -25,33 +25,34 @@
 #include "mir/thread/all.h"
 
 #include "mir/input/event_filter.h"
-#include "mir/input/event_filter_dispatcher_policy.h"
-#include "mir/input/dummy_input_reader_policy.h"
+#include "src/input/android/event_filter_dispatcher_policy.h"
+#include "src/input/android/dummy_input_reader_policy.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 
 namespace
 {
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(handles, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
 }
 
 TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
-    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    droidinput::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
     MockEventFilter event_filter;
-    android::sp<android::InputDispatcherPolicyInterface> dispatcher_policy = new mi::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
-    android::sp<android::InputReaderPolicyInterface> reader_policy = new mi::DummyInputReaderPolicy();
-    auto dispatcher = new android::InputDispatcher(dispatcher_policy);
-    auto reader = new android::InputReader(event_hub, reader_policy, dispatcher);
-    android::sp<android::InputReaderThread> reader_thread = new android::InputReaderThread(reader);
-    android::sp<android::InputDispatcherThread> dispatcher_thread = new android::InputDispatcherThread(dispatcher);
+    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
+    auto dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
+    auto reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
+    droidinput::sp<droidinput::InputReaderThread> reader_thread = new droidinput::InputReaderThread(reader);
+    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     
@@ -61,8 +62,8 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
 
-    dispatcher_thread->run("InputDispatcher", android::PRIORITY_URGENT_DISPLAY);
-    reader_thread->run("InputReader", android::PRIORITY_URGENT_DISPLAY);
+    dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
+    reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 
     // Takes a long time in valgrind
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

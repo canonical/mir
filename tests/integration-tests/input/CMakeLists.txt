@@ -17,7 +17,6 @@
 list(
   APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/fake_event_hub.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_manager.cpp
 )
 
 add_subdirectory(android-input)

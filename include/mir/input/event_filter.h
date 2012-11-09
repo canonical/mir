@@ -26,6 +26,8 @@ namespace android
     class InputEvent;
 }
 
+namespace droidinput = android;
+
 namespace mir
 {
 namespace input
@@ -36,7 +38,7 @@ class EventFilter
 public:
     virtual ~EventFilter() {}
 
-    virtual bool handles(const android::InputEvent *event) = 0;
+    virtual bool handles(const droidinput::InputEvent *event) = 0;
 
 protected:
     EventFilter() = default;

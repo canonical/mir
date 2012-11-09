@@ -10,6 +10,9 @@ namespace mir
 {
 namespace input
 {
+
+namespace android
+{
 /*
  Dummy implementation of a InputReaderPolicy
 
@@ -61,6 +64,8 @@ public:
 
     droidinput::sp<droidinput::PointerController> pointer_controller;
 };
+
+}
 }
 } // namespace mir
 

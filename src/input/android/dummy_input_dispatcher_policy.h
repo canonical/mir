@@ -15,6 +15,8 @@ namespace mir
 {
 namespace input
 {
+namespace android
+{
 /*
  Dummy implementation of a InputReaderPolicy
 
@@ -123,6 +125,8 @@ public:
         return true;
     }
 };
+
+}
 }
 }
 

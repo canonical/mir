@@ -18,8 +18,8 @@
  */
 
 #include "android_input_manager.h"
-#include "mir/input/event_filter_dispatcher_policy.h"
-#include "mir/input/dummy_input_reader_policy.h"
+#include "event_filter_dispatcher_policy.h"
+#include "dummy_input_reader_policy.h"
 
 #include <memory>
 #include <vector>
@@ -29,7 +29,7 @@
 #include <InputDispatcher.h>
 
 namespace mi = mir::input;
-namespace mia = mir::input::android;
+namespace mia = mi::android;
 
 mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub) :
   event_hub(event_hub)
@@ -50,8 +50,8 @@ void mia::InputManager::stop()
 
 void mia::InputManager::start()
 {
-    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mi::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mi::DummyInputReaderPolicy();
+    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
     dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
     reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
     reader_thread = new droidinput::InputReaderThread(reader);
