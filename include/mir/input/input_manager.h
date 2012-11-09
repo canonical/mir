@@ -21,19 +21,17 @@
 #define MIR_INPUT_INPUT_MANAGER_H_
 #include <memory>
 
-#include "mir/input/event_filter.h"
-
 namespace mir
 {
 namespace input
 {
+class EventFilter;
 
 class InputManager 
 {
 public:
     virtual ~InputManager() {}
 
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 protected:

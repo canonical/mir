@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "mir/thread/all.h"
+#include <thread>
 
 // Needed implicitly for InputManager destructor because of android::sp :/
 #include <InputDispatcher.h>
@@ -55,22 +56,19 @@ struct KeycodeMatchingEventFilter : public mi::EventFilter
 
 }
 
-
-TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
+TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
 {
     using namespace ::testing;
     android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
     MockEventFilter event_filter;
-    mia::InputManager input_manager(event_hub);
+    mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
-    
-    input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
     input_manager.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(60));
     input_manager.stop();
 }
 
@@ -78,14 +76,11 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
 {
     using namespace ::testing;
     android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
-    mia::InputManager input_manager(event_hub);
-    
     KeycodeMatchingEventFilter event_filter(AKEYCODE_DPAD_RIGHT);
-
+    mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
+    
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(KEY_RIGHT);
-    
-    input_manager.add_filter(std::shared_ptr<KeycodeMatchingEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
     input_manager.start();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));

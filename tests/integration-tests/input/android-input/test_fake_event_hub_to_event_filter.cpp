@@ -23,6 +23,7 @@
 #include <InputReader.h>
 
 #include "mir/thread/all.h"
+#include <thread>
 
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
@@ -66,7 +67,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 
     // Takes a long time in valgrind
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(60));
 
     reader_thread->requestExitAndWait();
     dispatcher_thread->requestExitAndWait();

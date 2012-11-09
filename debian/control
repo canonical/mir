@@ -1,0 +1,26 @@
+Source: mir
+Section: x11
+Priority: extra
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: cmake,
+               cmake-data,
+               debhelper (>= 9),
+               gcc-4.6,
+               g++-4.6,
+               libboost1.48-all-dev | libboost-all-dev,
+               protobuf-compiler,
+               libdrm-dev,
+               libegl1-mesa-dev,
+               libgles2-mesa-dev,
+               libgbm-dev,
+               libprotobuf-dev,
+               pkg-config
+Standards-Version: 3.9.3
+Homepage: https://launchpad.net/mir
+Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir/ubuntu
+
+Package: mir
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Ubuntu display server
+ Mir is the next generation display server for Ubuntu.
