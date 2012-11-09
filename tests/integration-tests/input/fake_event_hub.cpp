@@ -19,6 +19,7 @@ namespace mir
 
 FakeEventHub::FakeEventHub()
 {
+  keymap.loadGenericMaps();
 }
 
 FakeEventHub::~FakeEventHub()
@@ -108,6 +109,7 @@ status_t FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageC
 {
     (void)deviceId;
     (void)usageCode;
+    keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
     *outKeycode = scanCode;
     *outFlags = 0;
     return android::OK;
