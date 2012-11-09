@@ -59,6 +59,9 @@ private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
     droidinput::sp<droidinput::InputDispatcher> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;
+
+    // It's important to keep droidinput::sp to dispatcher_thread
+    // and reader_thread or they will free themselves on exit.
     droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
     droidinput::sp<droidinput::InputReaderThread> reader_thread;
     
