@@ -56,6 +56,6 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatche
     input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
     input_manager.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(60));
     input_manager.stop();
 }
