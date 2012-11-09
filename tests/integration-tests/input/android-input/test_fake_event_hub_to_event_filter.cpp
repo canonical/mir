@@ -67,7 +67,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 
     // Takes a long time in valgrind
-    std::this_thread::sleep_for(std::chrono::milliseconds(60));
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
 
     reader_thread->requestExitAndWait();
     dispatcher_thread->requestExitAndWait();
