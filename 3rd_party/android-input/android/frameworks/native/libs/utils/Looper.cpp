@@ -157,6 +157,8 @@ bool Looper::getAllowNonCallbacks() const {
 int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData) {
     int result = 0;
     // <mir changes>
+    // If there are no polls open i.e. no client the reader thread 
+    // can get stuck in epoll_wait making it impossible to exit
     if (mResponses.size() == 0) return result;
     // </mir changes>
     for (;;) {
