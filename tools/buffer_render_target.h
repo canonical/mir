@@ -35,8 +35,7 @@ namespace tools
 class BufferRenderTarget
 {
 public:
-    BufferRenderTarget(const mir::compositor::Buffer& buffer,
-                       EGLClientBuffer client_buffer);
+    BufferRenderTarget(mir::compositor::Buffer& buffer);
 
     void make_current();
 
@@ -45,22 +44,19 @@ private:
     {
     public:
         Resources()
-            : egl_image{EGL_NO_IMAGE_KHR}, fbo{0},
-              color_rbo{0}, depth_rbo{0}
+            : fbo{0}, color_tex{0}, depth_rbo{0}
         {
         }
         ~Resources();
-        void setup(const mir::compositor::Buffer& buffer,
-                   EGLClientBuffer client_buffer);
+        void setup(mir::compositor::Buffer& buffer);
 
-        EGLImageKHR egl_image;
         GLuint fbo;
-        GLuint color_rbo;
+        GLuint color_tex;
         GLuint depth_rbo;
     };
 
     Resources resources;
-    const mir::compositor::Buffer& buffer;
+    mir::compositor::Buffer& buffer;
 };
 
 }

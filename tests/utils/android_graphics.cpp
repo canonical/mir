@@ -68,10 +68,13 @@ void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClient
     
 
     int *buffer_vaddr;
-    
-    int ret;
+   
+    int ret; 
     ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
                 0, 0, width, height, (void**) &buffer_vaddr);
+    if (!ret)
+        return;
+
     int j;
     for(i=0; i<width; i++)
     {
