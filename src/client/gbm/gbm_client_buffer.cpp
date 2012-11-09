@@ -50,7 +50,7 @@ struct GEMHandle
         {
             std::string msg("Failed to open GEM handle for DRM buffer:");
             msg += strerror(errno);
-            throw std::runtime_error(strerror(errno));
+            throw std::runtime_error(msg);
         }
 
         handle = gem_open.handle;
@@ -94,7 +94,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
         {
             std::string msg("Failed to map dumb DRM buffer:");
             msg += strerror(errno);
-            throw std::runtime_error(strerror(errno));
+            throw std::runtime_error(msg);
         }
 
         void* map = drm_fd_handler->map(size_in_bytes, map_dumb.offset);
@@ -102,7 +102,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
         {
             std::string msg("Failed to mmap DRM buffer:");
             msg += strerror(errno);
-            throw std::runtime_error(strerror(errno));
+            throw std::runtime_error(msg);
         }
 
         vaddr = std::shared_ptr<char>(static_cast<char*>(map), NullDeleter());
