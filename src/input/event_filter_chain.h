@@ -28,6 +28,7 @@ namespace android
 {
     class InputEvent;
 }
+namespace droidinput = android;
 
 namespace mir
 {
@@ -40,7 +41,7 @@ public:
     explicit EventFilterChain() {}
     virtual ~EventFilterChain() {}
 
-    virtual bool handles(const android::InputEvent *event);
+    virtual bool handles(const droidinput::InputEvent *event);
     virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
 
 protected:

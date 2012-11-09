@@ -19,7 +19,7 @@
 #include "event_filter_chain.h"
 namespace mi = mir::input;
 
-bool mi::EventFilterChain::handles(const android::InputEvent *event)
+bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
 {
     for (auto it = filters.begin(); it != filters.end(); it++)
     {
