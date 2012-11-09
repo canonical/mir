@@ -103,6 +103,10 @@ target_link_libraries(
 )
 
 
+install(
+  TARGETS mir_demo_client
+  RUNTIME DESTINATION bin)
+
 set_target_properties(
   mirclient
   PROPERTIES 
