@@ -37,17 +37,17 @@ namespace input
 class EventFilterChain : public EventFilter
 {
 public:
-    explicit EventFilterChain() {}
-    virtual ~EventFilterChain() {}
+    explicit EventFilterChain(
+        std::initializer_list<std::shared_ptr<EventFilter> const> values)
+    {
+        for(auto filter = values.begin(); filter != values.end(); ++filter)
+            add_filter(*filter);
+    }
 
     virtual bool handles(android::InputEvent *event);
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
-
-protected:
-    EventFilterChain(const EventFilterChain&) = delete;
-    EventFilterChain& operator=(const EventFilterChain&) = delete;
 
 private:
+    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
     typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
     EventFilterVector filters;
 };

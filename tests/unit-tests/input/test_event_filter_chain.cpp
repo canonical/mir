@@ -38,12 +38,10 @@ struct MockEventFilter : public mi::EventFilter
 TEST(EventFilterChain, offers_events_to_filters)
 {
     using namespace ::testing;
-    mi::EventFilterChain filter_chain;
     auto filter = std::make_shared<MockEventFilter>();
     auto ev = new android::KeyEvent();
-    
-    filter_chain.add_filter(filter);
-    filter_chain.add_filter(filter);
+
+    mi::EventFilterChain filter_chain{filter, filter};
 
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
@@ -55,13 +53,10 @@ TEST(EventFilterChain, offers_events_to_filters)
 TEST(EventFilterChain, accepting_event_halts_emission)
 {
     using namespace ::testing;
-    mi::EventFilterChain filter_chain;
     auto filter = std::make_shared<MockEventFilter>();
     auto ev = new android::KeyEvent();
-    
-    filter_chain.add_filter(filter);
-    filter_chain.add_filter(filter);
-    filter_chain.add_filter(filter);
+
+    mi::EventFilterChain filter_chain{filter, filter, filter};
 
     // First filter will reject, second will accept, third one should not be asked.
     {
@@ -69,7 +64,7 @@ TEST(EventFilterChain, accepting_event_halts_emission)
         EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(false));
         EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
     }
-    
+
     // So the chain should accept
     EXPECT_EQ(filter_chain.handles(ev), true);    
 }
