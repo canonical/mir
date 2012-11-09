@@ -27,8 +27,6 @@
 
 namespace android
 {
-    class EventHub;
-    class EventHubInterface;
     class InputDispatcher;
     class InputDispatcherThread;
     class InputReader;
