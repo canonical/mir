@@ -43,18 +43,16 @@ struct MockEventFilter : public mi::EventFilter
 };
 }
 
-TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
+TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
 {
     using namespace ::testing;
     android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
     MockEventFilter event_filter;
-    mia::InputManager input_manager(event_hub);
+    mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(1);
-    
-    input_manager.add_filter(std::shared_ptr<MockEventFilter>(&event_filter, mir::EmptyDeleter()));                             
 
     input_manager.start();
     std::this_thread::sleep_for(std::chrono::milliseconds(60));

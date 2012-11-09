@@ -24,6 +24,7 @@
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
+#include <initializer_list>
 
 namespace android
 {
@@ -45,10 +46,10 @@ namespace android
 class InputManager : public mir::input::InputManager
 {
 public:
-    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub);
+    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
+			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters);
     virtual ~InputManager() {}
 
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
     virtual void start();
     virtual void stop();
 protected:

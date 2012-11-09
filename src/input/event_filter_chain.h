@@ -38,19 +38,17 @@ namespace input
 class EventFilterChain : public EventFilter
 {
 public:
-    explicit EventFilterChain() {}
-    virtual ~EventFilterChain() {}
+    explicit EventFilterChain(
+        std::initializer_list<std::shared_ptr<EventFilter> const> values) :
+        filters(values.begin(), values.end())
+    {
+    }
 
     virtual bool handles(const droidinput::InputEvent *event);
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
-
-protected:
-    EventFilterChain(const EventFilterChain&) = delete;
-    EventFilterChain& operator=(const EventFilterChain&) = delete;
 
 private:
     typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector filters;
+    EventFilterVector const filters;
 };
 
 }

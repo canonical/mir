@@ -32,7 +32,6 @@ class InputManager
 public:
     virtual ~InputManager() {}
 
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 protected:

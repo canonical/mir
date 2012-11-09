@@ -29,8 +29,3 @@ bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
     return false;
 }
  
-void mi::EventFilterChain::add_filter(std::shared_ptr<mi::EventFilter> const& filter)
-{
-    filters.push_back(filter);
-}
-
