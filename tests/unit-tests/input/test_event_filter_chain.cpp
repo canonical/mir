@@ -45,9 +45,9 @@ TEST(EventFilterChain, offers_events_to_filters)
 
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
-    
+
     // So the filter chain should also reject the event
-    EXPECT_EQ(filter_chain.handles(ev), false);    
+    EXPECT_EQ(false, filter_chain.handles(ev));
 }
 
 TEST(EventFilterChain, accepting_event_halts_emission)
@@ -66,6 +66,6 @@ TEST(EventFilterChain, accepting_event_halts_emission)
     }
 
     // So the chain should accept
-    EXPECT_EQ(filter_chain.handles(ev), true);    
+    EXPECT_EQ(true, filter_chain.handles(ev));
 }
 
