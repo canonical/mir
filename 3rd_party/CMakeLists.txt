@@ -35,4 +35,7 @@ SET(MIR_3RD_PARTY_SOURCES ${MIR_3RD_PARTY_SOURCES} PARENT_SCOPE)
 set(MIR_INPUT_ANDROID_COMPILE_FLAGS ${MIR_INPUT_ANDROID_COMPILE_FLAGS}
   PARENT_SCOPE)
 
-add_subdirectory(android-input)
+# TODO(tvoss): Fix compilation of the android input stack on android :)
+if( NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android-input)
+endif()

@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_BUFFER_INITIALIZER_H_
 #define MIR_GRAPHICS_BUFFER_INITIALIZER_H_
 
-#include <EGL/egl.h>
-
 namespace mir
 {
 namespace compositor
@@ -35,7 +33,7 @@ class BufferInitializer
 public:
     virtual ~BufferInitializer() {}
 
-    virtual void operator()(compositor::Buffer& buffer, EGLClientBuffer client_buffer) = 0;
+    virtual void operator()(compositor::Buffer& buffer) = 0;
 
 protected:
     BufferInitializer() = default;
@@ -46,7 +44,7 @@ protected:
 class NullBufferInitializer : public BufferInitializer
 {
 public:
-    void operator()(compositor::Buffer& /*buffer*/, EGLClientBuffer /*client_buffer*/) {}
+    void operator()(compositor::Buffer& /*buffer*/) {}
 };
 
 }
