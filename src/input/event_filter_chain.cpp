@@ -13,42 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/grab_filter.h"
-
-#include "mir/frontend/application.h"
-#include "mir/input/dispatcher.h"
-
-#include <cassert>
-#include <memory>
-
-namespace mf = mir::frontend;
+#include "event_filter_chain.h"
 namespace mi = mir::input;
 
-void mi::GrabFilter::accept(Event* e) const
+bool mi::EventFilterChain::handles(android::InputEvent *event)
 {
-    assert(e);
-    auto const i = grabs.begin();
-
-    if (i != grabs.end())
+    for (auto it = filters.begin(); it != filters.end(); it++)
     {
-        (*i)->on_event(e);
+        auto filter = *it;
+        if (filter->handles(event)) return true;
     }
-    else
-    {
-        ChainingFilter::accept(e);
-    }
+    return false;
+}
+ 
+void mi::EventFilterChain::add_filter(std::shared_ptr<mi::EventFilter> const& filter)
+{
+    filters.push_back(filter);
 }
 
-mi::GrabHandle mi::GrabFilter::push_grab(std::shared_ptr<EventHandler> const& handler)
-{
-    auto i = grabs.insert(grabs.begin(), handler);
-    return i;
-}
-
-void mi::GrabFilter::release_grab(GrabHandle const& handle)
-{
-    grabs.erase(handle.i);
-}
