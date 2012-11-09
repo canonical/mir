@@ -22,15 +22,23 @@
 
 #include "mir/chrono/chrono.h"
 
-#ifdef ANDROID
+#if defined(ANDROID) || ((__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
+
+// We only need this include if we use gcc 4.4
+#if ((__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
+#include <cstdatomic>
+#else
+#include <atomic>
+#endif // ((__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
+
 // For std::this_thread::sleep_for etc.
 #define _GLIBCXX_USE_NANOSLEEP
 #define MIR_USING_BOOST_THREADS
-#endif // ANDROID
-
+#else // defined(ANDROID) || ((__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
 #include <atomic>
 #include <thread>
 #include <mutex>
+#endif // defined(ANDROID) || ((__GNUC__ == 4) && (__GNUC_MINOR__ == 4))
 
 #ifndef MIR_USING_BOOST_THREADS
 #include <future>
@@ -47,6 +55,7 @@ namespace std
 using namespace ::std;
 using ::boost::unique_lock;
 using ::boost::lock_guard;
+using ::boost::thread;
 using ::boost::thread;
 using ::boost::mutex;
 

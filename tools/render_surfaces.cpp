@@ -49,13 +49,6 @@ namespace ms=mir::surfaces;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
-using namespace std;
-
-#ifndef ANDROID
-typedef std::chrono::high_resolution_clock Clock;
-typedef std::chrono::microseconds microsec;
-#endif
-
 volatile std::sig_atomic_t running = true;
 
 void signal_handler(int /*signum*/)
@@ -94,30 +87,23 @@ struct Moveable
           y{static_cast<float>(s.top_left().y.as_uint32_t())},
           w{static_cast<float>(s.size().width.as_uint32_t())},
           h{static_cast<float>(s.size().height.as_uint32_t())},
-          dx{dx}, dy{dy},
-#ifndef ANDROID
-          start{Clock::now()}, last_update{start},
-#else
-          step_count{0},
-#endif
-          rotation_axis{rotation_axis}, alpha_offset{alpha_offset}
+          dx{dx}, 
+          dy{dy},
+          start(mir::std::chrono::high_resolution_clock::now()), 
+          last_update{start},
+          rotation_axis{rotation_axis}, 
+          alpha_offset{alpha_offset}
     {
     }
 
     void step()
     {
-#ifndef ANDROID
-        Clock::time_point now = Clock::now();
-        microsec elapsed = std::chrono::duration_cast<microsec>(last_update - now);
-        float elapsed_sec = elapsed.count() / 1000000.0;
-        microsec total_elapsed = std::chrono::duration_cast<microsec>(now - start);
-        float total_elapsed_sec = total_elapsed.count() / 1000000.0;
+        auto now = mir::std::chrono::high_resolution_clock::now();
+        auto elapsed = last_update - now;
+        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        auto total_elapsed = start - now;
+        float total_elapsed_sec = total_elapsed.count() / (1000.f * 1000.f);
         last_update = now;
-#else
-        float elapsed_sec = 1.0f / 60.0f;
-        float total_elapsed_sec = step_count * 1.0f / 60.0f;
-        ++step_count;
-#endif
 
         bool should_update = true;
         float new_x = x + elapsed_sec * dx;
@@ -154,12 +140,8 @@ struct Moveable
     float h;
     float dx;
     float dy;
-#ifndef ANDROID
-    Clock::time_point start;
-    Clock::time_point last_update;
-#else
-    uint32_t step_count;
-#endif
+    mir::std::chrono::high_resolution_clock::time_point start;
+    mir::std::chrono::high_resolution_clock::time_point last_update;
     glm::vec3 rotation_axis;
     float alpha_offset;
 };
@@ -234,19 +216,14 @@ int main(int argc, char **argv)
     glClearColor(0.0, 1.0, 0.0, 1.0);
     uint32_t frames = 0;
 
-#ifndef ANDROID
-    Clock::time_point t0 = Clock::now();
-#endif
+    auto t0 = mir::std::chrono::high_resolution_clock::now();
     while (running) {
-#ifndef ANDROID
-        Clock::time_point t1 = Clock::now();
-        if (std::chrono::duration_cast<microsec>(t1 - t0).count() >= 1000000) {
+        auto t1 = mir::std::chrono::high_resolution_clock::now();
+        if ((t1 - t0).count() >= 1000000) {
             std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
             frames = 0;
             t0 = t1;
         }
-#endif
-
         /* Update surface state */
         for (int i = 0; i < num_moveables; ++i)
             m[i].step();
