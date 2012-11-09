@@ -4,11 +4,13 @@
 #include <list>
 #include <map>
 
+namespace droidinput = android;
+
 namespace mir
 {
 
 // An EventHub implementation that generates fake raw events.
-class FakeEventHub : public android::EventHubInterface
+class FakeEventHub : public droidinput::EventHubInterface
 {
 public:
     FakeEventHub();
@@ -16,33 +18,33 @@ public:
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
 
-    virtual android::InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const;
+    virtual droidinput::InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const;
 
     virtual void getConfiguration(int32_t deviceId,
-            android::PropertyMap* outConfiguration) const;
+            droidinput::PropertyMap* outConfiguration) const;
 
-    virtual android::status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
-            android::RawAbsoluteAxisInfo* outAxisInfo) const;
+    virtual droidinput::status_t getAbsoluteAxisInfo(int32_t deviceId, int axis,
+            droidinput::RawAbsoluteAxisInfo* outAxisInfo) const;
 
     virtual bool hasRelativeAxis(int32_t deviceId, int axis) const;
 
     virtual bool hasInputProperty(int32_t deviceId, int property) const;
 
-    virtual android::status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
+    virtual droidinput::status_t mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
             int32_t* outKeycode, uint32_t* outFlags) const;
 
-    virtual android::status_t mapAxis(int32_t deviceId, int32_t scanCode,
-            android::AxisInfo* outAxisInfo) const;
+    virtual droidinput::status_t mapAxis(int32_t deviceId, int32_t scanCode,
+            droidinput::AxisInfo* outAxisInfo) const;
 
-    virtual void setExcludedDevices(const android::Vector<android::String8>& devices);
+    virtual void setExcludedDevices(const droidinput::Vector<droidinput::String8>& devices);
 
-    virtual size_t getEvents(int timeoutMillis, android::RawEvent* buffer,
+    virtual size_t getEvents(int timeoutMillis, droidinput::RawEvent* buffer,
             size_t bufferSize);
 
     virtual int32_t getScanCodeState(int32_t deviceId, int32_t scanCode) const;
     virtual int32_t getKeyCodeState(int32_t deviceId, int32_t keyCode) const;
     virtual int32_t getSwitchState(int32_t deviceId, int32_t sw) const;
-    virtual android::status_t getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
+    virtual droidinput::status_t getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
                                           int32_t* outValue) const;
 
     virtual bool markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
@@ -53,11 +55,11 @@ public:
     virtual void setLedState(int32_t deviceId, int32_t led, bool on);
 
     virtual void getVirtualKeyDefinitions(int32_t deviceId,
-            android::Vector<android::VirtualKeyDefinition>& outVirtualKeys) const;
+            droidinput::Vector<droidinput::VirtualKeyDefinition>& outVirtualKeys) const;
 
-    virtual android::sp<android::KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const;
+    virtual droidinput::sp<droidinput::KeyCharacterMap> getKeyCharacterMap(int32_t deviceId) const;
     virtual bool setKeyboardLayoutOverlay(int32_t deviceId,
-                                          const android::sp<android::KeyCharacterMap>& map);
+                                          const droidinput::sp<droidinput::KeyCharacterMap>& map);
 
     virtual void vibrate(int32_t deviceId, nsecs_t duration);
     virtual void cancelVibrate(int32_t deviceId);
@@ -66,7 +68,7 @@ public:
 
     virtual void wake();
 
-    virtual void dump(android::String8& dump);
+    virtual void dump(droidinput::String8& dump);
 
     virtual void monitor();
     
@@ -74,12 +76,12 @@ public:
     void synthesize_key_event(int keycode);
 
     // list of RawEvents available for consumption via getEvents
-    std::list<android::RawEvent> events_available;
+    std::list<droidinput::RawEvent> events_available;
 
     typedef struct FakeDevice
     {
         uint32_t classes;
-        android::InputDeviceIdentifier identifier;
+        droidinput::InputDeviceIdentifier identifier;
         std::map<int, bool> input_properties;
     } FakeDevice;
 
