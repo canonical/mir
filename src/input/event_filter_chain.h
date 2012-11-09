@@ -38,18 +38,16 @@ class EventFilterChain : public EventFilter
 {
 public:
     explicit EventFilterChain(
-        std::initializer_list<std::shared_ptr<EventFilter> const> values)
+        std::initializer_list<std::shared_ptr<EventFilter> const> values) :
+        filters(values.begin(), values.end())
     {
-        for(auto filter = values.begin(); filter != values.end(); ++filter)
-            add_filter(*filter);
     }
 
     virtual bool handles(android::InputEvent *event);
 
 private:
-    virtual void add_filter(std::shared_ptr<EventFilter> const& filter);
     typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector filters;
+    EventFilterVector const filters;
 };
 
 }
