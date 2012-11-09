@@ -110,8 +110,6 @@ status_t FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageC
     (void)deviceId;
     (void)usageCode;
     keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
-    *outKeycode = scanCode;
-    *outFlags = 0;
     return android::OK;
 }
 
@@ -271,7 +269,7 @@ void FakeEventHub::synthesize_builtin_keyboard_added()
 void FakeEventHub::synthesize_key_event(int keycode)
 {
     RawEvent event;
-    event.when = 0;
+    event.when = systemTime(SYSTEM_TIME_MONOTONIC);
     event.type = EV_KEY;
     event.code = keycode;
     event.value = 1;

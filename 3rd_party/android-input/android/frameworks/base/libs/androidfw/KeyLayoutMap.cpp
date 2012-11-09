@@ -16,8 +16,6 @@
 
 #define LOG_TAG "KeyLayoutMap"
 
-#include <stdio.h>
-
 #include <stdlib.h>
 #include <android/keycodes.h>
 #include <androidfw/Keyboard.h>
@@ -189,8 +187,6 @@ status_t KeyLayoutMap::Parser::parse() {
         ALOGD("Parsing %s: '%s'.", mTokenizer->getLocation().string(),
                 mTokenizer->peekRemainderOfLine().string());
 #endif
-
-		      printf("Line number: %d \n", mTokenizer->getLineNumber());
 
 
         mTokenizer->skipDelimiters(WHITESPACE);
