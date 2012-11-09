@@ -17,7 +17,7 @@
 
 set(
   MIR_GCC_VERSION
-  4.4
+  4.6
   CACHE
   STRING
   "Version of gcc/g++"
