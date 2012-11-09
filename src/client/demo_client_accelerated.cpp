@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
     /* egl setup */
-    int major, minor, n;
+    int major, minor, n, rc;
     EGLDisplay disp;
     EGLContext context;
     EGLSurface egl_surface;
@@ -109,14 +109,28 @@ int main(int argc, char* argv[])
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
+    assert(native_window != NULL);
    
     disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(disp, &major, &minor);
+    assert(disp != EGL_NO_DISPLAY);
 
-    eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+    rc = eglInitialize(disp, &major, &minor);
+    assert(rc == EGL_TRUE); 
+    assert(major == 1); 
+    assert(minor == 4); 
+
+    rc = eglChooseConfig(disp, attribs, &egl_config, 1, &n);
+    assert(rc == EGL_TRUE);
+    assert(n == 1);
+
     egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
+    assert(egl_surface != EGL_NO_SURFACE);
+
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    eglMakeCurrent(disp, egl_surface, egl_surface, context);
+    assert(egl_surface != EGL_NO_CONTEXT);
+
+    rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
+    assert(rc == EGL_TRUE);
 
     mir::test::glAnimationBasic gl_animation;
     gl_animation.init_gl();
@@ -124,7 +138,8 @@ int main(int argc, char* argv[])
     for(;;)
     {
         gl_animation.render_gl();
-        eglSwapBuffers(disp, egl_surface);
+        rc = eglSwapBuffers(disp, egl_surface);
+        assert(rc == EGL_TRUE);
 
         usleep(167);//60fps
 
