@@ -23,6 +23,7 @@
 #include <InputReader.h>
 
 #include "mir/thread/all.h"
+#include <thread>
 
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"

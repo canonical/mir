@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include "mir/thread/all.h"
+#include <thread>
 
 // Needed implicitly for InputManager destructor because of android::sp :/
 #include <InputDispatcher.h>
