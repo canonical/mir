@@ -64,7 +64,8 @@ function(get_android_flags)
     -DANDROID;
     -DGTEST_OS_LINUX_ANDROID;
     -DGTEST_HAS_CLONE=0;
-    -DGTEST_HAS_POSIX_RE=0
+    -DGTEST_HAS_POSIX_RE=0;
+    -DGTEST_HAS_PTHREAD=0
   
     PARENT_SCOPE
     )

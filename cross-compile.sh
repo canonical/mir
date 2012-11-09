@@ -19,12 +19,12 @@ $cwd
 
 make 
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push ../bin/acceptance-tests /data/user
+$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/acceptance-tests /data/user
 $MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./acceptance-tests'
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push ../bin/integration-tests /data/user
+$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/integration-tests /data/user
 $MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./integration-tests'
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push ../bin/unit-tests /data/user
+$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/unit-tests /data/user
 $MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./unit-tests'
 
