@@ -26,8 +26,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
-
 if(PROTOBUF_FOUND)
 
 include_directories(

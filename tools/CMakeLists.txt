@@ -17,6 +17,8 @@
 
 include_directories(${GLESv2_INCLUDE_DIRS})
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
+
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
 
