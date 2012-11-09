@@ -102,11 +102,6 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
 )
 
-
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
-
 set_target_properties(
   mirclient
   PROPERTIES 
