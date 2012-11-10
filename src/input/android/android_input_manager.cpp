@@ -36,6 +36,15 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
   event_hub(event_hub),
   filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {
+    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
+    dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
+    reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
+    reader_thread = new droidinput::InputReaderThread(reader);
+    dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
+    
+    dispatcher->setInputDispatchMode(true, false);
+    dispatcher->setInputFilterEnabled(true);
 }
 
 void mia::InputManager::stop()
@@ -46,15 +55,6 @@ void mia::InputManager::stop()
 
 void mia::InputManager::start()
 {
-    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
-    dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
-    reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
-    reader_thread = new droidinput::InputReaderThread(reader);
-    dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
-    
-    dispatcher->setInputDispatchMode(true, false);
-    dispatcher->setInputFilterEnabled(true);
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 }
