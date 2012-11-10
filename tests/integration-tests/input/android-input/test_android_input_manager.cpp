@@ -27,10 +27,10 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
-#include <thread>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <thread>
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;

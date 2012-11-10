@@ -15,20 +15,17 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
+#include "mir_test/empty_deleter.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include "mir_test/empty_deleter.h"
 
 #include <androidfw/Input.h>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-
 
 namespace
 {
@@ -54,6 +51,6 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 
     // Android uses alternate notation...the policy returns true if the event was NOT handled (e.g. the EventFilter
     // returns false)
-    EXPECT_EQ(policy.filterInputEvent(ev, 0), true);    
+    EXPECT_TRUE(policy.filterInputEvent(ev, 0));
 }
 
