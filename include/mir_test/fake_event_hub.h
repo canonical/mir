@@ -8,7 +8,10 @@ namespace droidinput = android;
 
 namespace mir
 {
-
+namespace input
+{
+namespace android
+{
 // An EventHub implementation that generates fake raw events.
 class FakeEventHub : public droidinput::EventHubInterface
 {
@@ -88,5 +91,6 @@ public:
     std::map<int32_t, FakeDevice> device_from_id;
 
 };
-
+}
+}
 } // namespace mir

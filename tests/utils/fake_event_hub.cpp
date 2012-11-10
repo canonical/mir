@@ -1,33 +1,33 @@
 #include "mir_test/fake_event_hub.h"
 
-using android::AxisInfo;
-using android::InputDeviceIdentifier;
-using android::PropertyMap;
-using android::Vector;
-using android::String8;
-using android::RawAbsoluteAxisInfo;
-using android::RawEvent;
-using android::sp;
-using android::status_t;
-using android::KeyCharacterMap;
-using android::VirtualKeyDefinition;
+using droidinput::AxisInfo;
+using droidinput::InputDeviceIdentifier;
+using droidinput::PropertyMap;
+using droidinput::Vector;
+using droidinput::String8;
+using droidinput::RawAbsoluteAxisInfo;
+using droidinput::RawEvent;
+using droidinput::sp;
+using droidinput::status_t;
+using droidinput::KeyCharacterMap;
+using droidinput::VirtualKeyDefinition;
 
-namespace mir
-{
+namespace mi = mir::input;
+namespace mia = mir::input::android;
 
-FakeEventHub::FakeEventHub()
-{
-}
-
-FakeEventHub::~FakeEventHub()
+mia::FakeEventHub::FakeEventHub()
 {
 }
 
-uint32_t FakeEventHub::getDeviceClasses(int32_t deviceId) const
+mia::FakeEventHub::~FakeEventHub()
 {
-    if (deviceId == android::BUILT_IN_KEYBOARD_ID)
+}
+
+uint32_t mia::FakeEventHub::getDeviceClasses(int32_t deviceId) const
+{
+    if (deviceId == droidinput::BUILT_IN_KEYBOARD_ID)
     {
-        return android::INPUT_DEVICE_CLASS_KEYBOARD;
+        return droidinput::INPUT_DEVICE_CLASS_KEYBOARD;
     }
     auto fake_device_iterator = device_from_id.find(deviceId);
 
@@ -41,7 +41,7 @@ uint32_t FakeEventHub::getDeviceClasses(int32_t deviceId) const
     }
 }
 
-InputDeviceIdentifier FakeEventHub::getDeviceIdentifier(int32_t deviceId) const
+InputDeviceIdentifier mia::FakeEventHub::getDeviceIdentifier(int32_t deviceId) const
 {
     auto fake_device_iterator = device_from_id.find(deviceId);
 
@@ -55,13 +55,13 @@ InputDeviceIdentifier FakeEventHub::getDeviceIdentifier(int32_t deviceId) const
     }
 }
 
-void FakeEventHub::getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const
+void mia::FakeEventHub::getConfiguration(int32_t deviceId, PropertyMap* outConfiguration) const
 {
     (void)deviceId;
     (void)outConfiguration;
 }
 
-status_t FakeEventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
+status_t mia::FakeEventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
         RawAbsoluteAxisInfo* outAxisInfo) const
 {
     (void)deviceId;
@@ -70,14 +70,14 @@ status_t FakeEventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
     return -1;
 }
 
-bool FakeEventHub::hasRelativeAxis(int32_t deviceId, int axis) const
+bool mia::FakeEventHub::hasRelativeAxis(int32_t deviceId, int axis) const
 {
     (void)deviceId;
     (void)axis;
     return false;
 }
 
-bool FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
+bool mia::FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
 {
     auto fake_device_iterator = device_from_id.find(deviceId);
 
@@ -101,17 +101,17 @@ bool FakeEventHub::hasInputProperty(int32_t deviceId, int property) const
     }
 }
 
-status_t FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
+status_t mia::FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t usageCode,
                               int32_t* outKeycode, uint32_t* outFlags) const
 {
     (void)deviceId;
     (void)usageCode;
     *outKeycode = scanCode;
     *outFlags = 0;
-    return android::OK;
+    return droidinput::OK;
 }
 
-status_t FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
+status_t mia::FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
                                AxisInfo* outAxisInfo) const
 {
     (void)deviceId;
@@ -120,12 +120,12 @@ status_t FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
     return -1;
 }
 
-void FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
+void mia::FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
 {
     (void)devices;
 }
 
-size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
+size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
 {
     (void) timeoutMillis;
     size_t num_events_obtained = 0;
@@ -140,28 +140,28 @@ size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t buffe
     return num_events_obtained;
 }
 
-int32_t FakeEventHub::getScanCodeState(int32_t deviceId, int32_t scanCode) const
+int32_t mia::FakeEventHub::getScanCodeState(int32_t deviceId, int32_t scanCode) const
 {
     (void)deviceId;
     (void)scanCode;
     return AKEY_STATE_UNKNOWN;
 }
 
-int32_t FakeEventHub::getKeyCodeState(int32_t deviceId, int32_t keyCode) const
+int32_t mia::FakeEventHub::getKeyCodeState(int32_t deviceId, int32_t keyCode) const
 {
     (void)deviceId;
     (void)keyCode;
     return AKEY_STATE_UNKNOWN;
 }
 
-int32_t FakeEventHub::getSwitchState(int32_t deviceId, int32_t sw) const
+int32_t mia::FakeEventHub::getSwitchState(int32_t deviceId, int32_t sw) const
 {
     (void)deviceId;
     (void)sw;
     return AKEY_STATE_UNKNOWN;
 }
 
-status_t FakeEventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
+status_t mia::FakeEventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
         int32_t* outValue) const
 {
     (void)deviceId;
@@ -170,7 +170,7 @@ status_t FakeEventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis,
     return -1;
 }
 
-bool FakeEventHub::markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
+bool mia::FakeEventHub::markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
         const int32_t* keyCodes,
         uint8_t* outFlags) const
 {
@@ -181,41 +181,41 @@ bool FakeEventHub::markSupportedKeyCodes(int32_t deviceId, size_t numCodes,
     return true;
 }
 
-bool FakeEventHub::hasScanCode(int32_t deviceId, int32_t scanCode) const
+bool mia::FakeEventHub::hasScanCode(int32_t deviceId, int32_t scanCode) const
 {
     (void)deviceId;
     (void)scanCode;
     return false;
 }
 
-bool FakeEventHub::hasLed(int32_t deviceId, int32_t led) const
+bool mia::FakeEventHub::hasLed(int32_t deviceId, int32_t led) const
 {
     (void)deviceId;
     (void)led;
     return false;
 }
 
-void FakeEventHub::setLedState(int32_t deviceId, int32_t led, bool on)
+void mia::FakeEventHub::setLedState(int32_t deviceId, int32_t led, bool on)
 {
     (void)deviceId;
     (void)led;
     (void)on;
 }
 
-void FakeEventHub::getVirtualKeyDefinitions(int32_t deviceId,
+void mia::FakeEventHub::getVirtualKeyDefinitions(int32_t deviceId,
         Vector<VirtualKeyDefinition>& outVirtualKeys) const
 {
     (void)deviceId;
     (void)outVirtualKeys;
 }
 
-sp<KeyCharacterMap> FakeEventHub::getKeyCharacterMap(int32_t deviceId) const
+sp<KeyCharacterMap> mia::FakeEventHub::getKeyCharacterMap(int32_t deviceId) const
 {
     (void)deviceId;
     return sp<KeyCharacterMap>();
 }
 
-bool FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
+bool mia::FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
         const sp<KeyCharacterMap>& map)
 {
     (void)deviceId;
@@ -223,39 +223,39 @@ bool FakeEventHub::setKeyboardLayoutOverlay(int32_t deviceId,
     return true;
 }
 
-void FakeEventHub::vibrate(int32_t deviceId, nsecs_t duration)
+void mia::FakeEventHub::vibrate(int32_t deviceId, nsecs_t duration)
 {
     (void)deviceId;
     (void)duration;
 }
 
-void FakeEventHub::cancelVibrate(int32_t deviceId)
+void mia::FakeEventHub::cancelVibrate(int32_t deviceId)
 {
     (void)deviceId;
 }
 
-void FakeEventHub::requestReopenDevices()
+void mia::FakeEventHub::requestReopenDevices()
 {
 }
 
-void FakeEventHub::wake()
+void mia::FakeEventHub::wake()
 {
 }
 
-void FakeEventHub::dump(android::String8& dump)
+void mia::FakeEventHub::dump(droidinput::String8& dump)
 {
     (void)dump;
 }
 
-void FakeEventHub::monitor()
+void mia::FakeEventHub::monitor()
 {
 }
 
-void FakeEventHub::synthesize_builtin_keyboard_added()
+void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
     RawEvent event;
     event.when = 0;
-    event.deviceId = android::BUILT_IN_KEYBOARD_ID;
+    event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
     event.type = EventHubInterface::DEVICE_ADDED;
     events_available.push_back(event);
 
@@ -264,15 +264,15 @@ void FakeEventHub::synthesize_builtin_keyboard_added()
     events_available.push_back(event);
 }
 
-void FakeEventHub::synthesize_key_event(int keycode)
+void mia::FakeEventHub::synthesize_key_event(int keycode)
 {
     RawEvent event;
     event.when = 0;
     event.type = EV_KEY;
     event.code = keycode;
     event.value = 1;
-    event.deviceId = android::BUILT_IN_KEYBOARD_ID;
+    event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
     events_available.push_back(event);
 }
 
-} // namespace mir
+
