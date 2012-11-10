@@ -77,7 +77,7 @@ set(
 endif()
 
 add_library( 
-  mirclient STATIC
+  mirclient SHARED
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
@@ -101,6 +101,11 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
 )
+
+install(
+  TARGETS mirclient
+  LIBRARY DESTINATION lib)
+
 
 add_executable(
   mir_demo_client
