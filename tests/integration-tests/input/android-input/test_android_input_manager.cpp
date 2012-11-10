@@ -32,8 +32,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-
-
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 

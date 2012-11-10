@@ -16,21 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "mir/input/event_filter.h"
+#include "src/input/android/event_filter_dispatcher_policy.h"
+#include "src/input/android/dummy_input_reader_policy.h"
+#include "mir/thread/all.h"
+
+#include "mir_test/fake_event_hub.h"
+#include "mir_test/empty_deleter.h"
 
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
-#include "mir/thread/all.h"
 #include <thread>
 
-#include "mir/input/event_filter.h"
-#include "src/input/android/event_filter_dispatcher_policy.h"
-#include "src/input/android/dummy_input_reader_policy.h"
-
-#include "mir_test/fake_event_hub.h"
-#include "mir_test/empty_deleter.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
