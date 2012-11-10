@@ -125,7 +125,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
-
 # Pulling in local gmock version
 # While this seems evil, we are doing
 # it to ensure/allow for:
