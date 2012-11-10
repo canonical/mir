@@ -46,7 +46,7 @@ struct MockEventFilter : public mi::EventFilter
 TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
-    droidinput::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
     droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();

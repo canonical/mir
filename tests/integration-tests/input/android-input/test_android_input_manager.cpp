@@ -46,7 +46,7 @@ struct MockEventFilter : public mi::EventFilter
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
 {
     using namespace ::testing;
-    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    android::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     
