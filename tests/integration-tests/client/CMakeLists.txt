@@ -14,6 +14,7 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
+# TODO(tvoss): These tests are failing for me when run in an emulator
 if( MIR_PLATFORM STREQUAL "android")
 list(
   APPEND INTEGRATION_TESTS_SRCS

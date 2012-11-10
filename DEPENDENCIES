@@ -1,0 +1,10 @@
+TODO - get rid of this
+
+We have a number of dependencies that are managed in a rather ad-hoc manner. Until
+they are managed properly let's at least document them here:
+
+MESA - private-ppa.launchpad.net/rocket-scientists/mesa-9.0/ubuntu
+NDK  - https://chinstrap.canonical.com/~kdub/standalone-ndk-r8b.tar.gz
+GBM  - ~rocket-scientists/+junk/mesa-egl-platform-mir
+DRM  - kernel from http://people.canonical.com/~apw/drm-master-quantal/
+

@@ -17,7 +17,7 @@
 
 set(
   MIR_GCC_VERSION
-  4.4
+  4.6
   CACHE
   STRING
   "Version of gcc/g++"
@@ -31,9 +31,10 @@ project(Mir)
 cmake_minimum_required(VERSION 2.8)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
@@ -86,8 +87,20 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 
 if (MIR_PLATFORM STREQUAL "android")
+  include (cmake/AndroidFlags.cmake)
+  get_android_flags()
+  add_definitions( ${ANDROID_DEFINITIONS} )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
+
+  #ctest does not work for android, so turn test discovery off
+  set(DISABLE_GTEST_TEST_DISCOVERY ON)
+
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)

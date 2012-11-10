@@ -42,6 +42,7 @@ private:
     class Resources
     {
     public:
+        Resources();
         ~Resources();
         void setup(const geometry::Size& display_size);
 

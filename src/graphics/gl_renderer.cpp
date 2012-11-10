@@ -71,6 +71,42 @@ VertexAttributes vertex_attribs[4] =
     }
 };
 
+typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
+typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
+
+void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
+                          MirGLGetObjectiv      getObjectiv,
+                          std::string const &   msg,
+                          GLuint                object)
+{
+    GLint object_log_length = 0;
+    (*getObjectiv)(object, GL_INFO_LOG_LENGTH, &object_log_length);
+
+    const GLuint object_log_buffer_length = object_log_length + 1;
+    std::string  object_info_log;
+
+    object_info_log.resize(object_log_buffer_length);
+    (*getObjectInfoLog)(object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
+
+    std::string object_info_err(msg + "\n");
+    object_info_err += object_info_log;
+
+    throw std::runtime_error(object_info_err);
+}
+
+}
+
+mg::GLRenderer::Resources::Resources() :
+    vertex_shader(0),
+    fragment_shader(0),
+    program(0),
+    position_attr_loc(0),
+    texcoord_attr_loc(0),
+    transform_uniform_loc(0),
+    alpha_uniform_loc(0),
+    vertex_attribs_vbo(0),
+    texture(0)
+{
 }
 
 mg::GLRenderer::Resources::~Resources()
@@ -98,12 +134,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile vertex shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        GetObjectLogAndThrow(glGetShaderInfoLog,
+            glGetShaderiv,
+            "Failed to compile vertex shader:",
+            vertex_shader);
     }
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -112,12 +146,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        GetObjectLogAndThrow(glGetShaderInfoLog,
+            glGetShaderiv,
+            "Failed to compile fragment shader:",
+            fragment_shader);
     }
 
     program = glCreateProgram();
@@ -127,12 +159,10 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glGetProgramiv(program, GL_LINK_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetProgramInfoLog(program, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        GetObjectLogAndThrow(glGetProgramInfoLog,
+            glGetProgramiv,
+            "Failed to link program:",
+            program);
     }
 
     glUseProgram(program);
@@ -214,14 +244,14 @@ void mg::GLRenderer::render(Renderable& renderable)
     pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
     pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
-    /* Apply the renderable's custom transformation */
-    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
-
     glUseProgram(resources.program);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
+
+    /* Apply the renderable's custom transformation */
+    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
 
     glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transformation));
     glUniform1f(resources.alpha_uniform_loc, renderable.alpha());
@@ -234,6 +264,10 @@ void mg::GLRenderer::render(Renderable& renderable)
 
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
+
+    /* We must release the renderableTexture as soon
+     * as the bind_to_texture operation is complete
+     * so we are using it as a temporary */
     renderable.texture()->bind_to_texture();
 
     /* Draw */
