@@ -26,8 +26,9 @@
 
 namespace android
 {
-    class InputEvent;
+class InputEvent;
 }
+
 namespace droidinput = android;
 
 namespace mir
