@@ -47,7 +47,7 @@ TEST(EventFilterChain, offers_events_to_filters)
     EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
 
     // So the filter chain should also reject the event
-    EXPECT_EQ(false, filter_chain.handles(ev));
+    EXPECT_FALSE(filter_chain.handles(ev));
 }
 
 TEST(EventFilterChain, accepting_event_halts_emission)

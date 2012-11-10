@@ -33,7 +33,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 
-namespace
+namespace mir
 {
 
 class StubBuffer : public mc::Buffer
@@ -96,8 +96,6 @@ public:
         return std::shared_ptr<mg::PlatformIPCPackage>();
     }
 };
-
-}
 
 class GBMBufferIntegration : public ::testing::Test
 {
@@ -230,4 +228,5 @@ TEST_F(GBMBufferIntegration, buffer_lazy_texture_instantiation_from_arbitrary_th
         t.join();
         ASSERT_TRUE(texture_instantiator.exception_thrown);
     });
+}
 }

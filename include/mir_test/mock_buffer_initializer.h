@@ -29,11 +29,11 @@ namespace graphics
 class MockBufferInitializer : public BufferInitializer
 {
 public:
-    MOCK_METHOD2(operator_call, void(compositor::Buffer& buffer, EGLClientBuffer client_buffer));
+    MOCK_METHOD1(operator_call, void(compositor::Buffer& buffer));
 
-    void operator()(compositor::Buffer& buffer, EGLClientBuffer client_buffer)
+    void operator()(compositor::Buffer& buffer)
     {
-        operator_call(buffer, client_buffer);
+        operator_call(buffer);
     }
 };
 
