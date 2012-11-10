@@ -28,10 +28,10 @@
 
 namespace android
 {
-    class InputDispatcher;
-    class InputDispatcherThread;
-    class InputReader;
-    class InputReaderThread;
+class InputDispatcher;
+class InputDispatcherThread;
+class InputReader;
+class InputReaderThread;
 }
 
 namespace droidinput = android;
