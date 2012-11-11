@@ -91,7 +91,7 @@ public:
 
     std::map<int32_t, FakeDevice> device_from_id;
     
-    android::KeyMap keymap;
+    droidinput::KeyMap keymap;
 
 };
 }

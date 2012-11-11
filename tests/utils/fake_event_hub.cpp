@@ -1,5 +1,7 @@
 #include "mir_test/fake_event_hub.h"
 
+#include <androidfw/Keyboard.h>
+
 using droidinput::AxisInfo;
 using droidinput::InputDeviceIdentifier;
 using droidinput::PropertyMap;
@@ -107,7 +109,7 @@ status_t mia::FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t u
     (void)deviceId;
     (void)usageCode;
     keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
-    return android::OK;
+    return droidinput::OK;
 }
 
 status_t mia::FakeEventHub::mapAxis(int32_t deviceId, int32_t scanCode,
