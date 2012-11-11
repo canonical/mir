@@ -26,6 +26,7 @@ mir::Semaphore::Semaphore(int value)
 
 mir::Semaphore::~Semaphore()
 {
+    sem_destroy(&sem);
 }
 
 void mir::Semaphore::wait()
