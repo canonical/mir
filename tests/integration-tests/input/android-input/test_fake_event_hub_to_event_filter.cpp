@@ -19,18 +19,16 @@
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
 #include "src/input/android/dummy_input_reader_policy.h"
-#include "mir/thread/all.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/semaphore.h"
 
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <thread>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -55,7 +53,8 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     droidinput::sp<droidinput::InputReaderThread> reader_thread = new droidinput::InputReaderThread(reader);
     droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
     
-    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
+    mir::Semaphore event_handled;
+    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));    
     
     dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);
@@ -66,8 +65,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 
-    // Takes a long time in valgrind
-    std::this_thread::sleep_for(std::chrono::milliseconds(80));
+    event_handled.wait_seconds(5);
 
     reader_thread->requestExitAndWait();
     dispatcher_thread->requestExitAndWait();
