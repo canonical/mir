@@ -40,5 +40,5 @@ private:
 
 namespace
 {
-  ACTION_P(PostSemaphore, sem) { sem->post(); }
+    ACTION_P(PostSemaphore, sem) { sem->post(); }
 }

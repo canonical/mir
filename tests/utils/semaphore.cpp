@@ -46,7 +46,5 @@ void mir::Semaphore::wait_seconds(int seconds)
     absolute_time.tv_sec = time(NULL) + seconds;
     absolute_time.tv_nsec = 0;
     sem_timedwait(&sem, &absolute_time);
-#include <stdio.h>
-    printf("error: %s \n", strerror(errno));
 }
 
