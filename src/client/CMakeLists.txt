@@ -102,6 +102,11 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
 )
 
+install(
+  TARGETS mirclient
+  LIBRARY DESTINATION lib)
+
+
 add_executable(
   mir_demo_client
   

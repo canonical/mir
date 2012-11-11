@@ -16,21 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "mir/input/event_filter.h"
+#include "src/input/android/event_filter_dispatcher_policy.h"
+#include "src/input/android/dummy_input_reader_policy.h"
+#include "mir/thread/all.h"
+
+#include "mir_test/fake_event_hub.h"
+#include "mir_test/empty_deleter.h"
 
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
-#include "mir/thread/all.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include <thread>
-
-#include "mir/input/event_filter.h"
-#include "src/input/android/event_filter_dispatcher_policy.h"
-#include "src/input/android/dummy_input_reader_policy.h"
-
-#include "mir_test/fake_event_hub.h"
-#include "mir_test/empty_deleter.h"
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -46,7 +46,7 @@ struct MockEventFilter : public mi::EventFilter
 TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
-    droidinput::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
     droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();

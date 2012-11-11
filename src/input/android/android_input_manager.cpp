@@ -33,18 +33,8 @@ namespace mia = mi::android;
 
 mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
 				std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters) :
-  event_hub(event_hub)
-{
-    filter_chain = std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters));
-}
-
-void mia::InputManager::stop()
-{
-    reader_thread->requestExit();
-    dispatcher_thread->requestExit();
-}
-
-void mia::InputManager::start()
+  event_hub(event_hub),
+  filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
     droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
@@ -55,6 +45,16 @@ void mia::InputManager::start()
     
     dispatcher->setInputDispatchMode(true, false);
     dispatcher->setInputFilterEnabled(true);
+}
+
+void mia::InputManager::stop()
+{
+    reader_thread->requestExit();
+    dispatcher_thread->requestExit();
+}
+
+void mia::InputManager::start()
+{
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 }

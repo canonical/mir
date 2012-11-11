@@ -15,15 +15,13 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-
 #include "src/input/event_filter_chain.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 #include "mir_test/empty_deleter.h"
 
 #include <androidfw/Input.h>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mi = mir::input;
 
@@ -45,7 +43,7 @@ TEST(EventFilterChain, offers_events_to_filters)
     // Filter will pass the event on twice
     EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
     // So the filter chain should also reject the event
-    EXPECT_EQ(false, filter_chain.handles(ev));
+    EXPECT_FALSE(filter_chain.handles(ev));
 }
 
 TEST(EventFilterChain, accepting_event_halts_emission)
@@ -63,6 +61,6 @@ TEST(EventFilterChain, accepting_event_halts_emission)
         EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
     }
     // So the chain should accept
-    EXPECT_EQ(true, filter_chain.handles(ev));
+    EXPECT_TRUE(filter_chain.handles(ev));
 }
 

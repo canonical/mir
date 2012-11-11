@@ -17,7 +17,13 @@
  */
 
 #include "event_filter_chain.h"
+
 namespace mi = mir::input;
+
+mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
+    filters(values.begin(), values.end())
+{
+}
 
 bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
 {

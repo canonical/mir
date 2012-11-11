@@ -9,7 +9,10 @@ namespace droidinput = android;
 
 namespace mir
 {
-
+namespace input
+{
+namespace android
+{
 // An EventHub implementation that generates fake raw events.
 class FakeEventHub : public droidinput::EventHubInterface
 {
@@ -91,5 +94,6 @@ public:
     android::KeyMap keymap;
 
 };
-
+}
+}
 } // namespace mir

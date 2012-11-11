@@ -14,11 +14,6 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(
-  APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/fake_event_hub.cpp
-)
-
 add_subdirectory(android-input)
 
 set(

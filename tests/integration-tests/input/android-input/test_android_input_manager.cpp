@@ -16,21 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include "mir/thread/all.h"
-#include <thread>
-
-// Needed implicitly for InputManager destructor because of android::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
-
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
+
+// Needed implicitly for InputManager destructor because of android::sp :/
+#include <InputDispatcher.h>
+#include <InputReader.h>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include <thread>
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
@@ -59,13 +59,13 @@ struct KeycodeMatchingEventFilter : public mi::EventFilter
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
 {
     using namespace ::testing;
-    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    android::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(1);
+    event_hub->synthesize_key_event(KEY_ENTER);
 
     input_manager.start();
     std::this_thread::sleep_for(std::chrono::milliseconds(80));

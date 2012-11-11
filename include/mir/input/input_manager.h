@@ -19,6 +19,7 @@
 
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
+
 #include <memory>
 
 namespace mir
@@ -35,7 +36,7 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
 protected:
-    InputManager() = default;
+    InputManager() {};
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 };
