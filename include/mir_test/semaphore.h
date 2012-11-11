@@ -19,7 +19,6 @@
 #include <gtest/gtest.h>
 
 #include <semaphore.h>
-#include <time.h>
 
 namespace mir
 {

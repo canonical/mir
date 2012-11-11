@@ -17,6 +17,8 @@
  */
 #include "mir_test/semaphore.h"
 
+#include <time.h>
+
 mir::Semaphore::Semaphore(int value)
 {
     sem_init(&sem, false, value);
