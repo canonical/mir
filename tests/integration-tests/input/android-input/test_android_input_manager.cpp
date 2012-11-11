@@ -23,7 +23,7 @@
 #include "mir_test/empty_deleter.h"
 #include "mir_test/semaphore.h"
 
-// Needed implicitly for InputManager destructor because of android::sp :/
+// Needed implicitly for InputManager destructor because of droidinput::sp :/
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
@@ -40,9 +40,19 @@ namespace mia = mir::input::android;
 
 namespace
 {
+    using namespace ::testing;
+    MATCHER_P(HasKeycode, keycode, std::string(negation ? "does match" : "does not match") + PrintToString(keycode))
+    {
+	auto key_ev = static_cast<const droidinput::KeyEvent*>(arg);
+	return (keycode == key_ev->getKeyCode());
+    }
+}
+
+namespace
+{
 struct MockEventFilter : public mi::EventFilter
 {
-    MOCK_METHOD1(handles, bool(const android::InputEvent*));
+    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
 
 struct KeycodeMatchingEventFilter : public mi::EventFilter
@@ -62,7 +72,7 @@ struct KeycodeMatchingEventFilter : public mi::EventFilter
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
 {
     using namespace ::testing;
-    android::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
+    droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     mir::Semaphore event_handled;
@@ -79,14 +89,18 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_fi
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
 {
     using namespace ::testing;
-    android::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
-    KeycodeMatchingEventFilter event_filter(AKEYCODE_DPAD_RIGHT);
+    droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
+    MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
+    mir::Semaphore event_handled;
+      
+    EXPECT_CALL(event_filter, handles(HasKeycode((int)AKEYCODE_DPAD_RIGHT))).
+	WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));
     
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(KEY_RIGHT);
 
     input_manager.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    event_handled.wait_seconds(5);
     input_manager.stop();
 }

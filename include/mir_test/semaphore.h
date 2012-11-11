@@ -38,6 +38,7 @@ private:
 };
 }
 
-namespace{
+namespace
+{
   ACTION_P(PostSemaphore, sem) { sem->post(); }
 }
