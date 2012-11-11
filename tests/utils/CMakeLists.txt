@@ -29,6 +29,7 @@ set(
   display_server_test_fixture.cpp
   test_protobuf_client.cpp
   fake_event_hub.cpp
+  semaphore.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")
