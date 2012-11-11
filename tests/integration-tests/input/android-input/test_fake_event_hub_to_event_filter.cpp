@@ -19,6 +19,7 @@
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
 #include "src/input/android/dummy_input_reader_policy.h"
+#include "src/input/android/android_input_constants.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
@@ -56,7 +57,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     mir::Semaphore event_handled;
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));    
     
-    dispatcher->setInputDispatchMode(true, false);
+    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
 
     event_hub->synthesize_builtin_keyboard_added();

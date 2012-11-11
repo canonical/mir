@@ -18,6 +18,7 @@
  */
 
 #include "android_input_manager.h"
+#include "android_input_constants.h"
 #include "event_filter_dispatcher_policy.h"
 #include "dummy_input_reader_policy.h"
 
@@ -43,7 +44,7 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
     reader_thread = new droidinput::InputReaderThread(reader);
     dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
     
-    dispatcher->setInputDispatchMode(true, false);
+    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
 }
 

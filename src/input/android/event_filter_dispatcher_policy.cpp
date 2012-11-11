@@ -27,7 +27,10 @@ mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi
 
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
-    return !event_filter->handles(input_event);
+    if (event_filter->handles(input_event))
+	return false; /* Do not pass the event on */
+    else
+	return true; /* Pass the event on */
 }
 
 void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
