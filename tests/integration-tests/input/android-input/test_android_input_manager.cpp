@@ -56,7 +56,7 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_fi
     
     EXPECT_CALL(event_filter, handles(_)).WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));    
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(KEY_ENTER);
+    event_hub->synthesize_key_event();
 
     input_manager.start();
     event_handled.wait_seconds(5);

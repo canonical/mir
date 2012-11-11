@@ -61,7 +61,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
     dispatcher->setInputFilterEnabled(true);
 
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(1);
+    event_hub->synthesize_key_event();
 
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
