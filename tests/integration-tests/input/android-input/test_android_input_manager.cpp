@@ -75,7 +75,7 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_fi
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
 {
     using namespace ::testing;
-    android::sp<mir::FakeEventHub> event_hub = new mir::FakeEventHub();
+    android::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     KeycodeMatchingEventFilter event_filter(AKEYCODE_DPAD_RIGHT);
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
     
