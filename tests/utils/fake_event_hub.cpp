@@ -19,6 +19,7 @@ namespace mia = mir::input::android;
 
 mia::FakeEventHub::FakeEventHub()
 {
+    keymap.loadGenericMaps();
 }
 
 mia::FakeEventHub::~FakeEventHub()
