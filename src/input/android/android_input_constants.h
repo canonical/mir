@@ -15,36 +15,22 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "mir_test/semaphore.h"
 
-#include <time.h>
+#ifndef MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
+#define MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
 
-mir::Semaphore::Semaphore(int value)
+namespace mir
 {
-    sem_init(&sem, false, value);
+namespace input
+{
+namespace android
+{
+static const bool DispatchEnabled = true;
+static const bool DispatchDisabled = false;
+static const bool DispatchFrozen = true;
+static const bool DispatchUnfrozen = false;
+}
+}
 }
 
-mir::Semaphore::~Semaphore()
-{
-    sem_destroy(&sem);
-}
-
-void mir::Semaphore::wait()
-{
-    sem_wait(&sem);
-}
-
-void mir::Semaphore::post()
-{
-    sem_post(&sem);
-}
-
-// This is awkward but so is chrono.h's attempt to alias boost in to the std namespace. Awful things happen.
-void mir::Semaphore::wait_seconds(int seconds)
-{
-    struct timespec absolute_time;
-    absolute_time.tv_sec = time(NULL) + seconds;
-    absolute_time.tv_nsec = 0;
-    sem_timedwait(&sem, &absolute_time);
-}
-
+#endif // MIR_INPUT_ANDROID_INPUT_CONSTANTS_H

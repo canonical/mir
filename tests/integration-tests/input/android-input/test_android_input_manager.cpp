@@ -18,10 +18,10 @@
  */
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
+#include "mir/thread/all.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/semaphore.h"
 
 // Needed implicitly for InputManager destructor because of droidinput::sp :/
 #include <InputDispatcher.h>
@@ -31,9 +31,6 @@
 #include <gtest/gtest.h>
 
 #include <thread>
-
-#include <semaphore.h>
-#include <time.h>
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
@@ -75,14 +72,15 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_fi
     droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
-    mir::Semaphore event_handled;
     
-    EXPECT_CALL(event_filter, handles(_)).WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));    
+    EXPECT_CALL(event_filter, handles(_)).WillOnce(Return(false));    
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(KEY_ENTER);
+    event_hub->synthesize_key_event();
 
     input_manager.start();
-    event_handled.wait_seconds(5);
+    // TODO: This timeout is very long, but threads are very slow in valgrind. 
+    // Timeout will be improved in followup branch with semaphore/wait condition approach.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     input_manager.stop();
 }
 
@@ -92,15 +90,16 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
     droidinput::sp<mia::FakeEventHub> event_hub = new mia::FakeEventHub();
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
-    mir::Semaphore event_handled;
       
     EXPECT_CALL(event_filter, handles(HasKeycode((int)AKEYCODE_DPAD_RIGHT))).
-	WillOnce(DoAll(PostSemaphore(&event_handled), Return(false)));
+        WillOnce(Return(false));
     
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(KEY_RIGHT);
 
     input_manager.start();
-    event_handled.wait_seconds(5);
+    // TODO: This timeout is very long, but threads are very slow in valgrind. 
+    // Timeout will be improved in followup branch with semaphore/wait condition approach.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     input_manager.stop();
 }
