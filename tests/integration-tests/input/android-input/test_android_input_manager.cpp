@@ -38,7 +38,7 @@ namespace mia = mir::input::android;
 namespace
 {
     using namespace ::testing;
-    MATCHER_P(HasKeycode, keycode, std::string(negation ? "does match" : "does not match") + PrintToString(keycode))
+    MATCHER_P(EventWithKeycode, keycode, std::string(negation ? "does match" : "does not match") + PrintToString(keycode))
     {
 	auto key_ev = static_cast<const droidinput::KeyEvent*>(arg);
 	return (keycode == key_ev->getKeyCode());
@@ -91,7 +91,7 @@ TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, keys_are_mapped)
     MockEventFilter event_filter;
     mia::InputManager input_manager(event_hub, {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())});
       
-    EXPECT_CALL(event_filter, handles(HasKeycode((int)AKEYCODE_DPAD_RIGHT))).
+    EXPECT_CALL(event_filter, handles(EventWithKeycode((int)AKEYCODE_DPAD_RIGHT))).
         WillOnce(Return(false));
     
     event_hub->synthesize_builtin_keyboard_added();
