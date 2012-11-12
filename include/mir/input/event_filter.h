@@ -13,30 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *  Chase Douglas <chase.douglas@canonical.com>
- *  Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/position_info.h"
+#ifndef MIR_INPUT_EVENT_FILTER_H_
+#define MIR_INPUT_EVENT_FILTER_H_
 
-#include <boost/format.hpp>
+#include <memory>
 
-#include <ostream>
-
-namespace mi = mir::input;
+namespace android
+{
+    class InputEvent;
+}
 
 namespace mir
 {
 namespace input
 {
 
-std::ostream& operator<<(std::ostream& out, const mi::PositionInfo& pi)
+class EventFilter
 {
-    out <<
-            (boost::format("") % pi.mode).str();
-    return out;
-}
+public:
+    virtual ~EventFilter() {}
+
+    virtual bool handles(android::InputEvent *event) = 0;
+
+protected:
+    EventFilter() = default;
+    EventFilter(const EventFilter&) = delete;
+    EventFilter& operator=(const EventFilter&) = delete;
+};
 
 }
 }
+
+#endif // MIR_INPUT_EVENT_FILTER_H_

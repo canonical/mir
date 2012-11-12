@@ -13,45 +13,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_H_
-#define MIR_INPUT_EVENT_H_
+#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
 
-#include "mir/time_source.h"
+#include <memory>
+#include <vector>
+
+#include "mir/input/event_filter.h"
+
+namespace android
+{
+    class InputEvent;
+}
 
 namespace mir
 {
 namespace input
 {
 
-class Event {
- public:
-
-    virtual ~Event() {}
-
-    Event(const Event&) = delete;
-    Event& operator=(const Event&) = delete;
-
-    // The system timestamp as assigned to the event
-    // when entering the event processing.
-    const mir::Timestamp& get_system_timestamp() const
+class EventFilterChain : public EventFilter
+{
+public:
+    explicit EventFilterChain(
+        std::initializer_list<std::shared_ptr<EventFilter> const> values) :
+        filters(values.begin(), values.end())
     {
-        return system_timestamp;
     }
 
-    void set_system_timestamp(const mir::Timestamp& ts)
-    {
-        system_timestamp = ts;
-    }
+    virtual bool handles(android::InputEvent *event);
 
- protected:
-    Event() = default;
- private:
-    mir::Timestamp system_timestamp;
+private:
+    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
+    EventFilterVector const filters;
 };
 
-}}
+}
+}
 
-#endif // MIR_INPUT_EVENT_H_
+#endif // MIR_INPUT_EVENT_FILTER_H_

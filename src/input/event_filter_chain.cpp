@@ -13,31 +13,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "event_filter_chain.h"
+namespace mi = mir::input;
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
-
-#include "mir/input/filter.h"
-
-namespace mir
+bool mi::EventFilterChain::handles(android::InputEvent *event)
 {
-
-namespace input
-{
-
-class ApplicationFilter : public ChainingFilter
-{
-public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
-
-    void accept(Event* e) const;
-};
-
+    for (auto it = filters.begin(); it != filters.end(); it++)
+    {
+        auto filter = *it;
+        if (filter->handles(event)) return true;
+    }
+    return false;
 }
-}
-
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
+ 
