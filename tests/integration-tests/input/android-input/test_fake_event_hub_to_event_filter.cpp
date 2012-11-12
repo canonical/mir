@@ -65,7 +65,7 @@ class FakeEventHubSetup : public testing::Test
         dispatcher->setInputFilterEnabled(true);
 
         dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
-        reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);    
+        reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
     }
 
     void TearDown()
@@ -73,7 +73,7 @@ class FakeEventHubSetup : public testing::Test
         reader_thread->requestExitAndWait();
         dispatcher_thread->requestExitAndWait();
     }
-    
+
   protected:
     MockEventFilter event_filter;
     droidinput::sp<mia::FakeEventHub> event_hub;
@@ -99,14 +99,14 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
-    
+
     static const int key = KEY_ENTER;
 
     mir::WaitCondition wait_condition;
 
     EXPECT_CALL(event_filter, handles(IsKeyEventWithKey(key))).Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
-    
+
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(key);
 
