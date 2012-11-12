@@ -28,6 +28,7 @@ add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(frontend/)
+add_subdirectory(zup/)
 
 
 set(

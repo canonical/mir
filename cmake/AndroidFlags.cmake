@@ -73,4 +73,26 @@ function(get_android_flags)
   #linker flags
   set(ANDROID_LINKER_FLAGS "-Wl,-rpath,${MIR_NDK_PATH}/sysroot/usr/lib:${MIR_NDK_PATH}/arm-linux-androideabi/lib" PARENT_SCOPE)
 
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-T,/opt/stand-orig/arm-linux-androideabi/lib/ldscripts/armelf_linux_eabi.xsc")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--gc-sections")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-shared,-Bsymbolic")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-z,noexecstack")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--icf=safe")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--fix-cortex-a8")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--no-undefined")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -nostdlib")
+
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lc")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lstdc++")
+   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lsupc++")
+
+    set(ANDROID_SO_CRTBEGIN "/opt/stand-orig/sysroot/usr/lib/crtbegin_so.o" PARENT_SCOPE)
+  
+    set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} /opt/stand-orig/sysroot/usr/lib/crtbegin_so.o" PARENT_SCOPE)
+    
+
+
+    set(ANDROID_SO_CRTEND "/opt/stand-orig/sysroot/usr/lib/crtend_so.o" PARENT_SCOPE)
+    set(ANDROID_SO_GCC "/opt/stand-orig/./lib/gcc/arm-linux-androideabi/4.6.x-google/libgcc.a" PARENT_SCOPE)
+    set(ANDROID_SO_LIBRARIES protobuf;c;m;stdc++;supc++ PARENT_SCOPE)
 endfunction(get_android_flags)
