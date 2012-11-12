@@ -21,7 +21,6 @@
 #include "mir_client/gbm/drm_fd_handler.h"
 
 #include <stdexcept>
-#include <iostream>
 
 #include <xf86drm.h>
 #include <string.h>
