@@ -39,5 +39,13 @@ MATCHER_P(IsKeyEventWithKey, key, "")
     auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
     return key_event->getKeyCode() == key;
 }
+MATCHER(KeyDownEvent, "")
+{
+    if (arg->getType() != AINPUT_EVENT_TYPE_KEY)
+        return false;
+
+    auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
+    return key_event->getAction() == AKEY_EVENT_ACTION_DOWN;
+}
 
 #endif // MIR_TEST_MOCK_EVENT_FILTER_H_

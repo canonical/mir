@@ -15,8 +15,9 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#ifndef __EVENT_FACTORY_H
-#define __EVENT_FACTORY_H
+
+#ifndef MIR_TEST_EVENT_FACTORY_H
+#define MIR_TEST_EVENT_FACTORY_H
 
 namespace mir
 {
@@ -50,4 +51,4 @@ KeyParameters a_key_down_event();
 }
 }
 
-#endif /* __EVENT_FACTORY_H */
+#endif /* MIR_TEST_EVENT_FACTORY_H */

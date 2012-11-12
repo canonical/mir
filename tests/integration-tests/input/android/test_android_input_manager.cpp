@@ -81,7 +81,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
 
     EXPECT_CALL(
         event_filter,
-        handles(_))
+        handles(KeyDownEvent()))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
@@ -91,3 +91,4 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
 
     wait_condition.wait_for_seconds(30);
 }
+
