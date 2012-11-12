@@ -102,7 +102,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         event_filter,
-        handles(_))
+        handles(ButtonDownEvent()))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 

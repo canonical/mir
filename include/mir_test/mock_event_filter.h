@@ -47,5 +47,14 @@ MATCHER(KeyDownEvent, "")
     auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
     return key_event->getAction() == AKEY_EVENT_ACTION_DOWN;
 }
+MATCHER(ButtonDownEvent, "")
+{
+    if (arg->getType() != AINPUT_EVENT_TYPE_MOTION)
+	return false;
+    auto motion_event = static_cast<const droidinput::MotionEvent*>(arg);
+    if (motion_event->getButtonState() == 0)
+	return false;
+    return motion_event->getAction() == AKEY_EVENT_ACTION_DOWN;
+}
 
 #endif // MIR_TEST_MOCK_EVENT_FILTER_H_
