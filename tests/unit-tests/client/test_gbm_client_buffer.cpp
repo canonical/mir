@@ -109,15 +109,12 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_drm_buffer)
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
-    EXPECT_NO_THROW({
-        auto mem_region = buffer.secure_for_cpu_write();
-        ASSERT_EQ(map_addr, mem_region->vaddr.get());
-        ASSERT_EQ(width, mem_region->width);
-        ASSERT_EQ(height, mem_region->height);
-        ASSERT_EQ(stride, mem_region->stride);
-        ASSERT_EQ(pf, mem_region->format);
-    });
-
+    auto mem_region = buffer.secure_for_cpu_write();
+    ASSERT_EQ(map_addr, mem_region->vaddr.get());
+    ASSERT_EQ(width, mem_region->width);
+    ASSERT_EQ(height, mem_region->height);
+    ASSERT_EQ(stride, mem_region->stride);
+    ASSERT_EQ(pf, mem_region->format);
 }
 
 TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_gem_open_failure)
