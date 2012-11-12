@@ -25,10 +25,7 @@ namespace input
 {
 namespace synthesis
 {
-enum class EventType
-{
-    Key
-};
+
 enum class EventAction
 {
     Down, Up
