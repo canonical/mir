@@ -73,7 +73,7 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
     return false;
 }
 
-TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_filter)
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_events_to_filter)
 {
     using namespace ::testing;
 
