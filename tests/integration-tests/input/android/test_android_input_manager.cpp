@@ -109,7 +109,27 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_button_down_event().from_device(mia::FakeEventHub::BuiltInCursorID).of_button(BTN_LEFT));
+    event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
+
+    wait_condition.wait_for_seconds(30);
+}
+
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
+{
+    using namespace ::testing;
+
+    WaitCondition wait_condition;
+
+    EXPECT_CALL(
+        event_filter,
+        handles(MotionEvent()))
+            .Times(1)
+            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+
+    event_hub->synthesize_builtin_cursor_added();
+    event_hub->synthesize_device_scan_complete();
+
+    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
 
     wait_condition.wait_for_seconds(30);
 }

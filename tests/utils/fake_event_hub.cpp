@@ -338,4 +338,29 @@ void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters
     events_available.push_back(event);
 }
 
+void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
+{
+    RawEvent event;
+    event.when = 0;
+    event.type = EV_REL;
+    if (parameters.device_id)
+	event.deviceId = parameters.device_id;
+    else
+	event.deviceId = BuiltInCursorID;
+
+    std::lock_guard<std::mutex> lg(guard);
+    event.code = REL_X;
+    event.value = parameters.rel_x;
+    events_available.push_back(event);
+
+    event.code = REL_Y;
+    event.value = parameters.rel_y;
+    events_available.push_back(event);
+    
+    // Cursor motion events require a sync as per droidinput::CursorInputMapper::process
+    event.type = EV_SYN;
+    event.code = SYN_REPORT;
+    events_available.push_back(event);
+}
+
 

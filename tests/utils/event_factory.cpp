@@ -78,3 +78,28 @@ mis::ButtonParameters mis::a_button_down_event()
 {
     return mis::ButtonParameters().with_action(mis::EventAction::Down);
 }
+
+mis::MotionParameters::MotionParameters() :
+    device_id(0),
+    rel_x(0),
+    rel_y(0)
+{
+}
+
+mis::MotionParameters& mis::MotionParameters::from_device(int new_device_id)
+{
+    device_id = new_device_id;
+    return *this;
+}
+
+mis::MotionParameters& mis::MotionParameters::with_movement(int new_rel_x, int new_rel_y)
+{
+    rel_x = new_rel_x;
+    rel_y = new_rel_y;
+    return *this;
+}
+
+mis::MotionParameters mis::a_motion_event()
+{
+    return mis::MotionParameters();
+}

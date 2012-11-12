@@ -110,6 +110,7 @@ public:
 
     void synthesize_event(const synthesis::KeyParameters &parameters);
     void synthesize_event(const synthesis::ButtonParameters &parameters);
+    void synthesize_event(const synthesis::MotionParameters &parameters);
 
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;

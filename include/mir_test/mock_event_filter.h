@@ -56,5 +56,11 @@ MATCHER(ButtonDownEvent, "")
 	return false;
     return motion_event->getAction() == AKEY_EVENT_ACTION_DOWN;
 }
+MATCHER(MotionEvent, "")
+{
+   if (arg->getType() != AINPUT_EVENT_TYPE_MOTION)
+	return false;
+   return true;
+}
 
 #endif // MIR_TEST_MOCK_EVENT_FILTER_H_

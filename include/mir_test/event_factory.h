@@ -39,7 +39,7 @@ class KeyParameters
 public:    
     KeyParameters();
 
-    KeyParameters& from_device(int devipce_id);
+    KeyParameters& from_device(int device_id);
     KeyParameters& of_scancode(int scancode);
     KeyParameters& with_action(EventAction action);
 
@@ -63,6 +63,18 @@ public:
 };
 ButtonParameters a_button_down_event();
 
+class MotionParameters
+{
+public:
+    MotionParameters();
+    MotionParameters& from_device(int device_id);
+    MotionParameters& with_movement(int rel_x, int rel_y);
+    
+    int device_id;
+    int rel_x;
+    int rel_y;
+};
+MotionParameters a_motion_event();
 
 }   
 }
