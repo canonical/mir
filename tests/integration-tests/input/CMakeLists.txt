@@ -19,7 +19,9 @@ list(
    ${CMAKE_CURRENT_SOURCE_DIR}/test_input_manager.cpp
 )
 
-add_subdirectory(android-input)
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android)
+endif()
 
 set(
   INTEGRATION_TESTS_SRCS

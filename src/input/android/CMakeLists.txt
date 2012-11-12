@@ -14,21 +14,15 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+list(
+  APPEND INPUT_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/event_filter_dispatcher_policy.cpp
+)
+
 set(
-  INPUT_ANDROID_SOURCES
-
-  android_input_manager.cpp
-  event_filter_dispatcher_policy.cpp
-)
-
-add_library( 
-  mirinputandroid STATIC
-  
-  ${INPUT_ANDROID_SOURCES}
-)
-
-target_link_libraries(
-  mirinputandroid
-  android-input
+  INPUT_SOURCES
+  ${INPUT_SOURCES}
+  PARENT_SCOPE
 )
 

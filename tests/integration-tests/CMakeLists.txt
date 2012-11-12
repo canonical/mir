@@ -60,15 +60,12 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirinputandroid
   mirprocess
   mirsurfaces
   mirplatformgraphics
   mirprocess
   mirprotobuf
   
-  android-input
-
   3rd_party
 
   test-utils

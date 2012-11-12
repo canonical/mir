@@ -32,7 +32,8 @@ struct EmptyDeleter
     }
 };
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
+        std::shared_ptr<MirPlatformPackage> const& /*platform_package*/)
 {
     return std::make_shared<mcla::AndroidClientPlatform>();
 }

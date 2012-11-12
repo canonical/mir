@@ -20,6 +20,10 @@ set(
   event_filter_chain.cpp
 )
 
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android)
+endif()
+
 add_library( 
   mirinput STATIC
   
