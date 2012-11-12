@@ -57,7 +57,8 @@ struct GEMHandle
 
     ~GEMHandle()
     {
-        struct drm_gem_close gem_close = {handle, 0};
+        static const uint32_t pad{0};
+        struct drm_gem_close gem_close = {handle, pad};
         drm_fd_handler->ioctl(DRM_IOCTL_GEM_CLOSE, &gem_close);
     }
 
