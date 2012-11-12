@@ -36,7 +36,15 @@ if (MIR_PLATFORM STREQUAL "android")
 
     android_graphics.cpp
     ${TEST_UTILS_SRCS} 
-)
+    )
+else()
+  set(
+    TEST_UTILS_SRCS
+
+    fake_event_hub.cpp
+    ${TEST_UTILS_SRCS} 
+    )
+  
 endif()
 
 add_library(
@@ -60,7 +68,7 @@ target_link_libraries(
 
   test-utils
   3rd_party
-
+  
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

@@ -14,11 +14,15 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-if(NOT MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(android)
-endif()
+list(
+  APPEND INPUT_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/event_filter_dispatcher_policy.cpp
+)
 
 set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
-  PARENT_SCOPE)
+  INPUT_SOURCES
+  ${INPUT_SOURCES}
+  PARENT_SCOPE
+)
+

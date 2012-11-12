@@ -3,7 +3,7 @@
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * pasfublished by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,41 +14,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#ifndef MIR_INPUT_INPUT_MANAGER_H_
+#define MIR_INPUT_INPUT_MANAGER_H_
 
 #include <memory>
-#include <vector>
-
-#include "mir/input/event_filter.h"
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
 
 namespace mir
 {
 namespace input
 {
+class EventFilter;
 
-class EventFilterChain : public EventFilter
+class InputManager 
 {
 public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
+    virtual ~InputManager() {}
 
-    virtual bool handles(const droidinput::InputEvent *event);
-
-private:
-    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector const filters;
+    virtual void start() = 0;
+    virtual void stop() = 0;
+protected:
+    InputManager() {};
+    InputManager(const InputManager&) = delete;
+    InputManager& operator=(const InputManager&) = delete;
 };
 
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif // MIR_INPUT_INPUT_MANAGER

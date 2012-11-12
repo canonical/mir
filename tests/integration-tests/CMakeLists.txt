@@ -27,6 +27,7 @@ add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(process/)
+add_subdirectory(input/)
 
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
@@ -64,7 +65,7 @@ target_link_libraries(
   mirplatformgraphics
   mirprocess
   mirprotobuf
-
+  
   3rd_party
 
   test-utils

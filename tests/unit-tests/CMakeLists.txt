@@ -47,6 +47,7 @@ target_link_libraries(
   test-utils
 
   3rd_party
+
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}

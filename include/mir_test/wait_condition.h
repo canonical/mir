@@ -13,25 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#include "event_filter_chain.h"
+#ifndef MIR_TEST_WAIT_CONDITION_H_
+#define MIR_TEST_WAIT_CONDITION_H_
 
-namespace mi = mir::input;
+#include "mir/chrono/chrono.h"
+#include "mir/thread/all.h"
 
-mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
-    filters(values.begin(), values.end())
+namespace mir
 {
-}
-
-bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
+struct WaitCondition
 {
-    for (auto it = filters.begin(); it != filters.end(); it++)
+    void wait_for_seconds(int seconds)
     {
-        auto filter = *it;
-        if (filter->handles(event)) return true;
+        std::unique_lock<std::mutex> ul(guard);
+        condition.wait_for(ul, std::chrono::seconds(seconds));
     }
-    return false;
+
+    void wake_up_everyone()
+    {
+        std::unique_lock<std::mutex> ul(guard);
+        condition.notify_all();
+    }
+
+    std::mutex guard;
+    std::condition_variable condition;
+};
 }
- 
+
+#endif // MIR_TEST_WAIT_CONDITION_H_

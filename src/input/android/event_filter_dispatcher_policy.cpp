@@ -15,40 +15,25 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+#include "event_filter_dispatcher_policy.h"
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
+namespace mi = mir::input;
+namespace mia = mi::android;
 
-#include <memory>
-#include <vector>
-
-#include "mir/input/event_filter.h"
-
-namespace android
+mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
+  event_filter(event_filter)
 {
-class InputEvent;
 }
 
-namespace droidinput = android;
-
-namespace mir
+bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
-namespace input
-{
-
-class EventFilterChain : public EventFilter
-{
-public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
-
-    virtual bool handles(const droidinput::InputEvent *event);
-
-private:
-    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector const filters;
-};
-
-}
+    if (event_filter->handles(input_event))
+	return false; /* Do not pass the event on */
+    else
+	return true; /* Pass the event on */
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
+{
+    policy_flags = droidinput::POLICY_FLAG_FILTERED;
+}

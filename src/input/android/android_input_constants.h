@@ -16,39 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
-
-#include <memory>
-#include <vector>
-
-#include "mir/input/event_filter.h"
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#ifndef MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
+#define MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
 
 namespace mir
 {
 namespace input
 {
-
-class EventFilterChain : public EventFilter
+namespace android
 {
-public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
-
-    virtual bool handles(const droidinput::InputEvent *event);
-
-private:
-    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector const filters;
-};
-
+static const bool DispatchEnabled = true;
+static const bool DispatchDisabled = false;
+static const bool DispatchFrozen = true;
+static const bool DispatchUnfrozen = false;
+}
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif // MIR_INPUT_ANDROID_INPUT_CONSTANTS_H

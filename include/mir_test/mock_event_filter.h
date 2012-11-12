@@ -13,42 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
-
-#include <memory>
-#include <vector>
+#ifndef MIR_TEST_MOCK_EVENT_FILTER_H_
+#define MIR_TEST_MOCK_EVENT_FILTER_H_
 
 #include "mir/input/event_filter.h"
 
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace input
+struct MockEventFilter : public mir::input::EventFilter
 {
-
-class EventFilterChain : public EventFilter
-{
-public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
-
-    virtual bool handles(const droidinput::InputEvent *event);
-
-private:
-    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector const filters;
+    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
-
-}
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+MATCHER_P(IsKeyEventWithKey, key, "")
+{
+    if (arg->getType() != AINPUT_EVENT_TYPE_KEY)
+        return false;
+
+    auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
+    return key_event->getKeyCode() == key;
+}
+
+#endif // MIR_TEST_MOCK_EVENT_FILTER_H_
