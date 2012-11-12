@@ -25,10 +25,6 @@
 #include <memory>
 #include <vector>
 
-#include <EventHub.h>
-#include <InputReader.h>
-#include <InputDispatcher.h>
-
 namespace mi = mir::input;
 namespace mia = mi::android;
 

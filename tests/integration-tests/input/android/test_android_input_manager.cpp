@@ -26,8 +26,6 @@
 #include "mir_test/wait_condition.h"
 
 // Needed implicitly for InputManager destructor because of droidinput::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

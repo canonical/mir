@@ -24,6 +24,9 @@
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
+#include <InputDispatcher.h>
+#include <InputReader.h>
+
 #include <initializer_list>
 
 namespace android
