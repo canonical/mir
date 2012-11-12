@@ -88,5 +88,5 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(key);
 
-    wait_condition.wait_for_seconds(5);
+    wait_condition.wait_for_seconds(30);
 }

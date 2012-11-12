@@ -110,5 +110,5 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(key);
 
-    wait_condition.wait_for_seconds(2);
+    wait_condition.wait_for_seconds(30);
 }

@@ -31,6 +31,7 @@
 
 #include <map>
 #include <exception>
+#include <iostream>
 
 namespace
 {
