@@ -54,8 +54,8 @@ public:
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
 
 private:
-    std::shared_ptr<DRMFDHandler> drm_fd_handler;
-    std::shared_ptr<MirBufferPackage> creation_package;
+    const std::shared_ptr<DRMFDHandler> drm_fd_handler;
+    const std::shared_ptr<MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 };

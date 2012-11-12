@@ -64,7 +64,7 @@ struct GEMHandle
         drm_fd_handler->ioctl(DRM_IOCTL_GEM_CLOSE, &gem_close);
     }
 
-    std::shared_ptr<mclg::DRMFDHandler> drm_fd_handler;
+    std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
     uint32_t handle;
 };
 
@@ -117,9 +117,9 @@ struct GBMMemoryRegion : mcl::MemoryRegion
         drm_fd_handler->unmap(vaddr.get(), size_in_bytes);
     }
 
-    std::shared_ptr<mclg::DRMFDHandler> drm_fd_handler;
-    GEMHandle gem_handle;
-    size_t size_in_bytes;
+    std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
+    GEMHandle const gem_handle;
+    size_t const size_in_bytes;
 };
 
 }
