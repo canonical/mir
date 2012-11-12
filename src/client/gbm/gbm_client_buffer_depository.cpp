@@ -26,13 +26,15 @@
 namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
 
-mclg::GBMClientBufferDepository::GBMClientBufferDepository()
+mclg::GBMClientBufferDepository::GBMClientBufferDepository(
+        std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
+    : drm_fd_handler{drm_fd_handler}
 {
 }
 
 void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage>&& package, int, geometry::Size size, geometry::PixelFormat pf)
 {
-    buffer = std::make_shared<mclg::GBMClientBuffer>(std::move(package), size, pf);
+    buffer = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
 }
 
 std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_buffer(int)
