@@ -36,6 +36,7 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
+  mirinputandroid
   mirprocess
   mirsurfaces
   mirclient
@@ -44,6 +45,8 @@ target_link_libraries(
 
   test-utils
   3rd_party
+  
+  android-input
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

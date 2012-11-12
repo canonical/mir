@@ -26,3 +26,9 @@ add_library(
   
   ${INPUT_ANDROID_SOURCES}
 )
+
+target_link_libraries(
+  mirinputandroid
+  android-input
+)
+

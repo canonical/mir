@@ -61,8 +61,8 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirgraphics
-  mirinput
   mirinputandroid
+  mirinput
   mirprocess
   mirsurfaces
   mirplatformgraphics
