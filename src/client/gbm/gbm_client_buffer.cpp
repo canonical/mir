@@ -19,6 +19,7 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/gbm/gbm_client_buffer.h"
 #include "mir_client/gbm/drm_fd_handler.h"
+#include "mir/exception.h"
 
 #include <stdexcept>
 
@@ -47,9 +48,10 @@ struct GEMHandle
         int ret = drm_fd_handler->ioctl(DRM_IOCTL_GEM_OPEN, &gem_open);
         if (ret)
         {
-            std::string msg("Failed to open GEM handle for DRM buffer:");
-            msg += strerror(errno);
-            throw std::runtime_error(msg);
+            std::string msg("Failed to open GEM handle for DRM buffer");
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error(msg)) << boost::errinfo_errno(errno));
         }
 
         handle = gem_open.handle;
@@ -92,17 +94,19 @@ struct GBMMemoryRegion : mcl::MemoryRegion
         int ret = drm_fd_handler->ioctl(DRM_IOCTL_MODE_MAP_DUMB, &map_dumb);
         if (ret)
         {
-            std::string msg("Failed to map dumb DRM buffer:");
-            msg += strerror(errno);
-            throw std::runtime_error(msg);
+            std::string msg("Failed to map dumb DRM buffer");
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error(msg)) << boost::errinfo_errno(errno));
         }
 
         void* map = drm_fd_handler->map(size_in_bytes, map_dumb.offset);
         if (map == MAP_FAILED)
         {
-            std::string msg("Failed to mmap DRM buffer:");
-            msg += strerror(errno);
-            throw std::runtime_error(msg);
+            std::string msg("Failed to mmap DRM buffer");
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error(msg)) << boost::errinfo_errno(errno));
         }
 
         vaddr = std::shared_ptr<char>(static_cast<char*>(map), NullDeleter());
