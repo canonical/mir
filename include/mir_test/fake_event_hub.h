@@ -76,7 +76,7 @@ public:
     virtual void monitor();
     
     void synthesize_builtin_keyboard_added();
-    void synthesize_key_event(int keycode=KEY_ENTER);
+    void synthesize_key_event(int keycode);
 
     // list of RawEvents available for consumption via getEvents
     std::list<droidinput::RawEvent> events_available;
