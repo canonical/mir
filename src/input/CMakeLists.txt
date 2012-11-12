@@ -33,5 +33,3 @@ add_library(
 target_link_libraries(
   mirinput
 )
-
-add_subdirectory(android)
