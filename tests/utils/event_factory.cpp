@@ -20,7 +20,9 @@
 namespace mis = mir::input::synthesis;
 
 mis::KeyParameters::KeyParameters() :
-    device_id(0)
+    device_id(0),
+    scancode(0),
+    action(mis::EventAction::Down)
 {
 }
 
@@ -36,7 +38,7 @@ mis::KeyParameters& mis::KeyParameters::of_scancode(int new_scancode)
     return *this;
 }
 
-mis::KeyParameters& mis::KeyParameters::with_action(mis::KeyEventAction new_action)
+mis::KeyParameters& mis::KeyParameters::with_action(mis::EventAction new_action)
 {
     action = new_action;
     return *this;
@@ -44,5 +46,35 @@ mis::KeyParameters& mis::KeyParameters::with_action(mis::KeyEventAction new_acti
 
 mis::KeyParameters mis::a_key_down_event()
 {
-    return mis::KeyParameters().with_action(mis::KeyEventAction::Down);
+    return mis::KeyParameters().with_action(mis::EventAction::Down);
+}
+
+mis::ButtonParameters::ButtonParameters() :
+    device_id(0),
+    button(0),
+    action(mis::EventAction::Down)
+{
+}
+
+mis::ButtonParameters& mis::ButtonParameters::from_device(int new_device_id)
+{
+    device_id = new_device_id;
+    return *this;
+}
+
+mis::ButtonParameters& mis::ButtonParameters::of_button(int new_button)
+{
+    button = new_button;
+    return *this;
+}
+
+mis::ButtonParameters& mis::ButtonParameters::with_action(mis::EventAction new_action)
+{
+    action = new_action;
+    return *this;
+}
+
+mis::ButtonParameters mis::a_button_down_event()
+{
+    return mis::ButtonParameters().with_action(mis::EventAction::Down);
 }

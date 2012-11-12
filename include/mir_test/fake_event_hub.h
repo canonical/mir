@@ -44,6 +44,9 @@ public:
     FakeEventHub();
     virtual ~FakeEventHub();
 
+    static const int BuiltInKeyboardID = droidinput::BUILT_IN_KEYBOARD_ID;
+    static const int BuiltInCursorID = droidinput::BUILT_IN_KEYBOARD_ID + 1;
+
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
 
     virtual droidinput::InputDeviceIdentifier getDeviceIdentifier(int32_t deviceId) const;
@@ -101,9 +104,12 @@ public:
     virtual void monitor();
     
     // Returns device id
-    int synthesize_builtin_keyboard_added();
+    void synthesize_builtin_keyboard_added();
+    void synthesize_builtin_cursor_added();
+    void synthesize_device_scan_complete();
 
     void synthesize_event(const synthesis::KeyParameters &parameters);
+    void synthesize_event(const synthesis::ButtonParameters &parameters);
 
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;

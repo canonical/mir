@@ -86,6 +86,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
+    event_hub->synthesize_device_scan_complete();
+
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
 
@@ -100,12 +102,14 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         event_filter,
-        handles(AButtonDownEvent()))
+        handles(_))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_cursor_added();
-    event_hub->synthesize_event(mis::a_button_down_event());
+    event_hub->synthesize_device_scan_complete();
+
+    event_hub->synthesize_event(mis::a_button_down_event().from_device(mia::FakeEventHub::BuiltInCursorID).of_button(BTN_LEFT));
 
     wait_condition.wait_for_seconds(30);
 }

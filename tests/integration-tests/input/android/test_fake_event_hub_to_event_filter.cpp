@@ -108,6 +108,8 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 	.WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
+    event_hub->synthesize_device_scan_complete();
+    
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
 

@@ -29,24 +29,41 @@ enum class EventType
 {
     Key
 };
-enum class KeyEventAction
+enum class EventAction
 {
     Down, Up
 };
-class KeyParameters
+
+class KeyParameters 
 {
 public:    
     KeyParameters();
 
-    KeyParameters& from_device(int device_id);
+    KeyParameters& from_device(int devipce_id);
     KeyParameters& of_scancode(int scancode);
-    KeyParameters& with_action(KeyEventAction action);
+    KeyParameters& with_action(EventAction action);
 
     int device_id;
     int scancode;
-    KeyEventAction action;
+    EventAction action;
 };
 KeyParameters a_key_down_event();
+
+class ButtonParameters
+{
+public: 
+    ButtonParameters();
+    ButtonParameters& from_device(int device_id);
+    ButtonParameters& of_button(int scancode);
+    ButtonParameters& with_action(EventAction action);
+
+    int device_id;
+    int button;
+    EventAction action;
+};
+ButtonParameters a_button_down_event();
+
+
 }   
 }
 }
