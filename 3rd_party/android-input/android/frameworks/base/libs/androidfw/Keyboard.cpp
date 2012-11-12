@@ -117,10 +117,17 @@ status_t KeyMap::loadGenericMaps()
     keyLayoutFile.setTo("Generic.kl");
     keyCharacterMapFile.setTo("Generic.kcm");
     
-    status = KeyCharacterMap::loadContents(String8("Generic.kcm"), android::GenericKeyMap::keymap_contents, KeyCharacterMap::FORMAT_BASE, &keyCharacterMap);
+    status = KeyCharacterMap::loadContents(
+        String8("Generic.kcm"), 
+        GenericKeyMap::keymap_contents(), 
+        KeyCharacterMap::FORMAT_BASE, 
+        &keyCharacterMap);
     if (status) return status;
 
-    status = KeyLayoutMap::load(String8("Generic.kl"), android::GenericKeyMap::key_layout_contents, &keyLayoutMap);
+    status = KeyLayoutMap::load(
+        String8("Generic.kl"), 
+        GenericKeyMap::key_layout_contents(), 
+        &keyLayoutMap);
     if (status) return status;
 }
 // </mir modifications>
