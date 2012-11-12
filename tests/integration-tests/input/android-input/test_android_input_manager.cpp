@@ -52,18 +52,6 @@ struct MockEventFilter : public mi::EventFilter
     MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
 
-struct KeycodeMatchingEventFilter : public mi::EventFilter
-{
-    KeycodeMatchingEventFilter(int keycode) : keycode(keycode) {}
-    virtual ~KeycodeMatchingEventFilter() {}
-    bool handles(const droidinput::InputEvent *event) 
-    {
-	EXPECT_EQ(static_cast<const droidinput::KeyEvent*>(event)->getKeyCode(), keycode);
-	return true;
-    }
-    int keycode;
-    };
-
 }
 
 TEST(AndroidInputManagerAndEventFilterDispatcherPolicy, manager_dispatches_to_filter)
