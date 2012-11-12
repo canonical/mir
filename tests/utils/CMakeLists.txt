@@ -28,7 +28,6 @@ set(
   testing_process_manager.cpp
   display_server_test_fixture.cpp
   test_protobuf_client.cpp
-  fake_event_hub.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -37,7 +36,15 @@ if (MIR_PLATFORM STREQUAL "android")
 
     android_graphics.cpp
     ${TEST_UTILS_SRCS} 
-)
+    )
+else()
+  set(
+    TEST_UTILS_SRCS
+
+    fake_event_hub.cpp
+    ${TEST_UTILS_SRCS} 
+    )
+  
 endif()
 
 add_library(
@@ -62,8 +69,6 @@ target_link_libraries(
   test-utils
   3rd_party
   
-  android-input
-
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

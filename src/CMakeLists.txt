@@ -62,14 +62,11 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirinputandroid
   mirprocess
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
   
-  android-input
- 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
