@@ -91,25 +91,23 @@ set_target_properties(
   SOVERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
 )
 
-message("KEVIN ${ANDROID_SO_CRTBEGIN}")
 target_link_libraries(
   mirclient
 
-  mirprotobuf
-  zup
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_SO_LIBRARIES}
-  ${ANDROID_SO_GCC}
-  ${ANDROID_SO_CRTEND}
+  ${PROTOBUF_LIBRARIES}
+
+  mirprotobuf
+
+  ${ANDROID_STDLIB}
 )
 
-#install(
-#  TARGETS mirclient
-#  LIBRARY DESTINATION lib)
+install(
+  TARGETS mirclient
+  LIBRARY DESTINATION lib)
 
 
 add_executable(
