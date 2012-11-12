@@ -92,3 +92,21 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     wait_condition.wait_for_seconds(30);
 }
 
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_events_to_filter)
+{
+    using namespace ::testing;
+
+    WaitCondition wait_condition;
+
+    EXPECT_CALL(
+        event_filter,
+        handles(AButtonDownEvent()))
+            .Times(1)
+            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+
+    event_hub->synthesize_builtin_cursor_added();
+    event_hub->synthesize_event(mis::a_button_down_event());
+
+    wait_condition.wait_for_seconds(30);
+}
+
