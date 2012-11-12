@@ -40,7 +40,7 @@ public:
     void destroy_egl_window(EGLNativeWindowType window);
 
 private:
-    std::shared_ptr<DRMFDHandler> drm_fd_handler;
+    std::shared_ptr<DRMFDHandler> const drm_fd_handler;
 };
 
 }
