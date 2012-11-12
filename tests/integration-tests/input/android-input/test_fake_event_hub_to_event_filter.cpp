@@ -69,7 +69,7 @@ TEST(InputDispatcherAndEventFilterDispatcherPolicy, fake_event_hub_dispatches_to
 
     // TODO: This timeout is very long, but threads are very slow in valgrind. 
     // Timeout will be improved in followup branch with semaphore/wait condition approach.
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     reader_thread->requestExitAndWait();
     dispatcher_thread->requestExitAndWait();
