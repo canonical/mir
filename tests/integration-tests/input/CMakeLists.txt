@@ -14,7 +14,9 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-add_subdirectory(android-input)
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android)
+endif()
 
 set(
   INTEGRATION_TESTS_SRCS

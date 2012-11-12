@@ -129,6 +129,8 @@ void mia::FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
 
 size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
 {
+    std::lock_guard<std::mutex> lg(guard);
+    
     (void) timeoutMillis;
     size_t num_events_obtained = 0;
     
@@ -255,6 +257,8 @@ void mia::FakeEventHub::monitor()
 
 void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
+    std::lock_guard<std::mutex> lg(guard);
+    
     RawEvent event;
     event.when = 0;
     event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
@@ -263,6 +267,7 @@ void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 
     event.when = 0;
     event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
+    
     events_available.push_back(event);
 }
 
@@ -274,6 +279,8 @@ void mia::FakeEventHub::synthesize_key_event(int keycode)
     event.code = keycode;
     event.value = 1;
     event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
+    
+    std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
 }
 

@@ -1,3 +1,26 @@
+/*
+ * Copyright © 2012 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Robert Carr <robert.carr@canonical.com
+ */
+
+#ifndef MIR_TEST_FAKE_EVENT_HUB_H_
+#define MIR_TEST_FAKE_EVENT_HUB_H_
+
+#include "mir/thread/all.h"
+
 // from android-input
 #include <EventHub.h>
 
@@ -77,9 +100,10 @@ public:
     virtual void monitor();
     
     void synthesize_builtin_keyboard_added();
-    void synthesize_key_event(int keycode=KEY_ENTER);
+    void synthesize_key_event(int keycode);
 
     // list of RawEvents available for consumption via getEvents
+    std::mutex guard;
     std::list<droidinput::RawEvent> events_available;
 
     typedef struct FakeDevice
@@ -97,3 +121,5 @@ public:
 }
 }
 } // namespace mir
+
+#endif // MIR_TEST_FAKE_EVENT_HUB_H_
