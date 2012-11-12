@@ -24,6 +24,7 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/event_factory.h"
 
 // Needed implicitly for InputManager destructor because of android::sp :/
 #include <InputDispatcher.h>
@@ -34,6 +35,7 @@
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mis = mir::input::synthesis;
 
 using mir::MockEventFilter;
 using mir::WaitCondition;
@@ -75,18 +77,17 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
 {
     using namespace ::testing;
 
-    static const int key = KEY_ENTER;
-
     WaitCondition wait_condition;
 
     EXPECT_CALL(
         event_filter,
-        handles(IsKeyEventWithKey(key)))
+        handles(_))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(key);
+    event_hub->synthesize_event(mis::a_key_down_event()
+				.of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_seconds(30);
 }

@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_FAKE_EVENT_HUB_H_
 #define MIR_TEST_FAKE_EVENT_HUB_H_
 
+#include "mir_test/event_factory.h"
+
 #include "mir/thread/all.h"
 
 // from android-input
@@ -98,8 +100,10 @@ public:
 
     virtual void monitor();
     
-    void synthesize_builtin_keyboard_added();
-    void synthesize_key_event(int keycode);
+    // Returns device id
+    int synthesize_builtin_keyboard_added();
+
+    void synthesize_event(const synthesis::KeyParameters &parameters);
 
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;
@@ -113,7 +117,6 @@ public:
     } FakeDevice;
 
     std::map<int32_t, FakeDevice> device_from_id;
-
 };
 }
 }

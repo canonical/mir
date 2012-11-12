@@ -32,16 +32,7 @@ enum class KeyEventAction
 {
     Down, Up
 };
-class EventParameters
-{
-public:
-    virtual ~EventParameters();
-    virtual EventType get_event_type() = 0;
-protected:    
-    EventParameters() = default;
-    
-};
-class KeyParameters : public EventParameters
+class KeyParameters
 {
 public:    
     KeyParameters();
@@ -50,12 +41,11 @@ public:
     KeyParameters& of_scancode(int scancode);
     KeyParameters& with_action(KeyEventAction action);
 
-    EventType get_event_type();
-    
     int device_id;
     int scancode;
     KeyEventAction action;
 };
+KeyParameters a_key_down_event();
 }   
 }
 }

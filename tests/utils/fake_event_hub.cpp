@@ -14,6 +14,7 @@ using droidinput::VirtualKeyDefinition;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mis = mir::input::synthesis;
 
 mia::FakeEventHub::FakeEventHub()
 {
@@ -253,7 +254,7 @@ void mia::FakeEventHub::monitor()
 {
 }
 
-void mia::FakeEventHub::synthesize_builtin_keyboard_added()
+int mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
     std::lock_guard<std::mutex> lg(guard);
     
@@ -267,19 +268,27 @@ void mia::FakeEventHub::synthesize_builtin_keyboard_added()
     event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
     
     events_available.push_back(event);
+    
+    return droidinput::BUILT_IN_KEYBOARD_ID;
 }
 
-void mia::FakeEventHub::synthesize_key_event(int keycode)
+void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 {
     RawEvent event;
     event.when = 0;
     event.type = EV_KEY;
-    event.code = keycode;
-    event.value = 1;
-    event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
+    event.code = parameters.scancode;
+
+    if (parameters.device_id)
+	event.deviceId = parameters.device_id;
+    else
+	event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
+
+    if (parameters.action == mis::KeyEventAction::Down)
+	event.value = 1;
+    else
+	event.value = 0;
     
     std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
 }
-
-

@@ -42,7 +42,7 @@ mis::KeyParameters& mis::KeyParameters::with_action(mis::KeyEventAction new_acti
     return *this;
 }
 
-mis::EventType mis::KeyParameters::get_event_type()
+mis::KeyParameters mis::a_key_down_event()
 {
-    return mis::EventType::Key;
+    return mis::KeyParameters().with_action(mis::KeyEventAction::Down);
 }
