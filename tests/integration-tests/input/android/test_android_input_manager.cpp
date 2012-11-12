@@ -120,17 +120,24 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 
     WaitCondition wait_condition;
 
-    EXPECT_CALL(
-        event_filter,
-        handles(MotionEvent()))
-            .Times(1)
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    // We get absolute motion events since we have a pointer controller.
+    {
+	InSequence seq;
+
+	EXPECT_CALL(event_filter,
+		    handles(MotionEvent(100, 100)))
+	    .WillOnce(Return(false));
+	EXPECT_CALL(event_filter,
+		    handles(MotionEvent(200, 100)))
+	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    }
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
-
+    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
+    
     wait_condition.wait_for_seconds(30);
 }
 

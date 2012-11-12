@@ -56,11 +56,12 @@ MATCHER(ButtonDownEvent, "")
 	return false;
     return motion_event->getAction() == AKEY_EVENT_ACTION_DOWN;
 }
-MATCHER(MotionEvent, "")
+MATCHER_P2(MotionEvent, dx, dy, "")
 {
    if (arg->getType() != AINPUT_EVENT_TYPE_MOTION)
 	return false;
-   return true;
+   auto motion_ev = static_cast<const droidinput::MotionEvent *>(arg);
+   return (motion_ev->getX(0) == dx) && (motion_ev->getY(0) == dy);
 }
 
 #endif // MIR_TEST_MOCK_EVENT_FILTER_H_
