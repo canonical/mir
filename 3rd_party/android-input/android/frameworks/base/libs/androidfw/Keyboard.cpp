@@ -27,7 +27,7 @@
 #include <androidfw/InputDevice.h>
 
 // <mir changes>
-#include <androidfw/generic-keydata.h>
+#include <androidfw/GenericKeyMap.h>
 // </mir changes>
 
 #include <utils/Errors.h>
@@ -109,7 +109,7 @@ bool KeyMap::probeKeyMap(const InputDeviceIdentifier& deviceIdentifier,
     return isComplete();
 }
 
-// <mir modifications>
+// <mir changes>
 status_t KeyMap::loadGenericMaps()
 {
     status_t status = 0;
@@ -130,7 +130,7 @@ status_t KeyMap::loadGenericMaps()
         &keyLayoutMap);
     if (status) return status;
 }
-// </mir modifications>
+// </mir changes>
 
 status_t KeyMap::loadKeyLayout(const InputDeviceIdentifier& deviceIdentifier,
         const String8& name) {

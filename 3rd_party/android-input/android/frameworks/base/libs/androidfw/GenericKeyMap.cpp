@@ -12,27 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Generic key layout file for full alphabetic US English PC style external keyboards.
-//
-// This file is intentionally very generic and is intended to support a broad rang of keyboards.
-// Do not edit the generic key layout to support a specific keyboard; instead, create
-// a new key layout file with the required keyboard configuration.
-//
-// Taken from android source tree Generic.kl and Generic.kcm
 
-#ifndef GENERIC_KEY_DATA_H_
-#define GENERIC_KEY_DATA_H_
+#include <androidfw/GenericKeyMap.h>
 
-namespace android
-{
-struct GenericKeyMap
-{
-    static const char* key_layout_contents();
-
-    static const char* keymap_contents();
-};
-
-const char* GenericKeyMap::key_layout_contents()
+const char* android::GenericKeyMap::key_layout_contents()
 {
     static const char* result = 
             "key 1     ESCAPE\n"                \
@@ -437,7 +420,7 @@ const char* GenericKeyMap::key_layout_contents()
     return result;
 }
 
-const char* GenericKeyMap::keymap_contents()
+const char* android::GenericKeyMap::keymap_contents()
 {
     static const char* result = 
             "type FULL\n"                       \
@@ -1024,6 +1007,3 @@ const char* GenericKeyMap::keymap_contents()
             "}";
     return result;
 }
-}
-
-#endif // GENERIC_KEY_DATA_H_
