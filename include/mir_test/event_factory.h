@@ -26,7 +26,11 @@ namespace synthesis
 {
 enum class EventType
 {
-    RawKey
+    Key
+};
+enum class KeyEventAction
+{
+    Down, Up
 };
 class EventParameters
 {
@@ -37,14 +41,20 @@ protected:
     EventParameters() = default;
     
 };
-class RawKeyParameters : public EventParameters
+class KeyParameters : public EventParameters
 {
 public:    
-    RawKeyParameters();
-    RawKeyParameters& from_device(int device_id);
+    KeyParameters();
+
+    KeyParameters& from_device(int device_id);
+    KeyParameters& of_scancode(int scancode);
+    KeyParameters& with_action(KeyEventAction action);
+
     EventType get_event_type();
     
     int device_id;
+    int scancode;
+    KeyEventAction action;
 };
 }   
 }

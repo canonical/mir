@@ -19,18 +19,30 @@
 
 namespace mis = mir::input::synthesis;
 
-mis::RawKeyParameters::RawKeyParameters() :
+mis::KeyParameters::KeyParameters() :
     device_id(0)
 {
 }
 
-mis::RawKeyParameters& mis::RawKeyParameters::from_device(int new_device_id)
+mis::KeyParameters& mis::KeyParameters::from_device(int new_device_id)
 {
     device_id = new_device_id;
     return *this;
 }
 
-mis::EventType mis::RawKeyParameters::get_event_type()
+mis::KeyParameters& mis::KeyParameters::of_scancode(int new_scancode)
 {
-    return mis::EventType::RawKey;
+    scancode = new_scancode;
+    return *this;
+}
+
+mis::KeyParameters& mis::KeyParameters::with_action(mis::KeyEventAction new_action)
+{
+    action = new_action;
+    return *this;
+}
+
+mis::EventType mis::KeyParameters::get_event_type()
+{
+    return mis::EventType::Key;
 }
