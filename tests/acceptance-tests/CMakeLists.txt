@@ -38,7 +38,6 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
-  mirclient
   mirplatformgraphics
   mirprotobuf
 
@@ -51,6 +50,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(acceptance-tests)

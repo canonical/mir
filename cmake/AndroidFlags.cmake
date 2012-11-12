@@ -77,18 +77,27 @@ function(get_android_flags)
   set(ANDROID_SO_CRTEND "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_so.o")
   set(ANDROID_SO_GCC "${MIR_NDK_PATH}/lib/gcc/${EABI}/4.6.x-google/libgcc.a")
 
+  set(ANDROID_CRTBEGIN_DYNAMIC "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_dynamic.o")
+  set(ANDROID_CRTEND_ANDROID "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_android.o")
+
   #linker flags
   set(ANDROID_LINKER_FLAGS "-Wl,-rpath,${MIR_NDK_PATH}/sysroot/usr/lib:${MIR_NDK_PATH}/${EABI}/lib" PARENT_SCOPE)
 
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-T,${ANDROID_LINKER_SCRIPT}")
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lc")
+
+
+ # set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_CRTBEGIN_DYNAMIC}" PARENT_SCOPE)
+
+#  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS}" PARENT_SCOPE)
+
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -nostdlib")  
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--gc-sections")
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-shared,-Bsymbolic")
+#  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-shared,-Bsymbolic")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-z,noexecstack")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--icf=safe")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--fix-cortex-a8")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--no-undefined")
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -nostdlib")  
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lc")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_CRTBEGIN_SO}" PARENT_SCOPE)
 
   set(ANDROID_STDLIB
@@ -99,6 +108,16 @@ function(get_android_flags)
         supc++;
         ${ANDROID_SO_GCC};
         ${ANDROID_SO_CRTEND};
+        PARENT_SCOPE)
+
+  set(ANDROID_STDLIB2
+        protobuf;
+        m;
+        c;
+        stdc++;
+        supc++;
+        ${ANDROID_SO_GCC};
+        ${ANDROID_SO_CRTEND_ANDROID};
         PARENT_SCOPE)
 
 endfunction(get_android_flags)

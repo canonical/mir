@@ -42,7 +42,6 @@ target_link_libraries(
   mirsurfaces
   mirprocess
   miroptions
-  mirclient
   mirprotobuf
   test-utils
 
@@ -55,7 +54,9 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+ 
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)
