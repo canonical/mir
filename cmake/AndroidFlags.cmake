@@ -64,8 +64,7 @@ function(get_android_flags)
     -DANDROID;
     -DGTEST_OS_LINUX_ANDROID;
     -DGTEST_HAS_CLONE=0;
-    -DGTEST_HAS_POSIX_RE=0;
-    -DGTEST_HAS_PTHREAD=0
+    -DGTEST_HAS_POSIX_RE=0
   
     PARENT_SCOPE
     )
@@ -73,10 +72,9 @@ function(get_android_flags)
   set(EABI "arm-linux-androideabi")
   set(ANDROID_LINKER_SCRIPT "${MIR_NDK_PATH}/${EABI}/lib/ldscripts/armelf_linux_eabi.xsc")
   #crtbegin_so.o, crtend_so.o, and libgcc.a for -nostdlib flag 
-  set(ANDROID_CRTBEGIN_SO "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_so.o")
+  set(ANDROID_SO_CRTBEGIN "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_so.o")
   set(ANDROID_SO_CRTEND "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_so.o")
   set(ANDROID_SO_GCC "${MIR_NDK_PATH}/lib/gcc/${EABI}/4.6.x-google/libgcc.a")
-
   set(ANDROID_CRTBEGIN_DYNAMIC "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_dynamic.o")
   set(ANDROID_CRTEND_ANDROID "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_android.o")
 
@@ -92,7 +90,7 @@ function(get_android_flags)
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--icf=safe")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--fix-cortex-a8")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--no-undefined")
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_CRTBEGIN_SO}" PARENT_SCOPE)
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_SO_CRTBEGIN}" PARENT_SCOPE)
 
   #ANDROID_STDLIB must be set as the last target_link_libraries variable for every shared object
   #built for android. We set -nostdlib for the shared objects, so we have to link in the 'default'

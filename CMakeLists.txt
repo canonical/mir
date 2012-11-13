@@ -105,6 +105,7 @@ if (MIR_PLATFORM STREQUAL "android")
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
+  set(gtest_disable_pthreads ON)
 
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
