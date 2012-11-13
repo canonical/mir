@@ -61,3 +61,16 @@ TEST(AndroidPointerController, move_updates_position)
     EXPECT_EQ(out_y, 150);
 }
 
+TEST(AndroidPointerController, returns_default_bounds)
+{
+    using namespace ::testing;
+    mia::PointerController controller;
+    
+    int out_min_x, out_min_y, out_max_x, out_max_y;
+    controller.getBounds(&out_min_x, &out_min_y, &out_max_x, &out_max_y);
+    EXPECT_EQ(out_min_x, 0);
+    EXPECT_EQ(out_min_y, 0);
+    EXPECT_EQ(out_max_x, 2048);
+    EXPECT_EQ(out_max_y, 2048);
+}
+

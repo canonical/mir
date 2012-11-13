@@ -32,7 +32,7 @@ namespace android
 class DummyPointerController : public droidinput::PointerControllerInterface
 {
 public:
-    explicit DummyPointerController() {};
+    explicit DummyPointerController() = default;
     virtual ~DummyPointerController() = default;
 
     // Naming of these methods is dictated by android input stack.
@@ -42,8 +42,8 @@ public:
         (void)out_min_y;
 	(void)out_max_x;
 	(void)out_max_y;
-	// The bounds could be fetched
-	return true;
+	// The bounds could not be fetched
+	return false;
     }
     virtual void move(float delta_x, float delta_y)
     {
