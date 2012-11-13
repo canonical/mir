@@ -20,22 +20,27 @@
 
 #include "mir_client/mir_client_library.h"
 
+#include "mir/compositor/buffer_ipc_package.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
-#include "mir/compositor/buffer_ipc_package.h"
+#include "mir/thread/all.h"
 
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_server.h"
 #include "mir_test/empty_deleter.h"
 
-#include <GLES2/gl2.h>
-#include <hardware/gralloc.h>
 #include <gmock/gmock.h>
 
-#include "mir/thread/all.h"
- 
+#include <GLES2/gl2.h>
+#include <hardware/gralloc.h>
+
+#include <fstream>
+
+#include <dirent.h>
+#include <fnmatch.h>
+
 namespace mp=mir::process;
 namespace mt=mir::test;
 namespace mc=mir::compositor;
@@ -47,13 +52,41 @@ namespace
 static int test_width  = 300;
 static int test_height = 200;
 
-/* used by both client/server for patterns */ 
+static const char* proc_dir = "/proc";
+static const char* surface_flinger_executable_name = "surfaceflinger";
+int surface_flinger_filter(const struct dirent* d)
+{
+    if (fnmatch("[1-9]*", d->d_name, 0))
+        return 0;
+
+    char path[256];
+    snprintf(path, sizeof(path), "%s/%s/cmdline", proc_dir, d->d_name);
+
+    std::ifstream in(path);
+    std::string line;
+
+    while(std::getline(in, line))
+    {
+        if (line.find(surface_flinger_executable_name) != std::string::npos)
+            return 1;
+    }
+
+    return 0;
+}
+
+bool is_surface_flinger_running()
+{
+    struct dirent **namelist;
+    return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
+}
+
+/* used by both client/server for patterns */
 bool check_solid_pattern(MirGraphicsRegion *region, uint32_t value)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
 
-    int *pixel = (int*) region->vaddr; 
+    int *pixel = (int*) region->vaddr;
     int i,j;
     for(i=0; i< region->width; i++)
     {
@@ -73,7 +106,7 @@ bool render_solid_pattern(MirGraphicsRegion *region, uint32_t value)
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
 
-    int *pixel = (int*) region->vaddr; 
+    int *pixel = (int*) region->vaddr;
     int i,j;
     for(i=0; i< region->width; i++)
     {
@@ -219,7 +252,7 @@ struct TestClient
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
-        
+
         int major, minor, n;
         EGLDisplay disp;
         EGLContext context;
@@ -233,10 +266,10 @@ struct TestClient
         EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
         EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
-       
+
         disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         eglInitialize(disp, &major, &minor);
-        
+
         eglChooseConfig(disp, attribs, &egl_config, 1, &n);
         egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
         context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -280,7 +313,7 @@ struct TestClient
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
-        
+
         int major, minor, n;
         EGLDisplay disp;
         EGLContext context;
@@ -294,10 +327,10 @@ struct TestClient
         EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
         EGLNativeWindowType native_window = (EGLNativeWindowType)mir_surface_get_egl_native_window(surface);
-       
+
         disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         eglInitialize(disp, &major, &minor);
-        
+
         eglChooseConfig(disp, attribs, &egl_config, 1, &n);
         egl_surface = eglCreateWindowSurface(disp, egl_config, native_window, NULL);
         context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
@@ -440,13 +473,13 @@ bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
-    grmod->lock(grmod, handle, usage, 0, 0, test_width, test_height, (void**) &vaddr); 
+    grmod->lock(grmod, handle, usage, 0, 0, test_width, test_height, (void**) &vaddr);
 
     MirGraphicsRegion region;
     region.vaddr = (char*) vaddr;
     region.width = test_width;
     region.height = test_height;
-    region.pixel_format = mir_pixel_format_rgba_8888; 
+    region.pixel_format = mir_pixel_format_rgba_8888;
 
     auto valid = check_solid_pattern(&region, check_value);
     grmod->unlock(grmod, handle);
@@ -476,12 +509,12 @@ struct TestClientIPCRender : public testing::Test
                             mt::TestClient::render_double,
                             mt::TestClient::exit_function);
 
-        render_accelerated_process 
+        render_accelerated_process
              = mp::fork_and_run_in_a_different_process(
                             mt::TestClient::render_accelerated,
                             mt::TestClient::exit_function);
 
-        render_accelerated_process_double 
+        render_accelerated_process_double
              = mp::fork_and_run_in_a_different_process(
                             mt::TestClient::render_accelerated_double,
                             mt::TestClient::exit_function);
@@ -527,7 +560,7 @@ struct TestClientIPCRender : public testing::Test
 
     const hw_module_t    *hw_module;
     geom::Size size;
-    geom::PixelFormat pf; 
+    geom::PixelFormat pf;
     std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
@@ -546,86 +579,116 @@ std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer
 std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_double;
 
-TEST_F(TestClientIPCRender, DISABLED_test_render_single)
+TEST_F(TestClientIPCRender, test_render_single)
 {
-    /* activate client */
-    render_single_client_process->cont();
+    if (!is_surface_flinger_running())
+    {
+        /* activate client */
+        render_single_client_process->cont();
 
-    /* wait for client to finish */
-    EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
+        /* wait for client to finish */
+        EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
+        /* check content */
+        EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
+    } else
+    {
+        ADD_FAILURE() << "SurfaceFlinger is running and we cannot compete with it for exclusive access to the framebuffer.";
+    }
 }
 
-TEST_F(TestClientIPCRender, DISABLED_test_render_double)
+TEST_F(TestClientIPCRender, test_render_double)
 {
-    /* activate client */
-    render_double_client_process->cont();
+    if (!is_surface_flinger_running())
+    {
+        /* activate client */
+        render_double_client_process->cont();
 
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
+        /* wait for next buffer */
+        mock_server->wait_on_next_buffer();
+        EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
 
-    mock_server->set_package(second_package, 15);
+        mock_server->set_package(second_package, 15);
 
-    mock_server->allow_next_continue();
-    /* wait for client to finish */
-    EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
+        mock_server->allow_next_continue();
+        /* wait for client to finish */
+        EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0x78787878));
+        /* check content */
+        EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0x78787878));
+    } else
+    {
+        ADD_FAILURE() << "SurfaceFlinger is running and we cannot compete with it for exclusive access to the framebuffer.";
+    }
 }
 
-TEST_F(TestClientIPCRender, DISABLED_test_second_render_with_same_buffer)
+TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 {
-    /* activate client */
-    second_render_with_same_buffer_client_process->cont();
+    if (!is_surface_flinger_running())
+    {
+        /* activate client */
+        second_render_with_same_buffer_client_process->cont();
 
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
+        /* wait for next buffer */
+        mock_server->wait_on_next_buffer();
+        mock_server->allow_next_continue();
 
-    /* wait for client to finish */
-    EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
+        /* wait for client to finish */
+        EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x78787878));
+        /* check content */
+        EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x78787878));
+    } else
+    {
+        ADD_FAILURE() << "SurfaceFlinger is running and we cannot compete with it for exclusive access to the framebuffer.";
+    }
 }
 
-TEST_F(TestClientIPCRender, DISABLED_test_accelerated_render)
+TEST_F(TestClientIPCRender, test_accelerated_render)
 {
-    /* activate client */
-    render_accelerated_process->cont();
+    if (!is_surface_flinger_running())
+    {
+        /* activate client */
+        render_accelerated_process->cont();
 
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
+        /* wait for next buffer */
+        mock_server->wait_on_next_buffer();
+        mock_server->allow_next_continue();
 
-    /* wait for client to finish */
-    EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
+        /* wait for client to finish */
+        EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
+        /* check content */
+        EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
+    } else
+    {
+        ADD_FAILURE() << "SurfaceFlinger is running and we cannot compete with it for exclusive access to the framebuffer.";
+    }
 }
 
-TEST_F(TestClientIPCRender, DISABLED_test_accelerated_render_double)
+TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
-    /* activate client */
-    render_accelerated_process_double->cont();
+    if (!is_surface_flinger_running())
+    {
+        /* activate client */
+        render_accelerated_process_double->cont();
 
-    /* wait for next buffer */
-    mock_server->wait_on_next_buffer();
-    mock_server->set_package(second_package, 15);
-    mock_server->allow_next_continue();
+        /* wait for next buffer */
+        mock_server->wait_on_next_buffer();
+        mock_server->set_package(second_package, 15);
+        mock_server->allow_next_continue();
 
-    mock_server->wait_on_next_buffer();
-    mock_server->allow_next_continue();
+        mock_server->wait_on_next_buffer();
+        mock_server->allow_next_continue();
 
-    /* wait for client to finish */
-    EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
+        /* wait for client to finish */
+        EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0xFF00FF00));
+        /* check content */
+        EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
+        EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0xFF00FF00));
+    } else
+    {
+        ADD_FAILURE() << "SurfaceFlinger is running and we cannot compete with it for exclusive access to the framebuffer.";
+    }
 }
