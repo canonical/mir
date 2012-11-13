@@ -37,6 +37,9 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics; 
 namespace mt=mir::test;
 
+namespace
+{
+
 class AndroidBufferIntegration : public ::testing::Test
 {
 protected:
@@ -51,6 +54,9 @@ protected:
 
     virtual void SetUp()
     {
+        ASSERT_TRUE(platform != NULL);
+        ASSERT_TRUE(display != NULL);
+        
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -76,6 +82,8 @@ protected:
 
 std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
 std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform; 
+
+}
 
 TEST_F(AndroidBufferIntegration, post_does_not_throw)
 {
