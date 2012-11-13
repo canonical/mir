@@ -34,7 +34,7 @@ class InputReaderPolicy : public DummyInputReaderPolicy
 {
 public:
     explicit InputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener);
-    virtual ~InputReaderPolicy() = default;
+    virtual ~InputReaderPolicy() {}
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
 private:
