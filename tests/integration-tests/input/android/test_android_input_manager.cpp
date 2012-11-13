@@ -91,7 +91,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
 
-    wait_condition.wait_for_seconds(30);
+    wait_condition.wait_for_at_most_seconds(60);
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_events_to_filter)
@@ -111,7 +111,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
-    wait_condition.wait_for_seconds(30);
+    wait_condition.wait_for_at_most_seconds(60);
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
@@ -138,6 +138,6 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
     
-    wait_condition.wait_for_seconds(30);
+    wait_condition.wait_for_at_most_seconds(60);
 }
 

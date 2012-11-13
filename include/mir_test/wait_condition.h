@@ -26,7 +26,7 @@ namespace mir
 {
 struct WaitCondition
 {
-    void wait_for_seconds(int seconds)
+    void wait_for_at_most_seconds(int seconds)
     {
         std::unique_lock<std::mutex> ul(guard);
         condition.wait_for(ul, std::chrono::seconds(seconds));
