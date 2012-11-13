@@ -26,10 +26,6 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
-// Needed implicitly for InputManager destructor because of android::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -65,6 +61,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     MockEventFilter event_filter;
     std::shared_ptr<mia::InputManager> input_manager;
 };
+
 }
 
 ACTION_P(ReturnFalseAndWakeUp, wait_condition)

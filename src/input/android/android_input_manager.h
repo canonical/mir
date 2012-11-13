@@ -23,11 +23,13 @@
 #include "mir/input/input_manager.h"
 #include "../event_filter_chain.h"
 
-#include <EventHub.h>
+#include <utils/StrongPointer.h>
+
 #include <initializer_list>
 
 namespace android
 {
+class EventHubInterface;
 class InputDispatcher;
 class InputDispatcherThread;
 class InputReader;
@@ -47,10 +49,10 @@ namespace android
 class InputManager : public mir::input::InputManager
 {
 public:
-    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
+    explicit InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
 			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters,
 			  std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
-    virtual ~InputManager() {}
+    virtual ~InputManager();
 
     virtual void start();
     virtual void stop();
@@ -67,7 +69,7 @@ private:
     // and reader_thread or they will free themselves on exit.
     droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
     droidinput::sp<droidinput::InputReaderThread> reader_thread;
-    
+
     std::shared_ptr<EventFilterChain> filter_chain;
 };
 

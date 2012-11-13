@@ -1,5 +1,7 @@
 #include "mir_test/fake_event_hub.h"
 
+#include <androidfw/Keyboard.h>
+
 using droidinput::AxisInfo;
 using droidinput::InputDeviceIdentifier;
 using droidinput::PropertyMap;
@@ -18,6 +20,7 @@ namespace mis = mir::input::synthesis;
 
 mia::FakeEventHub::FakeEventHub()
 {
+    keymap.loadGenericMaps();
 }
 
 mia::FakeEventHub::~FakeEventHub()
@@ -112,8 +115,7 @@ status_t mia::FakeEventHub::mapKey(int32_t deviceId, int32_t scanCode, int32_t u
 {
     (void)deviceId;
     (void)usageCode;
-    *outKeycode = scanCode;
-    *outFlags = 0;
+    keymap.keyLayoutMap->mapKey(scanCode, usageCode, outKeycode, outFlags);
     return droidinput::OK;
 }
 
@@ -362,5 +364,3 @@ void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters
     event.code = SYN_REPORT;
     events_available.push_back(event);
 }
-
-

@@ -101,6 +101,6 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
 
-    wait_condition.wait_for_seconds(30);
+    wait_condition.wait_for_at_most_seconds(30);
 }
 

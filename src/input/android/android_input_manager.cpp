@@ -22,17 +22,17 @@
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_reader_policy.h"
 
+#include <EventHub.h>
+#include <InputDispatcher.h>
+#include <InputReader.h>
+
 #include <memory>
 #include <vector>
-
-#include <EventHub.h>
-#include <InputReader.h>
-#include <InputDispatcher.h>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
+mia::InputManager::InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
 				std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters,
 				std::shared_ptr<mi::CursorListener> const& cursor_listener) :
   event_hub(event_hub),
@@ -44,9 +44,13 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
     reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
     reader_thread = new droidinput::InputReaderThread(reader);
     dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
-    
+
     dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
+}
+
+mia::InputManager::~InputManager()
+{
 }
 
 void mia::InputManager::stop()
@@ -60,4 +64,3 @@ void mia::InputManager::start()
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
 }
-
