@@ -29,6 +29,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_platform.h"
+#include "mir_client/client_connection.h"
 
 #include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
@@ -44,7 +45,7 @@ class ClientBufferDepository;
 
 struct SurfaceRelease;
 
-class MirConnection
+class MirConnection : public mir::client::ClientConnection
 {
 public:
     MirConnection();
