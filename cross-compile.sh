@@ -19,12 +19,14 @@ $cwd
 
 make 
 
+$MIR_ANDROID_SDK_DIR/platform-tools/adb push lib/libmirclient.so.0.0.1 /data/user
+
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/acceptance-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./acceptance-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./acceptance-tests'
 
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/integration-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./integration-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./integration-tests'
 
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/unit-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && ./unit-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./unit-tests'
 
