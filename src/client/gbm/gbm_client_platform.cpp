@@ -20,6 +20,7 @@
 #include "mir_client/gbm/gbm_client_platform.h"
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 #include "mir_client/gbm/drm_fd_handler.h"
+#include "mir_client/mir_connection.h"
 
 #include <xf86drm.h>
 #include <sys/mman.h>
@@ -61,12 +62,17 @@ private:
 }
 
 std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        std::shared_ptr<MirPlatformPackage> const& platform_package)
+        ClientConnection* connection)
 {
+    MirPlatformPackage platform_package;
+
+    memset(&platform_package, 0, sizeof(platform_package));
+    connection->populate(platform_package);
+
     int drm_fd = -1;
 
-    if (platform_package->fd_items > 0)
-        drm_fd = platform_package->fd[0];
+    if (platform_package.fd_items > 0)
+        drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
     return std::make_shared<mclg::GBMClientPlatform>(drm_fd_handler);

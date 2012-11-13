@@ -135,9 +135,12 @@ MirWaitHandle* MirConnection::release_surface(
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
-    auto platform_package = std::make_shared<MirPlatformPackage>();
-    populate(*platform_package);
-    platform = mcl::create_client_platform(platform_package);
+    /*
+     * We need to create the client platform after the connection has been
+     * established, to ensure that the client platform has access to all
+     * needed data (e.g. platform package).
+     */
+    platform = mcl::create_client_platform(this);
 
     callback(this, context);
     connect_wait_handle.result_received();

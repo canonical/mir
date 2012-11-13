@@ -17,15 +17,24 @@
  */
 
 #include "mir_client/client_platform.h"
-#include "mir_client/client_buffer_depository.h"
 #include "mir_client/mir_client_surface.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_client/client_connection.h"
 
-#include <memory>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
+
+struct MockClientConnection : public mcl::ClientConnection
+{
+    MockClientConnection()
+    {
+        using namespace testing;
+        EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
+    }
+
+    MOCK_METHOD1(populate, void(MirPlatformPackage&));
+};
 
 struct MockClientSurface : public mcl::ClientSurface
 {
@@ -36,16 +45,16 @@ struct MockClientSurface : public mcl::ClientSurface
 
 TEST(ClientPlatformTest, platform_creates )
 {
-    auto platform_package = std::make_shared<MirPlatformPackage>();
-    auto platform = mcl::create_client_platform(platform_package);
+    auto connection = std::make_shared<MockClientConnection>();
+    auto platform = mcl::create_client_platform(connection.get());
     auto depository = platform->create_platform_depository(); 
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_native_window )
 {
-    auto platform_package = std::make_shared<MirPlatformPackage>();
-    auto platform = mcl::create_client_platform(platform_package);
+    auto connection = std::make_shared<MockClientConnection>();
+    auto platform = mcl::create_client_platform(connection.get());
     auto mock_client_surface = std::make_shared<MockClientSurface>();
     auto native_window = platform->create_egl_window(mock_client_surface.get()); 
     EXPECT_NE( native_window, (EGLNativeWindowType) NULL);
