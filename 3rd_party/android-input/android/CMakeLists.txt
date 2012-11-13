@@ -23,6 +23,8 @@ add_library(
   frameworks/base/libs/androidfw/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp
   frameworks/base/services/input/PointerController.cpp
+  # Keyboard/keymap handling
+  frameworks/base/libs/androidfw/GenericKeyMap.cpp
   # The stuff that is used internally by the implementation above.
   # We're not directly interested in those:
   frameworks/base/libs/androidfw/Input.cpp

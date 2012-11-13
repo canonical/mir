@@ -47,6 +47,33 @@ KeyLayoutMap::KeyLayoutMap() {
 KeyLayoutMap::~KeyLayoutMap() {
 }
 
+status_t KeyLayoutMap::load(Tokenizer *tokenizer, sp<KeyLayoutMap>* outMap) {
+    status_t status = 0;
+    outMap->clear();
+
+    sp<KeyLayoutMap> map = new KeyLayoutMap();
+    if (!map.get()) {
+	ALOGE("Error allocating key layout map.");
+	status = NO_MEMORY;
+    } else {
+#if DEBUG_PARSER_PERFORMANCE
+	nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
+#endif
+	Parser parser(map.get(), tokenizer);
+	status = parser.parse();
+#if DEBUG_PARSER_PERFORMANCE
+	nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
+	ALOGD("Parsed key layout map file '%s' %d lines in %0.3fms.",
+	      tokenizer->getFilename().string(), tokenizer->getLineNumber(),
+	      elapsedTime / 1000000.0);
+#endif
+	if (!status) {
+	    *outMap = map;
+	}
+    }
+    return status;
+}
+
 status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
     outMap->clear();
 
@@ -55,26 +82,20 @@ status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
     if (status) {
         ALOGE("Error %d opening key layout map file %s.", status, filename.string());
     } else {
-        sp<KeyLayoutMap> map = new KeyLayoutMap();
-        if (!map.get()) {
-            ALOGE("Error allocating key layout map.");
-            status = NO_MEMORY;
-        } else {
-#if DEBUG_PARSER_PERFORMANCE
-            nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#endif
-            Parser parser(map.get(), tokenizer);
-            status = parser.parse();
-#if DEBUG_PARSER_PERFORMANCE
-            nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-            ALOGD("Parsed key layout map file '%s' %d lines in %0.3fms.",
-                    tokenizer->getFilename().string(), tokenizer->getLineNumber(),
-                    elapsedTime / 1000000.0);
-#endif
-            if (!status) {
-                *outMap = map;
-            }
-        }
+	status = load(tokenizer, outMap);
+        delete tokenizer;
+    }
+    return status;
+}
+status_t KeyLayoutMap::load(const String8& filename, const char* contents, sp<KeyLayoutMap>* outMap) {
+    outMap->clear();
+
+    Tokenizer* tokenizer;
+    status_t status = Tokenizer::fromContents(filename, contents, &tokenizer);
+    if (status) {
+        ALOGE("Error %d opening key layout map file %s.", status, filename.string());
+    } else {
+	status = load(tokenizer, outMap);
         delete tokenizer;
     }
     return status;
