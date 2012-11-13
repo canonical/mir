@@ -21,12 +21,17 @@ make
 
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push lib/libmirclient.so.0.0.1 /data/user
 
+exit_value=0
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/acceptance-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./acceptance-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./acceptance-tests' || exit_value=1
+$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/acceptance-tests.xml'
 
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/integration-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./integration-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./integration-tests' || exit_value=1
+$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/integration-tests.xml'
 
 $MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/unit-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./unit-tests'
+$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./unit-tests' || exit_value=1
+$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/unit-tests.xml'
 
+exit $exit_value
