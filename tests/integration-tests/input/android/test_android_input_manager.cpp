@@ -25,8 +25,6 @@
 #include "mir_test/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 
-// Needed implicitly for InputManager destructor because of droidinput::sp :/
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -76,7 +74,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
 
     static const int in_key = KEY_ENTER;
     static const int out_key = AKEYCODE_ENTER;
-    
+
     WaitCondition wait_condition;
 
     EXPECT_CALL(
@@ -94,18 +92,18 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_f
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, keys_are_mapped)
 {
     using namespace ::testing;
-    
+
     static const int in_key = KEY_RIGHT;
     static const int out_key = AKEYCODE_DPAD_RIGHT;
-      
+
     WaitCondition wait_condition;
 
     EXPECT_CALL(
-        event_filter, 
+        event_filter,
         handles(IsKeyEventWithKey(out_key)))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
-    
+
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_key_event(in_key);
 

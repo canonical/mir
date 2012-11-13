@@ -87,7 +87,6 @@ status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
     }
     return status;
 }
-
 status_t KeyLayoutMap::load(const String8& filename, const char* contents, sp<KeyLayoutMap>* outMap) {
     outMap->clear();
 
@@ -187,7 +186,6 @@ status_t KeyLayoutMap::Parser::parse() {
         ALOGD("Parsing %s: '%s'.", mTokenizer->getLocation().string(),
                 mTokenizer->peekRemainderOfLine().string());
 #endif
-
 
         mTokenizer->skipDelimiters(WHITESPACE);
 

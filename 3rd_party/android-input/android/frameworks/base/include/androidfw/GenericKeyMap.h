@@ -20,8 +20,8 @@
 // a new key layout file with the required keyboard configuration.
 // Taken from android source tree Generic.kl and Generic.kcm
 
-#ifndef GENERIC_KEY_DATA_H_
-#define GENERIC_KEY_DATA_H_
+#ifndef GENERIC_KEY_MAP_H_
+#define GENERIC_KEY_MAP_H_
 
 namespace android
 {
@@ -33,4 +33,4 @@ struct GenericKeyMap
 };
 }
 
-#endif // GENERIC_KEY_DATA_H_
+#endif // GENERIC_KEY_MAP_H_
