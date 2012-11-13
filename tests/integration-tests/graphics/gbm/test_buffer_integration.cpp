@@ -24,7 +24,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/testing_server_configuration.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>

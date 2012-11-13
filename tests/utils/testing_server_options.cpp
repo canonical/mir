@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/testing_server_configuration.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"

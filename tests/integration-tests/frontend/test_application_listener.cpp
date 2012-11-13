@@ -19,7 +19,7 @@
 #include "mir_client/mir_client_library.h"
 #include "mir/frontend/application_listener.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/test_protobuf_client.h"
 
 #include <gmock/gmock.h>

@@ -17,7 +17,7 @@
  *              Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir/chrono/chrono.h"
 
 #include <gmock/gmock.h>
