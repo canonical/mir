@@ -20,7 +20,7 @@
 #include "android_input_manager.h"
 #include "android_input_constants.h"
 #include "event_filter_dispatcher_policy.h"
-#include "dummy_input_reader_policy.h"
+#include "android_input_reader_policy.h"
 
 #include <memory>
 #include <vector>
@@ -39,7 +39,7 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
   filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::DummyInputReaderPolicy();
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::AndroidInputReaderPolicy();
     dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
     reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
     reader_thread = new droidinput::InputReaderThread(reader);

@@ -17,6 +17,7 @@
 list(
   APPEND INPUT_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_reader_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/event_filter_dispatcher_policy.cpp
 )
 
