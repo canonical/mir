@@ -33,12 +33,15 @@ namespace client
 namespace gbm
 {
 
+class DRMFDHandler;
+
 class GBMClientBuffer : public ClientBuffer
 {
 public:
-    GBMClientBuffer(std::shared_ptr<MirBufferPackage> && ,
+    GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+                    std::shared_ptr<MirBufferPackage>&& buffer_package,
                     geometry::Size size,
-                    geometry::PixelFormat pf );
+                    geometry::PixelFormat pf);
     
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
@@ -51,7 +54,8 @@ public:
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
 
 private:
-    std::shared_ptr<MirBufferPackage> creation_package;
+    const std::shared_ptr<DRMFDHandler> drm_fd_handler;
+    const std::shared_ptr<MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 };

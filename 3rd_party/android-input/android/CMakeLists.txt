@@ -5,8 +5,7 @@ include_directories(
   hardware/libhardware_legacy/include
   system/core/include
   system/extras/ext4_utils
-  /usr/include
-  )
+)
 
 add_definitions(
   -DANDROID_SMP=1

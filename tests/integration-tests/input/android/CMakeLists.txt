@@ -12,14 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: 
-#   Chase Douglas <chase.douglas@canonical.com>
-#   Thomas Voss <thomas.voss@canonical.com>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-if(MIR_INPUT_ENABLE_EVEMU)
-  list(
-    APPEND UNIT_TEST_SOURCES 
-    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_fake_event_hub_to_event_filter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_manager.cpp
+)
 
-  set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
-endif(MIR_INPUT_ENABLE_EVEMU)
+set(
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
+  PARENT_SCOPE)

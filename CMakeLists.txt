@@ -34,10 +34,12 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
+include (cmake/Debian.cmake)
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
@@ -110,10 +112,16 @@ else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
+set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
+set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_SOURCES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)

@@ -13,40 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
- *              Thomas Guest <thomas.guest@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/application.h"
+#include "event_filter_chain.h"
 
-#include <cassert>
+namespace mi = mir::input;
 
-namespace mf = mir::frontend;
-
-mf::Application::Application(std::shared_ptr<Communicator> communicator)
-    : communicator(communicator)
-{
-    assert(communicator);
-}
-
-mf::Application::~Application()
+mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
+    filters(values.begin(), values.end())
 {
 }
 
-void mf::Application::on_event(mi::Event* e)
+bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
 {
-    assert(e);
+    for (auto it = filters.begin(); it != filters.end(); it++)
+    {
+        auto filter = *it;
+        if (filter->handles(event)) return true;
+    }
+    return false;
 }
-
-mf::Application::StateTransitionSignal& mf::Application::state_transition_signal()
-{
-    return state_transition;
-}
-
-void mf::Application::connect()
-{
-}
-
-void mf::Application::disconnect()
-{
-}
+ 

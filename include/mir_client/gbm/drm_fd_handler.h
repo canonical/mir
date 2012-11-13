@@ -13,30 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *  Chase Douglas <chase.douglas@canonical.com>
- *  Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/position_info.h"
+#ifndef MIR_CLIENT_GBM_DRM_FD_HANDLER_
+#define MIR_CLIENT_GBM_DRM_FD_HANDLER_
 
-#include <boost/format.hpp>
-
-#include <ostream>
-
-namespace mi = mir::input;
+#include <sys/types.h>
 
 namespace mir
 {
-namespace input
+namespace client
+{
+namespace gbm
 {
 
-std::ostream& operator<<(std::ostream& out, const mi::PositionInfo& pi)
+class DRMFDHandler
 {
-    out <<
-            (boost::format("") % pi.mode).str();
-    return out;
-}
+public:
+    virtual ~DRMFDHandler() {}
+
+    virtual int ioctl(unsigned long request, void* arg) = 0;
+    virtual void* map(size_t size, off_t offset) = 0;
+    virtual void unmap(void* addr, size_t size) = 0;
+
+protected:
+    DRMFDHandler() = default;
+    DRMFDHandler(const DRMFDHandler&) = delete;
+    DRMFDHandler& operator=(const DRMFDHandler&) = delete;
+};
 
 }
 }
+}
+
+#endif /* MIR_CLIENT_GBM_DRM_FD_HANDLER_ */

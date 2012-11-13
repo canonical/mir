@@ -173,6 +173,10 @@ struct MockClientDepository : public mcl::ClientBufferDepository
 
 namespace mt = mir::test;
 
+void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
+{
+}
+
 struct CallBack
 {
     void msg() {}
@@ -200,6 +204,9 @@ struct MirClientSurfaceTest : public testing::Test
         logger = std::make_shared<mcl::ConsoleLogger>();
         channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger);
         connection = std::make_shared<MirConnection>("./test_socket_surface", logger); 
+        MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                         connected_callback, 0);
+        wait_handle->wait_for_result();
         client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(channel.get());
     }
 

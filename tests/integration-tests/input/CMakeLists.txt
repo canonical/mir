@@ -14,11 +14,9 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(
-  APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_dispatch1.cpp
-)
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android)
+endif()
 
 set(
   INTEGRATION_TESTS_SRCS

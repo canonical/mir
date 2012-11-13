@@ -13,31 +13,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
 
-#ifndef MIR_INPUT_APPLICATION_FILTER_H_
-#define MIR_INPUT_APPLICATION_FILTER_H_
+#include <memory>
+#include <vector>
 
-#include "mir/input/filter.h"
+#include "mir/input/event_filter.h"
+
+namespace android
+{
+class InputEvent;
+}
+
+namespace droidinput = android;
 
 namespace mir
 {
-
 namespace input
 {
 
-class ApplicationFilter : public ChainingFilter
+class EventFilterChain : public EventFilter
 {
 public:
-    //using ChainingFilter::ChainingFilter;
-    explicit ApplicationFilter(std::shared_ptr<Filter> const& next_link);
+    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
 
-    void accept(Event* e) const;
+    virtual bool handles(const droidinput::InputEvent *event);
+
+private:
+    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
+    EventFilterVector const filters;
 };
 
 }
 }
 
-#endif /* MIR_INPUT_APPLICATION_FILTER_H_ */
+#endif // MIR_INPUT_EVENT_FILTER_H_

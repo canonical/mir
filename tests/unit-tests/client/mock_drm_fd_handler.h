@@ -13,20 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/application_filter.h"
+#ifndef MIR_TEST_CLIENT_MOCK_DRM_FD_HANDLER_H_
+#define MIR_TEST_CLIENT_MOCK_DRM_FD_HANDLER_H_
 
-namespace mi = mir::input;
+#include <gmock/gmock.h>
 
-mi::ApplicationFilter::ApplicationFilter(std::shared_ptr<Filter> const& next_link) :
-    ChainingFilter(next_link)
+#include "mir_client/gbm/drm_fd_handler.h"
+
+namespace mir
 {
-}
-
-void mi::ApplicationFilter::accept(Event* e) const
+namespace client
 {
-    ChainingFilter::accept(e);
-}
+namespace gbm
+{
 
+class MockDRMFDHandler : public DRMFDHandler
+{
+public:
+    MOCK_METHOD2(ioctl, int(unsigned long request, void* arg));
+    MOCK_METHOD2(map, void*(size_t size, off_t offset));
+    MOCK_METHOD2(unmap, void(void* addr, size_t size));
+};
+
+}
+}
+}
+#endif

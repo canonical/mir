@@ -13,34 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_HANDLER_H_
-#define MIR_INPUT_EVENT_HANDLER_H_
+#ifndef MIR_TEST_MOCK_EVENT_FILTER_H_
+#define MIR_TEST_MOCK_EVENT_FILTER_H_
+
+#include "mir/input/event_filter.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace input
+struct MockEventFilter : public mir::input::EventFilter
 {
-
-class Event;
-
-// EventHandler is the interface by which input
-// devices know the input dispatcher
-class EventHandler
-{
- public:
-    virtual ~EventHandler() {}
-
-    virtual void on_event(Event* e) = 0;
-protected:
-    EventHandler() = default;
-    EventHandler(const EventHandler&) = delete;
-    EventHandler& operator=(const EventHandler&) = delete;
+    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
 };
-
-}
 }
 
-#endif /* MIR_INPUT_EVENT_HANDLER_H_ */
+MATCHER_P(IsKeyEventWithKey, key, "")
+{
+    if (arg->getType() != AINPUT_EVENT_TYPE_KEY)
+        return false;
+
+    auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
+    return key_event->getKeyCode() == key;
+}
+
+#endif // MIR_TEST_MOCK_EVENT_FILTER_H_

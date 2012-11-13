@@ -13,28 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/filter.h"
+#ifndef MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
+#define MIR_INPUT_ANDROID_INPUT_CONSTANTS_H_
 
-#include <cassert>
-
-namespace mi = mir::input;
-
-void mi::NullFilter::accept(Event*) const
+namespace mir
 {
+namespace input
+{
+namespace android
+{
+static const bool DispatchEnabled = true;
+static const bool DispatchDisabled = false;
+static const bool DispatchFrozen = true;
+static const bool DispatchUnfrozen = false;
+}
+}
 }
 
-mi::ChainingFilter::ChainingFilter(std::shared_ptr<Filter> const& next_link)
-    :
-    next_link(next_link)
-{
-    assert(this->next_link.get());
-}
-
-void mi::ChainingFilter::accept(Event* e) const
-{
-    assert(e);
-    next_link->accept(e);
-}
+#endif // MIR_INPUT_ANDROID_INPUT_CONSTANTS_H

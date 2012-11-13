@@ -14,26 +14,12 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-option(
-  MIR_INPUT_ENABLE_EVEMU
-  "Controls if devices for handling evdev events are compiled"
-  OFF
+list(APPEND UNIT_TEST_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_input_dispatcher_policy.cpp
 )
 
-if(MIR_INPUT_ENABLE_EVEMU)
-
-  # Check for evemu (which may be named evemu or utouch-evemu)
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(EVEMU REQUIRED evemu utouch-evemu)
-
-  list(
-    APPEND INPUT_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/device.cpp)
-
-  set(
-    INPUT_SOURCES 
-    ${INPUT_SOURCES} 
-    PARENT_SCOPE)
-
-endif(MIR_INPUT_ENABLE_EVEMU)
-  
+set(
+  UNIT_TEST_SOURCES 
+  ${UNIT_TEST_SOURCES} 
+  PARENT_SCOPE)
