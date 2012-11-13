@@ -43,9 +43,6 @@
 #include "input/android/android_input_manager.h"
 
 #include <EventHub.h>
-// Needed for android::InputManager destructor
-#include <InputDispatcher.h>
-#include <InputReader.h>
 
 #include <boost/program_options/parsers.hpp>
 

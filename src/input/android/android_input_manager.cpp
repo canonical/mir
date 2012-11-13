@@ -48,6 +48,10 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
     dispatcher->setInputFilterEnabled(true);
 }
 
+mia::InputManager::~InputManager()
+{
+}
+
 void mia::InputManager::stop()
 {
     reader_thread->requestExit();

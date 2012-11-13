@@ -48,7 +48,7 @@ class InputManager : public mir::input::InputManager
 public:
     explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
 			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters);
-    virtual ~InputManager() {}
+    virtual ~InputManager();
 
     virtual void start();
     virtual void stop();
