@@ -23,6 +23,7 @@ class DummyInputReaderPolicy : public droidinput::InputReaderPolicyInterface
 public:
     DummyInputReaderPolicy()
     {
+      // This is soon to go!
       pointer_controller = new droidinput::PointerController;
       pointer_controller->setDisplaySize(1280, 1024);
       pointer_controller->setDisplayOrientation(droidinput::DISPLAY_ORIENTATION_0);
