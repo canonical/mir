@@ -16,13 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 #include "android_input_reader_policy.h"
-#include "dummy_android_pointer_controller.h"
+#include "android_pointer_controller.h"
 
 namespace mia = mir::input::android;
 
 mia::AndroidInputReaderPolicy::AndroidInputReaderPolicy()
 {
-    pointer_controller = new mia::DummyPointerController();
+    pointer_controller = new mia::PointerController();
 }
 droidinput::sp<droidinput::PointerControllerInterface> mia::AndroidInputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
 {
