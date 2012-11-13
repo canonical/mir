@@ -22,12 +22,23 @@ set_target_properties(
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
   )
 
-target_link_libraries(
-  raw-event-printer
-  android-input
-  -lrt
-  -lpthread
-  )
+if(MIR_PLATFORM STREQUAL "gbm")
+  target_link_libraries(
+    raw-event-printer
+    android-input
+    -lrt
+    -lpthread
+    )
+endif()
+
+if(MIR_PLATFORM STREQUAL "android")
+  target_link_libraries(
+    raw-event-printer
+    android-input
+    -lrt
+    -lpthread
+    )
+endif()
 
 ###### cooked-event-printer
 
@@ -42,12 +53,21 @@ set_target_properties(
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
   )
 
-target_link_libraries(
-  cooked-event-printer
-  android-input
-  -lrt
-  -lpthread
-  )
+if(MIR_PLATFORM STREQUAL "gbm")
+  target_link_libraries(
+    cooked-event-printer
+    android-input
+    -lrt
+    -lpthread
+    )
+endif()
+
+if(MIR_PLATFORM STREQUAL "android")
+  target_link_libraries(
+    cooked-event-printer
+    android-input
+    )
+endif()
 
 ###### dispatcher-check
 
@@ -62,9 +82,18 @@ set_target_properties(
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
   )
 
-target_link_libraries(
-  dispatcher-check
-  android-input
-  -lrt
-  -lpthread
-  )
+if(MIR_PLATFORM STREQUAL "gbm")
+  target_link_libraries(
+    dispatcher-check
+    android-input
+    -lrt
+    -lpthread
+    )
+endif()
+
+if(MIR_PLATFORM STREQUAL "android")
+  target_link_libraries(
+    dispatcher-check
+    android-input
+    )
+endif()
