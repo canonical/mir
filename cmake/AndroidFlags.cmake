@@ -100,7 +100,6 @@ function(get_android_flags)
   # set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS}" PARENT_SCOPE)
 
   set(ANDROID_STDLIB
-    protobuf;
     m;
     c;
     stdc++;
