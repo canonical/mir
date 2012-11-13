@@ -95,7 +95,7 @@ private:
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
 
     std::shared_ptr<mir::client::Logger> logger;
-    EGLNativeWindowType accelerated_window;
+    std::shared_ptr<EGLNativeWindowType> accelerated_window;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

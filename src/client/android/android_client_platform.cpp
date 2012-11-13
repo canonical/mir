@@ -55,8 +55,30 @@ std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create
     return std::make_shared<mcla::AndroidClientBufferDepository>(registrar);
 }
 
-EGLNativeWindowType mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+namespace
 {
-    return new mcla::MirNativeWindow(surface);
+struct MirNativeWindowDeleter
+{
+    MirNativeWindowDeleter(mcla::MirNativeWindow* window)
+     : window(window) {}
+
+    void operator()(EGLNativeWindowType* type )
+    {
+        delete type;
+        delete window;
+    }
+
+private:
+    mcla::MirNativeWindow *window;
+};
+}
+
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+{
+    auto window = new mcla::MirNativeWindow(surface);
+    EGLNativeWindowType* window_ptr = new EGLNativeWindowType;
+    *window_ptr = window;
+    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(window); 
+    return std::shared_ptr<EGLNativeWindowType>(window_ptr, deleter);
 }
 

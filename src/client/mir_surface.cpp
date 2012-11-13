@@ -56,7 +56,6 @@ MirSurface::~MirSurface()
 {
     auto platform = connection->get_client_platform();
     release_cpu_region();
-    platform->destroy_egl_window(accelerated_window);
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -226,5 +225,5 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
     
 EGLNativeWindowType MirSurface::generate_native_window()
 {
-    return accelerated_window;
+    return *accelerated_window;
 }
