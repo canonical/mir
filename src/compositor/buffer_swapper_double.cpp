@@ -31,6 +31,9 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
     last_posted_buffer = buffer_b.get();
 }
 
+mc::BufferSwapperDouble::~BufferSwapperDouble()
+{
+}
 
 mc::Buffer* mc::BufferSwapperDouble::client_acquire()
 {
