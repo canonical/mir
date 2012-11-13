@@ -48,9 +48,11 @@
 #include <sys/inotify.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
-#include <sys/limits.h>
 // <mir changes>
 // Needed to build on android platform (PATH_MAX)
+#ifdef HAVE_ANDROID_OS
+#include <sys/limits.h>
+#endif
 #include <linux/limits.h>
 // </mir changes>
 
