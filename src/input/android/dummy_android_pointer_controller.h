@@ -33,7 +33,7 @@ class DummyPointerController : public droidinput::PointerControllerInterface
 {
 public:
     explicit DummyPointerController() = default;
-    virtual ~DummyPointerController() = default;
+    virtual ~DummyPointerController() {}
 
     // Naming of these methods is dictated by android input stack.
     virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
