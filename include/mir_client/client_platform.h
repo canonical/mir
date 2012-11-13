@@ -38,8 +38,7 @@ public:
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
     virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
-    virtual EGLNativeWindowType create_egl_window(ClientSurface *surface) = 0;
-    virtual void destroy_egl_window(EGLNativeWindowType window) = 0;
+    virtual std::shared_ptr<EGLNativeWindowType> create_egl_window(ClientSurface *surface) = 0;
 };
 
 std::shared_ptr<ClientPlatform> create_client_platform(

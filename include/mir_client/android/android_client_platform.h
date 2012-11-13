@@ -33,8 +33,7 @@ class AndroidClientPlatform : public ClientPlatform
 {
 public:
     std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
+    std::shared_ptr<EGLNativeWindowType> create_egl_window(ClientSurface *surface);
 };
 
 }
