@@ -30,11 +30,11 @@ class CursorListener;
 namespace android
 {
 
-class AndroidInputReaderPolicy : public DummyInputReaderPolicy
+class InputReaderPolicy : public DummyInputReaderPolicy
 {
 public:
-    explicit AndroidInputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener);
-    virtual ~AndroidInputReaderPolicy() = default;
+    explicit InputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener);
+    virtual ~InputReaderPolicy() = default;
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
 private:

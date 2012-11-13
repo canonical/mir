@@ -39,7 +39,7 @@ mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> ev
   filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::AndroidInputReaderPolicy(cursor_listener);
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::InputReaderPolicy(cursor_listener);
     dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
     reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
     reader_thread = new droidinput::InputReaderThread(reader);
