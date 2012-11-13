@@ -34,5 +34,6 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android/hardware/libhardware_legacy/include
   ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include
   ${CMAKE_CURRENT_SOURCE_DIR}/android/system/extras/ext4_utils
+  ${CMAKE_CURRENT_SOURCE_DIR}/android/external/kernel-headers/original
   )
 set(MIR_ANDROID_INCLUDE_DIRECTORIES ${MIR_ANDROID_INCLUDE_DIRECTORIES} PARENT_SCOPE)
