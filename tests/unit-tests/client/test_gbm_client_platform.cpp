@@ -38,5 +38,5 @@ TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
     auto platform = mcl::create_client_platform(platform_package);
     auto mock_client_surface = std::make_shared<MockClientSurface>();
     auto native_window = platform->create_egl_window(mock_client_surface.get());
-    EXPECT_EQ(native_window, reinterpret_cast<EGLNativeWindowType>(mock_client_surface.get()));
+    EXPECT_EQ(*native_window, reinterpret_cast<EGLNativeWindowType>(mock_client_surface.get()));
 }
