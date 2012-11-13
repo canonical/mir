@@ -546,7 +546,7 @@ std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer
 std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process;
 std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_double;
 
-TEST_F(TestClientIPCRender, test_render_single)
+TEST_F(TestClientIPCRender, DISABLED_test_render_single)
 {
     /* activate client */
     render_single_client_process->cont();
@@ -558,7 +558,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
 }
 
-TEST_F(TestClientIPCRender, test_render_double)
+TEST_F(TestClientIPCRender, DISABLED_test_render_double)
 {
     /* activate client */
     render_double_client_process->cont();
@@ -577,7 +577,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0x78787878));
 }
 
-TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
+TEST_F(TestClientIPCRender, DISABLED_test_second_render_with_same_buffer)
 {
     /* activate client */
     second_render_with_same_buffer_client_process->cont();
@@ -593,7 +593,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x78787878));
 }
 
-TEST_F(TestClientIPCRender, test_accelerated_render)
+TEST_F(TestClientIPCRender, DISABLED_test_accelerated_render)
 {
     /* activate client */
     render_accelerated_process->cont();
@@ -609,7 +609,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
 }
 
-TEST_F(TestClientIPCRender, test_accelerated_render_double)
+TEST_F(TestClientIPCRender, DISABLED_test_accelerated_render_double)
 {
     /* activate client */
     render_accelerated_process_double->cont();
