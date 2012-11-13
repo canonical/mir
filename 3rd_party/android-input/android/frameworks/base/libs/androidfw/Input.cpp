@@ -25,9 +25,9 @@
 #ifdef HAVE_ANDROID_OS
 #include <binder/Parcel.h>
 
-#include "SkPoint.h"
-#include "SkMatrix.h"
-#include "SkScalar.h"
+#include <skia/core/SkPoint.h>
+#include <skia/core/SkMatrix.h>
+#include <skia/core/SkScalar.h>
 #endif
 
 namespace android {
