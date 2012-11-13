@@ -54,6 +54,7 @@ static int test_height = 200;
 
 static const char* proc_dir = "/proc";
 static const char* surface_flinger_executable_name = "surfaceflinger";
+
 int surface_flinger_filter(const struct dirent* d)
 {
     if (fnmatch("[1-9]*", d->d_name, 0))
