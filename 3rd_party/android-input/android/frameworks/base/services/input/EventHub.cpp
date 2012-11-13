@@ -1262,7 +1262,10 @@ status_t EventHub::loadVirtualKeyMapLocked(Device* device) {
 }
 
 status_t EventHub::loadKeyMapLocked(Device* device) {
-    return device->keyMap.load(device->identifier, device->configuration);
+    // <mir changes>
+    status_t status = device->keyMap.load(device->identifier, device->configuration);
+    if (status) return device->keyMap.loadGenericMaps();
+    // </mir changes>
 }
 
 bool EventHub::isExternalDeviceLocked(Device* device) {

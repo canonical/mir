@@ -26,8 +26,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
-
 if(PROTOBUF_FOUND)
 
 include_directories(
@@ -95,78 +93,21 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-  mirprotobuf
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+
+  mirprotobuf
+
   ${DRM_LIBRARIES}
+  ${ANDROID_STDLIB}
 )
 
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib)
-
-
-add_executable(
-  mir_demo_client
-  
-  demo_client.c
-)
-
-target_link_libraries(
-  mir_demo_client
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(
-  mir_demo_client_unaccelerated
-  
-  demo_client_unaccelerated.c
-)
-
-target_link_libraries(
-  mir_demo_client_unaccelerated
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(
-  mir_demo_client_accelerated
-  
-  demo_client_accelerated.cpp
-)
-
-target_link_libraries(
-  mir_demo_client_accelerated
-  
-  test-utils
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-
-)
-
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
 
 set_target_properties(
   mirclient

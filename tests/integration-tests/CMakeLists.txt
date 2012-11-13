@@ -51,7 +51,6 @@ add_executable(
 target_link_libraries(
   integration-tests
 
-  mirclient
   test-utils
 
   mir
@@ -76,6 +75,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(integration-tests)

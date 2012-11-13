@@ -83,9 +83,9 @@ std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_pla
     return std::make_shared<mclg::GBMClientBufferDepository>(drm_fd_handler);
 }
 
-EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface*)
+EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface* client_surface)
 {
-    return (EGLNativeWindowType) -1;
+    return reinterpret_cast<EGLNativeWindowType>(client_surface);
 }
 
 void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
