@@ -59,3 +59,11 @@ TEST(ClientPlatformTest, platform_creates_native_window )
     auto native_window = platform->create_egl_window(mock_client_surface.get()); 
     EXPECT_NE( native_window, (EGLNativeWindowType) NULL);
 }
+
+TEST(ClientPlatformTest, platform_creates_egl_native_display)
+{
+    auto connection = std::make_shared<MockClientConnection>();
+    auto platform = mcl::create_client_platform(connection.get());
+    auto native_display = platform->create_egl_native_display();
+    EXPECT_NE(nullptr, native_display.get());
+}

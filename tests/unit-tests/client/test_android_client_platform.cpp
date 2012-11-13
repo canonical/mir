@@ -17,8 +17,9 @@
  */
 
 #include "mir_client/client_platform.h"
-#include "mir_client/mir_client_surface.h"
 #include "mir_client/client_connection.h"
+
+#include <EGL/egl.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,27 +37,11 @@ struct MockClientConnection : public mcl::ClientConnection
     MOCK_METHOD1(populate, void(MirPlatformPackage&));
 };
 
-struct MockClientSurface : public mcl::ClientSurface
-{
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
-    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
-};
-
-TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
-{
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
-    auto mock_client_surface = std::make_shared<MockClientSurface>();
-    auto native_window = platform->create_egl_window(mock_client_surface.get());
-    EXPECT_EQ(native_window, reinterpret_cast<EGLNativeWindowType>(mock_client_surface.get()));
-}
-
-TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
+TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
     auto connection = std::make_shared<MockClientConnection>();
     auto platform = mcl::create_client_platform(connection.get());
     auto native_display = platform->create_egl_native_display();
     EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
-    EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(connection.get()), egl_native_display);
+    EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);
 }

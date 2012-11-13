@@ -59,6 +59,23 @@ private:
     int drm_fd;
 };
 
+class GBMEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
+{
+public:
+    GBMEGLNativeDisplayContainer(mcl::ClientConnection* const connection)
+        : connection{connection}
+    {
+    }
+
+    EGLNativeDisplayType get_egl_native_display()
+    {
+        return reinterpret_cast<EGLNativeDisplayType>(connection);
+    }
+
+private:
+    mcl::ClientConnection* const connection;
+};
+
 }
 
 std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
@@ -75,12 +92,13 @@ std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
         drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(drm_fd_handler);
+    return std::make_shared<mclg::GBMClientPlatform>(connection, drm_fd_handler);
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
+        ClientConnection* const connection,
         std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : drm_fd_handler{drm_fd_handler}
+    : connection{connection}, drm_fd_handler{drm_fd_handler}
 {
 }
 
@@ -96,4 +114,9 @@ EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface* cl
 
 void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
 {
+}
+
+std::shared_ptr<mcl::EGLNativeDisplayContainer> mclg::GBMClientPlatform::create_egl_native_display()
+{
+    return std::make_shared<GBMEGLNativeDisplayContainer>(connection);
 }

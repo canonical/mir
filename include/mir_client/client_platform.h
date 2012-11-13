@@ -29,6 +29,19 @@ class ClientBufferDepository;
 class ClientSurface;
 class ClientConnection;
 
+class EGLNativeDisplayContainer
+{
+public:
+    virtual ~EGLNativeDisplayContainer() {}
+
+    virtual EGLNativeDisplayType get_egl_native_display() = 0;
+
+protected:
+    EGLNativeDisplayContainer() = default;
+    EGLNativeDisplayContainer(EGLNativeDisplayContainer const&) = delete;
+    EGLNativeDisplayContainer& operator=(EGLNativeDisplayContainer const&) = delete;
+};
+
 class ClientPlatform
 {
 public:
@@ -39,6 +52,7 @@ public:
     virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
     virtual EGLNativeWindowType create_egl_window(ClientSurface *surface) = 0;
     virtual void destroy_egl_window(EGLNativeWindowType window) = 0;
+    virtual std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display() = 0;
 };
 
 std::shared_ptr<ClientPlatform> create_client_platform(ClientConnection* connection);
