@@ -1,3 +1,4 @@
+
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -38,4 +39,3 @@ target_link_libraries(
     mirplatformgraphics
     ${Boost_LIBRARIES}
 )
-
