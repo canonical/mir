@@ -26,8 +26,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
-
 if(PROTOBUF_FOUND)
 
 include_directories(
@@ -39,6 +37,7 @@ endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -100,50 +99,12 @@ target_link_libraries(
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
+  ${DRM_LIBRARIES}
 )
 
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib)
-
-
-add_executable(
-  mir_demo_client
-  
-  demo_client.c
-)
-
-target_link_libraries(
-  mir_demo_client
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(
-  ubuntu_ds_demo_client_unaccelerated
-  
-  demo_client_unaccelerated.c
-)
-
-target_link_libraries(
-  ubuntu_ds_demo_client_unaccelerated
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
 
 set_target_properties(
   mirclient

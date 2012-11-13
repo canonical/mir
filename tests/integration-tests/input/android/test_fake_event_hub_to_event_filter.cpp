@@ -26,6 +26,7 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
+#include "mir_test/event_factory.h"
 
 #include <InputDispatcher.h>
 #include <InputReader.h>
@@ -35,6 +36,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace mis = mir::input::synthesis;
 
 namespace mir
 {
@@ -100,16 +102,16 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
 
-    static const int in_key = KEY_ENTER;
-    static const int out_key = AKEYCODE_ENTER;
-    
     mir::WaitCondition wait_condition;
 
-    EXPECT_CALL(event_filter, handles(IsKeyEventWithKey(out_key))).Times(1)
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    EXPECT_CALL(event_filter, handles(KeyDownEvent())).Times(1)
+	.WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(in_key);
+    event_hub->synthesize_device_scan_complete();
+    
+    event_hub->synthesize_event(mis::a_key_down_event()
+				.of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_seconds(30);
 }
