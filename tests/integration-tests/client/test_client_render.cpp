@@ -586,10 +586,10 @@ TEST_F(TestClientIPCRender, test_render_single)
 {
     /* activate client */
     render_single_client_process->cont();
-    
+
     /* wait for client to finish */
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
-    
+
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
 }
@@ -598,17 +598,17 @@ TEST_F(TestClientIPCRender, test_render_double)
 {
     /* activate client */
     render_double_client_process->cont();
-    
+
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
-    
+
     mock_server->set_package(second_package, 15);
-    
+
     mock_server->allow_next_continue();
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
-    
+
     /* check content */
     EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0x78787878));
 }
@@ -617,14 +617,14 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 {
     /* activate client */
     second_render_with_same_buffer_client_process->cont();
-    
+
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     mock_server->allow_next_continue();
-    
+
     /* wait for client to finish */
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
-    
+
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x78787878));
 }
@@ -633,14 +633,14 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 {
     /* activate client */
     render_accelerated_process->cont();
-    
+
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     mock_server->allow_next_continue();
-    
+
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
-    
+
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
 }
@@ -649,18 +649,18 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
     /* activate client */
     render_accelerated_process_double->cont();
-    
+
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     mock_server->set_package(second_package, 15);
     mock_server->allow_next_continue();
-    
+
     mock_server->wait_on_next_buffer();
     mock_server->allow_next_continue();
-    
+
     /* wait for client to finish */
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
-    
+
     /* check content */
     EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
     EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0xFF00FF00));
