@@ -35,8 +35,6 @@ if(MIR_PLATFORM STREQUAL "android")
   target_link_libraries(
     raw-event-printer
     android-input
-    -lrt
-    -lpthread
     )
 endif()
 
