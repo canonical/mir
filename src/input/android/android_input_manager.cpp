@@ -34,12 +34,12 @@ namespace mia = mi::android;
 
 mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
 				std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters,
-				std::shared_ptr<mi::CursorListener> const& /*listener*/) :
+				std::shared_ptr<mi::CursorListener> const& cursor_listener) :
   event_hub(event_hub),
   filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::AndroidInputReaderPolicy();
+    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::AndroidInputReaderPolicy(cursor_listener);
     dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
     reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
     reader_thread = new droidinput::InputReaderThread(reader);

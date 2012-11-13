@@ -20,9 +20,9 @@
 
 namespace mia = mir::input::android;
 
-mia::AndroidInputReaderPolicy::AndroidInputReaderPolicy()
+mia::AndroidInputReaderPolicy::AndroidInputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener)
 {
-    pointer_controller = new mia::PointerController();
+    pointer_controller = new mia::PointerController(cursor_listener);
 }
 droidinput::sp<droidinput::PointerControllerInterface> mia::AndroidInputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
 {

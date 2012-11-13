@@ -20,18 +20,20 @@
 
 #include "dummy_input_reader_policy.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace input
 {
-
+class CursorListener;
 namespace android
 {
 
 class AndroidInputReaderPolicy : public DummyInputReaderPolicy
 {
 public:
-    explicit AndroidInputReaderPolicy();
+    explicit AndroidInputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~AndroidInputReaderPolicy() = default;
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);

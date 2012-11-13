@@ -46,7 +46,7 @@ namespace
 
 struct MockCursorListener : public mi::CursorListener
 {
-    MOCK_METHOD2(moved, void(int, int));
+    MOCK_METHOD2(moved, void(float, float));
 };
 
 class AndroidInputManagerAndCursorListenerSetup : public testing::Test
@@ -74,9 +74,10 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
     MockCursorListener cursor_listener;
 };
 
-ACTION_P(WakeUp, wait_condition)
+ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 {
     wait_condition->wake_up_everyone();
+    return false;
 }
 
 }
@@ -88,15 +89,11 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     WaitCondition wait_condition;
 
-    {
-	InSequence seq;
-	EXPECT_CALL(
-	    cursor_listener,
-	    moved(0,0)).Times(1);
-	EXPECT_CALL(
-	    cursor_listener,
-	    moved(100,100)).WillOnce(WakeUp(&wait_condition));
-    }
+    EXPECT_CALL(cursor_listener,
+		moved(100,100)).Times(1);
+    // The stack doesn't like shutting down while events are still moving through
+    EXPECT_CALL(event_filter,
+		handles(_)).WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
 
     event_hub->synthesize_builtin_cursor_added();
