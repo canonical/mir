@@ -14,6 +14,7 @@ using droidinput::VirtualKeyDefinition;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mis = mir::input::synthesis;
 
 mia::FakeEventHub::FakeEventHub()
 {
@@ -25,10 +26,15 @@ mia::FakeEventHub::~FakeEventHub()
 
 uint32_t mia::FakeEventHub::getDeviceClasses(int32_t deviceId) const
 {
-    if (deviceId == droidinput::BUILT_IN_KEYBOARD_ID)
+    if (deviceId == BuiltInKeyboardID)
     {
         return droidinput::INPUT_DEVICE_CLASS_KEYBOARD;
     }
+    else if (deviceId == BuiltInCursorID)
+    {
+	return droidinput::INPUT_DEVICE_CLASS_CURSOR;
+    }
+
     auto fake_device_iterator = device_from_id.find(deviceId);
 
     if (fake_device_iterator != device_from_id.end())
@@ -255,30 +261,105 @@ void mia::FakeEventHub::monitor()
 
 void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
-    std::lock_guard<std::mutex> lg(guard);
-    
     RawEvent event;
     event.when = 0;
-    event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
+    event.deviceId = BuiltInKeyboardID;
     event.type = EventHubInterface::DEVICE_ADDED;
-    events_available.push_back(event);
 
-    event.when = 0;
-    event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
-    
+    std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
 }
 
-void mia::FakeEventHub::synthesize_key_event(int keycode)
+void mia::FakeEventHub::synthesize_builtin_cursor_added()
+{
+    RawEvent event;
+    event.when = 0;
+    event.deviceId = BuiltInCursorID;
+    event.type = EventHubInterface::DEVICE_ADDED;
+    
+    std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+}
+
+void mia::FakeEventHub::synthesize_device_scan_complete()
+{
+    RawEvent event;
+    event.when = 0;
+    event.type = EventHubInterface::FINISHED_DEVICE_SCAN;
+
+    std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+}
+
+void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 {
     RawEvent event;
     event.when = 0;
     event.type = EV_KEY;
-    event.code = keycode;
-    event.value = 1;
-    event.deviceId = droidinput::BUILT_IN_KEYBOARD_ID;
+    event.code = parameters.scancode;
+
+    if (parameters.device_id)
+	event.deviceId = parameters.device_id;
+    else
+	event.deviceId = BuiltInKeyboardID;
+
+    if (parameters.action == mis::EventAction::Down)
+	event.value = 1;
+    else
+	event.value = 0;
     
     std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+}
+
+void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
+{
+    RawEvent event;
+    event.when = 0;
+    event.type = EV_KEY;
+    event.code = parameters.button;
+
+    if (parameters.device_id)
+	event.deviceId = parameters.device_id;
+    else
+	event.deviceId = BuiltInCursorID;
+
+    if (parameters.action == mis::EventAction::Down)
+	event.value = 1;
+    else
+	event.value = 0;
+    
+    std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+    
+    // Cursor button events require a sync as per droidinput::CursorInputMapper::process
+    event.type = EV_SYN;
+    event.code = SYN_REPORT;
+    events_available.push_back(event);
+}
+
+void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
+{
+    RawEvent event;
+    event.when = 0;
+    event.type = EV_REL;
+    if (parameters.device_id)
+	event.deviceId = parameters.device_id;
+    else
+	event.deviceId = BuiltInCursorID;
+
+    std::lock_guard<std::mutex> lg(guard);
+    event.code = REL_X;
+    event.value = parameters.rel_x;
+    events_available.push_back(event);
+
+    event.code = REL_Y;
+    event.value = parameters.rel_y;
+    events_available.push_back(event);
+    
+    // Cursor motion events require a sync as per droidinput::CursorInputMapper::process
+    event.type = EV_SYN;
+    event.code = SYN_REPORT;
     events_available.push_back(event);
 }
 
