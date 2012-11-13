@@ -49,6 +49,10 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <sys/limits.h>
+// <mir changes>
+// Needed to build on android platform (PATH_MAX)
+#include <linux/limits.h>
+// </mir changes>
 
 /* this macro is used to tell if "bit" is set in "array"
  * it selects a byte from the array, and does a boolean AND
