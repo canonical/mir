@@ -45,6 +45,9 @@ public:
     virtual ~FakeEventHub();
 
     static const int BuiltInKeyboardID = droidinput::BUILT_IN_KEYBOARD_ID;
+    // Any positive int besides BUILT_IN_KEYBOARD_ID (which has 
+    // special meaning) will do. There is no notion of a builtin 
+    // cursor device in the android input stack.
     static const int BuiltInCursorID = droidinput::BUILT_IN_KEYBOARD_ID + 1;
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
@@ -103,7 +106,6 @@ public:
 
     virtual void monitor();
     
-    // Returns device id
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
     void synthesize_device_scan_complete();
