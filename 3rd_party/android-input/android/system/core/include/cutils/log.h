@@ -39,10 +39,6 @@
 
 #include <cutils/uio.h>
 #include <cutils/logd.h>
-// <mir changes>
-// Needed for LONG_BIT on android platform
-#include <sys/limits.h>
-// </mir changes>
 
 #ifdef __cplusplus
 extern "C" {
