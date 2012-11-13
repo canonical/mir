@@ -28,6 +28,8 @@ namespace mir
 {
 namespace client
 {
+namespace android
+{
 
 class AndroidRegistrarGralloc : public AndroidRegistrar 
 {
@@ -42,6 +44,7 @@ private:
     std::shared_ptr<const gralloc_module_t> gralloc_module;
 };
 
+}
 }
 }
 #endif /* MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_ */

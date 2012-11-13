@@ -54,6 +54,7 @@ public:
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
+
     MirWaitHandle* release_surface(
             mir_surface_lifecycle_callback callback,
             void *context);
@@ -94,7 +95,6 @@ private:
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
 
     std::shared_ptr<mir::client::Logger> logger;
-    std::shared_ptr<mir::client::ClientPlatform> platform;
     EGLNativeWindowType accelerated_window;
 };
 

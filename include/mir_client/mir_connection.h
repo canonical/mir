@@ -78,6 +78,8 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate(MirDisplayInfo& display_info);
 
+    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
+
     static bool is_valid(MirConnection *connection);
 private:
     mir::client::MirRpcChannel channel;

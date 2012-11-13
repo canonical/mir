@@ -87,7 +87,13 @@ String8 getInputDeviceConfigurationFilePathByName(
         const String8& name, InputDeviceConfigurationFileType type) {
     // Search system repository.
     String8 path;
-    path.setTo(getenv("ANDROID_ROOT"));
+    // <mir modifications>
+    {
+        const char *root_env = getenv("ANDROID_ROOT");
+        if (root_env == NULL) root_env = "";
+        path.setTo(root_env);
+    }
+    // </mir modifications>
     path.append("/usr/");
     appendInputDeviceConfigurationFileRelativePath(path, name, type);
 #if DEBUG_PROBE
@@ -102,7 +108,14 @@ String8 getInputDeviceConfigurationFilePathByName(
 
     // Search user repository.
     // TODO Should only look here if not in safe mode.
-    path.setTo(getenv("ANDROID_DATA"));
+    // <mir modifications>
+    {
+        const char *data_env = getenv("ANDROID_DATA");
+        if (data_env == NULL) data_env = "";
+        path.setTo(data_env);
+    }
+
+    // </mir modifications>
     path.append("/system/devices/");
     appendInputDeviceConfigurationFileRelativePath(path, name, type);
 #if DEBUG_PROBE

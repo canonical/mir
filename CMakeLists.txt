@@ -17,7 +17,7 @@
 
 set(
   MIR_GCC_VERSION
-  4.4
+  4.6
   CACHE
   STRING
   "Version of gcc/g++"
@@ -31,12 +31,15 @@ project(Mir)
 cmake_minimum_required(VERSION 2.8)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra")
 
+include (cmake/Debian.cmake)
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
@@ -86,8 +89,20 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 
 if (MIR_PLATFORM STREQUAL "android")
+  include (cmake/AndroidFlags.cmake)
+  get_android_flags()
+  add_definitions( ${ANDROID_DEFINITIONS} )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
+
+  #ctest does not work for android, so turn test discovery off
+  set(DISABLE_GTEST_TEST_DISCOVERY ON)
+
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
@@ -97,10 +112,16 @@ else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
+set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
+set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_SOURCES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
@@ -134,6 +155,7 @@ include_directories (
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)
+add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 

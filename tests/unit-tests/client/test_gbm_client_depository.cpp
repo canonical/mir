@@ -19,11 +19,12 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 #include "mir_client/gbm/gbm_client_buffer.h"
+#include "mock_drm_fd_handler.h"
 
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mcl=mir::client;
+namespace mclg=mir::client::gbm;
 
 struct MirGBMBufferDepositoryTest : public testing::Test
 {
@@ -34,6 +35,7 @@ struct MirGBMBufferDepositoryTest : public testing::Test
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{width, height};
 
+        drm_fd_handler = std::make_shared<testing::NiceMock<mclg::MockDRMFDHandler>>();
         package = std::make_shared<MirBufferPackage>();
     }
     geom::Width width;
@@ -41,6 +43,7 @@ struct MirGBMBufferDepositoryTest : public testing::Test
     geom::PixelFormat pf;
     geom::Size size;
 
+    std::shared_ptr<testing::NiceMock<mclg::MockDRMFDHandler>> drm_fd_handler;
     std::shared_ptr<MirBufferPackage> package;
 
 };
@@ -49,7 +52,7 @@ TEST_F(MirGBMBufferDepositoryTest, depository_sets_width_and_height)
 {
     using namespace testing;
 
-    mcl::GBMClientBufferDepository depository;
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
     
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer = depository.access_buffer(8);
@@ -63,7 +66,7 @@ TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_buffer )
 {
     using namespace testing;
 
-    mcl::GBMClientBufferDepository depository;
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
    
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer1 = depository.access_buffer(8);

@@ -1,4 +1,3 @@
-
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,8 +15,6 @@
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 include_directories(${GLESv2_INCLUDE_DIRS})
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
@@ -42,61 +39,3 @@ target_link_libraries(
     ${Boost_LIBRARIES}
 )
 
-add_executable(
-  mir_demo_client
-  
-  demo_client.c
-)
-
-target_link_libraries(
-  mir_demo_client
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(
-  mir_demo_client_unaccelerated
-  
-  demo_client_unaccelerated.c
-)
-
-target_link_libraries(
-  mir_demo_client_unaccelerated
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(
-  mir_demo_client_accelerated
-  
-  demo_client_accelerated.cpp
-)
-
-target_link_libraries(
-  mir_demo_client_accelerated
-  
-  test-utils
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-
-)
-
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)

@@ -23,6 +23,7 @@
 #include "mir_client/mir_connection.h"
 
 namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 
 struct EmptyDeleter
 {
@@ -31,12 +32,13 @@ struct EmptyDeleter
     }
 };
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
+        std::shared_ptr<MirPlatformPackage> const& /*platform_package*/)
 {
-    return std::make_shared<mcl::AndroidClientPlatform>();
+    return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mcl::AndroidClientPlatform::create_platform_depository()
+std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create_platform_depository()
 {
     const hw_module_t *hw_module;
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
@@ -49,16 +51,16 @@ std::shared_ptr<mcl::ClientBufferDepository> mcl::AndroidClientPlatform::create_
     /* we use an empty deleter because hw_get_module does not give us the ownership of the ptr */
     EmptyDeleter empty_del;
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
-    auto registrar = std::make_shared<mcl::AndroidRegistrarGralloc>(gralloc_dev); 
-    return std::make_shared<mcl::AndroidClientBufferDepository>(registrar);
+    auto registrar = std::make_shared<mcla::AndroidRegistrarGralloc>(gralloc_dev); 
+    return std::make_shared<mcla::AndroidClientBufferDepository>(registrar);
 }
 
-EGLNativeWindowType mcl::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+EGLNativeWindowType mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
 {
-    return new mcl::MirNativeWindow(surface);
+    return new mcla::MirNativeWindow(surface);
 }
 
-void mcl::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
+void mcla::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
 {
     delete window;
 }

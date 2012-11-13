@@ -49,12 +49,8 @@ namespace ms=mir::surfaces;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
-using namespace std;
-
-#ifndef ANDROID
-typedef std::chrono::high_resolution_clock Clock;
-typedef std::chrono::microseconds microsec;
-#endif
+namespace mir
+{
 
 volatile std::sig_atomic_t running = true;
 
@@ -62,6 +58,45 @@ void signal_handler(int /*signum*/)
 {
     running = false;
 }
+
+// TODO(tvoss): This is only a helper class that shall ease time measurements
+// It's neither complete nor tested.
+struct StopWatch
+{
+    StopWatch() : start(std::chrono::high_resolution_clock::now()),
+                  last(start),
+                  now(last)
+    {
+    }
+
+    void stop()
+    {
+        now = std::chrono::high_resolution_clock::now();
+    }
+    
+    double elapsed_seconds_since_start()
+    {
+        auto elapsed = now - start;
+        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        return elapsed_sec;
+    }
+
+    double elapsed_seconds_since_last_restart()
+    {
+        auto elapsed = now - last;
+        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        return elapsed_sec;
+    }
+
+    void restart()
+    {
+        std::swap(last, now);
+    }
+    
+    std::chrono::high_resolution_clock::time_point start;
+    std::chrono::high_resolution_clock::time_point last;
+    std::chrono::high_resolution_clock::time_point now;
+};
 
 class RenderResourcesBufferInitializer : public mg::BufferInitializer
 {
@@ -74,9 +109,9 @@ public:
     {
     }
 
-    void operator()(mc::Buffer& buffer, EGLClientBuffer client_buffer)
+    void operator()(mc::Buffer& buffer)
     {
-        mt::BufferRenderTarget brt{buffer, client_buffer};
+        mt::BufferRenderTarget brt{buffer};
         brt.make_current();
         img_renderer.render();
     }
@@ -94,31 +129,20 @@ struct Moveable
           y{static_cast<float>(s.top_left().y.as_uint32_t())},
           w{static_cast<float>(s.size().width.as_uint32_t())},
           h{static_cast<float>(s.size().height.as_uint32_t())},
-          dx{dx}, dy{dy},
-#ifndef ANDROID
-          start{Clock::now()}, last_update{start},
-#else
-          step_count{0},
-#endif
-          rotation_axis{rotation_axis}, alpha_offset{alpha_offset}
+          dx{dx}, 
+          dy{dy},
+          rotation_axis{rotation_axis}, 
+          alpha_offset{alpha_offset}
     {
     }
 
     void step()
     {
-#ifndef ANDROID
-        Clock::time_point now = Clock::now();
-        microsec elapsed = std::chrono::duration_cast<microsec>(last_update - now);
-        float elapsed_sec = elapsed.count() / 1000000.0;
-        microsec total_elapsed = std::chrono::duration_cast<microsec>(now - start);
-        float total_elapsed_sec = total_elapsed.count() / 1000000.0;
-        last_update = now;
-#else
-        float elapsed_sec = 1.0f / 60.0f;
-        float total_elapsed_sec = step_count * 1.0f / 60.0f;
-        ++step_count;
-#endif
-
+        stop_watch.stop();
+        float elapsed_sec = stop_watch.elapsed_seconds_since_last_restart();
+        float total_elapsed_sec = stop_watch.elapsed_seconds_since_start();
+        stop_watch.restart();
+        
         bool should_update = true;
         float new_x = x + elapsed_sec * dx;
         float new_y = y + elapsed_sec * dy;
@@ -154,15 +178,11 @@ struct Moveable
     float h;
     float dx;
     float dy;
-#ifndef ANDROID
-    Clock::time_point start;
-    Clock::time_point last_update;
-#else
-    uint32_t step_count;
-#endif
+    StopWatch stop_watch;
     glm::vec3 rotation_axis;
     float alpha_offset;
 };
+}
 
 int main(int argc, char **argv)
 {
@@ -170,7 +190,7 @@ int main(int argc, char **argv)
     auto platform = mg::create_platform();
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
-    auto buffer_initializer = std::make_shared<RenderResourcesBufferInitializer>();
+    auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
     mc::BufferBundleManager manager{strategy};
@@ -180,14 +200,14 @@ int main(int argc, char **argv)
     
     /* Set up graceful exit on SIGINT */
     struct sigaction sa;
-    sa.sa_handler = signal_handler;
+    sa.sa_handler = mir::signal_handler;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
 
     sigaction(SIGINT, &sa, NULL);  
 
     /* Parse the command line */
-    int num_moveables = 5;
+    unsigned int num_moveables = 5;
 
     if (argc > 1)
     {
@@ -198,11 +218,11 @@ int main(int argc, char **argv)
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
     /* Set up the surfaces */
-    std::vector<Moveable> m{num_moveables};
+    std::vector<mir::Moveable> m{num_moveables};
 
     const uint32_t surface_size{300};
 
-    for (int i = 0; i < num_moveables; ++i)
+    for (unsigned int i = 0; i < num_moveables; ++i)
     {
         const float w = display_size.width.as_uint32_t();
         const float h = display_size.height.as_uint32_t();
@@ -219,7 +239,7 @@ int main(int argc, char **argv)
         uint32_t y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_size / 2.0;
 
         s->move_to({geom::X{x}, geom::Y{y}});
-        m[i] = Moveable(*s, display_size,
+        m[i] = mir::Moveable(*s, display_size,
                               cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                               sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
                               glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
@@ -233,22 +253,18 @@ int main(int argc, char **argv)
     /* Draw! */
     glClearColor(0.0, 1.0, 0.0, 1.0);
     uint32_t frames = 0;
+    
+    mir::StopWatch stop_watch;
 
-#ifndef ANDROID
-    Clock::time_point t0 = Clock::now();
-#endif
-    while (running) {
-#ifndef ANDROID
-        Clock::time_point t1 = Clock::now();
-        if (std::chrono::duration_cast<microsec>(t1 - t0).count() >= 1000000) {
+    while (mir::running) {
+        stop_watch.stop();
+        if (stop_watch.elapsed_seconds_since_last_restart() >= 1) {
             std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
             frames = 0;
-            t0 = t1;
-        }
-#endif
-
+            stop_watch.restart();
+        }        
         /* Update surface state */
-        for (int i = 0; i < num_moveables; ++i)
+        for (unsigned int i = 0; i < num_moveables; ++i)
             m[i].step();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

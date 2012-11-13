@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mcl=mir::client;
+namespace mcla=mir::client::android;
 namespace mt=mir::test;
 
 
@@ -58,14 +58,14 @@ TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
     EXPECT_CALL(*mock_registrar, unregister_buffer(_))
         .Times(1);
  
-    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
     auto buffer = depository.access_buffer(8);
 
     EXPECT_EQ(buffer->size().height, height); 
@@ -77,7 +77,7 @@ TEST_F(MirBufferDepositoryTest, depository_does_not_create_a_buffer_its_seen_bef
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
@@ -85,15 +85,15 @@ TEST_F(MirBufferDepositoryTest, depository_does_not_create_a_buffer_its_seen_bef
         .Times(1);
 
     /* repeated id */ 
-    depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package2, 8, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
+    depository.deposit_package(std::move(package2), 8, size, pf);
 }
 
 TEST_F(MirBufferDepositoryTest, depository_creates_two_buffers_with_distinct_id )
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -101,15 +101,15 @@ TEST_F(MirBufferDepositoryTest, depository_creates_two_buffers_with_distinct_id 
         .Times(2);
 
     /* repeated id */ 
-    depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package2, 9, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
+    depository.deposit_package(std::move(package2), 9, size, pf);
 }
 
 TEST_F(MirBufferDepositoryTest, depository_returns_same_accessed_buffer_for_same_id )
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -117,8 +117,8 @@ TEST_F(MirBufferDepositoryTest, depository_returns_same_accessed_buffer_for_same
         .Times(2);
 
     /* repeated id */ 
-    depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package2, 9, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
+    depository.deposit_package(std::move(package2), 9, size, pf);
 
     auto buffer1 = depository.access_buffer(8);
     auto buffer2 = depository.access_buffer(8);
@@ -130,7 +130,7 @@ TEST_F(MirBufferDepositoryTest, depository_returns_different_accessed_buffer_for
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(2); 
@@ -138,8 +138,8 @@ TEST_F(MirBufferDepositoryTest, depository_returns_different_accessed_buffer_for
         .Times(2);
 
     /* repeated id */ 
-    depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package2, 9, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
+    depository.deposit_package(std::move(package2), 9, size, pf);
 
     auto buffer1 = depository.access_buffer(8);
     auto buffer2 = depository.access_buffer(9);
@@ -151,7 +151,7 @@ TEST_F(MirBufferDepositoryTest, depository_throws_for_uncreated_id )
 {
     using namespace testing;
 
-    mcl::AndroidClientBufferDepository depository(mock_registrar);
+    mcla::AndroidClientBufferDepository depository(mock_registrar);
    
     EXPECT_CALL(*mock_registrar, register_buffer(_))
         .Times(1); 
@@ -159,7 +159,7 @@ TEST_F(MirBufferDepositoryTest, depository_throws_for_uncreated_id )
         .Times(1);
 
     /* repeated id */ 
-    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(std::move(package1), 8, size, pf);
 
     EXPECT_THROW({
     auto buffer2 = depository.access_buffer(9);

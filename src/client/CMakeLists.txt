@@ -37,6 +37,7 @@ endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -75,7 +76,7 @@ set(
 endif()
 
 add_library( 
-  mirclient STATIC
+  mirclient SHARED
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
@@ -98,7 +99,12 @@ target_link_libraries(
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
+  ${DRM_LIBRARIES}
 )
+
+install(
+  TARGETS mirclient
+  LIBRARY DESTINATION lib)
 
 set_target_properties(
   mirclient

@@ -64,7 +64,7 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     auto buffer = std::unique_ptr<mc::Buffer>(
         new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
 
-    (*buffer_initializer)(*buffer, reinterpret_cast<EGLClientBuffer>(handle));
+    (*buffer_initializer)(*buffer);
 
     return buffer;
 }

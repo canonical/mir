@@ -26,14 +26,24 @@ namespace client
 {
 class ClientBufferDepository;
 
+namespace gbm
+{
+
+class DRMFDHandler;
+
 class GBMClientPlatform : public ClientPlatform
 {
 public:
+    GBMClientPlatform(std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
     std::shared_ptr<ClientBufferDepository> create_platform_depository ();
     EGLNativeWindowType create_egl_window(ClientSurface *surface);
     void destroy_egl_window(EGLNativeWindowType window);
+
+private:
+    std::shared_ptr<DRMFDHandler> const drm_fd_handler;
 };
 
+}
 }
 }
 

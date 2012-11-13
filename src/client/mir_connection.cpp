@@ -55,8 +55,6 @@ MirConnection::MirConnection(const std::string& socket_file,
     , server(&channel)
     , log(log)
 {
-    platform = mcl::create_client_platform();
- 
     {
         lock_guard<mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -137,9 +135,12 @@ MirWaitHandle* MirConnection::release_surface(
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
+    auto platform_package = std::make_shared<MirPlatformPackage>();
+    populate(*platform_package);
+    platform = mcl::create_client_platform(platform_package);
+
     callback(this, context);
     connect_wait_handle.result_received();
-
 }
 
 MirWaitHandle* MirConnection::connect(
@@ -227,4 +228,10 @@ void MirConnection::populate(MirDisplayInfo& display_info)
         display_info.width = 0;
         display_info.height = 0;
     }
+}
+
+
+std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
+{
+    return platform;
 }

@@ -35,8 +35,11 @@ template<DimensionTag Tag>
 class IntWrapper
 {
 public:
+    typedef uint32_t ValueType;
+    
     IntWrapper() : value(0) {}
-    explicit IntWrapper(uint32_t value) : value(value) {}
+    template<typename AnyInteger>
+    explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
 
     uint32_t as_uint32_t() const
     {
@@ -44,7 +47,7 @@ public:
     }
 
 private:
-    uint32_t value;
+    ValueType value;
 };
 
 template<DimensionTag Tag>

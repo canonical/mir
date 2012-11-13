@@ -14,11 +14,9 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_grab_filter.cpp
-)
-
-add_subdirectory(evemu/)
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android)
+endif()
 
 set(
   UNIT_TEST_SOURCES 
