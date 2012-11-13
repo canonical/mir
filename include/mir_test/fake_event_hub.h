@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_FAKE_EVENT_HUB_H_
 #define MIR_TEST_FAKE_EVENT_HUB_H_
 
+#include "mir_test/event_factory.h"
+
 #include "mir/thread/all.h"
 
 // from android-input
@@ -41,6 +43,12 @@ class FakeEventHub : public droidinput::EventHubInterface
 public:
     FakeEventHub();
     virtual ~FakeEventHub();
+
+    static const int BuiltInKeyboardID = droidinput::BUILT_IN_KEYBOARD_ID;
+    // Any positive int besides BUILT_IN_KEYBOARD_ID (which has 
+    // special meaning) will do. There is no notion of a builtin 
+    // cursor device in the android input stack.
+    static const int BuiltInCursorID = droidinput::BUILT_IN_KEYBOARD_ID + 1;
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
 
@@ -99,7 +107,12 @@ public:
     virtual void monitor();
     
     void synthesize_builtin_keyboard_added();
-    void synthesize_key_event(int keycode);
+    void synthesize_builtin_cursor_added();
+    void synthesize_device_scan_complete();
+
+    void synthesize_event(const synthesis::KeyParameters &parameters);
+    void synthesize_event(const synthesis::ButtonParameters &parameters);
+    void synthesize_event(const synthesis::MotionParameters &parameters);
 
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;
@@ -113,7 +126,6 @@ public:
     } FakeDevice;
 
     std::map<int32_t, FakeDevice> device_from_id;
-
 };
 }
 }
