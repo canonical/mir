@@ -88,6 +88,10 @@ set (MIR_TRANSPORT
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 
+if ( MIR_TRANSPORT STREQUAL "socket" )
+  find_package( Protobuf REQUIRED )
+endif()
+
 if (MIR_PLATFORM STREQUAL "android")
   include (cmake/AndroidFlags.cmake)
   get_android_flags()

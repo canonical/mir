@@ -15,7 +15,6 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
 # Check for google protocol buffers and generate code
-find_package( Protobuf REQUIRED )
 
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
