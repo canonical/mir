@@ -33,7 +33,8 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
-				std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters) :
+				std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters,
+				std::shared_ptr<mi::CursorListener> const& /*listener*/) :
   event_hub(event_hub),
   filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
 {

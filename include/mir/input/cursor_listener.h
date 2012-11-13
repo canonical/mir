@@ -30,7 +30,7 @@ class CursorListener
 {
 public:
     virtual ~CursorListener() {}
-    virtual bool moved(int abs_x, int abs_y) = 0;
+    virtual void moved(int abs_x, int abs_y) = 0;
 protected:
     CursorListener() = default;
     CursorListener(const CursorListener&) = delete;

@@ -40,6 +40,7 @@ namespace mir
 {
 namespace input
 {
+class CursorListener;
 namespace android
 {
 
@@ -47,7 +48,8 @@ class InputManager : public mir::input::InputManager
 {
 public:
     explicit InputManager(droidinput::sp<droidinput::EventHubInterface> event_hub,
-			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters);
+			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters,
+			  std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
     virtual ~InputManager() {}
 
     virtual void start();
