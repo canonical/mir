@@ -94,11 +94,9 @@ function(get_android_flags)
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--no-undefined")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_CRTBEGIN_SO}" PARENT_SCOPE)
 
-  # TODO(kdub, tvoss): Do we need these?
-  # linker flags for executable creation
-  # set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_CRTBEGIN_DYNAMIC}" PARENT_SCOPE)
-  # set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS}" PARENT_SCOPE)
-
+  #ANDROID_STDLIB must be set as the last target_link_libraries variable for every shared object
+  #built for android. We set -nostdlib for the shared objects, so we have to link in the 'default'
+  #libraries ourself
   set(ANDROID_STDLIB
     m;
     c;
