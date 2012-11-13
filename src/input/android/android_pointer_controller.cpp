@@ -34,6 +34,7 @@ bool mia::PointerController::getBounds(float* out_min_x, float* out_min_y, float
     *out_min_y = 0;
     *out_max_x = 2048;
     *out_max_y = 2048;
+    return true;
 }
 void mia::PointerController::move(float delta_x, float delta_y)
 {
