@@ -127,13 +127,13 @@ target_link_libraries(
 )
 
 add_executable(
-  ubuntu_ds_demo_client_unaccelerated
+  mir_demo_client_unaccelerated
   
   demo_client_unaccelerated.c
 )
 
 target_link_libraries(
-  ubuntu_ds_demo_client_unaccelerated
+  mir_demo_client_unaccelerated
   
   mirclient
   mirprotobuf
@@ -141,6 +141,27 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+)
+
+add_executable(
+  mir_demo_client_accelerated
+  
+  demo_client_accelerated.cpp
+)
+
+target_link_libraries(
+  mir_demo_client_accelerated
+  
+  test-utils
+  mirclient
+  mirprotobuf
+  
+  ${Boost_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${EGL_LIBRARIES}
+  ${GLESv2_LIBRARIES}
+
 )
 
 install(
