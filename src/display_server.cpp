@@ -93,6 +93,8 @@ void mir::DisplayServer::start()
         do_stuff();
         lk.lock();     
     }
+
+    p->input_manager->stop();
 }
 
 void mir::DisplayServer::do_stuff()
@@ -102,7 +104,6 @@ void mir::DisplayServer::do_stuff()
 
 void mir::DisplayServer::stop()
 {
-    p->input_manager->stop();
     std::unique_lock<std::mutex> lk(p->exit_guard);
     p->exit=true;
 }
