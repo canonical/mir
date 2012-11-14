@@ -42,7 +42,7 @@ target_link_libraries(
   mirprotobuf
 
   mir-test-framework
-  test-utils
+  mir-test-doubles
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

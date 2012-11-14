@@ -28,7 +28,7 @@ add_subdirectory(acceptance-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)
 add_subdirectory(mir-test-framework/)
-add_subdirectory(utils/)
+add_subdirectory(mir-test-doubles/)
 
 if(MIR_ENABLE_DEATH_TESTS)
     add_subdirectory(death-tests/)

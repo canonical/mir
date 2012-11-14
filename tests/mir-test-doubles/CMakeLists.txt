@@ -39,11 +39,11 @@ if (MIR_PLATFORM STREQUAL "android")
 endif()
 
 add_library(
-  test-utils STATIC 
+  mir-test-doubles STATIC 
   ${TEST_UTILS_SRCS})
 
 target_link_libraries(
-  test-utils 
+  mir-test-doubles 
 
   mir
   miroptions
@@ -57,7 +57,7 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
 
-  test-utils
+  mir-test-doubles
   3rd_party
   
   ${PROTOBUF_LIBRARIES}

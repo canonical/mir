@@ -52,7 +52,7 @@ target_link_libraries(
   integration-tests
 
   mir-test-framework
-  test-utils
+  mir-test-doubles
 
   mir
   miroptions

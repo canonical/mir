@@ -59,7 +59,7 @@ add_executable(
 target_link_libraries(
   mir_demo_client_accelerated
   
-  test-utils
+  mir-test-doubles
   mirclient
   mirprotobuf
   
