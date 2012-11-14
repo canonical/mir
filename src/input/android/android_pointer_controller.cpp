@@ -15,18 +15,33 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+#include "mir/graphics/viewable_area.h"
 
 #include "android_pointer_controller.h"
 
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
 
-mia::PointerController::PointerController(std::shared_ptr<mi::CursorListener> const& cursor_listener) : 
+mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> const& viewable_area) :
     state(0),
     x(0.0), 
     y(0.0),
+    viewable_area(viewable_area),
+    cursor_listener(std::shared_ptr<mi::CursorListener>())
+{
+}
+
+
+mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> const& viewable_area,
+					  std::shared_ptr<mi::CursorListener> const& cursor_listener) : 
+    state(0),
+    x(0.0), 
+    y(0.0),
+    viewable_area(viewable_area),
     cursor_listener(cursor_listener)
+
 {
 }
 
@@ -38,10 +53,12 @@ void mia::PointerController::notify_listener()
 
 bool mia::PointerController::getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
 {
-    *out_min_x = 0;
-    *out_min_y = 0;
-    *out_max_x = 2048.0;
-    *out_max_y = 2048.0;
+    std::lock_guard<std::mutex> lg(guard);
+    auto bounds = viewable_area->view_area();
+    *out_min_x = bounds.top_left.x.as_float();
+    *out_min_y = bounds.top_left.y.as_float();
+    *out_max_x = bounds.top_left.x.as_float() + bounds.size.width.as_float();
+    *out_max_y = bounds.top_left.y.as_float() + bounds.size.height.as_float();
     return true;
 }
 void mia::PointerController::move(float delta_x, float delta_y)

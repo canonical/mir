@@ -167,10 +167,11 @@ mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::Ap
 }
 
 std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> event_filters)
+mir::DefaultServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> event_filters,
+						    std::shared_ptr<mg::ViewableArea> const& view_area)
 {
     droidinput::sp<droidinput::EventHubInterface>  event_hub = new droidinput::EventHub();
-    return std::shared_ptr<mia::InputManager>(new mia::InputManager(event_hub, event_filters));
+    return std::shared_ptr<mia::InputManager>(new mia::InputManager(event_hub, event_filters, view_area));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>

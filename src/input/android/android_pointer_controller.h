@@ -22,11 +22,16 @@
 #include "dummy_android_pointer_controller.h"
 
 #include "mir/input/cursor_listener.h"
+
 #include "mir/thread/all.h"
 #include <thread>
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
 namespace android
@@ -34,7 +39,9 @@ namespace android
 class PointerController : public DummyPointerController
 {
 public:
-    explicit PointerController(std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
+    explicit PointerController(std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+    explicit PointerController(std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+			       std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~PointerController() {};
     
     virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
@@ -49,7 +56,9 @@ private:
     mutable std::mutex guard;
     int32_t state;
     float x, y;
-    std::shared_ptr<CursorListener> const& cursor_listener;
+
+    std::shared_ptr<graphics::ViewableArea> viewable_area;
+    std::shared_ptr<CursorListener> cursor_listener;
 };
 }
 }

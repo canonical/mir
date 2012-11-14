@@ -15,17 +15,25 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "android_input_reader_policy.h"
-#include "android_pointer_controller.h"
 
-namespace mia = mir::input::android;
-namespace mg = mir::graphics;
+#ifndef MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
+#define MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
 
-mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mg::ViewableArea> const& viewable_area, std::shared_ptr<CursorListener> const& cursor_listener)
+#include "mir/graphics/viewable_area.h"
+
+#include <gmock/gmock.h>
+
+namespace mir
 {
-    pointer_controller = new mia::PointerController(viewable_area, cursor_listener);
-}
-droidinput::sp<droidinput::PointerControllerInterface> mia::InputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
+namespace graphics
 {
-    return pointer_controller;
+
+struct MockViewableArea : public ViewableArea
+{
+public:
+    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
+};
+
 }
+}
+#endif /* MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_ */

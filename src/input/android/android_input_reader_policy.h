@@ -24,6 +24,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
 class CursorListener;
@@ -33,7 +37,9 @@ namespace android
 class InputReaderPolicy : public DummyInputReaderPolicy
 {
 public:
-    explicit InputReaderPolicy(std::shared_ptr<CursorListener> const& cursor_listener);
+    explicit InputReaderPolicy(std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+			       std::shared_ptr<CursorListener> const& cursor_listener);
+
     virtual ~InputReaderPolicy() {}
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);

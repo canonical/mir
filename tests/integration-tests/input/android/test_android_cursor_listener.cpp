@@ -26,6 +26,7 @@
 #include "mir_test/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
+#include "mir_test/mock_viewable_area.h"
 
 // Needed implicitly for InputManager destructor because of android::sp :/
 #include <InputDispatcher.h>
@@ -37,6 +38,8 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 using mir::MockEventFilter;
 using mir::WaitCondition;
@@ -54,10 +57,18 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
   public:
     void SetUp()
     {
+	using ::testing::Return;
+
         event_hub = new mia::FakeEventHub();
+
+	EXPECT_CALL(viewable_area, view_area()).
+	    WillOnce(Return(geom::Rectangle{geom::Point(),
+			                    geom::Size{geom::Width(1024), geom::Height(1024)}}));
+
         input_manager.reset(new mia::InputManager(
             event_hub,
             {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())},
+	    std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
 	    std::shared_ptr<mi::CursorListener>(&cursor_listener, mir::EmptyDeleter())));
         input_manager->start();
     }
@@ -70,6 +81,7 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
   protected:
     android::sp<mia::FakeEventHub> event_hub;
     MockEventFilter event_filter;
+    mg::MockViewableArea viewable_area;
     std::shared_ptr<mia::InputManager> input_manager;
     MockCursorListener cursor_listener;
 };

@@ -98,7 +98,7 @@ public:
 }
 }
 
-std::shared_ptr<mi::InputManager> mir::TestingServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> /*event_filters*/)
+std::shared_ptr<mi::InputManager> mir::TestingServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> /*event_filters*/, std::shared_ptr<mg::ViewableArea> const& /*viewable_area*/)
 {
     using ::testing::NiceMock;
     return std::make_shared<NiceMock<mi::MockInputManager>>();

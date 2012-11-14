@@ -23,6 +23,7 @@
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/mock_event_filter.h"
+#include "mir_test/mock_viewable_area.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
@@ -32,22 +33,36 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 using mir::MockEventFilter;
 using mir::WaitCondition;
 
 namespace
 {
+static const int default_input_area_size = 1024;
+static const geom::Rectangle input_area_bounds = geom::Rectangle{geom::Point{geom::X(0), geom::Y(0)},
+								 geom::Size{geom::Width(default_input_area_size),
+									    geom::Height(default_input_area_size)}};
+
 
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
   public:
     void SetUp()
     {
+        using namespace ::testing;
+
+	viewable_area.reset(new mg::MockViewableArea());
+
         event_hub = new mia::FakeEventHub();
+
         input_manager.reset(new mia::InputManager(
             event_hub,
-            {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}));
+            {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
+	    viewable_area));
+
         input_manager->start();
     }
 
@@ -58,8 +73,10 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 
   protected:
     android::sp<mia::FakeEventHub> event_hub;
-    MockEventFilter event_filter;
     std::shared_ptr<mia::InputManager> input_manager;
+    geom::Rectangle input_area_bounds;
+    MockEventFilter event_filter;
+    std::shared_ptr<mg::MockViewableArea> viewable_area;
 };
 
 }
@@ -106,6 +123,9 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
+    EXPECT_CALL(*viewable_area, view_area()).
+      WillRepeatedly(Return(input_area_bounds));
+
     event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
     wait_condition.wait_for_at_most_seconds(60);
@@ -128,6 +148,9 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 		    handles(MotionEvent(200, 100)))
 	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
+
+    EXPECT_CALL(*viewable_area, view_area()).
+      WillRepeatedly(Return(input_area_bounds));
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
