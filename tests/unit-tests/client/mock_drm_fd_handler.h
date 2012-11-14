@@ -13,34 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voß <thomas.voss@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_WAIT_CONDITION_H_
-#define MIR_TEST_WAIT_CONDITION_H_
+#ifndef MIR_TEST_CLIENT_MOCK_DRM_FD_HANDLER_H_
+#define MIR_TEST_CLIENT_MOCK_DRM_FD_HANDLER_H_
 
-#include "mir/chrono/chrono.h"
-#include "mir/thread/all.h"
+#include <gmock/gmock.h>
+
+#include "mir_client/gbm/drm_fd_handler.h"
 
 namespace mir
 {
-struct WaitCondition
+namespace client
 {
-    void wait_for_at_most_seconds(int seconds)
-    {
-        std::unique_lock<std::mutex> ul(guard);
-        condition.wait_for(ul, std::chrono::seconds(seconds));
-    }
+namespace gbm
+{
 
-    void wake_up_everyone()
-    {
-        std::unique_lock<std::mutex> ul(guard);
-        condition.notify_all();
-    }
-
-    std::mutex guard;
-    std::condition_variable condition;
+class MockDRMFDHandler : public DRMFDHandler
+{
+public:
+    MOCK_METHOD2(ioctl, int(unsigned long request, void* arg));
+    MOCK_METHOD2(map, void*(size_t size, off_t offset));
+    MOCK_METHOD2(unmap, void(void* addr, size_t size));
 };
-}
 
-#endif // MIR_TEST_WAIT_CONDITION_H_
+}
+}
+}
+#endif

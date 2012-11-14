@@ -48,7 +48,13 @@
 #include <sys/inotify.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
+// <mir changes>
+// Needed to build on android platform (PATH_MAX)
+#ifdef HAVE_ANDROID_OS
 #include <sys/limits.h>
+#endif
+#include <linux/limits.h>
+// </mir changes>
 
 /* this macro is used to tell if "bit" is set in "array"
  * it selects a byte from the array, and does a boolean AND
@@ -1262,7 +1268,10 @@ status_t EventHub::loadVirtualKeyMapLocked(Device* device) {
 }
 
 status_t EventHub::loadKeyMapLocked(Device* device) {
-    return device->keyMap.load(device->identifier, device->configuration);
+    // <mir changes>
+    status_t status = device->keyMap.load(device->identifier, device->configuration);
+    if (status) return device->keyMap.loadGenericMaps();
+    // </mir changes>
 }
 
 bool EventHub::isExternalDeviceLocked(Device* device) {

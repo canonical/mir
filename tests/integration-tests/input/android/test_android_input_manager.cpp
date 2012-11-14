@@ -24,16 +24,14 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
-
-// Needed implicitly for InputManager destructor because of android::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
+#include "mir_test/event_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mis = mir::input::synthesis;
 
 using mir::MockEventFilter;
 using mir::WaitCondition;
@@ -63,6 +61,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     MockEventFilter event_filter;
     std::shared_ptr<mia::InputManager> input_manager;
 };
+
 }
 
 ACTION_P(ReturnFalseAndWakeUp, wait_condition)
@@ -71,22 +70,74 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
     return false;
 }
 
-TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_to_filter)
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_events_to_filter)
 {
     using namespace ::testing;
-
-    static const int key = KEY_ENTER;
 
     WaitCondition wait_condition;
 
     EXPECT_CALL(
         event_filter,
-        handles(IsKeyEventWithKey(key)))
+        handles(KeyDownEvent()))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_key_event(key);
+    event_hub->synthesize_device_scan_complete();
 
-    wait_condition.wait_for_seconds(30);
+    event_hub->synthesize_event(mis::a_key_down_event()
+				.of_scancode(KEY_ENTER));
+
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }
+
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_events_to_filter)
+{
+    using namespace ::testing;
+
+    WaitCondition wait_condition;
+
+    EXPECT_CALL(
+        event_filter,
+        handles(ButtonDownEvent()))
+            .Times(1)
+            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+
+    event_hub->synthesize_builtin_cursor_added();
+    event_hub->synthesize_device_scan_complete();
+
+    event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
+
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
+}
+
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
+{
+    using namespace ::testing;
+
+    WaitCondition wait_condition;
+
+    // We get absolute motion events since we have a pointer controller.
+    {
+	InSequence seq;
+
+	EXPECT_CALL(event_filter,
+		    handles(MotionEvent(100, 100)))
+	    .WillOnce(Return(false));
+	EXPECT_CALL(event_filter,
+		    handles(MotionEvent(200, 100)))
+	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    }
+
+    event_hub->synthesize_builtin_cursor_added();
+    event_hub->synthesize_device_scan_complete();
+
+    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
+    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
+
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
+}
+
