@@ -34,6 +34,7 @@ if(MIR_PLATFORM STREQUAL "gbm")
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_depository.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_platform.cpp
 )
 endif()
 

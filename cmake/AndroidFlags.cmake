@@ -4,6 +4,7 @@ function(get_android_flags)
   
   #build flags for finding things in the sysroot
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} --sysroot=${MIR_NDK_PATH}/sysroot")
+  set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -isystem ${MID_NDK_PATH}/lib/gcc/arm-linux-androideabi/4.6.x-google/include-fixed")
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -isystem ${MIR_NDK_PATH}/sysroot/usr/include")
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -isystem ${MIR_NDK_PATH}/include/c++")
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -isystem ${MIR_NDK_PATH}/include/c++/arm-linux-androideabi/armv7-a")
