@@ -19,9 +19,7 @@
 #ifndef MIR_CLIENT_CLIENT_CONNECTION_H_
 #define MIR_CLIENT_CLIENT_CONNECTION_H_
 
-#include "mir_client/mir_client_library.h"
-
-#include <memory>
+class MirPlatformPackage;
 
 namespace mir
 {
