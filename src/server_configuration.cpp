@@ -40,6 +40,9 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
+#include "input/android/android_input_manager.h"
+
+#include <EventHub.h>
 
 #include <boost/program_options/parsers.hpp>
 
@@ -49,6 +52,8 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
+namespace mia = mir::input::android;
 
 namespace
 {
@@ -159,6 +164,13 @@ mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::Ap
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
     auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSelectionStrategy>(session_model);
     return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
+}
+
+std::shared_ptr<mi::InputManager>
+mir::DefaultServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> event_filters)
+{
+    droidinput::sp<droidinput::EventHubInterface>  event_hub = new droidinput::EventHub();
+    return std::shared_ptr<mia::InputManager>(new mia::InputManager(event_hub, event_filters));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>

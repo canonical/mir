@@ -17,6 +17,7 @@
  */
 
 #include "mir_test/testing_server_configuration.h"
+#include "mir_test/mock_input_manager.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -25,11 +26,13 @@
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/input/input_manager.h"
 #include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 
 namespace mir
 {
@@ -93,6 +96,12 @@ public:
     }
 };
 }
+}
+
+std::shared_ptr<mi::InputManager> mir::TestingServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> /*event_filters*/)
+{
+    using ::testing::NiceMock;
+    return std::make_shared<NiceMock<mi::MockInputManager>>();
 }
 
 std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()

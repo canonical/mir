@@ -40,6 +40,11 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     std::shared_ptr<graphics::Platform> make_graphics_platform();
     std::shared_ptr<graphics::Renderer> make_renderer(
             std::shared_ptr<graphics::Display> const& display);
+    // We override make_input_manager in the default server configuration
+    // to avoid starting and stopping the full android input stack for tests
+    // which do not leverage input.
+    virtual std::shared_ptr<input::InputManager> make_input_manager(
+	    std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters);
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
