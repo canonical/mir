@@ -85,12 +85,10 @@ set (MIR_TRANSPORT
   STRING
   "IPC transport to build (options are 'socket' or 'binder')"
 )
+
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
-
-if ( MIR_TRANSPORT STREQUAL "socket" )
-  find_package( Protobuf REQUIRED )
-endif()
+find_package(Protobuf REQUIRED )
 
 if (MIR_PLATFORM STREQUAL "android")
   include (cmake/AndroidFlags.cmake)

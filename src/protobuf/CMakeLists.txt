@@ -14,8 +14,6 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-# Check for google protocol buffers and generate code
-
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR})
