@@ -18,30 +18,12 @@
 
 #include "mir_client/client_platform.h"
 #include "mir_client/mir_client_surface.h"
-#include "mir_client/client_context.h"
+#include "mock_client_context.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
-
-struct MockClientContext : public mcl::ClientContext
-{
-    MockClientContext()
-        : connection{reinterpret_cast<MirConnection*>(0xabcdef)}
-    {
-        using namespace testing;
-
-        ON_CALL(*this, mir_connection()).WillByDefault(Return(connection));
-        EXPECT_CALL(*this, mir_connection()).Times(AtLeast(0));
-        EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
-    }
-
-    MirConnection* connection;
-
-    MOCK_METHOD0(mir_connection, MirConnection*());
-    MOCK_METHOD1(populate, void(MirPlatformPackage&));
-};
 
 struct MockClientSurface : public mcl::ClientSurface
 {
@@ -52,7 +34,7 @@ struct MockClientSurface : public mcl::ClientSurface
 
 TEST(ClientPlatformTest, platform_creates )
 {
-    MockClientContext context;
+    mcl::MockClientContext context;
     auto platform = mcl::create_client_platform(&context);
     auto depository = platform->create_platform_depository(); 
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
@@ -60,7 +42,7 @@ TEST(ClientPlatformTest, platform_creates )
 
 TEST(ClientPlatformTest, platform_creates_native_window )
 {
-    MockClientContext context;
+    mcl::MockClientContext context;
     MockClientSurface surface;
     auto platform = mcl::create_client_platform(&context);
     auto native_window = platform->create_egl_window(&surface);
@@ -69,7 +51,7 @@ TEST(ClientPlatformTest, platform_creates_native_window )
 
 TEST(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    MockClientContext context;
+    mcl::MockClientContext context;
     auto platform = mcl::create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());
