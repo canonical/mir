@@ -54,14 +54,12 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     {
         using namespace ::testing;
 
-	viewable_area.reset(new mg::MockViewableArea());
-
         event_hub = new mia::FakeEventHub();
 
         input_manager.reset(new mia::InputManager(
             event_hub,
             {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
-	    viewable_area));
+	    std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter())));
 
         input_manager->start();
     }
@@ -76,7 +74,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     std::shared_ptr<mia::InputManager> input_manager;
     geom::Rectangle input_area_bounds;
     MockEventFilter event_filter;
-    std::shared_ptr<mg::MockViewableArea> viewable_area;
+    mg::MockViewableArea viewable_area;
 };
 
 }
@@ -123,7 +121,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
-    EXPECT_CALL(*viewable_area, view_area()).
+    EXPECT_CALL(viewable_area, view_area()).
       WillRepeatedly(Return(input_area_bounds));
 
     event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
@@ -149,7 +147,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
 
-    EXPECT_CALL(*viewable_area, view_area()).
+    EXPECT_CALL(viewable_area, view_area()).
       WillRepeatedly(Return(input_area_bounds));
 
     event_hub->synthesize_builtin_cursor_added();
