@@ -27,6 +27,7 @@
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -82,7 +83,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -123,7 +124,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
@@ -174,7 +175,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -231,7 +232,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));
@@ -297,7 +298,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
     {
         void exec()
         {
-            mt::TestProtobufClient client(mir::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).Times(testing::AtLeast(0));

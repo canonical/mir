@@ -25,12 +25,13 @@
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    ASSERT_FALSE(mir::detect_server(mir::test_socket_file(), std::chrono::milliseconds(0)));
+    ASSERT_FALSE(mtf::detect_server(mtf::test_socket_file(), std::chrono::milliseconds(0)));
 
     TestingServerConfiguration server_config;
 
@@ -40,7 +41,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     {
         void exec()
         {
-            EXPECT_TRUE(mir::detect_server(mir::test_socket_file(),
+            EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
                                            std::chrono::milliseconds(100)));
         }
     } client_config;

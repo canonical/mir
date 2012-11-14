@@ -32,6 +32,11 @@
 namespace mir
 {
 class DisplayServer;
+}
+
+namespace mir_test_framework
+{
+using namespace mir;
 
 struct TestingClientConfiguration
 {

@@ -37,10 +37,11 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* const mir_test_socket = mir::test_socket_file().c_str();
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
 namespace mir
@@ -179,7 +180,6 @@ const int ClientConfigCommon::max_surface_count;
 }
 
 using mir::SurfaceSync;
-using mir::TestingClientConfiguration;
 using mir::ClientConfigCommon;
 using mir::ErrorServer;
 

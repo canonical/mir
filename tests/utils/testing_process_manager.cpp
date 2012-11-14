@@ -31,6 +31,7 @@
 
 namespace mc = mir::compositor;
 namespace mp = mir::process;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -44,7 +45,7 @@ namespace
 }
 }
 
-namespace mir
+namespace mir_test_framework
 {
 void startup_pause()
 {
@@ -53,12 +54,12 @@ void startup_pause()
 }
 }
 
-mir::TestingProcessManager::TestingProcessManager() :
+mtf::TestingProcessManager::TestingProcessManager() :
     is_test_process(true)
 {
 }
 
-mir::TestingProcessManager::~TestingProcessManager()
+mtf::TestingProcessManager::~TestingProcessManager()
 {
 }
 
@@ -84,7 +85,7 @@ void signal_terminate (int )
 }
 }
 
-void mir::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
+void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
 
@@ -128,7 +129,7 @@ void mir::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     }
 }
 
-void mir::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
+void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguration& config)
 {
     if (!is_test_process)
     {
@@ -169,7 +170,7 @@ void mir::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     }
 }
 
-void mir::TestingProcessManager::tear_down_clients()
+void mtf::TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
     {
@@ -199,7 +200,7 @@ void mir::TestingProcessManager::tear_down_clients()
     }
 }
 
-void mir::TestingProcessManager::tear_down_server()
+void mtf::TestingProcessManager::tear_down_server()
 {
     if (is_test_process)
     {
@@ -213,13 +214,13 @@ void mir::TestingProcessManager::tear_down_server()
     }
 }
 
-void mir::TestingProcessManager::tear_down_all()
+void mtf::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
 }
 
-bool mir::detect_server(
+bool mtf::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {

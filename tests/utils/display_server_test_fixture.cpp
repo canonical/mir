@@ -20,7 +20,7 @@
 
 namespace mc = mir::compositor;
 
-mir::TestingProcessManager mir::DefaultDisplayServerTestFixture::process_manager;
+mir_test_framework::TestingProcessManager mir_test_framework::DefaultDisplayServerTestFixture::process_manager;
 
 
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
@@ -52,7 +52,7 @@ DefaultDisplayServerTestFixture::DefaultDisplayServerTestFixture()
 DefaultDisplayServerTestFixture::~DefaultDisplayServerTestFixture() {}
 
 
-void mir::BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfiguration& functor)
+void BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfiguration& functor)
 {
     process_manager.launch_server_process(functor);
 }

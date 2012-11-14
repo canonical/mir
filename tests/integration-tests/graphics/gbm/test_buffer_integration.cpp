@@ -32,6 +32,7 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
@@ -102,7 +103,7 @@ class GBMBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto options = mir::TestingServerConfiguration().make_options();
+        auto options = mtf::TestingServerConfiguration().make_options();
 
         if (options->get("tests_use_real_graphics", false))
             platform = mg::create_platform();

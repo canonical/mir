@@ -34,10 +34,11 @@
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mcl = mir::client;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mir::test_socket_file().c_str();
+    char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
 namespace mir
