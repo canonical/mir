@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
@@ -21,29 +21,19 @@ include_directories(
 )
 
 set(
-  TEST_UTILS_SRCS
+  TEST_FRAMEWORK_SRCS
 
-  graphics_utils.cpp 
-  test_protobuf_client.cpp
-  event_factory.cpp
-  fake_event_hub.cpp
+  testing_server_options.cpp
+  testing_process_manager.cpp
+  display_server_test_fixture.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "android")
-  set(
-    TEST_UTILS_SRCS
-
-    android_graphics.cpp
-    ${TEST_UTILS_SRCS} 
-    )
-endif()
-
 add_library(
-  test-utils STATIC 
-  ${TEST_UTILS_SRCS})
+  mir-test-framework STATIC 
+  ${TEST_FRAMEWORK_SRCS})
 
 target_link_libraries(
-  test-utils 
+  mir-test-framework
 
   mir
   miroptions
@@ -57,9 +47,8 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
 
-  test-utils
   3rd_party
-  
+
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
