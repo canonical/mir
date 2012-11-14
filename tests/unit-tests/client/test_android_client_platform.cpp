@@ -39,8 +39,8 @@ struct MockClientConnection : public mcl::ClientConnection
 
 TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
+    MockClientConnection connection;
+    auto platform = mcl::create_client_platform(&connection);
     auto native_display = platform->create_egl_native_display();
     EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);

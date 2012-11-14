@@ -45,25 +45,25 @@ struct MockClientSurface : public mcl::ClientSurface
 
 TEST(ClientPlatformTest, platform_creates )
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
+    MockClientConnection connection;
+    auto platform = mcl::create_client_platform(&connection);
     auto depository = platform->create_platform_depository(); 
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_native_window )
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
-    auto mock_client_surface = std::make_shared<MockClientSurface>();
-    auto native_window = platform->create_egl_window(mock_client_surface.get()); 
+    MockClientConnection connection;
+    MockClientSurface surface;
+    auto platform = mcl::create_client_platform(&connection);
+    auto native_window = platform->create_egl_window(&surface);
     EXPECT_NE( native_window, (EGLNativeWindowType) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
+    MockClientConnection connection;
+    auto platform = mcl::create_client_platform(&connection);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());
 }

@@ -45,18 +45,18 @@ struct MockClientSurface : public mcl::ClientSurface
 
 TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
-    auto mock_client_surface = std::make_shared<MockClientSurface>();
-    auto native_window = platform->create_egl_window(mock_client_surface.get());
-    EXPECT_EQ(native_window, reinterpret_cast<EGLNativeWindowType>(mock_client_surface.get()));
+    MockClientConnection connection;
+    MockClientSurface surface;
+    auto platform = mcl::create_client_platform(&connection);
+    auto native_window = platform->create_egl_window(&surface);
+    EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), native_window);
 }
 
 TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
 {
-    auto connection = std::make_shared<MockClientConnection>();
-    auto platform = mcl::create_client_platform(connection.get());
+    MockClientConnection connection;
+    auto platform = mcl::create_client_platform(&connection);
     auto native_display = platform->create_egl_native_display();
     EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
-    EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(connection.get()), egl_native_display);
+    EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(&connection), egl_native_display);
 }
