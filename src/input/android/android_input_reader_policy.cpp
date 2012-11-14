@@ -21,10 +21,12 @@
 namespace mia = mir::input::android;
 namespace mg = mir::graphics;
 
-mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mg::ViewableArea> const& viewable_area, std::shared_ptr<CursorListener> const& cursor_listener)
+mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mg::ViewableArea> const& viewable_area,
+					  std::shared_ptr<CursorListener> const& cursor_listener) :
+    pointer_controller(new mia::PointerController(viewable_area, cursor_listener))
 {
-    pointer_controller = new mia::PointerController(viewable_area, cursor_listener);
 }
+
 droidinput::sp<droidinput::PointerControllerInterface> mia::InputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
 {
     return pointer_controller;
