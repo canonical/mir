@@ -62,7 +62,7 @@ private:
 class GBMEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
 {
 public:
-    GBMEGLNativeDisplayContainer(mcl::ClientConnection* const connection)
+    GBMEGLNativeDisplayContainer(MirConnection* connection)
         : connection{connection}
     {
     }
@@ -73,18 +73,18 @@ public:
     }
 
 private:
-    mcl::ClientConnection* const connection;
+    MirConnection* const connection;
 };
 
 }
 
 std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        ClientConnection* connection)
+        ClientContext* context)
 {
     MirPlatformPackage platform_package;
 
     memset(&platform_package, 0, sizeof(platform_package));
-    connection->populate(platform_package);
+    context->populate(platform_package);
 
     int drm_fd = -1;
 
@@ -92,13 +92,13 @@ std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
         drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(connection, drm_fd_handler);
+    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler);
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
-        ClientConnection* const connection,
+        ClientContext* const context,
         std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : connection{connection}, drm_fd_handler{drm_fd_handler}
+    : context{context}, drm_fd_handler{drm_fd_handler}
 {
 }
 
@@ -118,5 +118,5 @@ void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
 
 std::shared_ptr<mcl::EGLNativeDisplayContainer> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    return std::make_shared<GBMEGLNativeDisplayContainer>(connection);
+    return std::make_shared<GBMEGLNativeDisplayContainer>(context->mir_connection());
 }

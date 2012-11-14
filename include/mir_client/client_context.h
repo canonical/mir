@@ -16,30 +16,32 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_CONNECTION_H_
-#define MIR_CLIENT_CLIENT_CONNECTION_H_
+#ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
+#define MIR_CLIENT_CLIENT_CONTEXT_H_
 
 class MirPlatformPackage;
+class MirConnection;
 
 namespace mir
 {
 namespace client
 {
 
-class ClientConnection
+class ClientContext
 {
 public:
-    virtual ~ClientConnection() {}
+    virtual ~ClientContext() {}
 
+    virtual MirConnection* mir_connection() = 0;
     virtual void populate(MirPlatformPackage& platform_package) = 0;
 
 protected:
-    ClientConnection() = default;
-    ClientConnection(const ClientConnection&) = delete;
-    ClientConnection& operator=(const ClientConnection&) = delete;
+    ClientContext() = default;
+    ClientContext(const ClientContext&) = delete;
+    ClientContext& operator=(const ClientContext&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_CLIENT_CLIENT_CONNECTION_H_ */
+#endif /* MIR_CLIENT_CLIENT_CONTEXT_H_ */

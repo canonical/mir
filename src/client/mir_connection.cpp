@@ -238,3 +238,8 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
 {
     return platform;
 }
+
+MirConnection* MirConnection::mir_connection()
+{
+    return this;
+}

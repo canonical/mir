@@ -16,8 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir_client/mir_client_library.h"
 #include "mir_client/client_platform.h"
-#include "mir_client/client_connection.h"
+#include "mir_client/client_context.h"
 
 #include <EGL/egl.h>
 
@@ -26,21 +27,28 @@
 
 namespace mcl = mir::client;
 
-struct MockClientConnection : public mcl::ClientConnection
+struct MockClientContext : public mcl::ClientContext
 {
-    MockClientConnection()
+    MockClientContext()
+        : connection{reinterpret_cast<MirConnection*>(0xabcdef)}
     {
         using namespace testing;
+
+        ON_CALL(*this, mir_connection()).WillByDefault(Return(connection));
+        EXPECT_CALL(*this, mir_connection()).Times(AtLeast(0));
         EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
     }
 
+    MirConnection* connection;
+
+    MOCK_METHOD0(mir_connection, MirConnection*());
     MOCK_METHOD1(populate, void(MirPlatformPackage&));
 };
 
 TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
-    MockClientConnection connection;
-    auto platform = mcl::create_client_platform(&connection);
+    MockClientContext context;
+    auto platform = mcl::create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);

@@ -27,7 +27,7 @@ namespace client
 {
 class ClientBufferDepository;
 class ClientSurface;
-class ClientConnection;
+class ClientContext;
 
 class EGLNativeDisplayContainer
 {
@@ -55,7 +55,7 @@ public:
     virtual std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display() = 0;
 };
 
-std::shared_ptr<ClientPlatform> create_client_platform(ClientConnection* connection);
+std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
 
 }
 }
