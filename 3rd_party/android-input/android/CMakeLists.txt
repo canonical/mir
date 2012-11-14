@@ -64,6 +64,13 @@ add_library(
   system/extras/ext4_utils/sha1.c
   )
 
+if(MIR_PLATFORM STREQUAL "android")
+  target_link_libraries(
+    android-input
+    binder
+    skia)
+endif()
+
 set_target_properties(
   android-input
   PROPERTIES

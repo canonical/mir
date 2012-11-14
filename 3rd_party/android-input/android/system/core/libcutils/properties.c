@@ -26,6 +26,8 @@
 #include <cutils/properties.h>
 #include "loghack.h"
 
+#define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path))
+
 #ifdef HAVE_LIBC_SYSTEM_PROPERTIES
 
 #define _REALLY_INCLUDE_SYS__SYSTEM_PROPERTIES_H_
