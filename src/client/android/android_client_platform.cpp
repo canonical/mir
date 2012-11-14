@@ -75,10 +75,10 @@ private:
 
 std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
 {
-    auto window = new mcla::MirNativeWindow(surface);
-    EGLNativeWindowType* window_ptr = new EGLNativeWindowType;
-    *window_ptr = window;
-    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(window); 
-    return std::shared_ptr<EGLNativeWindowType>(window_ptr, deleter);
+    auto mir_native_window = new mcla::MirNativeWindow(surface);
+    auto egl_native_window = new EGLNativeWindowType;
+    *egl_native_window = mir_native_window;
+    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window); 
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
