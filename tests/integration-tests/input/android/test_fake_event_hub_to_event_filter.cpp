@@ -112,6 +112,7 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
     
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
-
-    wait_condition.wait_for_seconds(30);
+    
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }
