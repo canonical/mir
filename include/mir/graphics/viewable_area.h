@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_H_
-#define MIR_GRAPHICS_DISPLAY_H_
+#ifndef MIR_GRAPHICS_VIEWABLE_AREA_H_
+#define MIR_GRAPHICS_VIEWABLE_AREA_H_
 
-#include "mir/graphics/viewable_area.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {
@@ -27,21 +27,20 @@ namespace mir
 namespace graphics
 {
 
-class Display : public ViewableArea
+class ViewableArea
 {
 public:
     virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
 
 protected:
-    Display() = default;
-    ~Display() = default;
+    ViewableArea() = default;
+    ~ViewableArea() = default;
 private:
-    Display(Display const&) = delete;
-    Display& operator=(Display const&) = delete;
+    ViewableArea(ViewableArea const&) = delete;
+    ViewableArea& operator=(ViewableArea const&) = delete;
 };
+
 }
 }
 
-#endif /* MIR_GRAPHICS_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_VIEWABLE_AREA_H_ */
