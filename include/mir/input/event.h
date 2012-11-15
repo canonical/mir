@@ -89,7 +89,6 @@ extern "C" {
                     float pressure;
                     float orientation;
                 }; 
-		// TODO: Where does this constant belong?
 		PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;

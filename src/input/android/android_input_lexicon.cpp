@@ -23,57 +23,57 @@
 
 namespace mia = mir::input::android;
 
-void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent *out_mir_event)
+void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent &mir_event)
 {
     switch(android_event->getType())
     {
 	case AINPUT_EVENT_TYPE_KEY:
 	{
 	    const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
-	    out_mir_event->type = MIR_INPUT_EVENT_TYPE_KEY;
-	    out_mir_event->device_id = android_event->getDeviceId();
-	    out_mir_event->source_id = android_event->getSource();
-	    out_mir_event->action = kev->getAction();
-	    out_mir_event->flags = kev->getFlags();
-	    out_mir_event->meta_state = kev->getMetaState();
-	    out_mir_event->details.key.key_code = kev->getKeyCode();
-	    out_mir_event->details.key.scan_code = kev->getScanCode();
-	    out_mir_event->details.key.repeat_count = kev->getRepeatCount();
-	    out_mir_event->details.key.down_time = kev->getDownTime();
-	    out_mir_event->details.key.event_time = kev->getEventTime();
-	    out_mir_event->details.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
+	    mir_event.type = MIR_INPUT_EVENT_TYPE_KEY;
+	    mir_event.device_id = android_event->getDeviceId();
+	    mir_event.source_id = android_event->getSource();
+	    mir_event.action = kev->getAction();
+	    mir_event.flags = kev->getFlags();
+	    mir_event.meta_state = kev->getMetaState();
+	    mir_event.details.key.key_code = kev->getKeyCode();
+	    mir_event.details.key.scan_code = kev->getScanCode();
+	    mir_event.details.key.repeat_count = kev->getRepeatCount();
+	    mir_event.details.key.down_time = kev->getDownTime();
+	    mir_event.details.key.event_time = kev->getEventTime();
+	    mir_event.details.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
 	    break;
 	}
 	case AINPUT_EVENT_TYPE_MOTION:
 	{
 	    const droidinput::MotionEvent* mev = static_cast<const droidinput::MotionEvent*>(android_event);
-	    out_mir_event->type = MIR_INPUT_EVENT_TYPE_MOTION;
-	    out_mir_event->device_id = android_event->getDeviceId();
-	    out_mir_event->source_id = android_event->getSource();
-	    out_mir_event->action = mev->getAction();
-	    out_mir_event->flags = mev->getFlags();
-	    out_mir_event->meta_state = mev->getMetaState();
-	    out_mir_event->details.motion.edge_flags = mev->getEdgeFlags();
-	    out_mir_event->details.motion.button_state = mev->getButtonState();
-	    out_mir_event->details.motion.x_offset = mev->getXOffset();
-	    out_mir_event->details.motion.y_offset = mev->getYOffset();
-	    out_mir_event->details.motion.x_precision = mev->getXPrecision();
-	    out_mir_event->details.motion.y_precision = mev->getYPrecision();
-	    out_mir_event->details.motion.down_time = mev->getDownTime();
-	    out_mir_event->details.motion.event_time = mev->getEventTime();
-	    out_mir_event->details.motion.pointer_count = mev->getPointerCount();
+	    mir_event.type = MIR_INPUT_EVENT_TYPE_MOTION;
+	    mir_event.device_id = android_event->getDeviceId();
+	    mir_event.source_id = android_event->getSource();
+	    mir_event.action = mev->getAction();
+	    mir_event.flags = mev->getFlags();
+	    mir_event.meta_state = mev->getMetaState();
+	    mir_event.details.motion.edge_flags = mev->getEdgeFlags();
+	    mir_event.details.motion.button_state = mev->getButtonState();
+	    mir_event.details.motion.x_offset = mev->getXOffset();
+	    mir_event.details.motion.y_offset = mev->getYOffset();
+	    mir_event.details.motion.x_precision = mev->getXPrecision();
+	    mir_event.details.motion.y_precision = mev->getYPrecision();
+	    mir_event.details.motion.down_time = mev->getDownTime();
+	    mir_event.details.motion.event_time = mev->getEventTime();
+	    mir_event.details.motion.pointer_count = mev->getPointerCount();
 	    for(unsigned int i = 0; i < mev->getPointerCount(); i++)
 	    {
-		    out_mir_event->details.motion.pointer_coordinates[i].id = mev->getPointerId(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].x = mev->getX(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].raw_x = mev->getRawX(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].y = mev->getY(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].raw_y = mev->getRawY(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].size = mev->getSize(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
-		    out_mir_event->details.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
+		    mir_event.details.motion.pointer_coordinates[i].id = mev->getPointerId(i);
+		    mir_event.details.motion.pointer_coordinates[i].x = mev->getX(i);
+		    mir_event.details.motion.pointer_coordinates[i].raw_x = mev->getRawX(i);
+		    mir_event.details.motion.pointer_coordinates[i].y = mev->getY(i);
+		    mir_event.details.motion.pointer_coordinates[i].raw_y = mev->getRawY(i);
+		    mir_event.details.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
+		    mir_event.details.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
+		    mir_event.details.motion.pointer_coordinates[i].size = mev->getSize(i);
+		    mir_event.details.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
+		    mir_event.details.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
 	    }
 	    break;
 	}

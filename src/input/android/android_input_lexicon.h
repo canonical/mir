@@ -38,7 +38,7 @@ namespace android
 class Lexicon
 {
 public:
-    static void translate(droidinput::InputEvent *android_event, MirEvent *out_mir_event);
+    static void translate(droidinput::InputEvent *android_event, MirEvent &mir_event);
 };
 }
 }
