@@ -45,7 +45,7 @@ namespace
 
 struct MockCursorListener : public mi::CursorListener
 {
-    MOCK_METHOD2(moved, void(float, float));
+    MOCK_METHOD2(moved_to, void(float, float));
 };
 
 class AndroidInputManagerAndCursorListenerSetup : public testing::Test
@@ -91,7 +91,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     WaitCondition wait_condition;
 
-    EXPECT_CALL(cursor_listener, moved(100,100)).Times(1);
+    EXPECT_CALL(cursor_listener, moved_to(100,100)).Times(1);
     // The stack doesn't like shutting down while events are still moving through
     EXPECT_CALL(event_filter,
 		handles(_)).WillOnce(ReturnFalseAndWakeUp(&wait_condition));

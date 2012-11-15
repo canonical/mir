@@ -48,7 +48,7 @@ mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> cons
 void mia::PointerController::notify_listener()
 {
     if (cursor_listener)
-	cursor_listener->moved(x, y);
+	cursor_listener->moved_to(x, y);
 }
 
 bool mia::PointerController::getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
