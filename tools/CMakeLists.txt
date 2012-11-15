@@ -24,7 +24,7 @@ target_link_libraries(
 
     mirplatformgraphics
     mirlogging
-    test-utils
+    mirdraw
 )
 
 set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)

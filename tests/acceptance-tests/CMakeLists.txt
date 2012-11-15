@@ -29,7 +29,7 @@ add_executable(
 
 target_link_libraries(
   acceptance-tests
-  
+
   mir
   miroptions
   mircompositor
@@ -41,7 +41,8 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
 
-  test-utils
+  mir-test-framework
+  mir-test-doubles
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

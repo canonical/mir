@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_test/test_utils_graphics.h"
+#include "mir/draw/graphics.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
     rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
     assert(rc == EGL_TRUE);
 
-    mir::test::glAnimationBasic gl_animation;
+    mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
 
     for(;;)

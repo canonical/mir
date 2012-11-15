@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
-#define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
+#ifndef MIR_DRAW_ANDROID_GRAPHICS
+#define MIR_DRAW_ANDROID_GRAPHICS
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/size.h"
@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace test
+namespace draw
 {
 
 class grallocRenderSW
@@ -45,4 +45,4 @@ private:
 }
 }
 
-#endif /* MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS */
+#endif /* MIR_DRAW_ANDROID_GRAPHICS */

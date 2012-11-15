@@ -28,7 +28,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,10 +36,11 @@
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* const mir_test_socket = mir::test_socket_file().c_str();
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
@@ -128,7 +129,6 @@ const int ClientConfigCommon::max_surface_count;
 }
 
 using mir::SurfaceSync;
-using mir::TestingClientConfiguration;
 using mir::ClientConfigCommon;
 
 namespace

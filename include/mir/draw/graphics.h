@@ -15,14 +15,14 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_TEST_UTILS_GRAPHICS
-#define MIR_TEST_TEST_UTILS_GRAPHICS
+#ifndef MIR_DRAW_GRAPHICS
+#define MIR_DRAW_GRAPHICS
 
 #include <GLES2/gl2.h>
 
 namespace mir
 {
-namespace test
+namespace draw
 {
 
 class glAnimationBasic
@@ -30,7 +30,7 @@ class glAnimationBasic
 public:
     glAnimationBasic();
 
-    void init_gl();    
+    void init_gl();
     void render_gl();
     void step();
     int texture_width();
@@ -44,4 +44,4 @@ private:
 }
 }
 
-#endif /* MIR_TEST_TEST_UTILS_GRAPHICS */
+#endif /* MIR_DRAW_GRAPHICS */

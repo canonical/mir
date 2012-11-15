@@ -12,50 +12,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-include_directories(${CMAKE_SOURCE_DIR})
-
-set(
-  INTEGRATION_TESTS_SRCS
-  test_renderloop.cpp
-  test_surfaceloop.cpp
-  test_error_reporting.cpp
+include_directories(
+    ${Boost_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
 )
 
-add_subdirectory(client/)
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(process/)
-add_subdirectory(input/)
+set(
+  TEST_UTILS_SRCS
 
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
+  test_protobuf_client.cpp
+  event_factory.cpp
+  fake_event_hub.cpp
+)
 
-if(MIR_PLATFORM STREQUAL "gbm")
-  include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
-  )
-  add_subdirectory(graphics/gbm)
-endif()
-
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
+add_library(
+  mir-test-doubles STATIC 
+  ${TEST_UTILS_SRCS})
 
 target_link_libraries(
-  integration-tests
-
-  mir-test-framework
-  mir-test-doubles
+  mir-test-doubles 
 
   mir
-  mirdraw
   miroptions
   mircompositor
   mirfrontend
@@ -63,8 +42,8 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
+  mirclient
   mirplatformgraphics
-  mirprocess
   mirprotobuf
 
   3rd_party
@@ -75,7 +54,4 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${ANDROID_STDLIB}
 )
-
-mir_discover_tests(integration-tests)

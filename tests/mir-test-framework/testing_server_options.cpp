@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/testing_server_configuration.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -30,6 +30,7 @@
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
@@ -95,7 +96,7 @@ public:
 }
 }
 
-std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_platform()
+std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_platform()
 {
     if (!graphics_platform)
     {
@@ -105,7 +106,7 @@ std::shared_ptr<mg::Platform> mir::TestingServerConfiguration::make_graphics_pla
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
+std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::make_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
     auto options = make_options();
@@ -116,20 +117,20 @@ std::shared_ptr<mg::Renderer> mir::TestingServerConfiguration::make_renderer(
         return std::make_shared<StubRenderer>();
 }
 
-void mir::TestingServerConfiguration::exec(DisplayServer* )
+void mtf::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
-void mir::TestingServerConfiguration::on_exit(DisplayServer* )
+void mtf::TestingServerConfiguration::on_exit(DisplayServer* )
 {
 }
 
-mir::TestingServerConfiguration::TestingServerConfiguration() :
+mtf::TestingServerConfiguration::TestingServerConfiguration() :
     DefaultServerConfiguration(test_socket_file())
 {
 }
 
-std::string const& mir::test_socket_file()
+std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{"./mir_socket_test"};
     return socket_file;

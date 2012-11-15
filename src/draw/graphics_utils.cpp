@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/test_utils_graphics.h"
-#include "mir_test/mir_image.h"
+#include "mir/draw/graphics.h"
+#include "mir/draw/mir_image.h"
 
-namespace mt=mir::test;
+namespace md=mir::draw;
 
 static const GLchar *vtex_shader_src =
 {
@@ -61,7 +61,7 @@ GLfloat uv_data[] =
 
 };
 
-mt::glAnimationBasic::glAnimationBasic()
+md::glAnimationBasic::glAnimationBasic()
  : program(-1),
    vPositionAttr(-1),
    uvCoord(-1),
@@ -69,17 +69,17 @@ mt::glAnimationBasic::glAnimationBasic()
    slide(0.0)
 {
 }
-int mt::glAnimationBasic::texture_width()
+int md::glAnimationBasic::texture_width()
 {
     return mir_image.width;
 }
 
-int mt::glAnimationBasic::texture_height()
+int md::glAnimationBasic::texture_height()
 {
     return mir_image.height;
 }
 
-void mt::glAnimationBasic::init_gl()
+void md::glAnimationBasic::init_gl()
 {
     glClearColor(0.0, 1.0, 0.0, 1.0);
 
@@ -117,7 +117,7 @@ void mt::glAnimationBasic::init_gl()
     slideUniform = glGetUniformLocation(program, "slide");
 }
 
-void mt::glAnimationBasic::render_gl()
+void md::glAnimationBasic::render_gl()
 {
     glUseProgram(program);
 
@@ -133,7 +133,7 @@ void mt::glAnimationBasic::render_gl()
     glDisableVertexAttribArray(vPositionAttr);
 }
  
-void mt::glAnimationBasic::step()
+void md::glAnimationBasic::step()
 {
     slide += 0.01f;
     if (slide > 1.0f)
