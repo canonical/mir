@@ -102,6 +102,11 @@ void mir_connection_release(MirConnection * connection)
     delete connection;
 }
 
+MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
+{
+    return connection->egl_native_display();
+}
+
 MirWaitHandle* mir_surface_create(MirConnection * connection,
                         MirSurfaceParameters const * params,
                         mir_surface_lifecycle_callback callback,
