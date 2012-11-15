@@ -40,19 +40,19 @@ public:
     {
         (void)out_min_x;
         (void)out_min_y;
-	(void)out_max_x;
-	(void)out_max_y;
-	// The bounds could not be fetched
-	return false;
+        (void)out_max_x;
+        (void)out_max_y;
+        // The bounds could not be fetched
+        return false;
     }
     virtual void move(float delta_x, float delta_y)
     {
-	(void)delta_x;
-	(void)delta_y;
+        (void)delta_x;
+        (void)delta_y;
     }
     virtual void setButtonState(int32_t button_state)
     {
-	(void)button_state;
+        (void)button_state;
     }
     virtual int32_t getButtonState() const
     {
@@ -60,33 +60,33 @@ public:
     }
     virtual void setPosition(float x, float y)
     {
-	(void)x;
-	(void)y;
+        (void)x;
+        (void)y;
     }
     virtual void getPosition(float* out_x, float* out_y) const
     {
-	(void)out_x;
-	(void)out_y;
+        (void)out_x;
+        (void)out_y;
     }
     virtual void fade(Transition transition)
     {
-	(void)transition;
+        (void)transition;
     }
     virtual void unfade(Transition transition)
     {
-	(void)transition;
+        (void)transition;
     }
 
     virtual void setPresentation(Presentation presentation)
     {
-	(void)presentation;
+        (void)presentation;
     }
     virtual void setSpots(const droidinput::PointerCoords* spot_coords,
-			  const uint32_t* spot_id_to_index, droidinput::BitSet32 spot_id_nits)
+                          const uint32_t* spot_id_to_index, droidinput::BitSet32 spot_id_nits)
     {
-	(void)spot_coords;
-	(void)spot_id_to_index;
-	(void)spot_id_nits;
+        (void)spot_coords;
+        (void)spot_id_to_index;
+        (void)spot_id_nits;
     }
     virtual void clearSpots()
     {
@@ -94,12 +94,12 @@ public:
 
     virtual void setDisplaySize(int32_t width, int32_t height)
     {
-	(void)width;
-	(void)height;
+        (void)width;
+        (void)height;
     }
     virtual void setDisplayOrientation(int32_t orientation)
     {
-	(void)orientation;
+        (void)orientation;
     }
 };
 
