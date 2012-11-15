@@ -143,9 +143,10 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     
     EXPECT_EQ(mir_ev.details.motion.pointer_count, pointer_count);
     EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].id, pointer_id);
-    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].x, x_axis);
+    // Notice these two coordinates are offset by x/y offset
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].x, x_axis + x_offset);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].y, y_axis + y_offset);
     EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].raw_x, x_axis);
-    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].y, y_axis);
     EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].raw_y, y_axis);
     EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].touch_major, touch_major);
     EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].touch_minor, touch_minor);
