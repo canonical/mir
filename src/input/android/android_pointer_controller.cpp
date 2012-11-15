@@ -19,6 +19,8 @@
 
 #include "android_pointer_controller.h"
 
+#include <algorithm>
+
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -91,19 +93,8 @@ void mia::PointerController::setPosition(float new_x, float new_y)
     
     get_bounds_locked(&min_x, &min_y, &max_x, &max_y);
 
-    if (new_x > max_x)
-        x = max_x;
-    else if (new_x < min_x)
-        x = min_x;
-    else
-        x = new_x;
-    
-    if (new_y > max_y)
-        y = max_y;
-    else if (new_y < min_y)
-        y = min_y;
-    else
-        y = new_y;
+    x = std::max(min_x, std::min(max_x, new_x));
+    y = std::max(min_y, std::min(max_y, new_y));
 
     // I think it's correct to hold this lock while notifying the listener (i.e. cursor rendering update)
     // to prevent the InputReader from getting ahead of rendering. This may need to be thought about later.
