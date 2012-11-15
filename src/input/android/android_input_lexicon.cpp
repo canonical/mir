@@ -41,7 +41,7 @@ void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent *ou
 	    out_mir_event->details.key.repeat_count = kev->getRepeatCount();
 	    out_mir_event->details.key.down_time = kev->getDownTime();
 	    out_mir_event->details.key.event_time = kev->getEventTime();
-	    out_mir_event->details.key.is_system_key = kev->isSystemKey();
+	    out_mir_event->details.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
 	    break;
 	}
     case AINPUT_EVENT_TYPE_MOTION:
