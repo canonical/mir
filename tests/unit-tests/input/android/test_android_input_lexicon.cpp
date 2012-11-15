@@ -70,13 +70,13 @@ TEST_F(AndroidInputLexiconSetup, translates_key_events)
     
     // Key event specific properties
     EXPECT_EQ(mir_ev.type, MIR_EVENT_TYPE_KEY);
-    EXPECT_EQ(mir_ev.key.key_code, key_code);
-    EXPECT_EQ(mir_ev.key.scan_code, scan_code);
-    EXPECT_EQ(mir_ev.key.repeat_count, repeat_count);
-    EXPECT_EQ(mir_ev.key.down_time, down_time);
-    EXPECT_EQ(mir_ev.key.event_time, event_time);
+    EXPECT_EQ(mir_ev.details.key.key_code, key_code);
+    EXPECT_EQ(mir_ev.details.key.scan_code, scan_code);
+    EXPECT_EQ(mir_ev.details.key.repeat_count, repeat_count);
+    EXPECT_EQ(mir_ev.details.key.down_time, down_time);
+    EXPECT_EQ(mir_ev.details.key.event_time, event_time);
     // What is this flag and where does it come from?
-    EXPECT_EQ(mir_ev.key.is_system_key, false);
+    EXPECT_EQ(mir_ev.details.key.is_system_key, false);
     
 }
 
