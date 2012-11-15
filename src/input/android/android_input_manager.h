@@ -54,9 +54,9 @@ class InputManager : public mir::input::InputManager
 {
 public:
     explicit InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-			  std::initializer_list<std::shared_ptr<input::EventFilter> const> filters,
-			  std::shared_ptr<graphics::ViewableArea> const& view_area,
-			  std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
+                          std::initializer_list<std::shared_ptr<input::EventFilter> const> filters,
+                          std::shared_ptr<graphics::ViewableArea> const& view_area,
+                          std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
     virtual ~InputManager();
 
     virtual void start();
