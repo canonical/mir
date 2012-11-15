@@ -40,6 +40,7 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
+
 #include "input/android/android_input_manager.h"
 
 #include <EventHub.h>

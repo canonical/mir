@@ -28,10 +28,6 @@
 #include "mir_test/event_factory.h"
 #include "mir_test/mock_viewable_area.h"
 
-// Needed implicitly for InputManager destructor because of android::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -61,7 +57,7 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
         event_hub = new mia::FakeEventHub();
 
-	EXPECT_CALL(viewable_area, view_area()).
+        EXPECT_CALL(viewable_area, view_area()).
 	    WillOnce(Return(geom::Rectangle{geom::Point(),
 			                    geom::Size{geom::Width(1024), geom::Height(1024)}}));
 
