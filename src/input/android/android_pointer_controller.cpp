@@ -35,7 +35,7 @@ mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> cons
 
 
 mia::PointerController::PointerController(std::shared_ptr<mg::ViewableArea> const& viewable_area,
-					  std::shared_ptr<mi::CursorListener> const& cursor_listener) : 
+                                          std::shared_ptr<mi::CursorListener> const& cursor_listener) : 
     state(0),
     x(0.0), 
     y(0.0),
