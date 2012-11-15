@@ -27,7 +27,7 @@ void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent *ou
 {
     switch(android_event->getType())
     {
-        case AINPUT_EVENT_TYPE_KEY:
+	case AINPUT_EVENT_TYPE_KEY:
 	{
 	    const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
 	    out_mir_event->type = MIR_INPUT_EVENT_TYPE_KEY;
@@ -44,39 +44,39 @@ void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent *ou
 	    out_mir_event->details.key.is_system_key = false; // TODO: Figure out what this is. //kev->isSystemKey();
 	    break;
 	}
-    case AINPUT_EVENT_TYPE_MOTION:
-	break;
-	/*
-	const android::MotionEvent* mev = static_cast<const android::MotionEvent*>(ev);
-	e.type = MOTION_EVENT_TYPE;
-	e.device_id = android_event->getDeviceId();
-	e.source_id = android_event->getSource();
-	e.action = mev->getAction();
-	e.flags = mev->getFlags();
-	e.meta_state = mev->getMetaState();
-	e.details.motion.edge_flags = mev->getEdgeFlags();
-	e.details.motion.button_state = mev->getButtonState();
-	e.details.motion.x_offset = mev->getXOffset();
-	e.details.motion.y_offset = mev->getYOffset();
-	e.details.motion.x_precision = mev->getXPrecision();
-	e.details.motion.y_precision = mev->getYPrecision();
-	e.details.motion.down_time = mev->getDownTime();
-	e.details.motion.event_time = mev->getEventTime();
-	e.details.motion.pointer_count = mev->getPointerCount();
-	for(unsigned int i = 0; i < mev->getPointerCount(); i++)
-        {
-		e.details.motion.pointer_coordinates[i].id = mev->getPointerId(i);
-		e.details.motion.pointer_coordinates[i].x = mev->getX(i);
-		e.details.motion.pointer_coordinates[i].raw_x = mev->getRawX(i);
-		e.details.motion.pointer_coordinates[i].y = mev->getY(i);
-		e.details.motion.pointer_coordinates[i].raw_y = mev->getRawY(i);
-		e.details.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
-		e.details.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
-		e.details.motion.pointer_coordinates[i].size = mev->getSize(i);
-		e.details.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
-		e.details.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
-        }
-	break;*/
+	case AINPUT_EVENT_TYPE_MOTION:
+	{
+	    const droidinput::MotionEvent* mev = static_cast<const droidinput::MotionEvent*>(android_event);
+	    out_mir_event->type = MIR_INPUT_EVENT_TYPE_MOTION;
+	    out_mir_event->device_id = android_event->getDeviceId();
+	    out_mir_event->source_id = android_event->getSource();
+	    out_mir_event->action = mev->getAction();
+	    out_mir_event->flags = mev->getFlags();
+	    out_mir_event->meta_state = mev->getMetaState();
+	    out_mir_event->details.motion.edge_flags = mev->getEdgeFlags();
+	    out_mir_event->details.motion.button_state = mev->getButtonState();
+	    out_mir_event->details.motion.x_offset = mev->getXOffset();
+	    out_mir_event->details.motion.y_offset = mev->getYOffset();
+	    out_mir_event->details.motion.x_precision = mev->getXPrecision();
+	    out_mir_event->details.motion.y_precision = mev->getYPrecision();
+	    out_mir_event->details.motion.down_time = mev->getDownTime();
+	    out_mir_event->details.motion.event_time = mev->getEventTime();
+	    out_mir_event->details.motion.pointer_count = mev->getPointerCount();
+	    for(unsigned int i = 0; i < mev->getPointerCount(); i++)
+	    {
+		    out_mir_event->details.motion.pointer_coordinates[i].id = mev->getPointerId(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].x = mev->getX(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].raw_x = mev->getRawX(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].y = mev->getY(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].raw_y = mev->getRawY(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].touch_major = mev->getTouchMajor(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].touch_minor = mev->getTouchMinor(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].size = mev->getSize(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].pressure = mev->getPressure(i);
+		    out_mir_event->details.motion.pointer_coordinates[i].orientation = mev->getOrientation(i);
+	    }
+	    break;
+	}
     }
 
 }

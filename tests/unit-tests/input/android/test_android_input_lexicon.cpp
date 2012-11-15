@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 #include "src/input/android/android_input_lexicon.h"
-// Is this the right place for this header?
+// Is this the right place for this header? Will eventually be included by clients.
 #include "mir/input/event.h"
 
 #include <androidfw/Input.h>
@@ -66,6 +66,93 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(mir_ev.details.key.event_time, event_time);
     // What is this flag and where does it come from?
     EXPECT_EQ(mir_ev.details.key.is_system_key, false);
-    
+
+    delete android_key_ev;
 }
 
+TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
+{
+    using namespace ::testing;
+    auto android_motion_ev = new android::MotionEvent;
+  
+    // Common event properties
+    const int32_t device_id = 1;
+    const int32_t source_id = 2;
+    const int32_t action = 3;
+    const int32_t flags = 4;
+    const int32_t edge_flags = 5;
+    const int32_t meta_state = 6;
+    const int32_t button_state = 7;
+    const float x_offset = 8;
+    const float y_offset = 9;
+    const float x_precision = 10;
+    const float y_precision = 11;
+    const nsecs_t down_time = 12;
+    const nsecs_t event_time = 13;
+    const size_t pointer_count = 1;
+
+    // Pointer specific properties (i.e. per touch)
+    const int pointer_id = 1;
+    droidinput::PointerProperties pointer_properties;
+    pointer_properties.id = pointer_id;
+  
+    droidinput::PointerCoords pointer_coords;
+    pointer_coords.clear();
+    const float x_axis = 100.0;
+    const float y_axis = 200.0;
+    const float touch_minor = 300.0;
+    const float touch_major = 400.0;
+    const float size = 500.0;
+    const float pressure = 600.0;
+    const float orientation = 700.0;
+
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_X, x_axis);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_Y, y_axis);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, touch_major);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, touch_minor);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_SIZE, size);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pressure);
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);  
+  
+    android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
+				  meta_state, button_state, x_offset, y_offset,
+				  x_precision, y_precision, down_time,
+				  event_time, pointer_count, &pointer_properties, &pointer_coords);
+
+    MirEvent mir_ev;
+    mia::Lexicon::translate(android_motion_ev, &mir_ev);
+    
+    // Common event properties
+    EXPECT_EQ(device_id, mir_ev.device_id);
+    EXPECT_EQ(source_id, mir_ev.source_id);
+    EXPECT_EQ(action, mir_ev.action);
+    EXPECT_EQ(flags, mir_ev.flags);
+    EXPECT_EQ(meta_state, mir_ev.meta_state);
+    
+    // Motion event specific properties
+    EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_MOTION);
+    
+    EXPECT_EQ(mir_ev.details.motion.edge_flags, edge_flags);
+    EXPECT_EQ(mir_ev.details.motion.button_state, button_state);
+    EXPECT_EQ(mir_ev.details.motion.x_offset, x_offset);
+    EXPECT_EQ(mir_ev.details.motion.y_offset, y_offset);
+    EXPECT_EQ(mir_ev.details.motion.x_precision, x_precision);
+    EXPECT_EQ(mir_ev.details.motion.y_precision, y_precision);
+    EXPECT_EQ(mir_ev.details.motion.down_time, down_time);
+    EXPECT_EQ(mir_ev.details.motion.event_time, event_time);
+    
+    EXPECT_EQ(mir_ev.details.motion.pointer_count, pointer_count);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].id, pointer_id);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].x, x_axis);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].raw_x, x_axis);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].y, y_axis);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].raw_y, y_axis);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].touch_major, touch_major);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].touch_minor, touch_minor);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].size, size);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].pressure, pressure);
+    EXPECT_EQ(mir_ev.details.motion.pointer_coordinates[0].orientation, orientation);
+    
+    
+    delete android_motion_ev;
+}
