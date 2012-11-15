@@ -14,58 +14,33 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-include_directories(${CMAKE_SOURCE_DIR})
-
-set(
-  INTEGRATION_TESTS_SRCS
-  test_renderloop.cpp
-  test_surfaceloop.cpp
-  test_error_reporting.cpp
-)
-
-add_subdirectory(client/)
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(process/)
-add_subdirectory(input/)
-
-if (MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
-
-if(MIR_PLATFORM STREQUAL "gbm")
-  include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
+include_directories(
+    ${Boost_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
-  )
-  add_subdirectory(graphics/gbm)
+)
+
+set(
+  DRAW_SRCS
+
+  graphics_utils.cpp 
+)
+
+if (MIR_PLATFORM STREQUAL "android")
+  set(
+    DRAW_SRCS
+
+    android_graphics.cpp
+    ${DRAW_SRCS} 
+    )
 endif()
 
-add_executable(
-  integration-tests 
-  ${INTEGRATION_TESTS_SRCS})
+add_library(
+  mirdraw SHARED 
+  ${DRAW_SRCS})
 
 target_link_libraries(
-  integration-tests
-
-  mir-test-framework
-  mir-test-doubles
-
-  mir
-  mirdraw
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirprocess
-  mirsurfaces
-  mirplatformgraphics
-  mirprocess
-  mirprotobuf
+  mirdraw 
 
   3rd_party
 
@@ -75,7 +50,4 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${ANDROID_STDLIB}
 )
-
-mir_discover_tests(integration-tests)
