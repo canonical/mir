@@ -64,8 +64,8 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager.reset(new mia::InputManager(
             event_hub,
             {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())},
-	    std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
-	    std::shared_ptr<mi::CursorListener>(&cursor_listener, mir::EmptyDeleter())));
+             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
+             std::shared_ptr<mi::CursorListener>(&cursor_listener, mir::EmptyDeleter())));
         input_manager->start();
     }
 
@@ -97,12 +97,10 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     WaitCondition wait_condition;
 
-    EXPECT_CALL(cursor_listener,
-		moved(100,100)).Times(1);
+    EXPECT_CALL(cursor_listener, moved(100,100)).Times(1);
     // The stack doesn't like shutting down while events are still moving through
     EXPECT_CALL(event_filter,
 		handles(_)).WillOnce(ReturnFalseAndWakeUp(&wait_condition));
-
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();

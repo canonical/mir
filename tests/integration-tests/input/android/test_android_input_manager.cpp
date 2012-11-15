@@ -59,7 +59,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
         input_manager.reset(new mia::InputManager(
             event_hub,
             {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
-	    std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter())));
+             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter())));
 
         input_manager->start();
     }
@@ -157,7 +157,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
-    
+
     // TODO: Investigate why timeout needs to be this large under valgrind
     wait_condition.wait_for_at_most_seconds(60);
 }

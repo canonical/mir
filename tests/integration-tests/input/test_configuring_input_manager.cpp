@@ -16,10 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <thread>
+#include "mir/thread/all.h"
 
 #include "mir_test/display_server_test_fixture.h"
 #include "mir_test/mock_input_manager.h"
@@ -33,8 +34,8 @@ TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_man
 	std::shared_ptr<mi::InputManager> make_input_manager()
 	{
             input_manager = std::make_shared<mi::MockInputManager>();
-	    EXPECT_CALL(*input_manager, start()).Times(1);
-	    EXPECT_CALL(*input_manager, stop()).Times(1);
+            EXPECT_CALL(*input_manager, start()).Times(1);
+            EXPECT_CALL(*input_manager, stop()).Times(1);
 
 	    return input_manager;
 	}
