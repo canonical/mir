@@ -30,7 +30,7 @@ class glAnimationBasic
 public:
     glAnimationBasic();
 
-    void init_gl();    
+    void init_gl();
     void render_gl();
     void step();
     int texture_width();
