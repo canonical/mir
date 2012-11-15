@@ -15,6 +15,7 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
 #include "src/input/android/android_pointer_controller.h"
 
 #include "mir_test/event_factory.h"
@@ -83,9 +84,8 @@ TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(viewable_area, view_area()).
-	WillOnce(Return(geom::Rectangle{geom::Point(),
-			geom::Size{geom::Width(1024), geom::Height(1024)}}));
+    EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(geom::Rectangle{geom::Point(),
+                    geom::Size{geom::Width(1024), geom::Height(1024)}}));
     
     float out_min_x, out_min_y, out_max_x, out_max_y;
     controller->getBounds(&out_min_x, &out_min_y, &out_max_x, &out_max_y);
