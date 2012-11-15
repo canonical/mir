@@ -27,18 +27,7 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 
-namespace
-{
-
-class AndroidInputLexiconSetup : public testing::Test
-{
-public:
-    mia::InputLexicon lexicon;
-}
-
-}
-
-TEST_F(AndroidInputLexiconSetup, translates_key_events)
+TEST(AndroidInputLexicon, translates_key_events)
 {
     using namespace ::testing;
     auto android_key_ev = new android::KeyEvent();
@@ -59,7 +48,7 @@ TEST_F(AndroidInputLexiconSetup, translates_key_events)
 			       down_time, event_time);
     
     MirEvent mir_ev;
-    lexicon.translate(android_key_ev, &mir_ev);
+    mia::lexicon::translate(android_key_ev, &mir_ev);
     
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);
