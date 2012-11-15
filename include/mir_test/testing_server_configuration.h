@@ -44,8 +44,8 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
     virtual std::shared_ptr<input::InputManager> make_input_manager(
-	    std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters,
-	    std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+            std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters,
+            std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
