@@ -35,10 +35,11 @@ namespace input
 {
 namespace android
 {
-namespace lexicon
+class Lexicon
 {
+public:
     static void translate(droidinput::InputEvent *android_event, MirEvent *out_mir_event);
-}
+};
 }
 }
 }

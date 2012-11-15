@@ -48,7 +48,7 @@ TEST(AndroidInputLexicon, translates_key_events)
 			       down_time, event_time);
     
     MirEvent mir_ev;
-    mia::lexicon::translate(android_key_ev, &mir_ev);
+    mia::Lexicon::translate(android_key_ev, &mir_ev);
     
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);
@@ -58,7 +58,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(meta_state, mir_ev.meta_state);
     
     // Key event specific properties
-    EXPECT_EQ(mir_ev.type, MIR_EVENT_TYPE_KEY);
+    EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_KEY);
     EXPECT_EQ(mir_ev.details.key.key_code, key_code);
     EXPECT_EQ(mir_ev.details.key.scan_code, scan_code);
     EXPECT_EQ(mir_ev.details.key.repeat_count, repeat_count);

@@ -42,7 +42,7 @@ extern "C" {
     struct MirEvent
     {
         // Generic event properties
-        EventType type;
+        MirEventType type;
         int32_t device_id;
         int32_t source_id;
         int32_t action;
@@ -99,4 +99,4 @@ extern "C" {
 }
 #endif
 
-#endif MIR_INPUT_EVENT_H_
+#endif // MIR_INPUT_EVENT_H_

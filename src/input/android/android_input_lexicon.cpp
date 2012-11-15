@@ -21,27 +21,27 @@
 
 #include <androidfw/Input.h>
 
-namespace mial = mir::input::android::lexicon;
+namespace mia = mir::input::android;
 
-static void translate(droidinput::InputEvent *android_event, MirEvent *out_mir_event)
+void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent *out_mir_event)
 {
     switch(android_event->getType())
     {
         case AINPUT_EVENT_TYPE_KEY:
 	{
-	    const android::KeyEvent* kev = static_cast<const android::KeyEvent*>(android_event);
-	    out_mir_event.type = KEY_EVENT_TYPE;
-	    out_mir_event.device_id = android_event->getDeviceId();
-	    out_mir_event.source_id = android_event->getSource();
-	    out_mir_event.action = kev->getAction();
-	    out_mir_event.flags = kev->getFlags();
-	    out_mir_event.meta_state = kev->getMetaState();
-	    out_mir_event.details.key.key_code = kev->getKeyCode();
-	    out_mir_event.details.key.scan_code = kev->getScanCode();
-	    out_mir_event.details.key.repeat_count = kev->getRepeatCount();
-	    out_mir_event.details.key.down_time = kev->getDownTime();
-	    out_mir_event.details.key.event_time = kev->getEventTime();
-	    out_mir_event.details.key.is_system_key = kev->isSystemKey();
+	    const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
+	    out_mir_event->type = MIR_INPUT_EVENT_TYPE_KEY;
+	    out_mir_event->device_id = android_event->getDeviceId();
+	    out_mir_event->source_id = android_event->getSource();
+	    out_mir_event->action = kev->getAction();
+	    out_mir_event->flags = kev->getFlags();
+	    out_mir_event->meta_state = kev->getMetaState();
+	    out_mir_event->details.key.key_code = kev->getKeyCode();
+	    out_mir_event->details.key.scan_code = kev->getScanCode();
+	    out_mir_event->details.key.repeat_count = kev->getRepeatCount();
+	    out_mir_event->details.key.down_time = kev->getDownTime();
+	    out_mir_event->details.key.event_time = kev->getEventTime();
+	    out_mir_event->details.key.is_system_key = kev->isSystemKey();
 	    break;
 	}
     case AINPUT_EVENT_TYPE_MOTION:
@@ -81,4 +81,3 @@ static void translate(droidinput::InputEvent *android_event, MirEvent *out_mir_e
 
 }
 
-#endif // MIR_INPUT_ANDROID_INPUT_LEXICON_H_
