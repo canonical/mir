@@ -54,6 +54,12 @@ void mia::PointerController::notify_listener()
 bool mia::PointerController::getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
 {
     std::lock_guard<std::mutex> lg(guard);
+    return get_bounds_locked(out_min_x, out_min_y, out_max_x, out_max_y);
+}
+
+// Differs in name as not dictated by android
+bool mia::PointerController::get_bounds_locked(float *out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
+{
     auto bounds = viewable_area->view_area();
     *out_min_x = bounds.top_left.x.as_float();
     *out_min_y = bounds.top_left.y.as_float();
@@ -61,14 +67,12 @@ bool mia::PointerController::getBounds(float* out_min_x, float* out_min_y, float
     *out_max_y = bounds.top_left.y.as_float() + bounds.size.height.as_float();
     return true;
 }
+
 void mia::PointerController::move(float delta_x, float delta_y)
 {
-    std::lock_guard<std::mutex> lg(guard);
-    x += delta_x;
-    y += delta_y;
-    // I think it's correct to hold this lock while notifying the listener (i.e. cursor rendering update)
-    // to prevent the InputReader from getting ahead of rendering. This may need to be thought about later.
-    notify_listener();
+    auto new_x = x + delta_x;
+    auto new_y = y + delta_y;
+    setPosition(new_x, new_y);
 }
 void mia::PointerController::setButtonState(int32_t button_state)
 {
@@ -83,10 +87,26 @@ int32_t mia::PointerController::getButtonState() const
 void mia::PointerController::setPosition(float new_x, float new_y)
 {
     std::lock_guard<std::mutex> lg(guard);
-    // Needs bounds checking
-    x = new_x;
-    y = new_y;
-    // See comment in ::move
+    float min_x, min_y, max_x, max_y;
+    
+    get_bounds_locked(&min_x, &min_y, &max_x, &max_y);
+
+    if (new_x > max_x)
+        x = max_x;
+    else if (new_x < min_x)
+        x = min_x;
+    else
+        x = new_x;
+    
+    if (new_y > max_y)
+        y = max_y;
+    else if (new_y < min_y)
+        y = min_y;
+    else
+        y = new_y;
+
+    // I think it's correct to hold this lock while notifying the listener (i.e. cursor rendering update)
+    // to prevent the InputReader from getting ahead of rendering. This may need to be thought about later.
     notify_listener();
 }
 void mia::PointerController::getPosition(float *out_x, float *out_y) const

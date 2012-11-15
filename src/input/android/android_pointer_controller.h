@@ -51,6 +51,7 @@ public:
     virtual void setPosition(float x, float y);
     virtual void getPosition(float *out_x, float *out_y) const;
 private:
+    bool get_bounds_locked(float *out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
     void notify_listener();
     // Could be a read/write mutex as this is a latency sensitive class.
     mutable std::mutex guard;
