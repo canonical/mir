@@ -87,6 +87,8 @@ public:
 
     MirConnection* mir_connection();
 
+    EGLNativeDisplayType egl_native_display();
+
 private:
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -98,6 +100,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
+    std::shared_ptr<mir::client::EGLNativeDisplayContainer> native_display_container;
 
     std::string error_message;
 

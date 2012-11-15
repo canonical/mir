@@ -144,6 +144,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
      * needed data (e.g. platform package).
      */
     platform = client_platform_factory->create_client_platform(this);
+    native_display_container = platform->create_egl_native_display();
 
     callback(this, context);
     connect_wait_handle.result_received();
@@ -245,4 +246,9 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
 MirConnection* MirConnection::mir_connection()
 {
     return this;
+}
+
+EGLNativeDisplayType MirConnection::egl_native_display()
+{
+    return native_display_container->get_egl_native_display();
 }
