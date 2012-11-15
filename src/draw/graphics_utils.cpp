@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/test_utils_graphics.h"
-#include "mir_test/mir_image.h"
+#include "mir/draw/graphics.h"
+#include "mir/draw/mir_image.h"
 
-namespace mt=mir::test;
+namespace mt=mir::draw;
 
 static const GLchar *vtex_shader_src =
 {

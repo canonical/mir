@@ -19,7 +19,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 
-#include "mir_test/test_utils_graphics.h"
+#include "mir/draw/graphics.h"
 
 #include <unistd.h>
 
@@ -27,7 +27,7 @@
 #define HEIGHT 720
 
 namespace mg=mir::graphics;
-namespace mt=mir::test;
+namespace mt=mir::draw;
 
 int main(int, char**)
 {

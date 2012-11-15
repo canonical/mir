@@ -15,33 +15,34 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_TEST_UTILS_GRAPHICS
-#define MIR_TEST_TEST_UTILS_GRAPHICS
+#ifndef MIR_DRAW_ANDROID_GRAPHICS
+#define MIR_DRAW_ANDROID_GRAPHICS
 
-#include <GLES2/gl2.h>
+#include "mir/compositor/buffer_bundle.h"
+#include "mir/geometry/size.h"
+
+#include <hardware/gralloc.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace draw
 {
 
-class glAnimationBasic
+class grallocRenderSW
 {
 public:
-    glAnimationBasic();
-
-    void init_gl();    
-    void render_gl();
-    void step();
-    int texture_width();
-    int texture_height();
-
+    grallocRenderSW(); 
+    ~grallocRenderSW(); 
+    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
+                        geometry::Size size, int val );
+ 
 private:
-    GLuint program, vPositionAttr, uvCoord, slideUniform;
-    float slide;
+    gralloc_module_t* module;
+    alloc_device_t* alloc_dev;
 };
 
 }
 }
 
-#endif /* MIR_TEST_TEST_UTILS_GRAPHICS */
+#endif /* MIR_DRAW_ANDROID_GRAPHICS */

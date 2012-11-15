@@ -17,11 +17,11 @@
  */
 
 
-#include "mir_test/test_utils_android_graphics.h"
+#include "mir/draw/android_graphics.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <stdexcept>
-namespace mt=mir::test;
+namespace mt=mir::draw;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 

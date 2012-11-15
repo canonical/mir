@@ -31,7 +31,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/chrono/chrono.h"
-#include "mir_test/mir_image.h"
+#include "mir/draw/mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
 
