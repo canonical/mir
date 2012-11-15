@@ -69,8 +69,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
             std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
-    virtual std::shared_ptr<input::InputManager> make_input_manager(std::initializer_list<std::shared_ptr<input::EventFilter> const>
-								    event_filters, std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+    virtual std::shared_ptr<input::InputManager> make_input_manager(std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters, std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -95,8 +94,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
                  std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
-    virtual std::shared_ptr<input::InputManager> make_input_manager(std::initializer_list<std::shared_ptr<input::EventFilter> const>
-								    event_filters, std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+    virtual std::shared_ptr<input::InputManager> make_input_manager(std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters, std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 private:
     std::string socket_file;
