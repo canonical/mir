@@ -174,7 +174,7 @@ struct PointerCoords {
 
     float getAxisValue(int32_t axis) const;
     status_t setAxisValue(int32_t axis, float value);
- 
+
     void scale(float scale);
 
     inline float getX() const {
