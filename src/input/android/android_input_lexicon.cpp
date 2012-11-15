@@ -23,7 +23,7 @@
 
 namespace mia = mir::input::android;
 
-void mia::Lexicon::translate(droidinput::InputEvent *android_event, MirEvent &mir_event)
+void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
 {
     switch(android_event->getType())
     {

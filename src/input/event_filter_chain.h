@@ -41,7 +41,7 @@ class EventFilterChain : public EventFilter
 public:
     explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
 
-    virtual bool handles(const droidinput::InputEvent *event);
+    virtual bool handles(const MirEvent &event);
 
 private:
     typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
