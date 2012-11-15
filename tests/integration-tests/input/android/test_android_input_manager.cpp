@@ -39,14 +39,11 @@ namespace geom = mir::geometry;
 using mir::MockEventFilter;
 using mir::WaitCondition;
 
+static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
+                                                                 geom::Size{geom::Width(1600), geom::Height(1400)}};
+
 namespace
 {
-static const int default_input_area_size = 1024;
-static const geom::Rectangle input_area_bounds = geom::Rectangle{geom::Point{geom::X(0), geom::Y(0)},
-								 geom::Size{geom::Width(default_input_area_size),
-									    geom::Height(default_input_area_size)}};
-
-
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
   public:
@@ -61,6 +58,11 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
             {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
              std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter())));
 
+        EXPECT_CALL(viewable_area, view_area()).Times(AnyNumber()).
+            WillRepeatedly(Return(default_view_area));
+
+
+
         input_manager->start();
     }
 
@@ -72,17 +74,10 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
   protected:
     android::sp<mia::FakeEventHub> event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
-    geom::Rectangle input_area_bounds;
     MockEventFilter event_filter;
     mg::MockViewableArea viewable_area;
 };
 
-}
-
-ACTION_P(ReturnFalseAndWakeUp, wait_condition)
-{
-    wait_condition->wake_up_everyone();
-    return false;
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_events_to_filter)
@@ -122,9 +117,6 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
-    EXPECT_CALL(viewable_area, view_area()).
-      WillRepeatedly(Return(input_area_bounds));
-
     event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
     // TODO: Investigate why timeout needs to be this large under valgrind
@@ -148,9 +140,6 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 		    handles(MotionEvent(200, 100)))
 	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
-
-    EXPECT_CALL(viewable_area, view_area()).
-      WillRepeatedly(Return(input_area_bounds));
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();

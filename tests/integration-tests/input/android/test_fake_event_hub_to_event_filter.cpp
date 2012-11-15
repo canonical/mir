@@ -92,12 +92,6 @@ class FakeEventHubSetup : public testing::Test
 using mir::FakeEventHubSetup;
 using mir::WaitCondition;
 
-ACTION_P(ReturnFalseAndWakeUp, wait_condition)
-{
-    wait_condition->wake_up_everyone();
-    return false;
-}
-
 TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;

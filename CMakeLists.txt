@@ -39,7 +39,7 @@ include (cmake/Debian.cmake)
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC -g")
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)

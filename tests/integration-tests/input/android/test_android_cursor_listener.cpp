@@ -57,8 +57,8 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
         event_hub = new mia::FakeEventHub();
 
-        EXPECT_CALL(viewable_area, view_area()).
-	    WillOnce(Return(geom::Rectangle{geom::Point(),
+        EXPECT_CALL(viewable_area, view_area()).Times(2).
+	    WillRepeatedly(Return(geom::Rectangle{geom::Point(),
 			                    geom::Size{geom::Width(1024), geom::Height(1024)}}));
 
         input_manager.reset(new mia::InputManager(
@@ -81,12 +81,6 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<mia::InputManager> input_manager;
     MockCursorListener cursor_listener;
 };
-
-ACTION_P(ReturnFalseAndWakeUp, wait_condition)
-{
-    wait_condition->wake_up_everyone();
-    return false;
-}
 
 }
 
