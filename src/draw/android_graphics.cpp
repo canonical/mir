@@ -21,11 +21,11 @@
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <stdexcept>
-namespace mt=mir::draw;
+namespace md=mir::draw;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mt::grallocRenderSW::grallocRenderSW()
+md::grallocRenderSW::grallocRenderSW()
 {
     const hw_module_t *hw_module;
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module) != 0)
@@ -34,12 +34,12 @@ mt::grallocRenderSW::grallocRenderSW()
     module = (gralloc_module_t*) hw_module;
 }
 
-mt::grallocRenderSW::~grallocRenderSW()
+md::grallocRenderSW::~grallocRenderSW()
 {
     gralloc_close(alloc_dev);
 }
 
-void mt::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Size size, int val)
+void md::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Size size, int val)
 {
     auto ipc_pack = res->ipc_package;
 
