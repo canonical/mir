@@ -18,7 +18,7 @@
 
 #include "mir_client/client_platform.h"
 #include "mir_client/mir_client_surface.h"
-#include "mir_client/mir_client_library.h"
+#include "mock_client_context.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -34,9 +34,19 @@ struct MockClientSurface : public mcl::ClientSurface
 
 TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
 {
-    auto platform_package = std::make_shared<MirPlatformPackage>();
-    auto platform = mcl::create_client_platform(platform_package);
-    auto mock_client_surface = std::make_shared<MockClientSurface>();
-    auto native_window = platform->create_egl_window(mock_client_surface.get());
-    EXPECT_EQ(native_window, reinterpret_cast<EGLNativeWindowType>(mock_client_surface.get()));
+    mcl::MockClientContext context;
+    MockClientSurface surface;
+    auto platform = mcl::create_client_platform(&context);
+    auto native_window = platform->create_egl_window(&surface);
+    EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), native_window);
+}
+
+TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
+{
+    mcl::MockClientContext context;
+    auto platform = mcl::create_client_platform(&context);
+    auto native_display = platform->create_egl_native_display();
+    EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
+    EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(context.connection),
+              egl_native_display);
 }

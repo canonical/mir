@@ -13,33 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
+#define MIR_CLIENT_CLIENT_CONTEXT_H_
+
+class MirPlatformPackage;
+class MirConnection;
 
 namespace mir
 {
 namespace client
 {
 
-class ClientBufferDepository;
-namespace android
-{
-
-class AndroidClientPlatform : public ClientPlatform
+class ClientContext
 {
 public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
-    std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display();
+    virtual ~ClientContext() {}
+
+    virtual MirConnection* mir_connection() = 0;
+    virtual void populate(MirPlatformPackage& platform_package) = 0;
+
+protected:
+    ClientContext() = default;
+    ClientContext(const ClientContext&) = delete;
+    ClientContext& operator=(const ClientContext&) = delete;
 };
 
 }
 }
-}
 
-#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_CLIENT_CONTEXT_H_ */

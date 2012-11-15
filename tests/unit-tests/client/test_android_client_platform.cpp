@@ -13,33 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
 #include "mir_client/client_platform.h"
+#include "mock_client_context.h"
 
-namespace mir
-{
-namespace client
-{
+#include <EGL/egl.h>
 
-class ClientBufferDepository;
-namespace android
-{
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
-class AndroidClientPlatform : public ClientPlatform
-{
-public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
-    std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display();
-};
+namespace mcl = mir::client;
 
+TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
+{
+    mcl::MockClientContext context;
+    auto platform = mcl::create_client_platform(&context);
+    auto native_display = platform->create_egl_native_display();
+    EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
+    EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);
 }
-}
-}
-
-#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_ */
