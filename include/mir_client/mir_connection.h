@@ -40,6 +40,7 @@ namespace client
 {
 class Logger;
 class ClientBufferDepository;
+class ClientPlatformFactory;
 }
 }
 
@@ -51,7 +52,8 @@ public:
     MirConnection();
 
     MirConnection(const std::string& socket_file,
-                  std::shared_ptr<mir::client::Logger> const & log);
+                  std::shared_ptr<mir::client::Logger> const & log,
+                  std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection();
 
     MirConnection(MirConnection const &) = delete;
@@ -94,6 +96,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
+    std::shared_ptr<mir::client::ClientPlatformFactory> client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
 
     std::string error_message;

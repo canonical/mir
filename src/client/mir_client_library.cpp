@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/client_platform_factory.h"
 
 #include "mir_client/mir_rpc_channel.h"
 
@@ -51,6 +52,16 @@ std::unordered_set<MirConnection *> MirConnection::valid_connections;
 namespace
 {
 MirConnection error_connection;
+
+class RealClientPlatformFactory : public mcl::ClientPlatformFactory
+{
+public:
+    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
+    {
+        return mcl::create_client_platform(context);
+    }
+};
+
 }
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
@@ -59,7 +70,8 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     try
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
-        MirConnection * connection = new MirConnection(socket_file, log);
+        auto client_platform_factory = std::make_shared<RealClientPlatformFactory>();
+        MirConnection* connection = new MirConnection(socket_file, log, client_platform_factory);
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
