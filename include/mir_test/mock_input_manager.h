@@ -13,35 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_H_
-#define MIR_GRAPHICS_DISPLAY_H_
+#ifndef MIR_TEST_MOCK_INPUT_MANAGER_H_
+#define MIR_TEST_MOCK_INPUT_MANAGER_H_
 
-#include "mir/graphics/viewable_area.h"
+#include "mir/input/input_manager.h"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mir
 {
-
-namespace graphics
+namespace input
 {
 
-class Display : public ViewableArea
+struct MockInputManager : public InputManager
 {
-public:
-    virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
-
-protected:
-    Display() = default;
-    ~Display() = default;
-private:
-    Display(Display const&) = delete;
-    Display& operator=(Display const&) = delete;
+    MOCK_METHOD0(start, void());
+    MOCK_METHOD0(stop, void());
 };
+
 }
 }
 
-#endif /* MIR_GRAPHICS_DISPLAY_H_ */
+#endif // MIR_TEST_MOCK_INPUT_MANAGER_H

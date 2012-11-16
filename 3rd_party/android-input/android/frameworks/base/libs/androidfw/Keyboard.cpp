@@ -122,13 +122,15 @@ status_t KeyMap::loadGenericMaps()
         GenericKeyMap::keymap_contents(), 
         KeyCharacterMap::FORMAT_BASE, 
         &keyCharacterMap);
-    if (status) return status;
+    if (status) 
+        return status;
 
     status = KeyLayoutMap::load(
         String8("Generic.kl"), 
         GenericKeyMap::key_layout_contents(), 
         &keyLayoutMap);
-    if (status) return status;
+    
+    return status;
 }
 // </mir changes>
 

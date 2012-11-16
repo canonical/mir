@@ -43,4 +43,13 @@ struct WaitCondition
 };
 }
 
+namespace
+{
+ACTION_P(ReturnFalseAndWakeUp, wait_condition)
+{
+    wait_condition->wake_up_everyone();
+    return false;
+}
+}
+
 #endif // MIR_TEST_WAIT_CONDITION_H_

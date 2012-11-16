@@ -13,35 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_H_
-#define MIR_GRAPHICS_DISPLAY_H_
-
-#include "mir/graphics/viewable_area.h"
+#ifndef MIR_INPUT_CURSOR_LISTENER_H_
+#define MIR_INPUT_CURSOR_LISTENER_H_
 
 namespace mir
 {
-
-namespace graphics
+namespace input
 {
 
-class Display : public ViewableArea
+class CursorListener
 {
-public:
-    virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
+  public:
+    virtual ~CursorListener() {}
 
-protected:
-    Display() = default;
-    ~Display() = default;
-private:
-    Display(Display const&) = delete;
-    Display& operator=(Display const&) = delete;
+    virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
+
+  protected:
+    CursorListener() = default;
+    CursorListener(const CursorListener&) = delete;
+    CursorListener& operator=(const CursorListener&) = delete;
 };
+
 }
 }
 
-#endif /* MIR_GRAPHICS_DISPLAY_H_ */
+#endif // MIR_INPUT_CURSOR_LISTENER_H_

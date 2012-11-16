@@ -21,9 +21,9 @@ set(
 )
 
 add_subdirectory(android)
- 
-add_library( 
+
+add_library(
   mirinput STATIC
-  
+
   ${INPUT_SOURCES}
 )

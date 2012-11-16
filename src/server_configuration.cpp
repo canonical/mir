@@ -36,12 +36,11 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
-
-#include <boost/program_options/parsers.hpp>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -49,6 +48,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 
 namespace
 {
@@ -78,7 +78,7 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationProxy>(
-            application_manager,                                                      
+            application_manager,
             graphics_platform,
             graphics_display,
             listener,
@@ -161,6 +161,14 @@ mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::Ap
     return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
 }
 
+std::shared_ptr<mi::InputManager>
+mir::DefaultServerConfiguration::make_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
+    std::shared_ptr<mg::ViewableArea> const& view_area)
+{
+    return mi::create_input_manager(event_filters, view_area);
+}
+
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
@@ -178,6 +186,3 @@ mir::DefaultServerConfiguration::make_application_listener()
 {
     return std::make_shared<mf::NullApplicationListener>();
 }
-
-
-
