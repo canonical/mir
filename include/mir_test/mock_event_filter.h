@@ -50,15 +50,15 @@ MATCHER(KeyDownEvent, "")
 MATCHER(ButtonDownEvent, "")
 {
     if (arg.type != MIR_INPUT_EVENT_TYPE_MOTION)
-	return false;
+        return false;
     if (arg.details.motion.button_state == 0)
-	return false;
+        return false;
     return arg.action == AKEY_EVENT_ACTION_DOWN;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {
     if (arg.type != MIR_INPUT_EVENT_TYPE_MOTION)
-	return false;
+        return false;
     auto coords = &arg.details.motion.pointer_coordinates[0];
     return (coords->x == dx) && (coords->y == dy);
 }
