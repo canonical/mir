@@ -3628,7 +3628,7 @@ Thomas Voss
             MyClass&amp; operator=(const MyClass&amp;) = delete;
             bool SomeInternalFunction();
   
-            int some_var;
+            int some_var_;
             int some_other_var;
         };
       </CODE_SNIPPET>
