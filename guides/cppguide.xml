@@ -3288,11 +3288,11 @@ Thomas Voss
       <CODE_SNIPPET>
         if (condition)  // no spaces inside parentheses
         {
-          ...  // 2 space indent.
+            ...  // 4 space indent.
         }
         else  // The else goes on a new line.
         {
-          ...
+            ...
         }
       </CODE_SNIPPET>
       <p>
@@ -3336,11 +3336,11 @@ Thomas Voss
       </p>
       <CODE_SNIPPET>
         if (condition)
-          DoSomething();  // 2 space indent.
+            DoSomething();  // 4 space indent.
 
         if (condition)
         {
-          DoSomething();  // 2 space indent.
+            DoSomething();  // 4 space indent.
         }
       </CODE_SNIPPET>
       <p>
@@ -3613,7 +3613,7 @@ Thomas Voss
         class MyClass : public OtherClass
         {
         public:
-            MyClass();  // Regular 2 space indent.
+            MyClass();  // Regular 4 space indent.
             explicit MyClass(int var);
             ~MyClass() {}
 
@@ -3624,12 +3624,12 @@ Thomas Voss
             int some_var() const { return some_var_; }
 
         private:
-	    MyClass(const MyClass&amp;) = delete;
-	    MyClass&amp; operator=(const MyClass&amp;) = delete;
+            MyClass(const MyClass&amp;) = delete;
+            MyClass&amp; operator=(const MyClass&amp;) = delete;
             bool SomeInternalFunction();
   
-            int some_var_;
-            int some_other_var_;
+            int some_var;
+            int some_other_var;
         };
       </CODE_SNIPPET>
       <p>
