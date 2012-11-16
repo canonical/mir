@@ -18,7 +18,7 @@
 #ifndef MIR_ANDROID_INPUT_READER_POLICY_H_
 #define MIR_ANDROID_INPUT_READER_POLICY_H_
 
-#include "dummy_input_reader_policy.h"
+#include "rudimentary_input_reader_policy.h"
 
 #include <memory>
 
@@ -34,7 +34,7 @@ class CursorListener;
 namespace android
 {
 
-class InputReaderPolicy : public DummyInputReaderPolicy
+class InputReaderPolicy : public RudimentaryInputReaderPolicy
 {
 public:
     explicit InputReaderPolicy(std::shared_ptr<graphics::ViewableArea> const& viewable_area,

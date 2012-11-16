@@ -15,8 +15,8 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#ifndef MIR_DUMMY_INPUT_READER_POLICY_H_
-#define MIR_DUMMY_INPUT_READER_POLICY_H_
+#ifndef MIR_INPUT_ANDROID_RUDIMENTARY_INPUT_READER_POLICY_H_
+#define MIR_INPUT_ANDROID_RUDIMENTARY_INPUT_READER_POLICY_H_
 
 // from android
 #include <InputReader.h>
@@ -29,7 +29,7 @@ namespace input
 {
 namespace android
 {
-class DummyInputReaderPolicy : public droidinput::InputReaderPolicyInterface
+class RudimentaryInputReaderPolicy : public droidinput::InputReaderPolicyInterface
 {
   public:
     // From InputReaderPolicyInterface
@@ -57,4 +57,4 @@ class DummyInputReaderPolicy : public droidinput::InputReaderPolicyInterface
 }
 } // namespace mir
 
-#endif // MIR_DUMMY_INPUT_READER_POLICY_H_
+#endif // MIR_INPUT_ANDROID_RUDIMENTARY_INPUT_READER_POLICY_H_

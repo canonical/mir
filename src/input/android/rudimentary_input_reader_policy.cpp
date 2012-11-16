@@ -16,11 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "dummy_input_reader_policy.h"
+#include "rudimentary_input_reader_policy.h"
 
 namespace mia = mir::input::android;
 
-void mia::DummyInputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
+void mia::RudimentaryInputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
 {
     static const int32_t default_display_id = 0;
     static const bool is_external = false;
@@ -36,26 +36,26 @@ void mia::DummyInputReaderPolicy::getReaderConfiguration(droidinput::InputReader
         display_orientation);
 }
 
-droidinput::sp<droidinput::PointerControllerInterface> mia::DummyInputReaderPolicy::obtainPointerController(int32_t device_id)
+droidinput::sp<droidinput::PointerControllerInterface> mia::RudimentaryInputReaderPolicy::obtainPointerController(int32_t device_id)
 {
     (void)device_id;
     return pointer_controller;
 }
 
-void mia::DummyInputReaderPolicy::notifyInputDevicesChanged(
+void mia::RudimentaryInputReaderPolicy::notifyInputDevicesChanged(
     const droidinput::Vector<droidinput::InputDeviceInfo>& input_devices)
 {
     (void)input_devices;
 }
 
-droidinput::sp<droidinput::KeyCharacterMap> mia::DummyInputReaderPolicy::getKeyboardLayoutOverlay(
+droidinput::sp<droidinput::KeyCharacterMap> mia::RudimentaryInputReaderPolicy::getKeyboardLayoutOverlay(
     const droidinput::String8& input_device_descriptor)
 {
     (void)input_device_descriptor;
     return droidinput::KeyCharacterMap::empty();
 }
 
-droidinput::String8 mia::DummyInputReaderPolicy::getDeviceAlias(const droidinput::InputDeviceIdentifier& identifier)
+droidinput::String8 mia::RudimentaryInputReaderPolicy::getDeviceAlias(const droidinput::InputDeviceIdentifier& identifier)
 {
     (void)identifier;
     return droidinput::String8();

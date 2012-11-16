@@ -18,7 +18,7 @@
  */
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
-#include "src/input/android/dummy_input_reader_policy.h"
+#include "src/input/android/rudimentary_input_reader_policy.h"
 #include "src/input/android/android_input_constants.h"
 #include "mir/thread/all.h"
 
@@ -57,7 +57,7 @@ class FakeEventHubSetup : public testing::Test
         event_hub = new mia::FakeEventHub();
         dispatcher_policy = new mia::EventFilterDispatcherPolicy(
             std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
-        reader_policy = new mia::DummyInputReaderPolicy();
+        reader_policy = new mia::RudimentaryInputReaderPolicy();
         dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
         reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
         reader_thread = new droidinput::InputReaderThread(reader);
