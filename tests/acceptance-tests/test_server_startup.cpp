@@ -42,7 +42,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
         void exec()
         {
             EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
-                                           std::chrono::seconds(10)));
+                                           std::chrono::milliseconds(100)));
         }
     } client_config;
 
