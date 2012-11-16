@@ -36,16 +36,11 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
-
-#include "input/android/android_input_manager.h"
-
-#include <EventHub.h>
-
-#include <boost/program_options/parsers.hpp>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -54,7 +49,6 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace mi = mir::input;
-namespace mia = mir::input::android;
 
 namespace
 {
@@ -172,15 +166,7 @@ mir::DefaultServerConfiguration::make_input_manager(
     const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
-    static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-    droidinput::sp<droidinput::EventHubInterface> event_hub =
-            new droidinput::EventHub();
-    return std::shared_ptr<mia::InputManager>(
-        new mia::InputManager(
-            event_hub,
-            event_filters,
-            view_area,
-            null_cursor_listener));
+    return mi::create_input_manager(event_filters, view_area);
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>

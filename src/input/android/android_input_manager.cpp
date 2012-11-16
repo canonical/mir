@@ -70,3 +70,17 @@ void mia::InputManager::start()
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
     dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
 }
+
+std::shared_ptr<mi::InputManager> mi::create_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
+    std::shared_ptr<mg::ViewableArea> const& view_area)
+{
+    static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+    droidinput::sp<droidinput::EventHubInterface> event_hub(new droidinput::EventHub());
+
+    return std::make_shared<mia::InputManager>(
+        event_hub,
+        event_filters,
+        view_area,
+        null_cursor_listener);
+}
