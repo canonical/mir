@@ -25,6 +25,7 @@ set(
 
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+set(CMAKE_GCOV gcov-${MIR_GCC_VERSION})
 
 project(Mir)
 

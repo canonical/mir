@@ -25,11 +25,13 @@
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/input/input_manager.h"
 #include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace mtf = mir_test_framework;
 
 namespace mir
@@ -93,7 +95,19 @@ public:
     {
     }
 };
+
+class StubInputManager : public mi::InputManager
+{
+  public:
+    void start() {}
+    void stop() {}
+};
 }
+}
+
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> /*event_filters*/, std::shared_ptr<mg::ViewableArea> const& /*viewable_area*/)
+{
+    return std::make_shared<StubInputManager>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_platform()

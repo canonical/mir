@@ -13,35 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_H_
-#define MIR_GRAPHICS_DISPLAY_H_
+#ifndef MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
+#define MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
 
 #include "mir/graphics/viewable_area.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
-
 namespace graphics
 {
 
-class Display : public ViewableArea
+struct MockViewableArea : public ViewableArea
 {
 public:
-    virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
-
-protected:
-    Display() = default;
-    ~Display() = default;
-private:
-    Display(Display const&) = delete;
-    Display& operator=(Display const&) = delete;
+    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
 };
-}
-}
 
-#endif /* MIR_GRAPHICS_DISPLAY_H_ */
+}
+}
+#endif /* MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_ */

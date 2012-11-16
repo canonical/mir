@@ -20,10 +20,11 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -36,6 +37,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace ms = mir::surfaces;
 namespace mtf = mir_test_framework;
 

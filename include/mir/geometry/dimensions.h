@@ -45,6 +45,10 @@ public:
     {
         return value;
     }
+    float as_float() const
+    {
+	return value;
+    }
 
 private:
     ValueType value;

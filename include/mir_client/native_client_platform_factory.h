@@ -13,35 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_H_
-#define MIR_GRAPHICS_DISPLAY_H_
+#ifndef MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
+#define MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
 
-#include "mir/graphics/viewable_area.h"
+#include "mir_client/client_platform_factory.h"
 
 namespace mir
 {
-
-namespace graphics
+namespace client
 {
 
-class Display : public ViewableArea
+class NativeClientPlatformFactory : public ClientPlatformFactory
 {
 public:
-    virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
-
-protected:
-    Display() = default;
-    ~Display() = default;
-private:
-    Display(Display const&) = delete;
-    Display& operator=(Display const&) = delete;
+    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
 };
+
 }
 }
 
-#endif /* MIR_GRAPHICS_DISPLAY_H_ */
+#endif /* MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_ */

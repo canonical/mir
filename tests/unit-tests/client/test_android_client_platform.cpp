@@ -17,6 +17,7 @@
  */
 
 #include "mir_client/client_platform.h"
+#include "mir_client/native_client_platform_factory.h"
 #include "mock_client_context.h"
 
 #include <EGL/egl.h>
@@ -29,7 +30,8 @@ namespace mcl = mir::client;
 TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
 {
     mcl::MockClientContext context;
-    auto platform = mcl::create_client_platform(&context);
+    mcl::NativeClientPlatformFactory factory;
+    auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);

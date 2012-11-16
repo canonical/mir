@@ -266,9 +266,10 @@ struct TestClient
             EGL_NONE };
         EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
+        EGLNativeDisplayType native_display = (EGLNativeDisplayType)mir_connection_get_egl_native_display(connection);
         EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
 
-        disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        disp = eglGetDisplay(native_display);
         eglInitialize(disp, &major, &minor);
 
         eglChooseConfig(disp, attribs, &egl_config, 1, &n);
@@ -327,9 +328,10 @@ struct TestClient
             EGL_NONE };
         EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
+        EGLNativeDisplayType native_display = (EGLNativeDisplayType)mir_connection_get_egl_native_display(connection);
         EGLNativeWindowType native_window = (EGLNativeWindowType)mir_surface_get_egl_native_window(surface);
 
-        disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        disp = eglGetDisplay(native_display);
         eglInitialize(disp, &major, &minor);
 
         eglChooseConfig(disp, attribs, &egl_config, 1, &n);

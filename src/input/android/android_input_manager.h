@@ -40,35 +40,45 @@ namespace droidinput = android;
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
+
+class CursorListener;
+
 namespace android
 {
 
 class InputManager : public mir::input::InputManager
 {
 public:
-    explicit InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-                          std::initializer_list<std::shared_ptr<input::EventFilter> const> filters);
+    explicit InputManager(
+        const droidinput::sp<droidinput::EventHubInterface>& event_hub,
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& filters,
+        std::shared_ptr<graphics::ViewableArea> const& view_area,
+        std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~InputManager();
 
     virtual void start();
     virtual void stop();
+
 protected:
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
+    std::shared_ptr<EventFilterChain> filter_chain;
     droidinput::sp<droidinput::InputDispatcher> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;
 
     // It's important to keep droidinput::sp to dispatcher_thread
     // and reader_thread or they will free themselves on exit.
-    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
     droidinput::sp<droidinput::InputReaderThread> reader_thread;
-
-    std::shared_ptr<EventFilterChain> filter_chain;
+    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
 };
 
 }
