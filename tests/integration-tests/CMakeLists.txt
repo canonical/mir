@@ -51,9 +51,11 @@ add_executable(
 target_link_libraries(
   integration-tests
 
-  test-utils
+  mir-test-framework
+  mir-test-doubles
 
   mir
+  mirdraw
   miroptions
   mircompositor
   mirfrontend
@@ -64,10 +66,8 @@ target_link_libraries(
   mirplatformgraphics
   mirprocess
   mirprotobuf
-  
-  3rd_party
 
-  test-utils
+  3rd_party
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}

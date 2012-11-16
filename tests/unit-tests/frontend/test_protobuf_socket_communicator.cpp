@@ -41,7 +41,7 @@ namespace mt = mir::test;
 
 namespace mir
 {
-struct ProtobufAsioCommunicatorBasic : public ::testing::Test
+struct ProtobufSocketCommunicatorBasic : public ::testing::Test
 {
     void SetUp()
     {
@@ -68,7 +68,7 @@ private:
     std::shared_ptr<mt::TestServer> stub_server;
 };
 
-TEST_F(ProtobufAsioCommunicatorBasic, create_surface_results_in_a_callback)
+TEST_F(ProtobufSocketCommunicatorBasic, create_surface_results_in_a_callback)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
 
@@ -81,7 +81,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, create_surface_results_in_a_callback)
     client->wait_for_create_surface();
 }
 
-TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
+TEST_F(ProtobufSocketCommunicatorBasic, connection_sets_app_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
 
@@ -98,7 +98,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, connection_sets_app_name)
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
 
-TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
+TEST_F(ProtobufSocketCommunicatorBasic, create_surface_sets_surface_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -127,7 +127,7 @@ TEST_F(ProtobufAsioCommunicatorBasic, create_surface_sets_surface_name)
 }
 
 
-TEST_F(ProtobufAsioCommunicatorBasic,
+TEST_F(ProtobufSocketCommunicatorBasic,
         create_surface_results_in_a_surface_being_created)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -141,7 +141,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
     client->wait_for_create_surface();
 }
 
-TEST_F(ProtobufAsioCommunicatorBasic,
+TEST_F(ProtobufSocketCommunicatorBasic,
        double_disconnection_attempt_has_no_effect)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -170,7 +170,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufAsioCommunicatorBasic,
+TEST_F(ProtobufSocketCommunicatorBasic,
        getting_and_advancing_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
@@ -208,7 +208,7 @@ TEST_F(ProtobufAsioCommunicatorBasic,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufAsioCommunicatorBasic,
+TEST_F(ProtobufSocketCommunicatorBasic,
        connect_create_surface_then_disconnect_a_session)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);

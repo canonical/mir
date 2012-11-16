@@ -13,36 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#ifndef MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
-#define MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS
 
-#include "mir/compositor/buffer_bundle.h"
-#include "mir/geometry/size.h"
+#ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
+#define MIR_CLIENT_CLIENT_CONTEXT_H_
 
-#include <hardware/gralloc.h>
-#include <memory>
+class MirPlatformPackage;
+class MirConnection;
 
 namespace mir
 {
-namespace test
+namespace client
 {
 
-class grallocRenderSW
+class ClientContext
 {
 public:
-    grallocRenderSW(); 
-    ~grallocRenderSW(); 
-    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
-                        geometry::Size size, int val );
- 
-private:
-    gralloc_module_t* module;
-    alloc_device_t* alloc_dev;
+    virtual ~ClientContext() {}
+
+    virtual MirConnection* mir_connection() = 0;
+    virtual void populate(MirPlatformPackage& platform_package) = 0;
+
+protected:
+    ClientContext() = default;
+    ClientContext(const ClientContext&) = delete;
+    ClientContext& operator=(const ClientContext&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_TEST_TEST_UTILS_ANDROID_GRAPHICS */
+#endif /* MIR_CLIENT_CLIENT_CONTEXT_H_ */

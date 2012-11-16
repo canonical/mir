@@ -43,7 +43,7 @@ target_link_libraries(
   mirprocess
   miroptions
   mirprotobuf
-  test-utils
+  mir-test-doubles
 
   3rd_party
 

@@ -13,35 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
-#ifndef MIR_TEST_TEST_UTILS_GRAPHICS
-#define MIR_TEST_TEST_UTILS_GRAPHICS
 
-#include <GLES2/gl2.h>
+#ifndef MIR_INPUT_ANDROID_INPUT_LEXICON_H_
+#define MIR_INPUT_ANDROID_INPUT_LEXICON_H_
+
+#include "mir/input/event.h"
+
+namespace android
+{
+class InputEvent;
+}
+
+namespace droidinput = android;
 
 namespace mir
 {
-namespace test
+namespace input
 {
-
-class glAnimationBasic
+namespace android
+{
+class Lexicon
 {
 public:
-    glAnimationBasic();
-
-    void init_gl();    
-    void render_gl();
-    void step();
-    int texture_width();
-    int texture_height();
-
-private:
-    GLuint program, vPositionAttr, uvCoord, slideUniform;
-    float slide;
+    static void translate(const droidinput::InputEvent *android_event, MirEvent &mir_event);
 };
-
 }
 }
+}
 
-#endif /* MIR_TEST_TEST_UTILS_GRAPHICS */
+#endif // MIR_INPUT_ANDROID_INPUT_LEXICON_H_

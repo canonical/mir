@@ -21,13 +21,15 @@
 
 #include "mir/process/process.h"
 
-#include "mir_test/testing_process_manager.h"
+#include "mir_test_framework/testing_process_manager.h"
 #include <gtest/gtest.h>
 
 #include <memory>
 
-namespace mir
+namespace mir_test_framework
 {
+using namespace ::mir;
+
 // The test fixture sets up and tears down a display server for use
 // in display server test cases.
 class DefaultDisplayServerTestFixture : public testing::Test
@@ -71,9 +73,9 @@ private:
 
 }
 
-using mir::DefaultDisplayServerTestFixture;
-using mir::BespokeDisplayServerTestFixture;
-using mir::TestingClientConfiguration;
-using mir::TestingServerConfiguration;
+using mir_test_framework::DefaultDisplayServerTestFixture;
+using mir_test_framework::BespokeDisplayServerTestFixture;
+using mir_test_framework::TestingClientConfiguration;
+using mir_test_framework::TestingServerConfiguration;
 
 #endif // MIR_DISPLAY_SERVER_TEST_FIXTURE

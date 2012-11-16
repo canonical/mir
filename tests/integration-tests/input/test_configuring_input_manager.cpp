@@ -22,7 +22,7 @@
 
 #include "mir/thread/all.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/mock_input_manager.h"
 
 namespace mi = mir::input;

@@ -29,6 +29,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_platform.h"
+#include "mir_client/client_context.h"
 
 #include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
@@ -44,7 +45,7 @@ class ClientBufferDepository;
 
 struct SurfaceRelease;
 
-class MirConnection
+class MirConnection : public mir::client::ClientContext
 {
 public:
     MirConnection();
@@ -81,6 +82,9 @@ public:
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
     static bool is_valid(MirConnection *connection);
+
+    MirConnection* mir_connection();
+
 private:
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub server;

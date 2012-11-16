@@ -14,7 +14,6 @@ cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/AndroidCrossCompile.cmake \
 -DMIR_ENABLE_DEATH_TESTS=NO \
 -DMIR_INPUT_ENABLE_EVEMU=NO \
 -DMIR_PLATFORM=android \
--Dgtest_disable_pthreads=YES \
 $cwd
 
 make 

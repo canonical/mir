@@ -20,6 +20,7 @@ add_subdirectory(protobuf/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(compositor/)
+add_subdirectory(draw/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(logging/)

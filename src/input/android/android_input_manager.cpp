@@ -62,12 +62,12 @@ mia::InputManager::~InputManager()
 
 void mia::InputManager::stop()
 {
-    reader_thread->requestExit();
-    dispatcher_thread->requestExit();
+    dispatcher_thread->requestExitAndWait();
+    reader_thread->requestExitAndWait();
 }
 
 void mia::InputManager::start()
 {
-    dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
     reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
+    dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
 }

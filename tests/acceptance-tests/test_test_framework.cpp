@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir/frontend/communicator.h"
 
