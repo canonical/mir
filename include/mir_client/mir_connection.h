@@ -98,7 +98,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    std::shared_ptr<mir::client::ClientPlatformFactory> client_platform_factory;
+    std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::EGLNativeDisplayContainer> native_display_container;
 
