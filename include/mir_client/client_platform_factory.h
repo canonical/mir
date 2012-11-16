@@ -15,24 +15,31 @@
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
+#ifndef MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_
+#define MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_
 
-#include "mir_client/client_platform.h"
-#include "mir_client/native_client_platform_factory.h"
-#include "mock_client_context.h"
-
-#include <EGL/egl.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-namespace mcl = mir::client;
-
-TEST(AndroidClientPlatformTest, egl_native_display_is_egl_default_display)
+namespace mir
 {
-    mcl::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
-    auto platform = factory.create_client_platform(&context);
-    auto native_display = platform->create_egl_native_display();
-    EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
-    EXPECT_EQ(EGL_DEFAULT_DISPLAY, egl_native_display);
+namespace client
+{
+
+class ClientPlatform;
+class ClientContext;
+
+class ClientPlatformFactory
+{
+public:
+    virtual ~ClientPlatformFactory() {}
+
+    virtual std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context) = 0;
+
+protected:
+    ClientPlatformFactory() = default;
+    ClientPlatformFactory(const ClientPlatformFactory& p) = delete;
+    ClientPlatformFactory& operator=(const ClientPlatformFactory& p) = delete;
+};
+
 }
+}
+
+#endif /* MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_ */

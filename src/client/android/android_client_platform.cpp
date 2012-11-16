@@ -21,6 +21,7 @@
 #include "mir_client/android/android_registrar_gralloc.h"
 #include "mir_client/android/android_client_buffer_depository.h"
 #include "mir_client/mir_connection.h"
+#include "mir_client/native_client_platform_factory.h"
 
 #include <EGL/egl.h>
 
@@ -48,8 +49,8 @@ public:
 
 }
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        ClientContext* /*context*/)
+std::shared_ptr<mcl::ClientPlatform>
+mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*context*/)
 {
     return std::make_shared<mcla::AndroidClientPlatform>();
 }

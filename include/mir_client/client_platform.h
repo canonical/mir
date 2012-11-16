@@ -55,8 +55,6 @@ public:
     virtual std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display() = 0;
 };
 
-std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
-
 }
 }
 
