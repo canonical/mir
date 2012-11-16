@@ -632,12 +632,12 @@ Thomas Voss
         <CODE_SNIPPET>
           class Foo
           {
-           private:
-            // Bar is a member class, nested within Foo.
-            class Bar
-            {
-              ...
-            };
+          private:
+              // Bar is a member class, nested within Foo.
+              class Bar
+              {
+                ...
+              };
 
           };
         </CODE_SNIPPET>
@@ -1444,9 +1444,9 @@ Thomas Voss
         </p>
         <CODE_SNIPPET>
           class MyClass {
-           public:
-            void Analyze(string const&amp; text);
-            void Analyze(const char *text, size_t textlen);
+          public:
+              void Analyze(string const&amp; text);
+              void Analyze(const char *text, size_t textlen);
           };
         </CODE_SNIPPET>
       </DEFINITION>
@@ -2448,13 +2448,13 @@ Thomas Voss
         <CODE_SNIPPET>
           class MyClass
           {
-           public:
-            ...
-            int get_num_entries() const { return num_entries; }
-            void set_num_entries(int value) { num_entries = value; }
+          public:
+              ...
+              int get_num_entries() const { return num_entries; }
+              void set_num_entries(int value) { num_entries = value; }
 
-           private:
-            int num_entries;
+          private:
+              int num_entries;
           };
         </CODE_SNIPPET>
       </SUBSECTION>
@@ -2779,11 +2779,11 @@ Thomas Voss
           For example:
         </p>
         <CODE_SNIPPET>
-          private:
-           // Keeps track of the total number of entries in the table.
-           // Used to ensure we do not go over the limit. -1 means
-           // that we don't yet know how many entries the table has.
-           int num_total_entries;
+         private:
+             // Keeps track of the total number of entries in the table.
+             // Used to ensure we do not go over the limit. -1 means
+             // that we don't yet know how many entries the table has.
+             int num_total_entries;
         </CODE_SNIPPET>
       </SUBSECTION>
 
@@ -3203,15 +3203,15 @@ Thomas Voss
         // Always have named parameters in interfaces.
         class Shape
         {
-         public:
-          virtual void Rotate(double radians) = 0;
+        public:
+            virtual void Rotate(double radians) = 0;
         }
 
         // Always have named parameters in the declaration.
         class Circle : public Shape
         {
-         public:
-          virtual void Rotate(double radians);
+        public:
+            virtual void Rotate(double radians);
         }
 
         // Comment out unused named parameters in definitions.
@@ -3613,23 +3613,23 @@ Thomas Voss
         class MyClass : public OtherClass
         {
         public:
-          MyClass();  // Regular 2 space indent.
-          explicit MyClass(int var);
-          ~MyClass() {}
+            MyClass();  // Regular 2 space indent.
+            explicit MyClass(int var);
+            ~MyClass() {}
 
-          void SomeFunction();
-          void SomeFunctionThatDoesNothing() {}
+            void SomeFunction();
+            void SomeFunctionThatDoesNothing() {}
 
-          void set_some_var(int var) { some_var_ = var; }
-          int some_var() const { return some_var_; }
+            void set_some_var(int var) { some_var_ = var; }
+            int some_var() const { return some_var_; }
 
-         private:
-	  MyClass(const MyClass&amp;) = delete;
-	  MyClass&amp; operator=(const MyClass&amp;) = delete;
-          bool SomeInternalFunction();
-
-          int some_var_;
-          int some_other_var_;
+        private:
+	    MyClass(const MyClass&amp;) = delete;
+	    MyClass&amp; operator=(const MyClass&amp;) = delete;
+            bool SomeInternalFunction();
+  
+            int some_var_;
+            int some_other_var_;
         };
       </CODE_SNIPPET>
       <p>
