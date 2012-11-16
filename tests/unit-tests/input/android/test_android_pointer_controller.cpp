@@ -41,7 +41,7 @@ class AndroidPointerControllerSetup : public testing::Test
 public:
     void SetUp()
     {
-	controller = std::make_shared<mia::PointerController>(std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()));
+        controller = std::make_shared<mia::PointerController>(std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()));
     }
 protected:
     mg::MockViewableArea viewable_area;
@@ -51,7 +51,7 @@ protected:
 TEST_F(AndroidPointerControllerSetup, button_state_is_saved)
 {
     using namespace ::testing;
-    
+
     controller->setButtonState(AKEY_STATE_DOWN);
     EXPECT_EQ(controller->getButtonState(), AKEY_STATE_DOWN);
 }
@@ -60,15 +60,18 @@ TEST_F(AndroidPointerControllerSetup, position_is_saved)
 {
     using namespace ::testing;
 
+    static const float x = 100;
+    static const float y = 200;
+
     EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(default_view_area));
 
-    controller->setPosition(100,200);
+    controller->setPosition(x, y);
 
     float out_x, out_y;
     controller->getPosition(&out_x, &out_y);
 
-    EXPECT_EQ(out_x, 100);
-    EXPECT_EQ(out_y, 200);
+    EXPECT_EQ(x, out_x);
+    EXPECT_EQ(y, out_y);
 }
 
 TEST_F(AndroidPointerControllerSetup, move_updates_position)
@@ -76,15 +79,20 @@ TEST_F(AndroidPointerControllerSetup, move_updates_position)
     using namespace ::testing;
 
     EXPECT_CALL(viewable_area, view_area()).Times(2).WillRepeatedly(Return(default_view_area));
-    
-    controller->setPosition(100, 100);
-    controller->move(100, 50);
+
+    static const float x = 100;
+    static const float y = 100;
+    static const float dx = 100;
+    static const float dy = 50;
+
+    controller->setPosition(x, y);
+    controller->move(dx, dy);
 
     float out_x, out_y;
     controller->getPosition(&out_x, &out_y);
-    
-    EXPECT_EQ(out_x, 200);
-    EXPECT_EQ(out_y, 150);
+
+    EXPECT_EQ(out_x, x + dx);
+    EXPECT_EQ(out_y, y + dy);
 }
 
 TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
@@ -96,7 +104,7 @@ TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
     float bound_max_y = default_view_area.size.height.as_float();
 
     EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(default_view_area));
-    
+
     float out_min_x, out_min_y, out_max_x, out_max_y;
     controller->getBounds(&out_min_x, &out_min_y, &out_max_x, &out_max_y);
 
@@ -117,21 +125,26 @@ TEST_F(AndroidPointerControllerSetup, clips_to_view_area)
     float bound_max_y = default_view_area.size.height.as_float();
     float out_x, out_y;
 
+    static const float invalid_lower_bound_x = bound_min_x - 1;
+    static const float invalid_lower_bound_y = bound_min_y - 1;
+    static const float invalid_upper_bound_x = bound_max_x + 1;
+    static const float invalid_upper_bound_y = bound_max_y + 1;
+
     EXPECT_CALL(viewable_area, view_area()).Times(4).WillRepeatedly(Return(default_view_area));
 
-    controller->setPosition(bound_min_x - 1, 0);
+    controller->setPosition(invalid_lower_bound_x, 0);
     controller->getPosition(&out_x, &out_y);
     EXPECT_EQ(out_x, bound_min_x);
 
-    controller->setPosition(0,bound_min_y - 1);
+    controller->setPosition(0, invalid_lower_bound_y);
     controller->getPosition(&out_x, &out_y);
     EXPECT_EQ(out_y, bound_min_y);
-    
-    controller->setPosition(bound_max_x + 1.0, 0);
+
+    controller->setPosition(invalid_upper_bound_x, 0);
     controller->getPosition(&out_x, &out_y);
     EXPECT_EQ(out_x, bound_max_x);
-    
-    controller->setPosition(0, bound_max_y + 1);
+
+    controller->setPosition(0, invalid_upper_bound_y);
     controller->getPosition(&out_x, &out_y);
     EXPECT_EQ(out_y, bound_max_y);
 }

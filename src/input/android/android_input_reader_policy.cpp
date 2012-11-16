@@ -15,6 +15,7 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
 #include "android_input_reader_policy.h"
 #include "android_pointer_controller.h"
 

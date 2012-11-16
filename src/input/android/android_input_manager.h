@@ -46,26 +46,29 @@ class ViewableArea;
 }
 namespace input
 {
+
 class CursorListener;
+
 namespace android
 {
 
 class InputManager : public mir::input::InputManager
 {
-public:
-    explicit InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-                          std::initializer_list<std::shared_ptr<input::EventFilter> const> filters,
-                          std::shared_ptr<graphics::ViewableArea> const& view_area,
-                          std::shared_ptr<CursorListener> const& cursor_listener = std::shared_ptr<CursorListener>());
+  public:
+    explicit InputManager(
+        const droidinput::sp<droidinput::EventHubInterface>& event_hub,
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& filters,
+        std::shared_ptr<graphics::ViewableArea> const& view_area,
+        std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~InputManager();
 
     virtual void start();
     virtual void stop();
-protected:
+  protected:
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
-private:
+  private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
     droidinput::sp<droidinput::InputDispatcher> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;

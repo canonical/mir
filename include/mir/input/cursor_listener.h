@@ -19,8 +19,6 @@
 #ifndef MIR_INPUT_CURSOR_LISTENER_H_
 #define MIR_INPUT_CURSOR_LISTENER_H_
 
-namespace droidinput = android;
-
 namespace mir
 {
 namespace input
@@ -28,10 +26,12 @@ namespace input
 
 class CursorListener
 {
-public:
+  public:
     virtual ~CursorListener() {}
-    virtual void moved_to(float abs_x, float abs_y) = 0;
-protected:
+
+    virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
+
+  protected:
     CursorListener() = default;
     CursorListener(const CursorListener&) = delete;
     CursorListener& operator=(const CursorListener&) = delete;

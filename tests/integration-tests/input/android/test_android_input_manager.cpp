@@ -16,6 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
+
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
 #include "mir/thread/all.h"
@@ -39,11 +40,14 @@ namespace geom = mir::geometry;
 using mir::MockEventFilter;
 using mir::WaitCondition;
 
-static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600), geom::Height(1400)}};
-
 namespace
 {
+static const geom::Rectangle default_view_area =
+        geom::Rectangle{geom::Point(),
+                        geom::Size{geom::Width(1600), geom::Height(1400)}};
+
+static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
   public:
@@ -53,15 +57,15 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 
         event_hub = new mia::FakeEventHub();
 
-        input_manager.reset(new mia::InputManager(
-            event_hub,
-            {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
-             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter())));
+        input_manager.reset(
+            new mia::InputManager(
+                event_hub,
+                {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
+                std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
+                null_cursor_listener));
 
         EXPECT_CALL(viewable_area, view_area()).Times(AnyNumber()).
             WillRepeatedly(Return(default_view_area));
-
-
 
         input_manager->start();
     }

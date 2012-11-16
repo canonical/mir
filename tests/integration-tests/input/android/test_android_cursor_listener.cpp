@@ -16,6 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
+
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
 #include "mir/input/cursor_listener.h"
@@ -45,7 +46,7 @@ namespace
 
 struct MockCursorListener : public mi::CursorListener
 {
-    MOCK_METHOD2(moved_to, void(float, float));
+    MOCK_METHOD2(cursor_moved_to, void(float, float));
 };
 
 class AndroidInputManagerAndCursorListenerSetup : public testing::Test
@@ -53,13 +54,19 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
   public:
     void SetUp()
     {
-	using ::testing::Return;
+        using ::testing::Return;
 
         event_hub = new mia::FakeEventHub();
 
-        EXPECT_CALL(viewable_area, view_area()).Times(2).
-	    WillRepeatedly(Return(geom::Rectangle{geom::Point(),
-			                    geom::Size{geom::Width(1024), geom::Height(1024)}}));
+        static const geom::Rectangle visible_rectangle
+        {
+            geom::Point(),
+            geom::Size{geom::Width(1024), geom::Height(1024)}
+        };
+
+        EXPECT_CALL(viewable_area, view_area())
+                .Times(2)
+                .WillRepeatedly(Return(visible_rectangle));
 
         input_manager.reset(new mia::InputManager(
             event_hub,
@@ -91,16 +98,19 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     WaitCondition wait_condition;
 
-    EXPECT_CALL(cursor_listener, moved_to(100,100)).Times(1);
+    static const float x = 100.f;
+    static const float y = 100.f;
+
+    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
+
     // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(event_filter,
-		handles(_)).WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    EXPECT_CALL(event_filter, handles(_))
+            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
+    event_hub->synthesize_event(mis::a_motion_event().with_movement(x, y));
 
     wait_condition.wait_for_at_most_seconds(60);
 }
-

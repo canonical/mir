@@ -10,9 +10,9 @@ namespace mir
 {
 namespace input
 {
-
 namespace android
 {
+
 /*
  Dummy implementation of a InputReaderPolicy
 
@@ -27,12 +27,18 @@ public:
 
     virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
     {
-	// TODO: This needs to go.
-        out_config->setDisplayInfo(0, /* id */
-                                   false, /* external  */
-                                   1280, /* width */
-                                   1024, /*height*/
-                                   droidinput::DISPLAY_ORIENTATION_0 /* orientation */);
+        static const int32_t default_display_id = 0;
+        static const bool is_external = false;
+        static const int32_t display_width = 1024;
+        static const int32_t display_height = 1024;
+        static const int32_t display_orientation = droidinput::DISPLAY_ORIENTATION_0;
+        // TODO: This needs to go.
+        out_config->setDisplayInfo(
+            default_display_id,
+            is_external,
+            display_width,
+            display_height,
+            display_orientation);
     }
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id)

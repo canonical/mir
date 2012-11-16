@@ -35,12 +35,15 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-                                std::initializer_list<std::shared_ptr<mi::EventFilter> const> filters,
-                                std::shared_ptr<mg::ViewableArea> const& view_area,
-                                std::shared_ptr<mi::CursorListener> const& cursor_listener) :
-  event_hub(event_hub),
-  filter_chain(std::shared_ptr<mi::EventFilterChain>(new mi::EventFilterChain(filters)))
+mia::InputManager::InputManager(
+    const droidinput::sp<droidinput::EventHubInterface>& event_hub,
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& filters,
+    std::shared_ptr<mg::ViewableArea> const& view_area,
+    std::shared_ptr<mi::CursorListener> const& cursor_listener)
+        : event_hub(event_hub),
+          filter_chain(
+              std::shared_ptr<mi::EventFilterChain>(
+                  new mi::EventFilterChain(filters)))
 {
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
     droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::InputReaderPolicy(view_area, cursor_listener);

@@ -38,6 +38,11 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace mi = mir::input;
 
+namespace
+{
+std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+}
+
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
@@ -51,7 +56,7 @@ struct mir::DisplayServer::Private
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
           communicator{config.make_communicator(surface_controller, display)},
-          input_manager{config.make_input_manager({} /* filters */, display)},
+          input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
     {
     }
@@ -91,7 +96,7 @@ void mir::DisplayServer::start()
     {
         lk.unlock();
         do_stuff();
-        lk.lock();     
+        lk.lock();
     }
 
     p->input_manager->stop();

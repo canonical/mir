@@ -84,7 +84,7 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationProxy>(
-            application_manager,                                                      
+            application_manager,
             graphics_platform,
             graphics_display,
             listener,
@@ -168,11 +168,19 @@ mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::Ap
 }
 
 std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> event_filters,
-						    std::shared_ptr<mg::ViewableArea> const& view_area)
+mir::DefaultServerConfiguration::make_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
+    std::shared_ptr<mg::ViewableArea> const& view_area)
 {
-    droidinput::sp<droidinput::EventHubInterface>  event_hub = new droidinput::EventHub();
-    return std::shared_ptr<mia::InputManager>(new mia::InputManager(event_hub, event_filters, view_area));
+    static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+    droidinput::sp<droidinput::EventHubInterface> event_hub =
+            new droidinput::EventHub();
+    return std::shared_ptr<mia::InputManager>(
+        new mia::InputManager(
+            event_hub,
+            event_filters,
+            view_area,
+            null_cursor_listener));
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
@@ -192,6 +200,3 @@ mir::DefaultServerConfiguration::make_application_listener()
 {
     return std::make_shared<mf::NullApplicationListener>();
 }
-
-
-
