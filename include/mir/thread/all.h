@@ -144,6 +144,7 @@ void sleep_for(const Duration& rel_time)
 }
 }
 }
+namespace mir_test_framework { namespace std { using namespace ::mir::std; } }
 #endif
 
 #endif // MIR_THREAD_ALL_H_
