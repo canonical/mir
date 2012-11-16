@@ -36,7 +36,7 @@ if (MIR_PLATFORM STREQUAL "android")
 endif()
 
 add_library(
-  mirdraw SHARED 
+  mirdraw STATIC 
   ${DRAW_SRCS})
 
 target_link_libraries(
@@ -50,4 +50,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-)
+  ${GLESv2_LIBRARIES}
+  ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_UI_LIBRARIES}
+ )

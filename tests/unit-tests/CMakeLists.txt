@@ -34,6 +34,7 @@ target_link_libraries(
   unit-tests
 
   mircompositor
+  mirdraw
   mirfrontend
   mirplatformgraphics
   mirgraphics
