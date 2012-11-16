@@ -41,17 +41,16 @@ mia::InputManager::InputManager(
     std::shared_ptr<mg::ViewableArea> const& view_area,
     std::shared_ptr<mi::CursorListener> const& cursor_listener)
         : event_hub(event_hub),
-          filter_chain(
-              std::shared_ptr<mi::EventFilterChain>(
-                  new mi::EventFilterChain(filters)))
+          filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
+          dispatcher(new droidinput::InputDispatcher(
+              new mia::EventFilterDispatcherPolicy(filter_chain))),
+          reader(new droidinput::InputReader(
+              event_hub,
+              new mia::InputReaderPolicy(view_area, cursor_listener),
+              dispatcher)),
+          reader_thread(new droidinput::InputReaderThread(reader)),
+          dispatcher_thread(new droidinput::InputDispatcherThread(dispatcher))
 {
-    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new mia::EventFilterDispatcherPolicy(filter_chain);
-    droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy = new mia::InputReaderPolicy(view_area, cursor_listener);
-    dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
-    reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
-    reader_thread = new droidinput::InputReaderThread(reader);
-    dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);
-
     dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
 }

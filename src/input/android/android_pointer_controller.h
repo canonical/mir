@@ -24,7 +24,6 @@
 #include "mir/input/cursor_listener.h"
 
 #include "mir/thread/all.h"
-#include <thread>
 
 namespace mir
 {
@@ -38,19 +37,19 @@ namespace android
 {
 class PointerController : public DummyPointerController
 {
-public:
+  public:
     explicit PointerController(std::shared_ptr<graphics::ViewableArea> const& viewable_area);
     explicit PointerController(std::shared_ptr<graphics::ViewableArea> const& viewable_area,
                                std::shared_ptr<CursorListener> const& cursor_listener);
-    virtual ~PointerController() {};
-    
+
     virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
     virtual void move(float delta_x, float delta_y);
     virtual void setButtonState(int32_t button_state);
     virtual int32_t getButtonState() const;
     virtual void setPosition(float x, float y);
     virtual void getPosition(float *out_x, float *out_y) const;
-private:
+
+  private:
     bool get_bounds_locked(float *out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
     void notify_listener();
     // Could be a read/write mutex as this is a latency sensitive class.

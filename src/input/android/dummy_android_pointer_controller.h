@@ -26,16 +26,14 @@ namespace mir
 {
 namespace input
 {
-namespace android 
+namespace android
 {
 
 class DummyPointerController : public droidinput::PointerControllerInterface
 {
-public:
-    explicit DummyPointerController() = default;
-    virtual ~DummyPointerController() {}
+  public:
 
-    // Naming of these methods is dictated by android input stack.
+    // From PointerControllerInterface
     virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const
     {
         (void)out_min_x;

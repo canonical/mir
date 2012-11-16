@@ -1275,9 +1275,9 @@ status_t EventHub::loadKeyMapLocked(Device* device) {
     // <mir changes>
     status_t status = device->keyMap.load(device->identifier, device->configuration);
     if (status) 
-        return device->keyMap.loadGenericMaps();
+        status = device->keyMap.loadGenericMaps();
 
-    return -1;
+    return status;
     // </mir changes>
 }
 

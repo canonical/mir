@@ -84,7 +84,7 @@ protected:
 
 class DefaultServerConfiguration : public ServerConfiguration
 {
-  public:
+public:
     DefaultServerConfiguration(std::string const& socket_file);
 
     virtual std::shared_ptr<options::Option> make_options();
@@ -103,7 +103,7 @@ class DefaultServerConfiguration : public ServerConfiguration
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
-  private:
+private:
     std::string socket_file;
     std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;

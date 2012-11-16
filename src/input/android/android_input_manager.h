@@ -54,7 +54,7 @@ namespace android
 
 class InputManager : public mir::input::InputManager
 {
-  public:
+public:
     explicit InputManager(
         const droidinput::sp<droidinput::EventHubInterface>& event_hub,
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& filters,
@@ -68,17 +68,16 @@ class InputManager : public mir::input::InputManager
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
-  private:
+private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
+    std::shared_ptr<EventFilterChain> filter_chain;
     droidinput::sp<droidinput::InputDispatcher> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;
 
     // It's important to keep droidinput::sp to dispatcher_thread
     // and reader_thread or they will free themselves on exit.
-    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
     droidinput::sp<droidinput::InputReaderThread> reader_thread;
-
-    std::shared_ptr<EventFilterChain> filter_chain;
+    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
 };
 
 }
