@@ -64,7 +64,8 @@ public:
 
     virtual void start();
     virtual void stop();
-  protected:
+
+protected:
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
