@@ -21,6 +21,7 @@
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 #include "mir_client/gbm/drm_fd_handler.h"
 #include "mir_client/mir_connection.h"
+#include "mir_client/native_client_platform_factory.h"
 
 #include <xf86drm.h>
 #include <sys/mman.h>
@@ -78,8 +79,8 @@ private:
 
 }
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        ClientContext* context)
+std::shared_ptr<mcl::ClientPlatform>
+mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
     MirPlatformPackage platform_package;
 

@@ -17,6 +17,7 @@
  */
 
 #include "mir_client/client_platform.h"
+#include "mir_client/native_client_platform_factory.h"
 #include "mir_client/mir_client_surface.h"
 #include "mock_client_context.h"
 
@@ -35,7 +36,8 @@ struct MockClientSurface : public mcl::ClientSurface
 TEST(ClientPlatformTest, platform_creates )
 {
     mcl::MockClientContext context;
-    auto platform = mcl::create_client_platform(&context);
+    mcl::NativeClientPlatformFactory factory;
+    auto platform = factory.create_client_platform(&context);
     auto depository = platform->create_platform_depository(); 
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
@@ -43,8 +45,9 @@ TEST(ClientPlatformTest, platform_creates )
 TEST(ClientPlatformTest, platform_creates_native_window )
 {
     mcl::MockClientContext context;
+    mcl::NativeClientPlatformFactory factory;
     MockClientSurface surface;
-    auto platform = mcl::create_client_platform(&context);
+    auto platform = factory.create_client_platform(&context);
     auto native_window = platform->create_egl_window(&surface);
     EXPECT_NE( native_window, (EGLNativeWindowType) NULL);
 }
@@ -52,7 +55,8 @@ TEST(ClientPlatformTest, platform_creates_native_window )
 TEST(ClientPlatformTest, platform_creates_egl_native_display)
 {
     mcl::MockClientContext context;
-    auto platform = mcl::create_client_platform(&context);
+    mcl::NativeClientPlatformFactory factory;
+    auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());
 }
