@@ -30,7 +30,7 @@
 #include "mir_client/mir_logger.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,10 +39,11 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* const mir_test_socket = mir::test_socket_file().c_str();
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 class StubBuffer : public mc::Buffer
 {
@@ -195,7 +196,6 @@ const int ClientConfigCommon::max_surface_count;
 
 using mir::StubDisplay;
 using mir::SurfaceSync;
-using mir::TestingClientConfiguration;
 using mir::ClientConfigCommon;
 
 namespace

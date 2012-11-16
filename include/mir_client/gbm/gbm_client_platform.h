@@ -34,11 +34,15 @@ class DRMFDHandler;
 class GBMClientPlatform : public ClientPlatform
 {
 public:
-    GBMClientPlatform(std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
+    GBMClientPlatform(ClientContext* const context,
+                      std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
+
     std::shared_ptr<ClientBufferDepository> create_platform_depository ();
     std::shared_ptr<EGLNativeWindowType> create_egl_window(ClientSurface *surface);
+    std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display();
 
 private:
+    ClientContext* const context;
     std::shared_ptr<DRMFDHandler> const drm_fd_handler;
 };
 

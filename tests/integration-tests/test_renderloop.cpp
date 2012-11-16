@@ -23,7 +23,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/display_server.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/mock_display.h"
 
 #include <gmock/gmock.h>

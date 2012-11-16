@@ -21,9 +21,15 @@
 #include "mir_client/android/android_registrar_gralloc.h"
 #include "mir_client/android/android_client_buffer_depository.h"
 #include "mir_client/mir_connection.h"
+#include "mir_client/native_client_platform_factory.h"
+
+#include <EGL/egl.h>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
+
+namespace
+{
 
 struct EmptyDeleter
 {
@@ -32,8 +38,19 @@ struct EmptyDeleter
     }
 };
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        std::shared_ptr<MirPlatformPackage> const& /*platform_package*/)
+class AndroidEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
+{
+public:
+    EGLNativeDisplayType get_egl_native_display()
+    {
+        return EGL_DEFAULT_DISPLAY;
+    }
+};
+
+}
+
+std::shared_ptr<mcl::ClientPlatform>
+mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*context*/)
 {
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
@@ -82,3 +99,8 @@ std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_win
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
+std::shared_ptr<mcl::EGLNativeDisplayContainer>
+mcla::AndroidClientPlatform::create_egl_native_display()
+{
+    return std::make_shared<AndroidEGLNativeDisplayContainer>();
+}

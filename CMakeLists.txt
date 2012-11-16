@@ -25,6 +25,7 @@ set(
 
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+set(CMAKE_GCOV gcov-${MIR_GCC_VERSION})
 
 project(Mir)
 
@@ -85,23 +86,25 @@ set (MIR_TRANSPORT
   STRING
   "IPC transport to build (options are 'socket' or 'binder')"
 )
+
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
+find_package(Protobuf REQUIRED )
 
 if (MIR_PLATFORM STREQUAL "android")
   include (cmake/AndroidFlags.cmake)
   get_android_flags()
   add_definitions( ${ANDROID_DEFINITIONS} )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_EXE_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
-#  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
 
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
+  set(gtest_disable_pthreads ON)
 
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )

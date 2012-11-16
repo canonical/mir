@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <initializer_list>
 
 namespace mir
 {
@@ -42,11 +43,17 @@ namespace graphics
 class Renderer;
 class Platform;
 class Display;
+class ViewableArea;
 class BufferInitializer;
 }
 namespace surfaces
 {
 class ApplicationSurfaceOrganiser;
+}
+namespace input
+{
+class InputManager;
+class EventFilter;
 }
 
 class ServerConfiguration
@@ -56,12 +63,16 @@ public:
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
-            std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
+        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
-            std::shared_ptr<graphics::Display> const& display) = 0;
+        std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
-    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
+    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+    virtual std::shared_ptr<input::InputManager> make_input_manager(
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
+        std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -80,12 +91,17 @@ public:
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
-            std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
+        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
-            std::shared_ptr<graphics::Display> const& display);
+        std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-                 std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display);
-    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, 
+        std::shared_ptr<graphics::Display> const& display);
+    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+    virtual std::shared_ptr<input::InputManager> make_input_manager(
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
+        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 private:
     std::string socket_file;
@@ -95,8 +111,8 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
-            std::shared_ptr<graphics::Display> const& display);
+        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<graphics::Display> const& display);
 
     virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
 };

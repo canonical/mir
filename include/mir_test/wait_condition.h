@@ -26,7 +26,7 @@ namespace mir
 {
 struct WaitCondition
 {
-    void wait_for_seconds(int seconds)
+    void wait_for_at_most_seconds(int seconds)
     {
         std::unique_lock<std::mutex> ul(guard);
         condition.wait_for(ul, std::chrono::seconds(seconds));
@@ -41,6 +41,15 @@ struct WaitCondition
     std::mutex guard;
     std::condition_variable condition;
 };
+}
+
+namespace
+{
+ACTION_P(ReturnFalseAndWakeUp, wait_condition)
+{
+    wait_condition->wake_up_everyone();
+    return false;
+}
 }
 
 #endif // MIR_TEST_WAIT_CONDITION_H_

@@ -28,6 +28,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
+#include "mir/input/input_manager.h"
 
 #include "mir/thread/all.h"
 
@@ -35,6 +36,12 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
+
+namespace
+{
+std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+}
 
 struct mir::DisplayServer::Private
 {
@@ -49,6 +56,7 @@ struct mir::DisplayServer::Private
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
           communicator{config.make_communicator(surface_controller, display)},
+          input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
     {
     }
@@ -63,6 +71,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Communicator> communicator;
+    std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
     bool exit;
 };
@@ -80,14 +89,17 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::start()
 {
     p->communicator->start();
+    p->input_manager->start();
 
     std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
     {
         lk.unlock();
         do_stuff();
-        lk.lock();     
+        lk.lock();
     }
+
+    p->input_manager->stop();
 }
 
 void mir::DisplayServer::do_stuff()

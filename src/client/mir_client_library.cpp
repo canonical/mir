@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
+#include "mir_client/native_client_platform_factory.h"
 
 #include "mir_client/mir_rpc_channel.h"
 
@@ -59,7 +60,8 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     try
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
-        MirConnection * connection = new MirConnection(socket_file, log);
+        auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
+        MirConnection* connection = new MirConnection(socket_file, log, client_platform_factory);
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
@@ -88,6 +90,11 @@ void mir_connection_release(MirConnection * connection)
     wait_handle->wait_for_result();
 
     delete connection;
+}
+
+MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
+{
+    return connection->egl_native_display();
 }
 
 MirWaitHandle* mir_surface_create(MirConnection * connection,
