@@ -60,23 +60,6 @@ private:
     int drm_fd;
 };
 
-class GBMEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
-{
-public:
-    GBMEGLNativeDisplayContainer(MirConnection* connection)
-        : connection{connection}
-    {
-    }
-
-    EGLNativeDisplayType get_egl_native_display()
-    {
-        return reinterpret_cast<EGLNativeDisplayType>(connection);
-    }
-
-private:
-    MirConnection* const connection;
-};
-
 }
 
 std::shared_ptr<mcl::ClientPlatform>
@@ -117,7 +100,10 @@ void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
 {
 }
 
-std::shared_ptr<mcl::EGLNativeDisplayContainer> mclg::GBMClientPlatform::create_egl_native_display()
+std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    return std::make_shared<GBMEGLNativeDisplayContainer>(context->mir_connection());
+    EGLNativeDisplayType* native_display_ptr = new EGLNativeDisplayType();
+    *native_display_ptr = reinterpret_cast<EGLNativeDisplayType>(context->mir_connection());
+
+    return std::shared_ptr<EGLNativeDisplayType>(native_display_ptr);
 }

@@ -38,15 +38,6 @@ struct EmptyDeleter
     }
 };
 
-class AndroidEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
-{
-public:
-    EGLNativeDisplayType get_egl_native_display()
-    {
-        return EGL_DEFAULT_DISPLAY;
-    }
-};
-
 }
 
 std::shared_ptr<mcl::ClientPlatform>
@@ -82,8 +73,10 @@ void mcla::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
     delete window;
 }
 
-std::shared_ptr<mcl::EGLNativeDisplayContainer>
+std::shared_ptr<EGLNativeDisplayType>
 mcla::AndroidClientPlatform::create_egl_native_display()
 {
-    return std::make_shared<AndroidEGLNativeDisplayContainer>();
+    EGLNativeDisplayType* native_display_ptr = new EGLNativeDisplayType{EGL_DEFAULT_DISPLAY};
+
+    return std::shared_ptr<EGLNativeDisplayType>(native_display_ptr);
 }

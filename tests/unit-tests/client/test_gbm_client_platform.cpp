@@ -49,7 +49,6 @@ TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
-    EGLNativeDisplayType egl_native_display = native_display->get_egl_native_display();
     EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(context.connection),
-              egl_native_display);
+              *native_display);
 }

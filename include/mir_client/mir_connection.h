@@ -100,7 +100,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    std::shared_ptr<mir::client::EGLNativeDisplayContainer> native_display_container;
+    std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::string error_message;
 
