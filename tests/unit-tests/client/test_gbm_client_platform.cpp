@@ -18,35 +18,28 @@
 
 #include "mir_client/client_platform.h"
 #include "mir_client/native_client_platform_factory.h"
-#include "mir_client/mir_client_surface.h"
-#include "mock_client_context.h"
+#include "mir_test/mock_client_context.h"
+#include "mir_test/mock_client_surface.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mt = mir::test;
 namespace mcl = mir::client;
-
-struct MockClientSurface : public mcl::ClientSurface
-{
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
-    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
-};
 
 TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
 {
-    mcl::MockClientContext context;
+    mt::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
-    MockClientSurface surface;
+    mt::MockClientSurface surface;
     auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<MockClientSurface>();
+    auto mock_client_surface = std::make_shared<mt::MockClientSurface>();
     auto native_window = platform->create_egl_window(&surface);
     EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), *native_window);
 }
 
 TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
 {
-    mcl::MockClientContext context;
+    mt::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
