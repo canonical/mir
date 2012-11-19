@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <map>
 #include <set>
@@ -9,7 +11,122 @@
 #include <iostream>
 #include <libgen.h>
 
+#include <getopt.h>
+
 using namespace std;
+
+namespace
+{
+enum DescriptorType
+{
+    test_case,
+    test_suite
+};
+
+DescriptorType check_line_for_test_case_or_suite(const string& line)
+{
+    if (line.find("  ") == 0)
+        return test_case;
+
+    return test_suite;
+}
+
+std::string& ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+        return s;
+}
+
+const char* ordinary_cmd_line_pattern()
+{
+    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s\")\n";
+    return pattern;
+}
+
+const char* memcheck_cmd_line_pattern()
+{
+    static const char* pattern = "ADD_TEST(\"memcheck(%s.%s)\" \"valgrind\" \"--trace-children=yes\" \"%s\" \"--gtest_death_test_use_fork\" \"--gtest_filter=%s\")\n";
+
+    return pattern;
+}
+
+std::string elide_string_right(const std::string& in, std::size_t max_size)
+{
+    assert(max_size >= 3);
+
+    std::string result(in.begin(), in.begin() + max_size);
+
+    if (in.size() >= max_size)
+    {
+        *(result.end()-1) = '.';
+        *(result.end()-2) = '.';
+        *(result.end()-3) = '.';
+    }
+
+    return result;
+}
+
+std::string elide_string_left(const std::string& in, std::size_t max_size)
+{
+    assert(max_size >= 3);
+
+    if (in.size() <= max_size)
+        return in;
+
+    std::string result(in.begin() + (in.size() - max_size), in.end());
+
+    *(result.begin()) = '.';
+    *(result.begin()+1) = '.';
+    *(result.begin()+2) = '.';
+
+    return result;
+}
+
+struct Configuration
+{
+    Configuration() : enable_memcheck(0)
+    {
+    }
+
+    int enable_memcheck;
+};
+
+bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
+{
+    static struct option long_options[] = {
+        {"enable-memcheck", no_argument, &config.enable_memcheck, 1},
+        {0, 0, 0, 0}
+    };
+
+    static const int enable_memcheck_option_index = 0;
+
+    while(1)
+    {
+        int option_index = 0;
+        int c = getopt_long(
+            argc,
+            argv,
+            "",
+            long_options,
+            &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c)
+        {
+            case 0:
+                if (enable_memcheck_option_index == option_index)
+                    break;
+                else
+                    return false;
+                break;
+        }
+    }
+
+    return true;
+}
+}
 
 int main (int argc, char **argv)
 {
@@ -21,12 +138,8 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    bool enable_memcheck = false;
-    if(argc > 2)
-    {
-        if (::strcmp(argv[2], "--enable-memcheck") == 0)
-            enable_memcheck=true;
-    }
+    Configuration config;
+    parse_configuration_from_cmd_line(argc, argv, config);
 
     set<string> tests;
     string line;
@@ -34,13 +147,15 @@ int main (int argc, char **argv)
 
     while (getline (cin, line))
     {
-        /* Is test case */
-        if (line.find ("  ") == 0)
+        switch(check_line_for_test_case_or_suite(line))
         {
-            tests.insert(current_test + "*");
+            case test_case:
+                tests.insert(current_test + ltrim(line));
+                break;
+            case test_suite:
+                current_test = line;
+                break;
         }
-        else
-            current_test = line;
     }
 
     ofstream testfilecmake;
@@ -48,30 +163,23 @@ int main (int argc, char **argv)
     string   test_suite(base);
 
     testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
-
     if (testfilecmake.is_open())
     {
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
+            static char cmd_line[1024] = "";
+            snprintf(
+                cmd_line,
+                sizeof(cmd_line),
+                config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
+                test_suite.c_str(),
+                elide_string_left(*test, 60).c_str(),
+                argv[1],
+                test->c_str());
+
             if (testfilecmake.good())
             {
-                testfilecmake
-                        << "ADD_TEST ("
-                        << test_suite << '.' << *test
-                        << " \"" << argv[1] << "\""
-                        << "\"--gtest_filter=" << *test << "\")" << endl;
-
-                if (enable_memcheck)
-                {
-                    testfilecmake
-                            << "ADD_TEST ("
-                            << "memcheck_" << test_suite << '.' << *test
-                            << " \"valgrind\"" 
-                            << "\"--trace-children=yes\""
-                            << " \"" << argv[1] << "\""
-                            << "\"--gtest_death_test_use_fork\""
-                            << "\"--gtest_filter=" << *test << "\")" << endl;
-                }
+                testfilecmake << cmd_line;
             }
         }
 
