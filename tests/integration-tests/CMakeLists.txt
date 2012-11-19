@@ -55,6 +55,7 @@ target_link_libraries(
   mir-test-doubles
 
   mir
+  mirclient
   mirdraw
   miroptions
   mircompositor
