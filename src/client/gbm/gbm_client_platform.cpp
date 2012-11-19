@@ -102,8 +102,7 @@ void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    EGLNativeDisplayType* native_display_ptr = new EGLNativeDisplayType();
-    *native_display_ptr = reinterpret_cast<EGLNativeDisplayType>(context->mir_connection());
-
-    return std::shared_ptr<EGLNativeDisplayType>(native_display_ptr);
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = reinterpret_cast<EGLNativeDisplayType>(context->mir_connection());
+    return native_display;
 }

@@ -97,9 +97,9 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 {
     using namespace testing;
 
-    EGLNativeDisplayType native_display_raw{reinterpret_cast<EGLNativeDisplayType>(0xabcdef)};
-    EGLNativeDisplayType* native_display_ptr = new EGLNativeDisplayType{native_display_raw};
-    std::shared_ptr<EGLNativeDisplayType> native_display{native_display_ptr};
+    EGLNativeDisplayType native_display_raw = reinterpret_cast<EGLNativeDisplayType>(0xabcdef);
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = native_display_raw;
 
     EXPECT_CALL(*platform, create_egl_native_display())
         .WillOnce(Return(native_display));
