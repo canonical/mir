@@ -510,35 +510,6 @@ std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(std::shared_p
     return std::shared_ptr<MirGraphicsRegion>(region, del);
 }
 
-#if 0
-bool check_buffer(std::shared_ptr<mc::BufferIPCPackage> package, const hw_module_t *hw_module, uint32_t check_value )
-{
-    native_handle_t* handle;
-    handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
-    handle->numInts = package->ipc_data.size();
-    handle->numFds  = package->ipc_fds.size();
-    int i;
-    for(i = 0; i< handle->numFds; i++)
-        handle->data[i] = package->ipc_fds[i];
-    for(; i < handle->numFds + handle->numInts; i++)
-        handle->data[i] = package->ipc_data[i-handle->numFds];
-
-    int *vaddr;
-    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
-    grmod->lock(grmod, handle, usage, 0, 0, test_width, test_height, (void**) &vaddr);
-
-    MirGraphicsRegion region;
-    region.vaddr = (char*) vaddr;
-    region.width = test_width;
-    region.height = test_height;
-    region.pixel_format = mir_pixel_format_rgba_8888;
-
-    auto valid = check_solid_pattern(&region, check_value);
-    grmod->unlock(grmod, handle);
-    return valid;
-}
-#endif
 }
 }
 
@@ -645,10 +616,8 @@ TEST_F(TestClientIPCRender, test_render_single)
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
     EXPECT_TRUE(check_solid_pattern(region, 0x12345678));
-//    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
 }
 
-#if 0
 TEST_F(TestClientIPCRender, test_render_double)
 {
     /* activate client */
@@ -656,7 +625,8 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x12345678));
+    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(region, 0x12345678));
 
     mock_server->set_package(second_package, 15);
 
@@ -664,8 +634,8 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    /* check content */
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0x78787878));
+    auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(second_region, 0x78787878));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
@@ -681,7 +651,8 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0x78787878));
+    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(region, 0x78787878));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
@@ -697,7 +668,8 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
+    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
@@ -717,7 +689,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    EXPECT_TRUE(mt::check_buffer(package, hw_module, 0xFF0000FF));
-    EXPECT_TRUE(mt::check_buffer(second_package, hw_module, 0xFF00FF00));
+    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
+    
+    auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
+    EXPECT_TRUE(check_solid_pattern(second_region, 0xFF00FF00));
 }
-#endif
