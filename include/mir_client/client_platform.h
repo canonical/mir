@@ -50,7 +50,7 @@ public:
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
     virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
-    virtual std::shared_ptr<EGLNativeWindowType> create_egl_window(ClientSurface *surface) = 0;
+    virtual std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayContainer> create_egl_native_display() = 0;
 };
 

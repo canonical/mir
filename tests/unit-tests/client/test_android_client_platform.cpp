@@ -47,6 +47,6 @@ TEST(AndroidClientPlatformTest, egl_native_window_is_set)
     mt::MockClientSurface surface;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mt::MockClientSurface>();
-    auto egl_native_window = platform->create_egl_window(&surface);
+    auto egl_native_window = platform->create_egl_native_window(&surface);
     EXPECT_NE(nullptr, egl_native_window);
 }

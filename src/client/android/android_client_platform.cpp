@@ -90,7 +90,7 @@ private:
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
 {
     auto mir_native_window = new mcla::MirNativeWindow(surface);
     auto egl_native_window = new EGLNativeWindowType;
