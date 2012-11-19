@@ -38,7 +38,7 @@ class BufferSwapperDouble : public BufferSwapper
 {
 public:
     BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
-    ~BufferSwapperDouble() {}
+    ~BufferSwapperDouble();
 
     Buffer* client_acquire();
     void client_release(Buffer* queued_buffer);
@@ -51,6 +51,9 @@ private:
     BufferPtr  buffer_b;
 
     std::mutex swapper_mutex;
+
+    std::condition_variable consumed_cv;
+    bool compositor_has_consumed;
 
     std::condition_variable buffer_available_cv;
     std::queue<Buffer*> client_queue;
