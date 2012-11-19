@@ -28,6 +28,7 @@
 #ifndef _LIBS_CUTILS_LOG_H
 #define _LIBS_CUTILS_LOG_H
 
+#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
@@ -292,8 +293,8 @@ extern "C" {
 #ifndef LOG_ALWAYS_FATAL_IF
 #define LOG_ALWAYS_FATAL_IF(cond, ...) \
     ( (CONDITION(cond)) \
-    ? ((void)android_printAssert(#cond, LOG_TAG, ## __VA_ARGS__)) \
-    : (void)0 )
+      ? ((void)android_printAssert(#cond, LOG_TAG, ## __VA_ARGS__)) \
+      : (void)0 )
 #endif
 
 #ifndef LOG_ALWAYS_FATAL
@@ -438,9 +439,15 @@ typedef enum {
  */
 #define __android_rest(first, ...)               , ## __VA_ARGS__
 
-#define android_printAssert(cond, tag, ...) \
-    __android_log_assert(cond, tag, \
-        __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
+#ifdef HAVE_ANDROID_OS
+#define android_printAssert(cond, tag, ...)                             \
+    __android_log_assert(cond, tag,                                     \
+                         __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
+#else
+    #define android_printAssert(cond, tag, ...) \
+        assert(false && #cond)
+
+#endif // HAVE_ANDROID_OS
 
 #define android_writeLog(prio, tag, text) \
     __android_log_write(prio, tag, text)

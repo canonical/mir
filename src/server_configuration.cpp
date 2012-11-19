@@ -90,6 +90,14 @@ private:
         return cache;
     }
 };
+
+class StubInputManager : public mi::InputManager
+{
+public:
+    void start() {}
+    void stop() {}
+};
+
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
@@ -107,8 +115,9 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
         desc.add_options()
             ("android_sdk_dir", po::value<std::string>(), "dummy")
             ("android_ndk_dir", po::value<std::string>(), "dummy")
-            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
-
+            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+            ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+        
         auto options = std::make_shared<mir::options::ProgramOption>();
 
         options->parse_environment(desc, "MIR_");
@@ -166,7 +175,10 @@ mir::DefaultServerConfiguration::make_input_manager(
     const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
-    return mi::create_input_manager(event_filters, view_area);
+    if (options->is_set("tests_use_real_input"))
+        return mi::create_input_manager(event_filters, view_area);
+
+    return std::make_shared<StubInputManager>();
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
