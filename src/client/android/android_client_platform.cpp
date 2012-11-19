@@ -76,7 +76,7 @@ void mcla::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
 std::shared_ptr<EGLNativeDisplayType>
 mcla::AndroidClientPlatform::create_egl_native_display()
 {
-    EGLNativeDisplayType* native_display_ptr = new EGLNativeDisplayType{EGL_DEFAULT_DISPLAY};
-
-    return std::shared_ptr<EGLNativeDisplayType>(native_display_ptr);
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = EGL_DEFAULT_DISPLAY;
+    return native_display;
 }
