@@ -81,7 +81,6 @@ bool is_surface_flinger_running()
     return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
 }
 
-/* used by both client/server for patterns */
 bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t value)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
@@ -102,18 +101,44 @@ bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint3
     return true;
 }
 
-bool render_solid_pattern(MirGraphicsRegion *region, uint32_t value)
+bool check_2x2_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
+                        uint32_t a_value, uint32_t b_value,
+                        uint32_t c_value, uint32_t d_value)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
 
     int *pixel = (int*) region->vaddr;
-    int i,j;
-    for(i=0; i< region->width; i++)
+    uint32_t values[4] = {a_value, b_value, c_value, d_value};
+    for(int i=0; i< region->width; i++)
     {
-        for(j=0; j<region->height; j++)
+        for(int j=0; j<region->height; j++)
         {
-            pixel[j*region->width + i] = value;
+            int key = (i % 2) + ((j % 2) * 2); 
+            if (pixel[j*region->width + i] != (int) values[key])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool render_2x2_pattern(MirGraphicsRegion *region,
+                        uint32_t a_value, uint32_t b_value,
+                        uint32_t c_value, uint32_t d_value)
+{
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        return false;
+
+    int *pixel = (int*) region->vaddr;
+    uint32_t values[4] = {a_value, b_value, c_value, d_value};
+    for(int i=0; i< region->width; i++)
+    {
+        for(int j=0; j<region->height; j++)
+        {
+            int key = (i % 2) + ((j % 2) * 2); 
+            pixel[j*region->width + i] = values[key];
         }
     }
     return true;
@@ -177,7 +202,7 @@ struct TestClient
         mir_surface_get_graphics_region( surface, &graphics_region);
 
         /* render pattern */
-        render_solid_pattern(&graphics_region, 0x12345678);
+        render_2x2_pattern(&graphics_region, 0x12345678, 0x23456789, 0x34567890, 0x45678901);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
@@ -214,11 +239,11 @@ struct TestClient
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
         mir_surface_get_graphics_region( surface, &graphics_region);
-        render_solid_pattern(&graphics_region, 0x12345678);
+        render_2x2_pattern(&graphics_region, 0x12345678, 0x23456789, 0x34567890, 0x45678901);
 
         mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
         mir_surface_get_graphics_region( surface, &graphics_region);
-        render_solid_pattern(&graphics_region, 0x78787878);
+        render_2x2_pattern(&graphics_region, 0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFF0000FF);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
@@ -615,7 +640,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_solid_pattern(region, 0x12345678));
+    EXPECT_TRUE(check_2x2_pattern(region, 0x12345678, 0x23456789, 0x34567890, 0x45678901));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
@@ -626,7 +651,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_solid_pattern(region, 0x12345678));
+    EXPECT_TRUE(check_2x2_pattern(region, 0x12345678, 0x23456789, 0x34567890, 0x45678901));
 
     mock_server->set_package(second_package, 15);
 
@@ -635,7 +660,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
-    EXPECT_TRUE(check_solid_pattern(second_region, 0x78787878));
+    EXPECT_TRUE(check_2x2_pattern(second_region, 0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFF0000FF));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
@@ -652,7 +677,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_solid_pattern(region, 0x78787878));
+    EXPECT_TRUE(check_2x2_pattern(region, 0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFF0000FF));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
