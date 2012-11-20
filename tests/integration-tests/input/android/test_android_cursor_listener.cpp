@@ -43,6 +43,7 @@ using mir::WaitCondition;
 
 namespace
 {
+using namespace ::testing;
 
 struct MockCursorListener : public mi::CursorListener
 {
@@ -51,11 +52,9 @@ struct MockCursorListener : public mi::CursorListener
 
 class AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
-  public:
+public:
     void SetUp()
     {
-        using ::testing::Return;
-
         event_hub = new mia::FakeEventHub();
 
         static const geom::Rectangle visible_rectangle
@@ -64,9 +63,8 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
             geom::Size{geom::Width(1024), geom::Height(1024)}
         };
 
-        EXPECT_CALL(viewable_area, view_area())
-                .Times(2)
-                .WillRepeatedly(Return(visible_rectangle));
+        ON_CALL(viewable_area, view_area())
+            .WillByDefault(Return(visible_rectangle));
 
         input_manager.reset(new mia::InputManager(
             event_hub,
@@ -81,10 +79,10 @@ class AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager->stop();
     }
 
-  protected:
+protected:
     android::sp<mia::FakeEventHub> event_hub;
     MockEventFilter event_filter;
-    mg::MockViewableArea viewable_area;
+    NiceMock<mg::MockViewableArea> viewable_area;
     std::shared_ptr<mia::InputManager> input_manager;
     MockCursorListener cursor_listener;
 };
