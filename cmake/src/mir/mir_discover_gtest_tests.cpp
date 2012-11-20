@@ -12,6 +12,7 @@
 #include <libgen.h>
 
 #include <getopt.h>
+#include <sys/ioctl.h>
 
 using namespace std;
 
@@ -29,6 +30,14 @@ DescriptorType check_line_for_test_case_or_suite(const string& line)
         return test_case;
 
     return test_suite;
+}
+
+int get_terminal_width()
+{
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+    return w.ws_col;
 }
 
 std::string& ltrim(std::string &s) {
@@ -83,21 +92,25 @@ std::string elide_string_left(const std::string& in, std::size_t max_size)
 
 struct Configuration
 {
-    Configuration() : enable_memcheck(0)
+    Configuration() : executable(NULL),
+                      enable_memcheck(0)
     {
     }
 
+    const char* executable;
     int enable_memcheck;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
 {
     static struct option long_options[] = {
+        {"executable", required_argument, NULL, 'e'},
         {"enable-memcheck", no_argument, &config.enable_memcheck, 1},
         {0, 0, 0, 0}
     };
 
-    static const int enable_memcheck_option_index = 0;
+    static const int executable_option_index = 0;
+    static const int enable_memcheck_option_index = 1;
 
     while(1)
     {
@@ -105,7 +118,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         int c = getopt_long(
             argc,
             argv,
-            "",
+            "e:",
             long_options,
             &option_index);
 
@@ -118,8 +131,14 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
             case 0:
                 if (enable_memcheck_option_index == option_index)
                     break;
+                else if (executable_option_index == option_index)
+                    config.executable = optarg;
                 else
                     return false;
+
+                break;
+            case 'e':
+                config.executable = optarg;
                 break;
         }
     }
@@ -130,16 +149,16 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
 
 int main (int argc, char **argv)
 {
+    int terminal_width = get_terminal_width();
+    
     cin >> noskipws;
 
-    if (argc < 2)
+    Configuration config;
+    if (!parse_configuration_from_cmd_line(argc, argv, config) || config.executable == NULL)
     {
-        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases PATH_TO_TEST_BINARY [--enable-memcheck]";
+        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases --executable PATH_TO_TEST_BINARY [--enable-memcheck]";
         return 1;
     }
-
-    Configuration config;
-    parse_configuration_from_cmd_line(argc, argv, config);
 
     set<string> tests;
     string line;
@@ -173,8 +192,8 @@ int main (int argc, char **argv)
                 sizeof(cmd_line),
                 config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
                 test_suite.c_str(),
-                elide_string_left(*test, 60).c_str(),
-                argv[1],
+                elide_string_left(*test, terminal_width/2).c_str(),
+                config.executable,
                 test->c_str());
 
             if (testfilecmake.good())
