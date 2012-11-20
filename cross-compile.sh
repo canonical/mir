@@ -1,33 +1,40 @@
-# Script to help in cross compiling for Android.
-# Assumes that a standalone ndk is available, that
-# contains all of mir's dependencies in its subfolder
-# sysroot.
-# Please adjust ANDROID_STANDALONE_TOOLCHAIN to your own setup.
+#!/bin/sh
+# build script for Mir on android arm devices
+# set $MIR_ANDROID_NDK_DIR to the android toolchain noted in DEPENDENCIES
+# test run requires package 'android-tools-adb' 
+#
+set -e
 
-cwd=`pwd`
-mkdir $1
-cd $1
+if [ ! -e $MIR_ANDROID_NDK_DIR ]; then
+    echo "aborting: MIR_ANDROID_NDK_DIR not set. set to path containing mir NDK"
+    exit
+fi
+
 export MIR_NDK_PATH=$MIR_ANDROID_NDK_DIR
+BUILD_DIR=build-android-arm
+if [ ! -e ${BUILD_DIR} ]; then
+    mkdir ${BUILD_DIR}
+    ( cd ${BUILD_DIR} &&
+      cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/AndroidCrossCompile.cmake \
+          -DBoost_COMPILER=-gcc \
+          -DMIR_ENABLE_DEATH_TESTS=NO \
+          -DMIR_INPUT_ENABLE_EVEMU=NO \
+          -DMIR_PLATFORM=android \
+          .. )
+fi
 
-cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/AndroidCrossCompile.cmake \
--DBoost_COMPILER=-gcc \
--DMIR_ENABLE_DEATH_TESTS=NO \
--DMIR_INPUT_ENABLE_EVEMU=NO \
--DMIR_PLATFORM=android \
-$cwd
+cmake --build ${BUILD_DIR}
 
-make 
+adb push ${BUILD_DIR}/lib/libmirclient.so.0.0.1 /data
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push lib/libmirclient.so.0.0.1 /data/user
+adb push ${BUILD_DIR}/bin/acceptance-tests /data
+adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./acceptance-tests'
+adb pull '/data/acceptance-tests.xml'
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/acceptance-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./acceptance-tests'
-$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/acceptance-tests.xml'
+adb push ${BUILD_DIR}/bin/integration-tests /data
+adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./integration-tests'
+adb pull '/data/integration-tests.xml'
 
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/integration-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./integration-tests'
-$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/integration-tests.xml'
-
-$MIR_ANDROID_SDK_DIR/platform-tools/adb push bin/unit-tests /data/user
-$MIR_ANDROID_SDK_DIR/platform-tools/adb shell 'cd /data/user && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./unit-tests'
-$MIR_ANDROID_SDK_DIR/platform-tools/adb pull '/data/user/unit-tests.xml'
+adb push ${BUILD_DIR}/bin/unit-tests /data
+adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./unit-tests'
+adb pull '/data/unit-tests.xml'

@@ -1,14 +1,17 @@
 #!/bin/sh
 # Native build script for Mir
 #
-# Builds the project with gcc-4.4, as specified by the toolchain file
 set -e
 
-CMAKE_TOOLCHAIN_FILE=cmake/Toolchain-Ubuntu-GCC44.cmake
-
-if [ ! -e build-native ]; then
-    mkdir build-native
-    ( cd build-native && cmake -DCMAKE_TOOLCHAIN_FILE=../$CMAKE_TOOLCHAIN_FILE ..)
+BUILD_DIR=build-linux-x86
+if [ ! -e ${BUILD_DIR} ]; then
+    mkdir ${BUILD_DIR}
+    ( cd ${BUILD_DIR} && cmake ..)
 fi
 
-cmake --build build-native
+cmake --build ${BUILD_DIR}
+
+GTEST_OUTPUT=xml:./
+${BUILD_DIR}/bin/acceptance-tests
+${BUILD_DIR}/bin/integration-tests
+${BUILD_DIR}/bin/unit-tests
