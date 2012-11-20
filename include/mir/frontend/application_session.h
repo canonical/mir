@@ -19,11 +19,12 @@
 #ifndef MIR_FRONTEND_APPLICATION_SESSION_H_
 #define MIR_FRONTEND_APPLICATION_SESSION_H_
 
+#include "mir/frontend/int_wrapper.h"
+#include "mir/thread/all.h"
+
 #include <memory>
 #include <string>
 #include <map>
-
-#include "mir/thread/all.h"
 
 namespace mir
 {
@@ -39,6 +40,7 @@ class Surface;
 
 namespace frontend
 {
+typedef detail::IntWrapper<> SurfaceId;
 
 class ApplicationSession 
 {
@@ -46,9 +48,9 @@ public:
     explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
     virtual ~ApplicationSession();
 
-    int create_surface(const surfaces::SurfaceCreationParameters& params);
-    void destroy_surface(int surface);
-    std::shared_ptr<surfaces::Surface> get_surface(int surface) const;
+    SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
+    void destroy_surface(SurfaceId surface);
+    std::shared_ptr<surfaces::Surface> get_surface(SurfaceId surface) const;
 
     std::string get_name();
 
@@ -62,11 +64,11 @@ private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const surface_organiser;
     std::string const name;
 
-    int next_id();
+    SurfaceId next_id();
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
+    typedef std::map<SurfaceId, std::weak_ptr<surfaces::Surface>> Surfaces;
     Surfaces surfaces;
 };
 

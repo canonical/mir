@@ -90,7 +90,7 @@ void mir::frontend::ApplicationProxy::create_surface(
 
     {
         auto surface = application_session->get_surface(id);
-        response->mutable_id()->set_value(id);
+        response->mutable_id()->set_value(id.as_value());
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
@@ -125,7 +125,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
 {
     listener->application_next_buffer_called(application_session->get_name());
 
-    auto surface = application_session->get_surface(request->value());
+    auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
     auto const& id = surface->get_buffer_id();
@@ -153,7 +153,7 @@ void mir::frontend::ApplicationProxy::release_surface(
 {
     listener->application_release_surface_called(application_session->get_name());
 
-    auto const id = request->value();
+    auto const id = SurfaceId(request->value());
 
     application_session->destroy_surface(id);
 

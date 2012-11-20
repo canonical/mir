@@ -48,14 +48,14 @@ mf::ApplicationSession::~ApplicationSession()
     }
 }
 
-int mf::ApplicationSession::next_id()
+mf::SurfaceId mf::ApplicationSession::next_id()
 {
     int id = next_surface_id.load();
     while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
+    return SurfaceId(id);
 }
 
-int mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
+mf::SurfaceId mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
     auto const id = next_id();
@@ -64,12 +64,12 @@ int mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& 
     return id;
 }
 
-std::shared_ptr<ms::Surface> mf::ApplicationSession::get_surface(int id) const
+std::shared_ptr<ms::Surface> mf::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
     return surfaces.find(id)->second.lock();
 }
 
-void mf::ApplicationSession::destroy_surface(int id)
+void mf::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     auto p = surfaces.find(id);
 
