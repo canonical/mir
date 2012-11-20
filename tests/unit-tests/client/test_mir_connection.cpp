@@ -34,17 +34,12 @@ namespace mt = mir::test;
 namespace
 {
 
-struct MockEGLNativeDisplayContainer : public mcl::EGLNativeDisplayContainer
-{
-    MOCK_METHOD0(get_egl_native_display, EGLNativeDisplayType());
-};
-
 struct MockClientPlatform : public mcl::ClientPlatform
 {
     MOCK_METHOD0(create_platform_depository, std::shared_ptr<mcl::ClientBufferDepository>());
     MOCK_METHOD1(create_egl_window, EGLNativeWindowType(mcl::ClientSurface*));
     MOCK_METHOD1(destroy_egl_window, void(EGLNativeWindowType));
-    MOCK_METHOD0(create_egl_native_display, std::shared_ptr<mcl::EGLNativeDisplayContainer>());
+    MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
 };
 
 struct MockClientPlatformFactory : public mcl::ClientPlatformFactory
@@ -73,13 +68,10 @@ struct MirConnectionTest : public testing::Test
 
         /* Create MirConnection dependencies */
         logger = std::make_shared<mcl::ConsoleLogger>();
-        native_display_container = std::make_shared<NiceMock<MockEGLNativeDisplayContainer>>();
         platform = std::make_shared<NiceMock<MockClientPlatform>>();
         platform_factory = std::make_shared<NiceMock<MockClientPlatformFactory>>();
 
         /* Set up return values for mock objects methods */
-        ON_CALL(*platform, create_egl_native_display())
-            .WillByDefault(Return(native_display_container));
         ON_CALL(*platform_factory, create_client_platform(_))
             .WillByDefault(Return(platform));
 
@@ -93,7 +85,6 @@ struct MirConnectionTest : public testing::Test
     }
 
     std::shared_ptr<mcl::Logger> logger;
-    std::shared_ptr<testing::NiceMock<MockEGLNativeDisplayContainer>> native_display_container;
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> platform;
     std::shared_ptr<testing::NiceMock<MockClientPlatformFactory>> platform_factory;
     std::shared_ptr<MirConnection> connection;
@@ -106,9 +97,11 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 {
     using namespace testing;
 
-    EGLNativeDisplayType native_display{reinterpret_cast<EGLNativeDisplayType>(0xabcdef)};
+    EGLNativeDisplayType native_display_raw = reinterpret_cast<EGLNativeDisplayType>(0xabcdef);
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = native_display_raw;
 
-    EXPECT_CALL(*native_display_container, get_egl_native_display())
+    EXPECT_CALL(*platform, create_egl_native_display())
         .WillOnce(Return(native_display));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
@@ -117,5 +110,5 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 
     EGLNativeDisplayType connection_native_display = connection->egl_native_display();
 
-    ASSERT_EQ(native_display, connection_native_display);
+    ASSERT_EQ(native_display_raw, connection_native_display);
 }

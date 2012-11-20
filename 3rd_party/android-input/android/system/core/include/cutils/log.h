@@ -438,9 +438,15 @@ typedef enum {
  */
 #define __android_rest(first, ...)               , ## __VA_ARGS__
 
-#define android_printAssert(cond, tag, ...) \
-    __android_log_assert(cond, tag, \
-        __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
+#ifdef HAVE_ANDROID_OS
+#define android_printAssert(cond, tag, ...)                             \
+    __android_log_assert(cond, tag,                                     \
+                         __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
+#else
+#include <assert.h>
+#define android_printAssert(cond, tag, ...)     \
+    assert(false && #cond)
+#endif // HAVE_ANDROID_OS
 
 #define android_writeLog(prio, tag, text) \
     __android_log_write(prio, tag, text)

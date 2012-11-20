@@ -43,7 +43,6 @@ if(ENABLE_MEMCHECK_OPTION)
 endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
-
   if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
     add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
   else()
@@ -70,6 +69,7 @@ function (mir_discover_tests EXECUTABLE)
 
     add_dependencies(
       ${TEST_DISCOVERY_TARGET_NAME}
+
       ${CHECK_TEST_DISCOVERY_TARGET_NAME}
       ${EXECUTABLE}
       mir_discover_gtest_tests)

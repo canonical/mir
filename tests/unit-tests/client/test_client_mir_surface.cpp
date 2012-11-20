@@ -187,9 +187,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
     }
 
-    std::shared_ptr<mcl::EGLNativeDisplayContainer> create_egl_native_display()
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
-        return std::shared_ptr<mcl::EGLNativeDisplayContainer>();
+        return std::shared_ptr<EGLNativeDisplayType>();
     }
 };
 

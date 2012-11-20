@@ -31,8 +31,9 @@ namespace mir_test_framework
 {
 using namespace mir;
 
-struct TestingServerConfiguration : DefaultServerConfiguration
+class TestingServerConfiguration : public DefaultServerConfiguration
 {
+public:
     TestingServerConfiguration();
 
     // Code to run in server process
@@ -44,13 +45,13 @@ struct TestingServerConfiguration : DefaultServerConfiguration
     // TODO can we remove this function and default to real graphics in tests?
     std::shared_ptr<graphics::Platform> make_graphics_platform();
     std::shared_ptr<graphics::Renderer> make_renderer(
-            std::shared_ptr<graphics::Display> const& display);
+        std::shared_ptr<graphics::Display> const& display);
     // We override make_input_manager in the default server configuration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
     virtual std::shared_ptr<input::InputManager> make_input_manager(
-            std::initializer_list<std::shared_ptr<input::EventFilter> const> event_filters,
-            std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
+        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
