@@ -44,6 +44,12 @@ ms::Surface::Surface(
 
 ms::Surface::~Surface()
 {
+    // this is a really ugly frig. {alan}
+    // We're about to delete graphics_resource which holds a client buffer
+    // and when that calls BufferSwapperDouble::client_release() there is
+    // a chance that we'll wait forever for rendering.
+    // So, first we simulate rendering:
+    texture();
 }
 
 std::string const& ms::Surface::name() const

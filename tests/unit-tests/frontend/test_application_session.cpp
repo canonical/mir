@@ -82,6 +82,6 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     app_session.hide();
     app_session.show();
-    
+
     app_session.destroy_surface(surf);
 }
