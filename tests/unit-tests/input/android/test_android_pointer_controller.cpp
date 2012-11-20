@@ -34,19 +34,26 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600), geom::Height(1400)}};
+                                                                 geom::Size{geom::Width(1600), 
+                                                                            geom::Height(1400)}};
+
+namespace
+{
 
 class AndroidPointerControllerSetup : public testing::Test
 {
 public:
     void SetUp()
     {
-        controller = std::make_shared<mia::PointerController>(std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()));
+        controller = std::make_shared<mia::PointerController>(
+            std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()));
     }
 protected:
     mg::MockViewableArea viewable_area;
     std::shared_ptr<mia::PointerController> controller;
 };
+
+}
 
 TEST_F(AndroidPointerControllerSetup, button_state_is_saved)
 {
@@ -60,91 +67,93 @@ TEST_F(AndroidPointerControllerSetup, position_is_saved)
 {
     using namespace ::testing;
 
-    static const float x = 100;
-    static const float y = 200;
+    static const float stored_x = 100;
+    static const float stored_y = 200;
 
     EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(default_view_area));
 
-    controller->setPosition(x, y);
+    controller->setPosition(stored_x, stored_y);
 
-    float out_x, out_y;
-    controller->getPosition(&out_x, &out_y);
+    float saved_x, saved_y;
+    controller->getPosition(&saved_x, &saved_y);
 
-    EXPECT_EQ(x, out_x);
-    EXPECT_EQ(y, out_y);
+    EXPECT_EQ(stored_x, saved_x);
+    EXPECT_EQ(stored_y, saved_y);
 }
 
 TEST_F(AndroidPointerControllerSetup, move_updates_position)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(viewable_area, view_area()).Times(2).WillRepeatedly(Return(default_view_area));
+    EXPECT_CALL(viewable_area, view_area()).Times(2)
+        .WillRepeatedly(Return(default_view_area));
 
-    static const float x = 100;
-    static const float y = 100;
+    static const float start_x = 100;
+    static const float start_y = 100;
     static const float dx = 100;
     static const float dy = 50;
 
-    controller->setPosition(x, y);
+    controller->setPosition(start_x, start_y);
     controller->move(dx, dy);
 
-    float out_x, out_y;
-    controller->getPosition(&out_x, &out_y);
+    float final_x, final_y;
+    controller->getPosition(&final_x, &final_y);
 
-    EXPECT_EQ(out_x, x + dx);
-    EXPECT_EQ(out_y, y + dy);
+    EXPECT_EQ(final_x, start_x + dx);
+    EXPECT_EQ(final_y, start_y + dy);
 }
 
 TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
 {
     using namespace ::testing;
-    float bound_min_x = default_view_area.top_left.x.as_float();
-    float bound_min_y = default_view_area.top_left.x.as_float();
-    float bound_max_x = default_view_area.size.width.as_float();
-    float bound_max_y = default_view_area.size.height.as_float();
-
     EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(default_view_area));
 
-    float out_min_x, out_min_y, out_max_x, out_max_y;
-    controller->getBounds(&out_min_x, &out_min_y, &out_max_x, &out_max_y);
+    float controller_min_x, controller_min_y, controller_max_x, controller_max_y;
+    controller->getBounds(&controller_min_x, &controller_min_y, 
+                          &controller_max_x, &controller_max_y);
 
+    const float area_min_x = default_view_area.top_left.x.as_float();
+    const float area_min_y = default_view_area.top_left.x.as_float();
+    const float area_max_x = default_view_area.size.width.as_float();
+    const float area_max_y = default_view_area.size.height.as_float();
 
-    EXPECT_EQ(out_min_x, bound_min_x);
-    EXPECT_EQ(out_min_y, bound_min_y);
-    EXPECT_EQ(out_max_x, bound_max_x);
-    EXPECT_EQ(out_max_y, bound_max_y);
+    EXPECT_EQ(controller_min_x, area_min_x);
+    EXPECT_EQ(controller_min_y, area_min_y);
+    EXPECT_EQ(controller_max_x, area_max_x);
+    EXPECT_EQ(controller_max_y, area_max_y);
 }
 
 TEST_F(AndroidPointerControllerSetup, clips_to_view_area)
 {
     using namespace ::testing;
 
-    float bound_min_x = default_view_area.top_left.x.as_float();
-    float bound_min_y = default_view_area.top_left.x.as_float();
-    float bound_max_x = default_view_area.size.width.as_float();
-    float bound_max_y = default_view_area.size.height.as_float();
-    float out_x, out_y;
+    float min_x_bound = default_view_area.top_left.x.as_float();
+    float min_y_bound = default_view_area.top_left.x.as_float();
+    float max_x_bound = min_x_bound + default_view_area.size.width.as_float();
+    float max_y_bound = min_y_bound + default_view_area.size.height.as_float();
 
-    static const float invalid_lower_bound_x = bound_min_x - 1;
-    static const float invalid_lower_bound_y = bound_min_y - 1;
-    static const float invalid_upper_bound_x = bound_max_x + 1;
-    static const float invalid_upper_bound_y = bound_max_y + 1;
+    static const float invalid_lower_bound_x = min_x_bound - 1;
+    static const float invalid_lower_bound_y = min_y_bound - 1;
+    static const float invalid_upper_bound_x = max_x_bound + 1;
+    static const float invalid_upper_bound_y = max_y_bound + 1;
 
     EXPECT_CALL(viewable_area, view_area()).Times(4).WillRepeatedly(Return(default_view_area));
 
+    float bounded_x, bounded_y;
+
     controller->setPosition(invalid_lower_bound_x, 0);
-    controller->getPosition(&out_x, &out_y);
-    EXPECT_EQ(out_x, bound_min_x);
+    controller->getPosition(&bounded_x, &bounded_y);
+    EXPECT_EQ(bounded_x, min_x_bound);
 
     controller->setPosition(0, invalid_lower_bound_y);
-    controller->getPosition(&out_x, &out_y);
-    EXPECT_EQ(out_y, bound_min_y);
+    controller->getPosition(&bounded_x, &bounded_y);
+    EXPECT_EQ(bounded_y, min_y_bound);
 
     controller->setPosition(invalid_upper_bound_x, 0);
-    controller->getPosition(&out_x, &out_y);
-    EXPECT_EQ(out_x, bound_max_x);
+    controller->getPosition(&bounded_x, &bounded_y);
+    EXPECT_EQ(bounded_x, max_x_bound);
 
     controller->setPosition(0, invalid_upper_bound_y);
-    controller->getPosition(&out_x, &out_y);
-    EXPECT_EQ(out_y, bound_max_y);
+    controller->getPosition(&bounded_x, &bounded_y);
+    EXPECT_EQ(bounded_y, max_y_bound);
 }
