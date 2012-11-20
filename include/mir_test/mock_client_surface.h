@@ -15,30 +15,25 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
+#define MIR_TEST_MOCK_CLIENT_SURFACE_
+
+#include "mir_client/mir_client_surface.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace client
+namespace test
 {
 
-class ClientBufferDepository;
-namespace android
+struct MockClientSurface : public client::ClientSurface
 {
-
-class AndroidClientPlatform : public ClientPlatform
-{
-public:
-    std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
 };
 
 }
 }
-}
-
-#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_ */
+#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */

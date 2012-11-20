@@ -37,8 +37,7 @@ namespace
 struct MockClientPlatform : public mcl::ClientPlatform
 {
     MOCK_METHOD0(create_platform_depository, std::shared_ptr<mcl::ClientBufferDepository>());
-    MOCK_METHOD1(create_egl_window, EGLNativeWindowType(mcl::ClientSurface*));
-    MOCK_METHOD1(destroy_egl_window, void(EGLNativeWindowType));
+    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
 };
 
