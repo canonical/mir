@@ -116,7 +116,7 @@ TEST(ApplicationManager, closing_session_removes_surfaces)
     EXPECT_CALL(strategy, previous_focus_app(_)).WillOnce(Return((std::shared_ptr<mf::ApplicationSession>())));
     
     auto session = app_manager.open_session("Visual Basic Studio");
-    auto surf = session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     
     app_manager.close_session(session);
 }

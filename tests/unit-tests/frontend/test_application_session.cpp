@@ -50,7 +50,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     ms::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
-    app_session.destroy_surface(surf.lock());
+    app_session.destroy_surface(surf);
 }
 
 
@@ -83,5 +83,5 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     app_session.hide();
     app_session.show();
     
-    app_session.destroy_surface(surf.lock());
+    app_session.destroy_surface(surf);
 }

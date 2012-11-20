@@ -21,7 +21,9 @@
 
 #include <memory>
 #include <string>
-#include <vector>
+#include <map>
+
+#include "mir/thread/all.h"
 
 namespace mir
 {
@@ -44,11 +46,12 @@ public:
     explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
     virtual ~ApplicationSession();
 
-    std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params);
-    void destroy_surface(std::shared_ptr<surfaces::Surface> const& surface);
-    
+    int create_surface(const surfaces::SurfaceCreationParameters& params);
+    void destroy_surface(int surface);
+    std::shared_ptr<surfaces::Surface> get_surface(int surface) const;
+
     std::string get_name();
-    
+
     virtual void hide();
     virtual void show();
 protected:
@@ -57,8 +60,14 @@ protected:
 
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const surface_organiser;
-    std::vector<std::shared_ptr<surfaces::Surface>> surfaces;
     std::string const name;
+
+    int next_id();
+
+    std::atomic<int> next_surface_id;
+
+    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
+    Surfaces surfaces;
 };
 
 }
