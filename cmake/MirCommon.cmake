@@ -47,16 +47,32 @@ function (mir_discover_tests EXECUTABLE)
   if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
     add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
   else()
+    set(CHECK_TEST_DISCOVERY_TARGET_NAME "check_discover_tests_in_${EXECUTABLE}")
     set(TEST_DISCOVERY_TARGET_NAME "discover_tests_in_${EXECUTABLE}")
-    message(STATUS "Defining target ${TEST_DISCOVERY_TARGET_NAME}")
+    message(STATUS "Defining targets: ${CHECK_TEST_DISCOVERY_TARGET_NAME} and ${TEST_DISCOVERY_TARGET_NAME}")
 
-    # This target is always considered out-of-date, and is always run (at least for normal builds, except for make test/install).
+    # These targets are always considered out-of-date, and are always run (at least for normal builds, except for make test/install).
+    add_custom_target(
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME} ALL
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tes > /dev/null
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
+
     add_custom_target(
       ${TEST_DISCOVERY_TARGET_NAME} ALL
-      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}      
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
 
-    add_dependencies(${TEST_DISCOVERY_TARGET_NAME} ${EXECUTABLE} mir_discover_gtest_tests)
+    add_dependencies(
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
+      ${EXECUTABLE})
+
+    add_dependencies(
+      ${TEST_DISCOVERY_TARGET_NAME}
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
+      ${EXECUTABLE}
+      mir_discover_gtest_tests)
+
   endif()
 endfunction ()
