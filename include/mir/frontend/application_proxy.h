@@ -58,8 +58,6 @@ public:
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    std::string const& name() const { return app_name; }
-
 private:
     virtual void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
@@ -89,7 +87,6 @@ private:
 
     int next_id();
 
-    std::string app_name;
     std::shared_ptr<frontend::ApplicationSessionFactory> session_factory;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;

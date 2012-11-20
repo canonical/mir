@@ -56,9 +56,9 @@ protected:
     ApplicationSession& operator=(const ApplicationSession&) = delete;
 
 private:
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const surface_organiser;
     std::vector<std::shared_ptr<surfaces::Surface>> surfaces;
-    std::string name;
+    std::string const name;
 };
 
 }

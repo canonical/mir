@@ -52,10 +52,9 @@ void mir::frontend::ApplicationProxy::connect(
                      ::mir::protobuf::Connection* response,
                      ::google::protobuf::Closure* done)
 {
-    app_name = request->application_name();
-    listener->application_connect_called(app_name);
-    
-    application_session = session_factory->open_session(app_name);
+    listener->application_connect_called(request->application_name());
+
+    application_session = session_factory->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -81,12 +80,12 @@ void mir::frontend::ApplicationProxy::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    listener->application_create_surface_called(app_name);
+    listener->application_create_surface_called(application_session->get_name());
 
     auto handle = application_session->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_size(request->width(), request->height())            
+        .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
         );
 
@@ -128,7 +127,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    listener->application_next_buffer_called(app_name);
+    listener->application_next_buffer_called(application_session->get_name());
 
     auto surface = surfaces[request->value()].lock();
 
@@ -163,7 +162,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    listener->application_release_surface_called(app_name);
+    listener->application_release_surface_called(application_session->get_name());
 
     auto const id = request->value();
 
@@ -177,7 +176,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     else
     {
         listener->application_error(
-            app_name,
+            application_session->get_name(),
             __FUNCTION__,
             "trying to destroy unknown surface");
     }
@@ -191,7 +190,7 @@ void mir::frontend::ApplicationProxy::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    listener->application_disconnect_called(app_name);
+    listener->application_disconnect_called(application_session->get_name());
 
     session_factory->close_session(application_session);
 
