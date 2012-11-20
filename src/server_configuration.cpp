@@ -90,14 +90,6 @@ private:
         return cache;
     }
 };
-
-class StubInputManager : public mi::InputManager
-{
-public:
-    void start() {}
-    void stop() {}
-};
-
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
@@ -175,10 +167,7 @@ mir::DefaultServerConfiguration::make_input_manager(
     const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
-    if (options->is_set("tests_use_real_input"))
-        return mi::create_input_manager(event_filters, view_area);
-
-    return std::make_shared<StubInputManager>();
+    return mi::create_input_manager(event_filters, view_area);
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
