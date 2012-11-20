@@ -16,6 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 #include "event_filter_dispatcher_policy.h"
+#include "android_input_lexicon.h"
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -27,7 +28,10 @@ mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi
 
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
-    if (event_filter->handles(input_event))
+    MirEvent mir_ev;
+    mia::Lexicon::translate(input_event, mir_ev);
+
+    if (event_filter->handles(mir_ev))
 	return false; /* Do not pass the event on */
     else
 	return true; /* Pass the event on */
