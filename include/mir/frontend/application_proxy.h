@@ -20,7 +20,6 @@
 #ifndef MIR_FRONTEND_APPLICATION_PROXY_H_
 #define MIR_FRONTEND_APPLICATION_PROXY_H_
 
-#include "mir/thread/all.h"
 #include "mir_protobuf.pb.h"
 
 #include <map>
@@ -58,8 +57,6 @@ public:
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    std::string const& name() const { return app_name; }
-
 private:
     virtual void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
@@ -87,18 +84,11 @@ private:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
-    int next_id();
-
-    std::string app_name;
     std::shared_ptr<frontend::ApplicationSessionFactory> session_factory;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;
 
-    std::atomic<int> next_surface_id;
-
-    typedef std::map<int, std::weak_ptr<surfaces::Surface>> Surfaces;
-    Surfaces surfaces;
     std::shared_ptr<ResourceCache> resource_cache;
 
     std::shared_ptr<frontend::ApplicationSession> application_session;

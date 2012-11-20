@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -91,8 +92,10 @@ class StubGraphicPlatform : public mg::Platform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(mg::Renderable&)
+    virtual void render(mg::Renderable& r)
     {
+        // Need to acquire the texture to cycle buffers
+        r.texture();
     }
 };
 

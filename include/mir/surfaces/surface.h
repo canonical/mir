@@ -98,7 +98,7 @@ class Surface : public graphics::Renderable
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;
-    
+
     bool is_hidden;
 };
 
