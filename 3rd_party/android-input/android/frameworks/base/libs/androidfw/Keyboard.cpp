@@ -25,6 +25,11 @@
 #include <androidfw/KeyLayoutMap.h>
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/InputDevice.h>
+
+// <mir changes>
+#include <androidfw/GenericKeyMap.h>
+// </mir changes>
+
 #include <utils/Errors.h>
 #include <utils/Log.h>
 #include <cutils/properties.h>
@@ -103,6 +108,31 @@ bool KeyMap::probeKeyMap(const InputDeviceIdentifier& deviceIdentifier,
     }
     return isComplete();
 }
+
+// <mir changes>
+status_t KeyMap::loadGenericMaps()
+{
+    status_t status = 0;
+
+    keyLayoutFile.setTo("Generic.kl");
+    keyCharacterMapFile.setTo("Generic.kcm");
+    
+    status = KeyCharacterMap::loadContents(
+        String8("Generic.kcm"), 
+        GenericKeyMap::keymap_contents(), 
+        KeyCharacterMap::FORMAT_BASE, 
+        &keyCharacterMap);
+    if (status) 
+        return status;
+
+    status = KeyLayoutMap::load(
+        String8("Generic.kl"), 
+        GenericKeyMap::key_layout_contents(), 
+        &keyLayoutMap);
+    
+    return status;
+}
+// </mir changes>
 
 status_t KeyMap::loadKeyLayout(const InputDeviceIdentifier& deviceIdentifier,
         const String8& name) {

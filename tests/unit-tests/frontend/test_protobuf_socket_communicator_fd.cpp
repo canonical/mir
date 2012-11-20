@@ -84,7 +84,7 @@ struct StubServerFd : public StubServerTool
 const int StubServerFd::file_descriptors;
 }
 
-struct ProtobufAsioCommunicatorFD : public ::testing::Test
+struct ProtobufSocketCommunicatorFD : public ::testing::Test
 {
     void SetUp()
     {
@@ -112,7 +112,7 @@ private:
     std::shared_ptr<mt::TestServer> stub_server;
 };
 
-TEST_F(ProtobufAsioCommunicatorFD, test_file_descriptors)
+TEST_F(ProtobufSocketCommunicatorFD, test_file_descriptors)
 {
     mir::protobuf::Buffer fds;
 

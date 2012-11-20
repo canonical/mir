@@ -29,8 +29,9 @@ add_executable(
 
 target_link_libraries(
   acceptance-tests
-  
+
   mir
+  mirclient
   miroptions
   mircompositor
   mirfrontend
@@ -38,11 +39,11 @@ target_link_libraries(
   mirinput
   mirprocess
   mirsurfaces
-  mirclient
   mirplatformgraphics
   mirprotobuf
 
-  test-utils
+  mir-test-framework
+  mir-test-doubles
   3rd_party
 
   ${PROTOBUF_LIBRARIES}
@@ -51,6 +52,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(acceptance-tests)

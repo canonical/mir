@@ -16,6 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
+
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
 #include "mir/thread/all.h"
@@ -23,12 +24,9 @@
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/mock_event_filter.h"
+#include "mir_test/mock_viewable_area.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
-
-// Needed implicitly for InputManager destructor because of android::sp :/
-#include <InputDispatcher.h>
-#include <InputReader.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,22 +34,39 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 using mir::MockEventFilter;
 using mir::WaitCondition;
 
 namespace
 {
+static const geom::Rectangle default_view_area =
+        geom::Rectangle{geom::Point(),
+                        geom::Size{geom::Width(1600), geom::Height(1400)}};
+
+static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
   public:
     void SetUp()
     {
+        using namespace ::testing;
+
         event_hub = new mia::FakeEventHub();
-        input_manager.reset(new mia::InputManager(
-            event_hub,
-            {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}));
+
+        input_manager.reset(
+            new mia::InputManager(
+                event_hub,
+                {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
+                std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
+                null_cursor_listener));
+
+        EXPECT_CALL(viewable_area, view_area()).Times(AnyNumber()).
+            WillRepeatedly(Return(default_view_area));
+
         input_manager->start();
     }
 
@@ -62,15 +77,11 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 
   protected:
     android::sp<mia::FakeEventHub> event_hub;
-    MockEventFilter event_filter;
     std::shared_ptr<mia::InputManager> input_manager;
+    MockEventFilter event_filter;
+    mg::MockViewableArea viewable_area;
 };
-}
 
-ACTION_P(ReturnFalseAndWakeUp, wait_condition)
-{
-    wait_condition->wake_up_everyone();
-    return false;
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_events_to_filter)
@@ -91,7 +102,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
 
-    wait_condition.wait_for_seconds(30);
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_events_to_filter)
@@ -111,7 +123,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
-    wait_condition.wait_for_seconds(30);
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }
 
 TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
@@ -137,7 +150,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
     event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
-    
-    wait_condition.wait_for_seconds(30);
+
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }
 

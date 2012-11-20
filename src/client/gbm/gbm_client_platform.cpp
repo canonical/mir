@@ -20,6 +20,8 @@
 #include "mir_client/gbm/gbm_client_platform.h"
 #include "mir_client/gbm/gbm_client_buffer_depository.h"
 #include "mir_client/gbm/drm_fd_handler.h"
+#include "mir_client/mir_connection.h"
+#include "mir_client/native_client_platform_factory.h"
 
 #include <xf86drm.h>
 #include <sys/mman.h>
@@ -60,21 +62,27 @@ private:
 
 }
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(
-        std::shared_ptr<MirPlatformPackage> const& platform_package)
+std::shared_ptr<mcl::ClientPlatform>
+mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
+    MirPlatformPackage platform_package;
+
+    memset(&platform_package, 0, sizeof(platform_package));
+    context->populate(platform_package);
+
     int drm_fd = -1;
 
-    if (platform_package->fd_items > 0)
-        drm_fd = platform_package->fd[0];
+    if (platform_package.fd_items > 0)
+        drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(drm_fd_handler);
+    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler);
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
+        ClientContext* const context,
         std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : drm_fd_handler{drm_fd_handler}
+    : context{context}, drm_fd_handler{drm_fd_handler}
 {
 }
 
@@ -83,11 +91,18 @@ std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_pla
     return std::make_shared<mclg::GBMClientBufferDepository>(drm_fd_handler);
 }
 
-EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface*)
+EGLNativeWindowType mclg::GBMClientPlatform::create_egl_window(ClientSurface* client_surface)
 {
-    return (EGLNativeWindowType) -1;
+    return reinterpret_cast<EGLNativeWindowType>(client_surface);
 }
 
 void mclg::GBMClientPlatform::destroy_egl_window(EGLNativeWindowType)
 {
+}
+
+std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
+{
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = reinterpret_cast<EGLNativeDisplayType>(context->mir_connection());
+    return native_display;
 }

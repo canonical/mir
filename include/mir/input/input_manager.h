@@ -24,22 +24,30 @@
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
 class EventFilter;
 
-class InputManager 
+class InputManager
 {
 public:
-    virtual ~InputManager() {}
-
     virtual void start() = 0;
     virtual void stop() = 0;
 protected:
     InputManager() {};
+    virtual ~InputManager() {}
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 };
+
+// Needs to be implemented by platform/stack-specific code
+std::shared_ptr<InputManager> create_input_manager(
+    const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
+    std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 }
 }

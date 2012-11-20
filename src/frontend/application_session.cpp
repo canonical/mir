@@ -48,7 +48,7 @@ std::weak_ptr<ms::Surface> mf::ApplicationSession::create_surface(const ms::Surf
 {
     auto surf = surface_organiser->create_surface(params);
     surfaces.push_back(surf.lock());
-    
+
     return surf;
 }
 

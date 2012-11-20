@@ -51,10 +51,12 @@ add_executable(
 target_link_libraries(
   integration-tests
 
-  mirclient
-  test-utils
+  mir-test-framework
+  mir-test-doubles
 
   mir
+  mirclient
+  mirdraw
   miroptions
   mircompositor
   mirfrontend
@@ -65,10 +67,8 @@ target_link_libraries(
   mirplatformgraphics
   mirprocess
   mirprotobuf
-  
-  3rd_party
 
-  test-utils
+  3rd_party
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -76,6 +76,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(integration-tests)

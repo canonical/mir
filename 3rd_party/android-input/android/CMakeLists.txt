@@ -23,6 +23,8 @@ add_library(
   frameworks/base/libs/androidfw/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp
   frameworks/base/services/input/PointerController.cpp
+  # Keyboard/keymap handling
+  frameworks/base/libs/androidfw/GenericKeyMap.cpp
   # The stuff that is used internally by the implementation above.
   # We're not directly interested in those:
   frameworks/base/libs/androidfw/Input.cpp
@@ -61,6 +63,13 @@ add_library(
   system/core/liblog/logprint.c
   system/extras/ext4_utils/sha1.c
   )
+
+if(MIR_PLATFORM STREQUAL "android")
+  target_link_libraries(
+    android-input
+    binder
+    skia)
+endif()
 
 set_target_properties(
   android-input

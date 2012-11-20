@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_test/test_utils_graphics.h"
+#include "mir/draw/graphics.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -108,10 +108,11 @@ int main(int argc, char* argv[])
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
+    EGLNativeDisplayType native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
     assert(native_window != NULL);
    
-    disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    disp = eglGetDisplay(native_display);
     assert(disp != EGL_NO_DISPLAY);
 
     rc = eglInitialize(disp, &major, &minor);
@@ -132,7 +133,7 @@ int main(int argc, char* argv[])
     rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
     assert(rc == EGL_TRUE);
 
-    mir::test::glAnimationBasic gl_animation;
+    mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
 
     for(;;)

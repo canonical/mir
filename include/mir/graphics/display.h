@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/geometry/rectangle.h"
+#include "mir/graphics/viewable_area.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace mir
 namespace graphics
 {
 
-class Display
+class Display : public ViewableArea
 {
 public:
     virtual geometry::Rectangle view_area() const = 0;

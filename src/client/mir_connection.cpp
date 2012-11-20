@@ -21,6 +21,7 @@
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/client_platform.h"
+#include "mir_client/client_platform_factory.h"
 #include "mir_client/client_buffer_depository.h"
 
 #include <cstddef>
@@ -50,10 +51,12 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(const std::string& socket_file,
-    std::shared_ptr<mcl::Logger> const & log) :
+    std::shared_ptr<mcl::Logger> const & log,
+    std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
       channel(socket_file, log)
     , server(&channel)
     , log(log)
+    , client_platform_factory(client_platform_factory)
 {
     {
         lock_guard<mutex> lock(connection_guard);
@@ -135,9 +138,13 @@ MirWaitHandle* MirConnection::release_surface(
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
-    auto platform_package = std::make_shared<MirPlatformPackage>();
-    populate(*platform_package);
-    platform = mcl::create_client_platform(platform_package);
+    /*
+     * We need to create the client platform after the connection has been
+     * established, to ensure that the client platform has access to all
+     * needed data (e.g. platform package).
+     */
+    platform = client_platform_factory->create_client_platform(this);
+    native_display = platform->create_egl_native_display();
 
     callback(this, context);
     connect_wait_handle.result_received();
@@ -234,4 +241,14 @@ void MirConnection::populate(MirDisplayInfo& display_info)
 std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
 {
     return platform;
+}
+
+MirConnection* MirConnection::mir_connection()
+{
+    return this;
+}
+
+EGLNativeDisplayType MirConnection::egl_native_display()
+{
+    return *native_display;
 }

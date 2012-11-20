@@ -18,7 +18,7 @@
  */
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
-#include "src/input/android/dummy_input_reader_policy.h"
+#include "src/input/android/rudimentary_input_reader_policy.h"
 #include "src/input/android/android_input_constants.h"
 #include "mir/thread/all.h"
 
@@ -57,7 +57,7 @@ class FakeEventHubSetup : public testing::Test
         event_hub = new mia::FakeEventHub();
         dispatcher_policy = new mia::EventFilterDispatcherPolicy(
             std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
-        reader_policy = new mia::DummyInputReaderPolicy();
+        reader_policy = new mia::RudimentaryInputReaderPolicy();
         dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
         reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
         reader_thread = new droidinput::InputReaderThread(reader);
@@ -92,12 +92,6 @@ class FakeEventHubSetup : public testing::Test
 using mir::FakeEventHubSetup;
 using mir::WaitCondition;
 
-ACTION_P(ReturnFalseAndWakeUp, wait_condition)
-{
-    wait_condition->wake_up_everyone();
-    return false;
-}
-
 TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
@@ -112,6 +106,7 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
     
     event_hub->synthesize_event(mis::a_key_down_event()
 				.of_scancode(KEY_ENTER));
-
-    wait_condition.wait_for_seconds(30);
+    
+    // TODO: Investigate why timeout needs to be this large under valgrind
+    wait_condition.wait_for_at_most_seconds(60);
 }

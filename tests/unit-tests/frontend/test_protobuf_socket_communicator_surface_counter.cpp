@@ -73,7 +73,7 @@ struct StubServerSurfaceCounter : public StubServerTool
 
 }
 
-struct ProtobufAsioCommunicatorCounter : public ::testing::Test
+struct ProtobufSocketCommunicatorCounter : public ::testing::Test
 {
     void SetUp()
     {
@@ -100,7 +100,7 @@ struct ProtobufAsioCommunicatorCounter : public ::testing::Test
     std::shared_ptr<mt::TestServer> stub_server;
 };
 
-TEST_F(ProtobufAsioCommunicatorCounter, server_creates_surface_on_create_surface_call)
+TEST_F(ProtobufSocketCommunicatorCounter, server_creates_surface_on_create_surface_call)
 {
     EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(1));
 
@@ -114,7 +114,7 @@ TEST_F(ProtobufAsioCommunicatorCounter, server_creates_surface_on_create_surface
     stub_server_tool->expect_surface_count(1);
 }
 
-TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
+TEST_F(ProtobufSocketCommunicatorCounter, surface_count_is_zero_after_connection)
 {
     using namespace testing;
     EXPECT_CALL(*stub_client, connect_done()).Times(AtLeast(0));
@@ -129,7 +129,7 @@ TEST_F(ProtobufAsioCommunicatorCounter, surface_count_is_zero_after_connection)
     stub_server_tool->expect_surface_count(0);
 }
 
-TEST_F(ProtobufAsioCommunicatorCounter,
+TEST_F(ProtobufSocketCommunicatorCounter,
        each_create_surface_results_in_a_new_surface_being_created)
 {
     int const surface_count{5};
@@ -150,7 +150,7 @@ TEST_F(ProtobufAsioCommunicatorCounter,
     stub_server_tool->expect_surface_count(surface_count);
 }
 
-TEST_F(ProtobufAsioCommunicatorCounter,
+TEST_F(ProtobufSocketCommunicatorCounter,
        each_create_surface_results_in_a_new_surface_being_created_asynchronously)
 {
     int const surface_count{5};
@@ -172,7 +172,7 @@ TEST_F(ProtobufAsioCommunicatorCounter,
 
 
 /* start Multi test cases */
-struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
+struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
 {
     static int const number_of_clients = 10;
 
@@ -205,7 +205,7 @@ struct ProtobufAsioMultiClientCommunicator : public ::testing::Test
     std::shared_ptr<mt::TestServer> stub_server;
 };
 
-TEST_F(ProtobufAsioMultiClientCommunicator,
+TEST_F(ProtobufSocketMultiClientCommunicator,
        multiple_clients_can_connect_create_surface_and_disconnect)
 {
     for (int i = 0; i != number_of_clients; ++i)
@@ -235,7 +235,7 @@ TEST_F(ProtobufAsioMultiClientCommunicator,
     stub_server_tool->expect_surface_count(number_of_clients);
 }
 
-TEST_F(ProtobufAsioMultiClientCommunicator,
+TEST_F(ProtobufSocketMultiClientCommunicator,
        multiple_clients_can_connect_and_disconnect_asynchronously)
 {
     for (int i = 0; i != number_of_clients; ++i)

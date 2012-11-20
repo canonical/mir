@@ -14,9 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-if(NOT MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(android)
-endif()
+add_subdirectory(android)
 
 set(
   UNIT_TEST_SOURCES 

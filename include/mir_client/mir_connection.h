@@ -29,6 +29,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_platform.h"
+#include "mir_client/client_context.h"
 
 #include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
@@ -39,18 +40,20 @@ namespace client
 {
 class Logger;
 class ClientBufferDepository;
+class ClientPlatformFactory;
 }
 }
 
 struct SurfaceRelease;
 
-class MirConnection
+class MirConnection : public mir::client::ClientContext
 {
 public:
     MirConnection();
 
     MirConnection(const std::string& socket_file,
-                  std::shared_ptr<mir::client::Logger> const & log);
+                  std::shared_ptr<mir::client::Logger> const & log,
+                  std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection();
 
     MirConnection(MirConnection const &) = delete;
@@ -81,6 +84,11 @@ public:
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
     static bool is_valid(MirConnection *connection);
+
+    MirConnection* mir_connection();
+
+    EGLNativeDisplayType egl_native_display();
+
 private:
     mir::client::MirRpcChannel channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -90,7 +98,9 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
 
+    std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
+    std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::string error_message;
 

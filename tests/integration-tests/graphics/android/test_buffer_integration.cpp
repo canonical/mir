@@ -25,8 +25,8 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mir_test/test_utils_android_graphics.h"
-#include "mir_test/test_utils_graphics.h"
+#include "mir/draw/android_graphics.h"
+#include "mir/draw/graphics.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -35,7 +35,10 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry; 
 namespace mga=mir::graphics::android; 
 namespace mg=mir::graphics; 
-namespace mt=mir::test;
+namespace md=mir::draw;
+
+namespace
+{
 
 class AndroidBufferIntegration : public ::testing::Test
 {
@@ -51,6 +54,9 @@ protected:
 
     virtual void SetUp()
     {
+        ASSERT_TRUE(platform != NULL);
+        ASSERT_TRUE(display != NULL);
+        
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -60,7 +66,7 @@ protected:
         buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
     }
 
-    mt::glAnimationBasic gl_animation;
+    md::glAnimationBasic gl_animation;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
     geom::Size size;
@@ -76,6 +82,8 @@ protected:
 
 std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
 std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform; 
+
+}
 
 TEST_F(AndroidBufferIntegration, post_does_not_throw)
 {
@@ -119,7 +127,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
-    mt::grallocRenderSW sw_renderer;
+    md::grallocRenderSW sw_renderer;
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -147,7 +155,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
-    mt::grallocRenderSW sw_renderer;
+    md::grallocRenderSW sw_renderer;
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);

@@ -93,13 +93,16 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-  mirprotobuf
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
+  ${PROTOBUF_LIBRARIES}
+
+  mirprotobuf
+
   ${DRM_LIBRARIES}
+  ${ANDROID_STDLIB}
 )
 
 install(

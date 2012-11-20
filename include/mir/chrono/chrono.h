@@ -65,6 +65,7 @@ using ::boost::chrono::high_resolution_clock;
 }
 }
 
+namespace mir_test_framework { namespace std { using namespace ::mir::std; } }
 #endif
 
 #endif // MIR_CHRONO_CHRONO_H_

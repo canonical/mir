@@ -29,6 +29,7 @@
 #include <list>
 #include <map>
 
+#include <androidfw/Keyboard.h>
 namespace droidinput = android;
 
 namespace mir
@@ -126,6 +127,9 @@ public:
     } FakeDevice;
 
     std::map<int32_t, FakeDevice> device_from_id;
+    
+    droidinput::KeyMap keymap;
+
 };
 }
 }
