@@ -33,6 +33,7 @@ add_executable(unit-tests ${UNIT_TEST_SOURCES})
 target_link_libraries(
   unit-tests
 
+  mirclient
   mircompositor
   mirdraw
   mirfrontend
@@ -40,10 +41,11 @@ target_link_libraries(
   mirgraphics
   mirinput
   mirlogging
-  mirsurfaces
   mirprocess
   miroptions
   mirprotobuf
+  mirsurfaces
+
   mir-test-doubles
 
   3rd_party
