@@ -54,7 +54,7 @@ public:
 };
 }
 
-TEST_F(AndroidInputReaderPolicySetup, display_configuration_is_filled_from_viewable_area)
+TEST_F(AndroidInputReaderPolicySetup, has_configuration_with_display_info_filled_from_view_area)
 {
     static const int32_t testing_display_id = 0;
     static const bool testing_display_is_external = false;
@@ -66,9 +66,11 @@ TEST_F(AndroidInputReaderPolicySetup, display_configuration_is_filled_from_viewa
     int32_t configured_height, configured_width, 
         configured_orientation;
     
-    EXPECT_TRUE(configuration.getDisplayInfo(
+    bool configuration_has_display_info = configuration.getDisplayInfo(
         testing_display_id, testing_display_is_external, &configured_width, &configured_height,
-        &configured_orientation));
+        &configured_orientation);
+    
+    EXPECT_TRUE(configuration_has_display_info);
 
     EXPECT_EQ(default_view_area.size.width.as_float(),  configured_width);
     EXPECT_EQ(default_view_area.size.height.as_float(), configured_height);
