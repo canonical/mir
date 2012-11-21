@@ -39,6 +39,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include (cmake/Debian.cmake)
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
+include (cmake/Doxygen.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
