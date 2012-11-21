@@ -170,7 +170,7 @@ int main (int argc, char **argv)
         switch(check_line_for_test_case_or_suite(line))
         {
             case test_case:
-                tests.insert(current_test + ltrim(line));
+                tests.insert(current_test + "*");
                 break;
             case test_suite:
                 current_test = line;
