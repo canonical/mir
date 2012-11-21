@@ -172,11 +172,11 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::ApplicationSessionFactory> const& application_session_factory,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<DefaultIpcFactory>(
-        make_application_session_factory(surface_organiser),
+        application_session_factory,
         make_application_listener(),
         make_graphics_platform(),
         display);

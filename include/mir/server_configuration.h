@@ -67,7 +67,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
+        std::shared_ptr<frontend::ApplicationSessionFactory> const& application_session_factory, std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::ApplicationSessionFactory> make_application_session_factory(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
     virtual std::shared_ptr<input::InputManager> make_input_manager(
@@ -95,7 +95,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, 
+        std::shared_ptr<frontend::ApplicationSessionFactory> const& application_session_factory,
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::ApplicationSessionFactory> make_application_session_factory(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
@@ -111,7 +111,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<frontend::ApplicationSessionFactory> const& application_session_factory,
         std::shared_ptr<graphics::Display> const& display);
 
     virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
