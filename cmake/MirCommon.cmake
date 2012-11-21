@@ -33,7 +33,7 @@ if(ENABLE_MEMCHECK_OPTION)
   find_program(
     VALGRIND_EXECUTABLE
     valgrind)
-  
+
   if(VALGRIND_EXECUTABLE)
     set(VALGRIND_ARGS "--trace-children=yes")
     set(ENABLE_MEMCHECK_FLAG "--enable-memcheck")
@@ -43,21 +43,36 @@ if(ENABLE_MEMCHECK_OPTION)
 endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
-
   if(BUILD_ANDROID OR DISABLE_GTEST_TEST_DISCOVERY)
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE}")
+    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} "${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}")
   else()
-    add_dependencies (
+    set(CHECK_TEST_DISCOVERY_TARGET_NAME "check_discover_tests_in_${EXECUTABLE}")
+    set(TEST_DISCOVERY_TARGET_NAME "discover_tests_in_${EXECUTABLE}")
+    message(STATUS "Defining targets: ${CHECK_TEST_DISCOVERY_TARGET_NAME} and ${TEST_DISCOVERY_TARGET_NAME}")
+
+    # These targets are always considered out-of-date, and are always run (at least for normal builds, except for make test/install).
+    add_custom_target(
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME} ALL
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests > /dev/null
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
+
+    add_custom_target(
+      ${TEST_DISCOVERY_TARGET_NAME} ALL
+      ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests --executable=${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Discovering Tests in ${EXECUTABLE}" VERBATIM)
+
+    add_dependencies(
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
+      ${EXECUTABLE})
+
+    add_dependencies(
+      ${TEST_DISCOVERY_TARGET_NAME}
+
+      ${CHECK_TEST_DISCOVERY_TARGET_NAME}
       ${EXECUTABLE}
       mir_discover_gtest_tests)
-    
-    add_custom_command (TARGET ${EXECUTABLE}
-      POST_BUILD
-      COMMAND ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests | ${CMAKE_BINARY_DIR}/mir_gtest/mir_discover_gtest_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} ${ENABLE_MEMCHECK_FLAG}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      COMMENT "Discovering Tests in ${EXECUTABLE}"
-      DEPENDS
-      VERBATIM)
+
   endif()
 endfunction ()
-
