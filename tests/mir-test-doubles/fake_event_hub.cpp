@@ -147,6 +147,9 @@ size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t 
         }
     }
 
+    /* Yield to prevent spinning, which causes long test times under valgrind */
+    std::this_thread::yield();
+
     return num_events_obtained;
 }
 
