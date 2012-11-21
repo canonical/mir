@@ -4274,6 +4274,4 @@ status_t InputDispatcherThread::requestExitAndWait() {
     return Thread::join();
 }
 
-
-
 } // namespace android
