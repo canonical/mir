@@ -179,8 +179,9 @@ int main (int argc, char **argv)
     }
 
     ofstream testfilecmake;
-    char *base = basename(argv[1]);
-    string   test_suite(base);
+    char* executable_copy = strdup(config.executable);
+    string test_suite(basename(executable_copy));
+    free(executable_copy);
 
     testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
     if (testfilecmake.is_open())
