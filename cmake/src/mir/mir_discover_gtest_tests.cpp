@@ -33,12 +33,21 @@ DescriptorType check_line_for_test_case_or_suite(const string& line)
     return test_suite;
 }
 
-int get_terminal_width()
+int get_output_width()
 {
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    const int fd_out{fileno(stdout)};
+    const int max_width{65535};
 
-    return w.ws_col;
+    int width{max_width};
+
+    if (isatty(fd_out))
+    {
+        struct winsize w;
+        if (ioctl(fd_out, TIOCGWINSZ, &w) != -1)
+            width = w.ws_col;
+    }
+
+    return width;
 }
 
 std::string& ltrim(std::string &s) {
@@ -150,7 +159,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
 
 int main (int argc, char **argv)
 {
-    int terminal_width = get_terminal_width();
+    int output_width = get_output_width();
     
     cin >> noskipws;
 
@@ -194,7 +203,7 @@ int main (int argc, char **argv)
                 sizeof(cmd_line),
                 config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
                 test_suite.c_str(),
-                elide_string_left(*test, terminal_width/2).c_str(),
+                elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
                 test->c_str());
 
