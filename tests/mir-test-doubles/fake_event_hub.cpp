@@ -35,7 +35,7 @@ uint32_t mia::FakeEventHub::getDeviceClasses(int32_t deviceId) const
     }
     else if (deviceId == BuiltInCursorID)
     {
-	return droidinput::INPUT_DEVICE_CLASS_CURSOR;
+        return droidinput::INPUT_DEVICE_CLASS_CURSOR;
     }
 
     auto fake_device_iterator = device_from_id.find(deviceId);
@@ -135,27 +135,18 @@ void mia::FakeEventHub::setExcludedDevices(const Vector<String8>& devices)
 
 size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize)
 {
-    std::lock_guard<std::mutex> lg(guard);
-    
-    (void) timeoutMillis;
     size_t num_events_obtained = 0;
-    
-    for (size_t i = 0; i < bufferSize && events_available.size() > 0; ++i)
+    (void) timeoutMillis;
     {
-        buffer[i] = events_available.front();
-        events_available.pop_front();
-        ++num_events_obtained;
+        std::lock_guard<std::mutex> lg(guard);
+        for (size_t i = 0; i < bufferSize && events_available.size() > 0; ++i)
+        {
+            buffer[i] = events_available.front();
+            events_available.pop_front();
+            ++num_events_obtained;
+        }
     }
-    
-    // Simulate blocking so we do not spin the reader loop
-    if (num_events_obtained == 0)
-    {
-        guard.unlock();
-        if (timeoutMillis != 0)
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        guard.lock();
-    }
-    
+
     return num_events_obtained;
 }
 
@@ -287,7 +278,7 @@ void mia::FakeEventHub::synthesize_builtin_cursor_added()
     event.when = 0;
     event.deviceId = BuiltInCursorID;
     event.type = EventHubInterface::DEVICE_ADDED;
-    
+
     std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
 }
@@ -310,15 +301,15 @@ void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
     event.code = parameters.scancode;
 
     if (parameters.device_id)
-	event.deviceId = parameters.device_id;
+        event.deviceId = parameters.device_id;
     else
-	event.deviceId = BuiltInKeyboardID;
+        event.deviceId = BuiltInKeyboardID;
 
     if (parameters.action == mis::EventAction::Down)
-	event.value = 1;
+        event.value = 1;
     else
-	event.value = 0;
-    
+        event.value = 0;
+
     std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
 }
@@ -331,18 +322,18 @@ void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters
     event.code = parameters.button;
 
     if (parameters.device_id)
-	event.deviceId = parameters.device_id;
+        event.deviceId = parameters.device_id;
     else
-	event.deviceId = BuiltInCursorID;
+        event.deviceId = BuiltInCursorID;
 
     if (parameters.action == mis::EventAction::Down)
-	event.value = 1;
+        event.value = 1;
     else
-	event.value = 0;
-    
+        event.value = 0;
+
     std::lock_guard<std::mutex> lg(guard);
     events_available.push_back(event);
-    
+
     // Cursor button events require a sync as per droidinput::CursorInputMapper::process
     event.type = EV_SYN;
     event.code = SYN_REPORT;
@@ -355,9 +346,9 @@ void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters
     event.when = 0;
     event.type = EV_REL;
     if (parameters.device_id)
-	event.deviceId = parameters.device_id;
+        event.deviceId = parameters.device_id;
     else
-	event.deviceId = BuiltInCursorID;
+        event.deviceId = BuiltInCursorID;
 
     std::lock_guard<std::mutex> lg(guard);
     event.code = REL_X;
@@ -367,7 +358,7 @@ void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters
     event.code = REL_Y;
     event.value = parameters.rel_y;
     events_available.push_back(event);
-    
+
     // Cursor motion events require a sync as per droidinput::CursorInputMapper::process
     event.type = EV_SYN;
     event.code = SYN_REPORT;

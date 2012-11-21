@@ -4268,10 +4268,4 @@ bool InputDispatcherThread::threadLoop() {
     return true;
 }
 
-status_t InputDispatcherThread::requestExitAndWait() {
-    Thread::requestExit();
-    mDispatcher->wake_looper();
-    return Thread::join();
-}
-
 } // namespace android

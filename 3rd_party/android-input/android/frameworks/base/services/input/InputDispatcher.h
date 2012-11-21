@@ -1094,8 +1094,6 @@ class InputDispatcherThread : public Thread {
 public:
     explicit InputDispatcherThread(const sp<InputDispatcherInterface>& dispatcher);
     ~InputDispatcherThread();
-    
-    virtual status_t requestExitAndWait();
 
 private:
     virtual bool threadLoop();
