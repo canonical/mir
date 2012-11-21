@@ -60,9 +60,14 @@ mia::InputManager::~InputManager()
 }
 
 void mia::InputManager::stop()
-{
-    dispatcher_thread->requestExitAndWait();
-    reader_thread->requestExitAndWait();
+{    
+    dispatcher_thread->requestExit();
+    dispatcher->setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen);
+    dispatcher_thread->join();
+
+    reader_thread->requestExit();
+    event_hub->wake();
+    reader_thread->join();
 }
 
 void mia::InputManager::start()
