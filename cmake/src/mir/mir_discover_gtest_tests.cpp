@@ -33,12 +33,21 @@ DescriptorType check_line_for_test_case_or_suite(const string& line)
     return test_suite;
 }
 
-int get_terminal_width()
+int get_output_width()
 {
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    const int fd_out{fileno(stdout)};
+    const int max_width{65535};
 
-    return w.ws_col;
+    int width{max_width};
+
+    if (isatty(fd_out))
+    {
+        struct winsize w;
+        if (ioctl(fd_out, TIOCGWINSZ, &w) != -1)
+            width = w.ws_col;
+    }
+
+    return width;
 }
 
 std::string& ltrim(std::string &s) {
@@ -94,32 +103,30 @@ std::string elide_string_left(const std::string& in, std::size_t max_size)
 struct Configuration
 {
     Configuration() : executable(NULL),
-                      enable_memcheck(0)
+                      enable_memcheck(false)
     {
     }
 
     const char* executable;
-    int enable_memcheck;
+    bool enable_memcheck;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
 {
     static struct option long_options[] = {
-        {"executable", required_argument, NULL, 'e'},
-        {"enable-memcheck", no_argument, &config.enable_memcheck, 1},
+        {"executable", required_argument, 0, 0},
+        {"enable-memcheck", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
-    static const int executable_option_index = 0;
-    static const int enable_memcheck_option_index = 1;
-
     while(1)
     {
-        int option_index = 0;
+        int option_index = -1;
+        const char *optname = "";
         int c = getopt_long(
             argc,
             argv,
-            "e:",
+            "e:m",
             long_options,
             &option_index);
 
@@ -127,21 +134,19 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         if (c == -1)
             break;
 
-        switch (c)
-        {
-            case 0:
-                if (enable_memcheck_option_index == option_index)
-                    break;
-                else if (executable_option_index == option_index)
-                    config.executable = optarg;
-                else
-                    return false;
+        /* Detect an error in the passed options */
+        if (c == ':' || c == '?')
+            return false;
 
-                break;
-            case 'e':
-                config.executable = optarg;
-                break;
-        }
+        /* Check if we got a long option and get its name */
+        if (option_index != -1)
+            optname = long_options[option_index].name;
+
+        /* Handle options */
+        if (c == 'e' || !strcmp(optname, "executable"))
+            config.executable = optarg;
+        else if (c == 'm' || !strcmp(optname, "enable-memcheck"))
+            config.enable_memcheck = true;
     }
 
     return true;
@@ -150,14 +155,15 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
 
 int main (int argc, char **argv)
 {
-    int terminal_width = get_terminal_width();
+    int output_width = get_output_width();
     
     cin >> noskipws;
 
     Configuration config;
     if (!parse_configuration_from_cmd_line(argc, argv, config) || config.executable == NULL)
     {
-        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases --executable PATH_TO_TEST_BINARY [--enable-memcheck]";
+        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | " << basename(argv[0])
+             << " --executable PATH_TO_TEST_BINARY [--enable-memcheck]" << endl;
         return 1;
     }
 
@@ -179,8 +185,9 @@ int main (int argc, char **argv)
     }
 
     ofstream testfilecmake;
-    char *base = basename(argv[1]);
-    string   test_suite(base);
+    char* executable_copy = strdup(config.executable);
+    string test_suite(basename(executable_copy));
+    free(executable_copy);
 
     testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
     if (testfilecmake.is_open())
@@ -193,7 +200,7 @@ int main (int argc, char **argv)
                 sizeof(cmd_line),
                 config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
                 test_suite.c_str(),
-                elide_string_left(*test, terminal_width/2).c_str(),
+                elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
                 test->c_str());
 
