@@ -3583,11 +3583,6 @@ void InputDispatcher::monitor() {
     mLock.unlock();
 }
 
-void InputDispatcher::wake_looper() {
-    mLooper->wake();
-}
-
-
 // --- InputDispatcher::Queue ---
 
 template <typename T>

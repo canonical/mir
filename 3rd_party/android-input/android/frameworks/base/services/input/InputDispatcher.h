@@ -341,8 +341,6 @@ public:
     virtual status_t registerInputChannel(const sp<InputChannel>& inputChannel,
             const sp<InputWindowHandle>& inputWindowHandle, bool monitor) = 0;
     virtual status_t unregisterInputChannel(const sp<InputChannel>& inputChannel) = 0;
-
-    virtual void wake_looper() = 0;
 };
 
 /* Dispatches events to input targets.  Some functions of the input dispatcher, such as
@@ -396,8 +394,6 @@ public:
             const sp<InputWindowHandle>& inputWindowHandle, bool monitor);
     virtual status_t unregisterInputChannel(const sp<InputChannel>& inputChannel);
     
-    virtual void wake_looper();
-
 private:
     template <typename T>
     struct Link {
