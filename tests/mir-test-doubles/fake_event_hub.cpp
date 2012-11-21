@@ -147,6 +147,15 @@ size_t mia::FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t 
         ++num_events_obtained;
     }
     
+    // Simulate blocking so we do not spin the reader loop
+    if (num_events_obtained == 0)
+    {
+        guard.unlock();
+        if (timeoutMillis != 0)
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        guard.lock();
+    }
+    
     return num_events_obtained;
 }
 
