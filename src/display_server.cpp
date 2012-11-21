@@ -23,6 +23,7 @@
 
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
+#include "mir/frontend/application_session_factory.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -86,6 +87,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
 
 mir::DisplayServer::~DisplayServer()
 {
+    p->application_session_factory->shutdown();
 }
 
 void mir::DisplayServer::start()

@@ -38,12 +38,15 @@ mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfac
   app_container(container),
   focus_selection_strategy(strategy),
   focus_mechanism(mechanism)
-															     
 {
     assert(surface_organiser);
     assert(strategy);
     assert(container);
     assert(mechanism);
+}
+
+mf::ApplicationManager::~ApplicationManager()
+{
 }
 
 std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string const& name)
@@ -77,4 +80,10 @@ void mf::ApplicationManager::focus_next()
     auto next_focus = focus_selection_strategy->next_focus_app(focused).lock();
     focus_application = next_focus;
     focus_mechanism->set_focus_to(next_focus);
+}
+
+void mf::ApplicationManager::shutdown()
+{
+    for (auto i = app_container->iterator(); i->is_valid(); i->advance())
+        i->operator*()->shutdown();
 }

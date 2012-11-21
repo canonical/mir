@@ -36,6 +36,7 @@ class ApplicationSessionFactory
 
     virtual std::shared_ptr<ApplicationSession> open_session(std::string const& name) = 0;
     virtual void close_session(std::shared_ptr<ApplicationSession> const& session)  = 0;
+    virtual void shutdown() = 0;
     
 protected:
     ApplicationSessionFactory() = default;
