@@ -162,7 +162,8 @@ int main (int argc, char **argv)
     Configuration config;
     if (!parse_configuration_from_cmd_line(argc, argv, config) || config.executable == NULL)
     {
-        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases --executable PATH_TO_TEST_BINARY [--enable-memcheck]";
+        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | " << basename(argv[0])
+             << " --executable PATH_TO_TEST_BINARY [--enable-memcheck]" << endl;
         return 1;
     }
 
