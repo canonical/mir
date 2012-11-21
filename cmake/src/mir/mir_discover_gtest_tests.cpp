@@ -103,32 +103,30 @@ std::string elide_string_left(const std::string& in, std::size_t max_size)
 struct Configuration
 {
     Configuration() : executable(NULL),
-                      enable_memcheck(0)
+                      enable_memcheck(false)
     {
     }
 
     const char* executable;
-    int enable_memcheck;
+    bool enable_memcheck;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
 {
     static struct option long_options[] = {
-        {"executable", required_argument, NULL, 'e'},
-        {"enable-memcheck", no_argument, &config.enable_memcheck, 1},
+        {"executable", required_argument, 0, 0},
+        {"enable-memcheck", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
-    static const int executable_option_index = 0;
-    static const int enable_memcheck_option_index = 1;
-
     while(1)
     {
-        int option_index = 0;
+        int option_index = -1;
+        const char *optname = "";
         int c = getopt_long(
             argc,
             argv,
-            "e:",
+            "e:m",
             long_options,
             &option_index);
 
@@ -136,21 +134,19 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         if (c == -1)
             break;
 
-        switch (c)
-        {
-            case 0:
-                if (enable_memcheck_option_index == option_index)
-                    break;
-                else if (executable_option_index == option_index)
-                    config.executable = optarg;
-                else
-                    return false;
+        /* Detect an error in the passed options */
+        if (c == ':' || c == '?')
+            return false;
 
-                break;
-            case 'e':
-                config.executable = optarg;
-                break;
-        }
+        /* Check if we got a long option and get its name */
+        if (option_index != -1)
+            optname = long_options[option_index].name;
+
+        /* Handle options */
+        if (c == 'e' || !strcmp(optname, "executable"))
+            config.executable = optarg;
+        else if (c == 'm' || !strcmp(optname, "enable-memcheck"))
+            config.enable_memcheck = true;
     }
 
     return true;
