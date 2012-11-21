@@ -59,6 +59,7 @@ public:
     virtual mc::Buffer* compositor_acquire() { return 0; }
 
     virtual void compositor_release(mc::Buffer*) { }
+    virtual void shutdown() {}
 };
 
 struct MockBufferBundleFactory : public mc::BufferBundleFactory
