@@ -3583,6 +3583,10 @@ void InputDispatcher::monitor() {
     mLock.unlock();
 }
 
+void InputDispatcher::wake_looper() {
+    mLooper->wake();
+}
+
 
 // --- InputDispatcher::Queue ---
 
@@ -4263,5 +4267,13 @@ bool InputDispatcherThread::threadLoop() {
     mDispatcher->dispatchOnce();
     return true;
 }
+
+status_t InputDispatcherThread::requestExitAndWait() {
+    Thread::requestExit();
+    mDispatcher->wake_looper();
+    return Thread::join();
+}
+
+
 
 } // namespace android
