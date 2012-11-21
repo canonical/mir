@@ -42,7 +42,6 @@ class AndroidInputReaderPolicySetup : public testing::Test
 public:
     void SetUp()
     {
-
         reader_policy = std::make_shared<mia::InputReaderPolicy>(
             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
             std::shared_ptr<mi::CursorListener>());
