@@ -176,3 +176,23 @@ TEST_F(FrontendShutdown, DISABLED_before_client_connects)
     // Maybe that should be in Process::wait_for_termination()?
     EXPECT_TRUE(shutdown_server_process());
 }
+
+TEST_F(FrontendShutdown, with_many_clients_connected)
+{
+    int const many = 13;
+
+    launch_server_process(server_processing);
+
+    for (int i = 0; i != many; ++i)
+        launch_client_process(client_config);
+
+    wait_for_client_to_connect();
+
+    // The problem we're really testing for is a hang here
+    // ...so there ought to be some sort of timeout.
+    // Maybe that should be in Process::wait_for_termination()?
+    EXPECT_TRUE(shutdown_server_process());
+
+    // TODO: clients detect that server failed - and can exit themselves
+    kill_client_processes();
+}
