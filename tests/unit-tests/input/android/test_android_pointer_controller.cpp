@@ -99,8 +99,8 @@ TEST_F(AndroidPointerControllerSetup, move_updates_position)
     float final_x, final_y;
     controller->getPosition(&final_x, &final_y);
 
-    EXPECT_EQ(final_x, start_x + dx);
-    EXPECT_EQ(final_y, start_y + dy);
+    EXPECT_EQ(start_x + dx, final_x);
+    EXPECT_EQ(start_y + dy, final_y);
 }
 
 TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
