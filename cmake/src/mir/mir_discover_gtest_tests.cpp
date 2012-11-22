@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cassert>
 #include <cstring>
 #include <map>
 #include <set>
@@ -9,23 +11,160 @@
 #include <iostream>
 #include <libgen.h>
 
+#include <getopt.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 using namespace std;
+
+namespace
+{
+enum DescriptorType
+{
+    test_case,
+    test_suite
+};
+
+DescriptorType check_line_for_test_case_or_suite(const string& line)
+{
+    if (line.find("  ") == 0)
+        return test_case;
+
+    return test_suite;
+}
+
+int get_output_width()
+{
+    const int fd_out{fileno(stdout)};
+    const int max_width{65535};
+
+    int width{max_width};
+
+    if (isatty(fd_out))
+    {
+        struct winsize w;
+        if (ioctl(fd_out, TIOCGWINSZ, &w) != -1)
+            width = w.ws_col;
+    }
+
+    return width;
+}
+
+std::string& ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+        return s;
+}
+
+const char* ordinary_cmd_line_pattern()
+{
+    static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s\")\n";
+    return pattern;
+}
+
+const char* memcheck_cmd_line_pattern()
+{
+    static const char* pattern = "ADD_TEST(\"memcheck(%s.%s)\" \"valgrind\" \"--trace-children=yes\" \"%s\" \"--gtest_death_test_use_fork\" \"--gtest_filter=%s\")\n";
+
+    return pattern;
+}
+
+std::string elide_string_right(const std::string& in, std::size_t max_size)
+{
+    assert(max_size >= 3);
+
+    std::string result(in.begin(), in.begin() + max_size);
+
+    if (in.size() >= max_size)
+    {
+        *(result.end()-1) = '.';
+        *(result.end()-2) = '.';
+        *(result.end()-3) = '.';
+    }
+
+    return result;
+}
+
+std::string elide_string_left(const std::string& in, std::size_t max_size)
+{
+    assert(max_size >= 3);
+
+    if (in.size() <= max_size)
+        return in;
+
+    std::string result(in.begin() + (in.size() - max_size), in.end());
+
+    *(result.begin()) = '.';
+    *(result.begin()+1) = '.';
+    *(result.begin()+2) = '.';
+
+    return result;
+}
+
+struct Configuration
+{
+    Configuration() : executable(NULL),
+                      enable_memcheck(false)
+    {
+    }
+
+    const char* executable;
+    bool enable_memcheck;
+};
+
+bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
+{
+    static struct option long_options[] = {
+        {"executable", required_argument, 0, 0},
+        {"enable-memcheck", no_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
+
+    while(1)
+    {
+        int option_index = -1;
+        const char *optname = "";
+        int c = getopt_long(
+            argc,
+            argv,
+            "e:m",
+            long_options,
+            &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        /* Detect an error in the passed options */
+        if (c == ':' || c == '?')
+            return false;
+
+        /* Check if we got a long option and get its name */
+        if (option_index != -1)
+            optname = long_options[option_index].name;
+
+        /* Handle options */
+        if (c == 'e' || !strcmp(optname, "executable"))
+            config.executable = optarg;
+        else if (c == 'm' || !strcmp(optname, "enable-memcheck"))
+            config.enable_memcheck = true;
+    }
+
+    return true;
+}
+}
 
 int main (int argc, char **argv)
 {
+    int output_width = get_output_width();
+    
     cin >> noskipws;
 
-    if (argc < 2)
+    Configuration config;
+    if (!parse_configuration_from_cmd_line(argc, argv, config) || config.executable == NULL)
     {
-        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | ./build_test_cases PATH_TO_TEST_BINARY [--enable-memcheck]";
+        cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | " << basename(argv[0])
+             << " --executable PATH_TO_TEST_BINARY [--enable-memcheck]" << endl;
         return 1;
-    }
-
-    bool enable_memcheck = false;
-    if(argc > 2)
-    {
-        if (::strcmp(argv[2], "--enable-memcheck") == 0)
-            enable_memcheck=true;
     }
 
     set<string> tests;
@@ -34,44 +173,40 @@ int main (int argc, char **argv)
 
     while (getline (cin, line))
     {
-        /* Is test case */
-        if (line.find ("  ") == 0)
+        switch(check_line_for_test_case_or_suite(line))
         {
-            tests.insert(current_test + "*");
+            case test_case:
+                tests.insert(current_test + "*");
+                break;
+            case test_suite:
+                current_test = line;
+                break;
         }
-        else
-            current_test = line;
     }
 
     ofstream testfilecmake;
-    char *base = basename(argv[1]);
-    string   test_suite(base);
+    char* executable_copy = strdup(config.executable);
+    string test_suite(basename(executable_copy));
+    free(executable_copy);
 
     testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
-
     if (testfilecmake.is_open())
     {
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
+            static char cmd_line[1024] = "";
+            snprintf(
+                cmd_line,
+                sizeof(cmd_line),
+                config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
+                test_suite.c_str(),
+                elide_string_left(*test, output_width/2).c_str(),
+                config.executable,
+                test->c_str());
+
             if (testfilecmake.good())
             {
-                testfilecmake
-                        << "ADD_TEST ("
-                        << test_suite << '.' << *test
-                        << " \"" << argv[1] << "\""
-                        << "\"--gtest_filter=" << *test << "\")" << endl;
-
-                if (enable_memcheck)
-                {
-                    testfilecmake
-                            << "ADD_TEST ("
-                            << "memcheck_" << test_suite << '.' << *test
-                            << " \"valgrind\"" 
-                            << "\"--trace-children=yes\""
-                            << " \"" << argv[1] << "\""
-                            << "\"--gtest_death_test_use_fork\""
-                            << "\"--gtest_filter=" << *test << "\")" << endl;
-                }
+                testfilecmake << cmd_line;
             }
         }
 
