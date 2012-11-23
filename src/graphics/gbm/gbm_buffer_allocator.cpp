@@ -22,6 +22,7 @@
 #include "gbm_platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/exception.h"
 
 #include <stdexcept>
 #include <xf86drm.h>
@@ -46,23 +47,36 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
 {
     uint32_t bo_flags{0};
 
+    /* Create the GBM buffer object */
     if (buffer_properties.usage == mc::BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
     else
         bo_flags |= GBM_BO_USE_RENDERING;
 
-    gbm_bo *handle = gbm_bo_create(
+    gbm_bo *bo_raw = gbm_bo_create(
         platform->gbm.device, 
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
         mgg::mir_format_to_gbm_format(buffer_properties.format),
         bo_flags);
     
-    if (!handle)
-        throw std::runtime_error("Failed to create GBM buffer object");
+    if (!bo_raw)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
 
-    auto buffer = std::unique_ptr<mc::Buffer>(
-        new GBMBuffer(std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter>(handle)));
+    std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> bo{bo_raw};
+
+    /* Get the GEM flink name from the GBM buffer object */
+    auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
+    auto drm_fd = gbm_device_get_fd(platform->gbm.device);
+    struct drm_gem_flink flink;
+    flink.handle = gem_handle;
+
+    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get GEM flink name from gbm bo"));
+
+    /* Create the GBMBuffer */
+    std::unique_ptr<mc::Buffer> buffer{new GBMBuffer{std::move(bo), flink.name}};
 
     (*buffer_initializer)(*buffer);
 

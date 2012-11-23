@@ -47,7 +47,8 @@ uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 class GBMBuffer: public compositor::Buffer
 {
 public:
-    GBMBuffer(std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> handle);
+    GBMBuffer(std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> handle,
+              uint32_t gem_flink_name);
     GBMBuffer(const GBMBuffer&) = delete;
     virtual ~GBMBuffer();
 
@@ -69,7 +70,7 @@ private:
     std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
     EGLImageKHR egl_image;
     EGLDisplay egl_display;
-    uint32_t gem_flink_name;
+    uint32_t const gem_flink_name;
 };
 
 }

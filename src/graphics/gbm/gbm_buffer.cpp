@@ -105,20 +105,11 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
 
 mgg::GBMBuffer::GBMBuffer(
-    std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle) 
+    std::unique_ptr<gbm_bo, mgg::GBMBufferObjectDeleter> handle,
+    uint32_t gem_flink_name)
         : gbm_handle(std::move(handle)), egl_image(EGL_NO_IMAGE_KHR),
-          egl_display(EGL_NO_DISPLAY), gem_flink_name(0)
+          egl_display(EGL_NO_DISPLAY), gem_flink_name(gem_flink_name)
 {
-    auto device = gbm_bo_get_device(gbm_handle.get());
-    auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
-    auto drm_fd = gbm_device_get_fd(device);
-    struct drm_gem_flink flink{gem_handle, 0};
-
-    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
-    if (ret)
-        throw std::runtime_error("Failed to get GEM flink name from gbm bo");
-
-    gem_flink_name = flink.name;
 }
 
 mgg::GBMBuffer::~GBMBuffer()
