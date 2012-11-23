@@ -142,6 +142,15 @@ private:
     EGLImageKHR egl_image;
 };
 
+struct GBMBODeleter
+{
+    void operator()(gbm_bo* handle) const
+    {
+        if (handle)
+            gbm_bo_destroy(handle);
+    }
+};
+
 }
 
 mgg::GBMBufferAllocator::GBMBufferAllocator(
@@ -174,7 +183,7 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     if (!bo_raw)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
 
-    std::shared_ptr<gbm_bo> bo{bo_raw, mgg::GBMBufferObjectDeleter()};
+    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
     /* Get the GEM flink name from the GBM buffer object */
     auto gem_handle = gbm_bo_get_handle(bo_raw).u32;

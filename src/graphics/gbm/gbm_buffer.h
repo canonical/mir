@@ -33,11 +33,6 @@ namespace graphics
 namespace gbm
 {
 
-struct GBMBufferObjectDeleter
-{
-    void operator()(gbm_bo* handle) const;
-};
-
 geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 
