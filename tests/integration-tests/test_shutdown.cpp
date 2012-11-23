@@ -55,7 +55,6 @@ struct Client : TestingClientConfiguration
             connection_callback,
             this));
 
-        mtf::client_connect_pending.store(true);
         sigqueue(mtf::test_process, SIGALRM, sigval());
 
         MirSurfaceParameters const request_params =
