@@ -71,14 +71,7 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
-        const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
         typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
-
-        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return(egl_exts));
-        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-            .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
@@ -219,11 +212,10 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
 TEST_F(GBMGraphicBufferBasic, bind_to_texture_gl_oes_egl_image_not_supported)
 {
     using namespace testing;
+    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
 
-    const char* gl_exts = "GL_OES_texture_npot";
-
-    ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-        .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);

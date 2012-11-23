@@ -40,44 +40,20 @@ PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES_ = 0;
 
 std::mutex ext_mutex;
 
-void ensure_egl_image_extensions()
+void ensure_egl_image_extension_functions()
 {
     std::lock_guard<std::mutex> lock(ext_mutex);
 
-    if (eglCreateImageKHR_ != 0 && eglDestroyImageKHR_ != 0 &&
-        glEGLImageTargetTexture2DOES_ != 0)
-    {
-        return;
-    }
-
-    std::string ext_string;
-    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
-    if (exts)
-        ext_string = exts;
-
-    /* Mesa in the framebuffer doesn't advertise EGL_KHRimage_pixmap properly */
-    //if (ext_string.find("EGL_KHRimage_pixmap") != std::string::npos)
-    {
-        eglCreateImageKHR_ =
-            reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
-        eglDestroyImageKHR_ =
-            reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
-    }
+    eglCreateImageKHR_ =
+        reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
+    eglDestroyImageKHR_ =
+        reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
 
     if (!eglCreateImageKHR_ || !eglDestroyImageKHR_)
         throw std::runtime_error("EGL implementation doesn't support EGLImage");
     
-    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    if (exts)
-        ext_string = exts;
-    else
-        ext_string.clear();
-
-    if (ext_string.find("GL_OES_EGL_image") != std::string::npos)
-    {
-        glEGLImageTargetTexture2DOES_ = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                eglGetProcAddress("glEGLImageTargetTexture2DOES"));
-    }
+    glEGLImageTargetTexture2DOES_ = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
+            eglGetProcAddress("glEGLImageTargetTexture2DOES"));
 
     if (!glEGLImageTargetTexture2DOES_)
         throw std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage");
@@ -155,7 +131,7 @@ void mgg::GBMBuffer::ensure_egl_image()
 {
     if (egl_image == EGL_NO_IMAGE_KHR)
     {
-        ensure_egl_image_extensions();
+        ensure_egl_image_extension_functions();
 
         egl_display = eglGetCurrentDisplay();
         struct gbm_bo* bo{gbm_handle.get()};
