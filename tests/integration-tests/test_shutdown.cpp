@@ -30,8 +30,17 @@ namespace mtf = mir_test_framework;
 
 namespace mir_test_framework
 {
-std::atomic<bool> client_connect_pending(false);
 int const test_process = getpid();
+std::atomic<int> client_pending_count(0);
+std::atomic<int> client_connect_count(0);
+
+void increment(std::atomic<int>& count)
+{
+    for (int new_count = count.load();
+        !count.compare_exchange_weak(new_count, new_count + 1);
+        std::this_thread::yield())
+        ;
+}
 
 void send_connected_signal()
 {
@@ -43,7 +52,7 @@ extern "C"
 static void (*signal_prev_fn)(int);
 static void handle_connected_signal(int)
 {
-    client_connect_pending.store(false);
+    increment(client_connect_count);
 }
 }
 }
@@ -157,6 +166,8 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
     {
         BespokeDisplayServerTestFixture::SetUp();
         signal_prev_fn = signal(SIGALRM, handle_connected_signal);
+        client_pending_count.store(0);
+        client_connect_count.store(0);
     }
 
     void TearDown()
@@ -170,13 +181,32 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
 
     void launch_client_process(TestingClientConfiguration& config)
     {
-        if (getpid() == test_process) client_connect_pending.store(true);
-        BespokeDisplayServerTestFixture::launch_client_process(config);
+        if (getpid() == test_process)
+        {
+            increment(client_pending_count);
+            BespokeDisplayServerTestFixture::launch_client_process(config);
+       }
     }
 
     void wait_for_client_to_connect()
     {
-        while (client_connect_pending.load()) std::this_thread::yield();
+        if (getpid() == test_process)
+        {
+            // The following seems a but elaborate, but we sometimes
+            // miss some notification signals.  In practice, after
+            // 500*10ms the clients will be there.  Even under valgrind.
+            int const max_clients = client_pending_count.load();
+            int const min_clients = (max_clients / 4) + 1;
+
+            for (auto retries = 0; (max_clients != client_connect_count.load()) && (retries != 500); ++retries)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+
+//            std::cerr << "DEBUG: client_pending_count=" << client_pending_count.load() << std::endl;
+//            std::cerr << "DEBUG: client_connect_count=" << client_connect_count.load() << std::endl;
+            ASSERT_LE(min_clients, client_connect_count.load());
+        }
     }
 };
 }
