@@ -49,7 +49,9 @@ void send_connected_signal()
 
 extern "C"
 {
-static void (*signal_prev_fn)(int);
+static struct sigaction oldsigaction;
+static struct sigaction newsigaction;
+
 static void handle_connected_signal(int)
 {
     increment(client_connect_count);
@@ -162,17 +164,30 @@ namespace mir_test_framework
 {
 struct FrontendShutdown : BespokeDisplayServerTestFixture
 {
+    static void SetUpTestCase()
+    {
+        BespokeDisplayServerTestFixture::SetUpTestCase();
+        newsigaction.sa_handler = handle_connected_signal;
+        newsigaction.sa_flags = SA_NODEFER;
+
+        sigaction(SIGALRM, &newsigaction, &oldsigaction);
+    }
+
+    static void TearDownTestCase()
+    {
+        sigaction(SIGALRM, &oldsigaction, 0);
+        BespokeDisplayServerTestFixture::TearDownTestCase();
+    }
+
     void SetUp()
     {
         BespokeDisplayServerTestFixture::SetUp();
-        signal_prev_fn = signal(SIGALRM, handle_connected_signal);
         client_pending_count.store(0);
         client_connect_count.store(0);
     }
 
     void TearDown()
     {
-        signal(SIGALRM, signal_prev_fn);
         BespokeDisplayServerTestFixture::TearDown();
     }
 
@@ -196,15 +211,19 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
             // miss some notification signals.  In practice, after
             // 500*10ms the clients will be there.  Even under valgrind.
             int const max_clients = client_pending_count.load();
-            int const min_clients = (max_clients / 4) + 1;
+            int const min_clients = (max_clients / 3) + 1;
 
-            for (auto retries = 0; (max_clients != client_connect_count.load()) && (retries != 500); ++retries)
+            for (auto retries = 0; (max_clients != client_connect_count.load()) && (retries != 200); ++retries)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
-//            std::cerr << "DEBUG: client_pending_count=" << client_pending_count.load() << std::endl;
-//            std::cerr << "DEBUG: client_connect_count=" << client_connect_count.load() << std::endl;
+            if (min_clients != client_connect_count.load())
+            {
+                std::cerr << "DEBUG: client_pending_count=" << client_pending_count.load() << std::endl;
+                std::cerr << "DEBUG: client_connect_count=" << client_connect_count.load() << std::endl;
+            }
+
             ASSERT_LE(min_clients, client_connect_count.load());
         }
     }
@@ -247,7 +266,7 @@ TEST_F(FrontendShutdown, DISABLED_before_client_connects)
 
 TEST_F(FrontendShutdown, with_many_clients_connected)
 {
-    int const many = 13;
+    int const many = 3;
 
     launch_server_process(server_processing);
 
