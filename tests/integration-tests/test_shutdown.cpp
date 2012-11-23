@@ -33,10 +33,15 @@ namespace mir_test_framework
 std::atomic<bool> client_connect_pending(false);
 int const test_process = getpid();
 
+void send_connected_signal()
+{
+    sigqueue(test_process, SIGALRM, sigval());
+}
+
 extern "C"
 {
 static void (*signal_prev_fn)(int);
-static void signal_connected(int)
+static void handle_connected_signal(int)
 {
     client_connect_pending.store(false);
 }
@@ -55,7 +60,7 @@ struct Client : TestingClientConfiguration
             connection_callback,
             this));
 
-        sigqueue(mtf::test_process, SIGALRM, sigval());
+        mtf::send_connected_signal();
 
         MirSurfaceParameters const request_params =
         {
@@ -151,7 +156,7 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
     void SetUp()
     {
         BespokeDisplayServerTestFixture::SetUp();
-        signal_prev_fn = signal(SIGALRM, signal_connected);
+        signal_prev_fn = signal(SIGALRM, handle_connected_signal);
     }
 
     void TearDown()
