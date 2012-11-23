@@ -23,8 +23,6 @@
 #include "mir/compositor/buffer.h"
 
 #include <gbm.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 #include <memory>
 
@@ -43,14 +41,15 @@ struct GBMBufferObjectDeleter
 geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 
+class BufferTextureBinder;
 
 class GBMBuffer: public compositor::Buffer
 {
 public:
-    GBMBuffer(std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> handle,
+    GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+              std::unique_ptr<BufferTextureBinder> texture_binder,
               uint32_t gem_flink_name);
     GBMBuffer(const GBMBuffer&) = delete;
-    virtual ~GBMBuffer();
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
 
@@ -65,11 +64,8 @@ public:
     virtual void bind_to_texture();
 
 private:
-    void ensure_egl_image();
-
-    std::unique_ptr<gbm_bo, GBMBufferObjectDeleter> gbm_handle;
-    EGLImageKHR egl_image;
-    EGLDisplay egl_display;
+    std::shared_ptr<gbm_bo> const gbm_handle;
+    std::unique_ptr<BufferTextureBinder> const texture_binder;
     uint32_t const gem_flink_name;
 };
 

@@ -28,7 +28,6 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 
-
 #include <gbm.h>
 
 #include <gtest/gtest.h>
@@ -48,10 +47,6 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-
-        auto platform = std::make_shared<mgg::GBMPlatform>();
-        auto null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
@@ -79,12 +74,18 @@ protected:
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
+
+        platform = std::make_shared<mgg::GBMPlatform>();
+        null_init = std::make_shared<mg::NullBufferInitializer>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
     }
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock>  mock_gl;
+    std::shared_ptr<mgg::GBMPlatform> platform;
+    std::shared_ptr<mg::NullBufferInitializer> null_init;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 
     // Defaults
@@ -190,36 +191,6 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_gem_flink_failure)
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
         auto ipc_package = buffer->get_ipc_package();
-    }, std::runtime_error);
-}
-
-TEST_F(GBMGraphicBufferBasic, bind_to_texture_egl_image_not_supported)
-{
-    using namespace testing;
-    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
-
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-
-    EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
-    }, std::runtime_error);
-}
-
-TEST_F(GBMGraphicBufferBasic, bind_to_texture_gl_oes_egl_image_not_supported)
-{
-    using namespace testing;
-    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
-
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-
-    EXPECT_THROW({
-        auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
     }, std::runtime_error);
 }
 
