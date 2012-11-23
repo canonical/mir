@@ -67,11 +67,12 @@ public:
     bool shutdown_server_process();
     void kill_client_processes();
 
-private:
-    TestingProcessManager process_manager;
-
+protected:
     virtual void SetUp();
     virtual void TearDown();
+
+private:
+    TestingProcessManager process_manager;
 };
 
 }

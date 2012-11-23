@@ -28,6 +28,22 @@
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
 
+namespace mir_test_framework
+{
+std::atomic<bool> client_connected(true);
+int const test_process = getpid();
+
+extern "C"
+{
+static void (*signal_prev_fn)(int);
+static void signal_connected(int)
+{
+    std::cerr << "DEBUG: connected pid=" << getpid() << std::endl;
+    client_connected.store(true);
+}
+}
+}
+
 namespace
 {
 struct Client : TestingClientConfiguration
@@ -39,6 +55,9 @@ struct Client : TestingClientConfiguration
             __PRETTY_FUNCTION__,
             connection_callback,
             this));
+
+        mtf::client_connected.store(true);
+        sigqueue(mtf::test_process, SIGALRM, sigval());
 
         MirSurfaceParameters const request_params =
         {
@@ -131,14 +150,30 @@ namespace mir_test_framework
 {
 struct FrontendShutdown : BespokeDisplayServerTestFixture
 {
+    void SetUp()
+    {
+        BespokeDisplayServerTestFixture::SetUp();
+        signal_prev_fn = signal(SIGALRM, signal_connected);
+    }
+
+    void TearDown()
+    {
+        signal(SIGALRM, signal_prev_fn);
+        BespokeDisplayServerTestFixture::TearDown();
+    }
+
     Server server_processing;
     Client client_config;
 
+    void launch_client_process(TestingClientConfiguration& config)
+    {
+        if (getpid() == test_process) client_connected.store(false);
+        BespokeDisplayServerTestFixture::launch_client_process(config);
+    }
+
     void wait_for_client_to_connect()
     {
-        // How do we detect that client has started a session?
-        // Also, only need this delay in testing process.
-        std::this_thread::sleep_for(std::chrono::milliseconds(400));
+        while (!client_connected.load()) std::this_thread::yield();
     }
 };
 }
