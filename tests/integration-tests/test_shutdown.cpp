@@ -38,7 +38,6 @@ extern "C"
 static void (*signal_prev_fn)(int);
 static void signal_connected(int)
 {
-    std::cerr << "DEBUG: connected pid=" << getpid() << std::endl;
     client_connected.store(true);
 }
 }
