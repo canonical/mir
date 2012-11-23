@@ -198,9 +198,9 @@ TEST_F(FrontendShutdown, after_client_connects)
 
 // TODO Fix behaviour and enable test
 // Disabled because this leaves a server with a single thread spinning
-// waiting for "signal_display_server" to be set. I don't see how the
-// main thread gets cancelled without the signal handler completing.
-// Maybe this is just an artifact of the frig in that code?
+// waiting for "signal_display_server" to be set. This is because the
+// main thread is processing the signal.
+// Maybe this is an artifact of the frig in that code - see TODO there.
 TEST_F(FrontendShutdown, DISABLED_before_client_connects)
 {
     launch_server_process(server_processing);

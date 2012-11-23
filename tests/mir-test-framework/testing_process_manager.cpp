@@ -67,7 +67,8 @@ mtf::TestingProcessManager::~TestingProcessManager()
 namespace
 {
 // TODO: Get rid of the volatile-hack here and replace it with
-// some sane atomic-pointer once we have left GCC 4.4 behind.
+// something that doesn't spinlock the thread it is waiting on
+// C.f. FrontendShutdown test DISABLED_before_client_connects
 mir::DisplayServer* volatile signal_display_server;
 }
 
