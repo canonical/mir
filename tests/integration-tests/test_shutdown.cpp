@@ -30,7 +30,7 @@ namespace mtf = mir_test_framework;
 
 namespace mir_test_framework
 {
-std::atomic<bool> client_connected(true);
+std::atomic<bool> client_connect_pending(false);
 int const test_process = getpid();
 
 extern "C"
@@ -38,7 +38,7 @@ extern "C"
 static void (*signal_prev_fn)(int);
 static void signal_connected(int)
 {
-    client_connected.store(true);
+    client_connect_pending.store(false);
 }
 }
 }
@@ -55,7 +55,7 @@ struct Client : TestingClientConfiguration
             connection_callback,
             this));
 
-        mtf::client_connected.store(true);
+        mtf::client_connect_pending.store(true);
         sigqueue(mtf::test_process, SIGALRM, sigval());
 
         MirSurfaceParameters const request_params =
@@ -166,13 +166,13 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
 
     void launch_client_process(TestingClientConfiguration& config)
     {
-        if (getpid() == test_process) client_connected.store(false);
+        if (getpid() == test_process) client_connect_pending.store(true);
         BespokeDisplayServerTestFixture::launch_client_process(config);
     }
 
     void wait_for_client_to_connect()
     {
-        while (!client_connected.load()) std::this_thread::yield();
+        while (client_connect_pending.load()) std::this_thread::yield();
     }
 };
 }
