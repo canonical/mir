@@ -81,6 +81,26 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
     *page_flip_pending = false;
 }
 
+void ensure_egl_image_extensions()
+{
+    std::string ext_string;
+    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+    if (exts)
+        ext_string = exts;
+
+    if (ext_string.find("EGL_MESA_drm_image") == std::string::npos)
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_MESA_drm_image extension"));
+
+    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+    if (exts)
+        ext_string = exts;
+    else
+        ext_string.clear();
+
+    if (ext_string.find("GL_OES_EGL_image") == std::string::npos)
+        BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
+}
+
 }
 
 mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, 
@@ -125,6 +145,15 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
                        egl.surface, egl.context) == EGL_FALSE)
     {
         throw std::runtime_error("Failed to make EGL surface current");
+    }
+
+    try
+    {
+        ensure_egl_image_extensions();
+    }
+    catch(...)
+    {
+        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
 
     clear();
