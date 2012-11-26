@@ -85,6 +85,15 @@ std::string mf::ApplicationSession::get_name()
     return name;
 }
 
+void mf::ApplicationSession::shutdown()
+{
+    for (auto& id_s : surfaces)
+    {
+        if (auto surface = id_s.second.lock())
+            surface->shutdown();
+    }
+}
+
 void mf::ApplicationSession::hide()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)

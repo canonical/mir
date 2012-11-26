@@ -90,6 +90,7 @@ class Surface : public graphics::Renderable
     void advance_client_buffer();
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package() const;
     compositor::BufferID get_buffer_id() const;
+    void shutdown();
 
  private:
     std::string surface_name;

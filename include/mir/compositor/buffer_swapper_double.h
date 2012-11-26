@@ -44,6 +44,7 @@ public:
     void client_release(Buffer* queued_buffer);
     Buffer* compositor_acquire();
     void compositor_release(Buffer* released_buffer);
+    void shutdown();
 
 private:
     typedef const std::unique_ptr<Buffer> BufferPtr;
@@ -54,6 +55,7 @@ private:
 
     std::condition_variable consumed_cv;
     bool compositor_has_consumed;
+    bool shutting_down;
 
     std::condition_variable buffer_available_cv;
     std::queue<Buffer*> client_queue;

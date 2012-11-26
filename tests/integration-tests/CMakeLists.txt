@@ -21,6 +21,7 @@ set(
   test_renderloop.cpp
   test_surfaceloop.cpp
   test_error_reporting.cpp
+  test_shutdown.cpp
 )
 
 add_subdirectory(client/)

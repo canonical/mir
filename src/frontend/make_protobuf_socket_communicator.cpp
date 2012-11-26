@@ -26,10 +26,10 @@ namespace ms = mir::surfaces;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::ApplicationSessionFactory> const& session_factory,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(surface_organiser, display));
+        socket_file, make_ipc_factory(session_factory, display));
 }
 
