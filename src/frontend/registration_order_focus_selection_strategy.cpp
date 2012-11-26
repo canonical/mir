@@ -18,7 +18,7 @@
 
 #include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/application_session.h"
-#include "mir/frontend/application_session_container.h"
+#include "mir/frontend/session_container.h"
 
 #include <memory>
 #include <cassert>
@@ -28,14 +28,14 @@
 namespace mf = mir::frontend;
 
 mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<mf::SessionContainer> const& app_container) :
-  app_container(app_container)
+  session_container(app_container)
 {
 
 }
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    auto it = app_container->iterator();
+    auto it = session_container->iterator();
 
     if (focused_app == NULL)
     {
@@ -66,7 +66,7 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std:
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    auto it = app_container->iterator();
+    auto it = session_container->iterator();
     
     if (focused_app == NULL)
     {

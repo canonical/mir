@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_APPLICATION_MODEL_H_
 #define MIR_FRONTEND_APPLICATION_MODEL_H_
 
-#include "mir/frontend/application_session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/thread/all.h"
 
 #include <memory>

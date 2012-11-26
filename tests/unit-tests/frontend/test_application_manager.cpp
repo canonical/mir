@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/session_manager.h"
-#include "mir/frontend/application_session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"

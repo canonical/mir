@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SERVICES_SESSION_CONTAINER_H_
-#define MIR_FRONTEND_SERVICES_SESSION_CONTAINER_H_
+#ifndef FRONTEND_SESSION_CONTAINER_H_
+#define FRONTEND_SESSION_CONTAINER_H_
 
 #include <memory>
 
@@ -64,4 +64,4 @@ protected:
 }
 
 
-#endif // MIR_FRONTEND_SERVICES_SESSION_CONTAINER_H_
+#endif // FRONTEND_SESSION_CONTAINER_H_
