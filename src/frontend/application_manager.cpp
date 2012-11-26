@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_surface_organiser.h"

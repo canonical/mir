@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

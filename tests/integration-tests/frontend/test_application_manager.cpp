@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
@@ -57,16 +57,16 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
-    auto session1 = app_manager.open_session("Visual Basic Studio");
-    auto session2 = app_manager.open_session("Microsoft Access");
-    auto session3 = app_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("Microsoft Access");
+    auto session3 = session_manager.open_session("WordPerfect");
     
     {
       InSequence seq;
@@ -75,9 +75,9 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
       EXPECT_CALL(mechanism, set_focus_to(session3)).Times(1);
     }
     
-    app_manager.focus_next();
-    app_manager.focus_next();
-    app_manager.focus_next();
+    session_manager.focus_next();
+    session_manager.focus_next();
+    session_manager.focus_next();
 }
 
 TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
@@ -89,16 +89,16 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        model,
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
-    auto session1 = app_manager.open_session("Visual Basic Studio");
-    auto session2 = app_manager.open_session("Microsoft Access");
-    auto session3 = app_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("Microsoft Access");
+    auto session3 = session_manager.open_session("WordPerfect");
     
     {
       InSequence seq;
@@ -106,6 +106,6 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
       EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
     }
     
-    app_manager.close_session(session3);
-    app_manager.close_session(session2);
+    session_manager.close_session(session3);
+    session_manager.close_session(session2);
 }

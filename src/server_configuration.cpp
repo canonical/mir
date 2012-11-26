@@ -27,7 +27,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_proxy.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/frontend/application_session_model.h"
@@ -56,11 +56,11 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mf::SessionManager> const& application_manager,
+        std::shared_ptr<mf::SessionManager> const& session_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display) :
-        application_manager(application_manager),
+        session_manager(session_manager),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::SessionManager> application_manager;
+    std::shared_ptr<mf::SessionManager> session_manager;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -78,7 +78,7 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationMediator>(
-            application_manager,
+            session_manager,
             graphics_platform,
             graphics_display,
             listener,
@@ -154,7 +154,7 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 }
 
 std::shared_ptr<mf::SessionManager>
-mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
+mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
 {
     auto session_model = std::make_shared<mf::TheSessionContainerImplementation>();
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
@@ -176,7 +176,7 @@ mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<DefaultIpcFactory>(
-        make_application_manager(surface_organiser),
+        make_session_manager(surface_organiser),
         make_application_listener(),
         make_graphics_platform(),
         display);

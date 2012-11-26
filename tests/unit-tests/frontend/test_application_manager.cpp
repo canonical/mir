@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/focus_sequence.h"
@@ -68,7 +68,7 @@ TEST(SessionManager, open_and_close_session)
     MockFocusSelectionStrategy strategy;
     MockFocus focus;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&focus, mir::EmptyDeleter()));
@@ -80,8 +80,8 @@ TEST(SessionManager, open_and_close_session)
 
     EXPECT_CALL(strategy, predecessor_of(_)).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
-    auto session = app_manager.open_session("Visual Basic Studio");
-    app_manager.close_session(session);
+    auto session = session_manager.open_session("Visual Basic Studio");
+    session_manager.close_session(session);
 }
 
 TEST(SessionManager, closing_session_removes_surfaces)
@@ -92,7 +92,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
     MockFocusSelectionStrategy strategy;
     MockFocus mechanism;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
@@ -115,10 +115,10 @@ TEST(SessionManager, closing_session_removes_surfaces)
 
     EXPECT_CALL(strategy, predecessor_of(_)).WillOnce(Return((std::shared_ptr<mf::Session>())));
     
-    auto session = app_manager.open_session("Visual Basic Studio");
+    auto session = session_manager.open_session("Visual Basic Studio");
     session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     
-    app_manager.close_session(session);
+    session_manager.close_session(session);
 }
 
 TEST(SessionManager, new_applications_receive_focus)
@@ -130,7 +130,7 @@ TEST(SessionManager, new_applications_receive_focus)
     MockFocus mechanism;
     std::shared_ptr<mf::Session> new_session;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
@@ -138,6 +138,6 @@ TEST(SessionManager, new_applications_receive_focus)
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
-    auto session = app_manager.open_session("Visual Basic Studio");
+    auto session = session_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
