@@ -77,7 +77,7 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(
+        return std::make_shared<mf::ApplicationMediator>(
             application_manager,
             graphics_platform,
             graphics_display,

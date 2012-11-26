@@ -45,12 +45,12 @@ class ApplicationListener;
 class SessionStore;
 class Session;
 
-// ApplicationProxy relays requests from the client into the server process.
-class ApplicationProxy : public mir::protobuf::DisplayServer
+// ApplicationMediator relays requests from the client into the server process.
+class ApplicationMediator : public mir::protobuf::DisplayServer
 {
 public:
 
-    ApplicationProxy(
+    ApplicationMediator(
         std::shared_ptr<frontend::SessionStore> const& session_factory,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,

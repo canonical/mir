@@ -31,7 +31,7 @@
 #include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
-mir::frontend::ApplicationProxy::ApplicationProxy(
+mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<frontend::SessionStore> const& session_factory,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
@@ -45,7 +45,7 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 {
 }
 
-void mir::frontend::ApplicationProxy::connect(
+void mir::frontend::ApplicationMediator::connect(
     ::google::protobuf::RpcController*,
                      const ::mir::protobuf::ConnectParameters* request,
                      ::mir::protobuf::Connection* response,
@@ -73,7 +73,7 @@ void mir::frontend::ApplicationProxy::connect(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::create_surface(
+void mir::frontend::ApplicationMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
     mir::protobuf::Surface* response,
@@ -117,7 +117,7 @@ void mir::frontend::ApplicationProxy::create_surface(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::next_buffer(
+void mir::frontend::ApplicationMediator::next_buffer(
     ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
     ::mir::protobuf::Buffer* response,
@@ -145,7 +145,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
 }
 
 
-void mir::frontend::ApplicationProxy::release_surface(
+void mir::frontend::ApplicationMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -160,7 +160,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::disconnect(
+void mir::frontend::ApplicationMediator::disconnect(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::Void* /*request*/,
     mir::protobuf::Void* /*response*/,
