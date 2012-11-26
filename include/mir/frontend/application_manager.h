@@ -38,7 +38,7 @@ class SessionManager : public SessionStore
  public:
     explicit SessionManager(std::shared_ptr<SurfaceOrganiser> const& surface_organiser,
                                 std::shared_ptr<SessionContainer> const& session_container,
-                                std::shared_ptr<FocusSequence> const& focus_selection_strategy,
+                                std::shared_ptr<FocusSequence> const& focus_sequence,
                                 std::shared_ptr<Focus> const& focus);
     virtual ~SessionManager();
 
@@ -54,7 +54,7 @@ protected:
 private:
     std::shared_ptr<frontend::SurfaceOrganiser> surface_organiser;
     std::shared_ptr<SessionContainer> app_container;
-    std::shared_ptr<FocusSequence> focus_selection_strategy;
+    std::shared_ptr<FocusSequence> focus_sequence;
     std::shared_ptr<Focus> focus;
 
     std::weak_ptr<Session> focus_application;

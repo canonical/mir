@@ -45,4 +45,4 @@ protected:
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_STRATEGY_H_
+#endif // MIR_FRONTEND_FOCUS_SEQUENCE_H_

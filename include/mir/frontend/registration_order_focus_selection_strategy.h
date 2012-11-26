@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_REGISTRATION_FOCUS_STRATEGY_H_
 #define MIR_FRONTEND_REGISTRATION_FOCUS_STRATEGY_H_
 
-#include "mir/frontend/application_focus_selection_strategy.h"
+#include "mir/frontend/focus_sequence.h"
 
 namespace mir
 {

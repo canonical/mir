@@ -22,7 +22,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/application_focus_selection_strategy.h"
+#include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 #include "mir/frontend/registration_order_focus_selection_strategy.h"
 #include "mir/frontend/application_session_model.h"

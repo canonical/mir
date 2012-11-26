@@ -20,7 +20,7 @@
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_surface_organiser.h"
-#include "mir/frontend/application_focus_selection_strategy.h"
+#include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 
 #include <memory>
@@ -32,15 +32,15 @@ namespace ms = mir::surfaces;
 
 mf::SessionManager::SessionManager(std::shared_ptr<mf::SurfaceOrganiser> const& organiser, 
                                            std::shared_ptr<mf::SessionContainer> const& container,
-                                           std::shared_ptr<mf::FocusSequence> const& strategy,
+                                           std::shared_ptr<mf::FocusSequence> const& sequence,
                                            std::shared_ptr<mf::Focus> const& focus) :
   surface_organiser(organiser),
   app_container(container),
-  focus_selection_strategy(strategy),
+  focus_sequence(sequence),
   focus(focus)
 {
     assert(surface_organiser);
-    assert(strategy);
+    assert(sequence);
     assert(container);
     assert(focus);
 }
@@ -64,7 +64,7 @@ void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 {
     if (session == focus_application.lock())
     {
-        focus_application = focus_selection_strategy->predecessor_of(session);
+        focus_application = focus_sequence->predecessor_of(session);
         focus->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
@@ -77,7 +77,7 @@ void mf::SessionManager::focus_next()
     {
         return;
     }
-    auto next_focus = focus_selection_strategy->successor_of(focused).lock();
+    auto next_focus = focus_sequence->successor_of(focused).lock();
     focus_application = next_focus;
     focus->set_focus_to(next_focus);
 }

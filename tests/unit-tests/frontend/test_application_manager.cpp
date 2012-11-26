@@ -20,7 +20,7 @@
 #include "mir/frontend/application_manager.h"
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_session.h"
-#include "mir/frontend/application_focus_selection_strategy.h"
+#include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
