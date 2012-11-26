@@ -32,8 +32,8 @@ class ApplicationFocusSelectionStrategy
 public:
     virtual ~ApplicationFocusSelectionStrategy() {}
 
-    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) = 0;
-    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) = 0;
+    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) const = 0;
+    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) const = 0;
 
 protected:
     ApplicationFocusSelectionStrategy() = default;

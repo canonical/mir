@@ -49,8 +49,8 @@ struct MockApplicationSessionModel : public mf::ApplicationSessionContainer
 
 struct MockFocusSelectionStrategy: public mf::ApplicationFocusSelectionStrategy
 {
-    MOCK_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession> const&));
-    MOCK_METHOD1(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession> const&));
+    MOCK_CONST_METHOD1(next_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession> const&));
+    MOCK_CONST_METHOD1(previous_focus_app, std::weak_ptr<mf::ApplicationSession>(std::shared_ptr<mf::ApplicationSession> const&));
 };
   
 struct MockFocusMechanism: public mf::ApplicationFocusMechanism

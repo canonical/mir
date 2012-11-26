@@ -33,8 +33,8 @@ public:
     explicit RegistrationOrderFocusSelectionStrategy(std::shared_ptr<ApplicationSessionContainer> const& app_container);
     virtual ~RegistrationOrderFocusSelectionStrategy() {}
 
-    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app);
-    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app);
+    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) const;
+    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) const;
 
 protected:
     RegistrationOrderFocusSelectionStrategy(const RegistrationOrderFocusSelectionStrategy&) = delete;
