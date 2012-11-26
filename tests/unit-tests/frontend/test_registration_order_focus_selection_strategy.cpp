@@ -32,12 +32,12 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(RegistrationOrderFocusSelectionStrategy, focus_order)
+TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
-    mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
+    mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
@@ -52,12 +52,12 @@ TEST(RegistrationOrderFocusSelectionStrategy, focus_order)
     EXPECT_EQ(focus_selection_strategy.successor_of(app3).lock()->get_name(), app1->get_name());
 }
 
-TEST(RegistrationOrderFocusSelectionStrategy, reverse_focus_order)
+TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
-    mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
+    mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
@@ -72,12 +72,12 @@ TEST(RegistrationOrderFocusSelectionStrategy, reverse_focus_order)
     EXPECT_EQ(focus_selection_strategy.predecessor_of(app1).lock()->get_name(), app3->get_name());
 }
 
-TEST(RegistrationOrderFocusSelectionStrategy, no_focus)
+TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
-    mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
+    mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
 

@@ -53,7 +53,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
-    mf::RegistrationOrderFocusSelectionStrategy strategy(model);
+    mf::RegistrationOrderFocusSequence strategy(model);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
@@ -85,7 +85,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     using namespace ::testing;
     ms::MockApplicationSurfaceOrganiser organiser;
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
-    mf::RegistrationOrderFocusSelectionStrategy strategy(model);
+    mf::RegistrationOrderFocusSequence strategy(model);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 

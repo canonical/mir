@@ -27,18 +27,18 @@ namespace frontend
 {
 class SessionContainer;
 
-class RegistrationOrderFocusSelectionStrategy : public FocusSequence
+class RegistrationOrderFocusSequence : public FocusSequence
 {
 public:
-    explicit RegistrationOrderFocusSelectionStrategy(std::shared_ptr<SessionContainer> const& app_container);
-    virtual ~RegistrationOrderFocusSelectionStrategy() {}
+    explicit RegistrationOrderFocusSequence(std::shared_ptr<SessionContainer> const& app_container);
+    virtual ~RegistrationOrderFocusSequence() {}
 
     virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app);
     virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app);
 
 protected:
-    RegistrationOrderFocusSelectionStrategy(const RegistrationOrderFocusSelectionStrategy&) = delete;
-    RegistrationOrderFocusSelectionStrategy& operator=(const RegistrationOrderFocusSelectionStrategy&) = delete;
+    RegistrationOrderFocusSequence(const RegistrationOrderFocusSequence&) = delete;
+    RegistrationOrderFocusSequence& operator=(const RegistrationOrderFocusSequence&) = delete;
 private:
     std::shared_ptr<SessionContainer> app_container;
 };

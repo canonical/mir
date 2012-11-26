@@ -27,13 +27,13 @@
 
 namespace mf = mir::frontend;
 
-mf::RegistrationOrderFocusSelectionStrategy::RegistrationOrderFocusSelectionStrategy(std::shared_ptr<mf::SessionContainer> const& app_container) :
+mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<mf::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::successor_of(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
 
@@ -64,7 +64,7 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::successo
     return **it;
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
     
