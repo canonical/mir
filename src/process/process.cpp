@@ -195,6 +195,11 @@ std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& resu
         print_signal(out, result.signal);
         out << ", ";
     }
-    print_exit_code(out, result.exit_code) << ')';
-    return out;
+
+    if (result.reason == TerminationReason::child_terminated_normally)
+    {
+        print_exit_code(out, result.exit_code);
+    }
+
+    return out << ')';
 }
