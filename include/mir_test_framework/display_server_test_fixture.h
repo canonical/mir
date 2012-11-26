@@ -64,11 +64,15 @@ public:
 
     void launch_client_process(TestingClientConfiguration& config);
 
-private:
-    TestingProcessManager process_manager;
+    bool shutdown_server_process();
+    void kill_client_processes();
 
+protected:
     virtual void SetUp();
     virtual void TearDown();
+
+private:
+    TestingProcessManager process_manager;
 };
 
 }

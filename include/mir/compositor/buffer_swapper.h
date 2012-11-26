@@ -45,6 +45,8 @@ public:
 
     virtual void compositor_release(Buffer* released_buffer) = 0;
 
+    virtual void shutdown() = 0;
+
     virtual ~BufferSwapper() {}
 
 protected:

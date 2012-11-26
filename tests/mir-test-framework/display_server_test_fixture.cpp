@@ -62,6 +62,16 @@ void BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfigu
     process_manager.launch_client_process(config);
 }
 
+bool BespokeDisplayServerTestFixture::shutdown_server_process()
+{
+    return process_manager.shutdown_server_process().succeeded();
+}
+
+void BespokeDisplayServerTestFixture::kill_client_processes()
+{
+    process_manager.kill_client_processes();
+}
+
 void BespokeDisplayServerTestFixture::SetUp()
 {
 }
