@@ -26,7 +26,7 @@ namespace mir
 
 namespace surfaces
 {
-class ApplicationSurfaceOrganiser;
+class SurfaceOrganiser;
 }
 
 namespace frontend

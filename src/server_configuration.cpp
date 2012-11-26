@@ -154,7 +154,7 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 }
 
 std::shared_ptr<mf::SessionManager>
-mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<mf::ApplicationSurfaceOrganiser> const& surface_organiser)
+mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
 {
     auto session_model = std::make_shared<mf::TheSessionContainerImplementation>();
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
@@ -172,7 +172,7 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<mf::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<DefaultIpcFactory>(

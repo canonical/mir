@@ -63,12 +63,12 @@ struct MockFocusMechanism: public mf::Focus
 TEST(SessionManager, open_and_close_session)
 {
     using namespace ::testing;
-    mf::MockApplicationSurfaceOrganiser organiser;
+    mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
@@ -87,12 +87,12 @@ TEST(SessionManager, open_and_close_session)
 TEST(SessionManager, closing_session_removes_surfaces)
 {
     using namespace ::testing;
-    mf::MockApplicationSurfaceOrganiser organiser;
+    mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
@@ -124,13 +124,13 @@ TEST(SessionManager, closing_session_removes_surfaces)
 TEST(SessionManager, new_applications_receive_focus)
 {
     using namespace ::testing;
-    mf::MockApplicationSurfaceOrganiser organiser;
+    mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
-    mf::SessionManager app_manager(std::shared_ptr<mf::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));

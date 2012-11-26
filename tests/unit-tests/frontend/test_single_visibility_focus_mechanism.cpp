@@ -39,7 +39,7 @@ namespace
 
 struct MockApplicationSession : public mf::Session
 {
-  MockApplicationSession(std::shared_ptr<mf::ApplicationSurfaceOrganiser> organiser,
+  MockApplicationSession(std::shared_ptr<mf::SurfaceOrganiser> organiser,
                          std::string name) : Session(organiser, name)
   {
   }
@@ -52,7 +52,7 @@ struct MockApplicationSession : public mf::Session
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::ApplicationSurfaceOrganiser> organiser(new mf::MockApplicationSurfaceOrganiser);
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser);
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");

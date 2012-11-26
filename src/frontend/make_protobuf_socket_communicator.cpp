@@ -25,7 +25,7 @@ namespace mg = mir::graphics;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(

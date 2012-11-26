@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
-#define MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
+#ifndef MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_
+#define MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_
 
 #include <memory>
 
@@ -32,10 +32,10 @@ class SurfaceCreationParameters;
 
 namespace frontend
 {
-class ApplicationSurfaceOrganiser
+class SurfaceOrganiser
 {
  public:
-    virtual ~ApplicationSurfaceOrganiser() {}
+    virtual ~SurfaceOrganiser() {}
 
     virtual std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params) = 0;
 
@@ -45,11 +45,11 @@ class ApplicationSurfaceOrganiser
     virtual void show_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
 
  protected:
-    ApplicationSurfaceOrganiser() = default;
-    ApplicationSurfaceOrganiser(const ApplicationSurfaceOrganiser&) = delete;
-    ApplicationSurfaceOrganiser& operator=(const ApplicationSurfaceOrganiser&) = delete;
+    SurfaceOrganiser() = default;
+    SurfaceOrganiser(const SurfaceOrganiser&) = delete;
+    SurfaceOrganiser& operator=(const SurfaceOrganiser&) = delete;
 };
 }
 }
 
-#endif // MIR_SURFACES_APPLICATION_SURFACE_ORGANISER_H_
+#endif // MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_

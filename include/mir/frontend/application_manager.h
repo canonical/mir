@@ -27,7 +27,7 @@ namespace mir
 
 namespace frontend
 {
-class ApplicationSurfaceOrganiser;
+class SurfaceOrganiser;
 class Session;
 class SessionContainer;
 class FocusSequence;
@@ -36,7 +36,7 @@ class Focus;
 class SessionManager : public SessionStore
 {
  public:
-    explicit SessionManager(std::shared_ptr<ApplicationSurfaceOrganiser> const& surface_organiser,
+    explicit SessionManager(std::shared_ptr<SurfaceOrganiser> const& surface_organiser,
                                 std::shared_ptr<SessionContainer> const& session_container,
                                 std::shared_ptr<FocusSequence> const& focus_selection_strategy,
                                 std::shared_ptr<Focus> const& focus_mechanism);
@@ -52,7 +52,7 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<frontend::ApplicationSurfaceOrganiser> surface_organiser;
+    std::shared_ptr<frontend::SurfaceOrganiser> surface_organiser;
     std::shared_ptr<SessionContainer> app_container;
     std::shared_ptr<FocusSequence> focus_selection_strategy;
     std::shared_ptr<Focus> focus_mechanism;

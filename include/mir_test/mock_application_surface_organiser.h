@@ -29,7 +29,7 @@ namespace mir
 namespace frontend
 {
 
-struct MockApplicationSurfaceOrganiser : public ApplicationSurfaceOrganiser
+struct MockSurfaceOrganiser : public SurfaceOrganiser
 {
     MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
