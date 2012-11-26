@@ -27,20 +27,20 @@ namespace mir
 namespace frontend
 {
 
-class ApplicationSession;
+class Session;
 
-class ApplicationSessionFactory
+class SessionStore
 {
  public:
-    virtual ~ApplicationSessionFactory() {}
+    virtual ~SessionStore() {}
 
-    virtual std::shared_ptr<ApplicationSession> open_session(std::string const& name) = 0;
-    virtual void close_session(std::shared_ptr<ApplicationSession> const& session)  = 0;
-    
+    virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
+    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
+
 protected:
-    ApplicationSessionFactory() = default;
-    ApplicationSessionFactory(const ApplicationSessionFactory&) = delete;
-    ApplicationSessionFactory& operator=(const ApplicationSessionFactory&) = delete;
+    SessionStore() = default;
+    SessionStore(const SessionStore&) = delete;
+    SessionStore& operator=(const SessionStore&) = delete;
 };
 
 }

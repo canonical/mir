@@ -25,15 +25,15 @@ namespace mir
 {
 namespace frontend
 {
-class ApplicationSession;
+class Session;
 
-class ApplicationSessionContainer
+class SessionContainer
 {
 public:
-    virtual ~ApplicationSessionContainer() {}
+    virtual ~SessionContainer() {}
 
-    virtual void insert_session(std::shared_ptr<ApplicationSession> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<ApplicationSession> const& session) = 0;
+    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
 
     virtual void lock() = 0;
     virtual void unlock() = 0;
@@ -44,20 +44,20 @@ public:
         virtual void advance() = 0;
         virtual bool is_valid() const = 0;
         virtual void reset() = 0;
-        virtual const std::shared_ptr<ApplicationSession> operator*() = 0;
+        virtual const std::shared_ptr<Session> operator*() = 0;
         virtual ~LockingIterator() {};
     protected:
-        friend class ApplicationSessionContainer;
+        friend class SessionContainer;
         LockingIterator() = default;
     };
 
-    virtual std::shared_ptr<ApplicationSessionContainer::LockingIterator> iterator() = 0;
+    virtual std::shared_ptr<SessionContainer::LockingIterator> iterator() = 0;
 
 
 protected:
-    ApplicationSessionContainer() = default;
-    ApplicationSessionContainer(const ApplicationSessionContainer&) = delete;
-    ApplicationSessionContainer& operator=(const ApplicationSessionContainer&) = delete;
+    SessionContainer() = default;
+    SessionContainer(const SessionContainer&) = delete;
+    SessionContainer& operator=(const SessionContainer&) = delete;
 };
 
 }

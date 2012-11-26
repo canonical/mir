@@ -33,50 +33,50 @@ namespace mir
 namespace frontend
 {
 
-class ApplicationSession;
+class Session;
 
-class ApplicationSessionModel : public ApplicationSessionContainer
+class TheSessionContainerImplementation : public SessionContainer
 {
 public:
-    explicit ApplicationSessionModel();
-    virtual ~ApplicationSessionModel() {}
+    explicit TheSessionContainerImplementation();
+    virtual ~TheSessionContainerImplementation() {}
     
-    void insert_session(std::shared_ptr<ApplicationSession> const& session);
-    void remove_session(std::shared_ptr<ApplicationSession> const& session);
+    void insert_session(std::shared_ptr<Session> const& session);
+    void remove_session(std::shared_ptr<Session> const& session);
     
     void lock();
     void unlock();
 
-    class LockingIterator : public ApplicationSessionContainer::LockingIterator
+    class LockingIterator : public SessionContainer::LockingIterator
     {
     public:
         void advance();
         bool is_valid() const;
         void reset();
-        const std::shared_ptr<ApplicationSession> operator*();
+        const std::shared_ptr<Session> operator*();
         virtual ~LockingIterator();
     protected:
-        friend class ApplicationSessionModel;
+        friend class TheSessionContainerImplementation;
       
-        LockingIterator(ApplicationSessionModel *model,
+        LockingIterator(TheSessionContainerImplementation *model,
                         size_t index);
 
       
     private:
-      ApplicationSessionModel *model;
+      TheSessionContainerImplementation *model;
       size_t it;
 	
     };
 
-    std::shared_ptr<ApplicationSessionContainer::LockingIterator> iterator();
+    std::shared_ptr<SessionContainer::LockingIterator> iterator();
     
 
 protected:
-    ApplicationSessionModel(const ApplicationSessionModel&) = delete;
-    ApplicationSessionModel& operator=(const ApplicationSessionModel&) = delete;
+    TheSessionContainerImplementation(const TheSessionContainerImplementation&) = delete;
+    TheSessionContainerImplementation& operator=(const TheSessionContainerImplementation&) = delete;
 
 private:
-    std::vector<std::shared_ptr<ApplicationSession>> apps;
+    std::vector<std::shared_ptr<Session>> apps;
     std::mutex guard;
 };
 

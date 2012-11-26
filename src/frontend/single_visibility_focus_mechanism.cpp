@@ -31,12 +31,12 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::ApplicationSessionContainer> const& app_container) :
+mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 }
 
-void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::ApplicationSession> const& focus_session)
+void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
 {
     auto it = app_container->iterator();
     while (it->is_valid())

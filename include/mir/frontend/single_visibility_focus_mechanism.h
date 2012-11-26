@@ -32,22 +32,22 @@ class ApplicationSurfaceOrganiser;
 
 namespace frontend
 {
-class ApplicationSession;
-class ApplicationSessionContainer;
+class Session;
+class SessionContainer;
 
-class SingleVisibilityFocusMechanism : public ApplicationFocusMechanism
+class SingleVisibilityFocusMechanism : public Focus
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<ApplicationSessionContainer> const& app_container);
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
     virtual ~SingleVisibilityFocusMechanism() {}
 
-    void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus);
+    void set_focus_to(std::shared_ptr<Session> const& new_focus);
 
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
-    std::shared_ptr<ApplicationSessionContainer> app_container;
+    std::shared_ptr<SessionContainer> app_container;
 };
 
 }

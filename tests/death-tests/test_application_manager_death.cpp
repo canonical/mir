@@ -28,10 +28,10 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                mir::frontend::ApplicationManager app(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(),
-                                                      std::shared_ptr<mf::ApplicationSessionContainer>(),
+                mir::frontend::SessionManager app(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(),
+                                                      std::shared_ptr<mf::SessionContainer>(),
                                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(),
-                                                      std::shared_ptr<mf::ApplicationFocusMechanism>()),
+                                                      std::shared_ptr<mf::Focus>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }

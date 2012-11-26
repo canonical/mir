@@ -26,12 +26,12 @@
 
 namespace mf = mir::frontend;
 
-mf::ApplicationSessionModel::ApplicationSessionModel()
+mf::TheSessionContainerImplementation::TheSessionContainerImplementation()
 {
 
 }
 
-void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::ApplicationSession> const& session)
+void mf::TheSessionContainerImplementation::insert_session(std::shared_ptr<mf::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
     auto name = session->get_name();
@@ -39,7 +39,7 @@ void mf::ApplicationSessionModel::insert_session(std::shared_ptr<mf::Application
     apps.push_back(session);
 }
 
-void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::ApplicationSession> const& session)
+void mf::TheSessionContainerImplementation::remove_session(std::shared_ptr<mf::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -47,54 +47,54 @@ void mf::ApplicationSessionModel::remove_session(std::shared_ptr<mf::Application
     apps.erase(it);
 }
 
-void mf::ApplicationSessionModel::lock()
+void mf::TheSessionContainerImplementation::lock()
 {
     guard.lock();
 }
 
-void mf::ApplicationSessionModel::unlock()
+void mf::TheSessionContainerImplementation::unlock()
 {
     guard.unlock();
 }
 
-mf::ApplicationSessionModel::LockingIterator::LockingIterator(ApplicationSessionModel *model, size_t index) : model(model),
+mf::TheSessionContainerImplementation::LockingIterator::LockingIterator(TheSessionContainerImplementation *model, size_t index) : model(model),
                                                                                                               it(index)
 {
   
 }
 
-void mf::ApplicationSessionModel::LockingIterator::advance()
+void mf::TheSessionContainerImplementation::LockingIterator::advance()
 {
     it += 1;
 }
 
-void mf::ApplicationSessionModel::LockingIterator::reset()
+void mf::TheSessionContainerImplementation::LockingIterator::reset()
 {
     it = 0;
 }
 
-bool mf::ApplicationSessionModel::LockingIterator::is_valid() const
+bool mf::TheSessionContainerImplementation::LockingIterator::is_valid() const
 {
     return it < model->apps.size();
 }
 
-const std::shared_ptr<mf::ApplicationSession> mf::ApplicationSessionModel::LockingIterator::operator*()
+const std::shared_ptr<mf::Session> mf::TheSessionContainerImplementation::LockingIterator::operator*()
 {
     auto app = model->apps[it];
     return app;
 }
 
-mf::ApplicationSessionModel::LockingIterator::~LockingIterator()
+mf::TheSessionContainerImplementation::LockingIterator::~LockingIterator()
 {
     model->unlock();
 }
 
-std::shared_ptr<mf::ApplicationSessionContainer::LockingIterator> mf::ApplicationSessionModel::iterator()
+std::shared_ptr<mf::SessionContainer::LockingIterator> mf::TheSessionContainerImplementation::iterator()
 {
     lock();
   
-    std::shared_ptr<mf::ApplicationSessionModel::LockingIterator> it(
-        new mf::ApplicationSessionModel::LockingIterator(this, 0));
+    std::shared_ptr<mf::TheSessionContainerImplementation::LockingIterator> it(
+        new mf::TheSessionContainerImplementation::LockingIterator(this, 0));
   
     return it;
 }

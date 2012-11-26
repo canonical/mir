@@ -29,7 +29,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationSession::ApplicationSession(
+mf::Session::Session(
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser,
     std::string const& application_name) :
     surface_organiser(organiser),
@@ -39,7 +39,7 @@ mf::ApplicationSession::ApplicationSession(
     assert(surface_organiser);
 }
 
-mf::ApplicationSession::~ApplicationSession()
+mf::Session::~Session()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
@@ -48,14 +48,14 @@ mf::ApplicationSession::~ApplicationSession()
     }
 }
 
-mf::SurfaceId mf::ApplicationSession::next_id()
+mf::SurfaceId mf::Session::next_id()
 {
     int id = next_surface_id.load();
     while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return SurfaceId(id);
 }
 
-mf::SurfaceId mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
+mf::SurfaceId mf::Session::create_surface(const ms::SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
     auto const id = next_id();
@@ -64,12 +64,12 @@ mf::SurfaceId mf::ApplicationSession::create_surface(const ms::SurfaceCreationPa
     return id;
 }
 
-std::shared_ptr<ms::Surface> mf::ApplicationSession::get_surface(mf::SurfaceId id) const
+std::shared_ptr<ms::Surface> mf::Session::get_surface(mf::SurfaceId id) const
 {
     return surfaces.find(id)->second.lock();
 }
 
-void mf::ApplicationSession::destroy_surface(mf::SurfaceId id)
+void mf::Session::destroy_surface(mf::SurfaceId id)
 {
     auto p = surfaces.find(id);
 
@@ -80,12 +80,12 @@ void mf::ApplicationSession::destroy_surface(mf::SurfaceId id)
     }
 }
 
-std::string mf::ApplicationSession::get_name()
+std::string mf::Session::get_name()
 {
     return name;
 }
 
-void mf::ApplicationSession::hide()
+void mf::Session::hide()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
@@ -94,7 +94,7 @@ void mf::ApplicationSession::hide()
     }
 }
 
-void mf::ApplicationSession::show()
+void mf::Session::show()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {

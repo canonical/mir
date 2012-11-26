@@ -30,7 +30,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(ApplicationSession, create_and_destroy_surface)
+TEST(Session, create_and_destroy_surface)
 {
     using namespace ::testing;
 
@@ -42,7 +42,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
             buffer_bundle));
 
     ms::MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::Session app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
@@ -54,7 +54,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
 }
 
 
-TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
+TEST(Session, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
@@ -66,7 +66,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
             buffer_bundle));
 
     ms::MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::Session app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));

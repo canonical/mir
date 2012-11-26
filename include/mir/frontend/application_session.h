@@ -42,11 +42,11 @@ namespace frontend
 {
 typedef detail::IntWrapper<> SurfaceId;
 
-class ApplicationSession 
+class Session 
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
-    virtual ~ApplicationSession();
+    explicit Session(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
+    virtual ~Session();
 
     SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
     void destroy_surface(SurfaceId surface);
@@ -57,8 +57,8 @@ public:
     virtual void hide();
     virtual void show();
 protected:
-    ApplicationSession(const ApplicationSession&) = delete;
-    ApplicationSession& operator=(const ApplicationSession&) = delete;
+    Session(const Session&) = delete;
+    Session& operator=(const Session&) = delete;
 
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const surface_organiser;

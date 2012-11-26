@@ -30,15 +30,14 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, 
-                                           std::shared_ptr<mf::ApplicationSessionContainer> const& container,
+mf::SessionManager::SessionManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, 
+                                           std::shared_ptr<mf::SessionContainer> const& container,
                                            std::shared_ptr<mf::ApplicationFocusSelectionStrategy> const& strategy,
-                                           std::shared_ptr<mf::ApplicationFocusMechanism> const& mechanism) : 
+                                           std::shared_ptr<mf::Focus> const& mechanism) : 
   surface_organiser(organiser),
   app_container(container),
   focus_selection_strategy(strategy),
   focus_mechanism(mechanism)
-															     
 {
     assert(surface_organiser);
     assert(strategy);
@@ -46,9 +45,9 @@ mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfac
     assert(mechanism);
 }
 
-std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string const& name)
+std::shared_ptr<mf::Session> mf::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<mf::ApplicationSession>(surface_organiser, name);
+    auto new_session = std::make_shared<mf::Session>(surface_organiser, name);
   
     app_container->insert_session(new_session);
     focus_application = new_session;
@@ -57,7 +56,7 @@ std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std
     return new_session;
 }
 
-void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSession> const& session)
+void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
     if (session == focus_application.lock())
     {
@@ -67,7 +66,7 @@ void mf::ApplicationManager::close_session(std::shared_ptr<mf::ApplicationSessio
     app_container->remove_session(session);
 }
 
-void mf::ApplicationManager::focus_next()
+void mf::SessionManager::focus_next()
 {
     auto focused = focus_application.lock();
     if (focused == NULL)

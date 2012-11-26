@@ -36,12 +36,12 @@ TEST(RegistrationOrderFocusSelectionStrategy, focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
-    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
+    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(organiser, std::string("Visual Studio 9")));
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::Session> app3(new mf::Session(organiser, std::string("Visual Studio 9")));
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -56,12 +56,12 @@ TEST(RegistrationOrderFocusSelectionStrategy, reverse_focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
-    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
+    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<mf::ApplicationSession> app3(new mf::ApplicationSession(organiser, std::string("Visual Studio 9")));
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::Session> app3(new mf::Session(organiser, std::string("Visual Studio 9")));
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -76,12 +76,12 @@ TEST(RegistrationOrderFocusSelectionStrategy, no_focus)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
-    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
+    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSelectionStrategy focus_selection_strategy(model);
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
 
     model->insert_session(app1);
 
-    EXPECT_EQ(focus_selection_strategy.next_focus_app(std::shared_ptr<mf::ApplicationSession>()).lock()->get_name(), app1->get_name());
+    EXPECT_EQ(focus_selection_strategy.next_focus_app(std::shared_ptr<mf::Session>()).lock()->get_name(), app1->get_name());
 }

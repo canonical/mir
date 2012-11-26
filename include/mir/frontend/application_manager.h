@@ -33,36 +33,36 @@ class ApplicationSurfaceOrganiser;
 namespace frontend
 {
 
-class ApplicationSession;
-class ApplicationSessionContainer;
+class Session;
+class SessionContainer;
 class ApplicationFocusSelectionStrategy;
-class ApplicationFocusMechanism;
+class Focus;
 
-class ApplicationManager : public ApplicationSessionFactory
+class SessionManager : public SessionStore
 {
  public:
-    explicit ApplicationManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
-                                std::shared_ptr<ApplicationSessionContainer> const& session_container,
+    explicit SessionManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+                                std::shared_ptr<SessionContainer> const& session_container,
                                 std::shared_ptr<ApplicationFocusSelectionStrategy> const& focus_selection_strategy,
-                                std::shared_ptr<ApplicationFocusMechanism> const& focus_mechanism);
-    virtual ~ApplicationManager() {}
+                                std::shared_ptr<Focus> const& focus_mechanism);
+    virtual ~SessionManager() {}
 
-    virtual std::shared_ptr<ApplicationSession> open_session(std::string const& name);
-    virtual void close_session(std::shared_ptr<ApplicationSession> const& session);
-    
+    virtual std::shared_ptr<Session> open_session(std::string const& name);
+    virtual void close_session(std::shared_ptr<Session> const& session);
+
     void focus_next();
 
 protected:
-    ApplicationManager(const ApplicationManager&) = delete;
-    ApplicationManager& operator=(const ApplicationManager&) = delete;
+    SessionManager(const SessionManager&) = delete;
+    SessionManager& operator=(const SessionManager&) = delete;
 
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
-    std::shared_ptr<ApplicationSessionContainer> app_container;
+    std::shared_ptr<SessionContainer> app_container;
     std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy;
-    std::shared_ptr<ApplicationFocusMechanism> focus_mechanism;
+    std::shared_ptr<Focus> focus_mechanism;
 
-    std::weak_ptr<ApplicationSession> focus_application;
+    std::weak_ptr<Session> focus_application;
 };
 
 }

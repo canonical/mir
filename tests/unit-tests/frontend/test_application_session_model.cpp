@@ -32,14 +32,14 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(ApplicationSessionModel, iterate_registration_order)
+TEST(TheSessionContainerImplementation, iterate_registration_order)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
-    mf::ApplicationSessionModel model;
+    mf::TheSessionContainerImplementation model;
     
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
 
     model.insert_session(app1);
     model.insert_session(app2);

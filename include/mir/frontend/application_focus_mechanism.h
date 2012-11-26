@@ -31,19 +31,19 @@ class ApplicationSurfaceOrganiser;
 
 namespace frontend
 {
-class ApplicationSession;
+class Session;
 
-class ApplicationFocusMechanism
+class Focus
 {
 public:
-    virtual ~ApplicationFocusMechanism() {}
+    virtual ~Focus() {}
 
-    virtual void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus) = 0;
+    virtual void set_focus_to(std::shared_ptr<Session> const& new_focus) = 0;
 
 protected:
-    ApplicationFocusMechanism() = default;
-    ApplicationFocusMechanism(const ApplicationFocusMechanism&) = delete;
-    ApplicationFocusMechanism& operator=(const ApplicationFocusMechanism&) = delete;
+    Focus() = default;
+    Focus(const Focus&) = delete;
+    Focus& operator=(const Focus&) = delete;
 };
 
 }

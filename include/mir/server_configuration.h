@@ -36,7 +36,7 @@ namespace frontend
 class Communicator;
 class ProtobufIpcFactory;
 class ApplicationListener;
-class ApplicationManager;
+class SessionManager;
 }
 namespace graphics
 {
@@ -68,7 +68,7 @@ public:
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
-    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(
+    virtual std::shared_ptr<frontend::SessionManager> make_application_manager(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
@@ -97,7 +97,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, 
         std::shared_ptr<graphics::Display> const& display);
-    virtual std::shared_ptr<frontend::ApplicationManager> make_application_manager(
+    virtual std::shared_ptr<frontend::SessionManager> make_application_manager(
         std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 

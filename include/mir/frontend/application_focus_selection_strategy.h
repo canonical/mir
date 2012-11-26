@@ -25,15 +25,15 @@ namespace mir
 {
 namespace frontend
 {
-class ApplicationSession;
+class Session;
 
 class ApplicationFocusSelectionStrategy
 {
 public:
     virtual ~ApplicationFocusSelectionStrategy() {}
 
-    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) = 0;
-    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app) = 0;
+    virtual std::weak_ptr<Session> next_focus_app(std::shared_ptr<Session> const& focused_app) = 0;
+    virtual std::weak_ptr<Session> previous_focus_app(std::shared_ptr<Session> const& focused_app) = 0;
 
 protected:
     ApplicationFocusSelectionStrategy() = default;

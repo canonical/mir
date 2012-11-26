@@ -25,22 +25,22 @@ namespace mir
 {
 namespace frontend
 {
-class ApplicationSessionContainer;
+class SessionContainer;
 
 class RegistrationOrderFocusSelectionStrategy : public ApplicationFocusSelectionStrategy
 {
 public:
-    explicit RegistrationOrderFocusSelectionStrategy(std::shared_ptr<ApplicationSessionContainer> const& app_container);
+    explicit RegistrationOrderFocusSelectionStrategy(std::shared_ptr<SessionContainer> const& app_container);
     virtual ~RegistrationOrderFocusSelectionStrategy() {}
 
-    virtual std::weak_ptr<ApplicationSession> next_focus_app(std::shared_ptr<ApplicationSession> const& focused_app);
-    virtual std::weak_ptr<ApplicationSession> previous_focus_app(std::shared_ptr<ApplicationSession> const& focused_app);
+    virtual std::weak_ptr<Session> next_focus_app(std::shared_ptr<Session> const& focused_app);
+    virtual std::weak_ptr<Session> previous_focus_app(std::shared_ptr<Session> const& focused_app);
 
 protected:
     RegistrationOrderFocusSelectionStrategy(const RegistrationOrderFocusSelectionStrategy&) = delete;
     RegistrationOrderFocusSelectionStrategy& operator=(const RegistrationOrderFocusSelectionStrategy&) = delete;
 private:
-    std::shared_ptr<ApplicationSessionContainer> app_container;
+    std::shared_ptr<SessionContainer> app_container;
 };
 
 }

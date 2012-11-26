@@ -37,10 +37,10 @@ namespace ms = mir::surfaces;
 namespace
 {
 
-struct MockApplicationSession : public mf::ApplicationSession
+struct MockApplicationSession : public mf::Session
 {
   MockApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser,
-                         std::string name) : ApplicationSession(organiser, name)
+                         std::string name) : Session(organiser, name)
   {
   }
   MOCK_METHOD0(hide,void());
@@ -53,15 +53,15 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
     std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser);
-    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
+    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");
     MockApplicationSession m2(organiser, "Visual Studio 8");
     MockApplicationSession m3(organiser, "Visual Studio 9");
     
-    std::shared_ptr<mf::ApplicationSession> app1(&m1, mir::EmptyDeleter());
-    std::shared_ptr<mf::ApplicationSession> app2(&m2, mir::EmptyDeleter());
-    std::shared_ptr<mf::ApplicationSession> app3(&m3, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app1(&m1, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app2(&m2, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app3(&m3, mir::EmptyDeleter());
 
     mf::SingleVisibilityFocusMechanism focus_mechanism(model);
     

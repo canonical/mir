@@ -27,13 +27,13 @@
 
 namespace mf = mir::frontend;
 
-mf::RegistrationOrderFocusSelectionStrategy::RegistrationOrderFocusSelectionStrategy(std::shared_ptr<mf::ApplicationSessionContainer> const& app_container) :
+mf::RegistrationOrderFocusSelectionStrategy::RegistrationOrderFocusSelectionStrategy(std::shared_ptr<mf::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 
 }
 
-std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrategy::next_focus_app(std::shared_ptr<mf::ApplicationSession> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::next_focus_app(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
 
@@ -64,7 +64,7 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrateg
     return **it;
 }
 
-std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrategy::previous_focus_app(std::shared_ptr<mf::ApplicationSession> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::previous_focus_app(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
     
@@ -73,7 +73,7 @@ std::weak_ptr<mf::ApplicationSession> mf::RegistrationOrderFocusSelectionStrateg
         return **it;
     }
     
-    std::weak_ptr<mf::ApplicationSession> last_app = **it;
+    std::weak_ptr<mf::Session> last_app = **it;
 
     it->advance();
     while (it->is_valid())

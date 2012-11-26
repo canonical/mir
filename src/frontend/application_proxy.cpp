@@ -32,7 +32,7 @@
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
+    std::shared_ptr<frontend::SessionStore> const& session_factory,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,

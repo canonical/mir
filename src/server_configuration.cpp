@@ -56,7 +56,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mf::ApplicationManager> const& application_manager,
+        std::shared_ptr<mf::SessionManager> const& application_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display) :
@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::ApplicationManager> application_manager;
+    std::shared_ptr<mf::SessionManager> application_manager;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -153,13 +153,13 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<mf::ApplicationManager>
+std::shared_ptr<mf::SessionManager>
 mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
-    auto session_model = std::make_shared<mf::ApplicationSessionModel>();
+    auto session_model = std::make_shared<mf::TheSessionContainerImplementation>();
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
     auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSelectionStrategy>(session_model);
-    return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
+    return std::make_shared<mf::SessionManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>
