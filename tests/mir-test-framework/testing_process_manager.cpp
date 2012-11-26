@@ -19,6 +19,7 @@
 #include "mir_test_framework/testing_process_manager.h"
 
 #include "mir/display_server.h"
+#include "mir/process/signal_dispatcher.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
@@ -72,21 +73,6 @@ namespace
 mir::DisplayServer* volatile signal_display_server;
 }
 
-namespace mir
-{
-extern "C"
-{
-void (*signal_prev_fn)(int);
-void signal_terminate (int )
-{
-    while (!signal_display_server)
-        std::this_thread::yield();
- 
-    signal_display_server->stop();
-}
-}
-}
-
 void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
@@ -104,7 +90,9 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        signal_prev_fn = signal(SIGTERM, signal_terminate);
+        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
+        mp::SignalDispatcher::instance()->signal_channel().connect(
+                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
         mir::DisplayServer server(config);
 
@@ -255,6 +243,21 @@ void mtf::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
+}
+
+void mtf::TestingProcessManager::os_signal_handler(int signal)
+{
+    switch(signal)
+    {
+    case SIGTERM:
+        while (!signal_display_server)
+            std::this_thread::yield();
+
+        signal_display_server->stop();
+        break;
+    default:
+        break;
+    }
 }
 
 bool mtf::detect_server(
