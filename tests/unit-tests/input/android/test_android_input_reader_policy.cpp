@@ -69,8 +69,8 @@ TEST_F(AndroidInputReaderPolicySetup, configuration_has_display_info_filled_from
         testing_display_id, testing_display_is_external, &configured_width, &configured_height,
         &configured_orientation);
     
-    EXPECT_TRUE(configuration_has_display_info);
+    ASSERT_TRUE(configuration_has_display_info);
 
-    EXPECT_EQ(default_view_area.size.width.as_float(),  configured_width);
-    EXPECT_EQ(default_view_area.size.height.as_float(), configured_height);
+    EXPECT_EQ(default_view_area.size.width.as_int32_t(),  configured_width);
+    EXPECT_EQ(default_view_area.size.height.as_int32_t(), configured_height);
 }
