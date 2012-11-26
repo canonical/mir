@@ -22,11 +22,10 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::ApplicationSurfaceOrganiser> const& surface_organiser,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(

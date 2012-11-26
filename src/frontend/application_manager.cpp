@@ -19,7 +19,7 @@
 #include "mir/frontend/application_manager.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_session_container.h"
-#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/application_surface_organiser.h"
 #include "mir/frontend/application_focus_selection_strategy.h"
 #include "mir/frontend/application_focus_mechanism.h"
 
@@ -30,7 +30,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::SessionManager::SessionManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, 
+mf::SessionManager::SessionManager(std::shared_ptr<mf::ApplicationSurfaceOrganiser> const& organiser, 
                                            std::shared_ptr<mf::SessionContainer> const& container,
                                            std::shared_ptr<mf::FocusSequence> const& strategy,
                                            std::shared_ptr<mf::Focus> const& mechanism) : 

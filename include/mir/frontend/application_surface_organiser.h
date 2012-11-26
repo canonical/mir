@@ -28,25 +28,27 @@ namespace surfaces
 
 class Surface;
 class SurfaceCreationParameters;
+}
 
+namespace frontend
+{
 class ApplicationSurfaceOrganiser
 {
  public:
     virtual ~ApplicationSurfaceOrganiser() {}
 
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    virtual std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params) = 0;
 
-    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
     
-    virtual void hide_surface(std::weak_ptr<Surface> const& surface) = 0;
-    virtual void show_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void hide_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+    virtual void show_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
 
  protected:
     ApplicationSurfaceOrganiser() = default;
     ApplicationSurfaceOrganiser(const ApplicationSurfaceOrganiser&) = delete;
     ApplicationSurfaceOrganiser& operator=(const ApplicationSurfaceOrganiser&) = delete;
 };
-
 }
 }
 

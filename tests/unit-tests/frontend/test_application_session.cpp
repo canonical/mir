@@ -41,8 +41,8 @@ TEST(Session, create_and_destroy_surface)
             ms::a_surface().name,
             buffer_bundle));
 
-    ms::MockApplicationSurfaceOrganiser organiser;
-    mf::Session app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::MockApplicationSurfaceOrganiser organiser;
+    mf::Session app_session(std::shared_ptr<mf::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
@@ -65,8 +65,8 @@ TEST(Session, session_visbility_propagates_to_surfaces)
             ms::a_surface().name,
             buffer_bundle));
 
-    ms::MockApplicationSurfaceOrganiser organiser;
-    mf::Session app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::MockApplicationSurfaceOrganiser organiser;
+    mf::Session app_session(std::shared_ptr<mf::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));

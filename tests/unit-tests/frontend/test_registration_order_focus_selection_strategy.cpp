@@ -35,7 +35,7 @@ namespace ms = mir::surfaces;
 TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
+    std::shared_ptr<mf::ApplicationSurfaceOrganiser> organiser(new mf::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     
@@ -55,7 +55,7 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
+    std::shared_ptr<mf::ApplicationSurfaceOrganiser> organiser(new mf::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     
@@ -75,7 +75,7 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
+    std::shared_ptr<mf::ApplicationSurfaceOrganiser> organiser(new mf::MockApplicationSurfaceOrganiser());
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
     mf::RegistrationOrderFocusSequence focus_selection_strategy(model);
     

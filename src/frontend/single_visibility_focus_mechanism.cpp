@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_session.h"
-#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/application_surface_organiser.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 
 #include <memory>

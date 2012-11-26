@@ -32,7 +32,6 @@ namespace mir
 namespace surfaces
 {
 
-class ApplicationSurfaceOrganiser;
 class SurfaceCreationParameters;
 class Surface;
 
@@ -40,12 +39,13 @@ class Surface;
 
 namespace frontend
 {
+class ApplicationSurfaceOrganiser;
 typedef detail::IntWrapper<> SurfaceId;
 
 class Session 
 {
 public:
-    explicit Session(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
+    explicit Session(std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser, std::string const& application_name);
     virtual ~Session();
 
     SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
@@ -61,7 +61,7 @@ protected:
     Session& operator=(const Session&) = delete;
 
 private:
-    std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const surface_organiser;
+    std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const surface_organiser;
     std::string const name;
 
     SurfaceId next_id();

@@ -20,6 +20,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_session_factory.h"
 #include "mir/frontend/application_session.h"
+#include "mir/frontend/application_surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -28,7 +29,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(

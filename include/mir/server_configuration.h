@@ -37,6 +37,7 @@ class Communicator;
 class ProtobufIpcFactory;
 class ApplicationListener;
 class SessionManager;
+class ApplicationSurfaceOrganiser;
 }
 namespace graphics
 {
@@ -45,10 +46,6 @@ class Platform;
 class Display;
 class ViewableArea;
 class BufferInitializer;
-}
-namespace surfaces
-{
-class ApplicationSurfaceOrganiser;
 }
 namespace input
 {
@@ -67,9 +64,9 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
+        std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser, std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::SessionManager> make_application_manager(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
+        std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser) = 0;
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
@@ -95,10 +92,10 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser, 
+        std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser, 
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::SessionManager> make_application_manager(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser);
+        std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser);
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
@@ -111,7 +108,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
+        std::shared_ptr<frontend::ApplicationSurfaceOrganiser> const& surface_organiser,
         std::shared_ptr<graphics::Display> const& display);
 
     virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
