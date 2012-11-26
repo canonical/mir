@@ -190,8 +190,11 @@ std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& resu
     out << "process::Result(";
     print_reason(out, result.reason);
     out << ", ";
-    print_signal(out, result.signal);
-    out << ", ";
+    if (result.signalled())
+    {
+        print_signal(out, result.signal);
+        out << ", ";
+    }
     print_exit_code(out, result.exit_code) << ')';
     return out;
 }
