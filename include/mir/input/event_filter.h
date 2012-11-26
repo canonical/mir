@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_EVENT_FILTER_H_
 #define MIR_INPUT_EVENT_FILTER_H_
 
+#include "mir/input/event.h"
+
 #include <memory>
 
 namespace android
@@ -38,7 +40,7 @@ class EventFilter
 public:
     virtual ~EventFilter() {}
 
-    virtual bool handles(const droidinput::InputEvent *event) = 0;
+    virtual bool handles(const MirEvent &event) = 0;
 
 protected:
     EventFilter() = default;

@@ -26,10 +26,10 @@
 
 namespace mir
 {
-namespace client
+namespace test 
 {
 
-struct MockClientContext : public ClientContext
+struct MockClientContext : public client::ClientContext
 {
     MockClientContext()
         : connection{reinterpret_cast<MirConnection*>(0xabcdef)}

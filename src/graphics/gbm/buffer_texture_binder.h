@@ -13,25 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "event_filter_chain.h"
+#ifndef MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
+#define MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
 
-namespace mi = mir::input;
-
-mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
-    filters(values.begin(), values.end())
+namespace mir
 {
+namespace graphics
+{
+namespace gbm
+{
+
+class BufferTextureBinder
+{
+public:
+    virtual ~BufferTextureBinder() {}
+
+    virtual void bind_to_texture() = 0;
+
+protected:
+    BufferTextureBinder() = default;
+    BufferTextureBinder(BufferTextureBinder const&) = delete;
+    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+};
+
+}
+}
 }
 
-bool mi::EventFilterChain::handles(const MirEvent &event)
-{
-    for (auto it = filters.begin(); it != filters.end(); it++)
-    {
-        auto filter = *it;
-        if (filter->handles(event)) return true;
-    }
-    return false;
-}
- 
+#endif /* MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_ */

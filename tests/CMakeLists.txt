@@ -14,6 +14,18 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
+if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_GRAPHICS})
+  message(STATUS "Tests are NOT run with real graphics support.")
+else()
+  message(STATUS "Tests are run with real graphics.")
+endif()
+
+if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_INPUT})
+  message(STATUS "Tests are NOT run with real input.")
+else()
+  message(STATUS "Tests are run with real input.")
+endif()
+
 option(
   MIR_ENABLE_DEATH_TESTS
   "Option to control whether to run death tests"
@@ -31,5 +43,7 @@ add_subdirectory(mir-test-framework/)
 add_subdirectory(mir-test-doubles/)
 
 if(MIR_ENABLE_DEATH_TESTS)
-    add_subdirectory(death-tests/)
+  add_subdirectory(death-tests/)
+else()
+  message(STATUS "Death tests are disabled and are not run.")
 endif(MIR_ENABLE_DEATH_TESTS)

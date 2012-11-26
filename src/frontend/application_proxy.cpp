@@ -41,7 +41,6 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     listener(listener),
-    next_surface_id(0),
     resource_cache(resource_cache)
 {
 }
@@ -52,10 +51,9 @@ void mir::frontend::ApplicationProxy::connect(
                      ::mir::protobuf::Connection* response,
                      ::google::protobuf::Closure* done)
 {
-    app_name = request->application_name();
-    listener->application_connect_called(app_name);
-    
-    application_session = session_factory->open_session(app_name);
+    listener->application_connect_called(request->application_name());
+
+    application_session = session_factory->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -81,19 +79,18 @@ void mir::frontend::ApplicationProxy::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    listener->application_create_surface_called(app_name);
+    listener->application_create_surface_called(application_session->get_name());
 
-    auto handle = application_session->create_surface(
+    auto const id = application_session->create_surface(
         surfaces::SurfaceCreationParameters()
         .of_name(request->surface_name())
-        .of_size(request->width(), request->height())            
+        .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
         );
 
-    auto const id = next_id();
     {
-        auto surface = handle.lock();
-        response->mutable_id()->set_value(id);
+        auto surface = application_session->get_surface(id);
+        response->mutable_id()->set_value(id.as_value());
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
@@ -117,8 +114,6 @@ void mir::frontend::ApplicationProxy::create_surface(
         resource_cache->save_resource(response, ipc_package);
     }
 
-    surfaces[id] = handle;
-
     done->Run();
 }
 
@@ -128,9 +123,9 @@ void mir::frontend::ApplicationProxy::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    listener->application_next_buffer_called(app_name);
+    listener->application_next_buffer_called(application_session->get_name());
 
-    auto surface = surfaces[request->value()].lock();
+    auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
     auto const& id = surface->get_buffer_id();
@@ -150,37 +145,17 @@ void mir::frontend::ApplicationProxy::next_buffer(
 }
 
 
-int mir::frontend::ApplicationProxy::next_id()
-{
-    int id = next_surface_id.load();
-    while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
-}
-
 void mir::frontend::ApplicationProxy::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    listener->application_release_surface_called(app_name);
+    listener->application_release_surface_called(application_session->get_name());
 
-    auto const id = request->value();
+    auto const id = SurfaceId(request->value());
 
-    auto p = surfaces.find(id);
-
-    if (p != surfaces.end())
-    {
-        application_session->destroy_surface((p->second).lock());
-        surfaces.erase(p);
-    }
-    else
-    {
-        listener->application_error(
-            app_name,
-            __FUNCTION__,
-            "trying to destroy unknown surface");
-    }
+    application_session->destroy_surface(id);
 
     done->Run();
 }
@@ -191,7 +166,7 @@ void mir::frontend::ApplicationProxy::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    listener->application_disconnect_called(app_name);
+    listener->application_disconnect_called(application_session->get_name());
 
     session_factory->close_session(application_session);
 

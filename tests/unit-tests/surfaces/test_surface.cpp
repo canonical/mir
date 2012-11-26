@@ -272,7 +272,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     auto buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pf);
 
     EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
-        .Times(1)
+        .Times(AtLeast(1))
         .WillOnce(Return(buffer));
 
     auto ret_texture = surf.texture();

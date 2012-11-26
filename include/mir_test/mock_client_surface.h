@@ -13,25 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "event_filter_chain.h"
+#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
+#define MIR_TEST_MOCK_CLIENT_SURFACE_
 
-namespace mi = mir::input;
+#include "mir_client/mir_client_surface.h"
+#include <gmock/gmock.h>
 
-mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi::EventFilter> const> values) :
-    filters(values.begin(), values.end())
+namespace mir
 {
-}
-
-bool mi::EventFilterChain::handles(const MirEvent &event)
+namespace test
 {
-    for (auto it = filters.begin(); it != filters.end(); it++)
-    {
-        auto filter = *it;
-        if (filter->handles(event)) return true;
-    }
-    return false;
+
+struct MockClientSurface : public client::ClientSurface
+{
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
+};
+
 }
- 
+}
+#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */

@@ -15,32 +15,27 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
 #include "mir/input/event_filter.h"
 #include "src/input/android/event_filter_dispatcher_policy.h"
+
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_event_filter.h"
+
+#include <androidfw/Input.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <androidfw/Input.h>
-
 namespace mi = mir::input;
 namespace mia = mi::android;
-
-namespace
-{
-struct MockEventFilter : public mi::EventFilter
-{
-    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
-};
-}
 
 TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 {
     using namespace ::testing;
     auto ev = new droidinput::KeyEvent();
-    MockEventFilter filter;
-    mia::EventFilterDispatcherPolicy policy(std::shared_ptr<MockEventFilter>(&filter, mir::EmptyDeleter()));
+    mir::MockEventFilter filter;
+    mia::EventFilterDispatcherPolicy policy(std::shared_ptr<mir::MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
     
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));
