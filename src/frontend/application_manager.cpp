@@ -37,8 +37,7 @@ mf::ApplicationManager::ApplicationManager(std::shared_ptr<ms::ApplicationSurfac
   surface_organiser(organiser),
   app_container(container),
   focus_selection_strategy(strategy),
-  focus_mechanism(mechanism),
-  shutting_down(false)
+  focus_mechanism(mechanism)
 {
     assert(surface_organiser);
     assert(strategy);
@@ -52,8 +51,6 @@ mf::ApplicationManager::~ApplicationManager()
 
 std::shared_ptr<mf::ApplicationSession> mf::ApplicationManager::open_session(std::string const& name)
 {
-    if (shutting_down) throw std::runtime_error("shutting down");
-
     auto new_session = std::make_shared<mf::ApplicationSession>(surface_organiser, name);
 
     app_container->insert_session(new_session);
@@ -87,7 +84,6 @@ void mf::ApplicationManager::focus_next()
 
 void mf::ApplicationManager::shutdown()
 {
-    shutting_down = false;
     for (auto i = app_container->iterator(); i->is_valid(); i->advance())
         i->operator*()->shutdown();
 }

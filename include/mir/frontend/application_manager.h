@@ -64,7 +64,6 @@ private:
     std::shared_ptr<ApplicationFocusMechanism> focus_mechanism;
 
     std::weak_ptr<ApplicationSession> focus_application;
-    bool shutting_down;
 };
 
 }
