@@ -25,7 +25,7 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/session_manager.h"
 #include "mir/frontend/registration_order_focus_selection_strategy.h"

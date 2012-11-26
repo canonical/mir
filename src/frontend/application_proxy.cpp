@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_session_factory.h"
 #include "mir/frontend/application_session.h"
