@@ -16,19 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_FOCUS_MECHANISM_H_
-#define MIR_FRONTEND_FOCUS_MECHANISM_H_
+#ifndef MIR_FRONTEND_FOCUS_H_
+#define MIR_FRONTEND_FOCUS_H_
 
 #include <memory>
 
 namespace mir
 {
-
-namespace surfaces
-{
-class SurfaceOrganiser;
-}
-
 namespace frontend
 {
 class Session;
@@ -50,4 +44,4 @@ protected:
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_MECHANISM_H_
+#endif // MIR_FRONTEND_FOCUS_H_

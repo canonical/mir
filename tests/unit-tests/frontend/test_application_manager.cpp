@@ -21,7 +21,7 @@
 #include "mir/frontend/application_session_container.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_focus_selection_strategy.h"
-#include "mir/frontend/application_focus_mechanism.h"
+#include "mir/frontend/focus.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -53,7 +53,7 @@ struct MockFocusSelectionStrategy: public mf::FocusSequence
     MOCK_METHOD1(predecessor_of, std::weak_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
 };
   
-struct MockFocusMechanism: public mf::Focus
+struct MockFocus: public mf::Focus
 {
     MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
 };
@@ -66,17 +66,17 @@ TEST(SessionManager, open_and_close_session)
     mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
-    MockFocusMechanism mechanism;
+    MockFocus focus;
 
     mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::Focus>(&focus, mir::EmptyDeleter()));
     
     EXPECT_CALL(model, insert_session(_)).Times(1);
     EXPECT_CALL(model, remove_session(_)).Times(1);
-    EXPECT_CALL(mechanism, set_focus_to(_));
-    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
+    EXPECT_CALL(focus, set_focus_to(_));
+    EXPECT_CALL(focus, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
 
     EXPECT_CALL(strategy, predecessor_of(_)).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
@@ -90,7 +90,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
     mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
-    MockFocusMechanism mechanism;
+    MockFocus mechanism;
 
     mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
@@ -127,7 +127,7 @@ TEST(SessionManager, new_applications_receive_focus)
     mf::MockSurfaceOrganiser organiser;
     MockApplicationSessionModel model;
     MockFocusSelectionStrategy strategy;
-    MockFocusMechanism mechanism;
+    MockFocus mechanism;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager app_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 

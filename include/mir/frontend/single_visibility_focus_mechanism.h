@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
 #include <memory>
-#include "mir/frontend/application_focus_mechanism.h"
+#include "mir/frontend/focus.h"
 
 namespace mir
 {
