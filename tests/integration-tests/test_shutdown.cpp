@@ -218,11 +218,13 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
 
-            if (min_clients != client_connect_count.load())
-            {
-                std::cerr << "DEBUG: client_pending_count=" << client_pending_count.load() << std::endl;
-                std::cerr << "DEBUG: client_connect_count=" << client_connect_count.load() << std::endl;
-            }
+// I don't usually approve of code in comments, but this demonstrates
+// the purpose of the above logic. I'd love a better solution.
+//            if (min_clients != client_connect_count.load())
+//            {
+//                std::cerr << "DEBUG: client_pending_count=" << client_pending_count.load() << std::endl;
+//                std::cerr << "DEBUG: client_connect_count=" << client_connect_count.load() << std::endl;
+//            }
 
             ASSERT_LE(min_clients, client_connect_count.load());
         }
