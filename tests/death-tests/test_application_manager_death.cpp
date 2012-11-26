@@ -30,7 +30,7 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
     EXPECT_EXIT(
                 mir::frontend::SessionManager app(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(),
                                                       std::shared_ptr<mf::SessionContainer>(),
-                                                      std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(),
+                                                      std::shared_ptr<mf::FocusSequence>(),
                                                       std::shared_ptr<mf::Focus>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");

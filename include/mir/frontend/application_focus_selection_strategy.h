@@ -27,18 +27,18 @@ namespace frontend
 {
 class Session;
 
-class ApplicationFocusSelectionStrategy
+class FocusSequence
 {
 public:
-    virtual ~ApplicationFocusSelectionStrategy() {}
+    virtual ~FocusSequence() {}
 
-    virtual std::weak_ptr<Session> next_focus_app(std::shared_ptr<Session> const& focused_app) = 0;
-    virtual std::weak_ptr<Session> previous_focus_app(std::shared_ptr<Session> const& focused_app) = 0;
+    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) = 0;
+    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) = 0;
 
 protected:
-    ApplicationFocusSelectionStrategy() = default;
-    ApplicationFocusSelectionStrategy(const ApplicationFocusSelectionStrategy&) = delete;
-    ApplicationFocusSelectionStrategy& operator=(const ApplicationFocusSelectionStrategy&) = delete;
+    FocusSequence() = default;
+    FocusSequence(const FocusSequence&) = delete;
+    FocusSequence& operator=(const FocusSequence&) = delete;
 };
 
 }

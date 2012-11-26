@@ -32,7 +32,7 @@ namespace ms = mir::surfaces;
 
 mf::SessionManager::SessionManager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, 
                                            std::shared_ptr<mf::SessionContainer> const& container,
-                                           std::shared_ptr<mf::ApplicationFocusSelectionStrategy> const& strategy,
+                                           std::shared_ptr<mf::FocusSequence> const& strategy,
                                            std::shared_ptr<mf::Focus> const& mechanism) : 
   surface_organiser(organiser),
   app_container(container),
@@ -60,7 +60,7 @@ void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 {
     if (session == focus_application.lock())
     {
-        focus_application = focus_selection_strategy->previous_focus_app(session);
+        focus_application = focus_selection_strategy->predecessor_of(session);
         focus_mechanism->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
@@ -73,7 +73,7 @@ void mf::SessionManager::focus_next()
     {
         return;
     }
-    auto next_focus = focus_selection_strategy->next_focus_app(focused).lock();
+    auto next_focus = focus_selection_strategy->successor_of(focused).lock();
     focus_application = next_focus;
     focus_mechanism->set_focus_to(next_focus);
 }

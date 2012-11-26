@@ -59,7 +59,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 
     mf::SessionManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
-                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
@@ -91,7 +91,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
 
     mf::SessionManager app_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
-                                       std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);

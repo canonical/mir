@@ -33,7 +33,7 @@ mf::RegistrationOrderFocusSelectionStrategy::RegistrationOrderFocusSelectionStra
 
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::next_focus_app(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::successor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
 
@@ -64,7 +64,7 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::next_foc
     return **it;
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::previous_focus_app(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSelectionStrategy::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
     auto it = app_container->iterator();
     

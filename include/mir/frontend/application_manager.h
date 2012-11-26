@@ -35,7 +35,7 @@ namespace frontend
 
 class Session;
 class SessionContainer;
-class ApplicationFocusSelectionStrategy;
+class FocusSequence;
 class Focus;
 
 class SessionManager : public SessionStore
@@ -43,7 +43,7 @@ class SessionManager : public SessionStore
  public:
     explicit SessionManager(std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> const& surface_organiser,
                                 std::shared_ptr<SessionContainer> const& session_container,
-                                std::shared_ptr<ApplicationFocusSelectionStrategy> const& focus_selection_strategy,
+                                std::shared_ptr<FocusSequence> const& focus_selection_strategy,
                                 std::shared_ptr<Focus> const& focus_mechanism);
     virtual ~SessionManager() {}
 
@@ -59,7 +59,7 @@ protected:
 private:
     std::shared_ptr<surfaces::ApplicationSurfaceOrganiser> surface_organiser;
     std::shared_ptr<SessionContainer> app_container;
-    std::shared_ptr<ApplicationFocusSelectionStrategy> focus_selection_strategy;
+    std::shared_ptr<FocusSequence> focus_selection_strategy;
     std::shared_ptr<Focus> focus_mechanism;
 
     std::weak_ptr<Session> focus_application;
