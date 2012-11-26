@@ -209,7 +209,7 @@ struct FrontendShutdown : BespokeDisplayServerTestFixture
         {
             // The following seems a but elaborate, but we sometimes
             // miss some notification signals.  In practice, after
-            // 500*10ms the clients will be there.  Even under valgrind.
+            // 200*10ms the clients will be there.  Even under valgrind.
             int const max_clients = client_pending_count.load();
             int const min_clients = (max_clients / 3) + 1;
 
@@ -249,12 +249,7 @@ TEST_F(FrontendShutdown, after_client_connects)
     kill_client_processes();
 }
 
-// TODO Fix behaviour and enable test
-// Disabled because this leaves a server with a single thread spinning
-// waiting for "signal_display_server" to be set. This is because the
-// main thread is processing the signal.
-// Maybe this is an artifact of the frig in that code - see TODO there.
-TEST_F(FrontendShutdown, DISABLED_before_client_connects)
+TEST_F(FrontendShutdown, before_client_connects)
 {
     launch_server_process(server_processing);
 
