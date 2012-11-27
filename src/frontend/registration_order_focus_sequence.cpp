@@ -35,50 +35,37 @@ mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_p
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    struct local
-    {
-        std::shared_ptr<mf::Session> const focused_app;
-        std::shared_ptr<mf::Session> first;
-        std::shared_ptr<mf::Session> result;
-        bool found;
+    std::shared_ptr<mf::Session> first;
+    std::shared_ptr<mf::Session> result;
+    bool found{false};
 
-        local(std::shared_ptr<mf::Session> const& focused_app) :
-            focused_app(focused_app), found(false) {}
+    session_container->for_each(
+        [&](std::shared_ptr<mf::Session> const& session)
+         {
+             if (!first) first = session;
 
-        void operator()(std::shared_ptr<mf::Session> const& session)
-        {
-            if (!first) first = session;
+             if (found)
+             {
+                 if (!result) result = session;
+             }
+             else if (focused_app == session)
+             {
+                 found = true;
+             }
+         });
 
-            if (found)
-            {
-                if (!result) result = session;
-            }
-            else if (focused_app == session)
-            {
-                found = true;
-            }
-        }
-    } find_successor(focused_app);
-
-    session_container->for_each(std::ref(find_successor));
-
-    if (find_successor.result) return find_successor.result;
-    return find_successor.first;
+    if (result) return result;
+    return first;
 }
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    struct local
-    {
-        std::shared_ptr<mf::Session> const focused_app;
-        std::shared_ptr<mf::Session> last;
-        std::shared_ptr<mf::Session> result;
-        bool found;
+    std::shared_ptr<mf::Session> last;
+    std::shared_ptr<mf::Session> result;
+    bool found{false};
 
-        local(std::shared_ptr<mf::Session> const& focused_app) :
-            focused_app(focused_app), found(false) {}
-
-        void operator()(std::shared_ptr<mf::Session> const& session)
+    session_container->for_each(
+        [&](std::shared_ptr<mf::Session> const& session)
         {
             last = session;
 
@@ -90,11 +77,8 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(st
             {
                 result = session;
             }
-        }
-    } find_predecessor(focused_app);
+        });
 
-    session_container->for_each(std::ref(find_predecessor));
-
-    if (find_predecessor.result) return find_predecessor.result;
-    return find_predecessor.last;
+    if (result) return result;
+    return last;
 }
