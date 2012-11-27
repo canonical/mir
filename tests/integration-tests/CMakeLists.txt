@@ -55,7 +55,6 @@ target_link_libraries(
   mir-test-doubles
 
   mir
-  mirclient
   mirdraw
   miroptions
   mircompositor
@@ -76,7 +75,7 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${ANDROID_STDLIB}
+  mirclient
 )
 
 mir_discover_tests(integration-tests)

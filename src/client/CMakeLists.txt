@@ -102,7 +102,6 @@ target_link_libraries(
   mirprotobuf
 
   ${DRM_LIBRARIES}
-  ${ANDROID_STDLIB}
 )
 
 install(

@@ -33,7 +33,6 @@ add_executable(unit-tests ${UNIT_TEST_SOURCES})
 target_link_libraries(
   unit-tests
 
-  mirclient
   mircompositor
   mirdraw
   mirfrontend
@@ -59,8 +58,8 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  mirclient
  
-  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)
