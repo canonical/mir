@@ -38,10 +38,8 @@ mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_p
 
 void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
 {
-    auto it = app_container->iterator();
-    while (it->is_valid())
-    {
-        auto session = **it;
+    app_container->for_each(
+        [&](std::shared_ptr<mf::Session> const& session) {
         if (session == focus_session)
         {
             session->show();
@@ -50,6 +48,5 @@ void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Sessio
         {
             session->hide();
         }
-        it->advance();
-    }
+    });
 }

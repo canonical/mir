@@ -40,28 +40,6 @@ public:
 
     void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
-    class LockingIterator
-    {
-    public:
-        void advance();
-        bool is_valid() const;
-        void reset();
-        const std::shared_ptr<Session> operator*();
-        ~LockingIterator();
-    protected:
-        LockingIterator(SessionContainer* container,
-                        size_t index);
-        friend class SessionContainer;
-        LockingIterator() = delete;
-        LockingIterator(LockingIterator const&LockingIterator) = delete;
-    private:
-      SessionContainer* container;
-      size_t it;
-    };
-
-    std::shared_ptr<SessionContainer::LockingIterator> iterator();
-
-
 protected:
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;

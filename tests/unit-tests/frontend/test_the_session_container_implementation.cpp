@@ -32,29 +32,6 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(SessionContainer, iterate_registration_order)
-{
-    using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    mf::SessionContainer container;
-
-    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
-
-    container.insert_session(app1);
-    container.insert_session(app2);
-
-    auto it = container.iterator();
-
-    EXPECT_EQ("Visual Studio 7", (**it)->get_name());
-    it->advance();
-    EXPECT_EQ("Visual Studio 8", (**it)->get_name());
-    it->advance();
-    EXPECT_FALSE(it->is_valid());
-    it->reset();
-    EXPECT_EQ("Visual Studio 7", (**it)->get_name());
-}
-
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;

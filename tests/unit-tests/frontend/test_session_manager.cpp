@@ -44,7 +44,6 @@ struct MockApplicationSessionModel : public mf::SessionContainer
     MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
-    MOCK_METHOD0(iterator, std::shared_ptr<mf::SessionContainer::LockingIterator>());
 };
 
 struct MockFocusSelectionStrategy: public mf::FocusSequence
