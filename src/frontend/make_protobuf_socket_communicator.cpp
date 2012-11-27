@@ -25,10 +25,10 @@ namespace mg = mir::graphics;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::SessionManager> const& session_manager,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(surface_organiser, display));
+        socket_file, make_ipc_factory(session_manager, display));
 }
 

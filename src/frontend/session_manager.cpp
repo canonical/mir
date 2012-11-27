@@ -52,7 +52,7 @@ mf::SessionManager::~SessionManager()
 std::shared_ptr<mf::Session> mf::SessionManager::open_session(std::string const& name)
 {
     auto new_session = std::make_shared<mf::Session>(surface_organiser, name);
-  
+
     app_container->insert_session(new_session);
     focus_application = new_session;
     focus->set_focus_to(new_session);
@@ -80,4 +80,12 @@ void mf::SessionManager::focus_next()
     auto next_focus = focus_sequence->successor_of(focused).lock();
     focus_application = next_focus;
     focus->set_focus_to(next_focus);
+}
+
+void mf::SessionManager::shutdown()
+{
+    app_container->for_each([](std::shared_ptr<Session> const& session)
+    {
+        session->shutdown();
+    });
 }

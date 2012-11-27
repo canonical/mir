@@ -19,6 +19,7 @@
 #include "mir_test_framework/testing_process_manager.h"
 
 #include "mir/display_server.h"
+#include "mir/process/signal_dispatcher.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
@@ -55,7 +56,8 @@ void startup_pause()
 }
 
 mtf::TestingProcessManager::TestingProcessManager() :
-    is_test_process(true)
+    is_test_process(true),
+    server_process_was_started(false)
 {
 }
 
@@ -66,23 +68,9 @@ mtf::TestingProcessManager::~TestingProcessManager()
 namespace
 {
 // TODO: Get rid of the volatile-hack here and replace it with
-// some sane atomic-pointer once we have left GCC 4.4 behind.
+// something that doesn't spinlock the thread it is waiting on
+// C.f. FrontendShutdown test DISABLED_before_client_connects
 mir::DisplayServer* volatile signal_display_server;
-}
-
-namespace mir
-{
-extern "C"
-{
-void (*signal_prev_fn)(int);
-void signal_terminate (int )
-{
-    while (!signal_display_server)
-        std::this_thread::yield();
- 
-    signal_display_server->stop();
-}
-}
 }
 
 void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
@@ -102,7 +90,9 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        signal_prev_fn = signal(SIGTERM, signal_terminate);
+        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
+        mp::SignalDispatcher::instance()->signal_channel().connect(
+                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
         mir::DisplayServer server(config);
 
@@ -126,6 +116,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     {
         server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
         startup_pause();
+        server_process_was_started = true;
     }
 }
 
@@ -137,7 +128,7 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     }
 
     // We're in the test process, so make sure we started a service
-    ASSERT_TRUE(WasStarted(server_process));
+    ASSERT_TRUE(server_process_was_started);
 
     pid_t pid = fork();
 
@@ -200,17 +191,51 @@ void mtf::TestingProcessManager::tear_down_clients()
     }
 }
 
+mp::Result mtf::TestingProcessManager::shutdown_server_process()
+{
+    mp::Result result;
+
+    if (server_process)
+    {
+        server_process->terminate();
+        result = server_process->wait_for_termination();
+        server_process.reset();
+        return result;
+    }
+    else
+    {
+        result.reason = mp::TerminationReason::child_terminated_normally;
+        result.exit_code = EXIT_SUCCESS;
+    }
+
+    return result;
+}
+
+void mtf::TestingProcessManager::kill_client_processes()
+{
+    if (is_test_process)
+    {
+        for(auto client : clients)
+        {
+            client->kill();
+        }
+
+        clients.clear();
+    }
+}
+
+
 void mtf::TestingProcessManager::tear_down_server()
 {
     if (is_test_process)
     {
         ASSERT_TRUE(clients.empty())  << "Clients should be stopped before server";
         // We're in the test process, so make sure we started a service
-        ASSERT_TRUE(WasStarted(server_process));
-        server_process->terminate();
-        mp::Result const result = server_process->wait_for_termination();
+        ASSERT_TRUE(server_process_was_started);
+
+        auto const& result = shutdown_server_process();
+
         EXPECT_TRUE(result.succeeded()) << result;
-        server_process.reset();
     }
 }
 
@@ -218,6 +243,21 @@ void mtf::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
+}
+
+void mtf::TestingProcessManager::os_signal_handler(int signal)
+{
+    switch(signal)
+    {
+    case SIGTERM:
+        while (!signal_display_server)
+            std::this_thread::yield();
+
+        signal_display_server->stop();
+        break;
+    default:
+        break;
+    }
 }
 
 bool mtf::detect_server(

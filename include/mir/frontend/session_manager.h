@@ -44,6 +44,7 @@ class SessionManager : public SessionStore
 
     virtual std::shared_ptr<Session> open_session(std::string const& name);
     virtual void close_session(std::shared_ptr<Session> const& session);
+    virtual void shutdown();
 
     void focus_next();
 

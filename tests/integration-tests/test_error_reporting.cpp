@@ -239,7 +239,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<mf::SurfaceOrganiser> const&,
+            std::shared_ptr<mf::SessionManager> const&,
             std::shared_ptr<mg::Display> const&)
 
         {
