@@ -28,7 +28,7 @@
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/session_manager.h"
-#include "mir/frontend/registration_order_focus_selection_strategy.h"
+#include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/frontend/application_session_model.h"
 #include "mir/graphics/display.h"

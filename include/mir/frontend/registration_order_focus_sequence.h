@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_REGISTRATION_FOCUS_STRATEGY_H_
-#define MIR_FRONTEND_REGISTRATION_FOCUS_STRATEGY_H_
+#ifndef MIR_FRONTEND_REGISTRATION_FOCUS_SEQUENCE_H_
+#define MIR_FRONTEND_REGISTRATION_FOCUS_SEQUENCE_H_
 
 #include "mir/frontend/focus_sequence.h"
 
