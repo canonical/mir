@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/application_session_factory.h"
+#include "mir/frontend/session_store.h"
 #include "mir/frontend/application_session.h"
 #include "mir/frontend/application_surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
@@ -32,12 +32,12 @@
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<frontend::SessionStore> const& session_factory,
+    std::shared_ptr<frontend::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    session_factory(session_factory),
+    session_store(session_store),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     listener(listener),
@@ -53,7 +53,7 @@ void mir::frontend::ApplicationMediator::connect(
 {
     listener->application_connect_called(request->application_name());
 
-    application_session = session_factory->open_session(request->application_name());
+    application_session = session_store->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -168,7 +168,7 @@ void mir::frontend::ApplicationMediator::disconnect(
 {
     listener->application_disconnect_called(application_session->get_name());
 
-    session_factory->close_session(application_session);
+    session_store->close_session(application_session);
 
     done->Run();
 }

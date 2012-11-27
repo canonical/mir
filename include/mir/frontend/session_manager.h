@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_APPLICATION_MANAGER_H_
 
 #include <memory>
-#include "mir/frontend/application_session_factory.h"
+#include "mir/frontend/session_store.h"
 
 namespace mir
 {
