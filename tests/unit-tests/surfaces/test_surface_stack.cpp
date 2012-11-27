@@ -286,5 +286,28 @@ TEST(
 
 }
 
+TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
+{
+    using namespace ::testing;
 
+    std::unique_ptr<mc::BufferSwapper> swapper_handle;
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+    MockBufferBundleFactory buffer_bundle_factory;
 
+    geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};
+    geom::PixelFormat const format{geom::PixelFormat::rgb_888};
+    mc::BufferUsage const usage{mc::BufferUsage::software};
+
+    EXPECT_CALL(buffer_bundle_factory,
+                create_buffer_bundle(AllOf(
+                    Field(&mc::BufferProperties::size, size),
+                    Field(&mc::BufferProperties::format, format),
+                    Field(&mc::BufferProperties::usage, usage))))
+        .Times(AtLeast(1));
+
+    ms::SurfaceStack stack(&buffer_bundle_factory);
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        ms::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+
+    stack.destroy_surface(surface);
+}
