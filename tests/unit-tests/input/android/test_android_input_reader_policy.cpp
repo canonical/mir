@@ -31,7 +31,8 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600), geom::Height(1400)}};
+                                                                 geom::Size{geom::Width(1600), 
+                                                                            geom::Height(1400)}};
 
 namespace
 {
