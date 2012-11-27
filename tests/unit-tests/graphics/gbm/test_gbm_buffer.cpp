@@ -214,7 +214,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
     {
         InSequence seq;
 
-        EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,EGL_DRM_BUFFER_MESA,_,_))
+        EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
             .Times(Exactly(1));
 
         EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
