@@ -18,7 +18,7 @@
 set(
   FRONTEND_SOURCES
 
-  application_proxy.cpp
+  application_mediator.cpp
   application_session.cpp
   application_session_model.cpp
   session_manager.cpp
