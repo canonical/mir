@@ -86,6 +86,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
+        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
         );
 
     {
