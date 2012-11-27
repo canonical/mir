@@ -69,17 +69,17 @@ TEST(SessionContainer, for_each)
 
     struct local
     {
-        MOCK_METHOD1(test, void (std::string const&));
+        MOCK_METHOD1(check_name, void (std::string const&));
 
-        void operator()(mf::Session& session)
+        void operator()(std::shared_ptr<mf::Session> const& session)
         {
-            test(session.get_name());
+            check_name(session->get_name());
         }
     } functor;
 
     InSequence seq;
-    EXPECT_CALL(functor, test("Visual Studio 7"));
-    EXPECT_CALL(functor, test("Visual Studio 8"));
+    EXPECT_CALL(functor, check_name("Visual Studio 7"));
+    EXPECT_CALL(functor, check_name("Visual Studio 8"));
 
     container.for_each(std::ref(functor));
 }

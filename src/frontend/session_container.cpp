@@ -51,13 +51,13 @@ void mf::SessionContainer::remove_session(std::shared_ptr<mf::Session> const& se
     apps.erase(it);
 }
 
-void mf::SessionContainer::for_each(std::function<void(Session&)> f) const
+void mf::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
     for (auto const ptr : apps)
     {
-        f(*ptr);
+        f(ptr);
     }
 }
 

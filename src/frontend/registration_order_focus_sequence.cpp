@@ -35,58 +35,66 @@ mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_p
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    auto it = session_container->iterator();
-
-    if (focused_app == NULL)
+    struct local
     {
-        return **it;
-    }
+        std::shared_ptr<mf::Session> const focused_app;
+        std::shared_ptr<mf::Session> first;
+        std::shared_ptr<mf::Session> result;
+        bool found;
 
-    bool found = false;
+        local(std::shared_ptr<mf::Session> const& focused_app) :
+            focused_app(focused_app), found(false) {}
 
-    while (it->is_valid())
-    {
-        auto stacked_app = **it;
-        
-        if (found) return stacked_app;
-
-        if (stacked_app == focused_app)
+        void operator()(std::shared_ptr<mf::Session> const& session)
         {
-            found = true;
-        }
-        it->advance();
-    }
-    it->reset();
-    // This is programmer error if not found...
-    // later we can make this use LockingIterators?
-    assert(found);
+            if (!first) first = session;
 
-    return **it;
+            if (found)
+            {
+                if (!result) result = session;
+            }
+            else if (focused_app == session)
+            {
+                found = true;
+            }
+        }
+    } find_successor(focused_app);
+
+    session_container->for_each(std::ref(find_successor));
+
+    if (find_successor.result) return find_successor.result;
+    return find_successor.first;
 }
 
 std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
 {
-    auto it = session_container->iterator();
-    
-    if (focused_app == NULL)
+    struct local
     {
-        return **it;
-    }
-    
-    std::weak_ptr<mf::Session> last_app = **it;
+        std::shared_ptr<mf::Session> const focused_app;
+        std::shared_ptr<mf::Session> last;
+        std::shared_ptr<mf::Session> result;
+        bool found;
 
-    it->advance();
-    while (it->is_valid())
-    {
-        auto stacked_app = **it;
-        
-        if (stacked_app == focused_app)
+        local(std::shared_ptr<mf::Session> const& focused_app) :
+            focused_app(focused_app), found(false) {}
+
+        void operator()(std::shared_ptr<mf::Session> const& session)
         {
-            return last_app;
+            last = session;
+
+            if (focused_app == session)
+            {
+                found = true;
+            }
+            else if (!found)
+            {
+                result = session;
+            }
         }
-        last_app = stacked_app;
-        it->advance();
-    }
-    // If we didn't focus_app it was the first app so we happily return the last app
-    return last_app;
+    } find_predecessor(focused_app);
+
+    session_container->for_each(std::ref(find_predecessor));
+
+    if (find_predecessor.result) return find_predecessor.result;
+    return find_predecessor.last;
 }
