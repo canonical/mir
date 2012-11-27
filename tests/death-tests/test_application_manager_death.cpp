@@ -31,7 +31,7 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
                 mir::frontend::SessionManager app(std::shared_ptr<mf::SurfaceOrganiser>(),
                                                       std::shared_ptr<mf::SessionContainer>(),
                                                       std::shared_ptr<mf::FocusSequence>(),
-                                                      std::shared_ptr<mf::Focus>()),
+                                                      std::shared_ptr<mf::FocusSetter>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }

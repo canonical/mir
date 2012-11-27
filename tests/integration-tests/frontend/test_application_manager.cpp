@@ -23,7 +23,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus.h"
+#include "mir/frontend/focus_setter.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/session_container.h"
 
@@ -41,7 +41,7 @@ namespace ms = mir::surfaces;
 namespace
 {
 
-struct MockFocusMechanism: public mf::Focus
+struct MockFocusMechanism: public mf::FocusSetter
 {
   MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
 };
@@ -60,7 +60,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        container,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
@@ -92,7 +92,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        model,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
 
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 

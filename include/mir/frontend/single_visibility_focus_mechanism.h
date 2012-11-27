@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
 #include <memory>
-#include "mir/frontend/focus.h"
+#include "mir/frontend/focus_setter.h"
 
 namespace mir
 {
@@ -35,7 +35,7 @@ namespace frontend
 class Session;
 class SessionContainer;
 
-class SingleVisibilityFocusMechanism : public Focus
+class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
     explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);

@@ -21,7 +21,7 @@
 #include "mir/frontend/session_container.h"
 #include "mir/frontend/surface_organiser.h"
 #include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus.h"
+#include "mir/frontend/focus_setter.h"
 
 #include <memory>
 #include <cassert>
@@ -33,16 +33,16 @@ namespace ms = mir::surfaces;
 mf::SessionManager::SessionManager(std::shared_ptr<mf::SurfaceOrganiser> const& organiser, 
                                            std::shared_ptr<mf::SessionContainer> const& container,
                                            std::shared_ptr<mf::FocusSequence> const& sequence,
-                                           std::shared_ptr<mf::Focus> const& focus) :
+                                           std::shared_ptr<mf::FocusSetter> const& focus_setter) :
   surface_organiser(organiser),
   app_container(container),
   focus_sequence(sequence),
-  focus(focus)
+  focus_setter(focus_setter)
 {
     assert(surface_organiser);
     assert(sequence);
     assert(container);
-    assert(focus);
+    assert(focus_setter);
 }
 
 mf::SessionManager::~SessionManager()
@@ -55,7 +55,7 @@ std::shared_ptr<mf::Session> mf::SessionManager::open_session(std::string const&
 
     app_container->insert_session(new_session);
     focus_application = new_session;
-    focus->set_focus_to(new_session);
+    focus_setter->set_focus_to(new_session);
   
     return new_session;
 }
@@ -65,7 +65,7 @@ void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     if (session == focus_application.lock())
     {
         focus_application = focus_sequence->predecessor_of(session);
-        focus->set_focus_to(focus_application.lock());
+        focus_setter->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
 }
@@ -79,7 +79,7 @@ void mf::SessionManager::focus_next()
     }
     auto next_focus = focus_sequence->successor_of(focused).lock();
     focus_application = next_focus;
-    focus->set_focus_to(next_focus);
+    focus_setter->set_focus_to(next_focus);
 }
 
 void mf::SessionManager::shutdown()

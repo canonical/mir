@@ -31,7 +31,7 @@ class SurfaceOrganiser;
 class Session;
 class SessionContainer;
 class FocusSequence;
-class Focus;
+class FocusSetter;
 
 class SessionManager : public SessionStore
 {
@@ -39,7 +39,7 @@ class SessionManager : public SessionStore
     explicit SessionManager(std::shared_ptr<SurfaceOrganiser> const& surface_organiser,
                                 std::shared_ptr<SessionContainer> const& session_container,
                                 std::shared_ptr<FocusSequence> const& focus_sequence,
-                                std::shared_ptr<Focus> const& focus);
+                                std::shared_ptr<FocusSetter> const& focus_setter);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<Session> open_session(std::string const& name);
@@ -56,7 +56,7 @@ private:
     std::shared_ptr<frontend::SurfaceOrganiser> surface_organiser;
     std::shared_ptr<SessionContainer> app_container;
     std::shared_ptr<FocusSequence> focus_sequence;
-    std::shared_ptr<Focus> focus;
+    std::shared_ptr<FocusSetter> focus_setter;
 
     std::weak_ptr<Session> focus_application;
 };

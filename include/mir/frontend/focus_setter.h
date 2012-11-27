@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_FOCUS_H_
-#define MIR_FRONTEND_FOCUS_H_
+#ifndef MIR_FRONTEND_FOCUS_SETTER_H_
+#define MIR_FRONTEND_FOCUS_SETTER_H_
 
 #include <memory>
 
@@ -27,21 +27,21 @@ namespace frontend
 {
 class Session;
 
-class Focus
+class FocusSetter
 {
 public:
-    virtual ~Focus() {}
+    virtual ~FocusSetter() {}
 
     virtual void set_focus_to(std::shared_ptr<Session> const& new_focus) = 0;
 
 protected:
-    Focus() = default;
-    Focus(const Focus&) = delete;
-    Focus& operator=(const Focus&) = delete;
+    FocusSetter() = default;
+    FocusSetter(const FocusSetter&) = delete;
+    FocusSetter& operator=(const FocusSetter&) = delete;
 };
 
 }
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_H_
+#endif // MIR_FRONTEND_FOCUS_SETTER_H_
