@@ -143,17 +143,17 @@ TEST_F(AndroidPointerControllerSetup, clips_to_view_area)
 
     controller->setPosition(invalid_lower_bound_x, 0);
     controller->getPosition(&bounded_x, &bounded_y);
-    EXPECT_EQ(bounded_x, min_x_bound);
+    EXPECT_EQ(min_x_bound, bounded_x);
 
     controller->setPosition(0, invalid_lower_bound_y);
     controller->getPosition(&bounded_x, &bounded_y);
-    EXPECT_EQ(bounded_y, min_y_bound);
+    EXPECT_EQ(min_y_bound, bounded_y);
 
     controller->setPosition(invalid_upper_bound_x, 0);
     controller->getPosition(&bounded_x, &bounded_y);
-    EXPECT_EQ(bounded_x, max_x_bound);
+    EXPECT_EQ(max_x_bound, bounded_x);
 
     controller->setPosition(0, invalid_upper_bound_y);
     controller->getPosition(&bounded_x, &bounded_y);
-    EXPECT_EQ(bounded_y, max_y_bound);
+    EXPECT_EQ(max_y_bound, bounded_y);
 }
