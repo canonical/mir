@@ -40,13 +40,9 @@ public:
 
     void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
-protected:
+private:
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
-
-private:
-    void lock();
-    void unlock();
 
     std::vector<std::shared_ptr<Session>> apps;
     mutable std::mutex guard;

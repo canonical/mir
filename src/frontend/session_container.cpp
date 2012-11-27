@@ -60,14 +60,3 @@ void mf::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> 
         f(ptr);
     }
 }
-
-
-void mf::SessionContainer::lock()
-{
-    guard.lock();
-}
-
-void mf::SessionContainer::unlock()
-{
-    guard.unlock();
-}
