@@ -31,14 +31,45 @@ namespace geom=mir::geometry;
 
 geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
-    (void)format;
-    return geom::PixelFormat::rgba_8888;
+    geom::PixelFormat pf;
+
+    switch (format)
+    {
+    case GBM_BO_FORMAT_ARGB8888:
+    case GBM_FORMAT_ARGB8888:
+        pf = geom::PixelFormat::rgba_8888;
+        break;
+    case GBM_BO_FORMAT_XRGB8888:
+    case GBM_FORMAT_XRGB8888:
+        pf = geom::PixelFormat::rgbx_8888;
+        break;
+    default:
+        pf = geom::PixelFormat::pixel_format_invalid;
+        break;
+    }
+
+    return pf;
 }
 
 uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 {
-    (void)format;
-    return GBM_BO_FORMAT_ARGB8888;
+    uint32_t gbm_pf;
+
+    switch (format)
+    {
+    case geom::PixelFormat::rgba_8888:
+        gbm_pf = GBM_FORMAT_ARGB8888;
+        break;
+    case geom::PixelFormat::rgbx_8888:
+        gbm_pf = GBM_FORMAT_XRGB8888;
+        break;
+    default:
+        /* There is no explicit invalid GBM pixel format! */
+        gbm_pf = UINT32_MAX;
+        break;
+    }
+
+    return gbm_pf;
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,

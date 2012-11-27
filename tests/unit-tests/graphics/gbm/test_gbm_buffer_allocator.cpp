@@ -93,14 +93,24 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgba_8888)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
+}
+
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgbx_8888)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgbx_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")
