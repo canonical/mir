@@ -30,6 +30,7 @@ namespace geometry
 enum class PixelFormat : uint32_t
 {
     rgba_8888,
+    rgbx_8888,
     rgb_888,
     pixel_format_invalid
 };
