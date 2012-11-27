@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
 list(APPEND UNIT_TEST_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_selection_strategy.cpp
