@@ -42,14 +42,14 @@ ms::Surface::Surface(
     assert(buffer_bundle);
 }
 
+void ms::Surface::shutdown()
+{
+    buffer_bundle->shutdown();
+}
+
 ms::Surface::~Surface()
 {
-    // this is a really ugly frig. {alan}
-    // We're about to delete graphics_resource which holds a client buffer
-    // and when that calls BufferSwapperDouble::client_release() there is
-    // a chance that we'll wait forever for rendering.
-    // So, first we simulate rendering:
-    texture();
+    shutdown();
 }
 
 std::string const& ms::Surface::name() const
@@ -134,7 +134,8 @@ std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() cons
 }
 
 ms::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), buffer_usage(mc::BufferUsage::undefined)
+    : name(), size(), buffer_usage(mc::BufferUsage::undefined),
+      pixel_format(geom::PixelFormat::pixel_format_invalid)
 {
 }
 
@@ -169,12 +170,21 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_buffer_usage(
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_pixel_format(
+    geom::PixelFormat new_pixel_format)
+{
+    pixel_format = new_pixel_format;
+
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
     return lhs.size == rhs.size &&
-           lhs.buffer_usage == rhs.buffer_usage;
+           lhs.buffer_usage == rhs.buffer_usage &&
+           lhs.pixel_format == rhs.pixel_format;
 }
 
 bool ms::operator!=(

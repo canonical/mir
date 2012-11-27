@@ -34,18 +34,19 @@ cmake_minimum_required(VERSION 2.8)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) 
 
+set(MIR_VERSION_MAJOR 0)
+set(MIR_VERSION_MINOR 0)
+set(MIR_VERSION_PATCH 1)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include (cmake/Debian.cmake)
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
+include (cmake/PrePush.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
-
-set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 0)
-set(MIR_VERSION_PATCH 1)
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov

@@ -23,6 +23,8 @@
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
+#include "mir_test/egl_mock.h"
+#include "mir_test/gl_mock.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -48,6 +50,15 @@ public:
 
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
         .WillByDefault(Return(240));
+
+        typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 #endif
     }
     
@@ -56,6 +67,8 @@ public:
 #ifndef ANDROID
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+    ::testing::NiceMock<mir::EglMock> mock_egl;
+    ::testing::NiceMock<mir::GLMock> mock_gl;
 #endif
 };
 

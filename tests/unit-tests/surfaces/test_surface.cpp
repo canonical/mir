@@ -32,12 +32,13 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     using namespace geom;
     ms::SurfaceCreationParameters params;
 
-    ASSERT_EQ(std::string(), params.name);
-    ASSERT_EQ(Width(0), params.size.width);
-    ASSERT_EQ(Height(0), params.size.height);
-    ASSERT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
+    EXPECT_EQ(std::string(), params.name);
+    EXPECT_EQ(Width(0), params.size.width);
+    EXPECT_EQ(Height(0), params.size.height);
+    EXPECT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
+    EXPECT_EQ(geom::PixelFormat::pixel_format_invalid, params.pixel_format);
 
-    ASSERT_EQ(ms::a_surface(), params);
+    EXPECT_EQ(ms::a_surface(), params);
 }
 
 TEST(SurfaceCreationParametersTest, builder_mutators)
@@ -45,15 +46,18 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
+    geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
     std::string name{"surface"};
 
     auto params = ms::a_surface().of_name(name)
                                  .of_size(size)
-                                 .of_buffer_usage(usage);
+                                 .of_buffer_usage(usage)
+                                 .of_pixel_format(format);
 
-    ASSERT_EQ(name, params.name);
-    ASSERT_EQ(size, params.size);
-    ASSERT_EQ(usage, params.buffer_usage);
+    EXPECT_EQ(name, params.name);
+    EXPECT_EQ(size, params.size);
+    EXPECT_EQ(usage, params.buffer_usage);
+    EXPECT_EQ(format, params.pixel_format);
 }
 
 TEST(SurfaceCreationParametersTest, equality)
@@ -61,44 +65,63 @@ TEST(SurfaceCreationParametersTest, equality)
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
+    geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 
     auto params0 = ms::a_surface().of_name("surface0")
                                   .of_size(size)
-                                  .of_buffer_usage(usage);
+                                  .of_buffer_usage(usage)
+                                  .of_pixel_format(format);
 
     auto params1 = ms::a_surface().of_name("surface1")
                                   .of_size(size)
-                                  .of_buffer_usage(usage);
+                                  .of_buffer_usage(usage)
+                                  .of_pixel_format(format);
 
-    ASSERT_EQ(params0, params1);
-    ASSERT_EQ(params1, params0);
+    EXPECT_EQ(params0, params1);
+    EXPECT_EQ(params1, params0);
 }
 
 TEST(SurfaceCreationParametersTest, inequality)
 {
     using namespace geom;
-    Size const size0{Width{1024}, Height{768}};
-    Size const size1{Width{1025}, Height{768}};
-    mc::BufferUsage const usage0{mc::BufferUsage::hardware};
-    mc::BufferUsage const usage2{mc::BufferUsage::software};
 
-    auto params0 = ms::a_surface().of_name("surface0")
-                                  .of_size(size0)
-                                  .of_buffer_usage(usage0);
+    std::vector<Size> const sizes{{Width{1024}, Height{768}},
+                                  {Width{1025}, Height{768}}};
 
-    auto params1 = ms::a_surface().of_name("surface0")
-                                  .of_size(size1)
-                                  .of_buffer_usage(usage0);
+    std::vector<mc::BufferUsage> const usages{mc::BufferUsage::hardware,
+                                              mc::BufferUsage::software};
 
-    auto params2 = ms::a_surface().of_name("surface0")
-                                  .of_size(size0)
-                                  .of_buffer_usage(usage2);
-    ASSERT_NE(params0, params1);
-    ASSERT_NE(params1, params0);
-    ASSERT_NE(params0, params2);
-    ASSERT_NE(params2, params0);
-    ASSERT_NE(params1, params2);
-    ASSERT_NE(params2, params1);
+    std::vector<geom::PixelFormat> const formats{geom::PixelFormat::rgba_8888,
+                                                 geom::PixelFormat::rgb_888};
+
+    std::vector<ms::SurfaceCreationParameters> params_vec;
+
+    for (auto const& size : sizes)
+    {
+        for (auto const& usage : usages)
+        {
+            for (auto const& format : formats)
+            {
+                auto cur_params = ms::a_surface().of_name("surface0")
+                                                 .of_size(size)
+                                                 .of_buffer_usage(usage)
+                                                 .of_pixel_format(format);
+                params_vec.push_back(cur_params);
+                size_t cur_index = params_vec.size() - 1;
+
+                /*
+                 * Compare the current SurfaceCreationParameters with all the previously
+                 * created ones.
+                 */
+                for (size_t i = 0; i < cur_index; i++)
+                {
+                    EXPECT_NE(params_vec[i], params_vec[cur_index]) << "cur_index: " << cur_index << " i: " << i;
+                    EXPECT_NE(params_vec[cur_index], params_vec[i]) << "cur_index: " << cur_index << " i: " << i;
+                }
+
+            }
+        }
+    }
 }
 
 namespace

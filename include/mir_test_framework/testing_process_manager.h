@@ -57,14 +57,17 @@ public:
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
-    void os_signal_handler(int signal);
+    mir::process::Result shutdown_server_process();
+    void kill_client_processes();
 
 private:
+    void os_signal_handler(int signal);
 
     std::shared_ptr<mir::process::Process> server_process;
     std::list<std::shared_ptr<mir::process::Process>> clients;
 
     bool is_test_process;
+    bool server_process_was_started;
 };
 
 std::string const& test_socket_file();

@@ -53,6 +53,7 @@ public:
     std::shared_ptr<surfaces::Surface> get_surface(SurfaceId surface) const;
 
     std::string get_name();
+    void shutdown();
 
     virtual void hide();
     virtual void show();

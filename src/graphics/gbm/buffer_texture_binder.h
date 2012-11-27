@@ -13,23 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/server_configuration.h"
-#include "mir/graphics/display.h"
-#include "protobuf_socket_communicator.h"
+#ifndef MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
+#define MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_
 
-namespace mf = mir::frontend;
-namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
-
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::ApplicationSessionFactory> const& session_factory,
-    std::shared_ptr<mg::Display> const& display)
+namespace mir
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_factory, display));
+namespace graphics
+{
+namespace gbm
+{
+
+class BufferTextureBinder
+{
+public:
+    virtual ~BufferTextureBinder() {}
+
+    virtual void bind_to_texture() = 0;
+
+protected:
+    BufferTextureBinder() = default;
+    BufferTextureBinder(BufferTextureBinder const&) = delete;
+    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
+};
+
+}
+}
 }
 
+#endif /* MIR_GRAPHICS_GBM_BUFFER_TEXTURE_BINDER_H_ */
