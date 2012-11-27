@@ -54,3 +54,32 @@ TEST(SessionContainer, iterate_registration_order)
     it->reset();
     EXPECT_EQ("Visual Studio 7", (**it)->get_name());
 }
+
+TEST(SessionContainer, for_each)
+{
+    using namespace ::testing;
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    mf::SessionContainer container;
+
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
+
+    container.insert_session(app1);
+    container.insert_session(app2);
+
+    struct local
+    {
+        MOCK_METHOD1(test, void (std::string const&));
+
+        void operator()(mf::Session& session)
+        {
+            test(session.get_name());
+        }
+    } functor;
+
+    InSequence seq;
+    EXPECT_CALL(functor, test("Visual Studio 7"));
+    EXPECT_CALL(functor, test("Visual Studio 8"));
+
+    container.for_each(std::ref(functor));
+}

@@ -38,6 +38,8 @@ public:
     virtual void insert_session(std::shared_ptr<Session> const& session);
     virtual void remove_session(std::shared_ptr<Session> const& session);
 
+    void for_each(std::function<void(Session&)> f) const;
+
     class LockingIterator
     {
     public:
@@ -69,7 +71,7 @@ private:
     void unlock();
 
     std::vector<std::shared_ptr<Session>> apps;
-    std::mutex guard;
+    mutable std::mutex guard;
 };
 
 }

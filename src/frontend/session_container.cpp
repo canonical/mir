@@ -51,6 +51,17 @@ void mf::SessionContainer::remove_session(std::shared_ptr<mf::Session> const& se
     apps.erase(it);
 }
 
+void mf::SessionContainer::for_each(std::function<void(Session&)> f) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    for (auto const ptr : apps)
+    {
+        f(*ptr);
+    }
+}
+
+
 void mf::SessionContainer::lock()
 {
     guard.lock();
@@ -96,12 +107,12 @@ mf::SessionContainer::LockingIterator::~LockingIterator()
 std::shared_ptr<mf::SessionContainer::LockingIterator> mf::SessionContainer::iterator()
 {
     lock();
-  
+
     std::shared_ptr<mf::SessionContainer::LockingIterator> it(
         new mf::SessionContainer::LockingIterator(this, 0));
-  
+
     return it;
 }
 
 
-  
+
