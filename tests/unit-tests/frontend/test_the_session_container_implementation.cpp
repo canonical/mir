@@ -22,7 +22,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_application_surface_organiser.h"
+#include "mir_test/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

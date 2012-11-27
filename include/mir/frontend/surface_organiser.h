@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_
-#define MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_
+#ifndef MIR_FRONTEND_SURFACE_ORGANISER_H_
+#define MIR_FRONTEND_SURFACE_ORGANISER_H_
 
 #include <memory>
 
@@ -52,4 +52,4 @@ class SurfaceOrganiser
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_SURFACE_ORGANISER_H_
+#endif // MIR_FRONTEND_SURFACE_ORGANISER_H_

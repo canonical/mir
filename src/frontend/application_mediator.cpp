@@ -20,7 +20,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/session_store.h"
 #include "mir/frontend/session.h"
-#include "mir/frontend/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"

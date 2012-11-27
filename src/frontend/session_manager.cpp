@@ -19,7 +19,7 @@
 #include "mir/frontend/session_manager.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/session_container.h"
-#include "mir/frontend/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 #include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 

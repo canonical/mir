@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_MOCK_SURFACE_ORGANISER_H_
 #define MIR_TEST_MOCK_SURFACE_ORGANISER_H_
 
-#include "mir/frontend/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

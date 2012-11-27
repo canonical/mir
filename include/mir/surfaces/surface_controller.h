@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/frontend/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 
 #include <memory>
 

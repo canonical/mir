@@ -32,7 +32,7 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_application_surface_organiser.h"
+#include "mir_test/mock_surface_organiser.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
