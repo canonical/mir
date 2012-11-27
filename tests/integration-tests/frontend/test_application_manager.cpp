@@ -25,7 +25,7 @@
 #include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/application_session_model.h"
+#include "mir/frontend/the_session_container_implementation.h"
 
 
 #include <gmock/gmock.h>
@@ -52,13 +52,13 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
-    mf::RegistrationOrderFocusSequence sequence(model);
+    std::shared_ptr<mf::TheSessionContainerImplementation> container(new mf::TheSessionContainerImplementation());
+    mf::RegistrationOrderFocusSequence sequence(container);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
-                                       model,
+                                       container,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     

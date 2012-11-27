@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/application_session.h"
-#include "mir/frontend/application_session_model.h"
+#include "mir/frontend/the_session_container_implementation.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -36,22 +36,21 @@ TEST(TheSessionContainerImplementation, iterate_registration_order)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    mf::TheSessionContainerImplementation model;
-    
+    mf::TheSessionContainerImplementation container;
+
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
 
-    model.insert_session(app1);
-    model.insert_session(app2);
-    
-    auto it = model.iterator();
-    
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
-    it->advance();
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 8");
-    it->advance();
-    EXPECT_EQ(it->is_valid(),false);
-    it->reset();
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
+    container.insert_session(app1);
+    container.insert_session(app2);
 
+    auto it = container.iterator();
+
+    EXPECT_EQ("Visual Studio 7", (**it)->get_name());
+    it->advance();
+    EXPECT_EQ("Visual Studio 8", (**it)->get_name());
+    it->advance();
+    EXPECT_FALSE(it->is_valid());
+    it->reset();
+    EXPECT_EQ("Visual Studio 7", (**it)->get_name());
 }

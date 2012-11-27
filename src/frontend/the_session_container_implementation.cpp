@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/application_session_model.h"
+#include "mir/frontend/the_session_container_implementation.h"
 #include "mir/frontend/application_session.h"
 
 #include <memory>
@@ -57,7 +57,7 @@ void mf::TheSessionContainerImplementation::unlock()
     guard.unlock();
 }
 
-mf::TheSessionContainerImplementation::LockingIterator::LockingIterator(TheSessionContainerImplementation *model, size_t index) : model(model),
+mf::TheSessionContainerImplementation::LockingIterator::LockingIterator(TheSessionContainerImplementation *model, size_t index) : container(model),
                                                                                                               it(index)
 {
   
@@ -75,18 +75,18 @@ void mf::TheSessionContainerImplementation::LockingIterator::reset()
 
 bool mf::TheSessionContainerImplementation::LockingIterator::is_valid() const
 {
-    return it < model->apps.size();
+    return it < container->apps.size();
 }
 
 const std::shared_ptr<mf::Session> mf::TheSessionContainerImplementation::LockingIterator::operator*()
 {
-    auto app = model->apps[it];
+    auto app = container->apps[it];
     return app;
 }
 
 mf::TheSessionContainerImplementation::LockingIterator::~LockingIterator()
 {
-    model->unlock();
+    container->unlock();
 }
 
 std::shared_ptr<mf::SessionContainer::LockingIterator> mf::TheSessionContainerImplementation::iterator()

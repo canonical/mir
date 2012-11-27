@@ -57,19 +57,17 @@ public:
         virtual ~LockingIterator();
     protected:
         friend class TheSessionContainerImplementation;
-      
-        LockingIterator(TheSessionContainerImplementation *model,
+
+        LockingIterator(TheSessionContainerImplementation* container,
                         size_t index);
 
-      
     private:
-      TheSessionContainerImplementation *model;
+      TheSessionContainerImplementation* container;
       size_t it;
 	
     };
 
     std::shared_ptr<SessionContainer::LockingIterator> iterator();
-    
 
 protected:
     TheSessionContainerImplementation(const TheSessionContainerImplementation&) = delete;
