@@ -102,8 +102,8 @@ bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint3
 }
 
 bool check_2x2_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
-                        uint32_t a_value, uint32_t b_value,
-                        uint32_t c_value, uint32_t d_value)
+                       uint32_t a_value, uint32_t b_value,
+                       uint32_t c_value, uint32_t d_value)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
@@ -489,10 +489,10 @@ struct StubServerGenerator : public mt::StubServerTool
 struct RegionDeleter
 {
     RegionDeleter(gralloc_module_t* grmod, native_handle_t* handle)
-     :
-    grmod(grmod),
-    handle(handle)
-    {}
+     : grmod(grmod),
+       handle(handle)
+    {
+    }
 
     void operator()(MirGraphicsRegion* region)
     {
@@ -505,8 +505,9 @@ struct RegionDeleter
     native_handle_t *handle;
 };
 
-std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(std::shared_ptr<mc::BufferIPCPackage> package,
-                                                const hw_module_t *hw_module)
+std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
+                        std::shared_ptr<mc::BufferIPCPackage> package,
+                        const hw_module_t *hw_module)
 {
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
