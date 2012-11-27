@@ -84,7 +84,12 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
 
     auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
     if (ret)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get GEM flink name from gbm bo"));
+    {
+        std::string const msg("Failed to get GEM flink name from gbm bo");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(msg)) << boost::errinfo_errno(errno));
+    }
 
     gem_flink_name = flink.name;
 }
