@@ -25,6 +25,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <signal.h>
+
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
 
@@ -44,7 +46,7 @@ void increment(std::atomic<int>& count)
 
 void send_connected_signal()
 {
-    sigqueue(test_process, SIGALRM, sigval());
+    kill(test_process, SIGALRM);
 }
 
 extern "C"
