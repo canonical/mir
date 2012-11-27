@@ -32,13 +32,13 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     using namespace geom;
     ms::SurfaceCreationParameters params;
 
-    ASSERT_EQ(std::string(), params.name);
-    ASSERT_EQ(Width(0), params.size.width);
-    ASSERT_EQ(Height(0), params.size.height);
-    ASSERT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
-    ASSERT_EQ(geom::PixelFormat::pixel_format_invalid, params.pixel_format);
+    EXPECT_EQ(std::string(), params.name);
+    EXPECT_EQ(Width(0), params.size.width);
+    EXPECT_EQ(Height(0), params.size.height);
+    EXPECT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
+    EXPECT_EQ(geom::PixelFormat::pixel_format_invalid, params.pixel_format);
 
-    ASSERT_EQ(ms::a_surface(), params);
+    EXPECT_EQ(ms::a_surface(), params);
 }
 
 TEST(SurfaceCreationParametersTest, builder_mutators)
@@ -54,10 +54,10 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
                                  .of_buffer_usage(usage)
                                  .of_pixel_format(format);
 
-    ASSERT_EQ(name, params.name);
-    ASSERT_EQ(size, params.size);
-    ASSERT_EQ(usage, params.buffer_usage);
-    ASSERT_EQ(format, params.pixel_format);
+    EXPECT_EQ(name, params.name);
+    EXPECT_EQ(size, params.size);
+    EXPECT_EQ(usage, params.buffer_usage);
+    EXPECT_EQ(format, params.pixel_format);
 }
 
 TEST(SurfaceCreationParametersTest, equality)
@@ -77,8 +77,8 @@ TEST(SurfaceCreationParametersTest, equality)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    ASSERT_EQ(params0, params1);
-    ASSERT_EQ(params1, params0);
+    EXPECT_EQ(params0, params1);
+    EXPECT_EQ(params1, params0);
 }
 
 TEST(SurfaceCreationParametersTest, inequality)
