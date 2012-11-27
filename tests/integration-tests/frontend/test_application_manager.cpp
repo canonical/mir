@@ -53,13 +53,13 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
-    mf::RegistrationOrderFocusSequence strategy(model);
+    mf::RegistrationOrderFocusSequence sequence(model);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        model,
-                                       std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
@@ -85,15 +85,15 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
-    mf::RegistrationOrderFocusSequence strategy(model);
+    mf::RegistrationOrderFocusSequence sequence(model);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        model,
-                                       std::shared_ptr<mf::FocusSequence>(&strategy, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::Focus>(&mechanism, mir::EmptyDeleter()));
-    
+
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
