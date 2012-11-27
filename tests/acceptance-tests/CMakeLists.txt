@@ -51,6 +51,8 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+
+  #fixme: android linker crashes in bionic if we link mirclient.so in first 
   mirclient
 )
 
