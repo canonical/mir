@@ -11,7 +11,6 @@ function(get_android_flags)
 
   #note: this has to go away before landing. works around a STL header problem
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fpermissive")
-  set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS}  -msoft-float -fpic -ffunction-sections -fdata-sections -funwind-tables -fstack-protector -Wa,--noexecstack -Werror=format-security -fgcse-after-reload -frerun-cse-after-loop -frename-registers")
 
   set( ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS}" PARENT_SCOPE)
 
