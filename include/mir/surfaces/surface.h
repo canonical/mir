@@ -52,9 +52,12 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
 
+    SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
+
     std::string name;
     geometry::Size size;
     compositor::BufferUsage buffer_usage;
+    geometry::PixelFormat pixel_format;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
