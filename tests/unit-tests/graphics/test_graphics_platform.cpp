@@ -51,6 +51,9 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
         .WillByDefault(Return(240));
 
+        ON_CALL(mock_gbm, gbm_bo_get_format(_))
+        .WillByDefault(Return(GBM_FORMAT_ARGB8888));
+
         typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
 
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))

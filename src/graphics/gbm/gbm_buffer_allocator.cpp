@@ -31,7 +31,6 @@
 #include <GLES2/gl2ext.h>
 
 #include <stdexcept>
-#include <xf86drm.h>
 #include <gbm.h>
 #include <cassert>
 
@@ -83,10 +82,8 @@ class EGLImageBufferTextureBinder : public mgg::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                                uint32_t gem_flink_name,
                                 std::shared_ptr<mgg::EGLExtensions> const& egl_extensions)
-        : bo{gbm_bo}, gem_flink_name{gem_flink_name},
-          egl_extensions{egl_extensions}, egl_image{EGL_NO_IMAGE_KHR}
+        : bo{gbm_bo}, egl_extensions{egl_extensions}, egl_image{EGL_NO_IMAGE_KHR}
     {
     }
 
@@ -112,23 +109,15 @@ private:
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
-            auto stride = gbm_bo_get_stride(bo_raw);
-            auto width = gbm_bo_get_width(bo_raw);
-            auto height = gbm_bo_get_height(bo_raw);
-
             const EGLint image_attrs[] =
             {
                 EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-                EGL_WIDTH, static_cast<EGLint>(width),
-                EGL_HEIGHT, static_cast<EGLint>(height),
-                EGL_DRM_BUFFER_FORMAT_MESA, EGL_DRM_BUFFER_FORMAT_ARGB32_MESA,
-                EGL_DRM_BUFFER_STRIDE_MESA, static_cast<EGLint>(stride) / 4,
                 EGL_NONE
             };
 
             egl_image = egl_extensions->eglCreateImageKHR(egl_display, EGL_NO_CONTEXT,
-                                                          EGL_DRM_BUFFER_MESA,
-                                                          reinterpret_cast<void*>(gem_flink_name),
+                                                          EGL_NATIVE_PIXMAP_KHR,
+                                                          reinterpret_cast<void*>(bo_raw),
                                                           image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 throw std::runtime_error("Failed to create EGLImage from GBM bo");
@@ -136,7 +125,6 @@ private:
     }
 
     std::shared_ptr<gbm_bo> const bo;
-    uint32_t const gem_flink_name;
     std::shared_ptr<mgg::EGLExtensions> const egl_extensions;
     EGLDisplay egl_display;
     EGLImageKHR egl_image;
@@ -185,21 +173,11 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
 
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
-    /* Get the GEM flink name from the GBM buffer object */
-    auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
-    auto drm_fd = gbm_device_get_fd(platform->gbm.device);
-    struct drm_gem_flink flink;
-    flink.handle = gem_handle;
-
-    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
-    if (ret)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get GEM flink name from gbm bo"));
-
     std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
-        new EGLImageBufferTextureBinder{bo, flink.name, egl_extensions}};
+        new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::unique_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder), flink.name}};
+    std::unique_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 

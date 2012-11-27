@@ -52,7 +52,8 @@ typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client
 /* Surface API */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_rgba_8888
+    mir_pixel_format_rgba_8888,
+    mir_pixel_format_rgbx_8888
 } MirPixelFormat;
 
 typedef enum MirBufferUsage
