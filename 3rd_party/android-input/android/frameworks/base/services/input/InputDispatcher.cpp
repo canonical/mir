@@ -3583,7 +3583,6 @@ void InputDispatcher::monitor() {
     mLock.unlock();
 }
 
-
 // --- InputDispatcher::Queue ---
 
 template <typename T>

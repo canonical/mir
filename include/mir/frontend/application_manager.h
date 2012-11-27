@@ -45,11 +45,12 @@ class ApplicationManager : public ApplicationSessionFactory
                                 std::shared_ptr<ApplicationSessionContainer> const& session_container,
                                 std::shared_ptr<ApplicationFocusSelectionStrategy> const& focus_selection_strategy,
                                 std::shared_ptr<ApplicationFocusMechanism> const& focus_mechanism);
-    virtual ~ApplicationManager() {}
+    virtual ~ApplicationManager();
 
     virtual std::shared_ptr<ApplicationSession> open_session(std::string const& name);
     virtual void close_session(std::shared_ptr<ApplicationSession> const& session);
-    
+    virtual void shutdown();
+
     void focus_next();
 
 protected:

@@ -52,9 +52,12 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
 
+    SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
+
     std::string name;
     geometry::Size size;
     compositor::BufferUsage buffer_usage;
+    geometry::PixelFormat pixel_format;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
@@ -90,6 +93,7 @@ class Surface : public graphics::Renderable
     void advance_client_buffer();
     std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package() const;
     compositor::BufferID get_buffer_id() const;
+    void shutdown();
 
  private:
     std::string surface_name;
@@ -98,7 +102,7 @@ class Surface : public graphics::Renderable
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;
-    
+
     bool is_hidden;
 };
 

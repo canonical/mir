@@ -393,7 +393,7 @@ public:
     virtual status_t registerInputChannel(const sp<InputChannel>& inputChannel,
             const sp<InputWindowHandle>& inputWindowHandle, bool monitor);
     virtual status_t unregisterInputChannel(const sp<InputChannel>& inputChannel);
-
+    
 private:
     template <typename T>
     struct Link {

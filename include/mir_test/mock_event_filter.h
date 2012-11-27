@@ -21,47 +21,46 @@
 
 #include "mir/input/event_filter.h"
 
+#include <androidfw/Input.h>
+
 #include <gmock/gmock.h>
 
 namespace mir
 {
 struct MockEventFilter : public mir::input::EventFilter
 {
-    MOCK_METHOD1(handles, bool(const droidinput::InputEvent*));
+    MOCK_METHOD1(handles, bool(const MirEvent&));
 };
 }
 
 MATCHER_P(IsKeyEventWithKey, key, "")
 {
-    if (arg->getType() != AINPUT_EVENT_TYPE_KEY)
+    if (arg.type != MIR_INPUT_EVENT_TYPE_KEY)
         return false;
 
-    auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
-    return key_event->getKeyCode() == key;
+    return arg.details.key.key_code == key;
 }
 MATCHER(KeyDownEvent, "")
 {
-    if (arg->getType() != AINPUT_EVENT_TYPE_KEY)
+    if (arg.type != MIR_INPUT_EVENT_TYPE_KEY)
         return false;
 
-    auto key_event = static_cast<const droidinput::KeyEvent*>(arg);
-    return key_event->getAction() == AKEY_EVENT_ACTION_DOWN;
+    return arg.action == AKEY_EVENT_ACTION_DOWN;
 }
 MATCHER(ButtonDownEvent, "")
 {
-    if (arg->getType() != AINPUT_EVENT_TYPE_MOTION)
-	return false;
-    auto motion_event = static_cast<const droidinput::MotionEvent*>(arg);
-    if (motion_event->getButtonState() == 0)
-	return false;
-    return motion_event->getAction() == AKEY_EVENT_ACTION_DOWN;
+    if (arg.type != MIR_INPUT_EVENT_TYPE_MOTION)
+        return false;
+    if (arg.details.motion.button_state == 0)
+        return false;
+    return arg.action == AKEY_EVENT_ACTION_DOWN;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {
-   if (arg->getType() != AINPUT_EVENT_TYPE_MOTION)
-	return false;
-   auto motion_ev = static_cast<const droidinput::MotionEvent *>(arg);
-   return (motion_ev->getX(0) == dx) && (motion_ev->getY(0) == dy);
+    if (arg.type != MIR_INPUT_EVENT_TYPE_MOTION)
+        return false;
+    auto coords = &arg.details.motion.pointer_coordinates[0];
+    return (coords->x == dx) && (coords->y == dy);
 }
 
 #endif // MIR_TEST_MOCK_EVENT_FILTER_H_

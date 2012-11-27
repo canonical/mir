@@ -32,22 +32,6 @@ namespace mf = mir::frontend;
 // We need some tests to prove that errors are reported by the
 // display server test fixture.  But don't want them to fail in
 // normal builds.
-
-namespace
-{
-struct StubCommunicator : public mf::Communicator
-{
-    StubCommunicator()
-    {
-    }
-
-    void start()
-    {
-    }
-};
-
-}
-
 TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 {
     struct Server : TestingServerConfiguration

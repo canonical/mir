@@ -25,7 +25,7 @@ mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi:
 {
 }
 
-bool mi::EventFilterChain::handles(const droidinput::InputEvent *event)
+bool mi::EventFilterChain::handles(const MirEvent &event)
 {
     for (auto it = filters.begin(); it != filters.end(); it++)
     {

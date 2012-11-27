@@ -13,23 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/server_configuration.h"
-#include "mir/graphics/display.h"
-#include "protobuf_socket_communicator.h"
+#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
+#define MIR_TEST_MOCK_CLIENT_SURFACE_
 
-namespace mf = mir::frontend;
-namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
+#include "mir_client/mir_client_surface.h"
+#include <gmock/gmock.h>
 
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::ApplicationSessionFactory> const& session_factory,
-    std::shared_ptr<mg::Display> const& display)
+namespace mir
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_factory, display));
-}
+namespace test
+{
 
+struct MockClientSurface : public client::ClientSurface
+{
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
+};
+
+}
+}
+#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */

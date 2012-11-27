@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -91,8 +92,10 @@ class StubGraphicPlatform : public mg::Platform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(mg::Renderable&)
+    virtual void render(mg::Renderable& r)
     {
+        // Need to acquire the texture to cycle buffers
+        r.texture();
     }
 };
 
@@ -105,9 +108,13 @@ class StubInputManager : public mi::InputManager
 }
 }
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_manager(std::initializer_list<std::shared_ptr<mi::EventFilter> const> /*event_filters*/, std::shared_ptr<mg::ViewableArea> const& /*viewable_area*/)
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters, std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
-    return std::make_shared<StubInputManager>();
+    auto options = make_options();
+    if (options->get("tests_use_real_input", false))
+        return mi::create_input_manager(event_filters, viewable_area);
+    else
+        return std::make_shared<StubInputManager>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_platform()

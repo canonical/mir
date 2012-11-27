@@ -178,13 +178,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
         return std::shared_ptr<mcl::ClientBufferDepository>();
     }
 
-    EGLNativeWindowType create_egl_window(mcl::ClientSurface* /*surface*/)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface* /*surface*/)
     {
-        return reinterpret_cast<EGLNativeWindowType>(0);
-    }
-
-    void destroy_egl_window(EGLNativeWindowType /*window*/)
-    {
+        return std::shared_ptr<EGLNativeWindowType>();
     }
 
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()

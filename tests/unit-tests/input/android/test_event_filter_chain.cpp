@@ -15,8 +15,10 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
+
 #include "src/input/event_filter_chain.h"
 #include "mir_test/empty_deleter.h"
+#include "mir_test/mock_event_filter.h"
 
 #include <androidfw/Input.h>
 
@@ -25,19 +27,11 @@
 
 namespace mi = mir::input;
 
-namespace
-{
-struct MockEventFilter : public mi::EventFilter
-{
-    MOCK_METHOD1(handles, bool(const android::InputEvent*));
-};
-}
-
 TEST(EventFilterChain, offers_events_to_filters)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<MockEventFilter>();
-    auto ev = new android::KeyEvent();
+    auto filter = std::make_shared<mir::MockEventFilter>();
+    MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter};
     // Filter will pass the event on twice
@@ -49,8 +43,8 @@ TEST(EventFilterChain, offers_events_to_filters)
 TEST(EventFilterChain, accepting_event_halts_emission)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<MockEventFilter>();
-    auto ev = new android::KeyEvent();
+    auto filter = std::make_shared<mir::MockEventFilter>();
+    MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter, filter};
 

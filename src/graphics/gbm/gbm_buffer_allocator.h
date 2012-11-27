@@ -33,6 +33,7 @@ namespace gbm
 {
 
 class GBMPlatform;
+class EGLExtensions;
 
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
@@ -46,6 +47,7 @@ public:
 private:
     std::shared_ptr<GBMPlatform> platform;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
+    std::shared_ptr<EGLExtensions> const egl_extensions;
 };
 
 }

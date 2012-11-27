@@ -29,8 +29,12 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::ApplicationSession::ApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser, std::string const& application_name) : 
-  surface_organiser(organiser), name(application_name)
+mf::ApplicationSession::ApplicationSession(
+    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& organiser,
+    std::string const& application_name) :
+    surface_organiser(organiser),
+    name(application_name),
+    next_surface_id(0)
 {
     assert(surface_organiser);
 }
@@ -39,26 +43,41 @@ mf::ApplicationSession::~ApplicationSession()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = *it;
+        auto surface = it->second;
         surface_organiser->destroy_surface(surface);
     }
 }
 
-std::weak_ptr<ms::Surface> mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
+mf::SurfaceId mf::ApplicationSession::next_id()
 {
-    auto surf = surface_organiser->create_surface(params);
-    surfaces.push_back(surf.lock());
-    
-    return surf;
+    int id = next_surface_id.load();
+    while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
+    return SurfaceId(id);
 }
 
-void mf::ApplicationSession::destroy_surface(std::shared_ptr<ms::Surface> const& surface)
+mf::SurfaceId mf::ApplicationSession::create_surface(const ms::SurfaceCreationParameters& params)
 {
-    auto it = std::find(surfaces.begin(), surfaces.end(), surface);
+    auto surf = surface_organiser->create_surface(params);
+    auto const id = next_id();
 
-    // FIXME: What goes on with no surface ID?
-    surfaces.erase(it);
-    surface_organiser->destroy_surface(surface);
+    surfaces[id] = surf;
+    return id;
+}
+
+std::shared_ptr<ms::Surface> mf::ApplicationSession::get_surface(mf::SurfaceId id) const
+{
+    return surfaces.find(id)->second.lock();
+}
+
+void mf::ApplicationSession::destroy_surface(mf::SurfaceId id)
+{
+    auto p = surfaces.find(id);
+
+    if (p != surfaces.end())
+    {
+        surface_organiser->destroy_surface(p->second);
+        surfaces.erase(p);
+    }
 }
 
 std::string mf::ApplicationSession::get_name()
@@ -66,11 +85,20 @@ std::string mf::ApplicationSession::get_name()
     return name;
 }
 
+void mf::ApplicationSession::shutdown()
+{
+    for (auto& id_s : surfaces)
+    {
+        if (auto surface = id_s.second.lock())
+            surface->shutdown();
+    }
+}
+
 void mf::ApplicationSession::hide()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = *it;
+        auto& surface = it->second;
         surface_organiser->hide_surface(surface);
     }
 }
@@ -79,7 +107,7 @@ void mf::ApplicationSession::show()
 {
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
-        auto surface = *it;
+        auto& surface = it->second;
         surface_organiser->show_surface(surface);
     }
 }

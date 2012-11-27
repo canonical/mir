@@ -56,11 +56,11 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mf::ApplicationManager> const& application_manager,
+        std::shared_ptr<mf::ApplicationSessionFactory> const& application_session_factory,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display) :
-        application_manager(application_manager),
+        application_session_factory(application_session_factory),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::ApplicationManager> application_manager;
+    std::shared_ptr<mf::ApplicationSessionFactory> application_session_factory;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -78,7 +78,7 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationProxy>(
-            application_manager,
+            application_session_factory,
             graphics_platform,
             graphics_display,
             listener,
@@ -107,8 +107,9 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
         desc.add_options()
             ("android_sdk_dir", po::value<std::string>(), "dummy")
             ("android_ndk_dir", po::value<std::string>(), "dummy")
-            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests");
-
+            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+            ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+        
         auto options = std::make_shared<mir::options::ProgramOption>();
 
         options->parse_environment(desc, "MIR_");
@@ -152,8 +153,8 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<mf::ApplicationManager>
-mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
+std::shared_ptr<mf::ApplicationSessionFactory>
+mir::DefaultServerConfiguration::make_application_session_factory(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
 {
     auto session_model = std::make_shared<mf::ApplicationSessionModel>();
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
@@ -171,11 +172,11 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::ApplicationSessionFactory> const& application_session_factory,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<DefaultIpcFactory>(
-        make_application_manager(surface_organiser),
+        application_session_factory,
         make_application_listener(),
         make_graphics_platform(),
         display);
