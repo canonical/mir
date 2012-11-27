@@ -42,8 +42,7 @@ class GBMBuffer: public compositor::Buffer
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
-              std::unique_ptr<BufferTextureBinder> texture_binder,
-              uint32_t gem_flink_name);
+              std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
@@ -61,7 +60,7 @@ public:
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     std::unique_ptr<BufferTextureBinder> const texture_binder;
-    uint32_t const gem_flink_name;
+    uint32_t gem_flink_name;
 };
 
 }

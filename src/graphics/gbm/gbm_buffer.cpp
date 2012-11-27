@@ -21,9 +21,11 @@
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/exception.h"
+
+#include <xf86drm.h>
 
 namespace mc=mir::compositor;
-namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
@@ -40,11 +42,20 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
-                          std::unique_ptr<BufferTextureBinder> texture_binder,
-                          uint32_t gem_flink_name)
-    : gbm_handle(handle), texture_binder(std::move(texture_binder)),
-      gem_flink_name(gem_flink_name)
+                          std::unique_ptr<BufferTextureBinder> texture_binder)
+    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}
 {
+    auto device = gbm_bo_get_device(gbm_handle.get());
+    auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
+    auto drm_fd = gbm_device_get_fd(device);
+    struct drm_gem_flink flink;
+    flink.handle = gem_handle;
+
+    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get GEM flink name from gbm bo"));
+
+    gem_flink_name = flink.name;
 }
 
 geom::Size mgg::GBMBuffer::size() const

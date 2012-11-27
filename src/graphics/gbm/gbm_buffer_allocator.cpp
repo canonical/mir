@@ -31,7 +31,6 @@
 #include <GLES2/gl2ext.h>
 
 #include <stdexcept>
-#include <xf86drm.h>
 #include <gbm.h>
 #include <cassert>
 
@@ -174,21 +173,11 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
 
     std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
 
-    /* Get the GEM flink name from the GBM buffer object */
-    auto gem_handle = gbm_bo_get_handle(bo_raw).u32;
-    auto drm_fd = gbm_device_get_fd(platform->gbm.device);
-    struct drm_gem_flink flink;
-    flink.handle = gem_handle;
-
-    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
-    if (ret)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get GEM flink name from gbm bo"));
-
     std::unique_ptr<EGLImageBufferTextureBinder> texture_binder{
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::unique_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder), flink.name}};
+    std::unique_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 
