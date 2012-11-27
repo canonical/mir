@@ -38,7 +38,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct MockApplicationSessionModel : public mf::SessionContainer
+struct MockSessionContainer : public mf::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
@@ -63,17 +63,17 @@ TEST(SessionManager, open_and_close_session)
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    MockApplicationSessionModel model;
+    MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
-                                       std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSetter>(&focus_setter, mir::EmptyDeleter()));
     
-    EXPECT_CALL(model, insert_session(_)).Times(1);
-    EXPECT_CALL(model, remove_session(_)).Times(1);
+    EXPECT_CALL(container, insert_session(_)).Times(1);
+    EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
 
@@ -87,12 +87,12 @@ TEST(SessionManager, closing_session_removes_surfaces)
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    MockApplicationSessionModel model;
+    MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
-                                       std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
     
@@ -106,8 +106,8 @@ TEST(SessionManager, closing_session_removes_surfaces)
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
-    EXPECT_CALL(model, insert_session(_)).Times(1);
-    EXPECT_CALL(model, remove_session(_)).Times(1);
+    EXPECT_CALL(container, insert_session(_)).Times(1);
+    EXPECT_CALL(container, remove_session(_)).Times(1);
 
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(1);
     EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
@@ -124,17 +124,17 @@ TEST(SessionManager, new_applications_receive_focus)
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    MockApplicationSessionModel model;
+    MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
-                                       std::shared_ptr<mf::SessionContainer>(&model, mir::EmptyDeleter()),
+                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
     
-    EXPECT_CALL(model, insert_session(_)).Times(1);
+    EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
     auto session = session_manager.open_session("Visual Basic Studio");
