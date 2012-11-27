@@ -23,7 +23,7 @@
 
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
-#include "mir/frontend/application_session_factory.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -56,7 +56,7 @@ struct mir::DisplayServer::Private
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          application_session_factory{config.make_application_session_factory(surface_controller)},
+          application_session_factory{config.make_session_manager(surface_controller)},
           communicator{config.make_communicator(application_session_factory, display)},
           input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
@@ -72,7 +72,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<ms::SurfaceController> surface_controller;
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<frontend::ApplicationSessionFactory> application_session_factory;
+    std::shared_ptr<frontend::SessionManager> application_session_factory;
     std::shared_ptr<frontend::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;

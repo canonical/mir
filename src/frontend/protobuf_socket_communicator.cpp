@@ -17,7 +17,7 @@
  */
 
 #include "protobuf_socket_communicator.h"
-#include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_mediator.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
