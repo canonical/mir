@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/the_session_container_implementation.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session.h"
 
 #include <memory>
 #include <cassert>

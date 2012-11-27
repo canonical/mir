@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session.h"
 #include "mir/frontend/the_session_container_implementation.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"

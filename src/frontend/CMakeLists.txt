@@ -19,7 +19,7 @@ set(
   FRONTEND_SOURCES
 
   application_mediator.cpp
-  application_session.cpp
+  session.cpp
   the_session_container_implementation.cpp
   session_manager.cpp
   registration_order_focus_sequence.cpp

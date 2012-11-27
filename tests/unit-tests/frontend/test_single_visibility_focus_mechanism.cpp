@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session.h"
 #include "mir/frontend/the_session_container_implementation.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"

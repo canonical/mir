@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -42,15 +42,15 @@ TEST(Session, create_and_destroy_surface)
             buffer_bundle));
 
     mf::MockSurfaceOrganiser organiser;
-    mf::Session app_session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::Session session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
-    auto surf = app_session.create_surface(params);
+    auto surf = session.create_surface(params);
 
-    app_session.destroy_surface(surf);
+    session.destroy_surface(surf);
 }
 
 
