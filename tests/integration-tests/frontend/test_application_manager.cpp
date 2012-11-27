@@ -25,7 +25,7 @@
 #include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/the_session_container_implementation.h"
+#include "mir/frontend/session_container.h"
 
 
 #include <gmock/gmock.h>
@@ -52,7 +52,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    std::shared_ptr<mf::TheSessionContainerImplementation> container(new mf::TheSessionContainerImplementation());
+    std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(container);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
@@ -84,7 +84,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
 {
     using namespace ::testing;
     mf::MockSurfaceOrganiser organiser;
-    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation());
+    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(model);
     MockFocusMechanism mechanism;
     std::shared_ptr<mf::Session> new_session;
@@ -99,13 +99,13 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("Microsoft Access");
     auto session3 = session_manager.open_session("WordPerfect");
-    
+
     {
       InSequence seq;
       EXPECT_CALL(mechanism, set_focus_to(session2)).Times(1);
       EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
     }
-    
+
     session_manager.close_session(session3);
     session_manager.close_session(session2);
 }

@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/session.h"
-#include "mir/frontend/the_session_container_implementation.h"
+#include "mir/frontend/session_container.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
@@ -36,7 +36,7 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    std::shared_ptr<mf::SessionContainer> model(new mf::TheSessionContainerImplementation);
+    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(model);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
@@ -56,7 +56,7 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    std::shared_ptr<mf::SessionContainer> container(new mf::TheSessionContainerImplementation);
+    std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
@@ -76,7 +76,7 @@ TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    std::shared_ptr<mf::SessionContainer> container(new mf::TheSessionContainerImplementation);
+    std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
     
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));

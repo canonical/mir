@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/session.h"
-#include "mir/frontend/the_session_container_implementation.h"
+#include "mir/frontend/session_container.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -32,11 +32,11 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(TheSessionContainerImplementation, iterate_registration_order)
+TEST(SessionContainer, iterate_registration_order)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
-    mf::TheSessionContainerImplementation container;
+    mf::SessionContainer container;
 
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));

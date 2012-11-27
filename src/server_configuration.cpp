@@ -30,7 +30,7 @@
 #include "mir/frontend/session_manager.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
-#include "mir/frontend/the_session_container_implementation.h"
+#include "mir/frontend/session_container.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -156,7 +156,7 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 std::shared_ptr<mf::SessionManager>
 mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
 {
-    auto session_container = std::make_shared<mf::TheSessionContainerImplementation>();
+    auto session_container = std::make_shared<mf::SessionContainer>();
     auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_container);
     auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSequence>(session_container);
     return std::make_shared<mf::SessionManager>(surface_organiser, session_container, focus_selection_strategy, focus_mechanism);

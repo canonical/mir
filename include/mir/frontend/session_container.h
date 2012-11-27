@@ -19,6 +19,8 @@
 #ifndef FRONTEND_SESSION_CONTAINER_H_
 #define FRONTEND_SESSION_CONTAINER_H_
 
+#include "mir/thread/all.h"
+#include <vector>
 #include <memory>
 
 namespace mir
@@ -30,34 +32,44 @@ class Session;
 class SessionContainer
 {
 public:
-    virtual ~SessionContainer() {}
+    SessionContainer();
+    ~SessionContainer();
 
-    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
+    void insert_session(std::shared_ptr<Session> const& session);
+    void remove_session(std::shared_ptr<Session> const& session);
 
-    virtual void lock() = 0;
-    virtual void unlock() = 0;
+    void lock();
+    void unlock();
 
     class LockingIterator
     {
     public:
-        virtual void advance() = 0;
-        virtual bool is_valid() const = 0;
-        virtual void reset() = 0;
-        virtual const std::shared_ptr<Session> operator*() = 0;
-        virtual ~LockingIterator() {};
+        void advance();
+        bool is_valid() const;
+        void reset();
+        const std::shared_ptr<Session> operator*();
+        ~LockingIterator();
     protected:
+        LockingIterator(SessionContainer* container,
+                        size_t index);
         friend class SessionContainer;
-        LockingIterator() = default;
+        LockingIterator() = delete;
+        LockingIterator(LockingIterator const&LockingIterator) = delete;
+    private:
+      SessionContainer* container;
+      size_t it;
     };
 
-    virtual std::shared_ptr<SessionContainer::LockingIterator> iterator() = 0;
+    std::shared_ptr<SessionContainer::LockingIterator> iterator();
 
 
 protected:
-    SessionContainer() = default;
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
+
+private:
+    std::vector<std::shared_ptr<Session>> apps;
+    std::mutex guard;
 };
 
 }

@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/frontend/session.h"
-#include "mir/frontend/the_session_container_implementation.h"
+#include "mir/frontend/session_container.h"
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
@@ -53,7 +53,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser);
-    std::shared_ptr<mf::TheSessionContainerImplementation> model(new mf::TheSessionContainerImplementation);
+    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");
     MockApplicationSession m2(organiser, "Visual Studio 8");

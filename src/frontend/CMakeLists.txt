@@ -20,7 +20,7 @@ set(
 
   application_mediator.cpp
   session.cpp
-  the_session_container_implementation.cpp
+  session_container.cpp
   session_manager.cpp
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
