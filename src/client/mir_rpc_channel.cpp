@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_client/mir_rpc_channel.h"
+#include "mir_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"

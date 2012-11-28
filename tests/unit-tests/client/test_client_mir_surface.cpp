@@ -23,7 +23,7 @@
 #include "mir_client/client_buffer_depository.h"
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
-#include "mir_client/mir_rpc_channel.h"
+#include "src/client/mir_rpc_channel.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_connection.h"
 #include "mir/frontend/resource_cache.h"

@@ -21,7 +21,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
-#include "mir_client/mir_rpc_channel.h"
+#include "src/client/mir_rpc_channel.h"
 #include "mir_client/mir_connection.h"
 
 #include "mir/thread/all.h"

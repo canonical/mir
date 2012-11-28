@@ -44,12 +44,20 @@ set(
   CLIENT_SOURCES
 
   mir_client_library.cpp
-  mir_rpc_channel.cpp
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
   ${PROTO_SRCS}
 )
+
+if (MIR_TRANSPORT STREQUAL "socket")
+list(APPEND CLIENT_SOURCES
+  mir_rpc_channel.cpp
+)
+elseif (MIR_TRANSPORT STREQUAL "binder")
+list(APPEND CLIENT_SOURCES
+)
+endif()
 
 if( MIR_PLATFORM STREQUAL "android")
 set(

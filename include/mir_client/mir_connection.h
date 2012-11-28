@@ -31,7 +31,6 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/client_context.h"
 
-#include "mir_rpc_channel.h"
 #include "mir_wait_handle.h"
 
 namespace mir
@@ -90,7 +89,7 @@ public:
     EGLNativeDisplayType egl_native_display();
 
 private:
-    mir::client::MirRpcChannel channel;
+    std::unique_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::client::Logger> log;
     mir::protobuf::Void void_response;
