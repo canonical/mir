@@ -23,8 +23,7 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
 #include "mir_client/client_buffer_depository.h"
-
-#include "mir_socket_rpc_channel.h"
+#include "mir_client/make_rpc_channel.h"
 
 #include <cstddef>
 
@@ -46,16 +45,17 @@ namespace gp = google::protobuf;
 
 
 MirConnection::MirConnection() :
-    channel(new mcl::MirSocketRpcChannel()),
-    server(channel.get()),
+    channel(),
+    server(0),
     error_message("ERROR")
 {
 }
 
-MirConnection::MirConnection(const std::string& socket_file,
+MirConnection::MirConnection(
+    std::shared_ptr<google::protobuf::RpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
-      channel(new mcl::MirSocketRpcChannel(socket_file, log))
+      channel(channel)
     , server(channel.get())
     , log(log)
     , client_platform_factory(client_platform_factory)

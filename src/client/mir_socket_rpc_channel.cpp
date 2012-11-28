@@ -331,3 +331,16 @@ std::ostream& c::NullLogger::debug()
     static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
     return null;
 }
+
+namespace mir
+{
+namespace client
+{
+std::shared_ptr<google::protobuf::RpcChannel>
+make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
+{
+    return std::make_shared<MirSocketRpcChannel>(name, log);
+
+}
+}
+}

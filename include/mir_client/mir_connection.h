@@ -50,7 +50,7 @@ class MirConnection : public mir::client::ClientContext
 public:
     MirConnection();
 
-    MirConnection(const std::string& socket_file,
+    MirConnection(std::shared_ptr<google::protobuf::RpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection();
@@ -89,7 +89,7 @@ public:
     EGLNativeDisplayType egl_native_display();
 
 private:
-    std::unique_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::client::Logger> log;
     mir::protobuf::Void void_response;
