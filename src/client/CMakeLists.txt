@@ -93,13 +93,13 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-
+  LINK_PRIVATE
+  mirprotobuf
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+
+  LINK_PUBLIC
   ${LIBHARDWARE_LIBRARIES}
-
-  mirprotobuf
-
   ${DRM_LIBRARIES}
 )
 

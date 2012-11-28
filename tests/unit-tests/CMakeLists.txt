@@ -52,8 +52,6 @@ target_link_libraries(
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}
-  #fixme: android linker crashes in bionic if we link mirclient.so in first 
-  mirclient
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
@@ -61,7 +59,7 @@ target_link_libraries(
   ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
- 
+  mirclient 
 )
 
 mir_discover_tests(unit-tests)

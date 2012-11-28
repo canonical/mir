@@ -47,14 +47,13 @@ target_link_libraries(
 
 
   ${PROTOBUF_LIBRARIES}
-  #fixme: android linker crashes in bionic if we link mirclient.so in first 
-  mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
+  mirclient
 )
 
 mir_discover_tests(acceptance-tests)
