@@ -23,7 +23,7 @@
 #include "mir_client/client_buffer_depository.h"
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
-#include "src/client/mir_rpc_channel.h"
+#include "src/client/mir_socket_rpc_channel.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_connection.h"
 #include "mir/frontend/resource_cache.h"
@@ -232,7 +232,7 @@ struct MirClientSurfaceTest : public testing::Test
         /* connect client */
         logger = std::make_shared<mcl::ConsoleLogger>();
         platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
-        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger);
+        channel = std::make_shared<mcl::MirSocketRpcChannel>(std::string("./test_socket_surface"), logger);
         connection = std::make_shared<MirConnection>("./test_socket_surface", logger, platform_factory);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
@@ -245,7 +245,7 @@ struct MirClientSurfaceTest : public testing::Test
         test_server.reset();
     }
 
-    std::shared_ptr<mcl::MirRpcChannel> channel;
+    std::shared_ptr<mcl::MirSocketRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;

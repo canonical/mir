@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_CLIENT_MIR_RPC_CHANNEL_H_
-#define MIR_CLIENT_MIR_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
+#define MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
 
 #include "mir/thread/all.h"
 #include "mir_client/mir_logger.h"
@@ -83,12 +83,12 @@ private:
 };
 }
 
-class MirRpcChannel : public google::protobuf::RpcChannel
+class MirSocketRpcChannel : public google::protobuf::RpcChannel
 {
 public:
-    MirRpcChannel();
-    MirRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
-    ~MirRpcChannel();
+    MirSocketRpcChannel();
+    MirSocketRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
+    ~MirSocketRpcChannel();
 
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
@@ -122,4 +122,4 @@ private:
 
 
 
-#endif /* MIR_CLIENT_MIR_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_ */

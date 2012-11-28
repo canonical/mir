@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_rpc_channel.h"
+#include "mir_socket_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -89,12 +89,12 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 }
 
 
-c::MirRpcChannel::MirRpcChannel() :
+c::MirSocketRpcChannel::MirSocketRpcChannel() :
     pending_calls(std::shared_ptr<Logger>()), work(io_service), socket(io_service)
 {
 }
 
-c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
+c::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
@@ -107,7 +107,7 @@ c::MirRpcChannel::MirRpcChannel(std::string const& endpoint, std::shared_ptr<Log
     }
 }
 
-c::MirRpcChannel::~MirRpcChannel()
+c::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
     io_service.stop();
 
@@ -121,7 +121,7 @@ c::MirRpcChannel::~MirRpcChannel()
 }
 
 
-void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
+void c::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
@@ -188,7 +188,7 @@ void c::MirRpcChannel::receive_file_descriptors(google::protobuf::Message* respo
     complete->Run();
 }
 
-void c::MirRpcChannel::CallMethod(
+void c::MirSocketRpcChannel::CallMethod(
     const google::protobuf::MethodDescriptor* method,
     google::protobuf::RpcController*,
     const google::protobuf::Message* parameters,
@@ -200,7 +200,7 @@ void c::MirRpcChannel::CallMethod(
     invocation.SerializeToOstream(&buffer);
 
     std::shared_ptr<google::protobuf::Closure> callback(
-        google::protobuf::NewPermanentCallback(this, &MirRpcChannel::receive_file_descriptors, response, complete));
+        google::protobuf::NewPermanentCallback(this, &MirSocketRpcChannel::receive_file_descriptors, response, complete));
 
     // Only save details after serialization succeeds
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
@@ -209,7 +209,7 @@ void c::MirRpcChannel::CallMethod(
     send_message(buffer.str(), send_buffer);
 }
 
-mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
+mir::protobuf::wire::Invocation c::MirSocketRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
@@ -225,14 +225,14 @@ mir::protobuf::wire::Invocation c::MirRpcChannel::invocation_for(
     return invoke;
 }
 
-int c::MirRpcChannel::next_id()
+int c::MirSocketRpcChannel::next_id()
 {
     int id = next_message_id.load();
     while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return id;
 }
 
-void c::MirRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
+void c::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -248,11 +248,11 @@ void c::MirRpcChannel::send_message(const std::string& body, detail::SendBuffer&
     boost::asio::async_write(
         socket,
         boost::asio::buffer(send_buffer),
-        boost::bind(&MirRpcChannel::on_message_sent, this,
+        boost::bind(&MirSocketRpcChannel::on_message_sent, this,
             boost::asio::placeholders::error));
 }
 
-void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
+void c::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
     if (error)
@@ -265,7 +265,7 @@ void c::MirRpcChannel::on_message_sent(boost::system::error_code const& error)
 }
 
 
-void c::MirRpcChannel::read_message()
+void c::MirSocketRpcChannel::read_message()
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
     const size_t body_size = read_message_header();
@@ -279,7 +279,7 @@ void c::MirRpcChannel::read_message()
     pending_calls.complete_response(result);
 }
 
-size_t c::MirRpcChannel::read_message_header()
+size_t c::MirSocketRpcChannel::read_message_header()
 {
     unsigned char header_bytes[2];
     boost::system::error_code error;
@@ -291,7 +291,7 @@ size_t c::MirRpcChannel::read_message_header()
     return body_size;
 }
 
-mir::protobuf::wire::Result c::MirRpcChannel::read_message_body(const size_t body_size)
+mir::protobuf::wire::Result c::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
     boost::system::error_code error;
     boost::asio::streambuf message;

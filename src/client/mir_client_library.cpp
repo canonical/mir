@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_rpc_channel.h"
+#include "mir_socket_rpc_channel.h"
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"

@@ -21,7 +21,7 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
-#include "src/client/mir_rpc_channel.h"
+#include "src/client/mir_socket_rpc_channel.h"
 
 #include "mir_test/mock_logger.h"
 
@@ -34,7 +34,7 @@ struct TestProtobufClient
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<MockLogger> logger;
-    mir::client::MirRpcChannel channel;
+    mir::client::MirSocketRpcChannel channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;
