@@ -62,6 +62,17 @@ set(
   android/mir_native_window.cpp
   ${CLIENT_SOURCES}
 )
+
+#todo: android should be shared as well, and we should combine with 
+# gbm's add_library below. Android currently has problems with multiple 
+# linkages of static protobuf
+add_library( 
+  mirclient STATIC
+  
+  ${CLIENT_SOURCES}
+  ${MIR_3RD_PARTY_SOURCES}
+)
+
 endif()
 
 if( MIR_PLATFORM STREQUAL "gbm")
@@ -73,14 +84,14 @@ set(
   gbm/gbm_client_buffer.cpp
   ${CLIENT_SOURCES}
 )
-endif()
 
 add_library( 
-  mirclient STATIC
+  mirclient SHARED
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
 )
+endif()
 
 set_target_properties(
   mirclient 
@@ -113,6 +124,7 @@ set_target_properties(
 
 install(
   TARGETS mirclient
+  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
 
