@@ -50,7 +50,6 @@ class ProtobufIpcFactory;
 namespace detail
 {
 class SocketSession;
-class AsioSession;
 }
 
 class ProtobufSocketCommunicator : public Communicator

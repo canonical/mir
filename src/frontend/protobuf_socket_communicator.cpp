@@ -117,9 +117,20 @@ private:
     std::vector<char> whole_message;
 };
 
-struct mfd::AsioSession : Processor
+namespace mir
 {
-    AsioSession(
+namespace frontend
+{
+namespace detail
+{
+class ProtobufProcessor;
+}
+}
+}
+
+struct mfd::ProtobufProcessor : Processor
+{
+    ProtobufProcessor(
         Sender* sender,
         int id_,
         ConnectedSessions<SocketSession>* connected_sessions,
@@ -213,7 +224,7 @@ struct mfd::AsioSession : Processor
         {
             std::unique_ptr<google::protobuf::Closure> callback(
                 google::protobuf::NewPermanentCallback(this,
-                    &AsioSession::send_response,
+                    &ProtobufProcessor::send_response,
                     invocation.id(),
                     &result_message));
 
@@ -254,7 +265,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
 {
     auto const& socket_session = std::make_shared<mfd::SocketSession>(io_service);
 
-    auto session = std::make_shared<detail::AsioSession>(
+    auto session = std::make_shared<detail::ProtobufProcessor>(
         socket_session.get(),
         next_id(),
         &connected_sessions,
@@ -313,7 +324,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     start_accept();
 }
 
-mfd::AsioSession::AsioSession(
+mfd::ProtobufProcessor::ProtobufProcessor(
     Sender* sender,
     int id_,
     ConnectedSessions<SocketSession>* connected_sessions,
@@ -350,7 +361,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
     }
 }
 
-bool mfd::AsioSession::process_message(std::istream& msg)
+bool mfd::ProtobufProcessor::process_message(std::istream& msg)
 {
     mir::protobuf::wire::Invocation invocation;
 
@@ -426,7 +437,7 @@ void mfd::SocketSession::send(const std::ostringstream& buffer2)
             boost::asio::placeholders::bytes_transferred));
 }
 
-void mfd::AsioSession::send_response(
+void mfd::ProtobufProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
