@@ -104,7 +104,7 @@ private:
 };
 }
 
-struct mfd::AsioSession : SocketSession, Processor
+struct mfd::AsioSession : Processor
 {
     AsioSession(
         boost::asio::io_service& io_service,
@@ -117,6 +117,13 @@ struct mfd::AsioSession : SocketSession, Processor
     {
         return id_;
     }
+
+    // TODO leaky encapsulation
+    boost::asio::local::stream_protocol::socket&
+    get_socket() { return socket_session.get_socket(); }
+
+    // TODO really part of initialisation
+    void read_next_message() { socket_session.read_next_message(); }
 
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
 
@@ -217,6 +224,7 @@ struct mfd::AsioSession : SocketSession, Processor
         }
     }
 private:
+    SocketSession socket_session;
     Sender* const sender;
     int const id_;
     ConnectedSessions<AsioSession>* connected_sessions;
@@ -302,8 +310,8 @@ mfd::AsioSession::AsioSession(
     ConnectedSessions<AsioSession>* connected_sessions,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    SocketSession(io_service, this),
-    sender(this),
+    socket_session(io_service, this),
+    sender(&socket_session),
     id_(id_),
     connected_sessions(connected_sessions),
     display_server(display_server),
@@ -315,7 +323,7 @@ void SocketSession::read_next_message()
 {
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
-        boost::bind(&mfd::AsioSession::on_read_size,
+        boost::bind(&SocketSession::on_read_size,
             this, ba::placeholders::error));
 }
 
