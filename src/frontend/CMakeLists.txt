@@ -25,6 +25,7 @@ set(
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
   null_application_listener.cpp
+  protobuf_message_processor.cpp
 
   resource_cache.cpp
   ${PROTO_HDRS}

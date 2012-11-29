@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_socket_communicator.h"
+#include "protobuf_message_processor.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
@@ -56,39 +57,23 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
-namespace
-{
-struct Sender
-{
-    virtual void send(const std::ostringstream& buffer2) = 0;
-    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
-};
 
-struct Processor
-{
-    virtual bool process_message(std::istream& msg) = 0;
-    virtual int id() const = 0;
-};
-
-struct NullProcessor : Processor
-{
-    bool process_message(std::istream& ) { return false; }
-    virtual int id() const { return 0; }
-};
-}
-
-struct mfd::SocketSession : public Sender
+struct mfd::SocketSession : public mfd::Sender
 {
     SocketSession(
-        boost::asio::io_service& io_service) :
+        boost::asio::io_service& io_service,
+        int id_,
+        ConnectedSessions<SocketSession>* connected_sessions) :
         socket(io_service),
-        processor(std::make_shared<NullProcessor>()) {}
+        id_(id_),
+        connected_sessions(connected_sessions),
+        processor(std::make_shared<NullMessageProcessor>()) {}
 
-    int id() const { return processor->id(); }
+    int id() const { return id_; }
 
     void read_next_message();
 
-    void set_processor(std::shared_ptr<Processor> const& processor)
+    void set_processor(std::shared_ptr<MessageProcessor> const& processor)
     {
         this->processor = processor;
     }
@@ -111,144 +96,13 @@ private:
     void on_read_size(const boost::system::error_code& ec);
 
     boost::asio::local::stream_protocol::socket socket;
-    std::shared_ptr<Processor> processor;
+    int const id_;
+    ConnectedSessions<SocketSession>* connected_sessions;
+    std::shared_ptr<MessageProcessor> processor;
     boost::asio::streambuf message;
     unsigned char message_header_bytes[2];
     std::vector<char> whole_message;
 };
-
-namespace mir
-{
-namespace frontend
-{
-namespace detail
-{
-class ProtobufProcessor;
-}
-}
-}
-
-struct mfd::ProtobufProcessor : Processor
-{
-    ProtobufProcessor(
-        Sender* sender,
-        int id_,
-        ConnectedSessions<SocketSession>* connected_sessions,
-        std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache);
-
-    int id() const
-    {
-        return id_;
-    }
-
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-
-    template<class ResultMessage>
-    void send_response(::google::protobuf::uint32 id, ResultMessage* response)
-    {
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-    }
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
-    {
-        const auto& fd = extract_fds_from(response);
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-        sender->send_fds(fd);
-        resource_cache->free_resource(response);
-    }
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response)
-    {
-        const auto& fd = extract_fds_from(response);
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-        sender->send_fds(fd);
-        resource_cache->free_resource(response);
-    }
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
-    {
-        const auto& fd = response->has_platform() ?
-            extract_fds_from(response->mutable_platform()) :
-            std::vector<int32_t>();
-
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-        sender->send_fds(fd);
-        resource_cache->free_resource(response);
-    }
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
-    {
-        const auto& fd = response->has_buffer() ?
-            extract_fds_from(response->mutable_buffer()) :
-            std::vector<int32_t>();
-
-        send_response(id, static_cast<google::protobuf::Message*>(response));
-        sender->send_fds(fd);
-        resource_cache->free_resource(response);
-    }
-
-    template<class Response>
-    std::vector<int32_t> extract_fds_from(Response* response)
-    {
-        std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
-        response->clear_fd();
-        response->set_fds_on_side_channel(fd.size());
-        return fd;
-    }
-
-    bool process_message(std::istream& msg);
-
-    template<class ParameterMessage, class ResultMessage>
-    void invoke(
-        void (protobuf::DisplayServer::*function)(
-            ::google::protobuf::RpcController* controller,
-            const ParameterMessage* request,
-            ResultMessage* response,
-            ::google::protobuf::Closure* done),
-        mir::protobuf::wire::Invocation const& invocation)
-    {
-        ParameterMessage parameter_message;
-        parameter_message.ParseFromString(invocation.parameters());
-        ResultMessage result_message;
-
-        try
-        {
-            std::unique_ptr<google::protobuf::Closure> callback(
-                google::protobuf::NewPermanentCallback(this,
-                    &ProtobufProcessor::send_response,
-                    invocation.id(),
-                    &result_message));
-
-            (display_server.get()->*function)(
-                0,
-                &parameter_message,
-                &result_message,
-                callback.get());
-        }
-        catch (std::exception const& x)
-        {
-            result_message.set_error(x.what());
-            send_response(invocation.id(), &result_message);
-        }
-    }
-private:
-    Sender* const sender;
-    int const id_;
-    ConnectedSessions<SocketSession>* connected_sessions;
-    std::shared_ptr<protobuf::DisplayServer> const display_server;
-    mir::protobuf::Surface surface;
-    std::shared_ptr<ResourceCache> const resource_cache;
-};
-
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
@@ -263,12 +117,13 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
-    auto const& socket_session = std::make_shared<mfd::SocketSession>(io_service);
-
-    auto session = std::make_shared<detail::ProtobufProcessor>(
-        socket_session.get(),
+    auto const& socket_session = std::make_shared<mfd::SocketSession>(
+        io_service,
         next_id(),
-        &connected_sessions,
+        &connected_sessions);
+
+    auto session = std::make_shared<detail::ProtobufMessageProcessor>(
+        socket_session.get(),
         ipc_factory->make_ipc_server(),
         ipc_factory->resource_cache());
 
@@ -324,20 +179,6 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     start_accept();
 }
 
-mfd::ProtobufProcessor::ProtobufProcessor(
-    Sender* sender,
-    int id_,
-    ConnectedSessions<SocketSession>* connected_sessions,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
-    sender(sender),
-    id_(id_),
-    connected_sessions(connected_sessions),
-    display_server(display_server),
-    resource_cache(resource_cache)
-{
-}
-
 void mfd::SocketSession::read_next_message()
 {
     boost::asio::async_read(socket,
@@ -361,49 +202,6 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
     }
 }
 
-bool mfd::ProtobufProcessor::process_message(std::istream& msg)
-{
-    mir::protobuf::wire::Invocation invocation;
-
-    invocation.ParseFromIstream(&msg);
-    // TODO comparing strings in an if-else chain isn't efficient.
-    // It is probably possible to generate a Trie at compile time.
-    if ("connect" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::connect, invocation);
-    }
-    else if ("create_surface" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::create_surface, invocation);
-    }
-    else if ("next_buffer" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::next_buffer, invocation);
-    }
-    else if ("release_surface" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::release_surface, invocation);
-    }
-    else if ("test_file_descriptors" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
-    }
-    else if ("disconnect" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::disconnect, invocation);
-        // Careful about what you do after this - it deletes this
-        connected_sessions->remove(id());
-        return false;
-    }
-    else
-    {
-        /*log->error()*/
-        std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
-    }
-
-    return true;
-}
-
 void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
 {
     bool alive{true};
@@ -415,6 +213,7 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
     }
 
     if (alive) read_next_message();
+    else connected_sessions->remove(id());
 }
 
 void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
@@ -435,21 +234,4 @@ void mfd::SocketSession::send(const std::ostringstream& buffer2)
     ba::async_write(socket, ba::buffer(whole_message),
         boost::bind(&mfd::SocketSession::on_response_sent, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
-}
-
-void mfd::ProtobufProcessor::send_response(
-    ::google::protobuf::uint32 id,
-    google::protobuf::Message* response)
-{
-    std::ostringstream buffer1;
-    response->SerializeToOstream(&buffer1);
-
-    mir::protobuf::wire::Result result;
-    result.set_id(id);
-    result.set_response(buffer1.str());
-
-    std::ostringstream buffer2;
-    result.SerializeToOstream(&buffer2);
-
-    sender->send(buffer2);
 }
