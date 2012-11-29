@@ -32,7 +32,7 @@
 #include "mir/surfaces/surface.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<frontend::SessionStore> const& session_store,
+    std::shared_ptr<SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
@@ -47,9 +47,9 @@ mir::frontend::ApplicationMediator::ApplicationMediator(
 
 void mir::frontend::ApplicationMediator::connect(
     ::google::protobuf::RpcController*,
-                     const ::mir::protobuf::ConnectParameters* request,
-                     ::mir::protobuf::Connection* response,
-                     ::google::protobuf::Closure* done)
+    const ::mir::protobuf::ConnectParameters* request,
+    ::mir::protobuf::Connection* response,
+    ::google::protobuf::Closure* done)
 {
     listener->application_connect_called(request->application_name());
 
