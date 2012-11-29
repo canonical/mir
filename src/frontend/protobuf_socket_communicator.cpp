@@ -56,15 +56,15 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
+namespace
+{
 struct SocketSession
 {
     SocketSession(boost::asio::io_service& io_service) :
         socket(io_service) {}
 
-    void read_next_message_from_socket();
-    void on_response_sent_to_socket(boost::system::error_code const& error, std::size_t);
-    void on_new_message_from_socket(const boost::system::error_code& ec);
-    void on_read_size_from_socket(const boost::system::error_code& ec);
+protected:
+    void send_over_socket(const std::ostringstream& buffer2);
     void send_fds_over_socket(std::vector<int32_t> const& fd)
     {
         if (fd.size() > 0)
@@ -72,17 +72,21 @@ struct SocketSession
             ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
         }
     }
-
-    void send_over_socket(const std::ostringstream& buffer2);
+private:
+    void read_next_message_from_socket();
+    void on_response_sent_to_socket(boost::system::error_code const& error, std::size_t);
+    void on_new_message_from_socket(const boost::system::error_code& ec);
+    void on_read_size_from_socket(const boost::system::error_code& ec);
 
     virtual bool invoke_method_for(std::istream& msg) = 0;
-private:
-    friend mf::ProtobufSocketCommunicator; //::start_accept;
+
+    friend class mf::ProtobufSocketCommunicator; //::start_accept;
     boost::asio::local::stream_protocol::socket socket;
     boost::asio::streambuf message;
     unsigned char message_header_bytes[2];
     std::vector<char> whole_message;
 };
+}
 
 struct mfd::AsioSession : SocketSession
 {
@@ -196,7 +200,7 @@ struct mfd::AsioSession : SocketSession
             send_response(invocation.id(), &result_message);
         }
     }
-
+private:
     int const id_;
     ConnectedSessions<AsioSession>* connected_sessions;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
