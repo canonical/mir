@@ -144,7 +144,7 @@ class StubDisplay : public mg::Display
 {
  public:
     geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() { std::this_thread::yield(); }
+    void clear() {}
     bool post_update() { return true; }
 };
 
