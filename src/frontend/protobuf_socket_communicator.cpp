@@ -70,11 +70,11 @@ struct mfd::AsioSession
         return id_;
     }
 
-    void read_next_message();
-    void on_response_sent(boost::system::error_code const& error, std::size_t);
+    void read_next_message_from_socket();
+    void on_response_sent_to_socket(boost::system::error_code const& error, std::size_t);
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
-    void on_new_message(const boost::system::error_code& ec);
-    void on_read_size(const boost::system::error_code& ec);
+    void on_new_message_from_socket(const boost::system::error_code& ec);
+    void on_read_size_from_socket(const boost::system::error_code& ec);
 
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response)
@@ -144,6 +144,9 @@ struct mfd::AsioSession
             ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
         }
     }
+
+    void send_over_socket(const std::ostringstream& buffer2);
+    bool invoke_method_for(std::istream& msg);
 
     template<class ParameterMessage, class ResultMessage>
     void invoke(
@@ -256,7 +259,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     {
         connected_sessions.add(session);
 
-        session->read_next_message();
+        session->read_next_message_from_socket();
     }
     start_accept();
 }
@@ -275,15 +278,15 @@ mfd::AsioSession::AsioSession(
 {
 }
 
-void mfd::AsioSession::read_next_message()
+void mfd::AsioSession::read_next_message_from_socket()
 {
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
-        boost::bind(&mfd::AsioSession::on_read_size,
+        boost::bind(&mfd::AsioSession::on_read_size_from_socket,
             this, ba::placeholders::error));
 }
 
-void mfd::AsioSession::on_read_size(const boost::system::error_code& ec)
+void mfd::AsioSession::on_read_size_from_socket(const boost::system::error_code& ec)
 {
     if (!ec)
     {
@@ -293,63 +296,85 @@ void mfd::AsioSession::on_read_size(const boost::system::error_code& ec)
              socket,
              message,
              boost::asio::transfer_exactly(body_size),
-             boost::bind(&AsioSession::on_new_message,
+             boost::bind(&AsioSession::on_new_message_from_socket,
                          this, ba::placeholders::error));
     }
 }
 
-void mfd::AsioSession::on_new_message(const boost::system::error_code& ec)
+bool mfd::AsioSession::invoke_method_for(std::istream& msg)
 {
-    if (!ec)
+    mir::protobuf::wire::Invocation invocation;
+
+    invocation.ParseFromIstream(&msg);
+    // TODO comparing strings in an if-else chain isn't efficient.
+    // It is probably possible to generate a Trie at compile time.
+    if ("connect" == invocation.method_name())
     {
-        std::istream in(&message);
-        mir::protobuf::wire::Invocation invocation;
-
-        invocation.ParseFromIstream(&in);
-
-        // TODO comparing strings in an if-else chain isn't efficient.
-        // It is probably possible to generate a Trie at compile time.
-        if ("connect" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::connect, invocation);
-        }
-        else if ("create_surface" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::create_surface, invocation);
-        }
-        else if ("next_buffer" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::next_buffer, invocation);
-        }
-        else if ("release_surface" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::release_surface, invocation);
-        }
-        else if ("test_file_descriptors" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
-        }
-        else if ("disconnect" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::disconnect, invocation);
-            // Careful about what you do after this - it deletes this
-            connected_sessions->remove(id());
-            return;
-        }
-        else
-        {
-            /*log->error()*/
-            std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
-        }
+        invoke(&protobuf::DisplayServer::connect, invocation);
+    }
+    else if ("create_surface" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::create_surface, invocation);
+    }
+    else if ("next_buffer" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::next_buffer, invocation);
+    }
+    else if ("release_surface" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::release_surface, invocation);
+    }
+    else if ("test_file_descriptors" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
+    }
+    else if ("disconnect" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::disconnect, invocation);
+        // Careful about what you do after this - it deletes this
+        connected_sessions->remove(id());
+        return false;
+    }
+    else
+    {
+        /*log->error()*/
+        std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
     }
 
-    read_next_message();
+    return true;
 }
 
-void mfd::AsioSession::on_response_sent(bs::error_code const& error, std::size_t)
+void mfd::AsioSession::on_new_message_from_socket(const boost::system::error_code& ec)
+{
+    bool alive{true};
+
+    if (!ec)
+    {
+        std::istream msg(&message);
+        alive = invoke_method_for(msg);
+    }
+
+    if (alive) read_next_message_from_socket();
+}
+
+void mfd::AsioSession::on_response_sent_to_socket(bs::error_code const& error, std::size_t)
 {
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
+}
+
+void mfd::AsioSession::send_over_socket(const std::ostringstream& buffer2)
+{
+    const std::string& body = buffer2.str();
+    const size_t size = body.size();
+    const unsigned char header_bytes[2] =
+    { static_cast<unsigned char>((size >> 8) & 0xff), static_cast<unsigned char>((size >> 0) & 0xff) };
+    whole_message.resize(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
+    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
+    ba::async_write(socket, ba::buffer(whole_message),
+        boost::bind(&AsioSession::on_response_sent_to_socket, this, boost::asio::placeholders::error,
+            boost::asio::placeholders::bytes_transferred));
 }
 
 void mfd::AsioSession::send_response(
@@ -366,22 +391,5 @@ void mfd::AsioSession::send_response(
     std::ostringstream buffer2;
     result.SerializeToOstream(&buffer2);
 
-    const std::string& body = buffer2.str();
-    const size_t size = body.size();
-    const unsigned char header_bytes[2] =
-    {
-        static_cast<unsigned char>((size >> 8) & 0xff),
-        static_cast<unsigned char>((size >> 0) & 0xff)
-    };
-
-    whole_message.resize(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
-
-    ba::async_write(
-        socket,
-        ba::buffer(whole_message),
-        boost::bind(&AsioSession::on_response_sent, this,
-            boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+    send_over_socket(buffer2);
 }
