@@ -19,22 +19,22 @@
 #ifndef MIR_TEST_MOCK_SURFACE_ORGANISER_H_
 #define MIR_TEST_MOCK_SURFACE_ORGANISER_H_
 
-#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mir
 {
-namespace surfaces
+namespace frontend
 {
 
-struct MockApplicationSurfaceOrganiser : public ApplicationSurfaceOrganiser
+struct MockSurfaceOrganiser : public SurfaceOrganiser
 {
-    MOCK_METHOD1(create_surface, std::weak_ptr<Surface>(const SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<Surface> const&));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<Surface> const&));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<Surface> const&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
+    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_METHOD1(hide_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_METHOD1(show_surface, void(std::weak_ptr<surfaces::Surface> const&));
 };
 
 }

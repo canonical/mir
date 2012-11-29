@@ -38,7 +38,6 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace ms = mir::surfaces;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -240,7 +239,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&,
+            std::shared_ptr<mf::SessionManager> const&,
             std::shared_ptr<mg::Display> const&)
 
         {

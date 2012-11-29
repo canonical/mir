@@ -23,6 +23,11 @@ set(
 
 add_library( 
   mirprocess STATIC
-  
+
   ${PROCESS_SOURCES}
+)
+
+target_link_libraries(
+  mirprocess
+  ${Boost_LIBRARIES}
 )

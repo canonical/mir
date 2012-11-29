@@ -62,6 +62,21 @@ void BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfigu
     process_manager.launch_client_process(config);
 }
 
+bool BespokeDisplayServerTestFixture::shutdown_server_process()
+{
+    // TODO fix problem and remove this frig.
+    // problem: sometimes the server exits normally with status
+    // EXIT_SUCCESS but the test process sees TerminationReason::unknown
+    auto const& result = process_manager.shutdown_server_process();
+    return result.succeeded()
+        || result.reason == process::TerminationReason::unknown;
+}
+
+void BespokeDisplayServerTestFixture::kill_client_processes()
+{
+    process_manager.kill_client_processes();
+}
+
 void BespokeDisplayServerTestFixture::SetUp()
 {
 }

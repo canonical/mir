@@ -16,38 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_FOCUS_MECHANISM_H_
-#define MIR_FRONTEND_FOCUS_MECHANISM_H_
+#ifndef MIR_FRONTEND_FOCUS_STRATEGY_H_
+#define MIR_FRONTEND_FOCUS_STRATEGY_H_
 
 #include <memory>
 
 namespace mir
 {
-
-namespace surfaces
-{
-class ApplicationSurfaceOrganiser;
-}
-
 namespace frontend
 {
-class ApplicationSession;
+class Session;
 
-class ApplicationFocusMechanism
+class FocusSequence
 {
 public:
-    virtual ~ApplicationFocusMechanism() {}
+    virtual ~FocusSequence() {}
 
-    virtual void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus) = 0;
+    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
 
 protected:
-    ApplicationFocusMechanism() = default;
-    ApplicationFocusMechanism(const ApplicationFocusMechanism&) = delete;
-    ApplicationFocusMechanism& operator=(const ApplicationFocusMechanism&) = delete;
+    FocusSequence() = default;
+    FocusSequence(const FocusSequence&) = delete;
+    FocusSequence& operator=(const FocusSequence&) = delete;
 };
 
 }
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_MECHANISM_H_
+#endif // MIR_FRONTEND_FOCUS_SEQUENCE_H_

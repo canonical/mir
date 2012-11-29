@@ -55,7 +55,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const ms::SurfaceCre
     std::lock_guard<std::mutex> lg(guard);
 
     mc::BufferProperties buffer_properties{params.size,
-                                           geom::PixelFormat::rgba_8888,
+                                           params.pixel_format,
                                            params.buffer_usage};
 
     std::shared_ptr<ms::Surface> surface(

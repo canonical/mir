@@ -16,10 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/application_session_factory.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session_store.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -28,16 +29,15 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/application_surface_organiser.h"
 #include "mir/surfaces/surface.h"
 
-mir::frontend::ApplicationProxy::ApplicationProxy(
-    std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
+mir::frontend::ApplicationMediator::ApplicationMediator(
+    std::shared_ptr<frontend::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    session_factory(session_factory),
+    session_store(session_store),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     listener(listener),
@@ -45,7 +45,7 @@ mir::frontend::ApplicationProxy::ApplicationProxy(
 {
 }
 
-void mir::frontend::ApplicationProxy::connect(
+void mir::frontend::ApplicationMediator::connect(
     ::google::protobuf::RpcController*,
                      const ::mir::protobuf::ConnectParameters* request,
                      ::mir::protobuf::Connection* response,
@@ -53,7 +53,7 @@ void mir::frontend::ApplicationProxy::connect(
 {
     listener->application_connect_called(request->application_name());
 
-    application_session = session_factory->open_session(request->application_name());
+    application_session = session_store->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -73,7 +73,7 @@ void mir::frontend::ApplicationProxy::connect(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::create_surface(
+void mir::frontend::ApplicationMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
     mir::protobuf::Surface* response,
@@ -86,6 +86,7 @@ void mir::frontend::ApplicationProxy::create_surface(
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
+        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
         );
 
     {
@@ -117,7 +118,7 @@ void mir::frontend::ApplicationProxy::create_surface(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::next_buffer(
+void mir::frontend::ApplicationMediator::next_buffer(
     ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
     ::mir::protobuf::Buffer* response,
@@ -145,7 +146,7 @@ void mir::frontend::ApplicationProxy::next_buffer(
 }
 
 
-void mir::frontend::ApplicationProxy::release_surface(
+void mir::frontend::ApplicationMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -160,7 +161,7 @@ void mir::frontend::ApplicationProxy::release_surface(
     done->Run();
 }
 
-void mir::frontend::ApplicationProxy::disconnect(
+void mir::frontend::ApplicationMediator::disconnect(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::Void* /*request*/,
     mir::protobuf::Void* /*response*/,
@@ -168,7 +169,7 @@ void mir::frontend::ApplicationProxy::disconnect(
 {
     listener->application_disconnect_called(application_session->get_name());
 
-    session_factory->close_session(application_session);
+    session_store->close_session(application_session);
 
     done->Run();
 }

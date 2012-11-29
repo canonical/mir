@@ -25,7 +25,8 @@ mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, s
     :
     buffer_a(std::move(buf_a)),
     buffer_b(std::move(buf_b)),
-    compositor_has_consumed(true)
+    compositor_has_consumed(true),
+    shutting_down(false)
 {
     client_queue.push(buffer_a.get());
     last_posted_buffer = buffer_b.get();
@@ -53,7 +54,7 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    while (!compositor_has_consumed)
+    while (!compositor_has_consumed && !shutting_down)
     {
         consumed_cv.wait(lk);
     }
@@ -66,7 +67,6 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
     }
 
     last_posted_buffer = queued_buffer;
-
 }
 
 mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
@@ -94,4 +94,12 @@ void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
         client_queue.push(released_buffer);
         buffer_available_cv.notify_one();
     }
+}
+
+void mc::BufferSwapperDouble::shutdown()
+{
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    shutting_down = true;
+    consumed_cv.notify_all();
 }
