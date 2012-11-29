@@ -650,8 +650,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    auto val = check_pattern<2,2>(region, mt::color_values_0);
-    EXPECT_TRUE(val);
+    EXPECT_TRUE(check_pattern(region, mt::color_values_0));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
@@ -662,8 +661,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    auto val = check_pattern<2,2>(region, mt::color_values_0);
-    EXPECT_TRUE(val);
+    EXPECT_TRUE(check_pattern(region, mt::color_values_0));
 
     mock_server->set_package(second_package, 15);
 
@@ -672,8 +670,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
-    val = check_pattern<2,2>(second_region, mt::color_values_1);
-    EXPECT_TRUE(val);
+    EXPECT_TRUE(check_pattern(second_region, mt::color_values_1));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
@@ -690,8 +687,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    auto val = check_pattern<2,2>(region, mt::color_values_1);
-    EXPECT_TRUE(val);
+    EXPECT_TRUE(check_pattern(region, mt::color_values_1));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
