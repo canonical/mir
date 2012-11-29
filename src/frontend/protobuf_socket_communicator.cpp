@@ -58,37 +58,53 @@ namespace bs = boost::system;
 
 namespace
 {
-struct SocketSession
+struct Sender
 {
-    SocketSession(boost::asio::io_service& io_service) :
-        socket(io_service) {}
+    virtual void send(const std::ostringstream& buffer2) = 0;
+    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+};
 
-protected:
-    void send_over_socket(const std::ostringstream& buffer2);
-    void send_fds_over_socket(std::vector<int32_t> const& fd)
+struct Processor
+{
+    virtual bool process_message(std::istream& msg) = 0;
+};
+
+struct SocketSession : public Sender
+{
+    SocketSession(
+        boost::asio::io_service& io_service,
+        Processor* const processor) :
+        socket(io_service),
+        processor(processor) {}
+
+    void read_next_message();
+
+    boost::asio::local::stream_protocol::socket&
+    get_socket() { return socket; }
+
+private:
+    void send(const std::ostringstream& buffer2);
+    void send_fds(std::vector<int32_t> const& fd)
     {
         if (fd.size() > 0)
         {
             ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
         }
     }
-private:
-    void read_next_message_from_socket();
-    void on_response_sent_to_socket(boost::system::error_code const& error, std::size_t);
-    void on_new_message_from_socket(const boost::system::error_code& ec);
-    void on_read_size_from_socket(const boost::system::error_code& ec);
 
-    virtual bool invoke_method_for(std::istream& msg) = 0;
+    void on_response_sent(boost::system::error_code const& error, std::size_t);
+    void on_new_message(const boost::system::error_code& ec);
+    void on_read_size(const boost::system::error_code& ec);
 
-    friend class mf::ProtobufSocketCommunicator; //::start_accept;
     boost::asio::local::stream_protocol::socket socket;
+    Processor* const processor;
     boost::asio::streambuf message;
     unsigned char message_header_bytes[2];
     std::vector<char> whole_message;
 };
 }
 
-struct mfd::AsioSession : SocketSession
+struct mfd::AsioSession : SocketSession, Processor
 {
     AsioSession(
         boost::asio::io_service& io_service,
@@ -116,7 +132,7 @@ struct mfd::AsioSession : SocketSession
     {
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds_over_socket(fd);
+        sender->send_fds(fd);
         resource_cache->free_resource(response);
     }
 
@@ -126,7 +142,7 @@ struct mfd::AsioSession : SocketSession
     {
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds_over_socket(fd);
+        sender->send_fds(fd);
         resource_cache->free_resource(response);
     }
 
@@ -139,7 +155,7 @@ struct mfd::AsioSession : SocketSession
             std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds_over_socket(fd);
+        sender->send_fds(fd);
         resource_cache->free_resource(response);
     }
 
@@ -152,7 +168,7 @@ struct mfd::AsioSession : SocketSession
             std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds_over_socket(fd);
+        sender->send_fds(fd);
         resource_cache->free_resource(response);
     }
 
@@ -165,7 +181,7 @@ struct mfd::AsioSession : SocketSession
         return fd;
     }
 
-    bool invoke_method_for(std::istream& msg);
+    bool process_message(std::istream& msg);
 
     template<class ParameterMessage, class ResultMessage>
     void invoke(
@@ -201,6 +217,7 @@ struct mfd::AsioSession : SocketSession
         }
     }
 private:
+    Sender* const sender;
     int const id_;
     ConnectedSessions<AsioSession>* connected_sessions;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
@@ -230,7 +247,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
         ipc_factory->resource_cache());
 
     acceptor.async_accept(
-        session->socket,
+        session->get_socket(),
         boost::bind(
             &ProtobufSocketCommunicator::on_new_connection,
             this,
@@ -274,7 +291,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     {
         connected_sessions.add(session);
 
-        session->read_next_message_from_socket();
+        session->read_next_message();
     }
     start_accept();
 }
@@ -285,7 +302,8 @@ mfd::AsioSession::AsioSession(
     ConnectedSessions<AsioSession>* connected_sessions,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    SocketSession(io_service),
+    SocketSession(io_service, this),
+    sender(this),
     id_(id_),
     connected_sessions(connected_sessions),
     display_server(display_server),
@@ -293,15 +311,15 @@ mfd::AsioSession::AsioSession(
 {
 }
 
-void SocketSession::read_next_message_from_socket()
+void SocketSession::read_next_message()
 {
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
-        boost::bind(&mfd::AsioSession::on_read_size_from_socket,
+        boost::bind(&mfd::AsioSession::on_read_size,
             this, ba::placeholders::error));
 }
 
-void SocketSession::on_read_size_from_socket(const boost::system::error_code& ec)
+void SocketSession::on_read_size(const boost::system::error_code& ec)
 {
     if (!ec)
     {
@@ -311,12 +329,12 @@ void SocketSession::on_read_size_from_socket(const boost::system::error_code& ec
              socket,
              message,
              boost::asio::transfer_exactly(body_size),
-             boost::bind(&SocketSession::on_new_message_from_socket,
+             boost::bind(&SocketSession::on_new_message,
                          this, ba::placeholders::error));
     }
 }
 
-bool mfd::AsioSession::invoke_method_for(std::istream& msg)
+bool mfd::AsioSession::process_message(std::istream& msg)
 {
     mir::protobuf::wire::Invocation invocation;
 
@@ -359,26 +377,26 @@ bool mfd::AsioSession::invoke_method_for(std::istream& msg)
     return true;
 }
 
-void SocketSession::on_new_message_from_socket(const boost::system::error_code& ec)
+void SocketSession::on_new_message(const boost::system::error_code& ec)
 {
     bool alive{true};
 
     if (!ec)
     {
         std::istream msg(&message);
-        alive = invoke_method_for(msg);
+        alive = processor->process_message(msg);
     }
 
-    if (alive) read_next_message_from_socket();
+    if (alive) read_next_message();
 }
 
-void SocketSession::on_response_sent_to_socket(bs::error_code const& error, std::size_t)
+void SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
 {
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
 
-void SocketSession::send_over_socket(const std::ostringstream& buffer2)
+void SocketSession::send(const std::ostringstream& buffer2)
 {
     const std::string& body = buffer2.str();
     const size_t size = body.size();
@@ -388,7 +406,7 @@ void SocketSession::send_over_socket(const std::ostringstream& buffer2)
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
     ba::async_write(socket, ba::buffer(whole_message),
-        boost::bind(&SocketSession::on_response_sent_to_socket, this, boost::asio::placeholders::error,
+        boost::bind(&SocketSession::on_response_sent, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
 }
 
@@ -406,5 +424,5 @@ void mfd::AsioSession::send_response(
     std::ostringstream buffer2;
     result.SerializeToOstream(&buffer2);
 
-    send_over_socket(buffer2);
+    sender->send(buffer2);
 }
