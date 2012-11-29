@@ -67,17 +67,31 @@ struct Sender
 struct Processor
 {
     virtual bool process_message(std::istream& msg) = 0;
+    virtual int id() const = 0;
 };
 
-struct SocketSession : public Sender
+struct NullProcessor : Processor
+{
+    bool process_message(std::istream& ) { return false; }
+    virtual int id() const { return 0; }
+};
+}
+
+struct mfd::SocketSession : public Sender
 {
     SocketSession(
-        boost::asio::io_service& io_service,
-        Processor* const processor) :
+        boost::asio::io_service& io_service) :
         socket(io_service),
-        processor(processor) {}
+        processor(std::make_shared<NullProcessor>()) {}
+
+    int id() const { return processor->id(); }
 
     void read_next_message();
+
+    void set_processor(std::shared_ptr<Processor> const& processor)
+    {
+        this->processor = processor;
+    }
 
     boost::asio::local::stream_protocol::socket&
     get_socket() { return socket; }
@@ -97,19 +111,18 @@ private:
     void on_read_size(const boost::system::error_code& ec);
 
     boost::asio::local::stream_protocol::socket socket;
-    Processor* const processor;
+    std::shared_ptr<Processor> processor;
     boost::asio::streambuf message;
     unsigned char message_header_bytes[2];
     std::vector<char> whole_message;
 };
-}
 
 struct mfd::AsioSession : Processor
 {
     AsioSession(
-        boost::asio::io_service& io_service,
+        Sender* sender,
         int id_,
-        ConnectedSessions<AsioSession>* connected_sessions,
+        ConnectedSessions<SocketSession>* connected_sessions,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -117,13 +130,6 @@ struct mfd::AsioSession : Processor
     {
         return id_;
     }
-
-    // TODO leaky encapsulation
-    boost::asio::local::stream_protocol::socket&
-    get_socket() { return socket_session.get_socket(); }
-
-    // TODO really part of initialisation
-    void read_next_message() { socket_session.read_next_message(); }
 
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
 
@@ -224,10 +230,9 @@ struct mfd::AsioSession : Processor
         }
     }
 private:
-    SocketSession socket_session;
     Sender* const sender;
     int const id_;
-    ConnectedSessions<AsioSession>* connected_sessions;
+    ConnectedSessions<SocketSession>* connected_sessions;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     std::shared_ptr<ResourceCache> const resource_cache;
@@ -247,19 +252,23 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
+    auto const& socket_session = std::make_shared<mfd::SocketSession>(io_service);
+
     auto session = std::make_shared<detail::AsioSession>(
-        io_service,
+        socket_session.get(),
         next_id(),
         &connected_sessions,
         ipc_factory->make_ipc_server(),
         ipc_factory->resource_cache());
 
+    socket_session->set_processor(session);
+
     acceptor.async_accept(
-        session->get_socket(),
+        socket_session->get_socket(),
         boost::bind(
             &ProtobufSocketCommunicator::on_new_connection,
             this,
-            session,
+            socket_session,
             ba::placeholders::error));
 }
 
@@ -292,7 +301,7 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
-    std::shared_ptr<detail::AsioSession> const& session,
+    std::shared_ptr<mfd::SocketSession> const& session,
     const boost::system::error_code& ec)
 {
     if (!ec)
@@ -305,13 +314,12 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 }
 
 mfd::AsioSession::AsioSession(
-    boost::asio::io_service& io_service,
+    Sender* sender,
     int id_,
-    ConnectedSessions<AsioSession>* connected_sessions,
+    ConnectedSessions<SocketSession>* connected_sessions,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    socket_session(io_service, this),
-    sender(&socket_session),
+    sender(sender),
     id_(id_),
     connected_sessions(connected_sessions),
     display_server(display_server),
@@ -319,15 +327,15 @@ mfd::AsioSession::AsioSession(
 {
 }
 
-void SocketSession::read_next_message()
+void mfd::SocketSession::read_next_message()
 {
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
-        boost::bind(&SocketSession::on_read_size,
+        boost::bind(&mfd::SocketSession::on_read_size,
             this, ba::placeholders::error));
 }
 
-void SocketSession::on_read_size(const boost::system::error_code& ec)
+void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
 {
     if (!ec)
     {
@@ -337,7 +345,7 @@ void SocketSession::on_read_size(const boost::system::error_code& ec)
              socket,
              message,
              boost::asio::transfer_exactly(body_size),
-             boost::bind(&SocketSession::on_new_message,
+             boost::bind(&mfd::SocketSession::on_new_message,
                          this, ba::placeholders::error));
     }
 }
@@ -385,7 +393,7 @@ bool mfd::AsioSession::process_message(std::istream& msg)
     return true;
 }
 
-void SocketSession::on_new_message(const boost::system::error_code& ec)
+void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
 {
     bool alive{true};
 
@@ -398,13 +406,13 @@ void SocketSession::on_new_message(const boost::system::error_code& ec)
     if (alive) read_next_message();
 }
 
-void SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
+void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
 {
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
 
-void SocketSession::send(const std::ostringstream& buffer2)
+void mfd::SocketSession::send(const std::ostringstream& buffer2)
 {
     const std::string& body = buffer2.str();
     const size_t size = body.size();
@@ -414,7 +422,7 @@ void SocketSession::send(const std::ostringstream& buffer2)
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
     ba::async_write(socket, ba::buffer(whole_message),
-        boost::bind(&SocketSession::on_response_sent, this, boost::asio::placeholders::error,
+        boost::bind(&mfd::SocketSession::on_response_sent, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
 }
 
