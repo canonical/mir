@@ -21,30 +21,77 @@
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/exception.h"
+
+#include <xf86drm.h>
 
 namespace mc=mir::compositor;
-namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
 geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
 {
-    (void)format;
-    return geom::PixelFormat::rgba_8888;
+    geom::PixelFormat pf;
+
+    switch (format)
+    {
+    case GBM_BO_FORMAT_ARGB8888:
+    case GBM_FORMAT_ARGB8888:
+        pf = geom::PixelFormat::rgba_8888;
+        break;
+    case GBM_BO_FORMAT_XRGB8888:
+    case GBM_FORMAT_XRGB8888:
+        pf = geom::PixelFormat::rgbx_8888;
+        break;
+    default:
+        pf = geom::PixelFormat::pixel_format_invalid;
+        break;
+    }
+
+    return pf;
 }
 
 uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 {
-    (void)format;
-    return GBM_BO_FORMAT_ARGB8888;
+    uint32_t gbm_pf;
+
+    switch (format)
+    {
+    case geom::PixelFormat::rgba_8888:
+        gbm_pf = GBM_FORMAT_ARGB8888;
+        break;
+    case geom::PixelFormat::rgbx_8888:
+        gbm_pf = GBM_FORMAT_XRGB8888;
+        break;
+    default:
+        /* There is no explicit invalid GBM pixel format! */
+        gbm_pf = UINT32_MAX;
+        break;
+    }
+
+    return gbm_pf;
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
-                          std::unique_ptr<BufferTextureBinder> texture_binder,
-                          uint32_t gem_flink_name)
-    : gbm_handle(handle), texture_binder(std::move(texture_binder)),
-      gem_flink_name(gem_flink_name)
+                          std::unique_ptr<BufferTextureBinder> texture_binder)
+    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}
 {
+    auto device = gbm_bo_get_device(gbm_handle.get());
+    auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
+    auto drm_fd = gbm_device_get_fd(device);
+    struct drm_gem_flink flink;
+    flink.handle = gem_handle;
+
+    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    if (ret)
+    {
+        std::string const msg("Failed to get GEM flink name from gbm bo");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(msg)) << boost::errinfo_errno(errno));
+    }
+
+    gem_flink_name = flink.name;
 }
 
 geom::Size mgg::GBMBuffer::size() const
