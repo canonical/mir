@@ -17,12 +17,12 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
-#include "mir/frontend/application_session_model.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/session_container.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_application_surface_organiser.h"
+#include "mir_test/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,26 +32,31 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(ApplicationSessionModel, iterate_registration_order)
+TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser());
-    mf::ApplicationSessionModel model;
-    
-    std::shared_ptr<mf::ApplicationSession> app1(new mf::ApplicationSession(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::ApplicationSession> app2(new mf::ApplicationSession(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    mf::SessionContainer container;
 
-    model.insert_session(app1);
-    model.insert_session(app2);
-    
-    auto it = model.iterator();
-    
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
-    it->advance();
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 8");
-    it->advance();
-    EXPECT_EQ(it->is_valid(),false);
-    it->reset();
-    EXPECT_EQ((**it)->get_name(), "Visual Studio 7");
+    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
 
+    container.insert_session(app1);
+    container.insert_session(app2);
+
+    struct local
+    {
+        MOCK_METHOD1(check_name, void (std::string const&));
+
+        void operator()(std::shared_ptr<mf::Session> const& session)
+        {
+            check_name(session->get_name());
+        }
+    } functor;
+
+    InSequence seq;
+    EXPECT_CALL(functor, check_name("Visual Studio 7"));
+    EXPECT_CALL(functor, check_name("Visual Studio 8"));
+
+    container.for_each(std::ref(functor));
 }

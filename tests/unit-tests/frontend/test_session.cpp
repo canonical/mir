@@ -17,11 +17,11 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
+#include "mir/frontend/session.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_application_surface_organiser.h"
+#include "mir_test/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,7 +30,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-TEST(ApplicationSession, create_and_destroy_surface)
+TEST(Session, create_and_destroy_surface)
 {
     using namespace ::testing;
 
@@ -41,20 +41,20 @@ TEST(ApplicationSession, create_and_destroy_surface)
             ms::a_surface().name,
             buffer_bundle));
 
-    ms::MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::MockSurfaceOrganiser organiser;
+    mf::Session session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 
     ms::SurfaceCreationParameters params;
-    auto surf = app_session.create_surface(params);
+    auto surf = session.create_surface(params);
 
-    app_session.destroy_surface(surf);
+    session.destroy_surface(surf);
 }
 
 
-TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
+TEST(Session, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
@@ -65,8 +65,8 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
             ms::a_surface().name,
             buffer_bundle));
 
-    ms::MockApplicationSurfaceOrganiser organiser;
-    mf::ApplicationSession app_session(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    mf::MockSurfaceOrganiser organiser;
+    mf::Session app_session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
