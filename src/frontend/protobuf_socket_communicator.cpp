@@ -72,9 +72,19 @@ struct mfd::AsioSession
 
     void read_next_message_from_socket();
     void on_response_sent_to_socket(boost::system::error_code const& error, std::size_t);
-    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
     void on_new_message_from_socket(const boost::system::error_code& ec);
     void on_read_size_from_socket(const boost::system::error_code& ec);
+    void send_fds_over_socket(std::vector<int32_t> const& fd)
+    {
+        if (fd.size() > 0)
+        {
+            ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        }
+    }
+
+    void send_over_socket(const std::ostringstream& buffer2);
+
+    void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
 
     template<class ResultMessage>
     void send_response(::google::protobuf::uint32 id, ResultMessage* response)
@@ -88,7 +98,7 @@ struct mfd::AsioSession
     {
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds(fd);
+        send_fds_over_socket(fd);
         resource_cache->free_resource(response);
     }
 
@@ -98,7 +108,7 @@ struct mfd::AsioSession
     {
         const auto& fd = extract_fds_from(response);
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds(fd);
+        send_fds_over_socket(fd);
         resource_cache->free_resource(response);
     }
 
@@ -111,7 +121,7 @@ struct mfd::AsioSession
             std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds(fd);
+        send_fds_over_socket(fd);
         resource_cache->free_resource(response);
     }
 
@@ -124,7 +134,7 @@ struct mfd::AsioSession
             std::vector<int32_t>();
 
         send_response(id, static_cast<google::protobuf::Message*>(response));
-        send_fds(fd);
+        send_fds_over_socket(fd);
         resource_cache->free_resource(response);
     }
 
@@ -137,15 +147,6 @@ struct mfd::AsioSession
         return fd;
     }
 
-    void send_fds(std::vector<int32_t> const& fd)
-    {
-        if (fd.size() > 0)
-        {
-            ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
-        }
-    }
-
-    void send_over_socket(const std::ostringstream& buffer2);
     bool invoke_method_for(std::istream& msg);
 
     template<class ParameterMessage, class ResultMessage>
