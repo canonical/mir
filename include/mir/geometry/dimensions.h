@@ -41,10 +41,6 @@ public:
     template<typename AnyInteger>
     explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
     
-    int32_t as_int32_t() const
-    {
-        return value;
-    }
     uint32_t as_uint32_t() const
     {
         return value;
