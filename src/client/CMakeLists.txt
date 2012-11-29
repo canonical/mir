@@ -76,7 +76,7 @@ set(
 endif()
 
 add_library( 
-  mirclient SHARED
+  mirclient STATIC
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
@@ -93,19 +93,17 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-  LINK_PRIVATE
-  mirprotobuf
+
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-
-  LINK_PUBLIC
   ${LIBHARDWARE_LIBRARIES}
-  ${DRM_LIBRARIES}
-)
+  ${PROTOBUF_LIBRARIES}
 
-install(
-  TARGETS mirclient
-  LIBRARY DESTINATION lib)
+  mirprotobuf
+
+  ${DRM_LIBRARIES}
+  ${ANDROID_STDLIB}
+)
 
 set_target_properties(
   mirclient
@@ -115,7 +113,6 @@ set_target_properties(
 
 install(
   TARGETS mirclient
-  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
 
