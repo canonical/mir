@@ -49,15 +49,15 @@ void google_protobuf_guard()
 bool force_init{(google_protobuf_guard(), true)};
 }
 
-namespace c = mir::client;
-namespace cd = mir::client::detail;
+namespace mcl = mir::client;
+namespace mcld = mir::client::detail;
 
-cd::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
+mcld::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
     log(log)
 {
 }
 
-cd::SendBuffer& cd::PendingCallCache::save_completion_details(
+mcld::SendBuffer& mcld::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
@@ -69,7 +69,7 @@ cd::SendBuffer& cd::PendingCallCache::save_completion_details(
     return current.send_buffer;
 }
 
-void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
+void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
     log->debug() << "complete_response for result " << result.id() << std::endl;
@@ -89,12 +89,12 @@ void cd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result
 }
 
 
-c::MirSocketRpcChannel::MirSocketRpcChannel() :
+mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
     pending_calls(std::shared_ptr<Logger>()), work(io_service), socket(io_service)
 {
 }
 
-c::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
+mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
     log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
@@ -107,7 +107,7 @@ c::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::sh
     }
 }
 
-c::MirSocketRpcChannel::~MirSocketRpcChannel()
+mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
     io_service.stop();
 
@@ -121,7 +121,7 @@ c::MirSocketRpcChannel::~MirSocketRpcChannel()
 }
 
 
-void c::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
+void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
@@ -188,7 +188,7 @@ void c::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message*
     complete->Run();
 }
 
-void c::MirSocketRpcChannel::CallMethod(
+void mcl::MirSocketRpcChannel::CallMethod(
     const google::protobuf::MethodDescriptor* method,
     google::protobuf::RpcController*,
     const google::protobuf::Message* parameters,
@@ -209,7 +209,7 @@ void c::MirSocketRpcChannel::CallMethod(
     send_message(buffer.str(), send_buffer);
 }
 
-mir::protobuf::wire::Invocation c::MirSocketRpcChannel::invocation_for(
+mir::protobuf::wire::Invocation mcl::MirSocketRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
@@ -225,14 +225,14 @@ mir::protobuf::wire::Invocation c::MirSocketRpcChannel::invocation_for(
     return invoke;
 }
 
-int c::MirSocketRpcChannel::next_id()
+int mcl::MirSocketRpcChannel::next_id()
 {
     int id = next_message_id.load();
     while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return id;
 }
 
-void c::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
+void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -252,7 +252,7 @@ void c::MirSocketRpcChannel::send_message(const std::string& body, detail::SendB
             boost::asio::placeholders::error));
 }
 
-void c::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& error)
+void mcl::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
     if (error)
@@ -265,7 +265,7 @@ void c::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& er
 }
 
 
-void c::MirSocketRpcChannel::read_message()
+void mcl::MirSocketRpcChannel::read_message()
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
     const size_t body_size = read_message_header();
@@ -279,7 +279,7 @@ void c::MirSocketRpcChannel::read_message()
     pending_calls.complete_response(result);
 }
 
-size_t c::MirSocketRpcChannel::read_message_header()
+size_t mcl::MirSocketRpcChannel::read_message_header()
 {
     unsigned char header_bytes[2];
     boost::system::error_code error;
@@ -291,7 +291,7 @@ size_t c::MirSocketRpcChannel::read_message_header()
     return body_size;
 }
 
-mir::protobuf::wire::Result c::MirSocketRpcChannel::read_message_body(const size_t body_size)
+mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
     boost::system::error_code error;
     boost::asio::streambuf message;
@@ -305,12 +305,12 @@ mir::protobuf::wire::Result c::MirSocketRpcChannel::read_message_body(const size
     return result;
 }
 
-std::ostream& c::ConsoleLogger::error()
+std::ostream& mcl::ConsoleLogger::error()
 {
     return std::cerr  << "ERROR: ";
 }
 
-std::ostream& c::ConsoleLogger::debug()
+std::ostream& mcl::ConsoleLogger::debug()
 {
     static char const* const debug = getenv("MIR_CLIENT_DEBUG");
 
@@ -320,13 +320,13 @@ std::ostream& c::ConsoleLogger::debug()
     return null;
 }
 
-std::ostream& c::NullLogger::error()
+std::ostream& mcl::NullLogger::error()
 {
     static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
     return null;
 }
 
-std::ostream& c::NullLogger::debug()
+std::ostream& mcl::NullLogger::debug()
 {
     static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
     return null;

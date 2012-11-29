@@ -19,10 +19,10 @@
 #include "mir_client/make_rpc_channel.h"
 #include "mir_socket_rpc_channel.h"
 
-namespace c = mir::client;
+namespace mcl = mir::client;
 
 std::shared_ptr<google::protobuf::RpcChannel>
-c::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
+mcl::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
 {
     return std::make_shared<MirSocketRpcChannel>(name, log);
 
