@@ -30,6 +30,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
+#include "mir/exception.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<frontend::SessionStore> const& session_store,
@@ -79,6 +80,9 @@ void mir::frontend::ApplicationMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
+    if (application_session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+
     listener->application_create_surface_called(application_session->get_name());
 
     auto const id = application_session->create_surface(
@@ -124,6 +128,9 @@ void mir::frontend::ApplicationMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
+    if (application_session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+
     listener->application_next_buffer_called(application_session->get_name());
 
     auto surface = application_session->get_surface(SurfaceId(request->value()));
@@ -152,6 +159,9 @@ void mir::frontend::ApplicationMediator::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
+    if (application_session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+
     listener->application_release_surface_called(application_session->get_name());
 
     auto const id = SurfaceId(request->value());
@@ -167,9 +177,13 @@ void mir::frontend::ApplicationMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
+    if (application_session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+
     listener->application_disconnect_called(application_session->get_name());
 
     session_store->close_session(application_session);
+    application_session.reset();
 
     done->Run();
 }
