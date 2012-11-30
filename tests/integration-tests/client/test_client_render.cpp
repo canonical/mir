@@ -81,7 +81,7 @@ bool is_surface_flinger_running()
     return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
 }
 
-bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t value)
+bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t color)
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
@@ -92,7 +92,7 @@ bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint3
     {
         for(j=0; j<region->height; j++)
         {
-            if (pixel[j*region->width + i] != (int) value)
+            if (pixel[j*region->width + i] != (int) color)
             {
                 return false;
             }
@@ -103,7 +103,7 @@ bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint3
 
 template<size_t Rows, size_t Cols>
 bool check_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
-                    uint32_t const (& values) [Rows][Cols])
+                    uint32_t const (& pattern) [Rows][Cols])
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
@@ -115,7 +115,7 @@ bool check_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            if (pixel[j*region->width + i] != values[key_row][key_col])
+            if (pixel[j*region->width + i] != pattern[key_row][key_col])
             {
                 return false;
             }
@@ -126,7 +126,7 @@ bool check_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
 
 template<size_t Rows, size_t Cols>
 bool render_pattern(MirGraphicsRegion *region,
-                    uint32_t const (& values) [Rows][Cols])
+                    uint32_t const (& pattern) [Rows][Cols])
 {
     if (region->pixel_format != mir_pixel_format_rgba_8888 )
         return false;
@@ -138,7 +138,7 @@ bool render_pattern(MirGraphicsRegion *region,
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            pixel[j*region->width + i] = values[key_row][key_col];
+            pixel[j*region->width + i] = pattern[key_row][key_col];
         }
     }
     return true;
@@ -166,10 +166,10 @@ static void next_callback(MirSurface *, void*)
 {
 }
 
-static const uint32_t color_values_0 [2][2] = {{0x12345678, 0x23456789},
+static const uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                                {0x34567890, 0x45678901}};
  
-static const uint32_t color_values_1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
+static const uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                                {0xFF00FF00, 0xFF0000FF}};
 struct TestClient
 {
@@ -208,7 +208,7 @@ struct TestClient
         mir_surface_get_graphics_region( surface, &graphics_region);
 
         /* render pattern */
-        if (!render_pattern<2,2>(&graphics_region, mt::color_values_0))
+        if (!render_pattern<2,2>(&graphics_region, mt::pattern0))
             return -1;
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
@@ -246,12 +246,12 @@ struct TestClient
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
         mir_surface_get_graphics_region( surface, &graphics_region);
-        if( !render_pattern<2,2>(&graphics_region, mt::color_values_0) )
+        if( !render_pattern<2,2>(&graphics_region, mt::pattern0) )
             return -1;
 
         mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
         mir_surface_get_graphics_region( surface, &graphics_region);
-        if( !render_pattern<2,2>(&graphics_region, mt::color_values_1))
+        if( !render_pattern<2,2>(&graphics_region, mt::pattern1))
             return -1;
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
@@ -650,7 +650,7 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_pattern(region, mt::color_values_0));
+    EXPECT_TRUE(check_pattern(region, mt::pattern0));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
@@ -661,7 +661,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_pattern(region, mt::color_values_0));
+    EXPECT_TRUE(check_pattern(region, mt::pattern0));
 
     mock_server->set_package(second_package, 15);
 
@@ -670,7 +670,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
-    EXPECT_TRUE(check_pattern(second_region, mt::color_values_1));
+    EXPECT_TRUE(check_pattern(second_region, mt::pattern1));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
@@ -687,7 +687,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
     /* check content */
     auto region = mt::get_graphic_region_from_package(package, hw_module);
-    EXPECT_TRUE(check_pattern(region, mt::color_values_1));
+    EXPECT_TRUE(check_pattern(region, mt::pattern1));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
