@@ -28,6 +28,7 @@ cmake --build ${BUILD_DIR}
 adb wait-for-device
 adb root
 adb wait-for-device
+adb shell stop
 
 adb push ${BUILD_DIR}/bin/acceptance-tests /data
 adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./acceptance-tests'
