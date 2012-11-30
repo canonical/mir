@@ -42,6 +42,7 @@ elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND FRONTEND_SOURCES
   protobuf_binder_communicator.cpp
   make_protobuf_binder_communicator.cpp
+  binder_session.cpp
 )
 endif()
 

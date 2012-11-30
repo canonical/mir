@@ -25,11 +25,6 @@
 #include "ancillary.h"
 
 #include <boost/bind.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/null.hpp>
-
-#include <cstdlib>
-#include <iostream>
 
 namespace
 {
@@ -303,31 +298,4 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     mir::protobuf::wire::Result result;
     result.ParseFromIstream(&in);
     return result;
-}
-
-std::ostream& mcl::ConsoleLogger::error()
-{
-    return std::cerr  << "ERROR: ";
-}
-
-std::ostream& mcl::ConsoleLogger::debug()
-{
-    static char const* const debug = getenv("MIR_CLIENT_DEBUG");
-
-    if (debug) return std::cerr  << "DEBUG: ";
-
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
-}
-
-std::ostream& mcl::NullLogger::error()
-{
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
-}
-
-std::ostream& mcl::NullLogger::debug()
-{
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
 }

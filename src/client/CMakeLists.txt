@@ -47,6 +47,7 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
+  mir_logger.cpp
   ${PROTO_SRCS}
 )
 
@@ -57,6 +58,8 @@ list(APPEND CLIENT_SOURCES
 )
 elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND CLIENT_SOURCES
+  mir_binder_rpc_channel.cpp
+  make_binder_rpc_channel.cpp
 )
 endif()
 

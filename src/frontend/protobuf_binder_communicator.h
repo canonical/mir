@@ -16,18 +16,37 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
-#include "protobuf_socket_communicator.h"
+#ifndef MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
+#define MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
 
-namespace mf = mir::frontend;
-namespace mg = mir::graphics;
+#include "connected_sessions.h"
 
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::SessionManager> const& session_manager,
-    std::shared_ptr<mg::Display> const& display)
+#include "mir/frontend/communicator.h"
+
+#include <string>
+#include <map>
+
+namespace mir
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_manager, display));
+namespace frontend
+{
+class ProtobufIpcFactory;
+
+
+class ProtobufBinderCommunicator : public Communicator
+{
+public:
+    explicit ProtobufBinderCommunicator(
+        const std::string& name,
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
+    ~ProtobufBinderCommunicator();
+    void start();
+
+private:
+    // TODO
+};
+
+}
 }
 
+#endif // MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
