@@ -25,7 +25,6 @@
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
-#include <boost/signals2.hpp>
 
 #include <string>
 #include <map>

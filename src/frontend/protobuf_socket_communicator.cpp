@@ -18,18 +18,13 @@
 
 #include "protobuf_socket_communicator.h"
 #include "protobuf_message_processor.h"
-#include "mir/frontend/application_mediator.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/resource_cache.h"
-#include "mir/thread/all.h"
+#include "socket_session.h"
 
-#include "ancillary.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
 
 #include <google/protobuf/descriptor.h>
 
-#include <map>
-#include <exception>
-#include <iostream>
+#include <boost/signals2.hpp>
 
 namespace
 {
@@ -52,54 +47,7 @@ bool force_init{(google_protobuf_guard(), true)};
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
-namespace bs = boost::system;
 
-
-struct mfd::SocketSession : public mfd::MessageSender
-{
-    SocketSession(
-        boost::asio::io_service& io_service,
-        int id_,
-        ConnectedSessions<SocketSession>* connected_sessions) :
-        socket(io_service),
-        id_(id_),
-        connected_sessions(connected_sessions),
-        processor(std::make_shared<NullMessageProcessor>()) {}
-
-    int id() const { return id_; }
-
-    void read_next_message();
-
-    void set_processor(std::shared_ptr<MessageProcessor> const& processor)
-    {
-        this->processor = processor;
-    }
-
-    boost::asio::local::stream_protocol::socket&
-    get_socket() { return socket; }
-
-private:
-    void send(const std::ostringstream& buffer2);
-    void send_fds(std::vector<int32_t> const& fd)
-    {
-        if (fd.size() > 0)
-        {
-            ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
-        }
-    }
-
-    void on_response_sent(boost::system::error_code const& error, std::size_t);
-    void on_new_message(const boost::system::error_code& ec);
-    void on_read_size(const boost::system::error_code& ec);
-
-    boost::asio::local::stream_protocol::socket socket;
-    int const id_;
-    ConnectedSessions<SocketSession>* const connected_sessions;
-    std::shared_ptr<MessageProcessor> processor;
-    boost::asio::streambuf message;
-    unsigned char message_header_bytes[2];
-    std::vector<char> whole_message;
-};
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
@@ -176,59 +124,3 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     start_accept();
 }
 
-void mfd::SocketSession::read_next_message()
-{
-    boost::asio::async_read(socket,
-        boost::asio::buffer(message_header_bytes),
-        boost::bind(&mfd::SocketSession::on_read_size,
-            this, ba::placeholders::error));
-}
-
-void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
-{
-    if (!ec)
-    {
-        size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-        // Read newline delimited messages for now
-        ba::async_read(
-             socket,
-             message,
-             boost::asio::transfer_exactly(body_size),
-             boost::bind(&mfd::SocketSession::on_new_message,
-                         this, ba::placeholders::error));
-    }
-}
-
-void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
-{
-    bool alive{true};
-
-    if (!ec)
-    {
-        std::istream msg(&message);
-        alive = processor->process_message(msg);
-    }
-
-    if (alive) read_next_message();
-    else connected_sessions->remove(id());
-}
-
-void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
-{
-    if (error)
-        std::cerr << "ERROR sending response: " << error.message() << std::endl;
-}
-
-void mfd::SocketSession::send(const std::ostringstream& buffer2)
-{
-    const std::string& body = buffer2.str();
-    const size_t size = body.size();
-    const unsigned char header_bytes[2] =
-    { static_cast<unsigned char>((size >> 8) & 0xff), static_cast<unsigned char>((size >> 0) & 0xff) };
-    whole_message.resize(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
-    ba::async_write(socket, ba::buffer(whole_message),
-        boost::bind(&mfd::SocketSession::on_response_sent, this, boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
-}
