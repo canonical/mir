@@ -72,55 +72,38 @@ function(get_android_flags)
     )
 
   set(EABI "arm-linux-androideabi")
-  set(ANDROID_LINKER_XSC_SCRIPT "${MIR_NDK_PATH}/${EABI}/lib/ldscripts/armelf_linux_eabi.xsc")
-  set(ANDROID_LINKER_X_SCRIPT "${MIR_NDK_PATH}/${EABI}/lib/ldscripts/armelf_linux_eabi.x")
+  set(ANDROID_LINKER_SCRIPT "${MIR_NDK_PATH}/${EABI}/lib/ldscripts/armelf_linux_eabi.xsc")
+  #crtbegin_so.o, crtend_so.o, and libgcc.a for -nostdlib flag 
   set(ANDROID_SO_CRTBEGIN "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_so.o")
   set(ANDROID_SO_CRTEND "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_so.o")
   set(ANDROID_SO_GCC "${MIR_NDK_PATH}/lib/gcc/${EABI}/4.6.x-google/libgcc.a")
   set(ANDROID_CRTBEGIN_DYNAMIC "${MIR_NDK_PATH}/sysroot/usr/lib/crtbegin_dynamic.o")
   set(ANDROID_CRTEND_ANDROID "${MIR_NDK_PATH}/sysroot/usr/lib/crtend_android.o")
-  set(ANDROID_STDLIB_STRING "-Wl,-Bstatic -lsupc++ -Wl,-Bdynamic -lc -lstdc++ -lm") 
-  set(ANDROID_STDGCC_STRING "-Wl,-Bstatic -lgcc") 
 
-  # common linker flags
+  # linker flags
   set(ANDROID_LINKER_FLAGS "-Wl,-rpath,${MIR_NDK_PATH}/sysroot/usr/lib:${MIR_NDK_PATH}/${EABI}/lib" PARENT_SCOPE)
 
-  #setup shared_object file generation 
+  # linker flags for shared object creation
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-T,${ANDROID_LINKER_SCRIPT}")
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -lc")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -nostdlib")  
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-T,${ANDROID_LINKER_XSC_SCRIPT}")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--gc-sections")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,-z,noexecstack")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--icf=safe")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--fix-cortex-a8")
   set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} -Wl,--no-undefined")
-  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS}" PARENT_SCOPE)
-  string(REGEX REPLACE
-    "<LINK_LIBRARIES>"
-    "${ANDROID_SO_CRTBEGIN} <LINK_LIBRARIES> ${ANDROID_STDLIB_STRING} ${ANDROID_STDGCC_STRING} ${ANDROID_SO_CRTEND}"
-    CMAKE_CXX_CREATE_SHARED_LIBRARY
-    "${CMAKE_CXX_CREATE_SHARED_LIBRARY}")
-  set(CMAKE_CXX_CREATE_SHARED_LIBRARY ${CMAKE_CXX_CREATE_SHARED_LIBRARY} PARENT_SCOPE)
+  set(ANDROID_SO_LINKER_FLAGS "${ANDROID_SO_LINKER_FLAGS} ${ANDROID_SO_CRTBEGIN}" PARENT_SCOPE)
 
-  #setup executable file generation 
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -nostdlib")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,-T,${ANDROID_LINKER_X_SCRIPT}")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,-dynamic-linker,/system/bin/linker")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,--gc-sections")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,-z,nocopyreloc")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,-z,noexecstack")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,--icf=safe")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS} -Wl,--fix-cortex-a8")
-  set(ANDROID_EXE_LINKER_FLAGS "${ANDROID_EXE_LINKER_FLAGS}" PARENT_SCOPE)
-  string(REGEX REPLACE
-    "<OBJECTS>"
-    "${ANDROID_CRTBEGIN_DYNAMIC} <OBJECTS> ${ANDROID_STDLIB_STRING}"  
-    CMAKE_CXX_LINK_EXECUTABLE
-    "${CMAKE_CXX_LINK_EXECUTABLE}")
-  string(REGEX REPLACE
-    "<LINK_LIBRARIES>"
-    "<LINK_LIBRARIES> ${ANDROID_STDLIB_STRING} ${ANDROID_STDGCC_STRING} ${ANDROID_CRTEND_ANDROID}"
-    CMAKE_CXX_LINK_EXECUTABLE
-    "${CMAKE_CXX_LINK_EXECUTABLE}")
-  set(CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_CXX_LINK_EXECUTABLE} PARENT_SCOPE)
+  #ANDROID_STDLIB must be set as the last target_link_libraries variable for every shared object
+  #built for android. We set -nostdlib for the shared objects, so we have to link in the 'default'
+  #libraries ourself
+  set(ANDROID_STDLIB
+    m;
+    c;
+    stdc++;
+    supc++;
+    ${ANDROID_SO_GCC};
+    ${ANDROID_SO_CRTEND};
+    PARENT_SCOPE)
 
 endfunction(get_android_flags)
