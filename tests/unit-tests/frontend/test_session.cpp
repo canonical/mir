@@ -35,7 +35,7 @@ TEST(Session, create_and_destroy_surface)
     using namespace ::testing;
 
     std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
+        new NiceMock<mc::MockBufferBundle>());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,
@@ -59,7 +59,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     using namespace ::testing;
 
     std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
+        new NiceMock<mc::MockBufferBundle>());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,

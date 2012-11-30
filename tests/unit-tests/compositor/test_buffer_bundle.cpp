@@ -54,9 +54,12 @@ protected:
         stride = geom::Stride{1024};
         pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
 
-        mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
-        second_mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
-        third_mock_buffer = std::make_shared<mc::MockBuffer>(size, stride, pixel_format);
+        mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>
+                                (size, stride, pixel_format);
+        second_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>
+                                (size, stride, pixel_format);
+        third_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>
+                                (size, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
         
         EXPECT_CALL(*mock_buffer, bind_to_texture())
@@ -73,7 +76,7 @@ protected:
         EXPECT_CALL(*mock_swapper, compositor_release(_))
             .Times(AtLeast(0)); 
     
-        mock_generator = std::make_shared<MockIDGenerator>();
+        mock_generator = std::make_shared<NiceMock<MockIDGenerator>>();
     }
 
     std::shared_ptr<mc::MockBuffer> mock_buffer;

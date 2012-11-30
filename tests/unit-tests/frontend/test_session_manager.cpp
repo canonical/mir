@@ -98,7 +98,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
     
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
     std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
+        new NiceMock<mc::MockBufferBundle>());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,
