@@ -33,6 +33,92 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
 {
 }
 
+template<class ResultMessage>
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ResultMessage* response)
+{
+    send_response(id, static_cast<google::protobuf::Message*>(response));
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
+{
+    const auto& fd = extract_fds_from(response);
+    send_response(id, static_cast<google::protobuf::Message*>(response));
+    sender->send_fds(fd);
+    resource_cache->free_resource(response);
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response)
+{
+    const auto& fd = extract_fds_from(response);
+    send_response(id, static_cast<google::protobuf::Message*>(response));
+    sender->send_fds(fd);
+    resource_cache->free_resource(response);
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
+{
+    const auto& fd = response->has_platform() ?
+        extract_fds_from(response->mutable_platform()) :
+        std::vector<int32_t>();
+
+    send_response(id, static_cast<google::protobuf::Message*>(response));
+    sender->send_fds(fd);
+    resource_cache->free_resource(response);
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
+{
+    const auto& fd = response->has_buffer() ?
+        extract_fds_from(response->mutable_buffer()) :
+        std::vector<int32_t>();
+
+    send_response(id, static_cast<google::protobuf::Message*>(response));
+    sender->send_fds(fd);
+    resource_cache->free_resource(response);
+}
+
+template<class Response>
+std::vector<int32_t> mfd::ProtobufMessageProcessor::extract_fds_from(Response* response)
+{
+    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
+    response->clear_fd();
+    response->set_fds_on_side_channel(fd.size());
+    return fd;
+}
+
+template<class ParameterMessage, class ResultMessage>
+void mfd::ProtobufMessageProcessor::invoke(
+    void (protobuf::DisplayServer::*function)(
+        ::google::protobuf::RpcController* controller,
+        const ParameterMessage* request,
+        ResultMessage* response,
+        ::google::protobuf::Closure* done),
+    mir::protobuf::wire::Invocation const& invocation)
+{
+    ParameterMessage parameter_message;
+    parameter_message.ParseFromString(invocation.parameters());
+    ResultMessage result_message;
+
+    try
+    {
+        std::unique_ptr<google::protobuf::Closure> callback(
+            google::protobuf::NewPermanentCallback(this,
+                &ProtobufMessageProcessor::send_response,
+                invocation.id(),
+                &result_message));
+
+        (display_server.get()->*function)(
+            0,
+            &parameter_message,
+            &result_message,
+            callback.get());
+    }
+    catch (std::exception const& x)
+    {
+        result_message.set_error(x.what());
+        send_response(invocation.id(), &result_message);
+    }
+}
 
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
