@@ -16,41 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "message_processor.h"
 
-#ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
-#define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
+namespace mfd = mir::frontend::detail;
 
-#include <vector>
-#include <memory>
-#include <iosfwd>
-#include <cstdint>
-
-namespace mir
+bool mfd::NullMessageProcessor::process_message(std::istream& )
 {
-namespace frontend
-{
-namespace detail
-{
-struct MessageSender
-{
-    virtual void send(const std::ostringstream& buffer2) = 0;
-    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
-};
-
-struct MessageProcessor
-{
-    virtual bool process_message(std::istream& msg) = 0;
-};
-
-struct NullMessageProcessor : MessageProcessor
-{
-    bool process_message(std::istream& );
-};
-
+    return false;
 }
-}
-}
-
-
-
-#endif /* PROTOBUF_MESSAGE_PROCESSOR_H_ */

@@ -42,7 +42,7 @@ namespace detail
 struct ProtobufMessageProcessor : MessageProcessor
 {
     ProtobufMessageProcessor(
-        Sender* sender,
+        MessageSender* sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -82,7 +82,7 @@ private:
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
 
-    Sender* const sender;
+    MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     mir::protobuf::Surface surface;
     std::shared_ptr<ResourceCache> const resource_cache;

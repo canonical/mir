@@ -58,7 +58,7 @@ namespace ba = boost::asio;
 namespace bs = boost::system;
 
 
-struct mfd::SocketSession : public mfd::Sender
+struct mfd::SocketSession : public mfd::MessageSender
 {
     SocketSession(
         boost::asio::io_service& io_service,

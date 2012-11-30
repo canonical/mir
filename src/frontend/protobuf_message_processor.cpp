@@ -24,7 +24,7 @@
 namespace mfd = mir::frontend::detail;
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    Sender* sender,
+    MessageSender* sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     sender(sender),
