@@ -23,9 +23,6 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
 
-#include "mir_protobuf.pb.h"
-#include "mir_protobuf_wire.pb.h"
-
 #include "ancillary.h"
 
 #include <google/protobuf/descriptor.h>
@@ -97,7 +94,7 @@ private:
 
     boost::asio::local::stream_protocol::socket socket;
     int const id_;
-    ConnectedSessions<SocketSession>* connected_sessions;
+    ConnectedSessions<SocketSession>* const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
     boost::asio::streambuf message;
     unsigned char message_header_bytes[2];
