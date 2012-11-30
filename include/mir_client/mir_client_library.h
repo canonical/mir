@@ -26,6 +26,7 @@ extern "C" {
 
 /* Display server connection API */
 typedef void* MirEGLNativeWindowType;
+typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 
@@ -51,7 +52,8 @@ typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client
 /* Surface API */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_rgba_8888
+    mir_pixel_format_rgba_8888,
+    mir_pixel_format_rgbx_8888
 } MirPixelFormat;
 
 typedef enum MirBufferUsage
@@ -139,6 +141,12 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 /* Query the width and height of the primary display */
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+
+/*
+ * Returns an EGLNativeDisplayType that the client can use for
+ * OpenGL ES 2.0 acceleration.
+ */
+MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
 
 /* Request a new MIR surface on the supplied connection with the
  * supplied parameters. The returned handle remains valid until

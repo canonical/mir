@@ -33,19 +33,23 @@ add_executable(unit-tests ${UNIT_TEST_SOURCES})
 target_link_libraries(
   unit-tests
 
+  mirclient
   mircompositor
+  mirdraw
   mirfrontend
   mirplatformgraphics
+  mirgraphics
   mirinput
   mirlogging
-  mirsurfaces
   mirprocess
   miroptions
-  mirclient
   mirprotobuf
-  test-utils
+  mirsurfaces
+
+  mir-test-doubles
 
   3rd_party
+
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}
@@ -54,7 +58,9 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread. 
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+ 
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)

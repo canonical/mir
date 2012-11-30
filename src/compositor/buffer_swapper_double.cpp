@@ -24,12 +24,17 @@ namespace mc = mir::compositor;
 mc::BufferSwapperDouble::BufferSwapperDouble(std::unique_ptr<Buffer> && buf_a, std::unique_ptr<Buffer> && buf_b)
     :
     buffer_a(std::move(buf_a)),
-    buffer_b(std::move(buf_b))
+    buffer_b(std::move(buf_b)),
+    compositor_has_consumed(true),
+    shutting_down(false)
 {
     client_queue.push(buffer_a.get());
     last_posted_buffer = buffer_b.get();
 }
 
+mc::BufferSwapperDouble::~BufferSwapperDouble()
+{
+}
 
 mc::Buffer* mc::BufferSwapperDouble::client_acquire()
 {
@@ -49,6 +54,12 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
+    while (!compositor_has_consumed && !shutting_down)
+    {
+        consumed_cv.wait(lk);
+    }
+    compositor_has_consumed = false;
+
     if(last_posted_buffer != NULL)
     {
         client_queue.push(last_posted_buffer);
@@ -56,7 +67,6 @@ void mc::BufferSwapperDouble::client_release(mc::Buffer* queued_buffer)
     }
 
     last_posted_buffer = queued_buffer;
-
 }
 
 mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
@@ -67,6 +77,8 @@ mc::Buffer* mc::BufferSwapperDouble::compositor_acquire()
     last_posted = last_posted_buffer;
     last_posted_buffer = NULL;
 
+    compositor_has_consumed = true;
+    consumed_cv.notify_one();
     return last_posted;
 }
 
@@ -82,4 +94,12 @@ void mc::BufferSwapperDouble::compositor_release(mc::Buffer *released_buffer)
         client_queue.push(released_buffer);
         buffer_available_cv.notify_one();
     }
+}
+
+void mc::BufferSwapperDouble::shutdown()
+{
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    shutting_down = true;
+    consumed_cv.notify_all();
 }

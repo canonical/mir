@@ -18,12 +18,11 @@
 set(
   FRONTEND_SOURCES
 
-  application.cpp
-  application_proxy.cpp
-  application_session.cpp
-  application_session_model.cpp
-  application_manager.cpp
-  registration_order_focus_selection_strategy.cpp
+  application_mediator.cpp
+  session.cpp
+  session_container.cpp
+  session_manager.cpp
+  registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
   null_application_listener.cpp
 

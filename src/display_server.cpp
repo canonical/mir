@@ -23,11 +23,13 @@
 
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
+#include "mir/frontend/session_manager.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
+#include "mir/input/input_manager.h"
 
 #include "mir/thread/all.h"
 
@@ -35,6 +37,12 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
+
+namespace
+{
+std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+}
 
 struct mir::DisplayServer::Private
 {
@@ -48,7 +56,9 @@ struct mir::DisplayServer::Private
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          communicator{config.make_communicator(surface_controller, display)},
+          application_session_factory{config.make_session_manager(surface_controller)},
+          communicator{config.make_communicator(application_session_factory, display)},
+          input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
     {
     }
@@ -62,7 +72,9 @@ struct mir::DisplayServer::Private
     std::shared_ptr<ms::SurfaceController> surface_controller;
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
+    std::shared_ptr<frontend::SessionManager> application_session_factory;
     std::shared_ptr<frontend::Communicator> communicator;
+    std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
     bool exit;
 };
@@ -75,19 +87,23 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
 
 mir::DisplayServer::~DisplayServer()
 {
+    p->application_session_factory->shutdown();
 }
 
 void mir::DisplayServer::start()
 {
     p->communicator->start();
+    p->input_manager->start();
 
     std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
     {
         lk.unlock();
         do_stuff();
-        lk.lock();     
+        lk.lock();
     }
+
+    p->input_manager->stop();
 }
 
 void mir::DisplayServer::do_stuff()

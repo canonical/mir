@@ -21,9 +21,15 @@
 #include "mir_client/android/android_registrar_gralloc.h"
 #include "mir_client/android/android_client_buffer_depository.h"
 #include "mir_client/mir_connection.h"
+#include "mir_client/native_client_platform_factory.h"
+
+#include <EGL/egl.h>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
+
+namespace
+{
 
 struct EmptyDeleter
 {
@@ -32,7 +38,10 @@ struct EmptyDeleter
     }
 };
 
-std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform()
+}
+
+std::shared_ptr<mcl::ClientPlatform>
+mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*context*/)
 {
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
@@ -54,12 +63,37 @@ std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create
     return std::make_shared<mcla::AndroidClientBufferDepository>(registrar);
 }
 
-EGLNativeWindowType mcla::AndroidClientPlatform::create_egl_window(ClientSurface *surface)
+namespace
 {
-    return new mcla::MirNativeWindow(surface);
+struct MirNativeWindowDeleter
+{
+    MirNativeWindowDeleter(mcla::MirNativeWindow* window)
+     : window(window) {}
+
+    void operator()(EGLNativeWindowType* type )
+    {
+        delete type;
+        delete window;
+    }
+
+private:
+    mcla::MirNativeWindow *window;
+};
 }
 
-void mcla::AndroidClientPlatform::destroy_egl_window(EGLNativeWindowType window)
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
 {
-    delete window;
+    auto mir_native_window = new mcla::MirNativeWindow(surface);
+    auto egl_native_window = new EGLNativeWindowType;
+    *egl_native_window = mir_native_window;
+    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window); 
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
+}
+
+std::shared_ptr<EGLNativeDisplayType>
+mcla::AndroidClientPlatform::create_egl_native_display()
+{
+    auto native_display = std::make_shared<EGLNativeDisplayType>();
+    *native_display = EGL_DEFAULT_DISPLAY;
+    return native_display;
 }

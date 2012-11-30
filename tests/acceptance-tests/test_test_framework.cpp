@@ -16,9 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 
-#include "mir/frontend/application.h"
 #include "mir/frontend/communicator.h"
 
 #include <gmock/gmock.h>
@@ -33,22 +32,6 @@ namespace mf = mir::frontend;
 // We need some tests to prove that errors are reported by the
 // display server test fixture.  But don't want them to fail in
 // normal builds.
-
-namespace
-{
-struct StubCommunicator : public mf::Communicator
-{
-    StubCommunicator()
-    {
-    }
-
-    void start()
-    {
-    }
-};
-
-}
-
 TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 {
     struct Server : TestingServerConfiguration
@@ -65,23 +48,6 @@ TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 
 TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_without_server)
 {
-}
-
-TEST_F(DefaultDisplayServerTestFixture, client_connects_and_disconnects)
-{
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            std::shared_ptr<mf::Communicator> communicator(new StubCommunicator());
-            mf::Application application(communicator);
-
-            EXPECT_NO_THROW(application.connect());
-            EXPECT_NO_THROW(application.disconnect());
-        }
-    } client_connects_and_disconnects;
-
-    launch_client_process(client_connects_and_disconnects);
 }
 
 TEST_F(DefaultDisplayServerTestFixture, demonstrate_multiple_clients)

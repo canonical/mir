@@ -20,14 +20,15 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_logger.h"
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
+#include "src/frontend/protobuf_socket_communicator.h"
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test/display_server_test_fixture.h"
+#include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,11 +37,12 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
+namespace mi = mir::input;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* const mir_test_socket = mir::test_socket_file().c_str();
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
 namespace mir
@@ -179,7 +181,6 @@ const int ClientConfigCommon::max_surface_count;
 }
 
 using mir::SurfaceSync;
-using mir::TestingClientConfiguration;
 using mir::ClientConfigCommon;
 using mir::ErrorServer;
 
@@ -238,7 +239,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<ms::ApplicationSurfaceOrganiser> const&,
+            std::shared_ptr<mf::SessionManager> const&,
             std::shared_ptr<mg::Display> const&)
 
         {

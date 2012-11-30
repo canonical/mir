@@ -61,7 +61,7 @@ public:
     // BE VERY CAREFUL of deadlocks. In particular, it would be silly to call
     // this function from this object's thread. Will return WOULD_BLOCK in
     // that case.
-            status_t    requestExitAndWait();
+    virtual status_t    requestExitAndWait();
 
     // Wait until this object's thread exits. Returns immediately if not yet running.
     // Do not call from this object's thread; will return WOULD_BLOCK in that case.

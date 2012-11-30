@@ -16,9 +16,9 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/application_session_container.h"
-#include "mir/frontend/application_session.h"
-#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface_organiser.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 
 #include <memory>
@@ -31,17 +31,15 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::ApplicationSessionContainer> const& app_container) :
+mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 }
 
-void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::ApplicationSession> const& focus_session)
+void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
 {
-    auto it = app_container->iterator();
-    while (it->is_valid())
-    {
-        auto session = **it;
+    app_container->for_each(
+        [&](std::shared_ptr<mf::Session> const& session) {
         if (session == focus_session)
         {
             session->show();
@@ -50,6 +48,5 @@ void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Applic
         {
             session->hide();
         }
-        it->advance();
-    }
+    });
 }

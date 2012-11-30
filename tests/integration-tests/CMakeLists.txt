@@ -21,13 +21,14 @@ set(
   test_renderloop.cpp
   test_surfaceloop.cpp
   test_error_reporting.cpp
+  test_shutdown.cpp
 )
 
 add_subdirectory(client/)
 add_subdirectory(compositor/)
-add_subdirectory(input/)
 add_subdirectory(frontend/)
 add_subdirectory(process/)
+add_subdirectory(input/)
 
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
@@ -51,10 +52,12 @@ add_executable(
 target_link_libraries(
   integration-tests
 
-  mirclient
-  test-utils
+  mir-test-framework
+  mir-test-doubles
 
   mir
+  mirclient
+  mirdraw
   miroptions
   mircompositor
   mirfrontend
@@ -68,14 +71,13 @@ target_link_libraries(
 
   3rd_party
 
-  test-utils
-
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(integration-tests)

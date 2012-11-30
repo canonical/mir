@@ -16,42 +16,86 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+
 #ifndef MIR_INPUT_EVENT_H_
 #define MIR_INPUT_EVENT_H_
 
-#include "mir/time_source.h"
+#include <stddef.h>
+#include <stdint.h>
 
-namespace mir
-{
-namespace input
-{
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class Event {
- public:
+    // TODO: To the moon.
+    static const size_t MIR_INPUT_EVENT_MAX_POINTER_COUNT = 16;
 
-    virtual ~Event() {}
+    typedef int64_t nsecs_t;
 
-    Event(const Event&) = delete;
-    Event& operator=(const Event&) = delete;
-
-    // The system timestamp as assigned to the event
-    // when entering the event processing.
-    const mir::Timestamp& get_system_timestamp() const
+    typedef enum
     {
-        return system_timestamp;
-    }
+	MIR_INPUT_EVENT_TYPE_KEY,
+	MIR_INPUT_EVENT_TYPE_MOTION,
+	MIR_INPUT_EVENT_TYPE_HW_SWITCH
+    } MirEventType;
 
-    void set_system_timestamp(const mir::Timestamp& ts)
+    struct MirEvent
     {
-        system_timestamp = ts;
-    }
+        // Generic event properties
+        MirEventType type;
+        int32_t device_id;
+        int32_t source_id;
+        int32_t action;
+        int32_t flags;
+        int32_t meta_state;
+        // Information specific to key/motion event types
+        union
+        {
+            struct HardwareSwitchEvent
+            {
+                nsecs_t event_time;
+                uint32_t policy_flags;
+                int32_t switch_code;
+                int32_t switch_value;
+            } hw_switch;
+            struct KeyEvent
+            {                
+                int32_t key_code;
+                int32_t scan_code;
+                int32_t repeat_count;
+                nsecs_t down_time;
+                nsecs_t event_time;
+                bool is_system_key;
+            } key;
+            struct MotionEvent
+            {
+                int32_t edge_flags;
+                int32_t button_state;
+                float x_offset;
+                float y_offset;
+                float x_precision;
+                float y_precision;
+                nsecs_t down_time;
+                nsecs_t event_time;
+                
+                size_t pointer_count;
+                struct PointerCoordinates {
+                    int id;
+                    float x, raw_x;
+                    float y, raw_y;
+                    float touch_major;
+                    float touch_minor;
+                    float size;
+                    float pressure;
+                    float orientation;
+                }; 
+		PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+            } motion;
+        } details;
+    };
 
- protected:
-    Event() = default;
- private:
-    mir::Timestamp system_timestamp;
-};
-
-}}
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MIR_INPUT_EVENT_H_

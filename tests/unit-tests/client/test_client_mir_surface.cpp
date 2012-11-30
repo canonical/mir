@@ -21,6 +21,8 @@
 #include "mir_client/mir_logger.h"
 #include "mir_client/client_buffer.h"
 #include "mir_client/client_buffer_depository.h"
+#include "mir_client/client_platform.h"
+#include "mir_client/client_platform_factory.h"
 #include "mir_client/mir_rpc_channel.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_connection.h"
@@ -168,10 +170,41 @@ struct MockClientDepository : public mcl::ClientBufferDepository
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
 
+
+struct StubClientPlatform : public mcl::ClientPlatform
+{
+    std::shared_ptr<mcl::ClientBufferDepository> create_platform_depository()
+    {
+        return std::shared_ptr<mcl::ClientBufferDepository>();
+    }
+
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface* /*surface*/)
+    {
+        return std::shared_ptr<EGLNativeWindowType>();
+    }
+
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
+    {
+        return std::shared_ptr<EGLNativeDisplayType>();
+    }
+};
+
+struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
+{
+    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* /*context*/)
+    {
+        return std::make_shared<StubClientPlatform>();
+    }
+};
+
 }
 }
 
 namespace mt = mir::test;
+
+void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
+{
+}
 
 struct CallBack
 {
@@ -198,8 +231,12 @@ struct MirClientSurfaceTest : public testing::Test
 
         /* connect client */
         logger = std::make_shared<mcl::ConsoleLogger>();
+        platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
         channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger);
-        connection = std::make_shared<MirConnection>("./test_socket_surface", logger); 
+        connection = std::make_shared<MirConnection>("./test_socket_surface", logger, platform_factory);
+        MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                         connected_callback, 0);
+        wait_handle->wait_for_result();
         client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(channel.get());
     }
 
@@ -210,6 +247,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<mcl::MirRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
+    std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;
 
     MirSurfaceParameters params;

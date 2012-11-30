@@ -17,21 +17,13 @@
 set(
   INPUT_SOURCES
 
-  axis.cpp
-  dispatcher.cpp
-  filter.cpp
-  grab_filter.cpp
-  shell_filter.cpp
-  application_filter.cpp
-  position_info.cpp
+  event_filter_chain.cpp
 )
 
-add_subdirectory(
-  evemu/
-)
+add_subdirectory(android)
 
-add_library( 
+add_library(
   mirinput STATIC
-  
+
   ${INPUT_SOURCES}
 )

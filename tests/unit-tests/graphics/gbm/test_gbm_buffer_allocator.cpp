@@ -24,6 +24,8 @@
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
+#include "mir_test/egl_mock.h"
+#include "mir_test/gl_mock.h"
 #include "mir_test/mock_buffer_initializer.h"
 
 #include <memory>
@@ -45,10 +47,6 @@ protected:
     {
         using namespace testing;
 
-        platform = std::make_shared<mgg::GBMPlatform>();
-        mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
-
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::rgba_8888;
         usage = mc::BufferUsage::hardware;
@@ -56,6 +54,19 @@ protected:
 
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
+
+        typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
+        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
+
+        platform = std::make_shared<mgg::GBMPlatform>();
+        mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
+        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
     }
 
     // Defaults
@@ -66,6 +77,8 @@ protected:
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mir::EglMock> mock_egl;
+    ::testing::NiceMock<mir::GLMock> mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
     std::shared_ptr<testing::NiceMock<mg::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
@@ -80,14 +93,24 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation)
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgba_8888)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_BO_FORMAT_ARGB8888,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
+}
+
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgbx_8888)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgbx_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")
@@ -186,5 +209,33 @@ TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
 
     EXPECT_THROW({
         allocator->alloc_buffer(buffer_properties);
+    }, std::runtime_error);
+}
+
+TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
+{
+    using namespace testing;
+    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+
+    EXPECT_THROW({
+        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
+    }, std::runtime_error);
+}
+
+TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_supported)
+{
+    using namespace testing;
+    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+
+    EXPECT_THROW({
+        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
     }, std::runtime_error);
 }

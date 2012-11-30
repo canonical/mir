@@ -22,6 +22,7 @@
 #include "mir/logging/logger.h"
 
 #include "mir_test/egl_mock.h"
+#include "mir_test/gl_mock.h"
 #include "mock_drm.h"
 #include "mock_gbm.h"
 
@@ -61,6 +62,15 @@ public:
         .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
+
+        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_MESA_drm_image";
+        const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
+
+        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
+        .WillByDefault(Return(egl_exts));
+        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
+        .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
         /* 
          * Silence uninteresting calls called when cleaning up resources in
          * the MockGBM destructor, and which are not handled by NiceMock<>. 
@@ -128,6 +138,7 @@ public:
     } fake;
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
+    ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::shared_ptr<testing::NiceMock<MockGBMDisplayListener> > mock_reporter;
@@ -466,4 +477,36 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
             StrEq("GBMDisplay"))).Times(Exactly(1));
 
     reporter->report_successful_drm_mode_set_crtc_on_construction();
+}
+
+TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
+{
+    using namespace ::testing;
+
+    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base";
+
+    EXPECT_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
+    .WillOnce(Return(egl_exts));
+
+    EXPECT_THROW(
+    {
+        auto platform = std::make_shared<mgg::GBMPlatform>();
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    }, mir::Exception);
+}
+
+TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
+{
+    using namespace ::testing;
+
+    const char* gl_exts = "GL_OES_texture_npot GL_OES_blend_func_separate";
+
+    EXPECT_CALL(mock_gl, glGetString(GL_EXTENSIONS))
+    .WillOnce(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
+    EXPECT_THROW(
+    {
+        auto platform = std::make_shared<mgg::GBMPlatform>();
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    }, mir::Exception);
 }

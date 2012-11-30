@@ -29,6 +29,7 @@
 #include <boost/iostreams/device/null.hpp>
 
 #include <cstdlib>
+#include <iostream>
 
 namespace
 {

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_manager.h"
+#include "mir/frontend/session_manager.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -28,10 +28,10 @@ TEST(ApplicationManagerDeathTest, class_invariants_not_satisfied_triggers_assert
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                mir::frontend::ApplicationManager app(std::shared_ptr<ms::ApplicationSurfaceOrganiser>(),
-                                                      std::shared_ptr<mf::ApplicationSessionContainer>(),
-                                                      std::shared_ptr<mf::ApplicationFocusSelectionStrategy>(),
-                                                      std::shared_ptr<mf::ApplicationFocusMechanism>()),
+                mir::frontend::SessionManager app(std::shared_ptr<mf::SurfaceOrganiser>(),
+                                                      std::shared_ptr<mf::SessionContainer>(),
+                                                      std::shared_ptr<mf::FocusSequence>(),
+                                                      std::shared_ptr<mf::FocusSetter>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }

@@ -26,8 +26,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
-
 if(PROTOBUF_FOUND)
 
 include_directories(
@@ -39,6 +37,7 @@ endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -63,6 +62,17 @@ set(
   android/mir_native_window.cpp
   ${CLIENT_SOURCES}
 )
+
+#todo: android should be shared as well, and we should combine with 
+# gbm's add_library below. Android currently has problems with multiple 
+# linkages of static protobuf
+add_library( 
+  mirclient STATIC
+  
+  ${CLIENT_SOURCES}
+  ${MIR_3RD_PARTY_SOURCES}
+)
+
 endif()
 
 if( MIR_PLATFORM STREQUAL "gbm")
@@ -74,14 +84,14 @@ set(
   gbm/gbm_client_buffer.cpp
   ${CLIENT_SOURCES}
 )
-endif()
 
 add_library( 
-  mirclient STATIC
+  mirclient SHARED
   
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
 )
+endif()
 
 set_target_properties(
   mirclient 
@@ -94,51 +104,17 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-  mirprotobuf
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
-)
-
-add_executable(
-  mir_demo_client
-  
-  demo_client.c
-)
-
-target_link_libraries(
-  mir_demo_client
-  
-  mirclient
-  mirprotobuf
-  
-  ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
 
-add_executable(
-  ubuntu_ds_demo_client_unaccelerated
-  
-  demo_client_unaccelerated.c
-)
-
-target_link_libraries(
-  ubuntu_ds_demo_client_unaccelerated
-  
-  mirclient
   mirprotobuf
-  
-  ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
 
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
+  ${DRM_LIBRARIES}
+  ${ANDROID_STDLIB}
+)
 
 set_target_properties(
   mirclient

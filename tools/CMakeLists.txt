@@ -1,4 +1,3 @@
-
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,7 +24,7 @@ target_link_libraries(
 
     mirplatformgraphics
     mirlogging
-    test-utils
+    mirdraw
 )
 
 set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
@@ -39,3 +38,5 @@ target_link_libraries(
     mirplatformgraphics
     ${Boost_LIBRARIES}
 )
+
+add_subdirectory(vera++)
