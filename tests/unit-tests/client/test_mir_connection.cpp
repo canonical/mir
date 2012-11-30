@@ -20,6 +20,7 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
 #include "mir_client/mir_connection.h"
+#include "mir_client/make_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_server.h"
@@ -74,8 +75,10 @@ struct MirConnectionTest : public testing::Test
         ON_CALL(*platform_factory, create_client_platform(_))
             .WillByDefault(Return(platform));
 
-        connection = std::make_shared<MirConnection>("./test_socket_surface", logger,
-                                                     platform_factory);
+        connection = std::make_shared<MirConnection>(
+            mcl::make_rpc_channel("./test_socket_surface", logger),
+            logger,
+            platform_factory);
     }
 
     void TearDown()
