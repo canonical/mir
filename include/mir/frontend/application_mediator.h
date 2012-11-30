@@ -51,13 +51,13 @@ class ApplicationMediator : public mir::protobuf::DisplayServer
 public:
 
     ApplicationMediator(
-        std::shared_ptr<frontend::SessionStore> const& session_store,
+        std::shared_ptr<SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-    virtual void connect(::google::protobuf::RpcController* controller,
+    void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
                          ::mir::protobuf::Connection* response,
                          ::google::protobuf::Closure* done);
@@ -84,12 +84,12 @@ public:
                  google::protobuf::Closure* done);
 
 private:
-    std::shared_ptr<frontend::SessionStore> session_store;
+    std::shared_ptr<SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;
 
-    std::shared_ptr<ResourceCache> resource_cache;
+    std::shared_ptr<ResourceCache> const resource_cache;
 
     std::shared_ptr<frontend::Session> application_session;
 };

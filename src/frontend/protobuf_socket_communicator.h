@@ -25,7 +25,6 @@
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
-#include <boost/signals2.hpp>
 
 #include <string>
 #include <map>
@@ -43,7 +42,6 @@ namespace mir
 namespace protobuf { class DisplayServer; }
 namespace frontend
 {
-class ProtobufSocketCommunicator;
 class ResourceCache;
 class ProtobufIpcFactory;
 
