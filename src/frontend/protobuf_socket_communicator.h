@@ -25,7 +25,6 @@
 #include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
-#include <boost/signals2.hpp>
 
 #include <string>
 #include <map>
@@ -43,13 +42,12 @@ namespace mir
 namespace protobuf { class DisplayServer; }
 namespace frontend
 {
-class ProtobufSocketCommunicator;
 class ResourceCache;
 class ProtobufIpcFactory;
 
 namespace detail
 {
-class AsioSession;
+class SocketSession;
 }
 
 class ProtobufSocketCommunicator : public Communicator
@@ -65,7 +63,7 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(const std::shared_ptr<detail::AsioSession>& session, const boost::system::error_code& ec);
+    void on_new_connection(const std::shared_ptr<detail::SocketSession>& session, const boost::system::error_code& ec);
     int next_id();
 
     const std::string socket_file;
@@ -74,7 +72,7 @@ private:
     std::thread io_service_thread;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
-    detail::ConnectedSessions<detail::AsioSession> connected_sessions;
+    detail::ConnectedSessions<detail::SocketSession> connected_sessions;
 };
 
 }
