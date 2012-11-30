@@ -25,6 +25,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator_fd.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator_errors.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_cache.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator.cpp
 )
 
 set(
