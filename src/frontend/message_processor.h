@@ -35,11 +35,21 @@ struct MessageSender
 {
     virtual void send(const std::ostringstream& buffer2) = 0;
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+protected:
+    MessageSender() = default;
+    ~MessageSender() = default;
+    MessageSender(MessageSender const&) = delete;
+    MessageSender& operator=(MessageSender const&) = delete;
 };
 
 struct MessageProcessor
 {
     virtual bool process_message(std::istream& msg) = 0;
+protected:
+    MessageProcessor() = default;
+    ~MessageProcessor() = default;
+    MessageProcessor(MessageProcessor const&) = delete;
+    MessageProcessor& operator=(MessageProcessor const&) = delete;
 };
 
 struct NullMessageProcessor : MessageProcessor
