@@ -21,8 +21,9 @@
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/native_client_platform_factory.h"
+#include "mir_client/mir_logger.h"
+#include "mir_client/make_rpc_channel.h"
 
-#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -61,7 +62,12 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     {
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
-        MirConnection* connection = new MirConnection(socket_file, log, client_platform_factory);
+
+        MirConnection* connection = new MirConnection(
+            mcl::make_rpc_channel(socket_file, log),
+            log,
+            client_platform_factory);
+
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
