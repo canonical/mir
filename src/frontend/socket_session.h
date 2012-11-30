@@ -52,8 +52,8 @@ struct SocketSession : public MessageSender
         this->processor = processor;
     }
 
-    boost::asio::local::stream_protocol::socket&
-    get_socket() { return socket; }
+    boost::asio::local::stream_protocol::socket& get_socket()
+    { return socket; }
 
 private:
     void send(const std::ostringstream& buffer2);

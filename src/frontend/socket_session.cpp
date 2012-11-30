@@ -33,10 +33,15 @@ void mfd::SocketSession::send(const std::ostringstream& buffer2)
     const std::string& body = buffer2.str();
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
-    { static_cast<unsigned char>((size >> 8) & 0xff), static_cast<unsigned char>((size >> 0) & 0xff) };
+    {
+        static_cast<unsigned char>((size >> 8) & 0xff),
+        static_cast<unsigned char>((size >> 0) & 0xff)
+    };
+
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
+
     ba::async_write(socket, ba::buffer(whole_message),
         boost::bind(&mfd::SocketSession::on_response_sent, this, boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
@@ -83,8 +88,14 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
         alive = processor->process_message(msg);
     }
 
-    if (alive) read_next_message();
-    else connected_sessions->remove(id());
+    if (alive)
+    {
+        read_next_message();
+    }
+    else
+    {
+        connected_sessions->remove(id());
+    }
 }
 
 void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
