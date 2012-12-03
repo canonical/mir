@@ -59,11 +59,6 @@ protected:
         third_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
         
-        EXPECT_CALL(*mock_buffer, bind_to_texture())
-            .Times(AtLeast(0)); 
-        EXPECT_CALL(*mock_buffer, get_ipc_package())
-            .Times(AtLeast(0)); 
-
         EXPECT_CALL(*mock_swapper, client_acquire())
             .Times(AtLeast(0)); 
         EXPECT_CALL(*mock_swapper, client_release(_))

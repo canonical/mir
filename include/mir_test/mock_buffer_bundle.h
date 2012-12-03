@@ -30,14 +30,6 @@ namespace compositor
 
 struct MockBufferBundle : public BufferBundle
 {
-    MockBufferBundle()
-    {
-        // TODO replace MockBufferBundle with a stub where appropriate
-        // E.g. ApplicationManager.closing_session_removes_surfaces
-        using namespace ::testing;
-        EXPECT_CALL(*this, lock_back_buffer()).Times(AtLeast(0));
-        ON_CALL(*this, lock_back_buffer()).WillByDefault(Return(std::shared_ptr<GraphicRegion>()));
-    }
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
     MOCK_METHOD0(lock_back_buffer, std::shared_ptr<GraphicRegion>());
 
