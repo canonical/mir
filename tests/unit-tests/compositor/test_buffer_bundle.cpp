@@ -57,24 +57,16 @@ protected:
         mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
         second_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
         third_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
-        mock_swapper = std::unique_ptr<mc::MockSwapper>(new mc::MockSwapper(mock_buffer));
+        mock_swapper = std::unique_ptr<NiceMock<mc::MockSwapper>>(
+            new NiceMock<mc::MockSwapper>(mock_buffer));
         
-        EXPECT_CALL(*mock_swapper, client_acquire())
-            .Times(AtLeast(0)); 
-        EXPECT_CALL(*mock_swapper, client_release(_))
-            .Times(AtLeast(0)); 
-        EXPECT_CALL(*mock_swapper, compositor_acquire())
-            .Times(AtLeast(0)); 
-        EXPECT_CALL(*mock_swapper, compositor_release(_))
-            .Times(AtLeast(0)); 
-    
         mock_generator = std::make_shared<NiceMock<MockIDGenerator>>();
     }
 
     std::shared_ptr<testing::NiceMock<mc::MockBuffer>> mock_buffer;
     std::shared_ptr<testing::NiceMock<mc::MockBuffer>> second_mock_buffer;
     std::shared_ptr<testing::NiceMock<mc::MockBuffer>> third_mock_buffer;
-    std::unique_ptr<mc::MockSwapper> mock_swapper;
+    std::unique_ptr<testing::NiceMock<mc::MockSwapper>> mock_swapper;
     geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;
