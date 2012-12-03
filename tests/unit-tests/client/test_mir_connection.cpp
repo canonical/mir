@@ -64,7 +64,7 @@ struct MirConnectionTest : public testing::Test
         test_server = std::make_shared<mt::TestServer>("./test_socket_surface", server_tool);
 
         EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
-        test_server->comm.start();
+        test_server->comm->start();
 
         /* Create MirConnection dependencies */
         logger = std::make_shared<mcl::ConsoleLogger>();

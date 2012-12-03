@@ -50,7 +50,7 @@ struct ProtobufSocketCommunicatorBasic : public ::testing::Test
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        stub_server->comm.start();
+        stub_server->comm->start();
 
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);

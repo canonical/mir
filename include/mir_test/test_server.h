@@ -33,13 +33,13 @@ struct TestServer
     TestServer(std::string socket_name,
                const std::shared_ptr<protobuf::DisplayServer>& tool) :
         factory(std::make_shared<MockIpcFactory>(*tool)),
-        comm(socket_name, factory)
+        comm(std::make_shared<frontend::ProtobufSocketCommunicator>(socket_name, factory))
     {
     }
 
     // "Server" side
     std::shared_ptr<MockIpcFactory> factory;
-    frontend::ProtobufSocketCommunicator comm;
+    std::shared_ptr<frontend::Communicator> comm;
 };
 
 }

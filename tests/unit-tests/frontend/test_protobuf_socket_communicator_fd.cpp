@@ -93,7 +93,7 @@ struct ProtobufSocketCommunicatorFD : public ::testing::Test
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        stub_server->comm.start();
+        stub_server->comm->start();
 
         stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 500);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
