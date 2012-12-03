@@ -33,7 +33,7 @@ mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_p
 
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app) const
 {
     std::shared_ptr<mf::Session> first;
     std::shared_ptr<mf::Session> result;
@@ -58,7 +58,7 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std:
     return first;
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app)
+std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app) const
 {
     std::shared_ptr<mf::Session> last;
     std::shared_ptr<mf::Session> result;
