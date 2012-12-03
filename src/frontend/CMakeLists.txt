@@ -56,4 +56,5 @@ target_link_libraries(
   mirfrontend
 
   mirlogging
+  3rd_party
 )

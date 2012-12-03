@@ -20,10 +20,10 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_selection_strategy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_single_visibility_focus_mechanism.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator_surface_counter.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator_fd.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_socket_communicator_errors.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_communicator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_surface_apis.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_sends_fds.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_reports_errors.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator.cpp
 )

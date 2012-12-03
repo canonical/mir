@@ -72,7 +72,7 @@ struct StubServerSurfaceCounter : public StubServerTool
 
 }
 
-struct ProtobufSocketCommunicatorCounter : public ::testing::Test
+struct ProtobufSurfaceCounter : public ::testing::Test
 {
     void SetUp()
     {
@@ -99,7 +99,7 @@ struct ProtobufSocketCommunicatorCounter : public ::testing::Test
     std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
-TEST_F(ProtobufSocketCommunicatorCounter, server_creates_surface_on_create_surface_call)
+TEST_F(ProtobufSurfaceCounter, server_creates_surface_on_create_surface_call)
 {
     EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(1));
 
@@ -113,7 +113,7 @@ TEST_F(ProtobufSocketCommunicatorCounter, server_creates_surface_on_create_surfa
     stub_server_tool->expect_surface_count(1);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter, surface_count_is_zero_after_connection)
+TEST_F(ProtobufSurfaceCounter, surface_count_is_zero_after_connection)
 {
     using namespace testing;
     EXPECT_CALL(*stub_client, connect_done()).Times(AtLeast(0));
@@ -128,7 +128,7 @@ TEST_F(ProtobufSocketCommunicatorCounter, surface_count_is_zero_after_connection
     stub_server_tool->expect_surface_count(0);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter,
+TEST_F(ProtobufSurfaceCounter,
        each_create_surface_results_in_a_new_surface_being_created)
 {
     int const surface_count{5};
@@ -149,7 +149,7 @@ TEST_F(ProtobufSocketCommunicatorCounter,
     stub_server_tool->expect_surface_count(surface_count);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter,
+TEST_F(ProtobufSurfaceCounter,
        each_create_surface_results_in_a_new_surface_being_created_asynchronously)
 {
     int const surface_count{5};
