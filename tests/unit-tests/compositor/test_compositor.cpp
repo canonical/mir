@@ -121,7 +121,7 @@ TEST(Compositor, skips_invisible_renderables)
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
     
-    MockRenderable mr1, mr2, mr3;
+    NiceMock<MockRenderable> mr1, mr2, mr3;
     
     EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
     EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
