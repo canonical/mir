@@ -33,7 +33,7 @@ namespace mia = mi::android;
 TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 {
     using namespace ::testing;
-    auto ev = new droidinput::KeyEvent();
+    droidinput::KeyEvent ev;
     mir::MockEventFilter filter;
     mia::EventFilterDispatcherPolicy policy(std::shared_ptr<mir::MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
@@ -41,11 +41,11 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));
 
     // The policy filters ALL key events before queuing
-    policy.interceptKeyBeforeQueueing(ev, policy_flags);
+    policy.interceptKeyBeforeQueueing(&ev, policy_flags);
     EXPECT_EQ(policy_flags, droidinput::POLICY_FLAG_FILTERED);
 
     // Android uses alternate notation...the policy returns true if the event was NOT handled (e.g. the EventFilter
     // returns false)
-    EXPECT_TRUE(policy.filterInputEvent(ev, 0));
+    EXPECT_TRUE(policy.filterInputEvent(&ev, 0));
 }
 

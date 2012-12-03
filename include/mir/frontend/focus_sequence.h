@@ -32,8 +32,8 @@ class FocusSequence
 public:
     virtual ~FocusSequence() {}
 
-    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) = 0;
-    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) = 0;
+    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
 
 protected:
     FocusSequence() = default;

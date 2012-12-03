@@ -33,8 +33,8 @@ public:
     explicit RegistrationOrderFocusSequence(std::shared_ptr<SessionContainer> const& session_container);
     virtual ~RegistrationOrderFocusSequence() {}
 
-    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app);
-    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app);
+    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const;
+    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const;
 
 protected:
     RegistrationOrderFocusSequence(const RegistrationOrderFocusSequence&) = delete;
