@@ -24,7 +24,6 @@
 #include "mir/frontend/communicator.h"
 
 #include <string>
-#include <map>
 
 namespace mir
 {

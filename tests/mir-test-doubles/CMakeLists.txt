@@ -37,7 +37,6 @@ list(APPEND TEST_UTILS_SRCS
 )
 endif()
 
-
 add_library(
   mir-test-doubles STATIC 
   ${TEST_UTILS_SRCS})

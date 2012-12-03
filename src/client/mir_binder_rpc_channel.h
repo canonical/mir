@@ -23,8 +23,6 @@
 #include "mir/thread/all.h"
 #include "mir_client/mir_logger.h"
 
-#include <boost/asio.hpp>
-
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 

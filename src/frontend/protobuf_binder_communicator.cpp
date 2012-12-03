@@ -18,10 +18,8 @@
 
 #include "protobuf_binder_communicator.h"
 
-
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
-
 
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
         const std::string& /*name*/,
