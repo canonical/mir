@@ -84,20 +84,6 @@ struct ErrorServer : StubServerTool
 
 std::string const ErrorServer::test_exception_text{"test exception text"};
 
-struct TestErrorServer
-{
-    TestErrorServer(std::string socket_name) :
-        factory(std::make_shared<mt::MockIpcFactory>(stub_services)),
-        comm(socket_name, factory)
-    {
-    }
-
-    // "Server" side
-    mt::ErrorServer stub_services;
-    std::shared_ptr<mt::MockIpcFactory> factory;
-    mf::ProtobufSocketCommunicator comm;
-};
-
 }
 }
 
@@ -105,12 +91,13 @@ struct ProtobufErrorTestFixture : public ::testing::Test
 {
     void SetUp()
     {
-        server = std::make_shared<mt::TestErrorServer>("./test_error_fixture");
+        stub_services = std::make_shared<mt::ErrorServer>();
+        server = std::make_shared<mt::TestProtobufServer>("./test_error_fixture", stub_services);
         client = std::make_shared<mt::TestProtobufClient>("./test_error_fixture", 100);
 
         ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
         EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
-        server->comm.start();
+        server->comm->start();
     }
 
     void TearDown()
@@ -118,7 +105,8 @@ struct ProtobufErrorTestFixture : public ::testing::Test
         server.reset();
     }
 
-    std::shared_ptr<mt::TestErrorServer> server;
+    std::shared_ptr<mt::ErrorServer> stub_services;
+    std::shared_ptr<mt::TestProtobufServer> server;
     std::shared_ptr<mt::TestProtobufClient>  client;
 };
 
@@ -137,7 +125,7 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
     client->wait_for_connect_done();
 
     EXPECT_TRUE(result.has_error());
-    EXPECT_EQ(server->stub_services.test_exception_text, result.error());
+    EXPECT_EQ(stub_services->test_exception_text, result.error());
 }
 
 TEST_F(ProtobufErrorTestFixture, create_surface_exception)
@@ -153,5 +141,5 @@ TEST_F(ProtobufErrorTestFixture, create_surface_exception)
     client->wait_for_create_surface();
 
     EXPECT_TRUE(client->surface.has_error());
-    EXPECT_EQ(server->stub_services.test_exception_text, client->surface.error());
+    EXPECT_EQ(stub_services->test_exception_text, client->surface.error());
 }
