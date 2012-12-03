@@ -26,6 +26,7 @@
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
 #include "mir_test/mock_surface_organiser.h"
+#include "null_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -34,6 +35,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 
 namespace
 {
@@ -97,8 +99,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
                                        std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
     
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(
-        new mc::MockBufferBundle());
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mt::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,
