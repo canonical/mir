@@ -26,7 +26,7 @@ namespace mir
 namespace test
 {
 
-class NullStubBufferBundle : public compositor::BufferBundle
+class NullBufferBundle : public compositor::BufferBundle
 {
 public:
     std::shared_ptr<compositor::GraphicBufferClientResource> secure_client_buffer()
