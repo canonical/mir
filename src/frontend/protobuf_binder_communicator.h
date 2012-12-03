@@ -19,9 +19,11 @@
 #ifndef MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
 
-#include "connected_sessions.h"
 
 #include "mir/frontend/communicator.h"
+
+#include "connected_sessions.h"
+#include <binder/Binder.h>
 
 #include <string>
 #include <map>
@@ -33,7 +35,9 @@ namespace frontend
 class ProtobufIpcFactory;
 
 
-class ProtobufBinderCommunicator : public Communicator
+class ProtobufBinderCommunicator :
+    public Communicator,
+    public android::BBinder
 {
 public:
     explicit ProtobufBinderCommunicator(
@@ -43,6 +47,8 @@ public:
     void start();
 
 private:
+
+    std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     // TODO
 };
 

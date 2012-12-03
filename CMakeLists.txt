@@ -157,6 +157,9 @@ include_directories (
   ${GTEST_INCLUDE_DIR}
 )
 
+set(Boost_LIBRARIES "${Boost_LIBRARIES};binder")
+message("Boost_LIBRARIES ${Boost_LIBRARIES}")
+
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)
