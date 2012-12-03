@@ -16,31 +16,26 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  *              Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_TEST_TEST_SERVER_H_
-#define MIR_TEST_TEST_SERVER_H_
+#ifndef MIR_TEST_TEST_PROTOBUF_SERVER_H_
+#define MIR_TEST_TEST_PROTOBUF_SERVER_H_
 
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/mock_ipc_factory.h"
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 
 namespace mir
 {
 namespace test
 {
 
-struct TestServer
+struct TestProtobufServer
 {
-    TestServer(std::string socket_name,
-               const std::shared_ptr<protobuf::DisplayServer>& tool) :
-        factory(std::make_shared<MockIpcFactory>(*tool)),
-        comm(make_communicator(socket_name, factory))
-    {
-    }
+    TestProtobufServer(std::string socket_name,
+               const std::shared_ptr<protobuf::DisplayServer>& tool);
 
-    std::shared_ptr<frontend::Communicator> make_communicator(const std::string& socket_name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
-    {
-        return std::make_shared < frontend::ProtobufSocketCommunicator > (socket_name, factory);
-    }
+    std::shared_ptr<frontend::Communicator> make_communicator(
+        const std::string& socket_name,
+        std::shared_ptr<frontend::ProtobufIpcFactory> const& factory);
 
     // "Server" side
     std::shared_ptr<MockIpcFactory> factory;
@@ -49,4 +44,4 @@ struct TestServer
 
 }
 }
-#endif /* MIR_TEST_TEST_SERVER_H_ */
+#endif /* MIR_TEST_TEST_PROTOBUF_SERVER_H_ */

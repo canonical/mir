@@ -26,7 +26,7 @@
 #include "mir_test/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -45,7 +45,7 @@ struct ProtobufSocketCommunicatorBasic : public ::testing::Test
     void SetUp()
     {
         stub_server_tool = std::make_shared<mt::StubServerTool>();
-        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
  
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
@@ -64,7 +64,7 @@ struct ProtobufSocketCommunicatorBasic : public ::testing::Test
     std::shared_ptr<mt::TestProtobufClient> client;
     std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
-    std::shared_ptr<mt::TestServer> stub_server;
+    std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
 TEST_F(ProtobufSocketCommunicatorBasic, create_surface_results_in_a_callback)

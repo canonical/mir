@@ -23,7 +23,7 @@
 #include "mir_client/make_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 
 #include <gtest/gtest.h>
@@ -61,7 +61,7 @@ struct MirConnectionTest : public testing::Test
 
         /* Set up test server */
         server_tool = std::make_shared<mt::StubServerTool>();
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", server_tool);
+        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", server_tool);
 
         EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
         test_server->comm->start();
@@ -91,7 +91,7 @@ struct MirConnectionTest : public testing::Test
     std::shared_ptr<testing::NiceMock<MockClientPlatformFactory>> platform_factory;
     std::shared_ptr<MirConnection> connection;
 
-    std::shared_ptr<mt::TestServer> test_server;
+    std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<mt::StubServerTool> server_tool;
 };
 

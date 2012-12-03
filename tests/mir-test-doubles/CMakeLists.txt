@@ -27,6 +27,17 @@ set(
   fake_event_hub.cpp
 )
 
+if (MIR_TRANSPORT STREQUAL "socket")
+list(APPEND TEST_UTILS_SRCS
+  test_protobuf_socket_server.cpp
+)
+elseif (MIR_TRANSPORT STREQUAL "binder")
+list(APPEND TEST_UTILS_SRCS
+  test_protobuf_binder_server.cpp
+)
+endif()
+
+
 add_library(
   mir-test-doubles STATIC 
   ${TEST_UTILS_SRCS})

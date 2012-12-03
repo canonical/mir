@@ -28,7 +28,7 @@
 #include "mir/thread/all.h"
 
 #include "mir_test/stub_server_tool.h"
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 #include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
@@ -603,7 +603,7 @@ struct TestClientIPCRender : public testing::Test
 
         /* start a server */
         mock_server = std::make_shared<mt::StubServerGenerator>(package, 14);
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server);
+        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
         EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
 
         test_server->comm.start();
@@ -616,7 +616,7 @@ struct TestClientIPCRender : public testing::Test
 
     mir::protobuf::Connection response;
 
-    std::shared_ptr<mt::TestServer> test_server;
+    std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<mt::StubServerGenerator> mock_server;
 
     const hw_module_t    *hw_module;

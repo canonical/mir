@@ -20,7 +20,7 @@
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/test_protobuf_client.h"
 
