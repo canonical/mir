@@ -21,7 +21,6 @@
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
 #include "message_processor.h"
-#include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -37,6 +36,8 @@ namespace protobuf { class DisplayServer; }
 
 namespace frontend
 {
+class ResourceCache;
+
 namespace detail
 {
 struct ProtobufMessageProcessor : MessageProcessor

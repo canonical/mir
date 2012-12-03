@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
+#include "mir/frontend/resource_cache.h"
 
 #include <sstream>
 #include <iostream>
