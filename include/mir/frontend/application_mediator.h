@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_FRONTEND_APPLICATION_PROXY_H_
-#define MIR_FRONTEND_APPLICATION_PROXY_H_
+#ifndef MIR_FRONTEND_APPLICATION_MEDIATOR_H_
+#define MIR_FRONTEND_APPLICATION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
 
@@ -42,23 +42,22 @@ namespace frontend
 {
 class ResourceCache;
 class ApplicationListener;
-class ApplicationSessionFactory;
-class ApplicationSession;
+class SessionStore;
+class Session;
 
-// ApplicationProxy relays requests from the client into the server process.
-class ApplicationProxy : public mir::protobuf::DisplayServer
+// ApplicationMediator relays requests from the client into the server process.
+class ApplicationMediator : public mir::protobuf::DisplayServer
 {
 public:
 
-    ApplicationProxy(
-        std::shared_ptr<frontend::ApplicationSessionFactory> const& session_factory,
+    ApplicationMediator(
+        std::shared_ptr<SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
-private:
-    virtual void connect(::google::protobuf::RpcController* controller,
+    void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
                          ::mir::protobuf::Connection* response,
                          ::google::protobuf::Closure* done);
@@ -84,18 +83,19 @@ private:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
-    std::shared_ptr<frontend::ApplicationSessionFactory> session_factory;
+private:
+    std::shared_ptr<SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<ApplicationListener> const listener;
 
-    std::shared_ptr<ResourceCache> resource_cache;
+    std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::shared_ptr<frontend::ApplicationSession> application_session;
+    std::shared_ptr<frontend::Session> application_session;
 };
 
 }
 }
 
 
-#endif /* MIR_FRONTEND_APPLICATION_PROXY_H_ */
+#endif /* MIR_FRONTEND_APPLICATION_MEDIATOR_H_ */

@@ -24,8 +24,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     logger(std::make_shared<MockLogger>()),
-    channel(socket_file, logger),
-    display_server(&channel),
+    channel(mir::client::make_rpc_channel(socket_file, logger)),
+    display_server(channel.get()),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),

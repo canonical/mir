@@ -44,6 +44,7 @@ public:
     MOCK_METHOD1(client_release, void(Buffer*));
     MOCK_METHOD0(compositor_acquire,  Buffer*(void));
     MOCK_METHOD1(compositor_release,   void(Buffer*));
+    MOCK_METHOD0(shutdown, void());
 
 private:
     std::shared_ptr<Buffer> default_buffer;

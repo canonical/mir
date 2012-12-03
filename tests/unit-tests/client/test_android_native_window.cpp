@@ -57,7 +57,8 @@ struct MockMirSurface : public mcl::ClientSurface
         ON_CALL(*this, get_parameters())
             .WillByDefault(Return(params)); 
         ON_CALL(*this, get_current_buffer())
-            .WillByDefault(Return(std::make_shared<MockClientBuffer>())); 
+            .WillByDefault(Return(
+                std::make_shared<NiceMock<MockClientBuffer>>())); 
     }
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
@@ -73,12 +74,14 @@ class AndroidNativeWindowTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
         surf_params.width = 530;
         surf_params.height = 715;
         surf_params.pixel_format = mir_pixel_format_rgba_8888; 
 
-        mock_surface = std::make_shared<MockMirSurface>(surf_params);
-        mock_client_buffer = std::make_shared<MockClientBuffer>();
+        mock_surface = std::make_shared<NiceMock<MockMirSurface>>(surf_params);
+        mock_client_buffer = 
+            std::make_shared<NiceMock<MockClientBuffer>>();
     }
 
     MirSurfaceParameters surf_params;

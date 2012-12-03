@@ -21,7 +21,6 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
-#include "mir_client/mir_rpc_channel.h"
 
 #include "mir_test/mock_ipc_factory.h"
 #include "mir_test/mock_logger.h"

@@ -107,7 +107,7 @@ TEST(Compositor, render)
     comp.render(&display);
 }
 
-TEST(Compositor, skips_invisible_rendererables)
+TEST(Compositor, skips_invisible_renderables)
 {
     using namespace testing;
 
@@ -115,17 +115,17 @@ TEST(Compositor, skips_invisible_rendererables)
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
-    mg::MockDisplay display;
+    NiceMock<mg::MockDisplay> display;
 
     EXPECT_CALL(display, view_area())
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
     
-    MockRenderable mr1, mr2, mr3;
+    NiceMock<MockRenderable> mr1, mr2, mr3;
     
-    ON_CALL(mr1, hidden()).WillByDefault(Return(false));
-    ON_CALL(mr2, hidden()).WillByDefault(Return(true));
-    ON_CALL(mr3, hidden()).WillByDefault(Return(false));
+    EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
+    EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
+    EXPECT_CALL(mr3, hidden()).WillOnce(Return(false));
     
     std::vector<mg::Renderable*> renderables;
     renderables.push_back(&mr1);

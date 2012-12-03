@@ -38,8 +38,7 @@ public:
                       std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
 
     std::shared_ptr<ClientBufferDepository> create_platform_depository ();
-    EGLNativeWindowType create_egl_window(ClientSurface *surface);
-    void destroy_egl_window(EGLNativeWindowType window);
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
 
 private:

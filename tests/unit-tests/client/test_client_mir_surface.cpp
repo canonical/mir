@@ -23,7 +23,6 @@
 #include "mir_client/client_buffer_depository.h"
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
-#include "mir_client/mir_rpc_channel.h"
 #include "mir_client/mir_surface.h"
 #include "mir_client/mir_connection.h"
 #include "mir/frontend/resource_cache.h"
@@ -178,13 +177,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
         return std::shared_ptr<mcl::ClientBufferDepository>();
     }
 
-    EGLNativeWindowType create_egl_window(mcl::ClientSurface* /*surface*/)
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface* /*surface*/)
     {
-        return reinterpret_cast<EGLNativeWindowType>(0);
-    }
-
-    void destroy_egl_window(EGLNativeWindowType /*window*/)
-    {
+        return std::shared_ptr<EGLNativeWindowType>();
     }
 
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
@@ -236,8 +231,8 @@ struct MirClientSurfaceTest : public testing::Test
         /* connect client */
         logger = std::make_shared<mcl::ConsoleLogger>();
         platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
-        channel = std::make_shared<mcl::MirRpcChannel>(std::string("./test_socket_surface"), logger);
-        connection = std::make_shared<MirConnection>("./test_socket_surface", logger, platform_factory);
+        channel = mcl::make_rpc_channel("./test_socket_surface", logger);
+        connection = std::make_shared<MirConnection>(channel, logger, platform_factory);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
         wait_handle->wait_for_result();
@@ -249,7 +244,7 @@ struct MirClientSurfaceTest : public testing::Test
         test_server.reset();
     }
 
-    std::shared_ptr<mcl::MirRpcChannel> channel;
+    std::shared_ptr<google::protobuf::RpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;

@@ -17,14 +17,14 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/application_session.h"
-#include "mir/frontend/application_session_model.h"
-#include "mir/frontend/registration_order_focus_selection_strategy.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_application_surface_organiser.h"
+#include "mir_test/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,10 +37,10 @@ namespace ms = mir::surfaces;
 namespace
 {
 
-struct MockApplicationSession : public mf::ApplicationSession
+struct MockApplicationSession : public mf::Session
 {
-  MockApplicationSession(std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser,
-                         std::string name) : ApplicationSession(organiser, name)
+  MockApplicationSession(std::shared_ptr<mf::SurfaceOrganiser> organiser,
+                         std::string name) : Session(organiser, name)
   {
   }
   MOCK_METHOD0(hide,void());
@@ -52,16 +52,16 @@ struct MockApplicationSession : public mf::ApplicationSession
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> organiser(new ms::MockApplicationSurfaceOrganiser);
-    std::shared_ptr<mf::ApplicationSessionModel> model(new mf::ApplicationSessionModel);
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser);
+    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");
     MockApplicationSession m2(organiser, "Visual Studio 8");
     MockApplicationSession m3(organiser, "Visual Studio 9");
     
-    std::shared_ptr<mf::ApplicationSession> app1(&m1, mir::EmptyDeleter());
-    std::shared_ptr<mf::ApplicationSession> app2(&m2, mir::EmptyDeleter());
-    std::shared_ptr<mf::ApplicationSession> app3(&m3, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app1(&m1, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app2(&m2, mir::EmptyDeleter());
+    std::shared_ptr<mf::Session> app3(&m3, mir::EmptyDeleter());
 
     mf::SingleVisibilityFocusMechanism focus_mechanism(model);
     

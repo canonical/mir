@@ -25,16 +25,19 @@ fi
 
 cmake --build ${BUILD_DIR}
 
-adb push ${BUILD_DIR}/lib/libmirclient.so.0.0.1 /data
+adb wait-for-device
+adb root
+adb wait-for-device
+adb shell stop
 
 adb push ${BUILD_DIR}/bin/acceptance-tests /data
-adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./acceptance-tests'
+adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./acceptance-tests'
 adb pull '/data/acceptance-tests.xml'
 
 adb push ${BUILD_DIR}/bin/integration-tests /data
-adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./integration-tests'
+adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./integration-tests'
 adb pull '/data/integration-tests.xml'
 
 adb push ${BUILD_DIR}/bin/unit-tests /data
-adb shell 'cd /data && LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH GTEST_OUTPUT=xml:./ ./unit-tests'
+adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./unit-tests'
 adb pull '/data/unit-tests.xml'

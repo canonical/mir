@@ -20,34 +20,34 @@
 #define MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
 #include <memory>
-#include "mir/frontend/application_focus_mechanism.h"
+#include "mir/frontend/focus_setter.h"
 
 namespace mir
 {
 
 namespace surfaces
 {
-class ApplicationSurfaceOrganiser;
+class SurfaceOrganiser;
 }
 
 namespace frontend
 {
-class ApplicationSession;
-class ApplicationSessionContainer;
+class Session;
+class SessionContainer;
 
-class SingleVisibilityFocusMechanism : public ApplicationFocusMechanism
+class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<ApplicationSessionContainer> const& app_container);
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
     virtual ~SingleVisibilityFocusMechanism() {}
 
-    void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus);
+    void set_focus_to(std::shared_ptr<Session> const& new_focus);
 
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
-    std::shared_ptr<ApplicationSessionContainer> app_container;
+    std::shared_ptr<SessionContainer> app_container;
 };
 
 }

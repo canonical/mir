@@ -16,38 +16,40 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_FOCUS_MECHANISM_H_
-#define MIR_FRONTEND_FOCUS_MECHANISM_H_
+#ifndef FRONTEND_SESSION_CONTAINER_H_
+#define FRONTEND_SESSION_CONTAINER_H_
 
+#include "mir/thread/all.h"
+#include <vector>
 #include <memory>
 
 namespace mir
 {
-
-namespace surfaces
-{
-class ApplicationSurfaceOrganiser;
-}
-
 namespace frontend
 {
-class ApplicationSession;
+class Session;
 
-class ApplicationFocusMechanism
+class SessionContainer
 {
 public:
-    virtual ~ApplicationFocusMechanism() {}
+    SessionContainer();
+    ~SessionContainer();
 
-    virtual void set_focus_to(std::shared_ptr<ApplicationSession> const& new_focus) = 0;
+    virtual void insert_session(std::shared_ptr<Session> const& session);
+    virtual void remove_session(std::shared_ptr<Session> const& session);
 
-protected:
-    ApplicationFocusMechanism() = default;
-    ApplicationFocusMechanism(const ApplicationFocusMechanism&) = delete;
-    ApplicationFocusMechanism& operator=(const ApplicationFocusMechanism&) = delete;
+    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
+
+private:
+    SessionContainer(const SessionContainer&) = delete;
+    SessionContainer& operator=(const SessionContainer&) = delete;
+
+    std::vector<std::shared_ptr<Session>> apps;
+    mutable std::mutex guard;
 };
 
 }
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_MECHANISM_H_
+#endif // FRONTEND_SESSION_CONTAINER_H_

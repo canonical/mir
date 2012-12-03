@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_SESSION_FACTORY_H_
-#define MIR_FRONTEND_APPLICATION_SESSION_FACTORY_H_
+#ifndef MIR_FRONTEND_SESSION_STORE_H_
+#define MIR_FRONTEND_SESSION_STORE_H_
 
 #include <memory>
 
@@ -27,23 +27,25 @@ namespace mir
 namespace frontend
 {
 
-class ApplicationSession;
+class Session;
 
-class ApplicationSessionFactory
+class SessionStore
 {
  public:
-    virtual ~ApplicationSessionFactory() {}
+    virtual ~SessionStore() {}
 
-    virtual std::shared_ptr<ApplicationSession> open_session(std::string const& name) = 0;
-    virtual void close_session(std::shared_ptr<ApplicationSession> const& session)  = 0;
+    virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
+    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
+
+    virtual void shutdown() = 0;
     
 protected:
-    ApplicationSessionFactory() = default;
-    ApplicationSessionFactory(const ApplicationSessionFactory&) = delete;
-    ApplicationSessionFactory& operator=(const ApplicationSessionFactory&) = delete;
+    SessionStore() = default;
+    SessionStore(const SessionStore&) = delete;
+    SessionStore& operator=(const SessionStore&) = delete;
 };
 
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_SESSION_FACTORY_H_
+#endif // MIR_FRONTEND_SESSION_STORE_H_

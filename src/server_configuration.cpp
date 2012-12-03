@@ -25,12 +25,12 @@
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/application_proxy.h"
+#include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/application_manager.h"
-#include "mir/frontend/registration_order_focus_selection_strategy.h"
+#include "mir/frontend/session_manager.h"
+#include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
-#include "mir/frontend/application_session_model.h"
+#include "mir/frontend/session_container.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -56,11 +56,11 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mf::ApplicationManager> const& application_manager,
+        std::shared_ptr<mf::SessionManager> const& session_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display) :
-        application_manager(application_manager),
+        session_manager(session_manager),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::ApplicationManager> application_manager;
+    std::shared_ptr<mf::SessionManager> session_manager;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -77,8 +77,8 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationProxy>(
-            application_manager,
+        return std::make_shared<mf::ApplicationMediator>(
+            session_manager,
             graphics_platform,
             graphics_display,
             listener,
@@ -153,13 +153,13 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<mf::ApplicationManager>
-mir::DefaultServerConfiguration::make_application_manager(std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser)
+std::shared_ptr<mf::SessionManager>
+mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
 {
-    auto session_model = std::make_shared<mf::ApplicationSessionModel>();
-    auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_model);
-    auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSelectionStrategy>(session_model);
-    return std::make_shared<mf::ApplicationManager>(surface_organiser, session_model, focus_selection_strategy, focus_mechanism);
+    auto session_container = std::make_shared<mf::SessionContainer>();
+    auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_container);
+    auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSequence>(session_container);
+    return std::make_shared<mf::SessionManager>(surface_organiser, session_container, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>
@@ -172,11 +172,11 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<ms::ApplicationSurfaceOrganiser> const& surface_organiser,
+    std::shared_ptr<mf::SessionManager> const& session_manager,
     std::shared_ptr<mg::Display> const& display)
 {
     return std::make_shared<DefaultIpcFactory>(
-        make_application_manager(surface_organiser),
+        session_manager,
         make_application_listener(),
         make_graphics_platform(),
         display);

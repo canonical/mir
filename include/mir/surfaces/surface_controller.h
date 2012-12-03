@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/surfaces/application_surface_organiser.h"
+#include "mir/frontend/surface_organiser.h"
 
 #include <memory>
 
@@ -32,7 +32,7 @@ class Surface;
 class SurfaceCreationParameters;
 class SurfaceStackModel;
 
-class SurfaceController : public ApplicationSurfaceOrganiser
+class SurfaceController : public frontend::SurfaceOrganiser
 {
  public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);

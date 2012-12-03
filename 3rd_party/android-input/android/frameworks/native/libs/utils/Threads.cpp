@@ -107,7 +107,7 @@ struct thread_data_t {
                 // defaults to that of parent, or as set by requestPriority()
             }
         }
-        
+
         if (name) {
 #if defined(HAVE_PRCTL)
             // Mac OS doesn't have this, and we build libutil for the host too
@@ -140,7 +140,7 @@ int androidCreateRawThreadEtc(android_thread_func_t entryFunction,
                                size_t threadStackSize,
                                android_thread_id_t *threadId)
 {
-    pthread_attr_t attr; 
+    pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
@@ -159,14 +159,14 @@ int androidCreateRawThreadEtc(android_thread_func_t entryFunction,
         t->entryFunction = entryFunction;
         t->userData = userData;
         entryFunction = (android_thread_func_t)&thread_data_t::trampoline;
-        userData = t;            
+        userData = t;
     }
 #endif
 
     if (threadStackSize) {
         pthread_attr_setstacksize(&attr, threadStackSize);
     }
-    
+
     errno = 0;
     pthread_t thread;
     int result = pthread_create(&thread, &attr,
@@ -259,7 +259,7 @@ static bool doCreateThread(android_thread_func_t fn, void* arg, android_thread_i
 #endif
 
     if (id != NULL) {
-      	*id = (android_thread_id_t)thrdaddr;
+        *id = (android_thread_id_t)thrdaddr;
     }
 
     return true;
@@ -329,7 +329,7 @@ pid_t androidGetTid()
 int androidSetThreadPriority(pid_t tid, int pri)
 {
     int rc = 0;
-    
+
 #if defined(HAVE_PTHREADS)
     int lasterr = 0;
 
@@ -359,7 +359,7 @@ int androidSetThreadPriority(pid_t tid, int pri)
         errno = lasterr;
     }
 #endif
-    
+
     return rc;
 }
 
@@ -506,7 +506,7 @@ typedef struct WinCondition {
         //printf("+++ wait: incr waitersCount to %d (tid=%ld)\n",
         //    condState->waitersCount, getThreadId());
         LeaveCriticalSection(&condState->waitersCountLock);
-    
+
         DWORD timeout = INFINITE;
         if (abstime) {
             nsecs_t reltime = *abstime - systemTime();
@@ -514,27 +514,27 @@ typedef struct WinCondition {
                 reltime = 0;
             timeout = reltime/1000000;
         }
-        
+
         // Atomically release the external mutex and wait on the semaphore.
         DWORD res =
             SignalObjectAndWait(hMutex, condState->sema, timeout, FALSE);
-    
+
         //printf("+++ wait: awake (tid=%ld)\n", getThreadId());
-    
+
         // Reacquire lock to avoid race conditions.
         EnterCriticalSection(&condState->waitersCountLock);
-    
+
         // No longer waiting.
         condState->waitersCount--;
-    
+
         // Check to see if we're the last waiter after a broadcast.
         bool lastWaiter = (condState->wasBroadcast && condState->waitersCount == 0);
-    
+
         //printf("+++ wait: lastWaiter=%d (wasBc=%d wc=%d)\n",
         //    lastWaiter, condState->wasBroadcast, condState->waitersCount);
-    
+
         LeaveCriticalSection(&condState->waitersCountLock);
-    
+
         // If we're the last waiter thread during this particular broadcast
         // then signal broadcast() that we're all awake.  It'll drop the
         // internal mutex.
@@ -550,11 +550,11 @@ typedef struct WinCondition {
             // Grab the internal mutex.
             WaitForSingleObject(condState->internalMutex, INFINITE);
         }
-    
+
         // Release the internal and grab the external.
         ReleaseMutex(condState->internalMutex);
         WaitForSingleObject(hMutex, INFINITE);
-    
+
         return res == WAIT_OBJECT_0 ? NO_ERROR : -1;
     }
 } WinCondition;
@@ -597,7 +597,7 @@ status_t Condition::wait(Mutex& mutex)
 {
     WinCondition* condState = (WinCondition*) mState;
     HANDLE hMutex = (HANDLE) mutex.mState;
-    
+
     return ((WinCondition*)mState)->wait(condState, hMutex, NULL);
 }
 
@@ -724,7 +724,7 @@ status_t Thread::run(const char* name, int32_t priority, size_t stack)
     mStatus = NO_ERROR;
     mExitPending = false;
     mThread = thread_id_t(-1);
-    
+
     // hold a strong reference on ourself
     mHoldSelf = this;
 
@@ -738,7 +738,7 @@ status_t Thread::run(const char* name, int32_t priority, size_t stack)
         res = androidCreateRawThreadEtc(_threadLoop,
                 this, name, priority, stack, &mThread);
     }
-    
+
     if (res == false) {
         mStatus = UNKNOWN_ERROR;   // something happened!
         mRunning = false;
@@ -747,7 +747,7 @@ status_t Thread::run(const char* name, int32_t priority, size_t stack)
 
         return UNKNOWN_ERROR;
     }
-    
+
     // Do not refer to mStatus here: The thread is already running (may, in fact
     // already have exited with a valid mStatus result). The NO_ERROR indication
     // here merely indicates successfully starting the thread and does not
@@ -811,14 +811,14 @@ int Thread::_threadLoop(void* user)
             break;
         }
         }
-        
+
         // Release our strong reference, to let a chance to the thread
         // to die a peaceful death.
         strong.clear();
         // And immediately, re-acquire a strong reference for the next loop
         strong = weak.promote();
     } while(strong != 0);
-    
+
     return 0;
 }
 
@@ -839,7 +839,7 @@ status_t Thread::requestExitAndWait()
 
         return WOULD_BLOCK;
     }
-    
+
     mExitPending = true;
 
     while (mRunning == true) {
