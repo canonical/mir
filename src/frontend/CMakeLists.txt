@@ -45,6 +45,13 @@ list(APPEND FRONTEND_SOURCES
 )
 endif()
 
+if (MIR_PLATFORM STREQUAL "android")
+  list(APPEND FRONTEND_SOURCES application_mediator_android.cpp)
+elseif (MIR_PLATFORM STREQUAL "gbm")
+  include_directories(${DRM_INCLUDE_DIRS})
+  list(APPEND FRONTEND_SOURCES application_mediator_gbm.cpp)
+endif()
+
 add_library( 
   mirfrontend STATIC
   
