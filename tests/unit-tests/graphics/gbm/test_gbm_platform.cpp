@@ -115,9 +115,10 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd,magic))
         .WillOnce(Return(-1));
 
+    auto platform = mg::create_platform();
+    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
+
     EXPECT_THROW({
-        auto platform = mg::create_platform();
-        auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
         authenticator->drm_auth_magic(magic);
     }, std::runtime_error);
 }
