@@ -27,7 +27,7 @@ void google_protobuf_guard();
 }
 }
 
-// Any translation unut that includes this header will get this as part
+// Any translation unit that includes this header will get this as part
 // of its initialization, and, in turn, this ensures that protobuf gets
 // initialized (and cleaned up) in a sensible sequence.
 namespace
