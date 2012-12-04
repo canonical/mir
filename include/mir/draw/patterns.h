@@ -20,6 +20,7 @@
 
 #include "mir_client/mir_client_library.h"
 
+#include <memory>
 /* todo: replace with color value types */
 #include <stdint.h>
 
@@ -32,8 +33,8 @@ class DrawPattern
 {
 public:
     virtual ~DrawPattern() {};
-    virtual void draw(MirGraphicsRegion* region) const = 0;
-    virtual bool check(const MirGraphicsRegion* region) const = 0;
+    virtual void draw(std::shared_ptr<MirGraphicsRegion>& region) const = 0;
+    virtual bool check(const std::shared_ptr<MirGraphicsRegion>& region) const = 0;
 
 };
 
@@ -43,8 +44,8 @@ public:
     /* todo: should construct with a color value type, not an uint32 */
     DrawPatternSolid(uint32_t color_value);
 
-    void draw(MirGraphicsRegion* region) const;
-    bool check(const MirGraphicsRegion* region) const;
+    void draw(std::shared_ptr<MirGraphicsRegion>& region) const;
+    bool check(const std::shared_ptr<MirGraphicsRegion>& region) const;
 
 private:
     const uint32_t color_value;

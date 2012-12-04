@@ -25,7 +25,7 @@ md::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
 {
 }
 
-void md::DrawPatternSolid::draw(MirGraphicsRegion* region) const
+void md::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) const
 {
     // todo: should throw
     //if (region->pixel_format != mir_pixel_format_rgba_8888 )
@@ -42,7 +42,7 @@ void md::DrawPatternSolid::draw(MirGraphicsRegion* region) const
     }
 }
 
-bool md::DrawPatternSolid::check(const MirGraphicsRegion* region) const
+bool md::DrawPatternSolid::check(const std::shared_ptr<MirGraphicsRegion>& region) const
 {
     // todo: should throw
     //if (region->pixel_format != mir_pixel_format_rgba_8888 )

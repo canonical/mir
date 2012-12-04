@@ -28,38 +28,39 @@ class DrawPatternsTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        test_region = std::make_shared<MirGraphicsRegion>();
         int bytes_pp = 4;
-        test_region.width  = 50;
-        test_region.height = 100;
-        test_region.stride = bytes_pp*100;
-        test_region.pixel_format = mir_pixel_format_rgba_8888;
-        test_region.vaddr = (char*) malloc(sizeof(char) * bytes_pp * test_region.height * test_region.stride);
+        test_region->width  = 50;
+        test_region->height = 100;
+        test_region->stride = bytes_pp*100;
+        test_region->pixel_format = mir_pixel_format_rgba_8888;
+        test_region->vaddr = (char*) malloc(sizeof(char) * bytes_pp * test_region->height * test_region->stride);
     }
     virtual void TearDown()
     {
-        free(test_region.vaddr);
+        free(test_region->vaddr);
     }
 
-    MirGraphicsRegion test_region;
+    std::shared_ptr<MirGraphicsRegion> test_region;
 };
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 {
     md::DrawPatternSolid pattern(0x43214321);
-    pattern.draw(&test_region);
-    EXPECT_TRUE(pattern.check(&test_region));  
+    pattern.draw(test_region);
+    EXPECT_TRUE(pattern.check(test_region));  
 }
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 {
     md::DrawPatternSolid pattern(0x43214321);
-    pattern.draw(&test_region);
+    pattern.draw(test_region);
 
-    test_region.vaddr[test_region.width]++;
-    EXPECT_FALSE(pattern.check(&test_region));
+    test_region->vaddr[test_region->width]++;
+    EXPECT_FALSE(pattern.check(test_region));
  
-    test_region.vaddr[test_region.width]--;
-    EXPECT_TRUE(pattern.check(&test_region));  
+    test_region->vaddr[test_region->width]--;
+    EXPECT_TRUE(pattern.check(test_region));  
 }
 
 
