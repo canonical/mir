@@ -50,27 +50,10 @@ namespace
 {
 static int test_width  = 300;
 static int test_height = 200;
-
-template<size_t Rows, size_t Cols>
-bool render_pattern(MirGraphicsRegion *region,
-                    uint32_t const (& pattern) [Rows][Cols])
-{
-    if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        return false;
-
-    uint32_t *pixel = (uint32_t*) region->vaddr;
-    for(int i=0; i< region->width; i++)
-    {
-        for(int j=0; j<region->height; j++)
-        {
-            int key_row = i % Rows;
-            int key_col = j % Cols;
-            pixel[j*region->width + i] = pattern[key_row][key_col];
-        }
-    }
-    return true;
 }
-}
+
+
+
 namespace mir
 {
 namespace test
@@ -98,7 +81,6 @@ static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
 struct TestClient
 {
-
     static void sig_handle(int)
     {
     }
@@ -128,13 +110,14 @@ struct TestClient
         surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
-        MirGraphicsRegion graphics_region;
+
+        auto graphics_region = std::make_shared<MirGraphicsRegion>();
         /* grab a buffer*/
-        mir_surface_get_graphics_region( surface, &graphics_region);
+        mir_surface_get_graphics_region( surface, graphics_region.get());
 
         /* render pattern */
-        if (!render_pattern<2,2>(&graphics_region, mt::pattern0))
-            return -1;
+        md::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
+        draw_pattern0.draw(graphics_region);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
@@ -149,11 +132,9 @@ struct TestClient
             return -1;
         pause();
 
-        /* only use C api */
         MirConnection* connection = NULL;
         MirSurface* surface;
         MirSurfaceParameters surface_parameters;
-        MirGraphicsRegion graphics_region;
 
          /* establish connection. wait for server to come up */
         while (connection == NULL)
@@ -170,14 +151,16 @@ struct TestClient
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
-        mir_surface_get_graphics_region( surface, &graphics_region);
-        if( !render_pattern<2,2>(&graphics_region, mt::pattern0) )
-            return -1;
+
+        auto graphics_region = std::make_shared<MirGraphicsRegion>();
+        mir_surface_get_graphics_region( surface, graphics_region.get());
+        md::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
+        draw_pattern0.draw(graphics_region);
 
         mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
-        mir_surface_get_graphics_region( surface, &graphics_region);
-        if( !render_pattern<2,2>(&graphics_region, mt::pattern1))
-            return -1;
+        mir_surface_get_graphics_region( surface, graphics_region.get());
+        md::DrawPatternCheckered<2,2> draw_pattern1(mt::pattern1);
+        draw_pattern1.draw(graphics_region);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
 
@@ -419,6 +402,7 @@ struct StubServerGenerator : public mt::StubServerTool
 
     int package_id;
 };
+
 
 
 }
