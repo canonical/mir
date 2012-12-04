@@ -20,6 +20,11 @@
 
 namespace md=mir::draw;
 
+md::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
+ : color_value(color_value)
+{
+}
+
 void md::DrawPatternSolid::draw(MirGraphicsRegion* /*region*/) const
 {
 }

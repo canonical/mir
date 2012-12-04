@@ -45,16 +45,22 @@ protected:
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 {
-    md::DrawPatternSolid pattern;
+    md::DrawPatternSolid pattern(0x43214321);
     pattern.draw(&test_region);
     EXPECT_TRUE(pattern.check(&test_region));  
 }
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 {
-    md::DrawPatternSolid pattern;
+    md::DrawPatternSolid pattern(0x43214321);
     pattern.draw(&test_region);
-    /* change 1 pixel */
+
     test_region.vaddr[test_region.width]++;
-    EXPECT_FALSE(pattern.check(&test_region));  
+    EXPECT_FALSE(pattern.check(&test_region));
+ 
+    test_region.vaddr[test_region.width]--;
+    EXPECT_TRUE(pattern.check(&test_region));  
 }
+
+
+

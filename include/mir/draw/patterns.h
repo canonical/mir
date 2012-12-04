@@ -20,6 +20,9 @@
 
 #include "mir_client/mir_client_library.h"
 
+/* todo: replace with color value types */
+#include <stdint.h>
+
 namespace mir
 {
 namespace draw
@@ -37,8 +40,14 @@ public:
 class DrawPatternSolid : public DrawPattern
 {
 public:
+    /* todo: should construct with a color value type, not an uint32 */
+    DrawPatternSolid(uint32_t color_value);
+
     void draw(MirGraphicsRegion* region) const;
     bool check(const MirGraphicsRegion* region) const;
+
+private:
+    const uint32_t color_value;
 };
  
 }
