@@ -28,6 +28,16 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator.cpp
 )
 
+if (MIR_PLATFORM STREQUAL "android")
+  list(APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator_android.cpp
+  )
+elseif (MIR_PLATFORM STREQUAL "gbm")
+  list(APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator_gbm.cpp
+  )
+endif()
+
 set(
   UNIT_TEST_SOURCES 
   ${UNIT_TEST_SOURCES} 
