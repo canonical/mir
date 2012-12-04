@@ -21,6 +21,7 @@
 #include "mir_client/mir_client_library.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/draw/android_graphics.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
@@ -43,6 +44,7 @@
 
 namespace mp=mir::process;
 namespace mt=mir::test;
+namespace md=mir::draw;
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -143,9 +145,7 @@ bool render_pattern(MirGraphicsRegion *region,
     }
     return true;
 }
-
 }
-
 namespace mir
 {
 namespace test
@@ -495,55 +495,6 @@ struct StubServerGenerator : public mt::StubServerTool
     int package_id;
 };
 
-struct RegionDeleter
-{
-    RegionDeleter(gralloc_module_t* grmod, native_handle_t* handle)
-     : grmod(grmod),
-       handle(handle)
-    {
-    }
-
-    void operator()(MirGraphicsRegion* region)
-    {
-        grmod->unlock(grmod, handle);
-        free(handle);
-        delete region;
-    }
-
-    gralloc_module_t *grmod;
-    native_handle_t *handle;
-};
-
-std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
-                        std::shared_ptr<mc::BufferIPCPackage> package,
-                        const hw_module_t *hw_module)
-{
-    native_handle_t* handle;
-    handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
-    handle->numInts = package->ipc_data.size();
-    handle->numFds  = package->ipc_fds.size();
-    int i;
-    for(i = 0; i< handle->numFds; i++)
-        handle->data[i] = package->ipc_fds[i];
-    for(; i < handle->numFds + handle->numInts; i++)
-        handle->data[i] = package->ipc_data[i-handle->numFds];
-
-    int *vaddr;
-    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
-    grmod->lock(grmod, handle, usage, 0, 0, test_width, test_height, (void**) &vaddr);
-
-
-    MirGraphicsRegion* region = new MirGraphicsRegion;
-    RegionDeleter del(grmod, handle);
-
-    region->vaddr = (char*) vaddr;
-    region->width = test_width;
-    region->height = test_height;
-    region->pixel_format = mir_pixel_format_rgba_8888;
-
-    return std::shared_ptr<MirGraphicsRegion>(region, del);
-}
 
 }
 }
@@ -649,7 +600,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    auto region = md::get_graphic_region_from_package(package, size, hw_module);
     EXPECT_TRUE(check_pattern(region, mt::pattern0));
 }
 
@@ -660,7 +611,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    auto region = md::get_graphic_region_from_package(package, size, hw_module);
     EXPECT_TRUE(check_pattern(region, mt::pattern0));
 
     mock_server->set_package(second_package, 15);
@@ -669,7 +620,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
+    auto second_region = md::get_graphic_region_from_package(second_package, size, hw_module);
     EXPECT_TRUE(check_pattern(second_region, mt::pattern1));
 }
 
@@ -686,7 +637,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    auto region = md::get_graphic_region_from_package(package, size, hw_module);
     EXPECT_TRUE(check_pattern(region, mt::pattern1));
 }
 
@@ -703,7 +654,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    auto region = md::get_graphic_region_from_package(package, size, hw_module);
     EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
 }
 
@@ -724,9 +675,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = mt::get_graphic_region_from_package(package, hw_module);
+    auto region = md::get_graphic_region_from_package(package, size, hw_module);
     EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
     
-    auto second_region = mt::get_graphic_region_from_package(second_package, hw_module);
+    auto second_region = md::get_graphic_region_from_package(second_package, size, hw_module);
     EXPECT_TRUE(check_solid_pattern(second_region, 0xFF00FF00));
 }

@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-
 #include "mir/draw/android_graphics.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
@@ -85,4 +84,57 @@ void md::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClient
     }
     module->unlock(module, native_handle);
 
+}
+
+namespace
+{
+struct RegionDeleter
+{
+    RegionDeleter(gralloc_module_t* grmod, native_handle_t* handle)
+     : grmod(grmod),
+       handle(handle)
+    {
+    }
+
+    void operator()(MirGraphicsRegion* region)
+    {
+        grmod->unlock(grmod, handle);
+        free(handle);
+        delete region;
+    }
+
+    gralloc_module_t *grmod;
+    native_handle_t *handle;
+};
+}
+
+std::shared_ptr<MirGraphicsRegion> md::get_graphic_region_from_package(
+                        std::shared_ptr<mc::BufferIPCPackage> package,
+                        geom::Size sz,
+                        const hw_module_t *hw_module)
+{
+    native_handle_t* handle;
+    handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
+    handle->numInts = package->ipc_data.size();
+    handle->numFds  = package->ipc_fds.size();
+    int i;
+    for(i = 0; i< handle->numFds; i++)
+        handle->data[i] = package->ipc_fds[i];
+    for(; i < handle->numFds + handle->numInts; i++)
+        handle->data[i] = package->ipc_data[i-handle->numFds];
+
+    int *vaddr;
+    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
+    gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
+    grmod->lock(grmod, handle, usage, 0, 0, sz.width.as_uint32_t(), sz.height.as_uint32_t(), (void**) &vaddr);
+
+    MirGraphicsRegion* region = new MirGraphicsRegion;
+    RegionDeleter del(grmod, handle);
+
+    region->vaddr = (char*) vaddr;
+    region->width = sz.width.as_uint32_t();
+    region->height = sz.height.as_uint32_t();
+    region->pixel_format = mir_pixel_format_rgba_8888;
+
+    return std::shared_ptr<MirGraphicsRegion>(region, del);
 }

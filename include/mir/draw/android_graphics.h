@@ -18,6 +18,7 @@
 #ifndef MIR_DRAW_ANDROID_GRAPHICS
 #define MIR_DRAW_ANDROID_GRAPHICS
 
+#include "mir_client/mir_client_library.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/size.h"
 
@@ -42,6 +43,10 @@ private:
     alloc_device_t* alloc_dev;
 };
 
+std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
+                        std::shared_ptr<compositor::BufferIPCPackage> package,
+                        geometry::Size sz,
+                        const hw_module_t *hw_module);
 }
 }
 
