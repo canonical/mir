@@ -24,12 +24,44 @@ DrawPatternCheckered<Rows,Cols>::DrawPatternCheckered(uint32_t pattern[Rows][Col
 }
 
 template<size_t Rows, size_t Cols>
-void DrawPatternCheckered<Rows,Cols>::draw(std::shared_ptr<MirGraphicsRegion>& /*region*/) const
+void DrawPatternCheckered<Rows,Cols>::draw(std::shared_ptr<MirGraphicsRegion>& region) const
 {
+    // todo: should throw
+    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
+    //    return false;
+
+    uint32_t *pixel = (uint32_t*) region->vaddr;
+    for(int i=0; i< region->width; i++)
+    {
+        for(int j=0; j<region->height; j++)
+        {
+            int key_row = i % Rows;
+            int key_col = j % Cols;
+            pixel[j*region->width + i] = color_pattern[key_row][key_col];
+        }
+    }
 }
 
 template<size_t Rows, size_t Cols>
-bool DrawPatternCheckered<Rows, Cols>::check(const std::shared_ptr<MirGraphicsRegion>& /*region*/) const
+bool DrawPatternCheckered<Rows, Cols>::check(const std::shared_ptr<MirGraphicsRegion>& region) const
 {
-    return false;
+    // todo: should throw
+    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
+    //    return false;
+
+    uint32_t *pixel = (uint32_t*) region->vaddr;
+    for(int i=0; i< region->width; i++)
+    {
+        for(int j=0; j<region->height; j++)
+        {
+            int key_row = i % Rows;
+            int key_col = j % Cols;
+            if (pixel[j*region->width + i] != color_pattern[key_row][key_col])
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
