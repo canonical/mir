@@ -56,7 +56,7 @@ class DrawPatternCheckered : public DrawPattern
 {
 public:
     /* todo: should construct with a color value type, not an uint32 */
-    DrawPatternCheckered(uint32_t pattern [Rows][Cols]);
+    DrawPatternCheckered(uint32_t (&pattern) [Rows][Cols]);
 
     void draw(std::shared_ptr<MirGraphicsRegion>& region) const;
     bool check(const std::shared_ptr<MirGraphicsRegion>& region) const;

@@ -16,14 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+
 #include "mir/draw/android_graphics.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include <fstream>
-
+#include <stdexcept>
 #include <dirent.h>
 #include <fnmatch.h>
-#include <stdexcept>
+
 namespace md=mir::draw;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
@@ -75,7 +76,7 @@ struct RegionDeleter
 }
 
 std::shared_ptr<MirGraphicsRegion> md::grallocRenderSW::get_graphic_region_from_package(
-                        std::shared_ptr<mc::BufferIPCPackage> package,
+                        const std::shared_ptr<mc::BufferIPCPackage>& package,
                         geom::Size sz)
 {
     native_handle_t* handle;

@@ -20,6 +20,7 @@
 #include "mir/draw/patterns.h"
 
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace md=mir::draw;
 
@@ -35,6 +36,11 @@ protected:
         test_region->stride = bytes_pp*100;
         test_region->pixel_format = mir_pixel_format_rgba_8888;
         test_region->vaddr = (char*) malloc(sizeof(char) * bytes_pp * test_region->height * test_region->stride);
+
+        uint32_t colors[2][2] = {{0x12345678, 0x23456789},
+                                 {0x34567890, 0x45678901}};
+        memcpy(pattern_colors, colors, sizeof(uint32_t)*4); 
+
     }
     virtual void TearDown()
     {
@@ -42,11 +48,13 @@ protected:
     }
 
     std::shared_ptr<MirGraphicsRegion> test_region;
+    uint32_t pattern_colors [2][2];
 };
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 {
     md::DrawPatternSolid pattern(0x43214321);
+
     pattern.draw(test_region);
     EXPECT_TRUE(pattern.check(test_region));  
 }
@@ -54,20 +62,56 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 {
     md::DrawPatternSolid pattern(0x43214321);
-    pattern.draw(test_region);
 
-    test_region->vaddr[test_region->width]++;
-    EXPECT_FALSE(pattern.check(test_region));
- 
-    test_region->vaddr[test_region->width]--;
-    EXPECT_TRUE(pattern.check(test_region));  
+    pattern.draw(test_region);
+    test_region->vaddr[0]++;
+    EXPECT_FALSE(pattern.check(test_region)); 
+}
+
+TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
+{
+    test_region->pixel_format = mir_pixel_format_rgbx_8888;
+
+    md::DrawPatternSolid pattern(0x43214321);
+
+    EXPECT_THROW({
+        pattern.draw(test_region); 
+    }, std::runtime_error);
+
+    EXPECT_THROW({
+        pattern.check(test_region); 
+    }, std::runtime_error);
+
 }
 
 TEST_F(DrawPatternsTest, checkered_pattern)
 {
-    uint32_t colors [2][2] = {{0x12345678, 0x23456789},
-                                    {0x34567890, 0x45678901}}; 
-    md::DrawPatternCheckered<2,2> pattern(colors);
+    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
     pattern.draw(test_region);
     EXPECT_TRUE(pattern.check(test_region));
+}
+
+TEST_F(DrawPatternsTest, checkered_pattern_error)
+{
+    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
+
+    pattern.draw(test_region);
+    test_region->vaddr[0]++;
+    EXPECT_FALSE(pattern.check(test_region));
+}
+
+TEST_F(DrawPatternsTest, checkered_bad_pixel_formats)
+{
+    test_region->pixel_format = mir_pixel_format_rgbx_8888;
+
+    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
+
+    EXPECT_THROW({
+        pattern.draw(test_region); 
+    }, std::runtime_error);
+
+    EXPECT_THROW({
+        pattern.check(test_region); 
+    }, std::runtime_error);
+
 }

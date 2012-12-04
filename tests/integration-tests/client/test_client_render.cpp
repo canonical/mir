@@ -81,6 +81,7 @@ static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
 struct TestClient
 {
+
     static void sig_handle(int)
     {
     }

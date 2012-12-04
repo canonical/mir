@@ -40,6 +40,7 @@ namespace md=mir::draw;
 
 namespace
 {
+
 class AndroidBufferIntegration : public ::testing::Test
 {
 protected:
