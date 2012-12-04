@@ -27,6 +27,7 @@
 
 #include "mir/draw/android_graphics.h"
 #include "mir/draw/graphics.h"
+#include "mir/draw/patterns.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -39,24 +40,6 @@ namespace md=mir::draw;
 
 namespace
 {
-
-/* todo: consolidate into common file for rendering and checking */
-void render_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t color)
-{
-    if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        throw(std::runtime_error("error, wrong pixel format for render_solid_pattern"));
-
-    uint32_t *pixel = (uint32_t*) region->vaddr;
-    int i,j;
-    for(i=0; i< region->width; i++)
-    {
-        for(j=0; j<region->height; j++)
-        {
-            pixel[j*region->width + i] = color;
-        }
-    }
-}
-
 class AndroidBufferIntegration : public ::testing::Test
 {
 protected:
@@ -146,6 +129,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
 
+    md::DrawPatternSolid red_pattern(0xFF0000FF);
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
@@ -161,7 +145,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     auto client_buffer = bundle->secure_client_buffer();
     auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
-    render_solid_pattern(region, 0xFF0000FF);
+    red_pattern.draw(region);
     client_buffer.reset();
 
     texture_res = bundle->lock_back_buffer();
@@ -173,6 +157,9 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
+
+    md::DrawPatternSolid red_pattern(0xFF0000FF);
+    md::DrawPatternSolid green_pattern(0xFF00FF00);
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -192,7 +179,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
         auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
-        render_solid_pattern(region, 0xFF0000FF);
+        red_pattern.draw(region);
         client_buffer.reset();
 
         texture_res = bundle->lock_back_buffer();
@@ -204,7 +191,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
         region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
-        render_solid_pattern(region, 0x0000FFFF);
+        green_pattern.draw(region);
         client_buffer.reset();
 
         texture_res = bundle->lock_back_buffer();
