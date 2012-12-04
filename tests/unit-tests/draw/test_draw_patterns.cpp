@@ -65,9 +65,9 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 
 TEST_F(DrawPatternsTest, checkered_pattern)
 {
-    const uint32_t colors [2][2] = {{0x12345678, 0x23456789},
+    uint32_t colors [2][2] = {{0x12345678, 0x23456789},
                                     {0x34567890, 0x45678901}}; 
-    md::DrawPatternCheckered pattern(colors);
+    md::DrawPatternCheckered<2,2> pattern(colors);
     pattern.draw(test_region);
     EXPECT_TRUE(pattern.check(test_region));
 }
