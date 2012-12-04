@@ -48,6 +48,7 @@ set(
   mir_wait_handle.cpp
   mir_surface.cpp
   mir_logger.cpp
+  mir_basic_rpc_channel.cpp
   ${PROTO_SRCS}
 )
 

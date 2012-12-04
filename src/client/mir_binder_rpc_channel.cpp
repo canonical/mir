@@ -59,7 +59,6 @@ mcl::MirBinderRpcChannel::MirBinderRpcChannel(
 
 mcl::MirBinderRpcChannel::~MirBinderRpcChannel()
 {
-    // TODO
 }
 
 void mcl::MirBinderRpcChannel::CallMethod(
@@ -71,4 +70,3 @@ void mcl::MirBinderRpcChannel::CallMethod(
 {
     // TODO
 }
-

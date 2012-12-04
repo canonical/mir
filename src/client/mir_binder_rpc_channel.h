@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 #define MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 
+#include "mir_basic_rpc_channel.h"
 #include "mir/thread/all.h"
 #include "mir_client/mir_logger.h"
 
@@ -32,10 +33,18 @@
 
 namespace mir
 {
+namespace protobuf
+{
+namespace wire
+{
+class Invocation;
+class Result;
+}
+}
 
 namespace client
 {
-class MirBinderRpcChannel : public google::protobuf::RpcChannel
+class MirBinderRpcChannel : public MirBasicRpcChannel
 {
 public:
     MirBinderRpcChannel();
