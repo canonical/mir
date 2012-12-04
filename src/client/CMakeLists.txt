@@ -126,6 +126,7 @@ target_link_libraries(
 
   ${DRM_LIBRARIES}
   ${ANDROID_STDLIB}
+  3rd_party
 )
 
 set_target_properties(

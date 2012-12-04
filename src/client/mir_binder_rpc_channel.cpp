@@ -22,6 +22,8 @@
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
+#include <binder/IServiceManager.h>
+
 namespace
 {
 // Too clever? The idea is to ensure protbuf version is verified once (on
@@ -47,9 +49,12 @@ mcl::MirBinderRpcChannel::MirBinderRpcChannel()
     // TODO
 }
 
-mcl::MirBinderRpcChannel::MirBinderRpcChannel(std::string const& /*endpoint*/, std::shared_ptr<Logger> const& /*log*/)
+mcl::MirBinderRpcChannel::MirBinderRpcChannel(
+    std::string const& endpoint,
+    std::shared_ptr<Logger> const& log) :
+    binder(android::defaultServiceManager()->getService(android::String16(endpoint.c_str()))),
+    log(log)
 {
-    // TODO
 }
 
 mcl::MirBinderRpcChannel::~MirBinderRpcChannel()

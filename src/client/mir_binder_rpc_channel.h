@@ -26,18 +26,12 @@
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
+#include <binder/Binder.h>
+
 #include <iosfwd>
 
 namespace mir
 {
-namespace protobuf
-{
-namespace wire
-{
-class Invocation;
-class Result;
-}
-}
 
 namespace client
 {
@@ -55,6 +49,9 @@ private:
         const google::protobuf::Message* parameters,
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
+
+    android::sp<android::IBinder> binder;
+    std::shared_ptr<Logger> const log;
 };
 
 }
