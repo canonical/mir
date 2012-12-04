@@ -15,33 +15,16 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_DRAW_PATTERNS_H
-#define MIR_DRAW_PATTERNS_H
 
-#include "mir_client/mir_client_library.h"
+#include "mir/draw/patterns.h"
 
-namespace mir
+namespace md=mir::draw;
+
+void md::DrawPatternSolid::draw(MirGraphicsRegion* /*region*/) const
 {
-namespace draw
-{
-
-class DrawPattern
-{
-public:
-    virtual ~DrawPattern() {};
-    virtual void draw(MirGraphicsRegion* region) const = 0;
-    virtual bool check(const MirGraphicsRegion* region) const = 0;
-
-};
-
-class DrawPatternSolid : public DrawPattern
-{
-public:
-    void draw(MirGraphicsRegion* region) const;
-    bool check(const MirGraphicsRegion* region) const;
-};
- 
-}
 }
 
-#endif /*MIR_DRAW_PATTERNS_H */
+bool md::DrawPatternSolid::check(const MirGraphicsRegion* /*region*/) const
+{
+    return false;
+}

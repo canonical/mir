@@ -23,7 +23,8 @@ include_directories(
 set(
   DRAW_SRCS
 
-  graphics_utils.cpp 
+  graphics_utils.cpp
+  patterns.cpp 
 )
 
 if (MIR_PLATFORM STREQUAL "android")
