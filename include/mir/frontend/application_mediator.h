@@ -57,6 +57,7 @@ public:
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
+    /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
                          const ::mir::protobuf::ConnectParameters* request,
                          ::mir::protobuf::Connection* response,
@@ -83,6 +84,11 @@ public:
                  mir::protobuf::Void* response,
                  google::protobuf::Closure* done);
 
+    /* Platform specific requests */
+    void drm_auth_magic(google::protobuf::RpcController* controller,
+                        const mir::protobuf::DRMMagic* request,
+                        mir::protobuf::Void* response,
+                        google::protobuf::Closure* done);
 private:
     std::shared_ptr<SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
