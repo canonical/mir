@@ -52,29 +52,6 @@ static int test_width  = 300;
 static int test_height = 200;
 
 template<size_t Rows, size_t Cols>
-bool check_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
-                    uint32_t const (& pattern) [Rows][Cols])
-{
-    if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        return false;
-
-    uint32_t *pixel = (uint32_t*) region->vaddr;
-    for(int i=0; i< region->width; i++)
-    {
-        for(int j=0; j<region->height; j++)
-        {
-            int key_row = i % Rows;
-            int key_col = j % Cols;
-            if (pixel[j*region->width + i] != pattern[key_row][key_col])
-            {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-template<size_t Rows, size_t Cols>
 bool render_pattern(MirGraphicsRegion *region,
                     uint32_t const (& pattern) [Rows][Cols])
 {
@@ -114,11 +91,11 @@ static void next_callback(MirSurface *, void*)
 {
 }
 
-static const uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
-                                               {0x34567890, 0x45678901}};
+static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
+                                   {0x34567890, 0x45678901}};
  
-static const uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
-                                               {0xFF00FF00, 0xFF0000FF}};
+static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
+                                   {0xFF00FF00, 0xFF0000FF}};
 struct TestClient
 {
 
@@ -546,6 +523,7 @@ std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_dou
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
+    md::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern0);
     /* activate client */
     render_single_client_process->cont();
 
@@ -554,18 +532,20 @@ TEST_F(TestClientIPCRender, test_render_single)
 
     /* check content */
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
-    EXPECT_TRUE(check_pattern(region, mt::pattern0));
+    EXPECT_TRUE(rendered_pattern.check(region));
 }
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
+    md::DrawPatternCheckered<2,2> rendered_pattern0(mt::pattern0);
+    md::DrawPatternCheckered<2,2> rendered_pattern1(mt::pattern1);
     /* activate client */
     render_double_client_process->cont();
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
-    EXPECT_TRUE(check_pattern(region, mt::pattern0));
+    EXPECT_TRUE(rendered_pattern0.check(region));
 
     mock_server->set_package(second_package, 15);
 
@@ -574,11 +554,12 @@ TEST_F(TestClientIPCRender, test_render_double)
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
     auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
-    EXPECT_TRUE(check_pattern(second_region, mt::pattern1));
+    EXPECT_TRUE(rendered_pattern1.check(second_region));
 }
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 {
+    md::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern1);
     /* activate client */
     second_render_with_same_buffer_client_process->cont();
 
@@ -591,7 +572,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
     /* check content */
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
-    EXPECT_TRUE(check_pattern(region, mt::pattern1));
+    EXPECT_TRUE(rendered_pattern.check(region));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
