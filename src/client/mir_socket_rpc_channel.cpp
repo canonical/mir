@@ -53,7 +53,7 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
 }
 
 mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
-    log(log), /*next_message_id(0),*/ pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
+    log(log), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
 
