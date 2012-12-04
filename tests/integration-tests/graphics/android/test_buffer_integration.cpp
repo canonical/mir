@@ -46,6 +46,7 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
+        ASSERT_FALSE(md::is_surface_flinger_running());
         ASSERT_NO_THROW(
         {
             platform = mg::create_platform();
