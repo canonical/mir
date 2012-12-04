@@ -37,10 +37,6 @@
 #include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
 
-#include <fstream>
-
-#include <dirent.h>
-#include <fnmatch.h>
 
 namespace mp=mir::process;
 namespace mt=mir::test;
@@ -54,34 +50,6 @@ namespace
 static int test_width  = 300;
 static int test_height = 200;
 
-static const char* proc_dir = "/proc";
-static const char* surface_flinger_executable_name = "surfaceflinger";
-
-int surface_flinger_filter(const struct dirent* d)
-{
-    if (fnmatch("[1-9]*", d->d_name, 0))
-        return 0;
-
-    char path[256];
-    snprintf(path, sizeof(path), "%s/%s/cmdline", proc_dir, d->d_name);
-
-    std::ifstream in(path);
-    std::string line;
-
-    while(std::getline(in, line))
-    {
-        if (line.find(surface_flinger_executable_name) != std::string::npos)
-            return 1;
-    }
-
-    return 0;
-}
-
-bool is_surface_flinger_running()
-{
-    struct dirent **namelist;
-    return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);
-}
 
 bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t color)
 {
@@ -531,7 +499,7 @@ struct TestClientIPCRender : public testing::Test
     }
 
     void SetUp() {
-        ASSERT_FALSE(is_surface_flinger_running());
+        ASSERT_FALSE(md::is_surface_flinger_running());
 
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::rgba_8888;
