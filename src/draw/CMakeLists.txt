@@ -24,7 +24,7 @@ set(
   DRAW_SRCS
 
   graphics_utils.cpp
-  patterns.cpp 
+  patterns.cpp
 )
 
 if (MIR_PLATFORM STREQUAL "android")

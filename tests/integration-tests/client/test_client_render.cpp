@@ -52,8 +52,6 @@ static int test_width  = 300;
 static int test_height = 200;
 }
 
-
-
 namespace mir
 {
 namespace test
@@ -92,7 +90,6 @@ struct TestClient
             return -1;
         pause();
 
-        /* only use C api */
         MirConnection* connection = NULL;
         MirSurface* surface;
         MirSurfaceParameters surface_parameters;
@@ -405,7 +402,6 @@ struct StubServerGenerator : public mt::StubServerTool
 };
 
 
-
 }
 }
 
@@ -447,7 +443,7 @@ struct TestClientIPCRender : public testing::Test
         pf = geom::PixelFormat::rgba_8888;
 
         /* allocate an android buffer */
-        int err; 
+        int err;
         const hw_module_t *hw_module;
         struct alloc_device_t *alloc_device_raw;
         err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
