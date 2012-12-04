@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_PROTOBUF_GUARD_H_
-#define MIR_PROTOBUF_GUARD_H_
+#ifndef MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_
+#define MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_
 
 namespace mir
 {
@@ -35,4 +35,4 @@ namespace
 bool force_google_protobuf_init{(mir::protobuf::google_protobuf_guard(), true)};
 }
 
-#endif /* MIR_PROTOBUF_GUARD_H_ */
+#endif /* MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_ */
