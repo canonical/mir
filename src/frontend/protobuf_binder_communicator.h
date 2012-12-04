@@ -23,7 +23,7 @@
 #include "mir/frontend/communicator.h"
 
 #include "connected_sessions.h"
-#include <binder/Binder.h>
+#include <binder/IServiceManager.h>
 
 #include <string>
 
@@ -34,9 +34,7 @@ namespace frontend
 class ProtobufIpcFactory;
 
 
-class ProtobufBinderCommunicator :
-    public Communicator,
-    public android::BBinder
+class ProtobufBinderCommunicator : public Communicator
 {
 public:
     explicit ProtobufBinderCommunicator(
@@ -48,6 +46,7 @@ public:
 private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
+    android::sp<android::IServiceManager> service_manager;
     // TODO
 };
 
