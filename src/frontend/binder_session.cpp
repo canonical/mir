@@ -58,6 +58,7 @@ void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
         response->writeFileDescriptor(fd, true);
 }
 
+
 android::status_t mfd::BinderSession::onTransact(
     uint32_t /*code*/,
     const android::Parcel& request,

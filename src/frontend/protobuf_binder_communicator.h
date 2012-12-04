@@ -22,7 +22,8 @@
 
 #include "mir/frontend/communicator.h"
 
-#include "connected_sessions.h"
+#include "binder_session.h"
+
 #include <binder/IServiceManager.h>
 
 #include <string>
@@ -47,7 +48,7 @@ private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     android::sp<android::IServiceManager> service_manager;
-    // TODO
+    detail::BinderSession session;
 };
 
 }

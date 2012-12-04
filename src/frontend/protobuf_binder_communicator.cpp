@@ -17,24 +17,41 @@
  */
 
 #include "protobuf_binder_communicator.h"
+#include "protobuf_message_processor.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
+
+#include <binder/ProcessState.h>
+
+#include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
-        const std::string& /*name*/,
-        std::shared_ptr<ProtobufIpcFactory> const& /*ipc_factory*/) :
+    const std::string& name,
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory) :
     ipc_factory(ipc_factory)
 {
-    // TODO
+    auto mp = std::make_shared<detail::ProtobufMessageProcessor>(
+        &session,
+        ipc_factory->make_ipc_server(),
+        ipc_factory->resource_cache());
+
+    session.set_processor(mp);
+
+    android::String16 const service_name(name.c_str());
+
+    if (service_manager->addService(service_name, &session) != 0)
+    {
+        throw std::runtime_error("Failed to add a new Binder service");
+    }
 }
 
 mf::ProtobufBinderCommunicator::~ProtobufBinderCommunicator()
 {
-    // TODO
 }
 
 void mf::ProtobufBinderCommunicator::start()
 {
-    // TODO
+    android::ProcessState::self()->startThreadPool();
 }
