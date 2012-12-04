@@ -46,6 +46,15 @@ list(APPEND FRONTEND_SOURCES
 )
 endif()
 
+# TODO replace this frig with an RTTI enabled binder library
+if (MIR_TRANSPORT STREQUAL "binder")
+set_source_files_properties(
+  protobuf_binder_communicator.cpp
+  binder_session.cpp
+  PROPERTIES
+  COMPILE_FLAGS "-fno-rtti")
+endif()
+
 add_library( 
   mirfrontend STATIC
   

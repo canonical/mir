@@ -23,7 +23,8 @@ namespace mfd = mir::frontend::detail;
 
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
         const std::string& /*name*/,
-        std::shared_ptr<ProtobufIpcFactory> const& /*ipc_factory*/)
+        std::shared_ptr<ProtobufIpcFactory> const& /*ipc_factory*/) :
+    ipc_factory(ipc_factory)
 {
     // TODO
 }
