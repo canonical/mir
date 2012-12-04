@@ -26,9 +26,8 @@ DrawPatternCheckered<Rows,Cols>::DrawPatternCheckered(uint32_t (&pattern) [Rows]
 template<size_t Rows, size_t Cols>
 void DrawPatternCheckered<Rows,Cols>::draw(std::shared_ptr<MirGraphicsRegion>& region) const
 {
-    // todo: should throw
-    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
-    //    return false;
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        throw(std::runtime_error("cannot draw region, incorrect format"));
 
     uint32_t *pixel = (uint32_t*) region->vaddr;
     for(int i=0; i< region->width; i++)
@@ -45,9 +44,8 @@ void DrawPatternCheckered<Rows,Cols>::draw(std::shared_ptr<MirGraphicsRegion>& r
 template<size_t Rows, size_t Cols>
 bool DrawPatternCheckered<Rows, Cols>::check(const std::shared_ptr<MirGraphicsRegion>& region) const
 {
-    // todo: should throw
-    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
-    //    return false;
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        throw(std::runtime_error("cannot check region, incorrect format"));
 
     uint32_t *pixel = (uint32_t*) region->vaddr;
     for(int i=0; i< region->width; i++)

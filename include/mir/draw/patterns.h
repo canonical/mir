@@ -21,6 +21,7 @@
 #include "mir_client/mir_client_library.h"
 
 #include <memory>
+#include <stdexcept>
 /* todo: replace with color value types */
 #include <stdint.h>
 

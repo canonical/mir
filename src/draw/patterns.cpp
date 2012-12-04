@@ -27,9 +27,8 @@ md::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
 
 void md::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) const
 {
-    // todo: should throw
-    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
-    //    return false;
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        throw(std::runtime_error("cannot draw region, incorrect format"));
 
     uint32_t *pixel = (uint32_t*) region->vaddr;
     int i,j;
@@ -44,9 +43,8 @@ void md::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) cons
 
 bool md::DrawPatternSolid::check(const std::shared_ptr<MirGraphicsRegion>& region) const
 {
-    // todo: should throw
-    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
-    //    return false;
+    if (region->pixel_format != mir_pixel_format_rgba_8888 )
+        throw(std::runtime_error("cannot check region, incorrect format"));
 
     uint32_t *pixel = (uint32_t*) region->vaddr;
     int i,j;
