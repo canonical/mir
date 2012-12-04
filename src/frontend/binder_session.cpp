@@ -17,12 +17,18 @@
  */
 
 #include "binder_session.h"
+
+#include <binder/Parcel.h>
+#include <utils/String8.h>
+
+#include <sstream>
 #include <stdexcept>
 
 namespace mfd = mir::frontend::detail;
 
 mfd::BinderSession::BinderSession() :
-    processor(std::make_shared<NullMessageProcessor>())
+    processor(std::make_shared<NullMessageProcessor>()),
+    response(0)
 {
 }
 
@@ -35,22 +41,40 @@ void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& 
     this->processor = processor;
 }
 
-void mfd::BinderSession::send(const std::ostringstream& /*buffer2*/)
+void mfd::BinderSession::send(const std::ostringstream& buffer)
 {
-    // TODO
+    assert(response);
+
+    auto const& as_str(buffer.str());
+
+    response->writeString8(android::String8(as_str.data(), as_str.length()));
 }
 
-void mfd::BinderSession::send_fds(std::vector<int32_t> const& /*fd*/)
+void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
 {
-    // TODO
-}
+    assert(response);
 
+    for(auto fd: fds)
+        response->writeFileDescriptor(fd, true);
+}
 
 android::status_t mfd::BinderSession::onTransact(
     uint32_t /*code*/,
-    const android::Parcel& /*request*/,
-    android::Parcel* /*response*/,
+    const android::Parcel& request,
+    android::Parcel* response,
     uint32_t /*flags*/)
 {
-    throw std::runtime_error("Not implemented");
+    this->response = response;
+
+    // TODO there's probably a way to refactor this to avoid copy
+    auto const& buffer = request.readString8();
+    std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
+    std::istringstream msg(inefficient_copy);
+
+    // TODO if this returns false, must close BinderSession
+    processor->process_message(msg);
+
+    assert(response == this->response);
+    this->response = 0;
+    return android::OK;
 }

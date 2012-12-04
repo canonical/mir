@@ -49,6 +49,8 @@ private:
                                  uint32_t flags);
 
     std::shared_ptr<MessageProcessor> processor;
+
+    android::Parcel* response;
 };
 }
 }
