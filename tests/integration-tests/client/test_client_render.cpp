@@ -22,6 +22,7 @@
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/draw/android_graphics.h"
+#include "mir/draw/patterns.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
@@ -49,27 +50,6 @@ namespace
 {
 static int test_width  = 300;
 static int test_height = 200;
-
-
-bool check_solid_pattern(const std::shared_ptr<MirGraphicsRegion> &region, uint32_t color)
-{
-    if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        return false;
-
-    int *pixel = (int*) region->vaddr;
-    int i,j;
-    for(i=0; i< region->width; i++)
-    {
-        for(j=0; j<region->height; j++)
-        {
-            if (pixel[j*region->width + i] != (int) color)
-            {
-                return false;
-            }
-        }
-    }
-    return true;
-}
 
 template<size_t Rows, size_t Cols>
 bool check_pattern(const std::shared_ptr<MirGraphicsRegion> &region,
@@ -616,6 +596,8 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
+    md::DrawPatternSolid red_pattern(0xFF0000FF);
+
     /* activate client */
     render_accelerated_process->cont();
 
@@ -628,11 +610,13 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
     /* check content */
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
-    EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
+    EXPECT_TRUE(red_pattern.check(region));
 }
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
+    md::DrawPatternSolid red_pattern(0xFF0000FF);
+    md::DrawPatternSolid green_pattern(0xFF00FF00);
     /* activate client */
     render_accelerated_process_double->cont();
 
@@ -649,8 +633,8 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
 
     /* check content */
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
-    EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
+    EXPECT_TRUE(red_pattern.check(region));
     
     auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
-    EXPECT_TRUE(check_solid_pattern(second_region, 0xFF00FF00));
+    EXPECT_TRUE(green_pattern.check(second_region));
 }
