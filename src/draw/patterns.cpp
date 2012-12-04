@@ -25,11 +25,40 @@ md::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
 {
 }
 
-void md::DrawPatternSolid::draw(MirGraphicsRegion* /*region*/) const
+void md::DrawPatternSolid::draw(MirGraphicsRegion* region) const
 {
+    // todo: should throw
+    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
+    //    return false;
+
+    uint32_t *pixel = (uint32_t*) region->vaddr;
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            pixel[j*region->width + i] = color_value;
+        }
+    }
 }
 
-bool md::DrawPatternSolid::check(const MirGraphicsRegion* /*region*/) const
+bool md::DrawPatternSolid::check(const MirGraphicsRegion* region) const
 {
-    return false;
+    // todo: should throw
+    //if (region->pixel_format != mir_pixel_format_rgba_8888 )
+    //    return false;
+
+    uint32_t *pixel = (uint32_t*) region->vaddr;
+    int i,j;
+    for(i=0; i< region->width; i++)
+    {
+        for(j=0; j<region->height; j++)
+        {
+            if (pixel[j*region->width + i] != color_value)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }
