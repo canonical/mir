@@ -537,14 +537,17 @@ struct TestClientIPCRender : public testing::Test
         pf = geom::PixelFormat::rgba_8888;
 
         /* allocate an android buffer */
-        int err;
+        int err; 
+        const hw_module_t *hw_module;
         struct alloc_device_t *alloc_device_raw;
         err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
         if (err < 0)
             throw std::runtime_error("Could not open hardware module");
         gralloc_open(hw_module, &alloc_device_raw);
-        auto alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
+        alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
+        buffer_converter = std::make_shared<md::grallocRenderSW>(hw_module, alloc_device.get());
+
 
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
         second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
@@ -563,6 +566,7 @@ struct TestClientIPCRender : public testing::Test
     void TearDown()
     {
         test_server.reset();
+        gralloc_close(alloc_device.get());
     }
 
     mir::protobuf::Connection response;
@@ -570,14 +574,15 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mt::TestServer> test_server;
     std::shared_ptr<mt::StubServerGenerator> mock_server;
 
-    const hw_module_t    *hw_module;
     geom::Size size;
     geom::PixelFormat pf;
+    std::shared_ptr<md::grallocRenderSW> buffer_converter;
     std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
     std::shared_ptr<mga::AndroidBuffer> second_android_buffer;
+    std::shared_ptr<struct alloc_device_t> alloc_device;
 
     static std::shared_ptr<mp::Process> render_single_client_process;
     static std::shared_ptr<mp::Process> render_double_client_process;
@@ -600,7 +605,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = md::get_graphic_region_from_package(package, size, hw_module);
+    auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(check_pattern(region, mt::pattern0));
 }
 
@@ -611,7 +616,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    auto region = md::get_graphic_region_from_package(package, size, hw_module);
+    auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(check_pattern(region, mt::pattern0));
 
     mock_server->set_package(second_package, 15);
@@ -620,7 +625,7 @@ TEST_F(TestClientIPCRender, test_render_double)
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = md::get_graphic_region_from_package(second_package, size, hw_module);
+    auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
     EXPECT_TRUE(check_pattern(second_region, mt::pattern1));
 }
 
@@ -637,7 +642,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = md::get_graphic_region_from_package(package, size, hw_module);
+    auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(check_pattern(region, mt::pattern1));
 }
 
@@ -654,7 +659,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = md::get_graphic_region_from_package(package, size, hw_module);
+    auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
 }
 
@@ -675,9 +680,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = md::get_graphic_region_from_package(package, size, hw_module);
+    auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(check_solid_pattern(region, 0xFF0000FF));
     
-    auto second_region = md::get_graphic_region_from_package(second_package, size, hw_module);
+    auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
     EXPECT_TRUE(check_solid_pattern(second_region, 0xFF00FF00));
 }

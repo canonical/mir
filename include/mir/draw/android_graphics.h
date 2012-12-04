@@ -34,19 +34,18 @@ class grallocRenderSW
 {
 public:
     grallocRenderSW(); 
+    grallocRenderSW(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
     ~grallocRenderSW(); 
-    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
-                        geometry::Size size, int val );
+    std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
+                            std::shared_ptr<compositor::BufferIPCPackage> package,
+                            geometry::Size sz);
  
 private:
+    const bool gralloc_ownership;
     gralloc_module_t* module;
     alloc_device_t* alloc_dev;
 };
 
-std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
-                        std::shared_ptr<compositor::BufferIPCPackage> package,
-                        geometry::Size sz,
-                        const hw_module_t *hw_module);
 }
 }
 

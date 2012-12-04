@@ -25,6 +25,7 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 md::grallocRenderSW::grallocRenderSW()
+ : gralloc_ownership(true)
 {
     const hw_module_t *hw_module;
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module) != 0)
@@ -33,57 +34,18 @@ md::grallocRenderSW::grallocRenderSW()
     module = (gralloc_module_t*) hw_module;
 }
 
-md::grallocRenderSW::~grallocRenderSW()
+md::grallocRenderSW::grallocRenderSW(const hw_module_t *hw_module,
+                                     alloc_device_t* alloc_dev)
+ : gralloc_ownership(false),
+   module((gralloc_module_t*)hw_module),
+   alloc_dev(alloc_dev)
 {
-    gralloc_close(alloc_dev);
 }
 
-void md::grallocRenderSW::render_pattern(std::shared_ptr<mc::GraphicBufferClientResource> res, geom::Size size, int val)
+md::grallocRenderSW::~grallocRenderSW()
 {
-    auto ipc_pack = res->ipc_package;
-
-    int width =  size.width.as_uint32_t(); 
-    int height = size.height.as_uint32_t();
-
-    /* reconstruct the native_window_t */
-    native_handle_t* native_handle;
-    int num_fd = ipc_pack->ipc_fds.size(); 
-    int num_data = ipc_pack->ipc_data.size(); 
-    native_handle = (native_handle_t*) malloc(sizeof(int) * (3+num_fd+num_data));
-    native_handle->numFds = num_fd;
-    native_handle->numInts = num_data;
-
-    int i=0;
-    for(auto it=ipc_pack->ipc_fds.begin(); it != ipc_pack->ipc_fds.end(); it++)
-    {
-        native_handle->data[i++] = *it;
-    }
-
-    i=num_fd;
-    for(auto it=ipc_pack->ipc_data.begin(); it != ipc_pack->ipc_data.end(); it++)
-    {
-        native_handle->data[i++] = *it;
-    }
-    
-
-    int *buffer_vaddr;
-   
-    int ret; 
-    ret = module->lock(module, native_handle, GRALLOC_USAGE_SW_WRITE_OFTEN,
-                0, 0, width, height, (void**) &buffer_vaddr);
-    if (!ret)
-        return;
-
-    int j;
-    for(i=0; i<width; i++)
-    {
-        for(j=0; j<height; j++)
-        {        
-            buffer_vaddr[width*i + j] = val;
-        }
-    }
-    module->unlock(module, native_handle);
-
+    if (gralloc_ownership)
+        gralloc_close(alloc_dev);
 }
 
 namespace
@@ -108,10 +70,9 @@ struct RegionDeleter
 };
 }
 
-std::shared_ptr<MirGraphicsRegion> md::get_graphic_region_from_package(
+std::shared_ptr<MirGraphicsRegion> md::grallocRenderSW::get_graphic_region_from_package(
                         std::shared_ptr<mc::BufferIPCPackage> package,
-                        geom::Size sz,
-                        const hw_module_t *hw_module)
+                        geom::Size sz)
 {
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
@@ -125,11 +86,10 @@ std::shared_ptr<MirGraphicsRegion> md::get_graphic_region_from_package(
 
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    gralloc_module_t *grmod = (gralloc_module_t*) hw_module;
-    grmod->lock(grmod, handle, usage, 0, 0, sz.width.as_uint32_t(), sz.height.as_uint32_t(), (void**) &vaddr);
+    module->lock(module, handle, usage, 0, 0, sz.width.as_uint32_t(), sz.height.as_uint32_t(), (void**) &vaddr);
 
     MirGraphicsRegion* region = new MirGraphicsRegion;
-    RegionDeleter del(grmod, handle);
+    RegionDeleter del(module, handle);
 
     region->vaddr = (char*) vaddr;
     region->width = sz.width.as_uint32_t();
