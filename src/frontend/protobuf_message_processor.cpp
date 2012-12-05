@@ -165,6 +165,10 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     {
         invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
     }
+    else if ("drm_auth_magic" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+    }
     else if ("disconnect" == invocation.method_name())
     {
         invoke(&protobuf::DisplayServer::disconnect, invocation);

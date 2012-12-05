@@ -28,7 +28,7 @@ namespace mg = mir::graphics;
 void mir::frontend::ApplicationMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
-    mir::protobuf::Void* /*response*/,
+    mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
@@ -39,7 +39,20 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
 
-    authenticator->drm_auth_magic(magic);
+    try
+    {
+        authenticator->drm_auth_magic(magic);
+        response->set_status_code(0);
+    }
+    catch (mir::Exception e)
+    {
+        auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+
+        if (errno_ptr != nullptr)
+            response->set_status_code(*errno_ptr);
+        else
+            throw;
+    }
 
     done->Run();
 }

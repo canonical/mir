@@ -24,7 +24,7 @@
 void mir::frontend::ApplicationMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* /*request*/,
-    mir::protobuf::Void* /*response*/,
+    mir::protobuf::DRMAuthMagicStatus* /*response*/,
     google::protobuf::Closure* /*done*/)
 {
     if (application_session.get() == nullptr)
