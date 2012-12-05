@@ -17,11 +17,19 @@
 #ifndef MIR_CLIENT_LIBRARY_DRM_H
 #define MIR_CLIENT_LIBRARY_DRM_H
 
+#include "mir_client_library.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef void (*mir_drm_auth_magic_callback)(int status, void *context);
+
+/* Authenticates a DRM magic cookie */
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void *context);
 
 #ifdef __cplusplus
 }
