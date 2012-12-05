@@ -151,29 +151,6 @@ void mcl::MirSocketRpcChannel::CallMethod(
     send_message(buffer.str(), send_buffer);
 }
 
-//mir::protobuf::wire::Invocation mcl::MirSocketRpcChannel::invocation_for(
-//    const google::protobuf::MethodDescriptor* method,
-//    const google::protobuf::Message* request)
-//{
-//    std::ostringstream buffer;
-//    request->SerializeToOstream(&buffer);
-//
-//    mir::protobuf::wire::Invocation invoke;
-//
-//    invoke.set_id(next_id());
-//    invoke.set_method_name(method->name());
-//    invoke.set_parameters(buffer.str());
-//
-//    return invoke;
-//}
-//
-//int mcl::MirSocketRpcChannel::next_id()
-//{
-//    int id = next_message_id.load();
-//    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-//    return id;
-//}
-
 void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();

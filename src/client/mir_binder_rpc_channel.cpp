@@ -25,12 +25,13 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <binder/IServiceManager.h>
+#include <binder/Parcel.h>
+#include <utils/String8.h>
 
 namespace mcl = mir::client;
 
 mcl::MirBinderRpcChannel::MirBinderRpcChannel()
 {
-    // TODO
 }
 
 mcl::MirBinderRpcChannel::MirBinderRpcChannel(
@@ -46,11 +47,32 @@ mcl::MirBinderRpcChannel::~MirBinderRpcChannel()
 }
 
 void mcl::MirBinderRpcChannel::CallMethod(
-    const google::protobuf::MethodDescriptor* /*method*/,
+    const google::protobuf::MethodDescriptor* method,
     google::protobuf::RpcController*,
-    const google::protobuf::Message* /*parameters*/,
-    google::protobuf::Message* /*response*/,
-    google::protobuf::Closure* /*complete*/)
+    const google::protobuf::Message* parameters,
+    google::protobuf::Message* response,
+    google::protobuf::Closure* complete)
 {
-    // TODO
+    mir::protobuf::wire::Invocation invocation = invocation_for(method, parameters);
+    std::ostringstream send_buffer;
+    invocation.SerializeToOstream(&send_buffer);
+
+    auto const& message = send_buffer.str();
+    android::Parcel request;
+    android::Parcel wire_response;
+
+    request.writeString8(android::String8(message.data(), message.length()));
+
+    binder->transact(0, request, &wire_response);
+
+    auto const& receive_buffer = wire_response.readString8();
+    std::string inefficient_copy(receive_buffer.string(), receive_buffer.string()+receive_buffer.size());
+    std::istringstream in(inefficient_copy);
+
+    mir::protobuf::wire::Result result;
+    result.ParseFromIstream(&in);
+
+    response->ParseFromString(result.response());
+
+    complete->Run();
 }
