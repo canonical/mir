@@ -20,35 +20,78 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/client_platform_factory.h"
 #include "mir_client/mir_connection.h"
-#include "mir_client/make_rpc_channel.h"
 
-#include "mir/frontend/resource_cache.h" /* needed by test_server.h */
-#include "mir_test/test_server.h"
-#include "mir_test/stub_server_tool.h"
+#include "mir_protobuf.pb.h"
+
+#include <google/protobuf/descriptor.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
-namespace mt = mir::test;
+namespace mp = mir::protobuf;
 
 namespace
 {
 
+struct MockRpcChannel : public google::protobuf::RpcChannel
+{
+    void CallMethod(const google::protobuf::MethodDescriptor* method,
+                    google::protobuf::RpcController*,
+                    const google::protobuf::Message* parameters,
+                    google::protobuf::Message*,
+                    google::protobuf::Closure* complete)
+    {
+        if (method->name() == "drm_auth_magic")
+            drm_auth_magic(static_cast<const mp::DRMMagic*>(parameters));
+
+        complete->Run();
+    }
+
+    MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
+};
+
 struct MockClientPlatform : public mcl::ClientPlatform
 {
+    MockClientPlatform()
+    {
+        using namespace testing;
+
+        auto native_display = std::make_shared<EGLNativeDisplayType>();
+        *native_display = reinterpret_cast<EGLNativeDisplayType>(0x0);
+
+        ON_CALL(*this, create_egl_native_display())
+            .WillByDefault(Return(native_display));
+    }
+
     MOCK_METHOD0(create_platform_depository, std::shared_ptr<mcl::ClientBufferDepository>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
 };
 
-struct MockClientPlatformFactory : public mcl::ClientPlatformFactory
+struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 {
-    MOCK_METHOD1(create_client_platform, std::shared_ptr<mcl::ClientPlatform>(mcl::ClientContext*));
+    StubClientPlatformFactory(std::shared_ptr<mcl::ClientPlatform> const& platform)
+        : platform{platform}
+    {
+    }
+
+    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext*)
+    {
+        return platform;
+    }
+
+    std::shared_ptr<mcl::ClientPlatform> platform;
 };
 
 void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
 {
+}
+
+void drm_auth_magic_callback(int status, void* client_context)
+{
+    auto status_ptr = static_cast<int*>(client_context);
+    *status_ptr = status;
 }
 
 }
@@ -59,40 +102,20 @@ struct MirConnectionTest : public testing::Test
     {
         using namespace testing;
 
-        /* Set up test server */
-        server_tool = std::make_shared<mt::StubServerTool>();
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", server_tool);
-
-        EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
-        test_server->comm.start();
-
-        /* Create MirConnection dependencies */
         logger = std::make_shared<mcl::ConsoleLogger>();
-        platform = std::make_shared<NiceMock<MockClientPlatform>>();
-        platform_factory = std::make_shared<NiceMock<MockClientPlatformFactory>>();
+        mock_platform = std::make_shared<NiceMock<MockClientPlatform>>();
+        platform_factory = std::make_shared<StubClientPlatformFactory>(mock_platform);
+        mock_channel = std::make_shared<MockRpcChannel>();
 
-        /* Set up return values for mock objects methods */
-        ON_CALL(*platform_factory, create_client_platform(_))
-            .WillByDefault(Return(platform));
-
-        connection = std::make_shared<MirConnection>(
-            mcl::make_rpc_channel("./test_socket_surface", logger),
-            logger,
-            platform_factory);
-    }
-
-    void TearDown()
-    {
-        test_server.reset();
+        connection = std::make_shared<MirConnection>(mock_channel, logger,
+                                                     platform_factory);
     }
 
     std::shared_ptr<mcl::Logger> logger;
-    std::shared_ptr<testing::NiceMock<MockClientPlatform>> platform;
-    std::shared_ptr<testing::NiceMock<MockClientPlatformFactory>> platform_factory;
+    std::shared_ptr<testing::NiceMock<MockClientPlatform>> mock_platform;
+    std::shared_ptr<StubClientPlatformFactory> platform_factory;
+    std::shared_ptr<MockRpcChannel> mock_channel;
     std::shared_ptr<MirConnection> connection;
-
-    std::shared_ptr<mt::TestServer> test_server;
-    std::shared_ptr<mt::StubServerTool> server_tool;
 };
 
 TEST_F(MirConnectionTest, returns_correct_egl_native_display)
@@ -103,7 +126,7 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
     auto native_display = std::make_shared<EGLNativeDisplayType>();
     *native_display = native_display_raw;
 
-    EXPECT_CALL(*platform, create_egl_native_display())
+    EXPECT_CALL(*mock_platform, create_egl_native_display())
         .WillOnce(Return(native_display));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
@@ -113,4 +136,31 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
     EGLNativeDisplayType connection_native_display = connection->egl_native_display();
 
     ASSERT_EQ(native_display_raw, connection_native_display);
+}
+
+MATCHER_P(has_drm_magic, magic, "")
+{
+    return arg->magic() == magic;
+}
+
+TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
+{
+    using namespace testing;
+
+    unsigned int const drm_magic{0x10111213};
+
+    EXPECT_CALL(*mock_channel, drm_auth_magic(has_drm_magic(drm_magic)))
+        .Times(1);
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_result();
+
+    int const no_error{0};
+    int status{67};
+
+    wait_handle = connection->drm_auth_magic(drm_magic, drm_auth_magic_callback, &status);
+    wait_handle->wait_for_result();
+
+    EXPECT_EQ(no_error, status);
 }
