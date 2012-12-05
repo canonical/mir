@@ -19,7 +19,6 @@
 
 #include "mir_basic_rpc_channel.h"
 
-#include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>

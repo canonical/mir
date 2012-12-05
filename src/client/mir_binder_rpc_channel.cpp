@@ -21,7 +21,6 @@
 
 #include "mir/protobuf/google_protobuf_guard.h"
 
-#include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
 #include <binder/IServiceManager.h>
@@ -53,6 +52,7 @@ void mcl::MirBinderRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
+    // TODO this happens synchronously - it should be async
     mir::protobuf::wire::Invocation invocation = invocation_for(method, parameters);
     std::ostringstream send_buffer;
     invocation.SerializeToOstream(&send_buffer);
