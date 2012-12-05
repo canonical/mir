@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/draw/graphics.h"
-#include "mir/draw/mir_image.h"
+#include "mir_test/draw/graphics.h"
+#include "mir_test/draw/mir_image.h"
 
 namespace md=mir::draw;
 

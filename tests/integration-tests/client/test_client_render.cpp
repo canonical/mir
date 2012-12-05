@@ -21,14 +21,14 @@
 #include "mir_client/mir_client_library.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/draw/android_graphics.h"
-#include "mir/draw/patterns.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
 #include "mir/thread/all.h"
 
+#include "mir_test/draw/android_graphics.h"
+#include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_server.h"
 #include "mir_test/empty_deleter.h"

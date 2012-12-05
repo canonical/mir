@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/draw/patterns.h"
+#include "mir_test/draw/patterns.h"
 
 namespace md=mir::draw;
 

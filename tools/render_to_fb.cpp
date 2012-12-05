@@ -19,7 +19,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 
-#include "mir/draw/graphics.h"
+#include "mir_test/draw/graphics.h"
 
 #include <unistd.h>
 
