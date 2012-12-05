@@ -156,15 +156,15 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::DRMMagic magic;
-    mp::DRMError error;
+    mp::DRMAuthMagicStatus status;
     magic.set_magic(drm_magic);
 
-    mediator.drm_auth_magic(nullptr, &magic, &error, null_callback.get());
+    mediator.drm_auth_magic(nullptr, &magic, &status, null_callback.get());
 
-    EXPECT_EQ(no_error, error.error_number());
+    EXPECT_EQ(no_error, status.status_code());
 }
 
-TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_error_number_on_error)
+TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_status_code_on_error)
 {
     using namespace testing;
 
@@ -180,10 +180,10 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_error_number_on_error)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::DRMMagic magic;
-    mp::DRMError error;
+    mp::DRMAuthMagicStatus status;
     magic.set_magic(drm_magic);
 
-    mediator.drm_auth_magic(nullptr, &magic, &error, null_callback.get());
+    mediator.drm_auth_magic(nullptr, &magic, &status, null_callback.get());
 
-    EXPECT_EQ(error_number, error.error_number());
+    EXPECT_EQ(error_number, status.status_code());
 }

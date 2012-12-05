@@ -232,7 +232,7 @@ TEST_F(ProtobufSocketCommunicatorBasic,
 TEST_F(ProtobufSocketCommunicatorBasic, drm_auth_magic_is_processed_by_the_server)
 {
     mir::protobuf::DRMMagic magic;
-    mir::protobuf::DRMError error;
+    mir::protobuf::DRMAuthMagicStatus status;
     magic.set_magic(0x10111213);
 
     EXPECT_CALL(*client, drm_auth_magic_done()).Times(1);
@@ -240,7 +240,7 @@ TEST_F(ProtobufSocketCommunicatorBasic, drm_auth_magic_is_processed_by_the_serve
     client->display_server.drm_auth_magic(
         0,
         &magic,
-        &error,
+        &status,
         google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::drm_auth_magic_done));
 
     client->wait_for_drm_auth_magic_done();

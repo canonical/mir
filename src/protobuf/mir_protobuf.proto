@@ -92,8 +92,8 @@ message DRMMagic {
 // But for the following result messages we either populate the "real"
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
-message DRMError {
-  optional int32 error_number = 1;
+message DRMAuthMagicStatus {
+  optional int32 status_code = 1;
   optional string error = 127;
 }
 
@@ -114,7 +114,7 @@ service DisplayServer {
   rpc release_surface(SurfaceId) returns (Void);
 
   // Platform specific requests
-  rpc drm_auth_magic(DRMMagic) returns (DRMError);
+  rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
 
   rpc test_file_descriptors(Void) returns (Buffer);
 }

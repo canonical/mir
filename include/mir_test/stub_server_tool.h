@@ -98,12 +98,12 @@ struct StubServerTool : mir::protobuf::DisplayServer
 
     virtual void drm_auth_magic(google::protobuf::RpcController* /*controller*/,
                                 const mir::protobuf::DRMMagic* request,
-                                mir::protobuf::DRMError* response,
+                                mir::protobuf::DRMAuthMagicStatus* response,
                                 google::protobuf::Closure* done)
     {
         std::unique_lock<std::mutex> lock(guard);
         drm_magic = request->magic();
-        response->set_error_number(0);
+        response->set_status_code(0);
         wait_condition.notify_one();
         done->Run();
     }
