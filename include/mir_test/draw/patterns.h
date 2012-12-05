@@ -37,6 +37,10 @@ public:
     virtual void draw(std::shared_ptr<MirGraphicsRegion>& region) const = 0;
     virtual bool check(const std::shared_ptr<MirGraphicsRegion>& region) const = 0;
 
+protected:
+    DrawPattern() = default;
+    DrawPattern(DrawPattern const&) = delete;
+    DrawPattern& operator=(DrawPattern const&) = delete;
 };
 
 class DrawPatternSolid : public DrawPattern

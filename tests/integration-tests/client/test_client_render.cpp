@@ -452,7 +452,7 @@ struct TestClientIPCRender : public testing::Test
         gralloc_open(hw_module, &alloc_device_raw);
         alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
-        buffer_converter = std::make_shared<md::grallocRenderSW>(hw_module, alloc_device.get());
+        buffer_converter = std::make_shared<md::TestGrallocMapper>(hw_module, alloc_device.get());
 
 
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
@@ -482,7 +482,7 @@ struct TestClientIPCRender : public testing::Test
 
     geom::Size size;
     geom::PixelFormat pf;
-    std::shared_ptr<md::grallocRenderSW> buffer_converter;
+    std::shared_ptr<md::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;

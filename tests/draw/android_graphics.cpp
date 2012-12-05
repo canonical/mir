@@ -73,7 +73,7 @@ int surface_flinger_filter(const struct dirent* d)
 }
 }
 
-md::grallocRenderSW::grallocRenderSW()
+md::TestGrallocMapper::TestGrallocMapper()
  : gralloc_ownership(true)
 {
     const hw_module_t *hw_module;
@@ -83,7 +83,7 @@ md::grallocRenderSW::grallocRenderSW()
     module = (gralloc_module_t*) hw_module;
 }
 
-md::grallocRenderSW::grallocRenderSW(const hw_module_t *hw_module,
+md::TestGrallocMapper::TestGrallocMapper(const hw_module_t *hw_module,
                                      alloc_device_t* alloc_dev)
  : gralloc_ownership(false),
    module((gralloc_module_t*)hw_module),
@@ -91,13 +91,13 @@ md::grallocRenderSW::grallocRenderSW(const hw_module_t *hw_module,
 {
 }
 
-md::grallocRenderSW::~grallocRenderSW()
+md::TestGrallocMapper::~TestGrallocMapper()
 {
     if (gralloc_ownership)
         gralloc_close(alloc_dev);
 }
 
-std::shared_ptr<MirGraphicsRegion> md::grallocRenderSW::get_graphic_region_from_package(
+std::shared_ptr<MirGraphicsRegion> md::TestGrallocMapper::get_graphic_region_from_package(
                         const std::shared_ptr<mc::BufferIPCPackage>& package,
                         geom::Size sz)
 {

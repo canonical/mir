@@ -74,7 +74,7 @@ protected:
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
-    md::grallocRenderSW sw_renderer;
+    md::TestGrallocMapper sw_renderer;
 
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we

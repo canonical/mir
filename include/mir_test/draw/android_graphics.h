@@ -30,17 +30,20 @@ namespace mir
 namespace draw
 {
 
-class grallocRenderSW
+class TestGrallocMapper
 {
 public:
-    grallocRenderSW(); 
-    grallocRenderSW(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
-    ~grallocRenderSW(); 
+    TestGrallocMapper(); 
+    TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
+    ~TestGrallocMapper(); 
     std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
                             const std::shared_ptr<compositor::BufferIPCPackage>& package,
                             geometry::Size sz);
  
 private:
+    TestGrallocMapper(TestGrallocMapper const&) = delete;
+    TestGrallocMapper& operator=(TestGrallocMapper const&) = delete;
+
     const bool gralloc_ownership;
     gralloc_module_t* module;
     alloc_device_t* alloc_dev;
