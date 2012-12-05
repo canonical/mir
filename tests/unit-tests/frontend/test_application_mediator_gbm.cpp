@@ -26,11 +26,10 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/exception.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -148,7 +147,8 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    drm_magic_t drm_magic{0x10111213};
+    drm_magic_t const drm_magic{0x10111213};
+    int const no_error{0};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))
         .Times(1);
@@ -156,7 +156,34 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::DRMMagic magic;
+    mp::DRMError error;
     magic.set_magic(drm_magic);
 
-    mediator.drm_auth_magic(nullptr, &magic, nullptr, null_callback.get());
+    mediator.drm_auth_magic(nullptr, &magic, &error, null_callback.get());
+
+    EXPECT_EQ(no_error, error.error_number());
+}
+
+TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_error_number_on_error)
+{
+    using namespace testing;
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    drm_magic_t const drm_magic{0x10111213};
+    int const error_number{667};
+
+    EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))
+        .WillOnce(Throw(mir::Exception() << boost::errinfo_errno(error_number)));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mp::DRMMagic magic;
+    mp::DRMError error;
+    magic.set_magic(drm_magic);
+
+    mediator.drm_auth_magic(nullptr, &magic, &error, null_callback.get());
+
+    EXPECT_EQ(error_number, error.error_number());
 }

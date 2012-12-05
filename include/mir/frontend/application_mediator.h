@@ -87,7 +87,7 @@ public:
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
-                        mir::protobuf::Void* response,
+                        mir::protobuf::DRMError* response,
                         google::protobuf::Closure* done);
 private:
     std::shared_ptr<SessionStore> const session_store;

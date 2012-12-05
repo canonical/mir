@@ -233,8 +233,9 @@ TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
 
     EXPECT_THROW({
         mp::DRMMagic request;
+        mp::DRMError response;
 
-        mediator.drm_auth_magic(nullptr, &request, nullptr, null_callback.get());
+        mediator.drm_auth_magic(nullptr, &request, &response, null_callback.get());
     }, std::runtime_error);
 
     EXPECT_THROW({
@@ -303,8 +304,9 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_disconnect_throws)
 
     EXPECT_THROW({
         mp::DRMMagic request;
+        mp::DRMError response;
 
-        mediator.drm_auth_magic(nullptr, &request, nullptr, null_callback.get());
+        mediator.drm_auth_magic(nullptr, &request, &response, null_callback.get());
     }, std::runtime_error);
 
     EXPECT_THROW({
