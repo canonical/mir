@@ -32,6 +32,7 @@ protobuf_generate_cpp(
 add_library( 
   mirprotobuf STATIC
   
+  google_protobuf_guard.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
