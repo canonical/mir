@@ -21,6 +21,7 @@
 
 #include "mir/protobuf/google_protobuf_guard.h"
 
+#include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <binder/IServiceManager.h>
@@ -74,5 +75,53 @@ void mcl::MirBinderRpcChannel::CallMethod(
 
     response->ParseFromString(result.response());
 
+    // Receive file descriptors
+    {
+        auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
+        if (!buffer)
+        {
+            auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+            if (surface && surface->has_buffer())
+                buffer = surface->mutable_buffer();
+        }
+
+        if (buffer)
+        {
+            buffer->clear_fd();
+
+            auto const end = buffer->fds_on_side_channel();
+
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << end << " file descriptors" << std::endl;
+
+            for (auto i = 0; i != end; ++i)
+            {
+                auto const fd = wire_response.readFileDescriptor();
+                buffer->add_fd(fd);
+            }
+        }
+
+        auto platform = dynamic_cast<mir::protobuf::Platform*>(response);
+        if (!platform)
+        {
+            auto connection = dynamic_cast<mir::protobuf::Connection*>(response);
+            if (connection && connection->has_platform())
+                platform = connection->mutable_platform();
+        }
+
+        if (platform)
+        {
+            platform->clear_fd();
+
+            auto const end = platform->fds_on_side_channel();
+
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << end << " file descriptors" << std::endl;
+
+            for (auto i = 0; i != end; ++i)
+            {
+                auto const fd = wire_response.readFileDescriptor();
+                platform->add_fd(fd);
+            }
+        }
+    }
     complete->Run();
 }
