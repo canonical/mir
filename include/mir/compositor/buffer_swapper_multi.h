@@ -17,15 +17,16 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_
-#define MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_
+#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_MULTI_H_
+#define MIR_COMPOSITOR_BUFFER_SWAPPER_MULTI_H_
 
 #include "buffer_swapper.h"
 
 #include "mir/thread/all.h"
 
 #include <memory>
-#include <queue>
+#include <deque>
+#include <vector>
 
 namespace mir
 {
@@ -34,11 +35,17 @@ namespace compositor
 
 class Buffer;
 
-class BufferSwapperDouble : public BufferSwapper
+class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    BufferSwapperDouble(std::unique_ptr<Buffer> && buffer_a, std::unique_ptr<Buffer> && buffer_b);
-    ~BufferSwapperDouble();
+    BufferSwapperMulti(std::vector<std::unique_ptr<Buffer>>&& buffers);
+
+    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
+                       std::unique_ptr<Buffer> buffer_b);
+
+    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
+                       std::unique_ptr<Buffer> buffer_b,
+                       std::unique_ptr<Buffer> buffer_c);
 
     Buffer* client_acquire();
     void client_release(Buffer* queued_buffer);
@@ -47,23 +54,16 @@ public:
     void shutdown();
 
 private:
-    typedef const std::unique_ptr<Buffer> BufferPtr;
-    BufferPtr  buffer_a;
-    BufferPtr  buffer_b;
+    std::vector<std::unique_ptr<Buffer>> buffers;
 
     std::mutex swapper_mutex;
 
-    std::condition_variable consumed_cv;
-    bool compositor_has_consumed;
-    bool shutting_down;
-
-    std::condition_variable buffer_available_cv;
-    std::queue<Buffer*> client_queue;
-
-    Buffer* last_posted_buffer;
+    std::condition_variable client_available_cv;
+    std::deque<Buffer*> client_queue;
+    std::deque<Buffer*> compositor_queue;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_DOUBLE_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_MULTI_H_ */

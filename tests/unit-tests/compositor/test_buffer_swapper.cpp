@@ -19,7 +19,7 @@
 
 #include "mir_test/mock_buffer.h"
 
-#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer_swapper_multi.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -43,7 +43,7 @@ struct BufferSwapper : testing::Test
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
-        swapper = std::make_shared<mc::BufferSwapperDouble>(
+        swapper = std::make_shared<mc::BufferSwapperMulti>(
                 std::move(buffer_a),
                 std::move(buffer_b));
 

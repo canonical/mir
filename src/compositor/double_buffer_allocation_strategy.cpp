@@ -18,7 +18,7 @@
 
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 
@@ -38,7 +38,7 @@ std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_sw
     BufferProperties const& buffer_properties)
 {
     return std::unique_ptr<BufferSwapper>(
-        new BufferSwapperDouble(
+        new BufferSwapperMulti(
             gr_allocator->alloc_buffer(buffer_properties),
             gr_allocator->alloc_buffer(buffer_properties)));
 }

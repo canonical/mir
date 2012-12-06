@@ -20,7 +20,7 @@
 #include "multithread_harness.h"
 
 #include "mir/chrono/chrono.h"
-#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/thread/all.h"
 
 
@@ -47,7 +47,7 @@ struct ThreadFixture {
             std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
             std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
 
-            auto swapper = std::make_shared<mc::BufferSwapperDouble>(
+            auto swapper = std::make_shared<mc::BufferSwapperMulti>(
                     std::move(buffer_a),
                     std::move(buffer_b));
 
