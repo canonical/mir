@@ -44,21 +44,40 @@ struct ProtobufCommunicator : public ::testing::Test
 {
     void SetUp()
     {
-        stub_server_tool = std::make_shared<mt::StubServerTool>();
-        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
+//        auto const pid = fork();
+//
+//        if (pid)
+//        {
+//            std::cout << "DEBUG (forked) pid=" << pid << std::endl;
+            stub_server_tool = std::make_shared<mt::StubServerTool>();
+            stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+            stub_server->comm->start();
 
-        stub_server->comm->start();
+            ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
+    //        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
-        client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+//            std::cout << "DEBUG (sleep) pid=" << pid << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+//            std::cout << "DEBUG (exit) pid=" << pid << std::endl;
+//            stub_server.reset();
+//            stub_server_tool.reset();
+//            exit(0);
+//        }
+//        else
+//        {
+//            std::cout << "DEBUG (forked) pid=" << pid << std::endl;
+            client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+    //        client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
+//            std::cout << "DEBUG (continue) pid=" << pid << std::endl;
+//        }
     }
 
     void TearDown()
     {
+        client.reset();
         stub_server.reset();
+        stub_server_tool.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;

@@ -48,6 +48,8 @@ private:
                                  android::Parcel* response,
                                  uint32_t flags);
 
+    android::status_t pingBinder();
+
     std::shared_ptr<MessageProcessor> processor;
 
     android::Parcel* response;
