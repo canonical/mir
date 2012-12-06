@@ -79,10 +79,3 @@ android::status_t mfd::BinderSession::onTransact(
     this->response = 0;
     return android::OK;
 }
-
-#include <iostream> // DEBUG
-android::status_t mfd::BinderSession::pingBinder()
-{
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
-    return android::OK;
-}
