@@ -30,14 +30,11 @@
 
 namespace mcl = mir::client;
 
-mcl::MirBinderRpcChannel::MirBinderRpcChannel()
-{
-}
-
 mcl::MirBinderRpcChannel::MirBinderRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<Logger> const& log) :
-    binder(android::defaultServiceManager()->getService(android::String16(endpoint.c_str()))),
+    sm(android::defaultServiceManager()),
+    binder(sm->getService(android::String16(endpoint.c_str()))),
     log(log)
 {
 }
@@ -123,5 +120,6 @@ void mcl::MirBinderRpcChannel::CallMethod(
             }
         }
     }
+
     complete->Run();
 }

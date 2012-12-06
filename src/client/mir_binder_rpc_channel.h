@@ -28,6 +28,7 @@
 #include <google/protobuf/descriptor.h>
 
 #include <binder/Binder.h>
+#include <binder/IServiceManager.h>
 
 #include <iosfwd>
 
@@ -47,7 +48,6 @@ namespace client
 class MirBinderRpcChannel : public MirBasicRpcChannel
 {
 public:
-    MirBinderRpcChannel();
     MirBinderRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
     ~MirBinderRpcChannel();
 
@@ -59,7 +59,8 @@ private:
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
 
-    android::sp<android::IBinder> binder;
+    android::sp<android::IServiceManager> const sm;
+    android::sp<android::IBinder> const binder;
     std::shared_ptr<Logger> const log;
 };
 

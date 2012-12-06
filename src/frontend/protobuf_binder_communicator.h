@@ -47,7 +47,7 @@ public:
 private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    android::sp<android::IServiceManager> service_manager;
+    android::sp<android::IServiceManager> const service_manager;
 
     // TODO this conflates the single Communication instance
     // TODO with multiple session instances, but I'll fix later

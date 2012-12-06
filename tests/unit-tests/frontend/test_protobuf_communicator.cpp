@@ -46,7 +46,7 @@ struct ProtobufCommunicator : public ::testing::Test
     {
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
- 
+
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
