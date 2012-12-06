@@ -42,17 +42,21 @@ namespace mir
 {
 struct ProtobufCommunicator : public ::testing::Test
 {
-    void SetUp()
+    static void SetUpTestCase()
     {
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
         stub_server->comm->start();
+    }
 
+    void SetUp()
+    {
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
+// TODO frigged because binder doesn't create new mediator (yet)
 //        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
 
-        std::this_thread::sleep_for(std::chrono::seconds(2));
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
@@ -60,15 +64,22 @@ struct ProtobufCommunicator : public ::testing::Test
     void TearDown()
     {
         client.reset();
+    }
+
+    static void TearDownTestCase()
+    {
         stub_server.reset();
         stub_server_tool.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;
-    std::shared_ptr<mt::StubServerTool> stub_server_tool;
+    static std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
-    std::shared_ptr<mt::TestProtobufServer> stub_server;
+    static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
+
+std::shared_ptr<mt::StubServerTool> ProtobufCommunicator::stub_server_tool;
+std::shared_ptr<mt::TestProtobufServer> ProtobufCommunicator::stub_server;
 
 TEST_F(ProtobufCommunicator, create_surface_results_in_a_callback)
 {
