@@ -27,6 +27,7 @@ add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(surfaces/)
+add_subdirectory(draw/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
@@ -36,6 +37,7 @@ target_link_libraries(
   mirclient
   mircompositor
   mirdraw
+  mirtestdraw
   mirfrontend
   mirplatformgraphics
   mirgraphics

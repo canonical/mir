@@ -12,26 +12,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+#
 
-include_directories(
-    ${Boost_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_draw_patterns.cpp
 )
 
-set(
-  DRAW_SRCS
-
-  graphics_utils.cpp
-)
-
-add_library(
-  mirdraw STATIC 
-  ${DRAW_SRCS})
-
-target_link_libraries(
-  mirdraw 
-
-  ${GLESv2_LIBRARIES}
- )
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
