@@ -58,6 +58,7 @@ target_link_libraries(
   mir
   mirclient
   mirdraw
+  mirtestdraw
   miroptions
   mircompositor
   mirfrontend
