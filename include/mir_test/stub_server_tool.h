@@ -30,6 +30,11 @@ namespace test
 
 struct StubServerTool : mir::protobuf::DisplayServer
 {
+    StubServerTool()
+        : drm_magic{0}
+    {
+    }
+
     virtual void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
@@ -91,10 +96,23 @@ struct StubServerTool : mir::protobuf::DisplayServer
         done->Run();
     }
 
+    virtual void drm_auth_magic(google::protobuf::RpcController* /*controller*/,
+                                const mir::protobuf::DRMMagic* request,
+                                mir::protobuf::DRMAuthMagicStatus* response,
+                                google::protobuf::Closure* done)
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        drm_magic = request->magic();
+        response->set_status_code(0);
+        wait_condition.notify_one();
+        done->Run();
+    }
+
     std::mutex guard;
     std::string surface_name;
     std::condition_variable wait_condition;
     std::string app_name;
+    unsigned int drm_magic;
 };
 
 }
