@@ -43,6 +43,7 @@ if(MIR_PLATFORM STREQUAL "gbm")
     ${CMAKE_SOURCE_DIR}
   )
   add_subdirectory(graphics/gbm)
+  list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
 add_executable(
