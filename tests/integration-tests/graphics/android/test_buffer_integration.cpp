@@ -37,6 +37,7 @@ namespace geom=mir::geometry;
 namespace mga=mir::graphics::android; 
 namespace mg=mir::graphics; 
 namespace md=mir::draw;
+namespace mtd=mir::test::draw;
 
 namespace
 {
@@ -46,7 +47,7 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
-        ASSERT_FALSE(md::is_surface_flinger_running());
+        ASSERT_FALSE(mtd::is_surface_flinger_running());
         ASSERT_NO_THROW(
         {
             platform = mg::create_platform();
@@ -74,7 +75,7 @@ protected:
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
-    md::TestGrallocMapper sw_renderer;
+    mtd::TestGrallocMapper sw_renderer;
 
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
@@ -131,7 +132,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
 
-    md::DrawPatternSolid red_pattern(0xFF0000FF);
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
@@ -160,8 +161,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
 
-    md::DrawPatternSolid red_pattern(0xFF0000FF);
-    md::DrawPatternSolid green_pattern(0xFF00FF00);
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);

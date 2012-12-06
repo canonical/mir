@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_DRAW_PATTERNS_H
-#define MIR_DRAW_PATTERNS_H
+#ifndef MIR_TEST_DRAW_PATTERNS_H
+#define MIR_TEST_DRAW_PATTERNS_H
 
 #include "mir_client/mir_client_library.h"
 
@@ -26,6 +26,8 @@
 #include <stdint.h>
 
 namespace mir
+{
+namespace test
 {
 namespace draw
 {
@@ -73,5 +75,6 @@ private:
  
 }
 }
+}
 
-#endif /*MIR_DRAW_PATTERNS_H */
+#endif /*MIR_TEST_DRAW_PATTERNS_H */

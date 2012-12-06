@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_DRAW_ANDROID_GRAPHICS
-#define MIR_DRAW_ANDROID_GRAPHICS
+#ifndef MIR_TEST_DRAW_ANDROID_GRAPHICS
+#define MIR_TEST_DRAW_ANDROID_GRAPHICS
 
 #include "mir_client/mir_client_library.h"
 #include "mir/compositor/buffer_bundle.h"
@@ -26,6 +26,8 @@
 #include <memory>
 
 namespace mir
+{
+namespace test
 {
 namespace draw
 {
@@ -50,7 +52,8 @@ private:
 };
 
 bool is_surface_flinger_running();
-}
-}
 
-#endif /* MIR_DRAW_ANDROID_GRAPHICS */
+}
+}
+}
+#endif /* MIR_TEST_DRAW_ANDROID_GRAPHICS */

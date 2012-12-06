@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-namespace md=mir::draw;
+namespace mtd=mir::test::draw;
 
 class DrawPatternsTest : public ::testing::Test
 {
@@ -53,7 +53,7 @@ protected:
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 {
-    md::DrawPatternSolid pattern(0x43214321);
+    mtd::DrawPatternSolid pattern(0x43214321);
 
     pattern.draw(test_region);
     EXPECT_TRUE(pattern.check(test_region));  
@@ -61,7 +61,7 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated)
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 {
-    md::DrawPatternSolid pattern(0x43214321);
+    mtd::DrawPatternSolid pattern(0x43214321);
 
     pattern.draw(test_region);
     test_region->vaddr[0]++;
@@ -72,7 +72,7 @@ TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
 {
     test_region->pixel_format = mir_pixel_format_rgbx_8888;
 
-    md::DrawPatternSolid pattern(0x43214321);
+    mtd::DrawPatternSolid pattern(0x43214321);
 
     EXPECT_THROW({
         pattern.draw(test_region); 
@@ -86,14 +86,14 @@ TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
 
 TEST_F(DrawPatternsTest, checkered_pattern)
 {
-    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
+    mtd::DrawPatternCheckered<2,2> pattern(pattern_colors);
     pattern.draw(test_region);
     EXPECT_TRUE(pattern.check(test_region));
 }
 
 TEST_F(DrawPatternsTest, checkered_pattern_error)
 {
-    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
+    mtd::DrawPatternCheckered<2,2> pattern(pattern_colors);
 
     pattern.draw(test_region);
     test_region->vaddr[0]++;
@@ -104,7 +104,7 @@ TEST_F(DrawPatternsTest, checkered_bad_pixel_formats)
 {
     test_region->pixel_format = mir_pixel_format_rgbx_8888;
 
-    md::DrawPatternCheckered<2,2> pattern(pattern_colors);
+    mtd::DrawPatternCheckered<2,2> pattern(pattern_colors);
 
     EXPECT_THROW({
         pattern.draw(test_region); 

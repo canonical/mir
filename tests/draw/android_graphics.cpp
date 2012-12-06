@@ -25,7 +25,7 @@
 #include <dirent.h>
 #include <fnmatch.h>
 
-namespace md=mir::draw;
+namespace mtd=mir::test::draw;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
@@ -73,7 +73,7 @@ int surface_flinger_filter(const struct dirent* d)
 }
 }
 
-md::TestGrallocMapper::TestGrallocMapper()
+mtd::TestGrallocMapper::TestGrallocMapper()
  : gralloc_ownership(true)
 {
     const hw_module_t *hw_module;
@@ -83,7 +83,7 @@ md::TestGrallocMapper::TestGrallocMapper()
     module = (gralloc_module_t*) hw_module;
 }
 
-md::TestGrallocMapper::TestGrallocMapper(const hw_module_t *hw_module,
+mtd::TestGrallocMapper::TestGrallocMapper(const hw_module_t *hw_module,
                                      alloc_device_t* alloc_dev)
  : gralloc_ownership(false),
    module((gralloc_module_t*)hw_module),
@@ -91,13 +91,13 @@ md::TestGrallocMapper::TestGrallocMapper(const hw_module_t *hw_module,
 {
 }
 
-md::TestGrallocMapper::~TestGrallocMapper()
+mtd::TestGrallocMapper::~TestGrallocMapper()
 {
     if (gralloc_ownership)
         gralloc_close(alloc_dev);
 }
 
-std::shared_ptr<MirGraphicsRegion> md::TestGrallocMapper::get_graphic_region_from_package(
+std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_from_package(
                         const std::shared_ptr<mc::BufferIPCPackage>& package,
                         geom::Size sz)
 {
@@ -126,7 +126,7 @@ std::shared_ptr<MirGraphicsRegion> md::TestGrallocMapper::get_graphic_region_fro
     return std::shared_ptr<MirGraphicsRegion>(region, del);
 }
 
-bool md::is_surface_flinger_running()
+bool mtd::is_surface_flinger_running()
 {
     struct dirent **namelist;
     return 0 < scandir(proc_dir, &namelist, surface_flinger_filter, 0);

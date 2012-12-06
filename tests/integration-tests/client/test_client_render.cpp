@@ -41,7 +41,7 @@
 
 namespace mp=mir::process;
 namespace mt=mir::test;
-namespace md=mir::draw;
+namespace mtd=mir::test::draw;
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -114,7 +114,7 @@ struct TestClient
         mir_surface_get_graphics_region( surface, graphics_region.get());
 
         /* render pattern */
-        md::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
+        mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
         draw_pattern0.draw(graphics_region);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
@@ -152,12 +152,12 @@ struct TestClient
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         mir_surface_get_graphics_region( surface, graphics_region.get());
-        md::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
+        mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
         draw_pattern0.draw(graphics_region);
 
         mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
         mir_surface_get_graphics_region( surface, graphics_region.get());
-        md::DrawPatternCheckered<2,2> draw_pattern1(mt::pattern1);
+        mtd::DrawPatternCheckered<2,2> draw_pattern1(mt::pattern1);
         draw_pattern1.draw(graphics_region);
 
         mir_wait_for(mir_surface_release(surface, &create_callback, &surface));
@@ -437,7 +437,7 @@ struct TestClientIPCRender : public testing::Test
     }
 
     void SetUp() {
-        ASSERT_FALSE(md::is_surface_flinger_running());
+        ASSERT_FALSE(mtd::is_surface_flinger_running());
 
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::rgba_8888;
@@ -452,7 +452,7 @@ struct TestClientIPCRender : public testing::Test
         gralloc_open(hw_module, &alloc_device_raw);
         alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
-        buffer_converter = std::make_shared<md::TestGrallocMapper>(hw_module, alloc_device.get());
+        buffer_converter = std::make_shared<mtd::TestGrallocMapper>(hw_module, alloc_device.get());
 
 
         android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
@@ -482,7 +482,7 @@ struct TestClientIPCRender : public testing::Test
 
     geom::Size size;
     geom::PixelFormat pf;
-    std::shared_ptr<md::TestGrallocMapper> buffer_converter;
+    std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
@@ -504,7 +504,7 @@ std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_dou
 
 TEST_F(TestClientIPCRender, test_render_single)
 {
-    md::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern0);
+    mtd::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern0);
     /* activate client */
     render_single_client_process->cont();
 
@@ -518,8 +518,8 @@ TEST_F(TestClientIPCRender, test_render_single)
 
 TEST_F(TestClientIPCRender, test_render_double)
 {
-    md::DrawPatternCheckered<2,2> rendered_pattern0(mt::pattern0);
-    md::DrawPatternCheckered<2,2> rendered_pattern1(mt::pattern1);
+    mtd::DrawPatternCheckered<2,2> rendered_pattern0(mt::pattern0);
+    mtd::DrawPatternCheckered<2,2> rendered_pattern1(mt::pattern1);
     /* activate client */
     render_double_client_process->cont();
 
@@ -540,7 +540,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
 TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 {
-    md::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern1);
+    mtd::DrawPatternCheckered<2,2> rendered_pattern(mt::pattern1);
     /* activate client */
     second_render_with_same_buffer_client_process->cont();
 
@@ -558,7 +558,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
-    md::DrawPatternSolid red_pattern(0xFF0000FF);
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
 
     /* activate client */
     render_accelerated_process->cont();
@@ -577,8 +577,8 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
-    md::DrawPatternSolid red_pattern(0xFF0000FF);
-    md::DrawPatternSolid green_pattern(0xFF00FF00);
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    mtd::DrawPatternSolid green_pattern(0xFF00FF00);
     /* activate client */
     render_accelerated_process_double->cont();
 
