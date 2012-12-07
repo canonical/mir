@@ -23,15 +23,24 @@ include_directories(
 set(
   DRAW_SRCS
 
-  graphics_utils.cpp
+  patterns.cpp
 )
 
+if (MIR_PLATFORM STREQUAL "android")
+  set(
+    DRAW_SRCS
+
+    android_graphics.cpp
+    ${DRAW_SRCS} 
+    )
+endif()
+
 add_library(
-  mirdraw STATIC 
+  mirtestdraw STATIC 
   ${DRAW_SRCS})
 
 target_link_libraries(
-  mirdraw 
+  mirtestdraw 
 
-  ${GLESv2_LIBRARIES}
+  ${LIBHARDWARE_LIBRARIES}
  )

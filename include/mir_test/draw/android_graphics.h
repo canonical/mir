@@ -15,9 +15,10 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_DRAW_ANDROID_GRAPHICS
-#define MIR_DRAW_ANDROID_GRAPHICS
+#ifndef MIR_TEST_DRAW_ANDROID_GRAPHICS
+#define MIR_TEST_DRAW_ANDROID_GRAPHICS
 
+#include "mir_client/mir_client_library.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/size.h"
 
@@ -26,23 +27,33 @@
 
 namespace mir
 {
+namespace test
+{
 namespace draw
 {
 
-class grallocRenderSW
+class TestGrallocMapper
 {
 public:
-    grallocRenderSW(); 
-    ~grallocRenderSW(); 
-    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
-                        geometry::Size size, int val );
+    TestGrallocMapper(); 
+    TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
+    ~TestGrallocMapper(); 
+    std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
+                            const std::shared_ptr<compositor::BufferIPCPackage>& package,
+                            geometry::Size sz);
  
 private:
+    TestGrallocMapper(TestGrallocMapper const&) = delete;
+    TestGrallocMapper& operator=(TestGrallocMapper const&) = delete;
+
+    const bool gralloc_ownership;
     gralloc_module_t* module;
     alloc_device_t* alloc_dev;
 };
 
-}
-}
+bool is_surface_flinger_running();
 
-#endif /* MIR_DRAW_ANDROID_GRAPHICS */
+}
+}
+}
+#endif /* MIR_TEST_DRAW_ANDROID_GRAPHICS */

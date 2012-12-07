@@ -30,6 +30,7 @@ if (NOT MIR_TRANSPORT STREQUAL "binder")
 add_subdirectory(input/)
 endif()
 add_subdirectory(surfaces/)
+add_subdirectory(draw/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
@@ -39,6 +40,7 @@ target_link_libraries(
   mirclient
   mircompositor
   mirdraw
+  mirtestdraw
   mirfrontend
   mirplatformgraphics
   mirgraphics
