@@ -25,7 +25,10 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
-#TODO stubbed out to run tests on emulator add_subdirectory(input/)
+#TODO stubbed out to run tests on emulator 
+if (NOT MIR_TRANSPORT STREQUAL "binder")
+add_subdirectory(input/)
+endif()
 add_subdirectory(surfaces/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
