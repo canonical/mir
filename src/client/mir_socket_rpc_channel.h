@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
 #define MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
 
+#include "mir_basic_rpc_channel.h"
 #include "mir/thread/all.h"
 #include "mir_client/mir_logger.h"
 
@@ -43,47 +44,7 @@ class Result;
 
 namespace client
 {
-namespace detail
-{
-typedef std::vector<char> SendBuffer;
-
-class PendingCallCache
-{
-public:
-    PendingCallCache(std::shared_ptr<Logger> const& log);
-
-    SendBuffer& save_completion_details(
-        mir::protobuf::wire::Invocation& invoke,
-        google::protobuf::Message* response,
-        std::shared_ptr<google::protobuf::Closure> const& complete);
-
-
-    void complete_response(mir::protobuf::wire::Result& result);
-
-private:
-
-    struct PendingCall
-    {
-        PendingCall(
-            google::protobuf::Message* response,
-            std::shared_ptr<google::protobuf::Closure> const& target)
-        : response(response), complete(target) {}
-
-        PendingCall()
-        : response(0), complete() {}
-
-        SendBuffer send_buffer;
-        google::protobuf::Message* response;
-        std::shared_ptr<google::protobuf::Closure> complete;
-    };
-
-    std::mutex mutable mutex;
-    std::map<int, PendingCall> pending_calls;
-    std::shared_ptr<Logger> const log;
-};
-}
-
-class MirSocketRpcChannel : public google::protobuf::RpcChannel
+class MirSocketRpcChannel : public MirBasicRpcChannel
 {
 public:
     MirSocketRpcChannel();
@@ -95,7 +56,6 @@ private:
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
     std::shared_ptr<Logger> log;
-    std::atomic<int> next_message_id;
     detail::PendingCallCache pending_calls;
     static const int threads = 1;
     std::thread io_service_thread[threads];
@@ -104,9 +64,6 @@ private:
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
-    mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,
-        const google::protobuf::Message* request);
-    int next_id();
     void send_message(const std::string& body, detail::SendBuffer& buffer);
     void on_message_sent(const boost::system::error_code& error);
 

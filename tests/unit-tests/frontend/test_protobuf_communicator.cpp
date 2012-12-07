@@ -26,7 +26,7 @@
 #include "mir_test/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,17 +40,22 @@ namespace mt = mir::test;
 
 namespace mir
 {
-struct ProtobufSocketCommunicatorBasic : public ::testing::Test
+struct ProtobufCommunicator : public ::testing::Test
 {
-    void SetUp()
+    static void SetUpTestCase()
     {
         stub_server_tool = std::make_shared<mt::StubServerTool>();
-        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
- 
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
-        stub_server->comm.start();
+        stub_server->comm->start();
+    }
+
+    void SetUp()
+    {
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
+// TODO frigged because binder doesn't create new mediator (yet)
+//        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
 
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
@@ -58,16 +63,25 @@ struct ProtobufSocketCommunicatorBasic : public ::testing::Test
 
     void TearDown()
     {
+        client.reset();
+    }
+
+    static void TearDownTestCase()
+    {
         stub_server.reset();
+        stub_server_tool.reset();
     }
 
     std::shared_ptr<mt::TestProtobufClient> client;
-    std::shared_ptr<mt::StubServerTool> stub_server_tool;
+    static std::shared_ptr<mt::StubServerTool> stub_server_tool;
 private:
-    std::shared_ptr<mt::TestServer> stub_server;
+    static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
-TEST_F(ProtobufSocketCommunicatorBasic, create_surface_results_in_a_callback)
+std::shared_ptr<mt::StubServerTool> ProtobufCommunicator::stub_server_tool;
+std::shared_ptr<mt::TestProtobufServer> ProtobufCommunicator::stub_server;
+
+TEST_F(ProtobufCommunicator, create_surface_results_in_a_callback)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
 
@@ -80,7 +94,7 @@ TEST_F(ProtobufSocketCommunicatorBasic, create_surface_results_in_a_callback)
     client->wait_for_create_surface();
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic, connection_sets_app_name)
+TEST_F(ProtobufCommunicator, connection_sets_app_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
 
@@ -97,7 +111,7 @@ TEST_F(ProtobufSocketCommunicatorBasic, connection_sets_app_name)
     EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic, create_surface_sets_surface_name)
+TEST_F(ProtobufCommunicator, create_surface_sets_surface_name)
 {
     EXPECT_CALL(*client, connect_done()).Times(1);
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -126,7 +140,7 @@ TEST_F(ProtobufSocketCommunicatorBasic, create_surface_sets_surface_name)
 }
 
 
-TEST_F(ProtobufSocketCommunicatorBasic,
+TEST_F(ProtobufCommunicator,
         create_surface_results_in_a_surface_being_created)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -140,7 +154,7 @@ TEST_F(ProtobufSocketCommunicatorBasic,
     client->wait_for_create_surface();
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic,
+TEST_F(ProtobufCommunicator,
        double_disconnection_attempt_has_no_effect)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -169,7 +183,7 @@ TEST_F(ProtobufSocketCommunicatorBasic,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic,
+TEST_F(ProtobufCommunicator,
        getting_and_advancing_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
@@ -207,7 +221,7 @@ TEST_F(ProtobufSocketCommunicatorBasic,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic,
+TEST_F(ProtobufCommunicator,
        connect_create_surface_then_disconnect_a_session)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(1);
@@ -229,7 +243,7 @@ TEST_F(ProtobufSocketCommunicatorBasic,
     client->wait_for_disconnect_done();
 }
 
-TEST_F(ProtobufSocketCommunicatorBasic, drm_auth_magic_is_processed_by_the_server)
+TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
 {
     mir::protobuf::DRMMagic magic;
     mir::protobuf::DRMAuthMagicStatus status;

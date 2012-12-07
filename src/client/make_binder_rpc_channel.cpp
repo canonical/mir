@@ -16,18 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
-#include "protobuf_socket_communicator.h"
+#include "mir_client/make_rpc_channel.h"
+#include "mir_binder_rpc_channel.h"
 
-namespace mf = mir::frontend;
-namespace mg = mir::graphics;
+namespace mcl = mir::client;
 
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::SessionManager> const& session_manager,
-    std::shared_ptr<mg::Display> const& display)
+std::shared_ptr<google::protobuf::RpcChannel>
+mcl::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_manager, display));
+    return std::make_shared<MirBinderRpcChannel>(name, log);
 }
 

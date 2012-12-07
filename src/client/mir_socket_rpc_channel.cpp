@@ -27,51 +27,9 @@
 #include "ancillary.h"
 
 #include <boost/bind.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/null.hpp>
-
-#include <cstdlib>
-#include <iostream>
 
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
-
-mcld::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
-    log(log)
-{
-}
-
-mcld::SendBuffer& mcld::PendingCallCache::save_completion_details(
-    mir::protobuf::wire::Invocation& invoke,
-    google::protobuf::Message* response,
-    std::shared_ptr<google::protobuf::Closure> const& complete)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-
-    auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
-    log->debug() << "save_completion_details " << invoke.id() << " response " << response << " complete " << complete << std::endl;
-    return current.send_buffer;
-}
-
-void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    log->debug() << "complete_response for result " << result.id() << std::endl;
-    auto call = pending_calls.find(result.id());
-    if (call == pending_calls.end())
-    {
-        log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
-    }
-    else
-    {
-        auto& completion = call->second;
-        log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
-        completion.response->ParseFromString(result.response());
-        completion.complete->Run();
-        pending_calls.erase(call);
-    }
-}
-
 
 mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
     pending_calls(std::shared_ptr<Logger>()), work(io_service), socket(io_service)
@@ -79,7 +37,7 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
 }
 
 mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
-    log(log), next_message_id(0), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
+    log(log), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
 {
     socket.connect(endpoint);
 
@@ -193,29 +151,6 @@ void mcl::MirSocketRpcChannel::CallMethod(
     send_message(buffer.str(), send_buffer);
 }
 
-mir::protobuf::wire::Invocation mcl::MirSocketRpcChannel::invocation_for(
-    const google::protobuf::MethodDescriptor* method,
-    const google::protobuf::Message* request)
-{
-    std::ostringstream buffer;
-    request->SerializeToOstream(&buffer);
-
-    mir::protobuf::wire::Invocation invoke;
-
-    invoke.set_id(next_id());
-    invoke.set_method_name(method->name());
-    invoke.set_parameters(buffer.str());
-
-    return invoke;
-}
-
-int mcl::MirSocketRpcChannel::next_id()
-{
-    int id = next_message_id.load();
-    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
-}
-
 void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
 {
     const size_t size = body.size();
@@ -287,31 +222,4 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     mir::protobuf::wire::Result result;
     result.ParseFromIstream(&in);
     return result;
-}
-
-std::ostream& mcl::ConsoleLogger::error()
-{
-    return std::cerr  << "ERROR: ";
-}
-
-std::ostream& mcl::ConsoleLogger::debug()
-{
-    static char const* const debug = getenv("MIR_CLIENT_DEBUG");
-
-    if (debug) return std::cerr  << "DEBUG: ";
-
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
-}
-
-std::ostream& mcl::NullLogger::error()
-{
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
-}
-
-std::ostream& mcl::NullLogger::debug()
-{
-    static boost::iostreams::stream<boost::iostreams::null_sink> null((boost::iostreams::null_sink()));
-    return null;
 }

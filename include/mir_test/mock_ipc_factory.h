@@ -22,6 +22,7 @@
 
 #include "mir_test/empty_deleter.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
+#include "mir/frontend/resource_cache.h"
 
 #include <gmock/gmock.h>
 
