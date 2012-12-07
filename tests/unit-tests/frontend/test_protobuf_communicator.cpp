@@ -48,11 +48,11 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
         stub_server->comm->start();
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
 // TODO frigged because binder doesn't create new mediator (yet)
 //        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
@@ -63,6 +63,7 @@ struct ProtobufCommunicator : public ::testing::Test
 
     void TearDown()
     {
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         client.reset();
     }
 

@@ -22,10 +22,9 @@
 
 #include "mir/frontend/communicator.h"
 
-#include "binder_session.h"
-
 #include <binder/IServiceManager.h>
 
+#include <memory>
 #include <string>
 
 namespace mir
@@ -47,11 +46,6 @@ public:
 private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
-    android::sp<android::IServiceManager> const service_manager;
-
-    // TODO this conflates the single Communication instance
-    // TODO with multiple session instances, but I'll fix later
-    detail::BinderSession session;
 };
 
 }

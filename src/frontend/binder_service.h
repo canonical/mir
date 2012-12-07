@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_FRONTEND_BINDER_SESSION_H_
-#define MIR_FRONTEND_BINDER_SESSION_H_
+#ifndef MIR_FRONTEND_BINDER_SERVICE_H_
+#define MIR_FRONTEND_BINDER_SERVICE_H_
 
 #include "message_processor.h"
 
@@ -30,11 +30,13 @@ namespace frontend
 {
 namespace detail
 {
-class BinderSession : public MessageSender, public android::BBinder
+// TODO Need to separate out the per-session MessageSender logic
+// TODO from the per-execution Service instance
+class BinderService : public MessageSender, public android::BBinder
 {
 public:
-    BinderSession();
-    ~BinderSession();
+    BinderService();
+    ~BinderService();
 
     void set_processor(std::shared_ptr<MessageProcessor> const& processor);
 
@@ -57,4 +59,4 @@ private:
 }
 
 
-#endif /* MIR_FRONTEND_BINDER_SESSION_H_ */
+#endif /* MIR_FRONTEND_BINDER_SERVICE_H_ */

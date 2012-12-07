@@ -42,7 +42,7 @@ elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND FRONTEND_SOURCES
   protobuf_binder_communicator.cpp
   make_protobuf_binder_communicator.cpp
-  binder_session.cpp
+  binder_service.cpp
 )
 endif()
 
@@ -57,7 +57,7 @@ endif()
 if (MIR_TRANSPORT STREQUAL "binder")
 set_source_files_properties(
   protobuf_binder_communicator.cpp
-  binder_session.cpp
+  binder_service.cpp
   PROPERTIES
   COMPILE_FLAGS "-fno-rtti")
 endif()

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "binder_session.h"
+#include "binder_service.h"
 
 #include <binder/Parcel.h>
 #include <utils/String8.h>
@@ -26,22 +26,22 @@
 
 namespace mfd = mir::frontend::detail;
 
-mfd::BinderSession::BinderSession() :
+mfd::BinderService::BinderService() :
     processor(std::make_shared<NullMessageProcessor>()),
     response(0)
 {
 }
 
-mfd::BinderSession::~BinderSession()
+mfd::BinderService::~BinderService()
 {
 }
 
-void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& processor)
+void mfd::BinderService::set_processor(std::shared_ptr<MessageProcessor> const& processor)
 {
     this->processor = processor;
 }
 
-void mfd::BinderSession::send(const std::ostringstream& buffer)
+void mfd::BinderService::send(const std::ostringstream& buffer)
 {
     assert(response);
 
@@ -50,7 +50,7 @@ void mfd::BinderSession::send(const std::ostringstream& buffer)
     response->writeString8(android::String8(as_str.data(), as_str.length()));
 }
 
-void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
+void mfd::BinderService::send_fds(std::vector<int32_t> const& fds)
 {
     assert(response);
 
@@ -59,7 +59,7 @@ void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
 }
 
 
-android::status_t mfd::BinderSession::onTransact(
+android::status_t mfd::BinderService::onTransact(
     uint32_t /*code*/,
     const android::Parcel& request,
     android::Parcel* response,
