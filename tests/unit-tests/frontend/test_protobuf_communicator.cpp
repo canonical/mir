@@ -176,9 +176,12 @@ TEST_F(ProtobufCommunicator,
 
     client->wait_for_disconnect_done();
 
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtLeast(1));
+    // socket based & binder based rpc fail differently, but either way
+    // the test ensures that nothing horrible happens.
+    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(1));
+    EXPECT_CALL(*client, disconnect_done()).Times(testing::AtMost(1));
 
-    // We don't expect this to be called, so it can't auto destruct
+    // We don't know if this will be called, so it can't auto destruct
     std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
     client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
     client->wait_for_disconnect_done();
