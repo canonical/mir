@@ -38,10 +38,7 @@ public:
 
     void set_processor(std::shared_ptr<MessageProcessor> const& processor);
 
-    android::status_t onTransact(uint32_t /*code*/,
-                                 const android::Parcel& request,
-                                 android::Parcel* response,
-                                 uint32_t /*flags*/)
+    bool process_message(const android::Parcel& request, android::Parcel* response)
     {
         this->response = response;
 
@@ -51,11 +48,11 @@ public:
         std::istringstream msg(inefficient_copy);
 
         // TODO if this returns false, must close BinderSession
-        processor->process_message(msg);
+        auto const result = processor->process_message(msg);
 
         assert(response == this->response);
         this->response = 0;
-        return android::OK;
+        return result;
     }
 
 private:
@@ -115,22 +112,22 @@ android::status_t mfd::BinderService::onTransact(
     android::Parcel* response,
     uint32_t /*flags*/)
 {
-    auto& session = sessions[android::IPCThreadState::self()->getCallingPid()];
+    auto const client_pid = android::IPCThreadState::self()->getCallingPid();
+    auto& session = sessions[client_pid];
 
     if (!session)
     {
         session = std::make_shared<BinderSession>();
-        auto const processor =
+
+        session->set_processor(
             std::make_shared<detail::ProtobufMessageProcessor>(
                 session.get(),
                 ipc_factory->make_ipc_server(),
-                ipc_factory->resource_cache());
-        session->set_processor(processor);
+                ipc_factory->resource_cache()));
     }
 
-    return session->onTransact(
-        0,
-        request,
-        response,
-        0);
+    if (!session->process_message(request, response))
+        sessions.erase(client_pid);
+
+    return android::OK;
 }
