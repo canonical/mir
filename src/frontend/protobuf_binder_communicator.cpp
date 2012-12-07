@@ -22,6 +22,7 @@
 #include "mir/protobuf/google_protobuf_guard.h"
 
 #include <binder/ProcessState.h>
+#include <binder/IServiceManager.h>
 
 #include <stdexcept>
 

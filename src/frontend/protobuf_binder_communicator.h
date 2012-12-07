@@ -19,10 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
 #define MIR_FRONTEND_PROTOBUF_BINDER_COMMUNICATOR_H_
 
-
 #include "mir/frontend/communicator.h"
-
-#include <binder/IServiceManager.h>
 
 #include <memory>
 #include <string>
