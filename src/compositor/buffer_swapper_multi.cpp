@@ -22,7 +22,7 @@
 namespace mc = mir::compositor;
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::unique_ptr<Buffer>>&& buffer_list)
-    : buffers{std::move(buffer_list)}
+    : buffers{std::move(buffer_list)}, in_use_by_client{0}
 {
     for (auto& buffer : buffers)
     {
@@ -32,6 +32,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::unique_ptr<Buffer>>&
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::unique_ptr<Buffer> buf_a,
                                            std::unique_ptr<Buffer> buf_b)
+    : in_use_by_client{0}
 {
     buffers.push_back(std::move(buf_a));
     buffers.push_back(std::move(buf_b));
@@ -45,6 +46,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::unique_ptr<Buffer> buf_a,
 mc::BufferSwapperMulti::BufferSwapperMulti(std::unique_ptr<Buffer> buf_a,
                                            std::unique_ptr<Buffer> buf_b,
                                            std::unique_ptr<Buffer> buf_c)
+    : in_use_by_client{0}
 {
     buffers.push_back(std::move(buf_a));
     buffers.push_back(std::move(buf_b));
@@ -60,13 +62,19 @@ mc::Buffer* mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    while (client_queue.empty())
+    /*
+     * Don't allow the client to acquire all the buffers, because then the
+     * compositor won't have a buffer to display.
+     */
+    while (client_queue.empty() || in_use_by_client == buffers.size() - 1)
     {
         client_available_cv.wait(lk);
     }
 
     Buffer* dequeued_buffer = client_queue.front();
     client_queue.pop_front();
+    in_use_by_client++;
+
     return dequeued_buffer;
 }
 
@@ -75,6 +83,15 @@ void mc::BufferSwapperMulti::client_release(mc::Buffer* queued_buffer)
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     compositor_queue.push_back(queued_buffer);
+    in_use_by_client--;
+
+    /*
+     * At this point we could signal the client_available_cv.  However, we
+     * won't do so, because the cv will get signaled after the next
+     * compositor_release anyway, and we want to avoid the overhead of
+     * signaling at every client_release just to ensure quicker client
+     * notification in an abnormal situation.
+     */
 }
 
 mc::Buffer* mc::BufferSwapperMulti::compositor_acquire()

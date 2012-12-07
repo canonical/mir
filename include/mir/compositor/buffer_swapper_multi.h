@@ -61,6 +61,7 @@ private:
     std::condition_variable client_available_cv;
     std::deque<Buffer*> client_queue;
     std::deque<Buffer*> compositor_queue;
+    unsigned int in_use_by_client;
 };
 
 }
