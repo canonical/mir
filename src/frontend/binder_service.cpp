@@ -22,6 +22,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 
 #include <binder/Parcel.h>
+#include <binder/IPCThreadState.h>
 #include <utils/String8.h>
 
 #include <sstream>
@@ -29,9 +30,72 @@
 
 namespace mfd = mir::frontend::detail;
 
-mfd::BinderService::BinderService() :
+class mfd::BinderSession : public MessageSender
+{
+public:
+
+    BinderSession();
+
+    void set_processor(std::shared_ptr<MessageProcessor> const& processor);
+
+    android::status_t onTransact(uint32_t /*code*/,
+                                 const android::Parcel& request,
+                                 android::Parcel* response,
+                                 uint32_t /*flags*/)
+    {
+        this->response = response;
+
+        // TODO there's probably a way to refactor this to avoid copy
+        auto const& buffer = request.readString8();
+        std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
+        std::istringstream msg(inefficient_copy);
+
+        // TODO if this returns false, must close BinderSession
+        processor->process_message(msg);
+
+        assert(response == this->response);
+        this->response = 0;
+        return android::OK;
+    }
+
+private:
+    void send(const std::ostringstream& buffer2);
+    void send_fds(std::vector<int32_t> const& fd);
+
+    std::shared_ptr<MessageProcessor> processor;
+
+    android::Parcel* response;
+};
+
+mfd::BinderSession::BinderSession() :
     processor(std::make_shared<NullMessageProcessor>()),
     response(0)
+{
+}
+
+void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& processor)
+{
+    this->processor = processor;
+}
+
+void mfd::BinderSession::send(const std::ostringstream& buffer)
+{
+    assert(response);
+
+    auto const& as_str(buffer.str());
+
+    response->writeString8(android::String8(as_str.data(), as_str.length()));
+}
+
+void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
+{
+    assert(response);
+
+    for(auto fd: fds)
+        response->writeFileDescriptor(fd, true);
+}
+
+mfd::BinderService::BinderService()
 {
 }
 
@@ -42,38 +106,8 @@ mfd::BinderService::~BinderService()
 void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
     this->ipc_factory = ipc_factory;
-
-    if (ipc_factory)
-    {
-        processor = std::make_shared<detail::ProtobufMessageProcessor>(
-        this,
-        ipc_factory->make_ipc_server(),
-        ipc_factory->resource_cache());
-    }
-    else
-    {
-        processor.reset();
-    }
+    sessions.clear();
 }
-
-
-void mfd::BinderService::send(const std::ostringstream& buffer)
-{
-    assert(response);
-
-    auto const& as_str(buffer.str());
-
-    response->writeString8(android::String8(as_str.data(), as_str.length()));
-}
-
-void mfd::BinderService::send_fds(std::vector<int32_t> const& fds)
-{
-    assert(response);
-
-    for(auto fd: fds)
-        response->writeFileDescriptor(fd, true);
-}
-
 
 android::status_t mfd::BinderService::onTransact(
     uint32_t /*code*/,
@@ -81,17 +115,22 @@ android::status_t mfd::BinderService::onTransact(
     android::Parcel* response,
     uint32_t /*flags*/)
 {
-    this->response = response;
+    auto& session = sessions[android::IPCThreadState::self()->getCallingPid()];
 
-    // TODO there's probably a way to refactor this to avoid copy
-    auto const& buffer = request.readString8();
-    std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
-    std::istringstream msg(inefficient_copy);
+    if (!session)
+    {
+        session = std::make_shared<BinderSession>();
+        auto const processor =
+            std::make_shared<detail::ProtobufMessageProcessor>(
+                session.get(),
+                ipc_factory->make_ipc_server(),
+                ipc_factory->resource_cache());
+        session->set_processor(processor);
+    }
 
-    // TODO if this returns false, must close BinderSession
-    processor->process_message(msg);
-
-    assert(response == this->response);
-    this->response = 0;
-    return android::OK;
+    return session->onTransact(
+        0,
+        request,
+        response,
+        0);
 }

@@ -20,21 +20,21 @@
 #ifndef MIR_FRONTEND_BINDER_SERVICE_H_
 #define MIR_FRONTEND_BINDER_SERVICE_H_
 
-#include "message_processor.h"
-
 #include <binder/Binder.h>
+
+#include <map>
+#include <memory>
 
 namespace mir
 {
 namespace frontend
 {
 class ProtobufIpcFactory;
-
 namespace detail
 {
-// TODO Need to separate out the per-session MessageSender logic
-// TODO from the per-execution Service instance
-class BinderService : public MessageSender, public android::BBinder
+class BinderSession;
+
+class BinderService : public android::BBinder
 {
 public:
     BinderService();
@@ -43,20 +43,13 @@ public:
     void set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
 
 private:
-
-    void send(const std::ostringstream& buffer2);
-    void send_fds(std::vector<int32_t> const& fd);
-
     android::status_t onTransact(uint32_t code,
                                  const android::Parcel& request,
                                  android::Parcel* response,
                                  uint32_t flags);
 
     std::shared_ptr<ProtobufIpcFactory> ipc_factory;
-
-    std::shared_ptr<MessageProcessor> processor;
-
-    android::Parcel* response;
+    std::map<int, std::shared_ptr<BinderSession>> sessions;
 };
 }
 }
