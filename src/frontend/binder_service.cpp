@@ -17,6 +17,9 @@
  */
 
 #include "binder_service.h"
+#include "protobuf_message_processor.h"
+
+#include "mir/frontend/protobuf_ipc_factory.h"
 
 #include <binder/Parcel.h>
 #include <utils/String8.h>
@@ -36,10 +39,23 @@ mfd::BinderService::~BinderService()
 {
 }
 
-void mfd::BinderService::set_processor(std::shared_ptr<MessageProcessor> const& processor)
+void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
-    this->processor = processor;
+    this->ipc_factory = ipc_factory;
+
+    if (ipc_factory)
+    {
+        processor = std::make_shared<detail::ProtobufMessageProcessor>(
+        this,
+        ipc_factory->make_ipc_server(),
+        ipc_factory->resource_cache());
+    }
+    else
+    {
+        processor.reset();
+    }
 }
+
 
 void mfd::BinderService::send(const std::ostringstream& buffer)
 {

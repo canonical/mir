@@ -17,10 +17,8 @@
  */
 
 #include "protobuf_binder_communicator.h"
-#include "protobuf_message_processor.h"
 #include "binder_service.h"
 
-#include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 
 #include <binder/ProcessState.h>
@@ -30,20 +28,17 @@
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 
+namespace
+{
+    android::sp<mfd::BinderService> const session(new mfd::BinderService());
+}
+
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
     const std::string& name,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory) :
     ipc_factory(ipc_factory)
 {
-    static android::sp<mfd::BinderService> session(
-        new mfd::BinderService());
-
-    auto mp = std::make_shared<detail::ProtobufMessageProcessor>(
-        session.get(),
-        ipc_factory->make_ipc_server(),
-        ipc_factory->resource_cache());
-
-    session->set_processor(mp);
+    session->set_ipc_factory(ipc_factory);
 
     auto const& sm = android::defaultServiceManager();
 
@@ -58,6 +53,7 @@ mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
 
 mf::ProtobufBinderCommunicator::~ProtobufBinderCommunicator()
 {
+    session->set_ipc_factory(std::shared_ptr<ProtobufIpcFactory>());
 }
 
 void mf::ProtobufBinderCommunicator::start()

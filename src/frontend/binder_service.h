@@ -28,6 +28,8 @@ namespace mir
 {
 namespace frontend
 {
+class ProtobufIpcFactory;
+
 namespace detail
 {
 // TODO Need to separate out the per-session MessageSender logic
@@ -38,7 +40,7 @@ public:
     BinderService();
     ~BinderService();
 
-    void set_processor(std::shared_ptr<MessageProcessor> const& processor);
+    void set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
 
 private:
 
@@ -49,6 +51,8 @@ private:
                                  const android::Parcel& request,
                                  android::Parcel* response,
                                  uint32_t flags);
+
+    std::shared_ptr<ProtobufIpcFactory> ipc_factory;
 
     std::shared_ptr<MessageProcessor> processor;
 
