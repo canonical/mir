@@ -130,10 +130,17 @@ target_link_libraries(
   3rd_party
 )
 
+set(
+  CLIENT_PUBLIC_HEADERS
+
+  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
+  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_drm.h
+)
+
 set_target_properties(
   mirclient
   PROPERTIES 
-  PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
+  PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
 )
 
 install(
