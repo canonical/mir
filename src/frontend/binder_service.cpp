@@ -47,11 +47,11 @@ public:
         std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
         std::istringstream msg(inefficient_copy);
 
-        // TODO if this returns false, must close BinderSession
         auto const result = processor->process_message(msg);
 
         assert(response == this->response);
         this->response = 0;
+
         return result;
     }
 

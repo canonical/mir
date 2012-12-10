@@ -34,7 +34,6 @@ namespace
     android::sp<mfd::BinderService> const session(new mfd::BinderService());
 }
 
-
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
     const std::string& name,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory) :
@@ -48,6 +47,7 @@ mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
 
     auto const b = sm->checkService(service_name);
 
+    // Even after MIR exits the service remains registered...
     bool const already_registered = b.get() != 0;
     bool const not_registered_or_dead = !already_registered || b->pingBinder() != android::OK;
 
