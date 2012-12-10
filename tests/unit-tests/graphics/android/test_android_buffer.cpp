@@ -25,10 +25,11 @@
 #include <gmock/gmock.h>
 #include <memory>
 
-namespace mc=mir::compositor;
-namespace mg=mir::graphics;
-namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {
@@ -36,8 +37,8 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
-        mock_alloc_device = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
+        mock_buffer_handle = std::make_shared<mtd::MockBufferHandle>();
+        mock_alloc_device = std::make_shared<mtd::MockAllocAdaptor>(mock_buffer_handle);
 
         /* set up common defaults */
         pf = geom::PixelFormat::rgba_8888;
@@ -47,8 +48,8 @@ protected:
             .Times(AtLeast(0));
     }
 
-    std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_device;
-    std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_device;
+    std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;
 };

@@ -23,9 +23,10 @@
 
 #include <gtest/gtest.h>
 
-namespace geom=mir::geometry;
-namespace mcla=mir::client::android;
-namespace mt=mir::test;
+namespace geom = mir::geometry;
+namespace mcla = mir::client::android;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 
 struct MirBufferDepositoryTest : public testing::Test
@@ -37,7 +38,7 @@ struct MirBufferDepositoryTest : public testing::Test
         size = geom::Size{width, height};
         pf = geom::PixelFormat::rgba_8888;
 
-        mock_registrar = std::make_shared<mt::MockAndroidRegistrar>();
+        mock_registrar = std::make_shared<mtd::MockAndroidRegistrar>();
         package1 = std::make_shared<MirBufferPackage>();
         package2 = std::make_shared<MirBufferPackage>();
 
@@ -47,7 +48,7 @@ struct MirBufferDepositoryTest : public testing::Test
     geom::PixelFormat pf;
     geom::Size size;
 
-    std::shared_ptr<mt::MockAndroidRegistrar> mock_registrar;
+    std::shared_ptr<mtd::MockAndroidRegistrar> mock_registrar;
 
     std::shared_ptr<MirBufferPackage> package1;
     std::shared_ptr<MirBufferPackage> package2;

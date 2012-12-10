@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockBufferHandle : public AndroidBufferHandle
+class MockBufferHandle : public graphics::android::AndroidBufferHandle
 {
 public:
 
@@ -37,12 +37,12 @@ public:
     MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
-    MOCK_CONST_METHOD0(usage,  BufferUsage());
+    MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
     MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
     
 };
 
-class MockAllocAdaptor : public GraphicAllocAdaptor
+class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
     MockAllocAdaptor(std::shared_ptr<MockBufferHandle> mock)
@@ -55,10 +55,10 @@ public:
         .WillByDefault(Return(mock_handle));
     }
 
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, BufferUsage));
+    MOCK_METHOD3(alloc_buffer, std::shared_ptr<graphics::android::AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
     MOCK_METHOD2(inspect_buffer, bool(char*, int));
 
-    std::shared_ptr<AndroidBufferHandle> mock_handle;
+    std::shared_ptr<graphics::android::AndroidBufferHandle> mock_handle;
 
 };
 
