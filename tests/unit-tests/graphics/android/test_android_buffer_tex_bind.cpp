@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/mock_alloc_adaptor.h"
+#include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test/egl_mock.h"
 

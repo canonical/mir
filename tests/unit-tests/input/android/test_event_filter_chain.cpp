@@ -18,7 +18,7 @@
 
 #include "src/input/event_filter_chain.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
 

@@ -20,9 +20,9 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/session_container.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

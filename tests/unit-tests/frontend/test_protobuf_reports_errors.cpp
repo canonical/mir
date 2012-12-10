@@ -21,7 +21,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test/mock_ipc_factory.h"
+#include "mir_test_doubles/mock_ipc_factory.h"
 #include "mir_test/test_protobuf_client.h"
 
 namespace mt = mir::test;

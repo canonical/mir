@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "multithread_harness.h"
 
 #include "mir/chrono/chrono.h"

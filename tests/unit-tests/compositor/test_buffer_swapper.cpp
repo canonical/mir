@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer_swapper_double.h"
 

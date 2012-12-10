@@ -24,7 +24,7 @@
 #include "mir/display_server.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test/mock_display.h"
+#include "mir_test_doubles/mock_display.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

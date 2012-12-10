@@ -24,7 +24,7 @@
 #include "mir_client/make_rpc_channel.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/mock_logger.h"
+#include "mir_test_doubles/mock_logger.h"
 
 namespace mir
 {

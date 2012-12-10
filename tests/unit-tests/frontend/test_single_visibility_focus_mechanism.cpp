@@ -22,9 +22,9 @@
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

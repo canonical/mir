@@ -22,7 +22,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test/mock_display.h"
+#include "mir_test_doubles/mock_display.h"
 #include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>

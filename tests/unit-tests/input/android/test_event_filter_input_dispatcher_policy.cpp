@@ -20,7 +20,7 @@
 #include "src/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
 

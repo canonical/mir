@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_swapper.h"

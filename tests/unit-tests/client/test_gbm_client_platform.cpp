@@ -18,8 +18,8 @@
 
 #include "mir_client/client_platform.h"
 #include "mir_client/native_client_platform_factory.h"
-#include "mir_test/mock_client_context.h"
-#include "mir_test/mock_client_surface.h"
+#include "mir_test_doubles/mock_client_context.h"
+#include "mir_test_doubles/mock_client_surface.h"
 
 #include <gtest/gtest.h>
 

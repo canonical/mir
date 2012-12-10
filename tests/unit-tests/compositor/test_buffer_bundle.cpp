@@ -19,8 +19,8 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 
-#include "mir_test/mock_swapper.h"
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_swapper.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
