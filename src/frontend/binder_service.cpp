@@ -88,7 +88,7 @@ void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
 {
     assert(response);
 
-    for(auto fd: fds)
+    for (auto fd: fds)
         response->writeFileDescriptor(fd, true);
 }
 

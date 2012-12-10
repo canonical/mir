@@ -92,6 +92,4 @@ private:
 }
 }
 
-
-
 #endif /* PROTOBUF_MESSAGE_PROCESSOR_H_ */

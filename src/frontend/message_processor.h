@@ -54,7 +54,7 @@ protected:
 
 struct NullMessageProcessor : MessageProcessor
 {
-    bool process_message(std::istream& );
+    bool process_message(std::istream&);
 };
 
 }
