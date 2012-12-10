@@ -19,6 +19,8 @@
 #include "android_input_reader_policy.h"
 #include "android_pointer_controller.h"
 
+#include "mir/graphics/viewable_area.h"
+
 namespace mia = mir::input::android;
 namespace mg = mir::graphics;
 

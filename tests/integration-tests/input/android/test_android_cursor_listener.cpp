@@ -50,9 +50,8 @@ struct MockCursorListener : public mi::CursorListener
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 };
 
-class AndroidInputManagerAndCursorListenerSetup : public testing::Test
+struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
-public:
     void SetUp()
     {
         event_hub = new mia::FakeEventHub();
@@ -79,7 +78,6 @@ public:
         input_manager->stop();
     }
 
-protected:
     android::sp<mia::FakeEventHub> event_hub;
     MockEventFilter event_filter;
     NiceMock<mg::MockViewableArea> viewable_area;

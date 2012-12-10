@@ -20,12 +20,14 @@
 
 #include "rudimentary_input_reader_policy.h"
 
-#include "mir/graphics/viewable_area.h"
-
 #include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
 class CursorListener;
