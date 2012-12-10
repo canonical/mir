@@ -26,15 +26,18 @@
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-struct MockInputManager : public InputManager
+struct MockInputManager : public input::InputManager
 {
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
 };
 
+}
 }
 }
 

@@ -36,8 +36,9 @@ namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
-using mir::MockEventFilter;
+using mtd::MockEventFilter;
 using mir::WaitCondition;
 
 namespace
@@ -79,7 +80,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     android::sp<mia::FakeEventHub> event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
     MockEventFilter event_filter;
-    mg::MockViewableArea viewable_area;
+    mtd::MockViewableArea viewable_area;
 };
 
 }

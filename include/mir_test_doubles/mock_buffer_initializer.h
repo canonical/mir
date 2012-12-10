@@ -23,10 +23,12 @@
 
 namespace mir
 {
-namespace graphics
+namespace test
+{
+namespace doubles
 {
 
-class MockBufferInitializer : public BufferInitializer
+class MockBufferInitializer : public graphics::BufferInitializer
 {
 public:
     MOCK_METHOD1(operator_call, void(compositor::Buffer& buffer));
@@ -39,6 +41,7 @@ public:
 
 }
 }
+} // namespace mir
 
 #endif /* MIR_TEST_MOCK_BUFFER_INITIALIZER_H_ */
 

@@ -26,6 +26,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -38,8 +39,8 @@ struct BufferSwapper : testing::Test
 {
     BufferSwapper()
     {
-        std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();

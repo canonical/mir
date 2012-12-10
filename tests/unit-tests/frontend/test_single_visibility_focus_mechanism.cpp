@@ -33,6 +33,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -52,7 +53,7 @@ struct MockApplicationSession : public mf::Session
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser);
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");

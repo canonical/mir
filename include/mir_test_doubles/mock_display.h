@@ -24,10 +24,12 @@
 
 namespace mir
 {
-namespace graphics
+namespace test
+{
+namespace doubles
 {
 
-struct MockDisplay : public Display
+struct MockDisplay : public graphics::Display
 {
 public:
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
@@ -35,6 +37,7 @@ public:
     MOCK_METHOD0(post_update, bool ());
 };
 
+}
 }
 }
 #endif /* MIR_COMPOSITOR_MOCK_DISPLAY_H_ */

@@ -38,7 +38,7 @@ struct TestProtobufServer
         std::shared_ptr<frontend::ProtobufIpcFactory> const& factory);
 
     // "Server" side
-    std::shared_ptr<MockIpcFactory> factory;
+    std::shared_ptr<doubles::MockIpcFactory> factory;
     std::shared_ptr<frontend::Communicator> comm;
 };
 

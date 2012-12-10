@@ -30,8 +30,9 @@ namespace mf = mir::frontend;
 
 namespace mir
 {
-
 namespace test
+{
+namespace doubles
 {
 
 class MockIpcFactory : public mf::ProtobufIpcFactory
@@ -62,6 +63,7 @@ private:
     std::shared_ptr<mf::ResourceCache> const cache;
 };
 
+}
 }
 }
 #endif /* MIR_TEST_MOCK_IPC_FACTORY_H_ */

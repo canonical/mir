@@ -18,8 +18,8 @@
 
 #include "src/input/android/android_pointer_controller.h"
 
-#include "mir_test/event_factory.h"
 #include "mir_test_doubles/mock_viewable_area.h"
+#include "mir_test/event_factory.h"
 #include "mir_test/empty_deleter.h"
 
 #include <android/input.h>
@@ -32,6 +32,7 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600), 
@@ -49,7 +50,7 @@ public:
             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()));
     }
 protected:
-    mg::MockViewableArea viewable_area;
+    mtd::MockViewableArea viewable_area;
     std::shared_ptr<mia::PointerController> controller;
 };
 

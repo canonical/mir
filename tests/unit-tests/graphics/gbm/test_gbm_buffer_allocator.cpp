@@ -39,6 +39,7 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class GBMBufferAllocatorTest  : public ::testing::Test
 {
@@ -65,7 +66,7 @@ protected:
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 
         platform = std::make_shared<mgg::GBMPlatform>();
-        mock_buffer_initializer = std::make_shared<testing::NiceMock<mg::MockBufferInitializer>>();
+        mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
     }
 
@@ -80,7 +81,7 @@ protected:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
-    std::shared_ptr<testing::NiceMock<mg::MockBufferInitializer>> mock_buffer_initializer;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
 };
 

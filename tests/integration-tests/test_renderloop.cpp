@@ -32,6 +32,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 {
@@ -39,7 +40,7 @@ TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
     {
         void exec(mir::DisplayServer* display_server)
         {
-            mg::MockDisplay display;
+            mtd::MockDisplay display;
 
             using namespace testing;
 

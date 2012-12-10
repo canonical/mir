@@ -37,6 +37,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -51,7 +52,7 @@ struct MockFocusMechanism: public mf::FocusSetter
 TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(container);
     MockFocusMechanism mechanism;
@@ -83,7 +84,7 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
 TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(model);
     MockFocusMechanism mechanism;

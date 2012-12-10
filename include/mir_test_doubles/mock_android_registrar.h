@@ -31,12 +31,15 @@ class Rectangle;
 }
 namespace test
 {
+namespace doubles
+{
 struct MockAndroidRegistrar : public client::android::AndroidRegistrar
 {
     MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
     MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
     MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geometry::Rectangle));
 };
+}
 }
 }
 

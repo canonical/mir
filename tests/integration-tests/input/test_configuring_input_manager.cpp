@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_input_manager.h"
 
 namespace mi = mir::input;
+namespace mtd = mir::test::doubles;
 
 TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_manager)
 {
@@ -33,13 +34,13 @@ TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_man
     {
 	std::shared_ptr<mi::InputManager> make_input_manager()
 	{
-            input_manager = std::make_shared<mi::MockInputManager>();
+            input_manager = std::make_shared<mtd::MockInputManager>();
             EXPECT_CALL(*input_manager, start()).Times(1);
             EXPECT_CALL(*input_manager, stop()).Times(1);
 
 	    return input_manager;
 	}
-        std::shared_ptr<mi::MockInputManager> input_manager;
+        std::shared_ptr<mtd::MockInputManager> input_manager;
     } server_config;
     
     launch_server_process(server_config);

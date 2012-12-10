@@ -25,10 +25,12 @@
 
 namespace mir
 {
-namespace graphics
+namespace test
+{
+namespace doubles
 {
 
-struct MockViewableArea : public ViewableArea
+struct MockViewableArea : public graphics::ViewableArea
 {
 public:
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
@@ -36,4 +38,6 @@ public:
 
 }
 }
+} // namespace mir
+
 #endif /* MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_ */

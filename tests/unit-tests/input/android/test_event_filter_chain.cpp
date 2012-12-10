@@ -26,11 +26,12 @@
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
+namespace mtd = mir::test::doubles;
 
 TEST(EventFilterChain, offers_events_to_filters)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<mir::MockEventFilter>();
+    auto filter = std::make_shared<mtd::MockEventFilter>();
     MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter};
@@ -43,7 +44,7 @@ TEST(EventFilterChain, offers_events_to_filters)
 TEST(EventFilterChain, accepting_event_halts_emission)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<mir::MockEventFilter>();
+    auto filter = std::make_shared<mtd::MockEventFilter>();
     MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter, filter};

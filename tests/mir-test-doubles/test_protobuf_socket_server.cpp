@@ -20,13 +20,14 @@
 #include "src/frontend/protobuf_socket_communicator.h"
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 
 
 mt::TestProtobufServer::TestProtobufServer(
     std::string socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<MockIpcFactory>(*tool)),
+    factory(std::make_shared<mtd::MockIpcFactory>(*tool)),
     comm(make_communicator(socket_name, factory))
 {
 }

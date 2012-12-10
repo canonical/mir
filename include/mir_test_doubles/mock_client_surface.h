@@ -26,6 +26,8 @@ namespace mir
 {
 namespace test
 {
+namespace doubles
+{
 
 struct MockClientSurface : public client::ClientSurface
 {
@@ -34,6 +36,7 @@ struct MockClientSurface : public client::ClientSurface
     MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
 };
 
+}
 }
 }
 #endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */

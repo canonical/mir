@@ -31,11 +31,12 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(model);
     
@@ -55,7 +56,7 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
     
@@ -75,7 +76,7 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
     

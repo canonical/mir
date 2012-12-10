@@ -34,7 +34,7 @@ struct TestProtobufClient
 {
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
-    std::shared_ptr<MockLogger> logger;
+    std::shared_ptr<doubles::MockLogger> logger;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;

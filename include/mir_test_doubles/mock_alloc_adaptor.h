@@ -24,9 +24,9 @@
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace android
+namespace doubles
 {
 
 class MockBufferHandle : public AndroidBufferHandle

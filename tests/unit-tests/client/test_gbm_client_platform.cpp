@@ -23,23 +23,24 @@
 
 #include <gtest/gtest.h>
 
-namespace mt = mir::test;
 namespace mcl = mir::client;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
 {
-    mt::MockClientContext context;
+    mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
-    mt::MockClientSurface surface;
+    mtd::MockClientSurface surface;
     auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mt::MockClientSurface>();
+    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(&surface);
     EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), *native_window);
 }
 
 TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
 {
-    mt::MockClientContext context;
+    mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();

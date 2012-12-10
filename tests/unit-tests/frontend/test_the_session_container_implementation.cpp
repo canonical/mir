@@ -31,11 +31,12 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser());
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     mf::SessionContainer container;
 
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));

@@ -31,6 +31,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 TEST(Session, create_and_destroy_surface)
 {
@@ -42,7 +43,7 @@ TEST(Session, create_and_destroy_surface)
             ms::a_surface().name,
             buffer_bundle));
 
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     mf::Session session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
@@ -65,7 +66,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
             ms::a_surface().name,
             buffer_bundle));
 
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     mf::Session app_session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));

@@ -25,19 +25,20 @@
 
 namespace mir
 {
-namespace compositor
+namespace test
 {
-
-struct MockBufferBundle : public BufferBundle
+namespace doubles
 {
-    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
-    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<GraphicRegion>());
+struct MockBufferBundle : public compositor::BufferBundle
+{
+    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<compositor::GraphicBufferClientResource>());
+    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<compositor::GraphicRegion>());
 
     MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(bundle_size, geometry::Size());
     MOCK_METHOD0(shutdown, void());
 };
-
+}
 }
 }
 #endif /* MIR_TEST_MOCK_BUFFER_BUNDLE_H_ */

@@ -26,10 +26,12 @@
 
 namespace mir
 {
-namespace frontend
+namespace test
+{
+namespace doubles
 {
 
-struct MockSurfaceOrganiser : public SurfaceOrganiser
+struct MockSurfaceOrganiser : public frontend::SurfaceOrganiser
 {
     MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
@@ -37,6 +39,7 @@ struct MockSurfaceOrganiser : public SurfaceOrganiser
     MOCK_METHOD1(show_surface, void(std::weak_ptr<surfaces::Surface> const&));
 };
 
+}
 }
 }
 

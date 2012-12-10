@@ -32,6 +32,8 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -88,7 +90,7 @@ TEST(Compositor, render)
         &mock_renderer,
         mir::EmptyDeleter());
     MockRenderView render_view;
-    mg::MockDisplay display;
+    mtd::MockDisplay display;
 
     mc::Compositor comp(&render_view, renderer);
 
@@ -115,7 +117,7 @@ TEST(Compositor, skips_invisible_renderables)
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
-    NiceMock<mg::MockDisplay> display;
+    NiceMock<mtd::MockDisplay> display;
 
     EXPECT_CALL(display, view_area())
             .Times(1)
