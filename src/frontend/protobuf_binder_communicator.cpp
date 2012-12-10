@@ -34,6 +34,7 @@ namespace
     android::sp<mfd::BinderService> const session(new mfd::BinderService());
 }
 
+
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
     const std::string& name,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory) :
@@ -45,8 +46,12 @@ mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
 
     android::String16 const service_name(name.c_str());
 
-    if (sm->checkService(service_name) == 0 &&
-        sm->addService(service_name, session) != android::OK)
+    auto const b = sm->checkService(service_name);
+
+    bool const already_registered = b.get() != 0;
+    bool const not_registered_or_dead = !already_registered || b->pingBinder() != android::OK;
+
+    if (not_registered_or_dead && sm->addService(service_name, session) != android::OK)
     {
         throw std::runtime_error("Failed to add a new Binder service");
     }

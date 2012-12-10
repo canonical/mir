@@ -33,8 +33,6 @@
 
 namespace mir
 {
-namespace protobuf
-{
 namespace client
 {
 class MirBinderRpcChannel : public MirBasicRpcChannel
