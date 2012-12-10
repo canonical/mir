@@ -53,8 +53,8 @@ struct ProtobufCommunicator : public ::testing::Test
 
     void SetUp()
     {
-// TODO frigged because binder doesn't create new mediator (yet)
-//        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        // called during socket comms initialisation:
+        // there's always a server awaiting the next connection
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
 
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);

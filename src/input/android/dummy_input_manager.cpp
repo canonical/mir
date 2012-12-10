@@ -13,8 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Daniel d'Andradra <daniel.dandrada@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "android_input_manager.h"
