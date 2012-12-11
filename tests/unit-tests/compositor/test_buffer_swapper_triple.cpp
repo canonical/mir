@@ -119,7 +119,6 @@ TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
     SUCCEED();
 }
 
-/* test that the triple returns in order */
 TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 {
     auto first_comp_buffer = swapper->compositor_acquire();
@@ -140,77 +139,3 @@ TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
     EXPECT_EQ(second_compositor_buffer, first_client_buffer);
     EXPECT_EQ(third_compositor_buffer, second_client_buffer);
 }
-
-#if 0
-TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted)
-{
-    mc::Buffer* buf_tmp_a;
-    mc::Buffer* buf_tmp_b;
-
-    buf_tmp_a = swapper->client_acquire();
-    swapper->client_release(buf_tmp_a);
-
-    buf_tmp_b = swapper->compositor_acquire();
-    swapper->compositor_release(buf_tmp_b);
-
-    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
-}
-
-
-TEST_F(BufferSwapperTriple, test_two_grabs_without_a_client_release)
-{
-    mc::Buffer* buf_tmp_a;
-    mc::Buffer* buf_tmp_b;
-    mc::Buffer* buf_tmp_c;
-
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
-
-    buf_tmp_b = swapper->compositor_acquire();
-    swapper->compositor_release(buf_tmp_b);
-
-    buf_tmp_a = swapper->compositor_acquire();
-    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
-}
-
-TEST_F(BufferSwapperTriple, test_two_grabs_with_client_updates)
-{
-    mc::Buffer* buf_tmp_a;
-    mc::Buffer* buf_tmp_b;
-    mc::Buffer* buf_tmp_c;
-
-    buf_tmp_a = swapper->client_acquire();
-    swapper->client_release(buf_tmp_a);
-
-    buf_tmp_c = swapper->compositor_acquire();
-    swapper->compositor_release(buf_tmp_c);
-
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
-
-    buf_tmp_b = swapper->compositor_acquire();
-    EXPECT_NE(buf_tmp_a, buf_tmp_b);
-
-}
-
-TEST_F(BufferSwapperTriple, test_grab_release_pattern)
-{
-    mc::Buffer* buf_tmp_a;
-    mc::Buffer* buf_tmp_b;
-    mc::Buffer* buf_tmp_c;
-    mc::Buffer* buf_tmp_d;
-
-    buf_tmp_d = swapper->client_acquire();
-    swapper->client_release(buf_tmp_d);
-
-    buf_tmp_c = swapper->compositor_acquire();
-    swapper->compositor_release(buf_tmp_c);
-
-    buf_tmp_b = swapper->client_acquire();
-    swapper->client_release(buf_tmp_b);
-
-    buf_tmp_a = swapper->compositor_acquire();
-    EXPECT_EQ(buf_tmp_a, buf_tmp_b);
-    EXPECT_NE(buf_tmp_a, buf_tmp_c);
-}
-#endif

@@ -30,70 +30,61 @@ namespace geom = mir::geometry;
 
 namespace mir
 {
-struct ThreadFixture {
-    public:
-        ThreadFixture(
-            std::function<void( std::shared_ptr<mt::SynchronizerSpawned>,
-                            std::shared_ptr<mc::BufferSwapper>,
-                            mc::Buffer** )> a,
-            std::function<void( std::shared_ptr<mt::SynchronizerSpawned>,
-                            std::shared_ptr<mc::BufferSwapper>,
-                            mc::Buffer** )> b)
-        : sleep_duration(50)
+struct BufferSwapperStress : public ::testing::Test
+{
+public:
+    void SetUp()
     {
-            geom::Size size{geom::Width{1024}, geom::Height{768}};
-            geom::Stride s {1024};
-            geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
-            std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
-            std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
+        geom::Size size{geom::Width{1024}, geom::Height{768}};
+        geom::Stride s {1024};
+        geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
-            auto swapper = std::make_shared<mc::BufferSwapperMulti>(
-                    std::move(buffer_a),
-                    std::move(buffer_b));
+        double_swapper = std::make_shared<mc::BufferSwapperMulti>(
+                    std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
+                    std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))));
+        triple_swapper = std::make_shared<mc::BufferSwapperMulti>(
+                    std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
+                    std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
+                    std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))));
 
-            auto sync1 = std::make_shared<mt::Synchronizer>();
-            auto sync2 = std::make_shared<mt::Synchronizer>();
-            compositor_controller = sync1;
-            client_controller = sync2;
+        compositor_controller = std::make_shared<mt::Synchronizer>();
+        client_controller = std::make_shared<mt::Synchronizer>();
 
-            thread1 = std::thread(a, sync1, swapper, &compositor_buffer);
-            thread2 = std::thread(b, sync2, swapper, &client_buffer);
+        sleep_duration = std::chrono::microseconds(50);
+        num_iterations = 500;
+    }
 
-        };
+    void terminate_child_thread(std::shared_ptr<mt::Synchronizer> controller)
+    {
+        controller->ensure_child_is_waiting();
+        controller->kill_thread();
+        controller->activate_waiting_child();
+    }
 
-        ~ThreadFixture()
-        {
-            client_controller->ensure_child_is_waiting();
-            client_controller->kill_thread();
-            client_controller->activate_waiting_child();
+    std::shared_ptr<mc::BufferSwapper> double_swapper;
+    std::shared_ptr<mc::BufferSwapper> triple_swapper;
 
-            compositor_controller->ensure_child_is_waiting();
-            compositor_controller->kill_thread();
-            compositor_controller->activate_waiting_child();
+    std::shared_ptr<mt::Synchronizer> compositor_controller;
+    std::shared_ptr<mt::Synchronizer> client_controller;
 
-            thread2.join();
-            thread1.join();
-        };
+    mc::Buffer *compositor_buffer;
+    mc::Buffer *client_buffer;
 
-        std::shared_ptr<mt::SynchronizerController> compositor_controller;
-        std::shared_ptr<mt::SynchronizerController> client_controller;
+    std::chrono::microseconds sleep_duration;
+    int num_iterations;
 
-        mc::Buffer *compositor_buffer;
-        mc::Buffer *client_buffer;
+    std::thread thread1;
+    std::thread thread2;
 
-        std::chrono::microseconds sleep_duration;
-
-    private:
-        /* thread objects must exist over lifetime of test */
-        std::thread thread1;
-        std::thread thread2;
+    void BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper);
+    void ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper);
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
     std::this_thread::sleep_for(duration);
 }
 
-void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+void client_request_loop( std::shared_ptr<mt::Synchronizer> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
@@ -110,8 +101,8 @@ void client_request_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
 }
 
 void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
-                            std::shared_ptr<mc::BufferSwapper> swapper,
-                            mc::Buffer** buf )
+                           std::shared_ptr<mc::BufferSwapper> swapper,
+                           mc::Buffer** buf )
 {
     for(;;)
     {
@@ -120,65 +111,92 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
 
         swapper->compositor_release(*buf);
         if (synchronizer->child_enter_wait()) return;
-
         std::this_thread::yield();
     }
 
 }
-} /* namespace mir */
 
-using mir::ThreadFixture;
+//using mir::ThreadFixture;
 using mir::main_test_loop_pause;
 using mir::client_request_loop;
 using mir::compositor_grab_loop;
 
 /* test that the compositor and the client are never in ownership of the same
    buffer */
-TEST(buffer_swapper_double_stress, distinct_buffers_in_client_and_compositor)
+void BufferSwapperStress::BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    const int num_iterations = 500;
-    ThreadFixture fix(compositor_grab_loop, client_request_loop);
+    thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
+
     for(int i=0; i<  num_iterations; i++)
     {
-        fix.compositor_controller->ensure_child_is_waiting();
-        fix.client_controller->ensure_child_is_waiting();
+        compositor_controller->ensure_child_is_waiting();
+        client_controller->ensure_child_is_waiting();
 
-        EXPECT_NE(fix.compositor_buffer, fix.client_buffer);
+        EXPECT_NE(compositor_buffer, client_buffer);
 
-        fix.compositor_controller->activate_waiting_child();
-        fix.client_controller->activate_waiting_child();
+        compositor_controller->activate_waiting_child();
+        client_controller->activate_waiting_child();
 
-        main_test_loop_pause(fix.sleep_duration);
+        main_test_loop_pause(sleep_duration);
     }
 
+    terminate_child_thread(client_controller);
+    terminate_child_thread(compositor_controller); 
+    thread2.join();
+    thread1.join();
+}
+
+TEST_F(BufferSwapperStress, distinct_double_buffers_in_client_and_compositor)
+{
+    BufferSwapperStressDistinctHelper(double_swapper);
+}
+TEST_F(BufferSwapperStress, distinct_triple_buffers_in_client_and_compositor)
+{
+    BufferSwapperStressDistinctHelper(triple_swapper);
 }
 
 /* test that we never get an invalid buffer */
-TEST(buffer_swapper_double_stress, ensure_valid_buffers)
+void BufferSwapperStress::ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    const int num_iterations = 500;
-    ThreadFixture fix(compositor_grab_loop, client_request_loop);
+    thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
 
     for(int i=0; i< num_iterations; i++)
     {
-        fix.compositor_controller->ensure_child_is_waiting();
-        fix.client_controller->ensure_child_is_waiting();
+        compositor_controller->ensure_child_is_waiting();
+        client_controller->ensure_child_is_waiting();
 
         if (i > 1)
         {
-            EXPECT_TRUE((fix.compositor_buffer != NULL));
-            EXPECT_TRUE((fix.client_buffer != NULL));
+            EXPECT_TRUE((compositor_buffer != NULL));
+            EXPECT_TRUE((client_buffer != NULL));
         }
 
-        fix.compositor_controller->activate_waiting_child();
-        fix.client_controller->activate_waiting_child();
+        compositor_controller->activate_waiting_child();
+        client_controller->activate_waiting_child();
 
-        main_test_loop_pause(fix.sleep_duration);
-
+        main_test_loop_pause(sleep_duration);
     }
+
+    terminate_child_thread(client_controller);
+    terminate_child_thread(compositor_controller); 
+    thread2.join();
+    thread1.join();
+}
+TEST_F(BufferSwapperStress, double_ensure_valid_buffers)
+{
+    ValidBufferCheck(double_swapper);
+}
+TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
+{
+    ValidBufferCheck(triple_swapper);
 }
 
 
+
+} /* namespace mir */
+#if 0
 void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -207,7 +225,7 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
 }
 
 /* test a simple wait situation due to no available buffers */
-TEST(buffer_swapper_double_stress, test_wait)
+TEST(BufferSwapperStress, test_wait)
 {
     ThreadFixture fix(compositor_grab, client_will_wait);
 
@@ -301,7 +319,7 @@ using mir::client_request_loop_stress_wait;
 using mir::compositor_grab_loop_with_wait;
 
 /* test normal situation, with moderate amount of waits */
-TEST(buffer_swapper_double_stress, test_last_posted)
+TEST(BufferSwapperStress, test_last_posted)
 {
     const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_with_wait);
@@ -321,7 +339,7 @@ TEST(buffer_swapper_double_stress, test_last_posted)
 }
 
 /* test situation where we'd wait on resoures more than normal, with moderate amount of waits */
-TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
+TEST(BufferSwapperStress, test_last_posted_stress_client_wait)
 {
     const int num_iterations = 500;
     ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_stress_wait);
@@ -338,3 +356,4 @@ TEST(buffer_swapper_double_stress, test_last_posted_stress_client_wait)
         main_test_loop_pause(fix.sleep_duration);
     }
 }
+#endif
