@@ -44,39 +44,39 @@ private:
     ValueType value;
 };
 
-template<TypeTag Tag>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
+template<TypeTag Tag, typename ValueType>
+std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<TypeTag Tag>
-inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<TypeTag Tag, typename ValueType>
+inline bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() == rhs.as_value();
 }
 
-template<TypeTag Tag>
-inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<TypeTag Tag, typename ValueType>
+inline bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() != rhs.as_value();
 }
 
-template<TypeTag Tag>
-inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<TypeTag Tag, typename ValueType>
+inline bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() <= rhs.as_value();
 }
 
-template<TypeTag Tag>
-inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<TypeTag Tag, typename ValueType>
+inline bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() >= rhs.as_value();
 }
 
-template<TypeTag Tag>
-inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
+template<TypeTag Tag, typename ValueType>
+inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
 }
