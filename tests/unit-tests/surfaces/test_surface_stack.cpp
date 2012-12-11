@@ -26,6 +26,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
+#include "mir_test_doubles/mock_renderable.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,6 +38,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -312,6 +314,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     stack.destroy_surface(surface);
 }
 
+#include "mir/compositor/rendering_operator_for_renderables.h"
 /* since the renderer is stateless,
  the render operator should accumulate the graphic resources that 
  the render operation needs to ensure through the driver flush */ 
@@ -319,13 +322,14 @@ TEST(SurfaceStack,
     render_operator_hold_resource)
 {
     MockSurfaceRenderer mock_renderer;
-/*
-    Renderable mock_renderable a;
-    Renderable mock_renderable b;
-    Renderable mock_renderable c;
+    mtd::MockRenderable mock_renderable_a;
+    mtd::MockRenderable mock_renderable_b;
+    mtd::MockRenderable mock_renderable_c;
 
     {
-        Renderoperator op(mock_renderer);
+        mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
+
+/*
 
         EXPECT_CALL(mock_renderable_a, texture()
             .WillOnce(Return(value_1);
@@ -341,8 +345,9 @@ TEST(SurfaceStack,
         EXPECT_EQ(refcount(value_1), 1);
         EXPECT_EQ(refcount(value_2), 1);
         EXPECT_EQ(refcount(value_3), 1);
+*/
     }
-
+/*
     EXPECT_EQ(refcount(value_1), 0);
     EXPECT_EQ(refcount(value_2), 0);
     EXPECT_EQ(refcount(value_3), 0);
