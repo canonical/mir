@@ -19,18 +19,19 @@
 #include "mir_client/client_platform.h"
 #include "mir_client/native_client_platform_factory.h"
 #include "mir_client/mir_client_surface.h"
-#include "mir_test/mock_client_context.h"
-#include "mir_test/mock_client_surface.h"
+#include "mir_test_doubles/mock_client_context.h"
+#include "mir_test_doubles/mock_client_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
 namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 TEST(ClientPlatformTest, platform_creates )
 {
-    mt::MockClientContext context;
+    mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto depository = platform->create_platform_depository(); 
@@ -39,17 +40,17 @@ TEST(ClientPlatformTest, platform_creates )
 
 TEST(ClientPlatformTest, platform_creates_native_window )
 {
-    mt::MockClientContext context;
+    mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mt::MockClientSurface>();
+    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get()); 
     EXPECT_NE( *native_window, (EGLNativeWindowType) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    mt::MockClientContext context;
+    mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();

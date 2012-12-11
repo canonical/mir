@@ -32,11 +32,12 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -51,7 +52,7 @@ struct MockFocusSetter: public mf::FocusSetter
 TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
@@ -83,7 +84,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;

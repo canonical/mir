@@ -24,7 +24,7 @@
 #include "mir_client/make_rpc_channel.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/mock_logger.h"
+#include "mir_test_doubles/mock_logger.h"
 
 namespace mir
 {
@@ -34,7 +34,7 @@ struct TestProtobufClient
 {
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
-    std::shared_ptr<MockLogger> logger;
+    std::shared_ptr<doubles::MockLogger> logger;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;

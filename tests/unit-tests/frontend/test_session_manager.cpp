@@ -23,9 +23,9 @@
 #include "mir/frontend/focus_sequence.h"
 #include "mir/frontend/focus_setter.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 #include "null_buffer_bundle.h"
 
 #include <gmock/gmock.h>
@@ -36,6 +36,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -64,7 +65,7 @@ struct MockFocusSetter: public mf::FocusSetter
 TEST(SessionManager, open_and_close_session)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
@@ -88,7 +89,7 @@ TEST(SessionManager, open_and_close_session)
 TEST(SessionManager, closing_session_removes_surfaces)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
@@ -124,7 +125,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
 TEST(SessionManager, new_applications_receive_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;

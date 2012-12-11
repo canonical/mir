@@ -28,7 +28,8 @@ namespace mir
 {
 namespace test 
 {
-
+namespace doubles
+{
 struct MockClientContext : public client::ClientContext
 {
     MockClientContext()
@@ -47,6 +48,7 @@ struct MockClientContext : public client::ClientContext
     MOCK_METHOD1(populate, void(MirPlatformPackage&));
 };
 
+}
 }
 }
 

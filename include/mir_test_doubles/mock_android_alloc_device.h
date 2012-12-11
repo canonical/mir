@@ -21,9 +21,12 @@
 #include <gmock/gmock.h>
 #include <hardware/gralloc.h>
 
-namespace
+namespace mir
 {
-
+namespace test
+{
+namespace android
+{
 class ICSAllocInterface
 {
 public:
@@ -33,9 +36,10 @@ public:
     virtual int dump_interface(alloc_device_t* dev, char *buf, int len) = 0;
 
 };
-    
-
-class MockAllocDevice : public ICSAllocInterface,
+}
+namespace doubles
+{
+class MockAllocDevice : public android::ICSAllocInterface,
     public alloc_device_t
 {
 public:
@@ -111,5 +115,7 @@ public:
     int fake_stride;
 };
 }
+}
+} // namespace mir
 
 #endif /* MIR_TEST_MOCK_ANDROID_ALLOC_DEVICE_H_ */
