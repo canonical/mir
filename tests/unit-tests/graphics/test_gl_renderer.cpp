@@ -24,8 +24,8 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/gl_renderer.h>
-#include <mir/graphics/renderable.h>
 #include <mir/compositor/graphic_region.h>
+#include <mir_test_doubles/mock_renderable.h>
 #include <mir_test/gl_mock.h>
 
 using testing::SetArgPointee;
@@ -33,6 +33,7 @@ using testing::InSequence;
 using testing::Return;
 using testing::_;
 
+namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 
@@ -275,19 +276,6 @@ public:
     std::unique_ptr<mg::GLRenderer> renderer;
 };
 
-class MockRenderable :
-    public mg::Renderable
-{
-public:
-
-    MOCK_CONST_METHOD0(top_left, mir::geometry::Point());
-    MOCK_CONST_METHOD0(size, mir::geometry::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(hidden, bool());
-};
-
 class MockGraphicRegion :
     public mc::GraphicRegion
 {
@@ -309,7 +297,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 {
     using namespace std::placeholders;
 
-    MockRenderable rd;
+    mtd::MockRenderable rd;
     MockGraphicRegion gr;
     std::shared_ptr<MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
     mir::geometry::Point tl;

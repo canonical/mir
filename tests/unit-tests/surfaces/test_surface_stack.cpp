@@ -312,8 +312,6 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     stack.destroy_surface(surface);
 }
 
-
-#if 0
 /* since the renderer is stateless,
  the render operator should accumulate the graphic resources that 
  the render operation needs to ensure through the driver flush */ 
@@ -321,6 +319,7 @@ TEST(SurfaceStack,
     render_operator_hold_resource)
 {
     MockSurfaceRenderer mock_renderer;
+/*
     Renderable mock_renderable a;
     Renderable mock_renderable b;
     Renderable mock_renderable c;
@@ -347,7 +346,10 @@ TEST(SurfaceStack,
     EXPECT_EQ(refcount(value_1), 0);
     EXPECT_EQ(refcount(value_2), 0);
     EXPECT_EQ(refcount(value_3), 0);
+*/
 }
+
+#if 0
 TEST(SurfaceStack,
     render_operator_submits_resource_it_saves_to_renderer)
 {
