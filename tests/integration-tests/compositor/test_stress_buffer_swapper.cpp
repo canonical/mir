@@ -283,28 +283,6 @@ void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> syn
     }
 }
 
-void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
-                            std::shared_ptr<mc::BufferSwapper> swapper,
-                            mc::Buffer** buf )
-{
-    bool wait_request = false;
-    for(;;)
-    {
-        wait_request = synchronizer->child_check_wait_request();
-
-        *buf = swapper->client_acquire();
-        swapper->client_release(*buf);
-
-        *buf = swapper->client_acquire();
-        swapper->client_release(*buf);
-
-        if (wait_request)
-            if (synchronizer->child_enter_wait()) return;
-
-        std::this_thread::yield();
-    }
-}
-
 void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -358,36 +336,6 @@ void BufferSwapperStress::test_last_posted(std::shared_ptr<mc::BufferSwapper> sw
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
     test_last_posted(double_swapper);
-}
-
-/* test situation where we'd wait on resoures more than normal, with moderate amount of waits */
-void BufferSwapperStress::test_last_posted_stress(std::shared_ptr<mc::BufferSwapper> swapper)
-{
-    thread1 = std::thread(compositor_grab_loop_with_wait, compositor_controller, swapper, &compositor_buffer);
-    thread2 = std::thread(client_request_loop_stress_wait,  client_controller, swapper, &client_buffer);
-
-    for(int i=0; i<  num_iterations; i++)
-    {
-        client_controller->ensure_child_is_waiting();
-        compositor_controller->ensure_child_is_waiting();
-
-        EXPECT_EQ(compositor_buffer, client_buffer);
-
-        compositor_controller->activate_waiting_child();
-        client_controller->activate_waiting_child();
-
-        main_test_loop_pause(sleep_duration);
-    }
-
-    terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
-    thread2.join();
-    thread1.join();
-}
-
-TEST_F(BufferSwapperStress, double_test_last_posted_stress)
-{
-    test_last_posted_stress(double_swapper);
 }
 
 } /* namespace mir */
