@@ -23,7 +23,6 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/thread/all.h"
 
-
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
@@ -76,11 +75,10 @@ public:
     std::thread thread1;
     std::thread thread2;
 
-    void BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper);
-    void ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper);
-    void test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_distinct_buffers(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_valid_buffers(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper, int requests);
     void test_last_posted(std::shared_ptr<mc::BufferSwapper> swapper);
-    void test_last_posted_stress(std::shared_ptr<mc::BufferSwapper> swapper);
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
@@ -116,17 +114,11 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
         if (synchronizer->child_enter_wait()) return;
         std::this_thread::yield();
     }
-
 }
-
-//using mir::ThreadFixture;
-using mir::main_test_loop_pause;
-using mir::client_request_loop;
-using mir::compositor_grab_loop;
 
 /* test that the compositor and the client are never in ownership of the same
    buffer */
-void BufferSwapperStress::BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper)
+void BufferSwapperStress::test_distinct_buffers(std::shared_ptr<mc::BufferSwapper> swapper)
 {
     thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
     thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
@@ -152,15 +144,15 @@ void BufferSwapperStress::BufferSwapperStressDistinctHelper(std::shared_ptr<mc::
 
 TEST_F(BufferSwapperStress, distinct_double_buffers_in_client_and_compositor)
 {
-    BufferSwapperStressDistinctHelper(double_swapper);
+    test_distinct_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, distinct_triple_buffers_in_client_and_compositor)
 {
-    BufferSwapperStressDistinctHelper(triple_swapper);
+    test_distinct_buffers(triple_swapper);
 }
 
 /* test that we never get an invalid buffer */
-void BufferSwapperStress::ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper)
+void BufferSwapperStress::test_valid_buffers(std::shared_ptr<mc::BufferSwapper> swapper)
 {
     thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
     thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
@@ -189,25 +181,27 @@ void BufferSwapperStress::ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> sw
 }
 TEST_F(BufferSwapperStress, double_ensure_valid_buffers)
 {
-    ValidBufferCheck(double_swapper);
+    test_valid_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
 {
-    ValidBufferCheck(triple_swapper);
+    test_valid_buffers(triple_swapper);
 }
 
-
-void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+void client_will_wait(std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
-                            mc::Buffer** buf )
+                            mc::Buffer** buf, int number_of_requests)
 {
     *buf = swapper->client_acquire();
     swapper->client_release(*buf);
 
+    for(auto i=0; i < number_of_requests; i++)
+    {
+        auto tmp = swapper->client_acquire();
+        swapper->client_release(tmp);
+    }
+
     synchronizer->child_enter_wait();
-
-    *buf = swapper->client_acquire();
-
     synchronizer->child_enter_wait();
 }
 
@@ -221,28 +215,23 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
     swapper->compositor_release(*buf);
 
     synchronizer->child_enter_wait();
-    synchronizer->child_enter_wait();
 }
 
-void BufferSwapperStress::test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper)
+void BufferSwapperStress::test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper, int number_of_requests)
 {
     mc::Buffer* first_dequeued;
 
     thread1 = std::thread(compositor_grab, compositor_controller, swapper, &compositor_buffer);
-    thread2 = std::thread(client_will_wait,  client_controller, swapper, &client_buffer);
+    thread2 = std::thread(client_will_wait,  client_controller, swapper, &client_buffer, number_of_requests);
 
     compositor_controller->ensure_child_is_waiting();
+
     client_controller->ensure_child_is_waiting();
-
     first_dequeued = client_buffer;
-
     client_controller->activate_waiting_child();
 
-    /* activate grab */
     compositor_controller->activate_waiting_child();
     compositor_controller->ensure_child_is_waiting();
-    compositor_controller->activate_waiting_child();
-
     EXPECT_EQ(first_dequeued, compositor_buffer);
 
     terminate_child_thread(client_controller);
@@ -253,17 +242,13 @@ void BufferSwapperStress::test_wait_situation(std::shared_ptr<mc::BufferSwapper>
 
 TEST_F(BufferSwapperStress, double_test_wait_situation)
 {
-    test_wait_situation(double_swapper);
+    test_wait_situation(double_swapper, 1);
 }
 TEST_F(BufferSwapperStress, triple_test_wait_situation)
 {
-    test_wait_situation(triple_swapper);
+    test_wait_situation(triple_swapper, 2);
 }
 
-} /* namespace mir */
-
-namespace mir
-{
 void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -305,10 +290,8 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
 
         std::this_thread::yield();
     }
-
 }
 
-/* test normal situation, with moderate amount of waits */
 void BufferSwapperStress::test_last_posted(std::shared_ptr<mc::BufferSwapper> swapper)
 {
     thread1 = std::thread(compositor_grab_loop_with_wait, compositor_controller, swapper, &compositor_buffer);
@@ -338,4 +321,4 @@ TEST_F(BufferSwapperStress, double_test_last_posted)
     test_last_posted(double_swapper);
 }
 
-} /* namespace mir */
+}
