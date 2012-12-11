@@ -321,8 +321,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(rd, texture())
-        .WillOnce(Return(gr_ptr));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
@@ -333,5 +331,5 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(rd);
+    renderer->render(rd, gr_ptr);
 }

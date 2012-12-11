@@ -339,10 +339,13 @@ TEST(SurfaceStack,
         mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
 
         EXPECT_CALL(mock_renderable_a, texture())
+            .Times(1)
             .WillOnce(Return(resource_a));
         EXPECT_CALL(mock_renderable_b, texture())
+            .Times(1)
             .WillOnce(Return(resource_a));
         EXPECT_CALL(mock_renderable_c, texture())
+            .Times(1)
             .WillOnce(Return(resource_a));
 
         use_count_a_before = resource_a.use_count();
@@ -363,54 +366,22 @@ TEST(SurfaceStack,
     EXPECT_EQ(resource_c.use_count(), use_count_c_before);
 }
 
-#if 0
 TEST(SurfaceStack,
     render_operator_submits_resource_it_saves_to_renderer)
 {
-    MockRenderer mock_renderer;
-    Renderable mock_renderable a;
+    using namespace testing;
 
-    Renderoperator op(mock_renderer);
+    MockSurfaceRenderer mock_renderer;
+    mtd::MockRenderable mock_renderable;
+    auto resource = std::make_shared<mtd::MockGraphicRegion>();
 
-    EXPECT_CALL(mock_renderable_a, texture()
-        .WillOnce(Return(value_1);
+    mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
 
-    EXPECT_CALL(mock_renderable, render(_,value_1));
+    EXPECT_CALL(mock_renderable, texture())
+        .WillOnce(Return(resource));
 
-    op(mock_renderable_a);
+    EXPECT_CALL(mock_renderable, render(_,resource))
+        .Times(1);
+
+    rendering_operator(mock_renderable);
 }
-#endif
-/*
-    using namespace ::testing;
-
-    MockBufferBundleFactory buffer_bundle_factory;
-    EXPECT_CALL(
-        buffer_bundle_factory,
-        create_buffer_bundle(_)).Times(AtLeast(1));
-     
-    ms::SurfaceStack stack(&buffer_bundle_factory);
-
-    auto surface1 = stack.create_surface(
-        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface2 = stack.create_surface(
-        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface3 = stack.create_surface(
-        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-
-    MockSurfaceRenderer renderer;
-    MockFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator(&renderer);
-    
-    ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_)).Times(3);
-    EXPECT_CALL(filter, filter(_)).Times(3);
-
-    {
-      InSequence seq;
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface3.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface2.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface1.lock()))).Times(1);
-    }
-
-    stack.for_each_if(filter, renderable_operator);
-*/
