@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+class GraphicRegion;
+}
 namespace graphics
 {
 
@@ -33,7 +37,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual void render(Renderable& renderable) = 0;
+    virtual void render(Renderable& renderable, const std::shared_ptr<compositor::GraphicRegion>& texture_resource) = 0;
 
 protected:
     Renderer() = default;
