@@ -24,7 +24,7 @@
 
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
@@ -37,6 +37,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mir::input::synthesis;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
@@ -82,7 +83,7 @@ class FakeEventHubSetup : public testing::Test
     }
 
   protected:
-    MockEventFilter event_filter;
+    mtd::MockEventFilter event_filter;
     droidinput::sp<mia::FakeEventHub> event_hub;
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     droidinput::sp<droidinput::InputReaderPolicyInterface> reader_policy;

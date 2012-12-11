@@ -24,12 +24,15 @@
 
 namespace mir
 {
-namespace compositor
+namespace test
 {
-struct MockSwapper : public BufferSwapper
+namespace doubles
+{
+
+struct MockSwapper : public compositor::BufferSwapper
 {
 public:
-    MockSwapper(std::shared_ptr<Buffer> buffer)
+    MockSwapper(std::shared_ptr<compositor::Buffer> buffer)
         : default_buffer(buffer)
     {
         using namespace testing;
@@ -40,15 +43,17 @@ public:
         .WillByDefault(Return(default_buffer.get()));
     };
 
-    MOCK_METHOD0(client_acquire,   Buffer*(void));
-    MOCK_METHOD1(client_release, void(Buffer*));
-    MOCK_METHOD0(compositor_acquire,  Buffer*(void));
-    MOCK_METHOD1(compositor_release,   void(Buffer*));
+    MOCK_METHOD0(client_acquire,   compositor::Buffer*(void));
+    MOCK_METHOD1(client_release, void(compositor::Buffer*));
+    MOCK_METHOD0(compositor_acquire,  compositor::Buffer*(void));
+    MOCK_METHOD1(compositor_release,   void(compositor::Buffer*));
     MOCK_METHOD0(shutdown, void());
 
 private:
-    std::shared_ptr<Buffer> default_buffer;
+    std::shared_ptr<compositor::Buffer> default_buffer;
 };
+
+}
 }
 }
 

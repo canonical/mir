@@ -13,28 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_MOCK_DISPLAY_H_
-#define MIR_COMPOSITOR_MOCK_DISPLAY_H_
+#ifndef MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
+#define MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
 
-#include "mir/graphics/display.h"
 #include <gmock/gmock.h>
+#include "mir_client/android/android_registrar.h"
 
 namespace mir
 {
-namespace graphics
+namespace geometry
 {
-
-struct MockDisplay : public Display
+class Rectangle;
+}
+namespace test
 {
-public:
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
-    MOCK_METHOD0(clear, void ());
-    MOCK_METHOD0(post_update, bool ());
+namespace doubles
+{
+struct MockAndroidRegistrar : public client::android::AndroidRegistrar
+{
+    MOCK_METHOD1(register_buffer,   void(const native_handle_t*));
+    MOCK_METHOD1(unregister_buffer, void(const native_handle_t*));
+    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geometry::Rectangle));
 };
+}
+}
+}
 
-}
-}
-#endif /* MIR_COMPOSITOR_MOCK_DISPLAY_H_ */
+#endif /* MIR_TEST_MOCK_ANDROID_REGISTRAR_H_ */

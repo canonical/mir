@@ -20,7 +20,7 @@
 #include "src/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
 
@@ -29,13 +29,14 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace mtd = mir::test::doubles;
 
 TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 {
     using namespace ::testing;
     droidinput::KeyEvent ev;
-    mir::MockEventFilter filter;
-    mia::EventFilterDispatcherPolicy policy(std::shared_ptr<mir::MockEventFilter>(&filter, mir::EmptyDeleter()));
+    mtd::MockEventFilter filter;
+    mia::EventFilterDispatcherPolicy policy(std::shared_ptr<mtd::MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
     
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));

@@ -28,6 +28,9 @@ namespace mir
 {
 namespace test
 {
+namespace doubles
+{
+
 class MockLogger : public mir::client::Logger
 {
     mir::client::ConsoleLogger real_logger;
@@ -52,5 +55,6 @@ public:
 
 }
 }
+} // namespace mir
 
 #endif /* MIR_TEST_MOCK_LOGGER_H_ */

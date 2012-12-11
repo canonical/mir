@@ -18,7 +18,7 @@
 
 #include "src/input/event_filter_chain.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 
 #include <androidfw/Input.h>
 
@@ -26,11 +26,12 @@
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
+namespace mtd = mir::test::doubles;
 
 TEST(EventFilterChain, offers_events_to_filters)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<mir::MockEventFilter>();
+    auto filter = std::make_shared<mtd::MockEventFilter>();
     MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter};
@@ -43,7 +44,7 @@ TEST(EventFilterChain, offers_events_to_filters)
 TEST(EventFilterChain, accepting_event_halts_emission)
 {
     using namespace ::testing;
-    auto filter = std::make_shared<mir::MockEventFilter>();
+    auto filter = std::make_shared<mtd::MockEventFilter>();
     MirEvent ev;
 
     mi::EventFilterChain filter_chain{filter, filter, filter};

@@ -18,8 +18,8 @@
 
 #include "src/graphics/android/android_alloc_adaptor.h"
 
-#include "mir_test/mock_android_alloc_device.h"
-#include "mir_test/mock_alloc_adaptor.h"
+#include "mir_test_doubles/mock_android_alloc_device.h"
+#include "mir_test_doubles/mock_alloc_adaptor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,6 +28,7 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 
 class AdaptorICSTest : public ::testing::Test
@@ -36,7 +37,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_alloc_device = std::shared_ptr<MockAllocDevice> (new MockAllocDevice());
+        mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
         native_handle = mock_alloc_device->buffer_handle; 
 
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
@@ -55,7 +56,7 @@ protected:
     }
 
     native_handle_t* native_handle;
-    std::shared_ptr<MockAllocDevice> mock_alloc_device;
+    std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 
     geom::PixelFormat pf;

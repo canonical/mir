@@ -13,31 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_SURFACE_ORGANISER_H_
-#define MIR_TEST_MOCK_SURFACE_ORGANISER_H_
+#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
+#define MIR_TEST_MOCK_CLIENT_SURFACE_
 
-#include "mir/frontend/surface_organiser.h"
-
+#include "mir_client/mir_client_surface.h"
 #include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace mir
 {
-namespace frontend
+namespace test
+{
+namespace doubles
 {
 
-struct MockSurfaceOrganiser : public SurfaceOrganiser
+struct MockClientSurface : public client::ClientSurface
 {
-    MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<surfaces::Surface> const&));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
 };
 
 }
 }
-
-#endif // MIR_TEST_MOCK_SURFACE_ORGANISER_H_
+}
+#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */

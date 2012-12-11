@@ -18,8 +18,8 @@
 
 #include "src/graphics/android/android_buffer_handle_default.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir_test/mock_alloc_adaptor.h"
-#include "mir_test/mock_android_alloc_device.h"
+#include "mir_test_doubles/mock_alloc_adaptor.h"
+#include "mir_test_doubles/mock_android_alloc_device.h"
 
 #include <memory>
 #include <gtest/gtest.h>
@@ -29,13 +29,14 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class AdaptorNativeWinProduction : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        mock_alloc_device = std::make_shared<MockAllocDevice>();
+        mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
 
         /* set up common defaults */
         pf = geom::PixelFormat::rgba_8888;
@@ -53,7 +54,7 @@ protected:
     ANativeWindowBuffer anwb;
 
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
-    std::shared_ptr<MockAllocDevice> mock_alloc_device;
+    std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
 
     geom::Size size;
     geom::Stride stride;

@@ -19,8 +19,8 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 
-#include "mir_test/mock_swapper.h"
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_swapper.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
@@ -28,6 +28,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 struct MockIDGenerator: public mc::BufferIDUniqueGenerator
 {
@@ -54,19 +55,19 @@ protected:
         stride = geom::Stride{1024};
         pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
 
-        mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
-        second_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
-        third_mock_buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pixel_format);
-        mock_swapper = std::unique_ptr<NiceMock<mc::MockSwapper>>(
-            new NiceMock<mc::MockSwapper>(mock_buffer));
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
+        second_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
+        third_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
+        mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
+            new NiceMock<mtd::MockSwapper>(mock_buffer));
         
         mock_generator = std::make_shared<NiceMock<MockIDGenerator>>();
     }
 
-    std::shared_ptr<testing::NiceMock<mc::MockBuffer>> mock_buffer;
-    std::shared_ptr<testing::NiceMock<mc::MockBuffer>> second_mock_buffer;
-    std::shared_ptr<testing::NiceMock<mc::MockBuffer>> third_mock_buffer;
-    std::unique_ptr<testing::NiceMock<mc::MockSwapper>> mock_swapper;
+    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
+    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> second_mock_buffer;
+    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> third_mock_buffer;
+    std::unique_ptr<testing::NiceMock<mtd::MockSwapper>> mock_swapper;
     geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;
