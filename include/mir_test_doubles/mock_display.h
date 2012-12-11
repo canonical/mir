@@ -16,28 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_BUFFER_BUNDLE_H_
-#define MIR_TEST_MOCK_BUFFER_BUNDLE_H_
+#ifndef MIR_COMPOSITOR_MOCK_DISPLAY_H_
+#define MIR_COMPOSITOR_MOCK_DISPLAY_H_
 
-#include "mir/compositor/buffer_bundle.h"
-
+#include "mir/graphics/display.h"
 #include <gmock/gmock.h>
 
 namespace mir
 {
-namespace compositor
+namespace test
+{
+namespace doubles
 {
 
-struct MockBufferBundle : public BufferBundle
+struct MockDisplay : public graphics::Display
 {
-    MOCK_METHOD0(secure_client_buffer, std::shared_ptr<GraphicBufferClientResource>());
-    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<GraphicRegion>());
-
-    MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
-    MOCK_METHOD0(bundle_size, geometry::Size());
-    MOCK_METHOD0(shutdown, void());
+public:
+    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
+    MOCK_METHOD0(clear, void ());
+    MOCK_METHOD0(post_update, bool ());
 };
 
 }
 }
-#endif /* MIR_TEST_MOCK_BUFFER_BUNDLE_H_ */
+}
+#endif /* MIR_COMPOSITOR_MOCK_DISPLAY_H_ */

@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -33,6 +33,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -57,8 +58,8 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    mc::MockBuffer mock_buffer{size, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
+    mtd::MockBuffer mock_buffer{size, stride, pixel_format};
+    std::shared_ptr<mtd::MockBuffer> default_buffer(
         &mock_buffer,
         mir::EmptyDeleter());
     MockBufferAllocationStrategy allocation_strategy;

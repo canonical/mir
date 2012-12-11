@@ -20,7 +20,7 @@
 #define MIR_TEST_TEST_PROTOBUF_SERVER_H_
 
 #include "mir_test/stub_server_tool.h"
-#include "mir_test/mock_ipc_factory.h"
+#include "mir_test_doubles/mock_ipc_factory.h"
 #include "mir/frontend/communicator.h"
 
 namespace mir
@@ -38,7 +38,7 @@ struct TestProtobufServer
         std::shared_ptr<frontend::ProtobufIpcFactory> const& factory);
 
     // "Server" side
-    std::shared_ptr<MockIpcFactory> factory;
+    std::shared_ptr<doubles::MockIpcFactory> factory;
     std::shared_ptr<frontend::Communicator> comm;
 };
 

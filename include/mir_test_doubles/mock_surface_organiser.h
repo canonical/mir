@@ -16,26 +16,31 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_TEST_MOCK_SURFACE_ORGANISER_H_
+#define MIR_TEST_MOCK_SURFACE_ORGANISER_H_
 
-#include "mir/input/input_manager.h"
+#include "mir/frontend/surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-struct MockInputManager : public InputManager
+struct MockSurfaceOrganiser : public frontend::SurfaceOrganiser
 {
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+    MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
+    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_METHOD1(hide_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_METHOD1(show_surface, void(std::weak_ptr<surfaces::Surface> const&));
 };
 
 }
 }
+}
 
-#endif // MIR_TEST_MOCK_INPUT_MANAGER_H
+#endif // MIR_TEST_MOCK_SURFACE_ORGANISER_H_

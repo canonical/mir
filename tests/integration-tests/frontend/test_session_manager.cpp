@@ -32,37 +32,38 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
 
-struct MockFocusMechanism: public mf::FocusSetter
+struct MockFocusSetter: public mf::FocusSetter
 {
   MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
 };
 
 }
 
-TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
+TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(container);
-    MockFocusMechanism mechanism;
+    MockFocusSetter focus_changer;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
                                        container,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
     
-    EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
+    EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("Microsoft Access");
@@ -70,9 +71,9 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     
     {
       InSequence seq;
-      EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
-      EXPECT_CALL(mechanism, set_focus_to(session2)).Times(1);
-      EXPECT_CALL(mechanism, set_focus_to(session3)).Times(1);
+      EXPECT_CALL(focus_changer, set_focus_to(session1)).Times(1);
+      EXPECT_CALL(focus_changer, set_focus_to(session2)).Times(1);
+      EXPECT_CALL(focus_changer, set_focus_to(session3)).Times(1);
     }
     
     session_manager.focus_next();
@@ -80,21 +81,21 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, cycle_focus)
     session_manager.focus_next();
 }
 
-TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
+TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    mf::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceOrganiser organiser;
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer());
     mf::RegistrationOrderFocusSequence sequence(model);
-    MockFocusMechanism mechanism;
+    MockFocusSetter focus_changer;
     std::shared_ptr<mf::Session> new_session;
 
     mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        model,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+                                       std::shared_ptr<mf::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
 
-    EXPECT_CALL(mechanism, set_focus_to(_)).Times(3);
+    EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("Microsoft Access");
@@ -102,8 +103,8 @@ TEST(TestApplicationManagerAndFocusSelectionStrategy, closing_applications_trans
 
     {
       InSequence seq;
-      EXPECT_CALL(mechanism, set_focus_to(session2)).Times(1);
-      EXPECT_CALL(mechanism, set_focus_to(session1)).Times(1);
+      EXPECT_CALL(focus_changer, set_focus_to(session2)).Times(1);
+      EXPECT_CALL(focus_changer, set_focus_to(session1)).Times(1);
     }
 
     session_manager.close_session(session3);

@@ -13,27 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
-#define MIR_TEST_MOCK_CLIENT_SURFACE_
+#ifndef MIR_TEST_MOCK_BUFFER_INITIALIZER_H_
+#define MIR_TEST_MOCK_BUFFER_INITIALIZER_H_
 
-#include "mir_client/mir_client_surface.h"
-#include <gmock/gmock.h>
+#include "mir/graphics/buffer_initializer.h"
 
 namespace mir
 {
 namespace test
 {
-
-struct MockClientSurface : public client::ClientSurface
+namespace doubles
 {
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
-    MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback, void*));
+
+class MockBufferInitializer : public graphics::BufferInitializer
+{
+public:
+    MOCK_METHOD1(operator_call, void(compositor::Buffer& buffer));
+
+    void operator()(compositor::Buffer& buffer)
+    {
+        operator_call(buffer);
+    }
 };
 
 }
 }
-#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */
+} // namespace mir
+
+#endif /* MIR_TEST_MOCK_BUFFER_INITIALIZER_H_ */
+

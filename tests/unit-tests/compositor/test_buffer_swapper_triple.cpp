@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer_swapper_multi.h"
 
@@ -26,7 +26,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-
+namespace mtd = mir::test::doubles;
 namespace
 {
 geom::Size size {geom::Width{1024}, geom::Height{768}};
@@ -38,9 +38,9 @@ struct BufferSwapperTriple : testing::Test
 {
     BufferSwapperTriple()
     {
-        std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_c(new mc::MockBuffer(size, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
+        std::unique_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
