@@ -79,6 +79,8 @@ public:
     void BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper);
     void ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper);
     void test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_last_posted(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_last_posted_stress(std::shared_ptr<mc::BufferSwapper> swapper);
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
@@ -259,29 +261,6 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
 }
 
 } /* namespace mir */
-#if 0
-/* test a simple wait situation due to no available buffers */
-TEST_F(BufferSwapperStress, test_wait_situation)
-{
-    ThreadFixture fix(compositor_grab, client_will_wait);
-
-    mc::Buffer* first_dequeued;
-
-    fix.compositor_controller->ensure_child_is_waiting();
-    fix.client_controller->ensure_child_is_waiting();
-
-    first_dequeued = fix.client_buffer;
-
-    fix.client_controller->activate_waiting_child();
-
-    /* activate grab */
-    fix.compositor_controller->activate_waiting_child();
-    fix.compositor_controller->ensure_child_is_waiting();
-    fix.compositor_controller->activate_waiting_child();
-
-    EXPECT_EQ(first_dequeued, fix.compositor_buffer);
-
-}
 
 namespace mir
 {
@@ -316,8 +295,6 @@ void client_request_loop_stress_wait( std::shared_ptr<mt::SynchronizerSpawned> s
         *buf = swapper->client_acquire();
         swapper->client_release(*buf);
 
-        /* two dequeues in quick succession like this will wait very often
-           hence the 'stress' */
         *buf = swapper->client_acquire();
         swapper->client_release(*buf);
 
@@ -342,54 +319,75 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
         swapper->compositor_release(*buf);
 
         if (wait_request)
+        {
+            *buf = swapper->compositor_acquire();
             if (synchronizer->child_enter_wait()) return;
+            swapper->compositor_release(*buf);
+        }
 
         std::this_thread::yield();
     }
 
 }
-} /* namespace mir */
-
-using mir::client_request_loop_with_wait;
-using mir::client_request_loop_stress_wait;
-using mir::compositor_grab_loop_with_wait;
 
 /* test normal situation, with moderate amount of waits */
-TEST(BufferSwapperStress, test_last_posted)
+void BufferSwapperStress::test_last_posted(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    const int num_iterations = 500;
-    ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_with_wait);
+    thread1 = std::thread(compositor_grab_loop_with_wait, compositor_controller, swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop_with_wait,  client_controller, swapper, &client_buffer);
+
     for(int i=0; i<  num_iterations; i++)
     {
-        fix.client_controller->ensure_child_is_waiting();
-        fix.compositor_controller->ensure_child_is_waiting();
+        client_controller->ensure_child_is_waiting();
+        compositor_controller->ensure_child_is_waiting();
 
-        EXPECT_EQ(fix.compositor_buffer, fix.client_buffer);
+        EXPECT_EQ(compositor_buffer, client_buffer);
 
-        fix.compositor_controller->activate_waiting_child();
-        fix.client_controller->activate_waiting_child();
+        compositor_controller->activate_waiting_child();
+        client_controller->activate_waiting_child();
 
-        main_test_loop_pause(fix.sleep_duration);
+        main_test_loop_pause(sleep_duration);
     }
 
+    terminate_child_thread(client_controller);
+    terminate_child_thread(compositor_controller); 
+    thread2.join();
+    thread1.join();
+}
+
+TEST_F(BufferSwapperStress, double_test_last_posted)
+{
+    test_last_posted(double_swapper);
 }
 
 /* test situation where we'd wait on resoures more than normal, with moderate amount of waits */
-TEST(BufferSwapperStress, test_last_posted_stress_client_wait)
+void BufferSwapperStress::test_last_posted_stress(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    const int num_iterations = 500;
-    ThreadFixture fix(compositor_grab_loop_with_wait, client_request_loop_stress_wait);
+    thread1 = std::thread(compositor_grab_loop_with_wait, compositor_controller, swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop_stress_wait,  client_controller, swapper, &client_buffer);
+
     for(int i=0; i<  num_iterations; i++)
     {
-        fix.client_controller->ensure_child_is_waiting();
-        fix.compositor_controller->ensure_child_is_waiting();
+        client_controller->ensure_child_is_waiting();
+        compositor_controller->ensure_child_is_waiting();
 
-        EXPECT_EQ(fix.compositor_buffer, fix.client_buffer);
+        EXPECT_EQ(compositor_buffer, client_buffer);
 
-        fix.compositor_controller->activate_waiting_child();
-        fix.client_controller->activate_waiting_child();
+        compositor_controller->activate_waiting_child();
+        client_controller->activate_waiting_child();
 
-        main_test_loop_pause(fix.sleep_duration);
+        main_test_loop_pause(sleep_duration);
     }
+
+    terminate_child_thread(client_controller);
+    terminate_child_thread(compositor_controller); 
+    thread2.join();
+    thread1.join();
 }
-#endif
+
+TEST_F(BufferSwapperStress, double_test_last_posted_stress)
+{
+    test_last_posted_stress(double_swapper);
+}
+
+} /* namespace mir */
