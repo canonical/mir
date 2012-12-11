@@ -55,6 +55,7 @@
 
 bool mir::client::detect_server(const std::string&, std::chrono::milliseconds const& timeout)
 {
+//    android::defaultServiceManager();
     std::this_thread::sleep_for(timeout/8);
     return true;
 }
