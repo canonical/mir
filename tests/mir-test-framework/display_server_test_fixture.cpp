@@ -68,6 +68,7 @@ bool BespokeDisplayServerTestFixture::shutdown_server_process()
     // problem: sometimes the server exits normally with status
     // EXIT_SUCCESS but the test process sees TerminationReason::unknown
     auto const& result = process_manager.shutdown_server_process();
+    std::cerr << "DEBUG shutdown_server_process() result=" << result << std::endl;
     return result.succeeded()
         || result.reason == process::TerminationReason::unknown;
 }

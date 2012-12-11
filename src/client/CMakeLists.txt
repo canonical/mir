@@ -54,11 +54,13 @@ set(
 
 if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND CLIENT_SOURCES
+  socket_detect_server.cpp
   mir_socket_rpc_channel.cpp
   make_socket_rpc_channel.cpp
 )
 elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND CLIENT_SOURCES
+  binder_detect_server.cpp
   mir_binder_rpc_channel.cpp
   make_binder_rpc_channel.cpp
 )

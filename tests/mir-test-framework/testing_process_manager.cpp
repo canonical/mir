@@ -24,6 +24,8 @@
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
 
+#include "mir_client/detect_server.h"
+
 #include <boost/asio.hpp>
 
 #include <gmock/gmock.h>
@@ -50,7 +52,7 @@ namespace mir_test_framework
 {
 void startup_pause()
 {
-    if (!detect_server(test_socket_file(), std::chrono::milliseconds(2000)))
+    if (!mir::client::detect_server(test_socket_file(), std::chrono::milliseconds(2000)))
         throw std::runtime_error("Failed to find server");
 }
 }
@@ -259,40 +261,3 @@ void mtf::TestingProcessManager::os_signal_handler(int signal)
         break;
     }
 }
-
-bool mtf::detect_server(
-        const std::string& socket_file,
-        std::chrono::milliseconds const& timeout)
-{
-    auto limit = std::chrono::system_clock::now() + timeout;
-
-    bool error = false;
-    struct stat file_status;
-
-    do
-    {
-      if (error) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(0));
-      }
-      error = stat(socket_file.c_str(), &file_status);
-    }
-    while (error && std::chrono::system_clock::now() < limit);
-
-    struct sockaddr_un remote; 
-    auto sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
-    remote.sun_family = AF_UNIX;
-    strcpy(remote.sun_path, socket_file.c_str());
-    auto len = strlen(remote.sun_path) + sizeof(remote.sun_family);
-
-    do
-    {
-      std::this_thread::sleep_for(std::chrono::milliseconds(0));
-    }
-    while ((connect(sockfd, (struct sockaddr *)&remote, len) == -1)
-            && (std::chrono::system_clock::now() < limit));
-
-    close(sockfd);
-
-    return !error;
-}
-
