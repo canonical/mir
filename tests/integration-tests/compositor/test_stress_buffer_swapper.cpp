@@ -78,6 +78,7 @@ public:
 
     void BufferSwapperStressDistinctHelper(std::shared_ptr<mc::BufferSwapper> swapper);
     void ValidBufferCheck(std::shared_ptr<mc::BufferSwapper> swapper);
+    void test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper);
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
@@ -194,9 +195,6 @@ TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
 }
 
 
-
-} /* namespace mir */
-#if 0
 void client_will_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
@@ -224,8 +222,46 @@ void compositor_grab( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
     synchronizer->child_enter_wait();
 }
 
+void BufferSwapperStress::test_wait_situation(std::shared_ptr<mc::BufferSwapper> swapper)
+{
+    mc::Buffer* first_dequeued;
+
+    thread1 = std::thread(compositor_grab, compositor_controller, swapper, &compositor_buffer);
+    thread2 = std::thread(client_will_wait,  client_controller, swapper, &client_buffer);
+
+    compositor_controller->ensure_child_is_waiting();
+    client_controller->ensure_child_is_waiting();
+
+    first_dequeued = client_buffer;
+
+    client_controller->activate_waiting_child();
+
+    /* activate grab */
+    compositor_controller->activate_waiting_child();
+    compositor_controller->ensure_child_is_waiting();
+    compositor_controller->activate_waiting_child();
+
+    EXPECT_EQ(first_dequeued, compositor_buffer);
+
+    terminate_child_thread(client_controller);
+    terminate_child_thread(compositor_controller); 
+    thread2.join();
+    thread1.join();
+}
+
+TEST_F(BufferSwapperStress, double_test_wait_situation)
+{
+    test_wait_situation(double_swapper);
+}
+TEST_F(BufferSwapperStress, triple_test_wait_situation)
+{
+    test_wait_situation(triple_swapper);
+}
+
+} /* namespace mir */
+#if 0
 /* test a simple wait situation due to no available buffers */
-TEST(BufferSwapperStress, test_wait)
+TEST_F(BufferSwapperStress, test_wait_situation)
 {
     ThreadFixture fix(compositor_grab, client_will_wait);
 
