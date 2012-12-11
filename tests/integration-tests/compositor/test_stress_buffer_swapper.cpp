@@ -33,23 +33,29 @@ struct BufferSwapperStress : public ::testing::Test
 {
 public:
     BufferSwapperStress()
-     : sleep_duration(50)
-    {};
-    void SetUp()
+     : sleep_duration(50),
+       num_iterations(500)
+    {}
+
+    std::shared_ptr<mc::BufferSwapper> alloc_double_swapper()
     {
         geom::Size size{geom::Width{1024}, geom::Height{768}};
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
-
-        double_swapper = std::make_shared<mc::BufferSwapperMulti>(
+        return std::make_shared<mc::BufferSwapperMulti>(
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))));
-        triple_swapper = std::make_shared<mc::BufferSwapperMulti>(
+    }
+
+    std::shared_ptr<mc::BufferSwapper> alloc_triple_swapper()
+    {
+        geom::Size size{geom::Width{1024}, geom::Height{768}};
+        geom::Stride s {1024};
+        geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+        return std::make_shared<mc::BufferSwapperMulti>(
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))));
-
-        num_iterations = 500;
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)
@@ -59,17 +65,11 @@ public:
         controller.activate_waiting_child();
     }
 
-    std::shared_ptr<mc::BufferSwapper> double_swapper;
-    std::shared_ptr<mc::BufferSwapper> triple_swapper;
-
     mt::Synchronizer compositor_controller;
     mt::Synchronizer client_controller;
 
-    mc::Buffer *compositor_buffer;
-    mc::Buffer *client_buffer;
-
     std::chrono::microseconds const sleep_duration;
-    int num_iterations;
+    int const num_iterations;
 
     std::thread thread1;
     std::thread thread2;
@@ -120,6 +120,9 @@ void compositor_grab_loop( mc::Buffer*& out_buffer, mt::SynchronizerSpawned& syn
    buffer */
 void BufferSwapperStress::test_distinct_buffers(const std::shared_ptr<mc::BufferSwapper>& swapper)
 {
+    mc::Buffer *compositor_buffer;
+    mc::Buffer *client_buffer;
+
     thread1 = std::thread(compositor_grab_loop, std::ref(compositor_buffer), std::ref(compositor_controller), swapper);
     thread2 = std::thread(client_request_loop,  std::ref(client_buffer), std::ref(client_controller), swapper);
 
@@ -144,16 +147,21 @@ void BufferSwapperStress::test_distinct_buffers(const std::shared_ptr<mc::Buffer
 
 TEST_F(BufferSwapperStress, distinct_double_buffers_in_client_and_compositor)
 {
+    auto double_swapper = alloc_double_swapper();
     test_distinct_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, distinct_triple_buffers_in_client_and_compositor)
 {
+    auto triple_swapper = alloc_triple_swapper();
     test_distinct_buffers(triple_swapper);
 }
 
 /* test that we never get an invalid buffer */
 void BufferSwapperStress::test_valid_buffers(const std::shared_ptr<mc::BufferSwapper>& swapper)
 {
+    mc::Buffer *compositor_buffer;
+    mc::Buffer *client_buffer;
+
     thread1 = std::thread(compositor_grab_loop, std::ref(compositor_buffer), std::ref(compositor_controller), swapper);
     thread2 = std::thread(client_request_loop, std::ref(client_buffer), std::ref(client_controller), swapper);
 
@@ -181,10 +189,12 @@ void BufferSwapperStress::test_valid_buffers(const std::shared_ptr<mc::BufferSwa
 }
 TEST_F(BufferSwapperStress, double_ensure_valid_buffers)
 {
+    auto double_swapper = alloc_double_swapper();
     test_valid_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
 {
+    auto triple_swapper = alloc_triple_swapper();
     test_valid_buffers(triple_swapper);
 }
 
@@ -250,6 +260,7 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     std::vector<mc::Buffer*> client_buffers;
     std::vector<mc::Buffer*> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
+    auto double_swapper = alloc_double_swapper();
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
     
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
@@ -260,6 +271,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     std::vector<mc::Buffer*> client_buffers;
     std::vector<mc::Buffer*> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
+    auto triple_swapper = alloc_triple_swapper();
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
     
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
@@ -308,6 +320,9 @@ void compositor_grab_loop_with_wait(mc::Buffer*& out_buffer, mt::SynchronizerSpa
 
 void BufferSwapperStress::test_last_posted(const std::shared_ptr<mc::BufferSwapper>& swapper)
 {
+    mc::Buffer *compositor_buffer;
+    mc::Buffer *client_buffer;
+
     thread1 = std::thread(compositor_grab_loop_with_wait, std::ref(compositor_buffer), std::ref(compositor_controller), swapper);
     thread2 = std::thread(client_request_loop_with_wait,  std::ref(client_buffer), std::ref(client_controller), swapper);
 
@@ -332,6 +347,7 @@ void BufferSwapperStress::test_last_posted(const std::shared_ptr<mc::BufferSwapp
 
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
+    auto double_swapper = alloc_double_swapper();
     test_last_posted(double_swapper);
 }
 }
