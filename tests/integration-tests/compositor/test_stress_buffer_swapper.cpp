@@ -49,24 +49,21 @@ public:
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))),
                     std::move(std::unique_ptr<mc::Buffer>(new mc::MockBuffer(size, s, pf))));
 
-        compositor_controller = std::make_shared<mt::Synchronizer>();
-        client_controller = std::make_shared<mt::Synchronizer>();
-
         num_iterations = 500;
     }
 
-    void terminate_child_thread(std::shared_ptr<mt::Synchronizer> controller)
+    void terminate_child_thread(mt::Synchronizer& controller)
     {
-        controller->ensure_child_is_waiting();
-        controller->kill_thread();
-        controller->activate_waiting_child();
+        controller.ensure_child_is_waiting();
+        controller.kill_thread();
+        controller.activate_waiting_child();
     }
 
     std::shared_ptr<mc::BufferSwapper> double_swapper;
     std::shared_ptr<mc::BufferSwapper> triple_swapper;
 
-    std::shared_ptr<mt::Synchronizer> compositor_controller;
-    std::shared_ptr<mt::Synchronizer> client_controller;
+    mt::Synchronizer compositor_controller;
+    mt::Synchronizer client_controller;
 
     mc::Buffer *compositor_buffer;
     mc::Buffer *client_buffer;
@@ -90,33 +87,33 @@ void main_test_loop_pause(std::chrono::microseconds duration) {
     std::this_thread::sleep_for(duration);
 }
 
-void client_request_loop( std::shared_ptr<mt::Synchronizer> synchronizer,
+void client_request_loop( mt::SynchronizerSpawned& synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
     for(;;)
     {
         *buf = swapper->client_acquire();
-        if (synchronizer->child_enter_wait()) return;
+        if (synchronizer.child_enter_wait()) return;
 
         swapper->client_release(*buf);
-        if (synchronizer->child_enter_wait()) return;
+        if (synchronizer.child_enter_wait()) return;
 
         std::this_thread::yield();
     }
 }
 
-void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+void compositor_grab_loop( mt::SynchronizerSpawned& synchronizer,
                            std::shared_ptr<mc::BufferSwapper> swapper,
                            mc::Buffer** buf )
 {
     for(;;)
     {
         *buf = swapper->compositor_acquire();
-        if (synchronizer->child_enter_wait()) return;
+        if (synchronizer.child_enter_wait()) return;
 
         swapper->compositor_release(*buf);
-        if (synchronizer->child_enter_wait()) return;
+        if (synchronizer.child_enter_wait()) return;
         std::this_thread::yield();
     }
 }
@@ -125,18 +122,18 @@ void compositor_grab_loop( std::shared_ptr<mt::SynchronizerSpawned> synchronizer
    buffer */
 void BufferSwapperStress::test_distinct_buffers(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
-    thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
+    thread1 = std::thread(compositor_grab_loop, std::ref(compositor_controller), swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop,  std::ref(client_controller), swapper, &client_buffer);
 
     for(int i=0; i<  num_iterations; i++)
     {
-        compositor_controller->ensure_child_is_waiting();
-        client_controller->ensure_child_is_waiting();
+        compositor_controller.ensure_child_is_waiting();
+        client_controller.ensure_child_is_waiting();
 
         EXPECT_NE(compositor_buffer, client_buffer);
 
-        compositor_controller->activate_waiting_child();
-        client_controller->activate_waiting_child();
+        compositor_controller.activate_waiting_child();
+        client_controller.activate_waiting_child();
 
         main_test_loop_pause(sleep_duration);
     }
@@ -159,13 +156,13 @@ TEST_F(BufferSwapperStress, distinct_triple_buffers_in_client_and_compositor)
 /* test that we never get an invalid buffer */
 void BufferSwapperStress::test_valid_buffers(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    thread1 = std::thread(compositor_grab_loop, compositor_controller, swapper, &compositor_buffer);
-    thread2 = std::thread(client_request_loop,  client_controller, swapper, &client_buffer);
+    thread1 = std::thread(compositor_grab_loop, std::ref(compositor_controller), swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop, std::ref(client_controller), swapper, &client_buffer);
 
     for(int i=0; i< num_iterations; i++)
     {
-        compositor_controller->ensure_child_is_waiting();
-        client_controller->ensure_child_is_waiting();
+        compositor_controller.ensure_child_is_waiting();
+        client_controller.ensure_child_is_waiting();
 
         if (i > 1)
         {
@@ -173,8 +170,8 @@ void BufferSwapperStress::test_valid_buffers(std::shared_ptr<mc::BufferSwapper> 
             EXPECT_TRUE((client_buffer != NULL));
         }
 
-        compositor_controller->activate_waiting_child();
-        client_controller->activate_waiting_child();
+        compositor_controller.activate_waiting_child();
+        client_controller.activate_waiting_child();
 
         main_test_loop_pause(sleep_duration);
     }
@@ -194,7 +191,7 @@ TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
 }
 
 void client_will_wait(std::vector<mc::Buffer*>& buffers,
-                      std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+                      mt::SynchronizerSpawned& synchronizer,
                       std::shared_ptr<mc::BufferSwapper> swapper,
                       int number_of_requests_to_make)
 {
@@ -206,21 +203,21 @@ void client_will_wait(std::vector<mc::Buffer*>& buffers,
     }
 
     ASSERT_EQ(buffers.size(), (unsigned int) number_of_requests_to_make);
-    synchronizer->child_enter_wait();
-    synchronizer->child_enter_wait();
+    synchronizer.child_enter_wait();
+    synchronizer.child_enter_wait();
 }
 
 void compositor_grab(std::vector<mc::Buffer*>& buffers,
-                     std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+                     mt::SynchronizerSpawned& synchronizer,
                      std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    synchronizer->child_enter_wait();
+    synchronizer.child_enter_wait();
 
     auto buf = swapper->compositor_acquire();
     swapper->compositor_release(buf);
     buffers.push_back(buf);
 
-    synchronizer->child_enter_wait();
+    synchronizer.child_enter_wait();
 }
 
 void BufferSwapperStress::test_wait_situation(std::vector<mc::Buffer*>& compositor_output_buffers,
@@ -228,16 +225,18 @@ void BufferSwapperStress::test_wait_situation(std::vector<mc::Buffer*>& composit
                                               std::shared_ptr<mc::BufferSwapper> swapper,
                                               unsigned int number_of_client_requests_to_make)
 {
-    thread1 = std::thread(compositor_grab, std::ref(compositor_output_buffers), compositor_controller, swapper);
-    thread2 = std::thread(client_will_wait, std::ref(client_output_buffers), client_controller, swapper, number_of_client_requests_to_make);
+    thread1 = std::thread(compositor_grab, std::ref(compositor_output_buffers),
+                          std::ref(compositor_controller), swapper);
+    thread2 = std::thread(client_will_wait, std::ref(client_output_buffers),
+                          std::ref(client_controller), swapper, number_of_client_requests_to_make);
 
-    compositor_controller->ensure_child_is_waiting();
+    compositor_controller.ensure_child_is_waiting();
 
-    client_controller->ensure_child_is_waiting();
-    client_controller->activate_waiting_child();
+    client_controller.ensure_child_is_waiting();
+    client_controller.activate_waiting_child();
 
-    compositor_controller->activate_waiting_child();
-    compositor_controller->ensure_child_is_waiting();
+    compositor_controller.activate_waiting_child();
+    compositor_controller.ensure_child_is_waiting();
 
     terminate_child_thread(client_controller);
     terminate_child_thread(compositor_controller); 
@@ -268,33 +267,34 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
-void client_request_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+
+void client_request_loop_with_wait(mt::SynchronizerSpawned& synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
     bool wait_request = false;
     for(;;)
     {
-        wait_request = synchronizer->child_check_wait_request();
+        wait_request = synchronizer.child_check_wait_request();
 
         *buf = swapper->client_acquire();
         swapper->client_release(*buf);
 
         if (wait_request)
-            if (synchronizer->child_enter_wait()) return;
+            if (synchronizer.child_enter_wait()) return;
 
         std::this_thread::yield();
     }
 }
 
-void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> synchronizer,
+void compositor_grab_loop_with_wait(mt::SynchronizerSpawned& synchronizer,
                             std::shared_ptr<mc::BufferSwapper> swapper,
                             mc::Buffer** buf )
 {
     bool wait_request = false;
     for(;;)
     {
-        wait_request = synchronizer->child_check_wait_request();
+        wait_request = synchronizer.child_check_wait_request();
 
         *buf = swapper->compositor_acquire();
 
@@ -303,7 +303,7 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
         if (wait_request)
         {
             *buf = swapper->compositor_acquire();
-            if (synchronizer->child_enter_wait()) return;
+            if (synchronizer.child_enter_wait()) return;
             swapper->compositor_release(*buf);
         }
 
@@ -313,18 +313,18 @@ void compositor_grab_loop_with_wait( std::shared_ptr<mt::SynchronizerSpawned> sy
 
 void BufferSwapperStress::test_last_posted(std::shared_ptr<mc::BufferSwapper> swapper)
 {
-    thread1 = std::thread(compositor_grab_loop_with_wait, compositor_controller, swapper, &compositor_buffer);
-    thread2 = std::thread(client_request_loop_with_wait,  client_controller, swapper, &client_buffer);
+    thread1 = std::thread(compositor_grab_loop_with_wait, std::ref(compositor_controller), swapper, &compositor_buffer);
+    thread2 = std::thread(client_request_loop_with_wait,  std::ref(client_controller), swapper, &client_buffer);
 
     for(int i=0; i<  num_iterations; i++)
     {
-        client_controller->ensure_child_is_waiting();
-        compositor_controller->ensure_child_is_waiting();
+        client_controller.ensure_child_is_waiting();
+        compositor_controller.ensure_child_is_waiting();
 
         EXPECT_EQ(compositor_buffer, client_buffer);
 
-        compositor_controller->activate_waiting_child();
-        client_controller->activate_waiting_child();
+        compositor_controller.activate_waiting_child();
+        client_controller.activate_waiting_child();
 
         main_test_loop_pause(sleep_duration);
     }
@@ -339,5 +339,4 @@ TEST_F(BufferSwapperStress, double_test_last_posted)
 {
     test_last_posted(double_swapper);
 }
-
 }
