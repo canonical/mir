@@ -18,6 +18,7 @@
 
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper_double.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
@@ -35,10 +36,15 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
 }
 
 std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
-    BufferProperties const& buffer_properties)
+    BufferProperties const& requested_buffer_properties,
+    BufferProperties& actual_buffer_properties)
 {
+    auto buf1 = gr_allocator->alloc_buffer(requested_buffer_properties);
+    auto buf2 = gr_allocator->alloc_buffer(requested_buffer_properties);
+
+    actual_buffer_properties = BufferProperties{buf2->size(), buf2->pixel_format(),
+                                                requested_buffer_properties.usage};
+
     return std::unique_ptr<BufferSwapper>(
-        new BufferSwapperDouble(
-            gr_allocator->alloc_buffer(buffer_properties),
-            gr_allocator->alloc_buffer(buffer_properties)));
+        new BufferSwapperDouble(std::move(buf1), std::move(buf2)));
 }
