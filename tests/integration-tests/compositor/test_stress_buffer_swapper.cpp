@@ -32,6 +32,9 @@ namespace mir
 struct BufferSwapperStress : public ::testing::Test
 {
 public:
+    BufferSwapperStress()
+     : sleep_duration(50)
+    {};
     void SetUp()
     {
         geom::Size size{geom::Width{1024}, geom::Height{768}};
@@ -49,7 +52,6 @@ public:
         compositor_controller = std::make_shared<mt::Synchronizer>();
         client_controller = std::make_shared<mt::Synchronizer>();
 
-        sleep_duration = std::chrono::microseconds(50);
         num_iterations = 500;
     }
 
@@ -69,7 +71,7 @@ public:
     mc::Buffer *compositor_buffer;
     mc::Buffer *client_buffer;
 
-    std::chrono::microseconds sleep_duration;
+    std::chrono::microseconds const sleep_duration;
     int num_iterations;
 
     std::thread thread1;
