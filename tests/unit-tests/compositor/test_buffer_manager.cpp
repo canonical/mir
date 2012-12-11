@@ -43,7 +43,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&, mc::BufferProperties&));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
 };
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
@@ -68,7 +68,7 @@ TEST(buffer_manager, create_buffer)
             std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, mir::EmptyDeleter()));
 
 
-    EXPECT_CALL(allocation_strategy, create_swapper(buffer_properties,_))
+    EXPECT_CALL(allocation_strategy, create_swapper(_,buffer_properties))
         .Times(AtLeast(1));
 
     std::shared_ptr<mc::BufferBundle> bundle{

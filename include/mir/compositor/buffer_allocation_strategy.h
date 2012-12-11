@@ -40,8 +40,8 @@ class BufferAllocationStrategy
 public:
 
     virtual std::unique_ptr<BufferSwapper> create_swapper(
-        BufferProperties const& requested_buffer_properties,
-        BufferProperties& actual_buffer_properties) = 0;
+        BufferProperties& actual_buffer_properties,
+        BufferProperties const& requested_buffer_properties) = 0;
 
 protected:
     ~BufferAllocationStrategy() {}

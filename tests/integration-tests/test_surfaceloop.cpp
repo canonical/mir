@@ -70,10 +70,10 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 
     MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&, mc::BufferProperties&));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties const& requested,
-                                                         mc::BufferProperties& actual)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
+                                                         mc::BufferProperties const& requested)
     {
         actual = requested;
         return std::unique_ptr<mc::BufferSwapper>(
@@ -238,7 +238,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(buffer_properties,_)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_,buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }

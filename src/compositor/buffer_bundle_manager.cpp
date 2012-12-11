@@ -47,8 +47,8 @@ std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
 {
     BufferProperties actual_buffer_properties;
 
-    auto swapper(buffer_allocation_strategy->create_swapper(buffer_properties,
-                                                            actual_buffer_properties));
+    auto swapper(buffer_allocation_strategy->create_swapper(actual_buffer_properties,
+                                                            buffer_properties));
 
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>(); 
     return std::make_shared<mc::BufferBundleSurfaces>(

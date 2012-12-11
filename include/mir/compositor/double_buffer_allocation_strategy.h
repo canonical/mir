@@ -37,8 +37,8 @@ public:
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
 
     std::unique_ptr<BufferSwapper> create_swapper(
-        BufferProperties const& requested_buffer_properties,
-        BufferProperties& actual_buffer_properties);
+        BufferProperties& actual_buffer_properties,
+        BufferProperties const& requested_buffer_properties);
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;

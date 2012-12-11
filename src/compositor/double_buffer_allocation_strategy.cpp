@@ -36,8 +36,8 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
 }
 
 std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
-    BufferProperties const& requested_buffer_properties,
-    BufferProperties& actual_buffer_properties)
+    BufferProperties& actual_buffer_properties,
+    BufferProperties const& requested_buffer_properties)
 {
     auto buf1 = gr_allocator->alloc_buffer(requested_buffer_properties);
     auto buf2 = gr_allocator->alloc_buffer(requested_buffer_properties);
