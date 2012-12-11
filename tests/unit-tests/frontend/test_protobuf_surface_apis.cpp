@@ -26,7 +26,7 @@
 #include "mir_test/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -72,17 +72,17 @@ struct StubServerSurfaceCounter : public StubServerTool
 
 }
 
-struct ProtobufSocketCommunicatorCounter : public ::testing::Test
+struct ProtobufSurfaceCounter : public ::testing::Test
 {
     void SetUp()
     {
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
-        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
  
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
-        stub_server->comm.start();
+        stub_server->comm->start();
 
         stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
@@ -96,10 +96,10 @@ struct ProtobufSocketCommunicatorCounter : public ::testing::Test
     std::shared_ptr<mt::TestProtobufClient> stub_client;
     std::shared_ptr<mt::StubServerSurfaceCounter> stub_server_tool;
 
-    std::shared_ptr<mt::TestServer> stub_server;
+    std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
-TEST_F(ProtobufSocketCommunicatorCounter, server_creates_surface_on_create_surface_call)
+TEST_F(ProtobufSurfaceCounter, server_creates_surface_on_create_surface_call)
 {
     EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(1));
 
@@ -113,7 +113,7 @@ TEST_F(ProtobufSocketCommunicatorCounter, server_creates_surface_on_create_surfa
     stub_server_tool->expect_surface_count(1);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter, surface_count_is_zero_after_connection)
+TEST_F(ProtobufSurfaceCounter, surface_count_is_zero_after_connection)
 {
     using namespace testing;
     EXPECT_CALL(*stub_client, connect_done()).Times(AtLeast(0));
@@ -128,7 +128,7 @@ TEST_F(ProtobufSocketCommunicatorCounter, surface_count_is_zero_after_connection
     stub_server_tool->expect_surface_count(0);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter,
+TEST_F(ProtobufSurfaceCounter,
        each_create_surface_results_in_a_new_surface_being_created)
 {
     int const surface_count{5};
@@ -149,7 +149,7 @@ TEST_F(ProtobufSocketCommunicatorCounter,
     stub_server_tool->expect_surface_count(surface_count);
 }
 
-TEST_F(ProtobufSocketCommunicatorCounter,
+TEST_F(ProtobufSurfaceCounter,
        each_create_surface_results_in_a_new_surface_being_created_asynchronously)
 {
     int const surface_count{5};
@@ -180,11 +180,11 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
         using namespace testing;
 
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
-        stub_server = std::make_shared<mt::TestServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(AtLeast(0));
 
-        stub_server->comm.start();
+        stub_server->comm->start();
 
         for(int i=0; i<number_of_clients; i++)
         {
@@ -201,7 +201,7 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
     std::vector<std::shared_ptr<mt::TestProtobufClient>> clients;
     std::shared_ptr<mt::StubServerSurfaceCounter> stub_server_tool;
 
-    std::shared_ptr<mt::TestServer> stub_server;
+    std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
 TEST_F(ProtobufSocketMultiClientCommunicator,

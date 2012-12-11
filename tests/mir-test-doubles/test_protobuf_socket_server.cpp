@@ -13,35 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
- *              Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_TEST_TEST_SERVER_H_
-#define MIR_TEST_TEST_SERVER_H_
 
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/mock_ipc_factory.h"
+#include "mir_test/test_protobuf_server.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 
-namespace mir
-{
-namespace test
-{
+namespace mt = mir::test;
+namespace mf = mir::frontend;
 
-struct TestServer
+
+mt::TestProtobufServer::TestProtobufServer(
+    std::string socket_name,
+    const std::shared_ptr<protobuf::DisplayServer>& tool) :
+    factory(std::make_shared<MockIpcFactory>(*tool)),
+    comm(make_communicator(socket_name, factory))
 {
-    TestServer(std::string socket_name,
-               const std::shared_ptr<protobuf::DisplayServer>& tool) :
-        factory(std::make_shared<MockIpcFactory>(*tool)),
-        comm(socket_name, factory)
-    {
-    }
-
-    // "Server" side
-    std::shared_ptr<MockIpcFactory> factory;
-    frontend::ProtobufSocketCommunicator comm;
-};
-
 }
+
+std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& socket_name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
+{
+    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory);
 }
-#endif /* MIR_TEST_TEST_SERVER_H_ */

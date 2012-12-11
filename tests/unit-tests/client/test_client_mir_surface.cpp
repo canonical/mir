@@ -27,7 +27,7 @@
 #include "mir_client/mir_connection.h"
 #include "mir/frontend/resource_cache.h"
 
-#include "mir_test/test_server.h"
+#include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/gmock_fixes.h"
@@ -215,10 +215,10 @@ struct MirClientSurfaceTest : public testing::Test
     void SetUp()
     {
         mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
-        test_server = std::make_shared<mt::TestServer>("./test_socket_surface", mock_server_tool);
+        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
 
         EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
-        test_server->comm.start();
+        test_server->comm->start();
 
         mock_depository = std::make_shared<mt::MockClientDepository>();
 
@@ -255,7 +255,7 @@ struct MirClientSurfaceTest : public testing::Test
     mir::protobuf::Connection response;
     mir::protobuf::ConnectParameters connect_parameters;
 
-    std::shared_ptr<mt::TestServer> test_server;
+    std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<mt::TestProtobufClient> client_tools;
     std::shared_ptr<mt::MockServerPackageGenerator> mock_server_tool;
 

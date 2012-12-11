@@ -12,55 +12,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 include_directories(
     ${Boost_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
 
 set(
-  TEST_UTILS_SRCS
+  DRAW_SRCS
 
-  test_protobuf_client.cpp
-  event_factory.cpp
-  fake_event_hub.cpp
+  patterns.cpp
 )
 
-if (MIR_TRANSPORT STREQUAL "socket")
-list(APPEND TEST_UTILS_SRCS
-  test_protobuf_socket_server.cpp
-)
-elseif (MIR_TRANSPORT STREQUAL "binder")
-list(APPEND TEST_UTILS_SRCS
-  test_protobuf_binder_server.cpp
-)
+if (MIR_PLATFORM STREQUAL "android")
+  set(
+    DRAW_SRCS
+
+    android_graphics.cpp
+    ${DRAW_SRCS} 
+    )
 endif()
 
 add_library(
-  mir-test-doubles STATIC 
-  ${TEST_UTILS_SRCS})
+  mirtestdraw STATIC 
+  ${DRAW_SRCS})
 
 target_link_libraries(
-  mir-test-doubles 
+  mirtestdraw 
 
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirprocess
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
-
-  3rd_party
-
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-)
+  ${LIBHARDWARE_LIBRARIES}
+ )

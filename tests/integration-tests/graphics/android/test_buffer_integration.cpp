@@ -25,8 +25,9 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mir/draw/android_graphics.h"
 #include "mir/draw/graphics.h"
+#include "mir_test/draw/android_graphics.h"
+#include "mir_test/draw/patterns.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -36,6 +37,7 @@ namespace geom=mir::geometry;
 namespace mga=mir::graphics::android; 
 namespace mg=mir::graphics; 
 namespace md=mir::draw;
+namespace mtd=mir::test::draw;
 
 namespace
 {
@@ -45,6 +47,7 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     static void SetUpTestCase()
     {
+        ASSERT_FALSE(mtd::is_surface_flinger_running());
         ASSERT_NO_THROW(
         {
             platform = mg::create_platform();
@@ -72,6 +75,7 @@ protected:
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
+    mtd::TestGrallocMapper sw_renderer;
 
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
@@ -127,8 +131,8 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
-    md::grallocRenderSW sw_renderer;
 
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
@@ -143,7 +147,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     std::shared_ptr<mc::GraphicRegion> texture_res;
 
     auto client_buffer = bundle->secure_client_buffer();
-    sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
+    auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+    red_pattern.draw(region);
     client_buffer.reset();
 
     texture_res = bundle->lock_back_buffer();
@@ -155,7 +160,9 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 {
     using namespace testing;
-    md::grallocRenderSW sw_renderer;
+
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -174,7 +181,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, size, 0xFF0000FF);
+        auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+        red_pattern.draw(region);
         client_buffer.reset();
 
         texture_res = bundle->lock_back_buffer();
@@ -185,7 +193,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        sw_renderer.render_pattern(client_buffer, size, 0x0000FFFF);
+        region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+        green_pattern.draw(region);
         client_buffer.reset();
 
         texture_res = bundle->lock_back_buffer();

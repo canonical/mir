@@ -16,18 +16,22 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
-#include "protobuf_socket_communicator.h"
+#include "mir_test/test_protobuf_server.h"
+#include "src/frontend/protobuf_binder_communicator.h"
 
+namespace mt = mir::test;
 namespace mf = mir::frontend;
-namespace mg = mir::graphics;
 
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::SessionManager> const& session_manager,
-    std::shared_ptr<mg::Display> const& display)
+
+mt::TestProtobufServer::TestProtobufServer(
+    std::string socket_name,
+    const std::shared_ptr<protobuf::DisplayServer>& tool) :
+    factory(std::make_shared<MockIpcFactory>(*tool)),
+    comm(make_communicator(socket_name, factory))
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_manager, display));
 }
 
+std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
+{
+    return std::make_shared<mf::ProtobufBinderCommunicator>(name, factory);
+}

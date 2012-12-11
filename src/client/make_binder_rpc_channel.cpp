@@ -13,36 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_DRAW_ANDROID_GRAPHICS
-#define MIR_DRAW_ANDROID_GRAPHICS
 
-#include "mir/compositor/buffer_bundle.h"
-#include "mir/geometry/size.h"
+#include "mir_client/make_rpc_channel.h"
+#include "mir_binder_rpc_channel.h"
 
-#include <hardware/gralloc.h>
-#include <memory>
+namespace mcl = mir::client;
 
-namespace mir
+std::shared_ptr<google::protobuf::RpcChannel>
+mcl::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
 {
-namespace draw
-{
-
-class grallocRenderSW
-{
-public:
-    grallocRenderSW(); 
-    ~grallocRenderSW(); 
-    void render_pattern(std::shared_ptr<compositor::GraphicBufferClientResource>, 
-                        geometry::Size size, int val );
- 
-private:
-    gralloc_module_t* module;
-    alloc_device_t* alloc_dev;
-};
-
-}
+    return std::make_shared<MirBinderRpcChannel>(name, log);
 }
 
-#endif /* MIR_DRAW_ANDROID_GRAPHICS */
