@@ -315,43 +315,52 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 }
 
 #include "mir/compositor/rendering_operator_for_renderables.h"
+#include "mir_test_doubles/mock_graphic_region.h"
+//#include "mir_test/empty_deleter.h"
 /* since the renderer is stateless,
  the render operator should accumulate the graphic resources that 
  the render operation needs to ensure through the driver flush */ 
 TEST(SurfaceStack,
     render_operator_hold_resource)
 {
+    using namespace testing;
+
     MockSurfaceRenderer mock_renderer;
     mtd::MockRenderable mock_renderable_a;
     mtd::MockRenderable mock_renderable_b;
     mtd::MockRenderable mock_renderable_c;
 
+    auto resource_a = std::make_shared<mtd::MockGraphicRegion>();
+    auto resource_b = std::make_shared<mtd::MockGraphicRegion>();
+    auto resource_c = std::make_shared<mtd::MockGraphicRegion>();
+
+    long use_count_a_before, use_count_b_before, use_count_c_before;
     {
         mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
 
-/*
+        EXPECT_CALL(mock_renderable_a, texture())
+            .WillOnce(Return(resource_a));
+        EXPECT_CALL(mock_renderable_b, texture())
+            .WillOnce(Return(resource_a));
+        EXPECT_CALL(mock_renderable_c, texture())
+            .WillOnce(Return(resource_a));
 
-        EXPECT_CALL(mock_renderable_a, texture()
-            .WillOnce(Return(value_1);
-        EXPECT_CALL(mock_renderable_b, texture()
-            .WillOnce(Return(value_2);
-        EXPECT_CALL(mock_renderable_c, texture()
-            .WillOnce(Return(value_3);
+        use_count_a_before = resource_a.use_count();
+        use_count_b_before = resource_b.use_count();
+        use_count_c_before = resource_c.use_count();
 
-        op(mock_renderable_a);
-        op(mock_renderable_b);
-        op(mock_renderable_c);
+        rendering_operator(mock_renderable_a);
+        rendering_operator(mock_renderable_b);
+        rendering_operator(mock_renderable_c);
 
-        EXPECT_EQ(refcount(value_1), 1);
-        EXPECT_EQ(refcount(value_2), 1);
-        EXPECT_EQ(refcount(value_3), 1);
-*/
+        EXPECT_GT(resource_a.use_count(), use_count_a_before);
+        EXPECT_GT(resource_b.use_count(), use_count_b_before);
+        EXPECT_GT(resource_c.use_count(), use_count_c_before);
     }
-/*
-    EXPECT_EQ(refcount(value_1), 0);
-    EXPECT_EQ(refcount(value_2), 0);
-    EXPECT_EQ(refcount(value_3), 0);
-*/
+
+    EXPECT_EQ(resource_a.use_count(), use_count_a_before);
+    EXPECT_EQ(resource_b.use_count(), use_count_b_before);
+    EXPECT_EQ(resource_c.use_count(), use_count_c_before);
 }
 
 #if 0
