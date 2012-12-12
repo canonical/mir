@@ -198,6 +198,7 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
     surf.advance_client_buffer();
 }
 
+#if 0
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 {
     using namespace testing;
@@ -327,3 +328,4 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     EXPECT_EQ(alpha, ret_alpha); 
 }
+#endif
