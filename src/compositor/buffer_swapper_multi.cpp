@@ -57,8 +57,8 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
     }
 }
 #endif
-#if 0
-void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer);
+
+void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -71,14 +71,15 @@ void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_re
         client_available_cv.wait(lk);
     }
 
-    Buffer* dequeued_buffer = client_queue.front();
+    dequeued_buffer = client_queue.front();
     client_queue.pop_front();
+    buffer_reference = buffers[dequeued_buffer]; 
     in_use_by_client++;
 
-    return dequeued_buffer;
+    return;
 }
 
-void mc::BufferSwapperMulti::client_release(BufferID& queued_buffer);
+void mc::BufferSwapperMulti::client_release(BufferID& queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -94,10 +95,9 @@ void mc::BufferSwapperMulti::client_release(BufferID& queued_buffer);
      */
 }
 
-void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& acquired_buffer);
+void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    Buffer* dequeued_buffer{nullptr};
 
     if (compositor_queue.empty())
     {
@@ -110,10 +110,11 @@ void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffe
         compositor_queue.pop_front();
     }
 
-    return dequeued_buffer;
+    buffer_reference = buffers[dequeued_buffer]; 
+    return;
 }
 
-void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer);
+void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(released_buffer);
@@ -122,6 +123,7 @@ void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer);
 
 void mc::BufferSwapperMulti::shutdown()
 {
+#if 0
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     if (client_queue.empty())
@@ -132,5 +134,5 @@ void mc::BufferSwapperMulti::shutdown()
     }
 
     client_available_cv.notify_all();
-}
 #endif
+}
