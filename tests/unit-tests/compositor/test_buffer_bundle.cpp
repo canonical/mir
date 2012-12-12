@@ -118,15 +118,6 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
 
-TEST_F(BufferBundleTest, client_requesting_resource_queries_for_ipc_package)
-{
-    EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(1);
-
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
-    auto buffer_package = buffer_bundle.secure_client_buffer();
-}
-
 TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 {
     using namespace testing;
