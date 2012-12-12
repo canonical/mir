@@ -45,10 +45,10 @@ public:
                        std::shared_ptr<Buffer> buffer_b,
                        std::shared_ptr<Buffer> buffer_c);
 
-    Buffer* client_acquire();
-    void client_release(Buffer* queued_buffer);
-    Buffer* compositor_acquire();
-    void compositor_release(Buffer* released_buffer);
+    void client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer);
+    void client_release(BufferID& queued_buffer);
+    void compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& acquired_buffer);
+    void compositor_release(BufferID& released_buffer);
     void shutdown();
 
 private:

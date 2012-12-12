@@ -79,7 +79,7 @@ TEST_F(BufferSwapperDouble, test_valid_buffer_returned)
     mc::BufferID buf_tmp;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp);
     EXPECT_TRUE((buf_tmp == buffer_id_a) || (buf_tmp == buffer_id_b));
     EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
 
@@ -93,13 +93,13 @@ TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)
     std::weak_ptr<mc::Buffer> buffer_ref_a;
     std::weak_ptr<mc::Buffer> buffer_ref_b;
 
-    buf_tmp_a = swapper->client_acquire(buffer_ref_a);
+    swapper->client_acquire(buffer_ref_a, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    buf_tmp_b = swapper->compositor_acquire(buffer_ref_b);
+    swapper->client_acquire(buffer_ref_b, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
-    buf_tmp_b = swapper->client_acquire(buffer_ref_b);
+    swapper->client_acquire(buffer_ref_b, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
     EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b));
