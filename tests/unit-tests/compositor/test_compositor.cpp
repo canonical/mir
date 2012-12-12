@@ -40,7 +40,7 @@ namespace
 
 struct MockSurfaceRenderer : public mg::Renderer
 {
-    MOCK_METHOD1(render, void(mg::Renderable&));
+    MOCK_METHOD2(render, void(mg::Renderable&, const std::shared_ptr<mc::GraphicRegion>&));
 };
 
 struct MockRenderable : mg::Renderable
@@ -94,7 +94,7 @@ TEST(Compositor, render)
 
     mc::Compositor comp(&render_view, renderer);
 
-    EXPECT_CALL(mock_renderer, render(_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
     EXPECT_CALL(display, view_area())
             .Times(1)
@@ -134,9 +134,9 @@ TEST(Compositor, skips_invisible_renderables)
     renderables.push_back(&mr2);
     renderables.push_back(&mr3);
     
-    EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr1),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr2),_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(Ref(mr3),_)).Times(1);
     
     FakeRenderView render_view(renderables);
 

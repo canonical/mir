@@ -28,6 +28,7 @@
 #include <signal.h>
 
 namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
 namespace mir_test_framework
@@ -152,7 +153,7 @@ struct Server : TestingServerConfiguration
         class StubRenderer : public mg::Renderer
         {
         public:
-            virtual void render(mg::Renderable& /*r*/)
+            virtual void render(mg::Renderable& /*r*/, const std::shared_ptr<mc::GraphicRegion>&)
             {
                 // NOOP will cause client threads to stall
             }

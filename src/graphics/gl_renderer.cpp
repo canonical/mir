@@ -215,7 +215,8 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(Renderable& renderable)
+void mg::GLRenderer::render(Renderable& renderable,
+                           const std::shared_ptr<compositor::GraphicRegion>& /*texture_resource*/)
 {
     const geom::Point top_left = renderable.top_left();
     const geom::Size size = renderable.size();

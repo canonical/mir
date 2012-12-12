@@ -19,6 +19,7 @@
 #define MIR_COMPOSITOR_RENDERING_OPERATOR_FOR_RENDERABLES_H_
 
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/renderable.h"
 
 namespace mir
 {
@@ -33,7 +34,8 @@ public:
     }
     void operator()(graphics::Renderable& renderable)
     {
-        renderer.render(renderable);
+        auto texture_resource = renderable.texture();
+        renderer.render(renderable, texture_resource);
     }
 private:
     graphics::Renderer& renderer;
