@@ -34,7 +34,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    listener->application_drm_auth_magic_called(application_session->get_name());
+    listener->application_drm_auth_magic_called(application_session->name());
 
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
