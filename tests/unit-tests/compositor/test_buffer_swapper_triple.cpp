@@ -90,24 +90,28 @@ TEST_F(BufferSwapperTriple, test_valid_buffer_returned)
     EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
 }
 
-#if 0
 TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 {
-    auto buf_tmp_a = swapper->client_acquire();
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp_a;
+    mc::BufferID buf_tmp_b;
+    mc::BufferID buf_tmp_c;
+
+    swapper->client_acquire(buffer_ref, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    auto buf_tmp_b = swapper->compositor_acquire();
+    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
-    buf_tmp_b = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    auto buf_tmp_c = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_c);
     swapper->client_release(buf_tmp_c);
 
-    EXPECT_TRUE((buf_tmp_a == buffer_a_addr) || (buf_tmp_a == buffer_b_addr) || (buf_tmp_a == buffer_c_addr));
-    EXPECT_TRUE((buf_tmp_b == buffer_a_addr) || (buf_tmp_b == buffer_b_addr) || (buf_tmp_b == buffer_c_addr));
-    EXPECT_TRUE((buf_tmp_c == buffer_a_addr) || (buf_tmp_c == buffer_b_addr) || (buf_tmp_c == buffer_c_addr));
+    EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b) || (buf_tmp_a == buffer_id_c));
+    EXPECT_TRUE((buf_tmp_b == buffer_id_a) || (buf_tmp_b == buffer_id_b) || (buf_tmp_b == buffer_id_c));
+    EXPECT_TRUE((buf_tmp_c == buffer_id_a) || (buf_tmp_c == buffer_id_b) || (buf_tmp_c == buffer_id_c));
 
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_c);
@@ -116,49 +120,58 @@ TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
 {
-    mc::Buffer* buf_tmp, *buf_tmp_b;
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp_a;
+    mc::BufferID buf_tmp_b;
 
-    buf_tmp_b = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    buf_tmp = swapper->compositor_acquire();
-    EXPECT_TRUE((buf_tmp == buffer_a_addr) || (buf_tmp == buffer_b_addr) || (buf_tmp == buffer_c_addr));
+    swapper->compositor_acquire(buffer_ref, buf_tmp_a);
+    EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b) || (buf_tmp_a == buffer_id_c));
 }
 
 /* this would stall a double buffer */
 TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
 {
-    mc::Buffer* buf_tmp_c;
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp;
 
-    swapper->compositor_acquire();
+    swapper->compositor_acquire(buffer_ref, buf_tmp);
 
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
+    swapper->client_acquire(buffer_ref, buf_tmp);
+    swapper->client_release(buf_tmp);
 
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
+    swapper->client_acquire(buffer_ref, buf_tmp);
+    swapper->client_release(buf_tmp);
 
     SUCCEED();
 }
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 {
-    auto first_comp_buffer = swapper->compositor_acquire();
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID first_comp_buffer;
+    mc::BufferID first_client_buffer;
+    mc::BufferID second_comp_buffer;
+    mc::BufferID second_client_buffer;
+    mc::BufferID third_comp_buffer;
 
-    auto first_client_buffer = swapper->client_acquire();
+    swapper->compositor_acquire(buffer_ref, first_comp_buffer);
+
+    swapper->client_acquire(buffer_ref, first_client_buffer);
     swapper->client_release(first_client_buffer);
 
-    auto second_client_buffer = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, second_client_buffer);
     swapper->client_release(second_client_buffer);
 
     swapper->compositor_release(first_comp_buffer);
 
-    auto second_compositor_buffer = swapper->compositor_acquire();
-    swapper->compositor_release(second_compositor_buffer);
-  
-    auto third_compositor_buffer = swapper->compositor_acquire();
+    swapper->compositor_acquire(buffer_ref, second_comp_buffer);
+    swapper->compositor_release(second_comp_buffer);
+ 
+    swapper->compositor_acquire(buffer_ref, third_comp_buffer);
 
-    EXPECT_EQ(second_compositor_buffer, first_client_buffer);
-    EXPECT_EQ(third_compositor_buffer, second_client_buffer);
+    EXPECT_EQ(second_comp_buffer, first_client_buffer);
+    EXPECT_EQ(third_comp_buffer, second_client_buffer);
 }
-#endif

@@ -41,12 +41,23 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
 //        client_queue.push_back(buffer.get());
 //    }
 }
-#if 0
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
-                                           std::shared_ptr<Buffer> buf_b,
-                                           std::shared_ptr<Buffer> buf_c)
+
+mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
+                       BufferID id_a,
+                       std::shared_ptr<Buffer> buffer_b,
+                       BufferID id_b,
+                       std::shared_ptr<Buffer> buffer_c,
+                       BufferID id_c)
     : in_use_by_client{0}
 {
+    buffers[id_a] = buffer_a;
+    buffers[id_b] = buffer_b;
+    buffers[id_c] = buffer_c;
+
+    client_queue.push_back(id_a);
+    client_queue.push_back(id_b);
+    client_queue.push_back(id_c);
+#if 0
     buffers.push_back(std::move(buf_a));
     buffers.push_back(std::move(buf_b));
     buffers.push_back(std::move(buf_c));
@@ -55,8 +66,8 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
     {
         client_queue.push_back(buffer.get());
     }
-}
 #endif
+}
 
 void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
