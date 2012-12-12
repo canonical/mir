@@ -41,10 +41,11 @@ public:
     BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
                        std::shared_ptr<Buffer> buffer_b);
 
+#if 0
     BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
                        std::shared_ptr<Buffer> buffer_b,
                        std::shared_ptr<Buffer> buffer_c);
-
+#endif
     void client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer);
     void client_release(BufferID& queued_buffer);
     void compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& acquired_buffer);
