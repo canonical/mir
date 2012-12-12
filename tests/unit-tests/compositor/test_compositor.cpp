@@ -101,7 +101,7 @@ TEST(Compositor, render)
             .WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(render_view, for_each_if(_,_))
-		.Times(1);
+                .Times(1);
 
     EXPECT_CALL(display, post_update())
             .Times(1);

@@ -34,9 +34,9 @@ extern "C" {
 
     typedef enum
     {
-	MIR_INPUT_EVENT_TYPE_KEY,
-	MIR_INPUT_EVENT_TYPE_MOTION,
-	MIR_INPUT_EVENT_TYPE_HW_SWITCH
+        MIR_INPUT_EVENT_TYPE_KEY,
+        MIR_INPUT_EVENT_TYPE_MOTION,
+        MIR_INPUT_EVENT_TYPE_HW_SWITCH
     } MirEventType;
 
     struct MirEvent
@@ -89,7 +89,7 @@ extern "C" {
                     float pressure;
                     float orientation;
                 }; 
-		PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+                PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;
     };
