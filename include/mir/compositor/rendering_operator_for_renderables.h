@@ -20,6 +20,7 @@
 
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/render_view.h"
 #include <vector>
 
 namespace mir
