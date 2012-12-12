@@ -16,22 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_server.h"
-#include "src/frontend/protobuf_binder_communicator.h"
 
-namespace mt = mir::test;
-namespace mf = mir::frontend;
+#ifndef MIR_CLIENT_DETECT_SERVER_H_
+#define MIR_CLIENT_DETECT_SERVER_H_
 
+#include "mir/chrono/chrono.h"
+#include <string>
 
-mt::TestProtobufServer::TestProtobufServer(
-    std::string socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<mt::doubles::MockIpcFactory>(*tool)),
-    comm(make_communicator(socket_name, factory))
+namespace mir
 {
+namespace client
+{
+bool detect_server(const std::string& name, std::chrono::milliseconds const& timeout);
+}
 }
 
-std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
-{
-    return std::make_shared<mf::ProtobufBinderCommunicator>(name, factory);
-}
+
+#endif /* MIR_CLIENT_DETECT_SERVER_H_ */

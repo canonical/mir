@@ -16,22 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_server.h"
-#include "src/frontend/protobuf_binder_communicator.h"
+#include "android_input_manager.h"
 
-namespace mt = mir::test;
-namespace mf = mir::frontend;
+namespace mg = mir::graphics;
+namespace mi = mir::input;
+namespace mia = mi::android;
 
-
-mt::TestProtobufServer::TestProtobufServer(
-    std::string socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<mt::doubles::MockIpcFactory>(*tool)),
-    comm(make_communicator(socket_name, factory))
+std::shared_ptr<mi::InputManager> mi::create_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
+    std::shared_ptr<mg::ViewableArea> const& )
 {
-}
-
-std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
-{
-    return std::make_shared<mf::ProtobufBinderCommunicator>(name, factory);
+    return std::shared_ptr<mia::InputManager>();
 }

@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 #define MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 
@@ -34,15 +33,6 @@
 
 namespace mir
 {
-namespace protobuf
-{
-namespace wire
-{
-class Invocation;
-class Result;
-}
-}
-
 namespace client
 {
 class MirBinderRpcChannel : public MirBasicRpcChannel
@@ -63,10 +53,7 @@ private:
     android::sp<android::IBinder> const binder;
     std::shared_ptr<Logger> const log;
 };
-
 }
 }
-
-
 
 #endif /* MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_ */

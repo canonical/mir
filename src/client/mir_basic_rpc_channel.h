@@ -100,6 +100,4 @@ private:
 }
 }
 
-
-
 #endif /* MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_ */

@@ -42,7 +42,7 @@ namespace frontend
 class SurfaceOrganiser;
 typedef detail::IntWrapper<> SurfaceId;
 
-class Session 
+class Session
 {
 public:
     explicit Session(std::shared_ptr<frontend::SurfaceOrganiser> const& surface_organiser, std::string const& application_name);

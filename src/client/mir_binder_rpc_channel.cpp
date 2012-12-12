@@ -37,8 +37,10 @@ mcl::MirBinderRpcChannel::MirBinderRpcChannel(
     binder(sm->getService(android::String16(endpoint.c_str()))),
     log(log)
 {
-    if (!android::OK != binder->pingBinder())
-        std::runtime_error("Can't find MIR server");
+    if (!binder.get() || android::OK != binder->pingBinder())
+    {
+        throw std::runtime_error("Can't find MIR server");
+    }
 }
 
 mcl::MirBinderRpcChannel::~MirBinderRpcChannel()
