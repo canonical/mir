@@ -31,6 +31,12 @@ namespace doubles
 class MockRenderable :  public graphics::Renderable
 {
 public:
+    MockRenderable()
+    {
+        using namespace testing; 
+        ON_CALL(*this, texture())
+            .WillByDefault(Return(std::shared_ptr<compositor::GraphicRegion>()));
+    }
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(texture, std::shared_ptr<compositor::GraphicRegion>());

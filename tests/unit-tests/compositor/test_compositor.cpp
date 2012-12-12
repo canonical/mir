@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_display.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
@@ -41,22 +42,6 @@ namespace
 struct MockSurfaceRenderer : public mg::Renderer
 {
     MOCK_METHOD2(render, void(mg::Renderable&, const std::shared_ptr<mc::GraphicRegion>&));
-};
-
-struct MockRenderable : mg::Renderable
-{
-    MockRenderable()
-    {
-        using namespace testing; 
-        ON_CALL(*this, texture())
-            .WillByDefault(Return(std::shared_ptr<mc::GraphicRegion>()));
-    }
-    MOCK_CONST_METHOD0(top_left, geom::Point());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(hidden, bool());
 };
 
 struct MockRenderView : mc::RenderView
@@ -129,7 +114,7 @@ TEST(Compositor, skips_invisible_renderables)
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
     
-    NiceMock<MockRenderable> mr1, mr2, mr3;
+    NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
     
     EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
     EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
