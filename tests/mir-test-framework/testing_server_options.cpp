@@ -94,10 +94,7 @@ class StubRenderer : public mg::Renderer
 public:
     virtual void render(mg::Renderable& /*renderable*/,
                         const std::shared_ptr<mc::GraphicRegion>& /*texture_resource*/)
- //   virtual void render(mg::Renderable& r)
     {
-        // Need to acquire the texture to cycle buffers
-//        renderable.texture();
     }
 };
 
