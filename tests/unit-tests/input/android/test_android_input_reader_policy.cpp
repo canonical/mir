@@ -31,7 +31,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
-static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
+static geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600), 
                                                                             geom::Height(1400)}};
 
@@ -57,15 +57,14 @@ public:
 
 TEST_F(AndroidInputReaderPolicySetup, configuration_has_display_info_filled_from_view_area)
 {
-    static const int32_t testing_display_id = 0;
-    static const bool testing_display_is_external = false;
+    static int32_t const testing_display_id = 0;
+    static bool const testing_display_is_external = false;
 
     droidinput::InputReaderConfiguration configuration;
     
     reader_policy->getReaderConfiguration(&configuration);
 
-    int32_t configured_height, configured_width, 
-        configured_orientation;
+    int32_t configured_height, configured_width, configured_orientation;
     
     bool configuration_has_display_info = configuration.getDisplayInfo(
         testing_display_id, testing_display_is_external, &configured_width, &configured_height,

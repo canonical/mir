@@ -33,9 +33,9 @@ mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mg::ViewableArea> cons
 
 void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
 {
-    static const int32_t default_display_id = 0;
-    static const bool is_external = false;
-    static const int32_t default_display_orientation = droidinput::DISPLAY_ORIENTATION_0;
+    static int32_t const default_display_id = 0;
+    static bool const is_external = false;
+    static int32_t const default_display_orientation = droidinput::DISPLAY_ORIENTATION_0;
     
     auto bounds = viewable_area->view_area();
     auto width = bounds.size.width.as_float();
