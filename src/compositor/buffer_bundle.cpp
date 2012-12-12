@@ -28,6 +28,7 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
+#if 0
 namespace
 {
 struct CompositorReleaseDeleter
@@ -60,6 +61,7 @@ struct ClientReleaseDeleter
     mc::BufferSwapper* const swapper;
 };
 }
+#endif 
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,

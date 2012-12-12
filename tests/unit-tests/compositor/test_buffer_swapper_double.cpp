@@ -62,6 +62,7 @@ struct BufferSwapperDouble : testing::Test
         {
             return ( buffer.lock().get() == buffer_b_addr);
         }
+        return false;
     }
 
     mc::Buffer* buffer_a_addr;

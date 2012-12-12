@@ -37,6 +37,11 @@ private:
     static const uint32_t id_invalid = 0;
 };
 
+inline bool operator < (BufferID const& lhs, BufferID const& rhs)
+{
+    return lhs.as_uint32_t() < rhs.as_uint32_t();
+}
+
 inline bool operator == (BufferID const& lhs, BufferID const& rhs)
 {
     return lhs.as_uint32_t() == rhs.as_uint32_t();

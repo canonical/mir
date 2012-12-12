@@ -26,7 +26,7 @@
 
 #include <memory>
 #include <deque>
-#include <vector>
+#include <map>
 
 namespace mir
 {
@@ -48,20 +48,20 @@ public:
                        std::shared_ptr<Buffer> buffer_b,
                        std::shared_ptr<Buffer> buffer_c);
 #endif
-    void client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer);
+    void client_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer);
     void client_release(BufferID& queued_buffer);
-    void compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& acquired_buffer);
+    void compositor_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& acquired_buffer);
     void compositor_release(BufferID& released_buffer);
     void shutdown();
 
 private:
-    std::vector<std::shared_ptr<Buffer>> buffers;
+    std::map<BufferID, std::shared_ptr<Buffer>> buffers;
 
     std::mutex swapper_mutex;
 
     std::condition_variable client_available_cv;
-    std::deque<Buffer*> client_queue;
-    std::deque<Buffer*> compositor_queue;
+    std::deque<BufferID> client_queue;
+    std::deque<BufferID> compositor_queue;
     unsigned int in_use_by_client;
 };
 

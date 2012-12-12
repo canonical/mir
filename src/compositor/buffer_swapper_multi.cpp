@@ -18,22 +18,28 @@
 
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_id.h"
 
 namespace mc = mir::compositor;
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
                                            BufferID id_a,
                                            std::shared_ptr<Buffer> buffer_b,
-                                           BufferID id_b);
+                                           BufferID id_b)
     : in_use_by_client{0}
 {
-    buffers.push_back(std::move(buf_a));
-    buffers.push_back(std::move(buf_b));
+    buffers[id_a] = buffer_a;
+    buffers[id_b] = buffer_b;
 
-    for (auto& buffer : buffers)
-    {
-        client_queue.push_back(buffer.get());
-    }
+    client_queue.push_back(id_a);
+    client_queue.push_back(id_b);
+//    buffers.push_back(std::move(buf_a));
+//    buffers.push_back(std::move(buf_b));
+
+//    for (auto& buffer : buffers)
+//    {
+//        client_queue.push_back(buffer.get());
+//    }
 }
 #if 0
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
@@ -51,6 +57,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
     }
 }
 #endif
+#if 0
 void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer);
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
@@ -126,3 +133,4 @@ void mc::BufferSwapperMulti::shutdown()
 
     client_available_cv.notify_all();
 }
+#endif
