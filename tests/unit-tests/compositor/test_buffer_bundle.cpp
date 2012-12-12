@@ -88,6 +88,22 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     auto texture = buffer_bundle.lock_back_buffer();
 }
 
+TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    .Times(1);
+    EXPECT_CALL(*mock_swapper, compositor_release(_))
+    .Times(1);
+
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+
+    std::shared_ptr<GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
+    auto buffer = texture->buffer.lock();
+    buffer->bind_to_texture();
+}
+
 TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
@@ -126,6 +142,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
 }
 
 #if 0
+/* todo: move these somewhere else */
 TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same_buffer)
 {
     using namespace testing;
