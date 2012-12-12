@@ -198,7 +198,6 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
     surf.advance_client_buffer();
 }
 
-#if 0
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 {
     using namespace testing;
@@ -216,9 +215,10 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     surf.advance_client_buffer();
 
     auto ret_ipc = surf.get_buffer_ipc_package();
-    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
+    EXPECT_EQ(ret_ipc->buffer.lock()->get_ipc_package().get(), mock_buffer->get_ipc_package().get()); 
 }
 
+#if 0
 TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
 {
     using namespace testing;
