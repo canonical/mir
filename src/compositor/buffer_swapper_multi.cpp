@@ -21,8 +21,10 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buf_a,
-                                           std::shared_ptr<Buffer> buf_b)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
+                                           BufferID id_a,
+                                           std::shared_ptr<Buffer> buffer_b,
+                                           BufferID id_b);
     : in_use_by_client{0}
 {
     buffers.push_back(std::move(buf_a));

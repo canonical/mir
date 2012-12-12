@@ -39,7 +39,9 @@ class BufferSwapperMulti : public BufferSwapper
 {
 public:
     BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
-                       std::shared_ptr<Buffer> buffer_b);
+                       BufferID id_a,
+                       std::shared_ptr<Buffer> buffer_b,
+                       BufferID id_b);
 
 #if 0
     BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,

@@ -47,7 +47,7 @@ struct BufferSwapperDouble : testing::Test
         buffer_id_b = mc::BufferID(9);
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
-        swapper = std::make_shared<mc::BufferSwapperMulti>(buffer_a, buffer_b);
+        swapper = std::make_shared<mc::BufferSwapperMulti>(buffer_a, buffer_id_a, buffer_b, buffer_id_b);
 
     }
 
