@@ -38,12 +38,12 @@ class Buffer;
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    BufferSwapperMulti(std::unique_ptr<Buffer>&& buffer_a,
-                       std::unique_ptr<Buffer>&& buffer_b);
+    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
+                       std::unique_ptr<Buffer> buffer_b);
 
-    BufferSwapperMulti(std::unique_ptr<Buffer>&& buffer_a,
-                       std::unique_ptr<Buffer>&& buffer_b,
-                       std::unique_ptr<Buffer>&& buffer_c);
+    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
+                       std::unique_ptr<Buffer> buffer_b,
+                       std::unique_ptr<Buffer> buffer_c);
 
     Buffer* client_acquire();
     void client_release(Buffer* queued_buffer);
