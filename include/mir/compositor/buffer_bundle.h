@@ -49,6 +49,17 @@ struct GraphicBufferClientResource
     std::weak_ptr<Buffer> buffer;
 };
 
+struct GraphicBufferCompositorResource
+{
+    GraphicBufferCompositorResource() {}
+    GraphicBufferCompositorResource(std::weak_ptr<GraphicRegion> const& region)
+       : region(region)
+    {
+    }
+
+    std::weak_ptr<GraphicRegion> region;
+};
+
 class BufferBundle
 {
 public:

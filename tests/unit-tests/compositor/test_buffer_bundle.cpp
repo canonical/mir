@@ -99,8 +99,9 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
-    std::shared_ptr<GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
-    auto buffer = texture->buffer.lock();
+    std::shared_ptr<mc::GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
+    /* maybe helper function? */
+    auto buffer = texture->region.lock();
     buffer->bind_to_texture();
 }
 
