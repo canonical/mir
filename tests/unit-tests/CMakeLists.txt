@@ -22,7 +22,7 @@ set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
-add_subdirectory(frontend/)
+#add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
@@ -41,7 +41,7 @@ target_link_libraries(
   mircompositor
   mirdraw
   mirtestdraw
-  mirfrontend
+#  mirfrontend
   mirplatformgraphics
   mirgraphics
   mirinput
@@ -49,7 +49,7 @@ target_link_libraries(
   mirprocess
   miroptions
   mirprotobuf
-  mirsurfaces
+#  mirsurfaces
 
   mir-test-doubles
 

@@ -39,16 +39,14 @@ struct GraphicBufferClientResource
 {
     GraphicBufferClientResource() {}
     GraphicBufferClientResource(
-        std::shared_ptr<BufferIPCPackage> const& ipc_package,
-        std::shared_ptr<Buffer> const& buffer,
+        std::weak_ptr<Buffer> const& buffer,
         BufferID id) :
-            id(id), ipc_package(ipc_package), buffer(buffer)
+            id(id), buffer(buffer)
     {
     }
 
-    const BufferID id;
-    std::shared_ptr<BufferIPCPackage> const ipc_package;
-    std::shared_ptr<Buffer> const buffer;
+    BufferID id;
+    std::weak_ptr<Buffer> buffer;
 };
 
 class BufferBundle

@@ -28,9 +28,9 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-#if 0
 namespace
 {
+#if 0
 struct CompositorReleaseDeleter
 {
     explicit CompositorReleaseDeleter(mc::BufferSwapper* sw) :
@@ -45,6 +45,7 @@ struct CompositorReleaseDeleter
 
     mc::BufferSwapper* const swapper;
 };
+#endif 
 
 struct ClientReleaseDeleter
 {
@@ -53,15 +54,15 @@ struct ClientReleaseDeleter
     {
     }
 
-    void operator()(mc::Buffer* buffer)
+    void operator()(mc::GraphicBufferClientResource* client_resource)
     {
-        swapper->client_release(buffer);
+        swapper->client_release(client_resource->id);
+        delete client_resource;
     }
 
     mc::BufferSwapper* const swapper;
 };
 }
-#endif 
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
@@ -87,15 +88,18 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
+#if 0
 std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
     std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
 
     return bptr;
 }
+#endif
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
+/*
     std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
 
     auto it = buffer_to_id_map.find(bptr.get());
@@ -107,6 +111,12 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
 
     auto id = buffer_to_id_map[bptr.get()];
     return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr, id);
+*/
+    auto resource = new mc::GraphicBufferClientResource;
+    swapper->client_acquire(resource->buffer, resource->id);
+    ClientReleaseDeleter del(swapper.get());
+    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
+    return client_resource;
 
 }
 

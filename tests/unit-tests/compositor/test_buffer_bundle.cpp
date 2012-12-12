@@ -121,7 +121,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
-    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->buffer.lock()->ipc_package();
+    auto buffer_package = buffer_resource->buffer.lock()->get_ipc_package();
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }
 
