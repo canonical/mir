@@ -22,6 +22,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_id.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_double_buffer_allocation_strategy.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

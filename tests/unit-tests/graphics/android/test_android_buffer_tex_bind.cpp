@@ -16,16 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/mock_alloc_adaptor.h"
+#include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test/egl_mock.h"
 
 #include <gtest/gtest.h>
 
-namespace mg =mir::graphics;
-namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
+namespace mc = mir::compositor;
+namespace mtd = mir::test::doubles;
 
 class AndroidBufferBinding : public ::testing::Test
 {
@@ -34,8 +35,8 @@ public:
     {
         using namespace testing;
 
-        mock_buffer_handle = std::make_shared<mga::MockBufferHandle>();
-        mock_alloc_dev = std::make_shared<mga::MockAllocAdaptor>(mock_buffer_handle);
+        mock_buffer_handle = std::make_shared<mtd::MockBufferHandle>();
+        mock_alloc_dev = std::make_shared<mtd::MockAllocAdaptor>(mock_buffer_handle);
         EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _))
         .Times(AtLeast(0));
         EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
@@ -61,8 +62,8 @@ public:
     std::shared_ptr<mc::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
-    std::shared_ptr<mga::MockAllocAdaptor> mock_alloc_dev;
-    std::shared_ptr<mga::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_dev;
+    std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)

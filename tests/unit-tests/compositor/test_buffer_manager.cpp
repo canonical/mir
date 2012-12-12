@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -33,6 +33,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -40,9 +41,9 @@ namespace
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
-    MOCK_METHOD1(
+    MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
 };
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
@@ -57,8 +58,8 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    mc::MockBuffer mock_buffer{size, stride, pixel_format};
-    std::shared_ptr<mc::MockBuffer> default_buffer(
+    mtd::MockBuffer mock_buffer{size, stride, pixel_format};
+    std::shared_ptr<mtd::MockBuffer> default_buffer(
         &mock_buffer,
         mir::EmptyDeleter());
     MockBufferAllocationStrategy allocation_strategy;
@@ -67,7 +68,7 @@ TEST(buffer_manager, create_buffer)
             std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, mir::EmptyDeleter()));
 
 
-    EXPECT_CALL(allocation_strategy, create_swapper(buffer_properties))
+    EXPECT_CALL(allocation_strategy, create_swapper(_,buffer_properties))
         .Times(AtLeast(1));
 
     std::shared_ptr<mc::BufferBundle> bundle{

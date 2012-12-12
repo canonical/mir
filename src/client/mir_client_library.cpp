@@ -17,6 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/mir_client_library_drm.h"
 
 #include "mir_client/mir_connection.h"
 #include "mir_client/mir_surface.h"
@@ -192,4 +193,12 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
     return surface->generate_native_window();
+}
+
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    return connection->drm_auth_magic(magic, callback, context);
 }

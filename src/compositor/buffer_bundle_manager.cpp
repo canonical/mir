@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
@@ -44,11 +45,14 @@ mc::BufferBundleManager::BufferBundleManager(
 std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
-    auto swapper(buffer_allocation_strategy->create_swapper(buffer_properties));
+    BufferProperties actual_buffer_properties;
+
+    auto swapper(buffer_allocation_strategy->create_swapper(actual_buffer_properties,
+                                                            buffer_properties));
 
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>(); 
     return std::make_shared<mc::BufferBundleSurfaces>(
         std::move(swapper),
         generator,
-        buffer_properties);
+        actual_buffer_properties);
 }

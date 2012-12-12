@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/drm_authenticator.h"
 #include "gbm_display_helpers.h"
 
 namespace mir
@@ -29,7 +30,9 @@ namespace graphics
 namespace gbm
 {
 
-class GBMPlatform : public Platform, public std::enable_shared_from_this<GBMPlatform>
+class GBMPlatform : public Platform,
+                    public DRMAuthenticator,
+                    public std::enable_shared_from_this<GBMPlatform>
 {
 public:
     explicit GBMPlatform();
@@ -40,6 +43,9 @@ public:
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+
+    /* From DRMAuthenticator */
+    void drm_auth_magic(drm_magic_t magic);
 
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;

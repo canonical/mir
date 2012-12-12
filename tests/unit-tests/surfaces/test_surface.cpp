@@ -17,8 +17,8 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir_test/mock_buffer_bundle.h"
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -26,6 +26,7 @@
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
@@ -134,11 +135,11 @@ struct SurfaceCreation : public ::testing::Test
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
-        mock_buffer_bundle = std::make_shared<testing::NiceMock<mc::MockBufferBundle>>();
+        mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
     }
 
     std::string surface_name;
-    std::shared_ptr<testing::NiceMock<mc::MockBufferBundle>> mock_buffer_bundle;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferBundle>> mock_buffer_bundle;
     geom::PixelFormat pf;
     geom::Stride stride;
     geom::Size size;
@@ -204,7 +205,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
-    auto mock_buffer = std::make_shared<mc::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
@@ -224,7 +225,7 @@ TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
     mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
-    auto mock_buffer = std::make_shared<mc::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(AtLeast(0))
@@ -292,7 +293,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     using namespace testing;
 
     ms::Surface surf{surface_name, mock_buffer_bundle};
-    auto buffer = std::make_shared<NiceMock<mc::MockBuffer>>(size, stride, pf);
+    auto buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pf);
 
     EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
         .Times(AtLeast(1))

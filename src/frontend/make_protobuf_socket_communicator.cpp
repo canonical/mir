@@ -17,7 +17,6 @@
  */
 
 #include "mir/server_configuration.h"
-#include "mir/graphics/display.h"
 #include "protobuf_socket_communicator.h"
 
 namespace mf = mir::frontend;

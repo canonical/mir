@@ -24,10 +24,10 @@
 
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/mock_event_filter.h"
+#include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
-#include "mir_test/mock_viewable_area.h"
+#include "mir_test_doubles/mock_viewable_area.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,8 +37,9 @@ namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
-using mir::MockEventFilter;
+using mtd::MockEventFilter;
 using mir::WaitCondition;
 
 namespace
@@ -80,7 +81,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
     android::sp<mia::FakeEventHub> event_hub;
     MockEventFilter event_filter;
-    NiceMock<mg::MockViewableArea> viewable_area;
+    NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mia::InputManager> input_manager;
     MockCursorListener cursor_listener;
 };

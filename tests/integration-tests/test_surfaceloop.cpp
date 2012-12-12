@@ -45,11 +45,16 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
+geom::Size const size{geom::Width{640}, geom::Height{480}};
+geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+mc::BufferUsage const usage{mc::BufferUsage::hardware};
+mc::BufferProperties const buffer_properties{size, format, usage};
+
 class StubBuffer : public mc::Buffer
 {
-    geom::Size size() const { return geom::Size(); }
+    geom::Size size() const { return ::size; }
     geom::Stride stride() const { return geom::Stride(); }
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
+    geom::PixelFormat pixel_format() const { return ::format; }
     std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
     void bind_to_texture() {}
 };
@@ -59,16 +64,18 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_))
+        ON_CALL(*this, create_swapper(_,_))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
-    MOCK_METHOD1(
+    MOCK_METHOD2(
         create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties const&));
+        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
 
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties const&)
+    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
+                                                         mc::BufferProperties const& requested)
     {
+        actual = requested;
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperDouble(
                 std::unique_ptr<mc::Buffer>(new StubBuffer()),
@@ -95,12 +102,6 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
 };
-
-
-geom::Size const size{geom::Width{640}, geom::Height{480}};
-geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
-mc::BufferUsage const usage{mc::BufferUsage::hardware};
-mc::BufferProperties const buffer_properties{size, format, usage};
 }
 
 namespace mir
@@ -232,10 +233,12 @@ TEST_F(BespokeDisplayServerTestFixture,
         std::shared_ptr<mc::BufferAllocationStrategy> make_buffer_allocation_strategy(
                 std::shared_ptr<mc::GraphicBufferAllocator> const& /*buffer_allocator*/)
         {
+            using namespace testing;
+
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(buffer_properties)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_,buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }

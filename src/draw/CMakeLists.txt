@@ -23,17 +23,8 @@ include_directories(
 set(
   DRAW_SRCS
 
-  graphics_utils.cpp 
+  graphics_utils.cpp
 )
-
-if (MIR_PLATFORM STREQUAL "android")
-  set(
-    DRAW_SRCS
-
-    android_graphics.cpp
-    ${DRAW_SRCS} 
-    )
-endif()
 
 add_library(
   mirdraw STATIC 
@@ -42,15 +33,5 @@ add_library(
 target_link_libraries(
   mirdraw 
 
-  3rd_party
-
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${GLESv2_LIBRARIES}
-  ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_UI_LIBRARIES}
  )

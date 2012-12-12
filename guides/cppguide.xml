@@ -163,7 +163,7 @@ Thomas Voss
         <li> We can declare (but not define) functions with arguments,
              and/or return values, of type <code>Foo</code>.  (One
              exception is if an argument <code>Foo</code>
-             or <code>const Foo&amp;</code> has a
+             or <code>Foo const&amp;</code> has a
              non-<code>explicit</code>, one-argument constructor,
 
              in which case we need the full definition to support
@@ -310,10 +310,10 @@ Thomas Voss
         function, output from the function, or both. Input parameters
         are usually values or <code>const</code> references, while output
         and input/output parameters will be non-<code>const</code>
-        pointers. When ordering function parameters, put all output
-        parameters before any input-only parameters.  In particular, do not add
-        new parameters to the end of the function just because they are
-        new; place new output parameters before the input-only
+        references or pointers to non-<code>const</code>. When ordering function 
+        parameters, put all output parameters before any input-only parameters.
+        In particular, do not add new parameters to the end of the function just
+        because they are new; place new output parameters before the input-only
         parameters.
       </p>
       <p>
@@ -746,7 +746,7 @@ Thomas Voss
         <code>if</code> and <code>while</code> statements, e.g.
       </p>
       <CODE_SNIPPET>
-        while (const char* p = strchr(str, '/')) str = p + 1;
+        while (char const* p = strchr(str, '/')) str = p + 1;
       </CODE_SNIPPET>
       <p>
         There is one caveat:  if the variable is an object, its
@@ -811,7 +811,7 @@ Thomas Voss
       <p>
         As a result we only allow static variables to contain POD data.  This
         rule completely disallows <code>vector</code> (use C arrays instead), or
-        <code>string</code> (use <code>const char []</code>).
+        <code>string</code> (use <code>char const[]</code>).
       </p>
 
       <p>
@@ -1404,7 +1404,7 @@ Thomas Voss
           <code>const</code>:
         </p>
         <CODE_SNIPPET>
-          void Foo(const string &amp;in, string *out);
+          void Foo(string const&amp; in, string* out);
         </CODE_SNIPPET>
         <p>
           In fact it is a very strong convention in Unity code that input
@@ -1440,13 +1440,13 @@ Thomas Voss
         <p>
           You may write a function that takes a
           <code>string const&amp;</code> and overload it with another that
-          takes <code>const char*</code>.
+          takes <code>char const*</code>.
         </p>
         <CODE_SNIPPET>
           class MyClass {
           public:
               void Analyze(string const&amp; text);
-              void Analyze(const char *text, size_t textlen);
+              void Analyze(char const* text, size_t textlen);
           };
         </CODE_SNIPPET>
       </DEFINITION>
@@ -1775,7 +1775,7 @@ Thomas Voss
       <DEFINITION>
         Declared variables and parameters can be preceded by the
         keyword <code>const</code> to indicate the variables are not
-        changed (e.g., <code>const int foo</code>).  Class functions
+        changed (e.g., <code>int const foo</code>).  Class functions
         can have the <code>const</code> qualifier to indicate the
         function does not change the state of the class member
         variables (e.g., <code>class Foo { int Bar(char c) const;
@@ -1825,10 +1825,10 @@ Thomas Voss
         </ul>
         <p>
           However, do not go crazy with <code>const</code>.  Something like
-          <code>const int * const * const x;</code> is likely
+          <code>int const* const* const x;</code> is likely
           overkill, even if it accurately describes how const x is.
           Focus on what's really useful to know: in this case,
-          <code>const int** x</code> is probably sufficient.
+          <code>int const** x</code> is probably sufficient.
         </p>
         <p>
           The <code>mutable</code> keyword is allowed but is unsafe
@@ -1841,9 +1841,6 @@ Thomas Voss
           We favor the form <code>int const* foo</code> to
           <code>const int* foo</code>.  This keeps the <code>const</code>
           with the type modifier (&amp; or *).
-        </p>
-        <p>An exception to this is <code>const char*</code> due to existing
-        C convention.
         </p>
         <p>
           That said, while we encourage putting <code>const</code> after the type,
@@ -1945,7 +1942,7 @@ Thomas Voss
                 <th>Notes</th>
               </tr>
               <tr align="center">
-                <td><code>void *</code> (or any pointer)</td>
+                <td><code>void*</code> (or any pointer)</td>
                 <td><code>%lx</code></td>
                 <td><code>%p</code></td>
                 <td> </td>
@@ -2002,7 +1999,7 @@ Thomas Voss
 
           </li>
 
-        <li> Remember that <code>sizeof(void *)</code> !=
+        <li> Remember that <code>sizeof(void*)</code> !=
              <code>sizeof(int)</code>.  Use <code>intptr_t</code> if
              you want a pointer-sized integer.
              </li>
@@ -2327,7 +2324,7 @@ Thomas Voss
         struct UrlTableProperties  ...
 
         // typedefs
-        typedef hash_map&lt;UrlTableProperties *, string&gt; PropertiesMap;
+        typedef hash_map&lt;UrlTableProperties*, string&gt; PropertiesMap;
 
         // enums
         enum UrlTableErrors ...
@@ -2409,8 +2406,8 @@ Thomas Voss
         the name.
       </p>
       <CODE_SNIPPET>
-        const auto match = map.find(value);
-        const int  width{1024};
+        auto const match = map.find(value);
+        int const width{1024};
         int height{900};
       </CODE_SNIPPET>
     </BODY>
@@ -2880,9 +2877,9 @@ Thomas Voss
           Or alternatively, constants or self-describing variables:
         </p>
         <CODE_SNIPPET>
-          const int kDefaultBaseValue = 10;
-          const bool kFirstTimeCalling = false;
-          Callback *null_callback = NULL;
+          int const kDefaultBaseValue = 10;
+          bool const kFirstTimeCalling = false;
+          Callback* null_callback = NULL;
           bool success = CalculateSomething(interesting_value,
                                             kDefaultBaseValue,
                                             kFirstTimeCalling,
@@ -3553,12 +3550,12 @@ Thomas Voss
       <CODE_SNIPPET>
 	//C++11: default initialization using {}
 	int n{5}; //zero initialization: n is initialized to 5
-	int *p{}; //initialized to nullptr
+	int* p{}; //initialized to nullptr
 	double d{}; //initialized to 0.0
 	char s[12]{}; //all 12 chars are initialized to '\0'
 	string s{}; //same as: string s;
 	string name{"Some Name"};
-	char *p=new char [5]{}; // all five chars are initialized to '\0'	
+	char* p=new char [5]{}; // all five chars are initialized to '\0'	
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -3624,8 +3621,8 @@ Thomas Voss
             int some_var() const { return some_var_; }
 
         private:
-            MyClass(const MyClass&amp;) = delete;
-            MyClass&amp; operator=(const MyClass&amp;) = delete;
+            MyClass(MyClass const&amp;) = delete;
+            MyClass&amp; operator=(MyClass const&amp;) = delete;
             bool SomeInternalFunction();
   
             int some_var_;
@@ -3787,7 +3784,7 @@ Thomas Voss
         vector&lt;string&gt; x;           // No spaces inside the angle
         y = static_cast&lt;char*&gt;(x);  // brackets (&lt; and &gt;), before
                                     // &lt;, or between &gt;( in a cast.
-        vector&lt;char *&gt; x;           // Spaces between type and pointer are
+        vector&lt;char*&gt; x;           // Spaces between type and pointer are
                                     // okay, but be consistent.
         set&lt;list&lt;string&gt;&gt; x;       // C++11 now allows &gt;&gt; to close templates.
         set&lt;list&lt;string&gt; &gt; x;       // Older C++ requiree a space in &gt; &gt;, and is allowed.

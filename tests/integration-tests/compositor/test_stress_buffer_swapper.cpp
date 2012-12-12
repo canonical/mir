@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "multithread_harness.h"
 
 #include "mir/chrono/chrono.h"
@@ -27,6 +27,7 @@
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
@@ -44,8 +45,8 @@ struct ThreadFixture {
             geom::Size size{geom::Width{1024}, geom::Height{768}};
             geom::Stride s {1024};
             geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
-            std::unique_ptr<mc::Buffer> buffer_a(new mc::MockBuffer(size, s, pf));
-            std::unique_ptr<mc::Buffer> buffer_b(new mc::MockBuffer(size, s, pf));
+            std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+            std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
 
             auto swapper = std::make_shared<mc::BufferSwapperDouble>(
                     std::move(buffer_a),

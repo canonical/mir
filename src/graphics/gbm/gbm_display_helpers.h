@@ -45,6 +45,7 @@ public:
 
     void setup();
     int get_authenticated_fd();
+    void auth_magic(drm_magic_t magic) const;
 
     int fd;
 

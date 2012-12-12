@@ -42,7 +42,24 @@ elseif (MIR_TRANSPORT STREQUAL "binder")
 list(APPEND FRONTEND_SOURCES
   protobuf_binder_communicator.cpp
   make_protobuf_binder_communicator.cpp
+  binder_session.cpp
 )
+endif()
+
+if (MIR_PLATFORM STREQUAL "android")
+  list(APPEND FRONTEND_SOURCES application_mediator_android.cpp)
+elseif (MIR_PLATFORM STREQUAL "gbm")
+  include_directories(${DRM_INCLUDE_DIRS})
+  list(APPEND FRONTEND_SOURCES application_mediator_gbm.cpp)
+endif()
+
+# TODO replace this frig with an RTTI enabled binder library
+if (MIR_TRANSPORT STREQUAL "binder")
+set_source_files_properties(
+  protobuf_binder_communicator.cpp
+  binder_session.cpp
+  PROPERTIES
+  COMPILE_FLAGS "-fno-rtti")
 endif()
 
 add_library( 
@@ -55,4 +72,5 @@ target_link_libraries(
   mirfrontend
 
   mirlogging
+  3rd_party
 )

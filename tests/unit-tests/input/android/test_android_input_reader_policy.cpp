@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test/mock_viewable_area.h"
+#include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/empty_deleter.h"
 
 #include "src/input/android/android_input_reader_policy.h"
@@ -29,6 +29,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600), 
@@ -49,7 +50,7 @@ public:
         
         ON_CALL(viewable_area, view_area()).WillByDefault(Return(default_view_area));
     }
-    NiceMock<mg::MockViewableArea> viewable_area;
+    NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mia::InputReaderPolicy> reader_policy;
 };
 }

@@ -24,6 +24,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_manager.h"
@@ -41,24 +42,32 @@ namespace
 {
 class StubBuffer : public mc::Buffer
 {
-    geom::Size size() const { return geom::Size(); }
+public:
+    StubBuffer(mc::BufferProperties const& properties)
+        : buf_size{properties.size}, buf_pixel_format{properties.format}
+    {
+    }
+
+    geom::Size size() const { return buf_size; }
 
     geom::Stride stride() const { return geom::Stride(); }
 
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
+    geom::PixelFormat pixel_format() const { return buf_pixel_format; }
 
     std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
 
     void bind_to_texture() {}
 
+    geom::Size const buf_size;
+    geom::PixelFormat const buf_pixel_format;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
     {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        return std::unique_ptr<mc::Buffer>(new StubBuffer(properties));
     }
 };
 

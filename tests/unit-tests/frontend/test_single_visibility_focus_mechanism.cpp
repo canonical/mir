@@ -22,9 +22,9 @@
 #include "mir/frontend/registration_order_focus_sequence.h"
 #include "mir/frontend/single_visibility_focus_mechanism.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_organiser.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -33,6 +33,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -52,7 +53,7 @@ struct MockApplicationSession : public mf::Session
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mf::MockSurfaceOrganiser);
+    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     
     MockApplicationSession m1(organiser, "Visual Studio 7");

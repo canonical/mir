@@ -40,6 +40,8 @@ public:
 
     virtual void application_disconnect_called(std::string const& app_name) = 0;
 
+    virtual void application_drm_auth_magic_called(std::string const& app_name) = 0;
+
     virtual void application_error(
         std::string const& app_name,
         char const* method,
@@ -58,6 +60,8 @@ class NullApplicationListener : public ApplicationListener
     virtual void application_release_surface_called(std::string const& app_name);
 
     virtual void application_disconnect_called(std::string const& app_name);
+
+    virtual void application_drm_auth_magic_called(std::string const& app_name);
 
     virtual void application_error(
         std::string const& app_name,

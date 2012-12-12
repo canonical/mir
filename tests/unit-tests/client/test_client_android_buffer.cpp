@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/mock_android_registrar.h"
+#include "mir_test_doubles/mock_android_registrar.h"
 #include "mir_client/android/android_client_buffer.h"
 #include "mir_client/mir_client_library.h"
 
@@ -26,10 +26,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mt=mir::test;
-namespace mcl=mir::client;
-namespace mcla=mir::client::android;
-namespace geom=mir::geometry;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+namespace mcl = mir::client;
+namespace mcla = mir::client::android;
+namespace geom = mir::geometry;
 
 class ClientAndroidBufferTest : public ::testing::Test
 {
@@ -54,7 +55,7 @@ protected:
         package = std::make_shared<MirBufferPackage>();
         package->stride = stride.as_uint32_t();
 
-        mock_android_registrar = std::make_shared<mt::MockAndroidRegistrar>();
+        mock_android_registrar = std::make_shared<mtd::MockAndroidRegistrar>();
         package_copy = std::make_shared<MirBufferPackage>(*package.get());
 
         EXPECT_CALL(*mock_android_registrar, register_buffer(_))
@@ -71,7 +72,7 @@ protected:
     geom::Stride stride;
     geom::PixelFormat pf, pf_copy;
     std::shared_ptr<mcla::AndroidClientBuffer> buffer;
-    std::shared_ptr<mt::MockAndroidRegistrar> mock_android_registrar;
+    std::shared_ptr<mtd::MockAndroidRegistrar> mock_android_registrar;
 };
 
 TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
