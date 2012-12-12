@@ -97,7 +97,7 @@ TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)
     swapper->client_acquire(buffer_ref_a, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    swapper->client_acquire(buffer_ref_b, buf_tmp_b);
+    swapper->compositor_acquire(buffer_ref_b, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
     swapper->client_acquire(buffer_ref_b, buf_tmp_b);
@@ -107,21 +107,21 @@ TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)
     EXPECT_TRUE((buf_tmp_b == buffer_id_a) || (buf_tmp_b == buffer_id_b));
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 
-
     EXPECT_TRUE(check_ref_to_id(buf_tmp_a, buffer_ref_a));
     EXPECT_TRUE(check_ref_to_id(buf_tmp_b, buffer_ref_b));
 }
-#if 0
+
 TEST_F(BufferSwapperDouble, test_compositor_gets_valid)
 {
-    mc::BufferID buf_tmp, *buf_tmp_b;
+    mc::BufferID buf_tmp, buf_tmp_b;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp_b = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    buf_tmp = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp);
     EXPECT_TRUE((buf_tmp == buffer_id_a) || (buf_tmp == buffer_id_b)); /* we should get valid buffer we supplied in constructor */
+    EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
 }
 
 TEST_F(BufferSwapperDouble, test_compositor_gets_last_posted)
@@ -130,15 +130,14 @@ TEST_F(BufferSwapperDouble, test_compositor_gets_last_posted)
     mc::BufferID buf_tmp_b;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp_a = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    buf_tmp_b = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
-
 
 TEST_F(BufferSwapperDouble, test_two_grabs_without_a_client_release)
 {
@@ -147,13 +146,13 @@ TEST_F(BufferSwapperDouble, test_two_grabs_without_a_client_release)
     mc::BufferID buf_tmp_c;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp_c = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_c);
     swapper->client_release(buf_tmp_c);
 
-    buf_tmp_b = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
-    buf_tmp_a = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_a);
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
 
@@ -164,18 +163,17 @@ TEST_F(BufferSwapperDouble, test_two_grabs_with_client_updates)
     mc::BufferID buf_tmp_c;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp_a = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    buf_tmp_c = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_c);
     swapper->compositor_release(buf_tmp_c);
 
-    buf_tmp_c = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_c);
     swapper->client_release(buf_tmp_c);
 
-    buf_tmp_b = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
-
 }
 
 TEST_F(BufferSwapperDouble, test_grab_release_pattern)
@@ -186,17 +184,16 @@ TEST_F(BufferSwapperDouble, test_grab_release_pattern)
     mc::BufferID buf_tmp_d;
     std::weak_ptr<mc::Buffer> buffer_ref;
 
-    buf_tmp_d = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_d);
     swapper->client_release(buf_tmp_d);
 
-    buf_tmp_c = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_c);
     swapper->compositor_release(buf_tmp_c);
 
-    buf_tmp_b = swapper->client_acquire(buffer_ref);
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    buf_tmp_a = swapper->compositor_acquire(buffer_ref);
+    swapper->compositor_acquire(buffer_ref, buf_tmp_a);
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_c);
 }
-#endif
