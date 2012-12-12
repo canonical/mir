@@ -50,7 +50,7 @@ public:
         
         ON_CALL(viewable_area, view_area()).WillByDefault(Return(default_view_area));
     }
-    NiceMock<mtd::MockViewableArea> viewable_area;
+    mtd::MockViewableArea viewable_area;
     std::shared_ptr<mia::InputReaderPolicy> reader_policy;
 };
 }
@@ -59,9 +59,10 @@ TEST_F(AndroidInputReaderPolicySetup, configuration_has_display_info_filled_from
 {
     static int32_t const testing_display_id = 0;
     static bool const testing_display_is_external = false;
+    
+    EXPECT_CALL(viewable_area, view_area()).Times(1);
 
     droidinput::InputReaderConfiguration configuration;
-    
     reader_policy->getReaderConfiguration(&configuration);
 
     int32_t configured_height, configured_width, configured_orientation;
