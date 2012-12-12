@@ -34,9 +34,9 @@ public:
         return std::shared_ptr<compositor::GraphicBufferClientResource>();
     }
 
-    std::shared_ptr<compositor::GraphicRegion> lock_back_buffer()
+    std::shared_ptr<compositor::GraphicBufferCompositorResource> lock_back_buffer()
     {
-        return std::shared_ptr<compositor::GraphicRegion>();
+        return std::shared_ptr<compositor::GraphicBufferCompositorResource>();
     }
 
     geometry::PixelFormat get_bundle_pixel_format()
