@@ -43,9 +43,12 @@ public:
         geom::Size size{geom::Width{1024}, geom::Height{768}};
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+
+        auto p1 = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        auto p2 = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
         return std::make_shared<mc::BufferSwapperMulti>(
-                    std::move(std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf))),
-                    std::move(std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf))));
+                    std::move(p1),
+                    std::move(p2));
     }
 
     std::shared_ptr<mc::BufferSwapper> alloc_triple_swapper()
@@ -53,10 +56,14 @@ public:
         geom::Size size{geom::Width{1024}, geom::Height{768}};
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+        
+        auto p1 = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        auto p2 = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        auto p3 = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
         return std::make_shared<mc::BufferSwapperMulti>(
-                    std::move(std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf))),
-                    std::move(std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf))),
-                    std::move(std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf))));
+                    std::move(p1),
+                    std::move(p2),
+                    std::move(p3));
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)
