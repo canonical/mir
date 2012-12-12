@@ -87,7 +87,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 
     auto texture = buffer_bundle.lock_back_buffer();
 }
-#if 0
+
 TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
@@ -121,10 +121,11 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
-    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->ipc_package;
+    std::shared_ptr<mc::BufferIPCPackage> buffer_package = buffer_resource->buffer.lock()->ipc_package();
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }
 
+#if 0
 TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same_buffer)
 {
     using namespace testing;
