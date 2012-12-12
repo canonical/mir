@@ -45,6 +45,7 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
+  mirclient
 
   3rd_party
 

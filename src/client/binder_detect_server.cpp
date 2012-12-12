@@ -24,38 +24,31 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 
-//bool mir::client::detect_server(const std::string& name, std::chrono::milliseconds const& timeout)
-//{
-//    using std::chrono::system_clock::now;
-//
-//    auto limit = now() + timeout;
-//
-//    auto const& sm = android::defaultServiceManager();
-//    android::String16 const service_name(name.c_str());
-//
-//    auto b = sm->checkService(service_name);
-//    auto running = false;
-//
-//    while ((!b.get() || !running) && now() < limit)
-//    {
-//        if (b.get())
-//        {
-//            running = b->pingBinder() == android::OK;
-//        }
-//
-//        if (!running)
-//        {
-//            std::this_thread::sleep_for(timeout/8);
-//            b = sm->checkService(service_name);
-//        }
-//    }
-//
-//    return running;
-//}
-
-bool mir::client::detect_server(const std::string&, std::chrono::milliseconds const& timeout)
+bool mir::client::detect_server(const std::string& name, std::chrono::milliseconds const& timeout)
 {
-//    android::defaultServiceManager();
-    std::this_thread::sleep_for(timeout/8);
-    return true;
+    using std::chrono::system_clock::now;
+
+    auto limit = now() + timeout;
+
+    auto const& sm = android::defaultServiceManager();
+    android::String16 const service_name(name.c_str());
+
+    auto b = sm->checkService(service_name);
+    auto running = false;
+
+    while ((!b.get() || !running) && now() < limit)
+    {
+        if (b.get())
+        {
+            running = b->pingBinder() == android::OK;
+        }
+
+        if (!running)
+        {
+            std::this_thread::sleep_for(timeout/8);
+            b = sm->checkService(service_name);
+        }
+    }
+
+    return running;
 }
