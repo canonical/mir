@@ -45,6 +45,12 @@ struct MockSurfaceRenderer : public mg::Renderer
 
 struct MockRenderable : mg::Renderable
 {
+    MockRenderable()
+    {
+        using namespace testing; 
+        ON_CALL(*this, texture())
+            .WillByDefault(Return(std::shared_ptr<mc::GraphicRegion>()));
+    }
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
