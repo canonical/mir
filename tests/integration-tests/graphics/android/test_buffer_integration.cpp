@@ -114,8 +114,10 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
 {
     using namespace testing;
 
+    mc::BufferProperties actual;
+
     EXPECT_NO_THROW({ 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
     });
 }
 
@@ -123,7 +125,9 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
+    mc::BufferProperties actual;
+
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
     EXPECT_NE((int)swapper->client_acquire(), NULL);
 }
@@ -138,7 +142,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
+    mc::BufferProperties actual;
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 
@@ -169,7 +174,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
-    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(buffer_properties);
+    mc::BufferProperties actual;
+    std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
 
