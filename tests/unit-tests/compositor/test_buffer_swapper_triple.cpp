@@ -38,17 +38,14 @@ struct BufferSwapperTriple : testing::Test
 {
     BufferSwapperTriple()
     {
-        std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
         buf_c = buffer_c.get();
-        swapper = std::make_shared<mc::BufferSwapperMulti>(
-                std::move(buffer_a),
-                std::move(buffer_b),
-                std::move(buffer_c));
+        swapper = std::make_shared<mc::BufferSwapperMulti>(buffer_a, buffer_b, buffer_c);
 
     }
 

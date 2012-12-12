@@ -39,15 +39,12 @@ struct BufferSwapperDouble : testing::Test
 {
     BufferSwapperDouble()
     {
-        std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
-        swapper = std::make_shared<mc::BufferSwapperMulti>(
-                std::move(buffer_a),
-                std::move(buffer_b));
-
+        swapper = std::make_shared<mc::BufferSwapperMulti>(buffer_a, buffer_b);
     }
 
     mc::Buffer* buf_a;

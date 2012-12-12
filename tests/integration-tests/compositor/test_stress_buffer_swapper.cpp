@@ -41,9 +41,9 @@ public:
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
-        buffer_a = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
-        buffer_b = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
-        buffer_c = std::unique_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        buffer_a = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        buffer_b = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        buffer_c = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)
@@ -70,9 +70,9 @@ public:
                              unsigned int number_of_client_requests_to_make);
     void test_last_posted(mc::BufferSwapper& swapper);
 
-    std::unique_ptr<mc::Buffer> buffer_a;
-    std::unique_ptr<mc::Buffer> buffer_b;
-    std::unique_ptr<mc::Buffer> buffer_c;
+    std::shared_ptr<mc::Buffer> buffer_a;
+    std::shared_ptr<mc::Buffer> buffer_b;
+    std::shared_ptr<mc::Buffer> buffer_c;
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration) {
@@ -140,12 +140,12 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, distinct_double_buffers_in_client_and_compositor)
 {
-    mc::BufferSwapperMulti double_swapper(std::move(buffer_a), std::move(buffer_b));
+    mc::BufferSwapperMulti double_swapper(buffer_a, buffer_b);
     test_distinct_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, distinct_triple_buffers_in_client_and_compositor)
 {
-    mc::BufferSwapperMulti triple_swapper(std::move(buffer_a), std::move(buffer_b), std::move(buffer_c));
+    mc::BufferSwapperMulti triple_swapper(buffer_a, buffer_b, buffer_c);
     test_distinct_buffers(triple_swapper);
 }
 
@@ -183,12 +183,12 @@ void BufferSwapperStress::test_valid_buffers(mc::BufferSwapper& swapper)
 }
 TEST_F(BufferSwapperStress, double_ensure_valid_buffers)
 {
-    mc::BufferSwapperMulti double_swapper(std::move(buffer_a), std::move(buffer_b));
+    mc::BufferSwapperMulti double_swapper(buffer_a, buffer_b);
     test_valid_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, triple_ensure_valid_buffers)
 {
-    mc::BufferSwapperMulti triple_swapper(std::move(buffer_a), std::move(buffer_b), std::move(buffer_c));
+    mc::BufferSwapperMulti triple_swapper(buffer_a, buffer_b, buffer_c);
     test_valid_buffers(triple_swapper);
 }
 
@@ -254,7 +254,7 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     std::vector<mc::Buffer*> client_buffers;
     std::vector<mc::Buffer*> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
-    mc::BufferSwapperMulti double_swapper(std::move(buffer_a), std::move(buffer_b));
+    mc::BufferSwapperMulti double_swapper(buffer_a, buffer_b);
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
     
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
@@ -265,7 +265,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     std::vector<mc::Buffer*> client_buffers;
     std::vector<mc::Buffer*> compositor_buffers;
     /* a triple buffered client should stall on the third request without the compositor running */
-    mc::BufferSwapperMulti triple_swapper(std::move(buffer_a), std::move(buffer_b), std::move(buffer_c));
+    mc::BufferSwapperMulti triple_swapper(buffer_a, buffer_b, buffer_c);
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
     
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
@@ -341,7 +341,7 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
-    mc::BufferSwapperMulti double_swapper(std::move(buffer_a), std::move(buffer_b));
+    mc::BufferSwapperMulti double_swapper(buffer_a, buffer_b);
     test_last_posted(double_swapper);
 }
 }
