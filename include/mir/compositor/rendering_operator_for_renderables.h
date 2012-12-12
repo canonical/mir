@@ -20,6 +20,7 @@
 
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
+#include <vector>
 
 namespace mir
 {
@@ -34,11 +35,15 @@ public:
     }
     void operator()(graphics::Renderable& renderable)
     {
-        auto texture_resource = renderable.texture();
-        renderer.render(renderable, texture_resource);
+        auto resource = renderable.texture();
+        texture_resources.push_back(resource);
+
+        renderer.render(renderable, resource);
     }
 private:
     graphics::Renderer& renderer;
+
+    std::vector<std::shared_ptr<compositor::GraphicRegion>> texture_resources;
 };
 
 }

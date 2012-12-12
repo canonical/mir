@@ -325,7 +325,7 @@ TEST(SurfaceStack,
 {
     using namespace testing;
 
-    MockSurfaceRenderer mock_renderer;
+    NiceMock<MockSurfaceRenderer> mock_renderer;
     mtd::MockRenderable mock_renderable_a;
     mtd::MockRenderable mock_renderable_b;
     mtd::MockRenderable mock_renderable_c;
@@ -343,10 +343,10 @@ TEST(SurfaceStack,
             .WillOnce(Return(resource_a));
         EXPECT_CALL(mock_renderable_b, texture())
             .Times(1)
-            .WillOnce(Return(resource_a));
+            .WillOnce(Return(resource_b));
         EXPECT_CALL(mock_renderable_c, texture())
             .Times(1)
-            .WillOnce(Return(resource_a));
+            .WillOnce(Return(resource_c));
 
         use_count_a_before = resource_a.use_count();
         use_count_b_before = resource_b.use_count();
@@ -378,8 +378,8 @@ TEST(SurfaceStack,
     mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
 
     EXPECT_CALL(mock_renderable, texture())
-        .WillOnce(Return(resource))
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(resource));
     EXPECT_CALL(mock_renderer, render(_, resource))
         .Times(1);
 
