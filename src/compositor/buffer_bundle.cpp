@@ -30,22 +30,23 @@ namespace geom = mir::geometry;
 
 namespace
 {
-#if 0
 struct CompositorReleaseDeleter
 {
-    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw) :
-        swapper(sw)
+    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw, mc::BufferID id) :
+        swapper(sw),
+        id(id)
     {
     }
 
-    void operator()(mc::Buffer* buffer)
+    void operator()(mc::GraphicBufferCompositorResource* compositor_resource)
     {
-        swapper->compositor_release(buffer);
+        swapper->compositor_release(id);
+        delete compositor_resource;
     }
 
     mc::BufferSwapper* const swapper;
+    mc::BufferID id;
 };
-#endif 
 
 struct ClientReleaseDeleter
 {
@@ -88,36 +89,26 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-#if 0
-std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
+std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::lock_back_buffer()
 {
-    std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
+    mc::BufferID id;
+    std::weak_ptr<mc::Buffer> region;
+    swapper->compositor_acquire(region, id);
 
-    return bptr;
+    auto resource = new mc::GraphicBufferCompositorResource(region);
+    CompositorReleaseDeleter del(swapper.get(), id);
+    auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
+
+    return compositor_resource;
 }
-#endif
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
-/*
-    std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
-
-    auto it = buffer_to_id_map.find(bptr.get());
-    if (it == buffer_to_id_map.end())
-    {
-        auto new_id = generator->generate_unique_id();
-        buffer_to_id_map[bptr.get()] = new_id;
-    }
-
-    auto id = buffer_to_id_map[bptr.get()];
-    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr, id);
-*/
     auto resource = new mc::GraphicBufferClientResource;
     swapper->client_acquire(resource->buffer, resource->id);
     ClientReleaseDeleter del(swapper.get());
     auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
     return client_resource;
-
 }
 
 geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
