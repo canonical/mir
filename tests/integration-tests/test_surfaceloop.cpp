@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -76,10 +77,14 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
                                                          mc::BufferProperties const& requested)
     {
         actual = requested;
+        mc::BufferID id_a{2};
+        mc::BufferID id_b{3};
         return std::unique_ptr<mc::BufferSwapper>(
             new mc::BufferSwapperMulti(
-                std::unique_ptr<mc::Buffer>(new StubBuffer()),
-                std::unique_ptr<mc::Buffer>(new StubBuffer())));
+                std::shared_ptr<mc::Buffer>(new StubBuffer()),
+                id_a,
+                std::shared_ptr<mc::Buffer>(new StubBuffer()),
+                id_b));
     }
 };
 
