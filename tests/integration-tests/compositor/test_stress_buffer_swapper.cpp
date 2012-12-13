@@ -204,7 +204,6 @@ void client_request_loop_finite(std::vector<mc::Buffer*>& buffers,
         buffers.push_back(tmp);
     }
 
-    ASSERT_EQ(buffers.size(), (unsigned int) number_of_requests_to_make);
     synchronizer.child_enter_wait();
     synchronizer.child_enter_wait();
 }
