@@ -36,11 +36,13 @@ mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
+    std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<ApplicationListener> const& listener,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     session_store(session_store),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
+    buffer_allocator(buffer_allocator),
     listener(listener),
     resource_cache(resource_cache)
 {

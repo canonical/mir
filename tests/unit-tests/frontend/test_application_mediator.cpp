@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -140,6 +141,20 @@ public:
     std::shared_ptr<mf::SurfaceOrganiser> organiser;
 };
 
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    {
+        return std::unique_ptr<mc::Buffer>();
+    }
+
+    virtual std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
+};
+
 class StubDisplay : public mg::Display
 {
  public:
@@ -154,7 +169,7 @@ class StubPlatform : public mg::Platform
     std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
     {
-        return std::shared_ptr<mc::GraphicBufferAllocator>();
+        return std::shared_ptr<StubGraphicBufferAllocator>();
     }
 
     std::shared_ptr<mg::Display> create_display()
@@ -176,10 +191,11 @@ struct ApplicationMediatorTest : public ::testing::Test
         : session_store{std::make_shared<StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<StubDisplay>()},
+          buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           listener{std::make_shared<mf::NullApplicationListener>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
-                   listener, resource_cache},
+                   buffer_allocator, listener, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -187,6 +203,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     std::shared_ptr<mf::SessionStore> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::ApplicationMediator mediator;
