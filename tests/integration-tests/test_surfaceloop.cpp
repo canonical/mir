@@ -19,7 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/display.h"
@@ -77,7 +77,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     {
         actual = requested;
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperDouble(
+            new mc::BufferSwapperMulti(
                 std::unique_ptr<mc::Buffer>(new StubBuffer()),
                 std::unique_ptr<mc::Buffer>(new StubBuffer())));
     }
