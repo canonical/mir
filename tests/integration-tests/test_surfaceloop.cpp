@@ -77,8 +77,6 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
                                                          mc::BufferProperties const& requested)
     {
         actual = requested;
-        mc::BufferID id_a{2};
-        mc::BufferID id_b{3};
         auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
         auto stub_buffer_a = std::make_shared<StubBuffer>();
         auto stub_buffer_b = std::make_shared<StubBuffer>();

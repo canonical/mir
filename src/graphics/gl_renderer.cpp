@@ -269,6 +269,9 @@ void mg::GLRenderer::render(Renderable& renderable)
     /* We must release the renderableTexture as soon
      * as the bind_to_texture operation is complete
      * so we are using it as a temporary */
+
+    /* this long chain of code and above mentioned comment will go away once lp:~kdub/mir/hold-resource-over-draw
+       lands. releasing texture resource here is the wrong thing to do! -- kdub */ 
     renderable.texture()->region.lock()->bind_to_texture();
 
     /* Draw */
