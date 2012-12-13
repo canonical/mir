@@ -29,10 +29,10 @@ namespace geometry
 {
 enum class PixelFormat : uint32_t
 {
+    invalid,
     rgba_8888,
     rgbx_8888,
-    rgb_888,
-    pixel_format_invalid
+    rgb_888
 };
 
 class PixelOperation
