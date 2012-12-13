@@ -271,7 +271,10 @@ void mg::GLRenderer::render(Renderable& renderable)
 
     /* this long chain of code and above mentioned comment will go away once lp:~kdub/mir/hold-resource-over-draw
        lands. releasing texture resource here is the wrong thing to do! -- kdub */ 
-    renderable.texture()->region.lock()->bind_to_texture();
+    if (auto texture_resource = renderable.texture()->region.lock())
+    {
+        texture_resource->bind_to_texture();
+    }
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
