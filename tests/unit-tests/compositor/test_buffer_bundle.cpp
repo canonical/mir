@@ -82,7 +82,6 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
-    /* maybe helper function? */
     auto buffer = texture->region.lock();
     buffer->bind_to_texture();
 }
@@ -114,59 +113,3 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     auto buffer_package = buffer_resource->buffer.lock()->get_ipc_package();
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }
-
-#if 0
-/* todo: move these somewhere else */
-TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_once_with_same_buffer)
-{
-    using namespace testing;
-
-    int num_iteration = 5;
-    EXPECT_CALL(*mock_swapper, client_acquire(_,_))
-        .Times(num_iteration)
-        .WillRepeatedly(Return(mock_buffer.get())); 
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(1);
-
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
-    for(auto i=0; i<num_iteration; i++)
-    {
-        auto buffer_resource = buffer_bundle.secure_client_buffer();
-    }
-}
-
-TEST_F(BufferBundleTest, new_buffer_from_swapper_generates_new_id_thrice_with_three_different_buffers)
-{
-    using namespace testing;
-
-    int num_iteration = 7;
-    EXPECT_CALL(*mock_swapper, client_acquire(_,_))
-        .Times(num_iteration)
-        .WillOnce(Return(mock_buffer.get()))
-        .WillOnce(Return(second_mock_buffer.get()))
-        .WillRepeatedly(Return(third_mock_buffer.get()));
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(3);
-
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
- 
-    for(auto i=0; i<num_iteration; i++)
-    {
-        buffer_bundle.secure_client_buffer();
-    }
-}
-
-TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package_with_valid_id)
-{
-    using namespace testing;
-    std::shared_ptr<mc::BufferIPCPackage> dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
-    EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(1)
-    .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
-
-    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();   
-    EXPECT_TRUE(buffer_resource->id.is_valid()); 
-    EXPECT_EQ(buffer_resource->id, mock_generator->id); 
-}
-#endif

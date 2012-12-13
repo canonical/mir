@@ -99,8 +99,8 @@ TEST_F(BufferSwapperConstruction, error_construction)
         mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a});
     }, std::runtime_error);
 
-    /* BufferSwapper multi theoretically is generic enough to do >=4 buffers. However, we only test for 2 or 3,
-       so we should throw on 4 or greater until 4 or greater buffers is tested*/
+    /* BufferSwapperMulti algorithm is generic enough to do >=4 buffers. However, we have only tested
+       for 2 or 3 buffers, so we will throw on 4 or greater until 4 or greater buffers is tested*/
     EXPECT_THROW({
         mc::BufferSwapperMulti(std::move(mock_generator2), {buffer_a, buffer_b, buffer_c, buffer_b});
     }, std::runtime_error);

@@ -1,7 +1,6 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/graphic_region.h"
-#include "mir/compositor/buffer_bundle.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

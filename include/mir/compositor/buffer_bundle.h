@@ -34,6 +34,7 @@ class BufferSwapper;
 class BufferIPCPackage;
 class Buffer;
 class GraphicRegion;
+class GraphicBufferCompositorResource;
 
 struct GraphicBufferClientResource
 {
@@ -47,17 +48,6 @@ struct GraphicBufferClientResource
 
     BufferID id;
     std::weak_ptr<Buffer> buffer;
-};
-
-struct GraphicBufferCompositorResource
-{
-    GraphicBufferCompositorResource() {}
-    GraphicBufferCompositorResource(std::weak_ptr<GraphicRegion> const& region)
-       : region(region)
-    {
-    }
-
-    std::weak_ptr<GraphicRegion> region;
 };
 
 class BufferBundle
