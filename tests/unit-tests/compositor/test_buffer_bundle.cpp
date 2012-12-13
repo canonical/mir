@@ -45,8 +45,6 @@ protected:
         third_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
             new NiceMock<mtd::MockSwapper>(mock_buffer));
-        
-        mock_generator = std::make_shared<NiceMock<MockIDGenerator>>();
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
@@ -56,7 +54,6 @@ protected:
     geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;
-    std::shared_ptr<testing::NiceMock<MockIDGenerator>> mock_generator;
 };
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
@@ -68,7 +65,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     auto texture = buffer_bundle.lock_back_buffer();
 }
@@ -82,7 +79,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
     /* maybe helper function? */
@@ -98,7 +95,7 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
     .Times(1);
     EXPECT_CALL(*mock_swapper, client_release(_))
     .Times(1);
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
@@ -111,7 +108,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     EXPECT_CALL(*mock_buffer, get_ipc_package())
     .Times(1)
     .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper), mock_generator);
+    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
     std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
     auto buffer_package = buffer_resource->buffer.lock()->get_ipc_package();
