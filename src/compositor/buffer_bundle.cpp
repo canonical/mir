@@ -67,19 +67,15 @@ struct ClientReleaseDeleter
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
-    std::shared_ptr<BufferIDUniqueGenerator> gen, 
     BufferProperties const& buffer_properties)
-     : generator(gen),
-       swapper(std::move(swapper)),
+     : swapper(std::move(swapper)),
        size(buffer_properties.size),
        pixel_format(buffer_properties.format)
 {
 }
 
-mc::BufferBundleSurfaces::BufferBundleSurfaces(
-    std::unique_ptr<BufferSwapper>&& swapper, std::shared_ptr<BufferIDUniqueGenerator> gen)
-     : generator(gen),
-       swapper(std::move(swapper)),
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
+     : swapper(std::move(swapper)),
        size(),
        pixel_format(geometry::PixelFormat::rgba_8888)
 {

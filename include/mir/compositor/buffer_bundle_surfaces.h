@@ -35,14 +35,10 @@ class BufferProperties;
 class BufferBundleSurfaces : public BufferBundle
 {
 public:
-    BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper, 
-        std::shared_ptr<BufferIDUniqueGenerator> generator );
+    BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper);
 
     BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper,
-        std::shared_ptr<BufferIDUniqueGenerator> generator,
-        BufferProperties const& buffer_properties);
+        std::unique_ptr<BufferSwapper>&& swapper, BufferProperties const& buffer_properties);
 
     ~BufferBundleSurfaces();
 
@@ -59,7 +55,6 @@ protected:
     BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
 
 private:
-    std::shared_ptr<BufferIDUniqueGenerator> generator;
     std::unique_ptr<BufferSwapper> swapper;
     std::map<Buffer*, BufferID> buffer_to_id_map;
     geometry::Size size;
