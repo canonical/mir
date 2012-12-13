@@ -70,6 +70,24 @@ static void render_pattern(MirGraphicsRegion *region, int pf)
     }
 }
 
+static MirPixelFormat find_8888_format(MirDisplayInfo *info)
+{
+    MirPixelFormat pf = 0;
+
+    for (int i = 0; i < info->supported_pixel_format_items; ++i)
+    {
+        MirPixelFormat cur_pf = info->supported_pixel_format[i];
+        if (cur_pf == mir_pixel_format_rgba_8888 ||
+            cur_pf == mir_pixel_format_rgbx_8888)
+        {
+            pf = cur_pf;
+            break;
+        }
+    }
+
+    return pf;
+}
+
 int main(int argc, char* argv[])
 {
     int arg;
@@ -102,8 +120,14 @@ int main(int argc, char* argv[])
     assert(mir_connection_is_valid(connection));
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
 
+    MirDisplayInfo display_info;
+    mir_connection_get_display_info(connection, &display_info);
+    assert(display_info.supported_pixel_format_items > 0);
+
+    MirPixelFormat pixel_format = find_8888_format(&display_info);
+
     MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, mir_pixel_format_rgba_8888, mir_buffer_usage_software};
+        {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_software};
     mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
     puts("Surface created");
 
