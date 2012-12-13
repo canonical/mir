@@ -49,7 +49,7 @@ geom::PixelFormat const StubBuffer::buf_pixel_format{geom::PixelFormat::rgbx_888
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }

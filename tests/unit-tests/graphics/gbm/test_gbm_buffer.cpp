@@ -103,7 +103,7 @@ TEST_F(GBMGraphicBufferBasic, dimensions_test)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer = allocator->alloc_buffer(buffer_properties);
+    auto buffer = allocator->alloc_buffer(buffer_properties);
     ASSERT_EQ(size, buffer->size());
 }
 
@@ -114,7 +114,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_has_expected_pixel_format)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(buffer_properties));
+    auto buffer(allocator->alloc_buffer(buffer_properties));
     ASSERT_EQ(pf, buffer->pixel_format());
 }
 
@@ -129,7 +129,7 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     // TODO: is there a *maximum* sane value for stride?
     geom::Stride minimum(size.width.as_uint32_t() * 4);
 
-    std::unique_ptr<mc::Buffer> buffer(allocator->alloc_buffer(buffer_properties));
+    auto buffer(allocator->alloc_buffer(buffer_properties));
 
     ASSERT_LE(minimum, buffer->stride());
 }

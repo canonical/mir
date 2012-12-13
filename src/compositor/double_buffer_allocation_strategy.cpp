@@ -47,8 +47,5 @@ std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_sw
                                                 requested_buffer_properties.usage};
 
     auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    /* todo: kludge around grallocator's unique_ptr */
-    auto bufs1 = std::shared_ptr<mc::Buffer>(std::move(buf1));
-    auto bufs2 = std::shared_ptr<mc::Buffer>(std::move(buf2));
-    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti(generator, {bufs1, bufs2}));
+    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti(generator, {buf1, buf2}));
 }

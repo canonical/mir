@@ -35,7 +35,7 @@ class GraphicBufferAllocator
 public:
     virtual ~GraphicBufferAllocator() {}
 
-    virtual std::unique_ptr<Buffer> alloc_buffer(
+    virtual std::shared_ptr<Buffer> alloc_buffer(
             BufferProperties const& buffer_properties) = 0;
 
 protected:
