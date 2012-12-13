@@ -32,9 +32,9 @@ bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputE
     mia::Lexicon::translate(input_event, mir_ev);
 
     if (event_filter->handles(mir_ev))
-	return false; /* Do not pass the event on */
+        return false; /* Do not pass the event on */
     else
-	return true; /* Pass the event on */
+        return true; /* Pass the event on */
 }
 
 void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)

@@ -100,7 +100,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     event_hub->synthesize_device_scan_complete();
 
     event_hub->synthesize_event(mis::a_key_down_event()
-				.of_scancode(KEY_ENTER));
+                                .of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_at_most_seconds(1);
 }
@@ -133,14 +133,14 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 
     // We get absolute motion events since we have a pointer controller.
     {
-	InSequence seq;
+        InSequence seq;
 
-	EXPECT_CALL(event_filter,
-		    handles(MotionEvent(100, 100)))
-	    .WillOnce(Return(false));
-	EXPECT_CALL(event_filter,
-		    handles(MotionEvent(200, 100)))
-	    .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+        EXPECT_CALL(event_filter,
+                    handles(MotionEvent(100, 100)))
+            .WillOnce(Return(false));
+        EXPECT_CALL(event_filter,
+                    handles(MotionEvent(200, 100)))
+            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
 
     event_hub->synthesize_builtin_cursor_added();
