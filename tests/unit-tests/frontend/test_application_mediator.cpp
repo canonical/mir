@@ -229,14 +229,12 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
 
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
     }
-
     {
         mp::SurfaceId request;
         mp::Buffer response;
 
         mediator.next_buffer(nullptr, &request, &response, null_callback.get());
     }
-
     {
         mp::SurfaceId request;
 
