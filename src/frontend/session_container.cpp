@@ -38,7 +38,7 @@ mf::SessionContainer::~SessionContainer()
 void mf::SessionContainer::insert_session(std::shared_ptr<mf::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
-    auto name = session->get_name();
+    auto name = session->name();
 
     apps.push_back(session);
 }
