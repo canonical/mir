@@ -79,12 +79,12 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
         actual = requested;
         mc::BufferID id_a{2};
         mc::BufferID id_b{3};
+        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+        auto stub_buffer_a = std::make_shared<StubBuffer>();
+        auto stub_buffer_b = std::make_shared<StubBuffer>();
+        std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(
-                std::shared_ptr<mc::Buffer>(new StubBuffer()),
-                id_a,
-                std::shared_ptr<mc::Buffer>(new StubBuffer()),
-                id_b));
+            new mc::BufferSwapperMulti(std::move(generator), list)); 
     }
 };
 
