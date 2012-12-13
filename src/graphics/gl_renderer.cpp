@@ -1,6 +1,7 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/graphic_region.h"
+#include "mir/compositor/buffer_bundle.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -268,7 +269,7 @@ void mg::GLRenderer::render(Renderable& renderable)
     /* We must release the renderableTexture as soon
      * as the bind_to_texture operation is complete
      * so we are using it as a temporary */
-    renderable.texture()->bind_to_texture();
+    renderable.texture()->region.lock()->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
