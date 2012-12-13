@@ -33,13 +33,6 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
 
     client_queue.push_back(id_a);
     client_queue.push_back(id_b);
-//    buffers.push_back(std::move(buf_a));
-//    buffers.push_back(std::move(buf_b));
-
-//    for (auto& buffer : buffers)
-//    {
-//        client_queue.push_back(buffer.get());
-//    }
 }
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
@@ -57,16 +50,6 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
     client_queue.push_back(id_a);
     client_queue.push_back(id_b);
     client_queue.push_back(id_c);
-#if 0
-    buffers.push_back(std::move(buf_a));
-    buffers.push_back(std::move(buf_b));
-    buffers.push_back(std::move(buf_c));
-
-    for (auto& buffer : buffers)
-    {
-        client_queue.push_back(buffer.get());
-    }
-#endif
 }
 
 void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
@@ -86,8 +69,6 @@ void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_re
     client_queue.pop_front();
     buffer_reference = buffers[dequeued_buffer]; 
     in_use_by_client++;
-
-    return;
 }
 
 void mc::BufferSwapperMulti::client_release(BufferID& queued_buffer)
@@ -122,7 +103,6 @@ void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffe
     }
 
     buffer_reference = buffers[dequeued_buffer]; 
-    return;
 }
 
 void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer)
@@ -134,16 +114,14 @@ void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer)
 
 void mc::BufferSwapperMulti::shutdown()
 {
-#if 0
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     if (client_queue.empty())
     {
-        Buffer* dequeued_buffer = compositor_queue.front();
+        auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);
     }
 
     client_available_cv.notify_all();
-#endif
 }
