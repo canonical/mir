@@ -59,7 +59,13 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(2);
 
-    mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a, buffer_b});
+    auto use_count_before  = buffer_a.use_count();
+    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_a});
+
+    EXPECT_EQ(buffer_a.use_count(), use_count_before + 2);
+
+    /* just to keep ref */
+    swapper.shutdown(); 
 }
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction)
@@ -67,7 +73,13 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction)
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(3);
 
-    mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a, buffer_b, buffer_c});
+    auto use_count_before  = buffer_a.use_count();
+    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_a, buffer_a});
+
+    EXPECT_EQ(buffer_a.use_count(), use_count_before + 3);
+
+    /* just to keep ref */
+    swapper.shutdown(); 
 }
 
 TEST_F(BufferSwapperConstruction, error_construction)
