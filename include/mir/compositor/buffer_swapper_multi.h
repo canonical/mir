@@ -50,6 +50,7 @@ public:
 
 private:
     std::map<BufferID, std::shared_ptr<Buffer>> buffers;
+    std::shared_ptr<compositor::BufferIDUniqueGenerator> generator;
 
     std::mutex swapper_mutex;
 

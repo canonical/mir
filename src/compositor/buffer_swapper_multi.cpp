@@ -19,13 +19,30 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && /*generator*/, 
-                                           std::initializer_list<std::shared_ptr<compositor::Buffer>> /*buffer_list*/)
+#include <iostream>
+mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && gen, 
+                                           std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
+ :
+generator(std::move(gen))
 {
-
+    if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
+    {
+        throw std::runtime_error("BufferSwapperMulti is not validated for 1 or >3 buffers");
+    }
+        
+    for( auto& buffer : buffer_list )
+    {
+        auto new_id = generator->generate_unique_id();
+        std::cout << "adding: " << buffer.use_count() << "\n";
+        buffers[new_id] = buffer;
+        client_queue.push_back(new_id);
+        std::cout << "added: " << buffer.use_count() << "\n";
+    }
+//    generator->
 
 }
 /*

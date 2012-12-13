@@ -41,8 +41,8 @@ struct BufferSwapperConstruction : testing::Test
         buffer_c = std::make_shared<mtd::MockBuffer>(size, s, pf);
 
         id1 = mc::BufferID{4};
-        id1 = mc::BufferID{6};
-        id1 = mc::BufferID{5};
+        id2 = mc::BufferID{6};
+        id3 = mc::BufferID{5};
     }
 
     mc::BufferID id1;
@@ -59,10 +59,12 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
     EXPECT_CALL(*mock_generator, generate_unique_id())
         .Times(2);
 
-    auto use_count_before  = buffer_a.use_count();
-    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_a});
+    auto use_count_before_a  = buffer_a.use_count();
+    auto use_count_before_b  = buffer_b.use_count();
+    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_b});
 
-    EXPECT_EQ(buffer_a.use_count(), use_count_before + 2);
+    EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
+    EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
 
     /* just to keep ref */
     swapper.shutdown(); 
@@ -84,6 +86,7 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction)
 
 TEST_F(BufferSwapperConstruction, error_construction)
 {
+    auto mock_generator2 = std::make_shared<mtd::MockIDGenerator>();
     /* don't support single buffering with the mc::BufferSwapper interface model */
     EXPECT_THROW({
         mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a});
@@ -92,7 +95,7 @@ TEST_F(BufferSwapperConstruction, error_construction)
     /* BufferSwapper multi theoretically is generic enough to do >=4 buffers. However, we only test for 2 or 3,
        so we should throw on 4 or greater until 4 or greater buffers is tested*/
     EXPECT_THROW({
-        mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a, buffer_b, buffer_c, buffer_b});
+        mc::BufferSwapperMulti(std::move(mock_generator2), {buffer_a, buffer_b, buffer_c, buffer_b});
     }, std::runtime_error);
 }
 
@@ -132,6 +135,7 @@ TEST_F(BufferSwapperConstruction, triple_assigns_unique_to_each)
     std::weak_ptr<mc::Buffer> buffer_ref; 
     swapper.compositor_acquire(buffer_ref, test_id_1);
     swapper.client_acquire(buffer_ref, test_id_2);
+    swapper.client_release(test_id_2);
     swapper.client_acquire(buffer_ref, test_id_3);
     /* swapper is now 'empty' */
 
