@@ -51,7 +51,7 @@ target_link_libraries(
   mirgraphics
   mirinput
   mirprocess
-#  mirsurfaces
+  mirsurfaces
   mirplatformgraphics
   mirprotobuf
 
