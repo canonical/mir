@@ -147,8 +147,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
     mc::BufferProperties actual;
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 
@@ -178,8 +177,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
     mc::BufferProperties actual;
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper), generator);
+    auto bundle = std::make_shared<mc::BufferBundleSurfaces>(std::move(swapper));
 
     gl_animation.init_gl();
 
