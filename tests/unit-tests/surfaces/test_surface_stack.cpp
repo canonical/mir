@@ -56,7 +56,6 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
     MockBufferBundleFactory()
     {
         using namespace ::testing;
-        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
 
         ON_CALL(
             *this,
@@ -65,7 +64,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
-                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()), generator ))));
+                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD1(
@@ -114,8 +113,7 @@ TEST(
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle), generator );
+    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
     MockBufferBundleFactory buffer_bundle_factory;
 
     EXPECT_CALL(
@@ -280,7 +278,6 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     MockBufferBundleFactory buffer_bundle_factory;
 
     geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};
