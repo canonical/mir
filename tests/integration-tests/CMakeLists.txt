@@ -25,7 +25,7 @@ set(
 )
 
 add_subdirectory(client/)
-add_subdirectory(compositor/)
+#add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(process/)
 add_subdirectory(input/)

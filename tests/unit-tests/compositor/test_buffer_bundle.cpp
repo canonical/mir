@@ -30,21 +30,6 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
-struct MockIDGenerator: public mc::BufferIDUniqueGenerator
-{
-    MockIDGenerator()
-    {
-        using namespace testing;
-        id = mc::BufferID{34};
-        ON_CALL(*this, generate_unique_id())
-            .WillByDefault(Return(id));
-    }
-
-    MOCK_METHOD0(generate_unique_id, mc::BufferID());
-
-    mc::BufferID id;
-};
-
 class BufferBundleTest : public ::testing::Test
 {
 protected:
