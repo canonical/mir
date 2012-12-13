@@ -126,10 +126,13 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     using namespace testing;
 
     mc::BufferProperties actual;
+    std::weak_ptr<mc::Buffer> returned_buffer;
+    mc::BufferID id{34};
 
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
-    EXPECT_NE((int)swapper->client_acquire(), NULL);
+    swapper->client_acquire(returned_buffer, id);
+    EXPECT_NE((int)returned_buffer.lock().get(), NULL);
 }
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
@@ -149,14 +152,13 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mc::GraphicRegion> texture_res;
-
     auto client_buffer = bundle->secure_client_buffer();
-    auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+    auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+    auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
     red_pattern.draw(region);
     client_buffer.reset();
 
-    texture_res = bundle->lock_back_buffer();
+    auto texture_res = bundle->lock_back_buffer();
     gl_animation.render_gl();
     display->post_update();
     texture_res.reset();
@@ -181,17 +183,16 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
     gl_animation.init_gl();
 
-    std::shared_ptr<mc::GraphicRegion> texture_res;
-
     for(;;)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        auto region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+        auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         red_pattern.draw(region);
         client_buffer.reset();
 
-        texture_res = bundle->lock_back_buffer();
+        auto texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
         display->post_update();
         texture_res.reset();
@@ -199,7 +200,8 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        region = sw_renderer.get_graphic_region_from_package(client_buffer->ipc_package, size);
+        ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         green_pattern.draw(region);
         client_buffer.reset();
 
