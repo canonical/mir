@@ -22,6 +22,13 @@
 
 namespace mc = mir::compositor;
 
+mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && /*generator*/, 
+                                           std::initializer_list<std::shared_ptr<compositor::Buffer>> /*buffer_list*/)
+{
+
+
+}
+/*
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
                                            BufferID id_a,
                                            std::shared_ptr<Buffer> buffer_b,
@@ -34,7 +41,6 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
     client_queue.push_back(id_a);
     client_queue.push_back(id_b);
 }
-
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
                        BufferID id_a,
                        std::shared_ptr<Buffer> buffer_b,
@@ -51,7 +57,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
     client_queue.push_back(id_b);
     client_queue.push_back(id_c);
 }
-
+*/
 void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);

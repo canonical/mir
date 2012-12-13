@@ -34,21 +34,13 @@ namespace compositor
 {
 
 class Buffer;
+class BufferIDUniqueGenerator;
 
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
-                       BufferID id_a,
-                       std::shared_ptr<Buffer> buffer_b,
-                       BufferID id_b);
-
-    BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
-                       BufferID id_a,
-                       std::shared_ptr<Buffer> buffer_b,
-                       BufferID id_b,
-                       std::shared_ptr<Buffer> buffer_c,
-                       BufferID id_c);
+    BufferSwapperMulti(std::shared_ptr<compositor::BufferIDUniqueGenerator>&& generator,
+                       std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
 
     void client_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer);
     void client_release(BufferID queued_buffer);

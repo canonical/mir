@@ -49,8 +49,10 @@ struct BufferSwapperDouble : testing::Test
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
  
-        mc::BufferIDMonotonicIncreaseGenerator id_generator;
-        swapper = std::make_shared<mc::BufferSwapperMulti>(id_generator, {buffer_a, buffer_b});
+        auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+
+        auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+        swapper = std::make_shared<mc::BufferSwapperMulti>(std::move(id_generator), double_list);
 
     }
 
