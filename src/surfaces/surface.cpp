@@ -119,13 +119,9 @@ void ms::Surface::advance_client_buffer()
 {
     /* we must hold a reference (graphics_resource) to the resource on behalf
        of the client until it is returned to us */
+    /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
     graphics_resource.reset();  // Release old client buffer
     graphics_resource = buffer_bundle->secure_client_buffer();
-}
-
-mc::BufferID ms::Surface::get_buffer_id() const
-{
-    return graphics_resource->id;
 }
 
 std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::get_buffer_ipc_package() const
