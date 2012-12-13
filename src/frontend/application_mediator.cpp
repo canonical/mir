@@ -85,7 +85,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    listener->application_create_surface_called(application_session->get_name());
+    listener->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
         surfaces::SurfaceCreationParameters()
@@ -136,7 +136,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    listener->application_next_buffer_called(application_session->get_name());
+    listener->application_next_buffer_called(application_session->name());
 
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
@@ -168,7 +168,7 @@ void mir::frontend::ApplicationMediator::release_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    listener->application_release_surface_called(application_session->get_name());
+    listener->application_release_surface_called(application_session->name());
 
     auto const id = SurfaceId(request->value());
 
@@ -186,7 +186,7 @@ void mir::frontend::ApplicationMediator::disconnect(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    listener->application_disconnect_called(application_session->get_name());
+    listener->application_disconnect_called(application_session->name());
 
     session_store->close_session(application_session);
     application_session.reset();

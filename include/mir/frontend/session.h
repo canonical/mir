@@ -45,14 +45,14 @@ typedef detail::IntWrapper<> SurfaceId;
 class Session 
 {
 public:
-    explicit Session(std::shared_ptr<frontend::SurfaceOrganiser> const& surface_organiser, std::string const& application_name);
+    explicit Session(std::shared_ptr<frontend::SurfaceOrganiser> const& surface_organiser, std::string const& session_name);
     virtual ~Session();
 
     SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
     void destroy_surface(SurfaceId surface);
     std::shared_ptr<surfaces::Surface> get_surface(SurfaceId surface) const;
 
-    std::string get_name();
+    std::string name();
     void shutdown();
 
     virtual void hide();
@@ -63,7 +63,7 @@ protected:
 
 private:
     std::shared_ptr<frontend::SurfaceOrganiser> const surface_organiser;
-    std::string const name;
+    std::string const session_name;
 
     SurfaceId next_id();
 

@@ -43,6 +43,8 @@ using mir::WaitCondition;
 
 namespace
 {
+using namespace ::testing;
+
 static const geom::Rectangle default_view_area =
         geom::Rectangle{geom::Point(),
                         geom::Size{geom::Width(1600), geom::Height(1400)}};
@@ -51,22 +53,19 @@ static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
-  public:
+public:
     void SetUp()
     {
-        using namespace ::testing;
+        ON_CALL(viewable_area, view_area())
+            .WillByDefault(Return(default_view_area));
 
         event_hub = new mia::FakeEventHub();
-
         input_manager.reset(
             new mia::InputManager(
                 event_hub,
                 {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
                 std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
                 null_cursor_listener));
-
-        EXPECT_CALL(viewable_area, view_area()).Times(AnyNumber()).
-            WillRepeatedly(Return(default_view_area));
 
         input_manager->start();
     }
@@ -80,7 +79,7 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
     android::sp<mia::FakeEventHub> event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
     MockEventFilter event_filter;
-    mtd::MockViewableArea viewable_area;
+    NiceMock<mtd::MockViewableArea> viewable_area;
 };
 
 }

@@ -22,18 +22,7 @@ namespace mia = mir::input::android;
 
 void mia::RudimentaryInputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfiguration* out_config)
 {
-    static const int32_t default_display_id = 0;
-    static const bool is_external = false;
-    static const int32_t display_width = 1024;
-    static const int32_t display_height = 1024;
-    static const int32_t display_orientation = droidinput::DISPLAY_ORIENTATION_0;
-    // TODO: This needs to go.
-    out_config->setDisplayInfo(
-        default_display_id,
-        is_external,
-        display_width,
-        display_height,
-        display_orientation);
+    (void)out_config;
 }
 
 droidinput::sp<droidinput::PointerControllerInterface> mia::RudimentaryInputReaderPolicy::obtainPointerController(int32_t device_id)
