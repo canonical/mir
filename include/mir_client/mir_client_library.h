@@ -105,10 +105,14 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
+enum { mir_supported_pixel_format_max = 32 };
+
 typedef struct MirDisplayInfo
 {
     int width;
     int height;
+    int supported_pixel_format_items;
+    MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
 
 /*
