@@ -38,7 +38,7 @@ public:
 
     void set_processor(std::shared_ptr<MessageProcessor> const& processor);
 
-    bool process_message(const android::Parcel& request, android::Parcel* response)
+    bool process_message(android::Parcel const& request, android::Parcel* response)
     {
         this->response = response;
 

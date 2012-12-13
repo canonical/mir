@@ -34,10 +34,10 @@ mcl::MirBinderRpcChannel::MirBinderRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<Logger> const& log) :
     sm(android::defaultServiceManager()),
-    binder(sm->getService(android::String16(endpoint.c_str()))),
+    mir_proxy(sm->getService(android::String16(endpoint.c_str()))),
     log(log)
 {
-    if (!binder.get() || android::OK != binder->pingBinder())
+    if (!mir_proxy.get() || android::OK != mir_proxy->pingBinder())
     {
         throw std::runtime_error("Can't find MIR server");
     }
@@ -65,7 +65,7 @@ void mcl::MirBinderRpcChannel::CallMethod(
 
     request.writeString8(android::String8(message.data(), message.length()));
 
-    binder->transact(0, request, &wire_response);
+    mir_proxy->transact(0, request, &wire_response);
 
     auto const& receive_buffer = wire_response.readString8();
     std::string inefficient_copy(receive_buffer.string(), receive_buffer.string()+receive_buffer.size());
