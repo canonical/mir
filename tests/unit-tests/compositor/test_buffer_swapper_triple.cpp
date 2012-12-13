@@ -42,36 +42,19 @@ struct BufferSwapperTriple : testing::Test
         std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
         std::shared_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
 
-        buffer_id_a = mc::BufferID(7);
-        buffer_id_b = mc::BufferID(8);
-        buffer_id_c = mc::BufferID(9);
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
         buffer_c_addr = buffer_c.get();
-        swapper = std::make_shared<mc::BufferSwapperMulti>(buffer_a, buffer_id_a, buffer_b, buffer_id_b, buffer_c, buffer_id_c);
 
-    }
+        auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+        auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+        swapper = std::make_shared<mc::BufferSwapperMulti>(std::move(id_generator), triple_list);
 
-    bool check_ref_to_id(mc::BufferID id, std::weak_ptr<mc::Buffer> buffer)
-    {
-        if (id == buffer_id_a)
-        {
-            return ( buffer.lock().get() == buffer_a_addr);
-        }
-
-        if (id == buffer_id_b)
-        {
-            return ( buffer.lock().get() == buffer_b_addr);
-        }
-        return false;
     }
 
     mc::Buffer* buffer_a_addr;
     mc::Buffer* buffer_b_addr;
     mc::Buffer* buffer_c_addr;
-    mc::BufferID buffer_id_a;
-    mc::BufferID buffer_id_b;
-    mc::BufferID buffer_id_c;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
@@ -86,8 +69,8 @@ TEST_F(BufferSwapperTriple, test_valid_buffer_returned)
     swapper->client_acquire(buffer_ref, buf_tmp);
     swapper->client_release(buf_tmp);
 
-    EXPECT_TRUE((buf_tmp == buffer_id_a) || (buf_tmp == buffer_id_b) || (buf_tmp == buffer_id_c));
-    EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
+    auto addr = buffer_ref.lock().get();
+    EXPECT_TRUE((addr == buffer_a_addr) || (addr == buffer_b_addr) || (addr = buffer_c_addr));
 }
 
 TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
@@ -109,10 +92,6 @@ TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
     swapper->client_acquire(buffer_ref, buf_tmp_c);
     swapper->client_release(buf_tmp_c);
 
-    EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b) || (buf_tmp_a == buffer_id_c));
-    EXPECT_TRUE((buf_tmp_b == buffer_id_a) || (buf_tmp_b == buffer_id_b) || (buf_tmp_b == buffer_id_c));
-    EXPECT_TRUE((buf_tmp_c == buffer_id_a) || (buf_tmp_c == buffer_id_b) || (buf_tmp_c == buffer_id_c));
-
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_c);
     EXPECT_NE(buf_tmp_b, buf_tmp_c);
@@ -128,7 +107,6 @@ TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
     swapper->client_release(buf_tmp_b);
 
     swapper->compositor_acquire(buffer_ref, buf_tmp_a);
-    EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b) || (buf_tmp_a == buffer_id_c));
 }
 
 /* this would stall a double buffer */

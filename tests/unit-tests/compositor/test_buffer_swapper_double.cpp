@@ -44,8 +44,6 @@ struct BufferSwapperDouble : testing::Test
         std::shared_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
         std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
 
-        buffer_id_a = mc::BufferID(8);
-        buffer_id_b = mc::BufferID(9);
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
  
@@ -56,24 +54,8 @@ struct BufferSwapperDouble : testing::Test
 
     }
 
-    bool check_ref_to_id(mc::BufferID id, std::weak_ptr<mc::Buffer> buffer)
-    {
-        if (id == buffer_id_a)
-        {
-            return ( buffer.lock().get() == buffer_a_addr);
-        }
-
-        if (id == buffer_id_b)
-        {
-            return ( buffer.lock().get() == buffer_b_addr);
-        }
-        return false;
-    }
-
     mc::Buffer* buffer_a_addr;
     mc::Buffer* buffer_b_addr;
-    mc::BufferID buffer_id_a;
-    mc::BufferID buffer_id_b;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
@@ -86,8 +68,8 @@ TEST_F(BufferSwapperDouble, test_valid_buffer_returned)
     std::weak_ptr<mc::Buffer> buffer_ref;
 
     swapper->client_acquire(buffer_ref, buf_tmp);
-    EXPECT_TRUE((buf_tmp == buffer_id_a) || (buf_tmp == buffer_id_b));
-    EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
+    auto addr = buffer_ref.lock().get();
+    EXPECT_TRUE((addr == buffer_a_addr) || (addr == buffer_b_addr));
 
     swapper->client_release(buf_tmp);
 }
@@ -108,12 +90,12 @@ TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)
     swapper->client_acquire(buffer_ref_b, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    EXPECT_TRUE((buf_tmp_a == buffer_id_a) || (buf_tmp_a == buffer_id_b));
-    EXPECT_TRUE((buf_tmp_b == buffer_id_a) || (buf_tmp_b == buffer_id_b));
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 
-    EXPECT_TRUE(check_ref_to_id(buf_tmp_a, buffer_ref_a));
-    EXPECT_TRUE(check_ref_to_id(buf_tmp_b, buffer_ref_b));
+    auto addr_a = buffer_ref_a.lock().get();
+    auto addr_b = buffer_ref_b.lock().get();
+    EXPECT_TRUE((addr_a == buffer_a_addr) || (addr_a == buffer_b_addr));
+    EXPECT_TRUE((addr_b == buffer_a_addr) || (addr_b == buffer_b_addr));
 }
 
 TEST_F(BufferSwapperDouble, test_compositor_gets_valid)
@@ -125,8 +107,8 @@ TEST_F(BufferSwapperDouble, test_compositor_gets_valid)
     swapper->client_release(buf_tmp_b);
 
     swapper->compositor_acquire(buffer_ref, buf_tmp);
-    EXPECT_TRUE((buf_tmp == buffer_id_a) || (buf_tmp == buffer_id_b)); /* we should get valid buffer we supplied in constructor */
-    EXPECT_TRUE(check_ref_to_id(buf_tmp, buffer_ref));
+    auto addr_a = buffer_ref.lock().get();
+    EXPECT_TRUE((addr_a == buffer_a_addr) || (addr_a == buffer_b_addr));
 }
 
 TEST_F(BufferSwapperDouble, test_compositor_gets_last_posted)

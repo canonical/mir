@@ -23,7 +23,6 @@
 
 namespace mc = mir::compositor;
 
-#include <iostream>
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && gen, 
                                            std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
  : generator(std::move(gen))
@@ -38,10 +37,6 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGen
         auto new_id = generator->generate_unique_id();
         buffers[new_id] = buffer;
         client_queue.push_back(new_id);
-    }
-    for( auto& buffer : buffers )
-    {
-        std::cout << buffer.second.use_count() << std::endl;
     }
 }
 
