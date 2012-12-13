@@ -39,14 +39,14 @@ public:
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
-    virtual void client_release(BufferID& queued_buffer) = 0;
+    virtual void client_release(BufferID queued_buffer) = 0;
 
     /* caller of compositor_acquire buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via compositor_release() */
     virtual void compositor_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& acquired_buffer) = 0;
 
-    virtual void compositor_release(BufferID& released_buffer) = 0;
+    virtual void compositor_release(BufferID released_buffer) = 0;
 
     virtual void shutdown() = 0;
 

@@ -71,7 +71,7 @@ void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_re
     in_use_by_client++;
 }
 
-void mc::BufferSwapperMulti::client_release(BufferID& queued_buffer)
+void mc::BufferSwapperMulti::client_release(BufferID queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -105,7 +105,7 @@ void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffe
     buffer_reference = buffers[dequeued_buffer]; 
 }
 
-void mc::BufferSwapperMulti::compositor_release(BufferID& released_buffer)
+void mc::BufferSwapperMulti::compositor_release(BufferID released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(released_buffer);

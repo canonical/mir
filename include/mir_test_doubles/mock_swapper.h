@@ -44,9 +44,9 @@ public:
     };
 
     MOCK_METHOD2(client_acquire,     void(std::weak_ptr<compositor::Buffer>& buffer_reference, compositor::BufferID& dequeued_buffer));
-    MOCK_METHOD1(client_release,     void(compositor::BufferID& queued_buffer));
+    MOCK_METHOD1(client_release,     void(compositor::BufferID queued_buffer));
     MOCK_METHOD2(compositor_acquire, void(std::weak_ptr<compositor::Buffer>& buffer_reference, compositor::BufferID& dequeued_buffer));
-    MOCK_METHOD1(compositor_release, void(compositor::BufferID& queued_buffer));
+    MOCK_METHOD1(compositor_release, void(compositor::BufferID queued_buffer));
     MOCK_METHOD0(shutdown, void());
 
 private:
