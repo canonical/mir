@@ -56,8 +56,11 @@ struct BufferSwapperConstruction : testing::Test
 
 TEST_F(BufferSwapperConstruction, basic_double_construction)
 {
+    using namespace testing;
     EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(2);
+        .Times(2)
+        .WillOnce(Return(id1))
+        .WillRepeatedly(Return(id2));
 
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
@@ -72,8 +75,12 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction)
 {
+    using namespace testing;
     EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(3);
+        .Times(3)
+        .WillOnce(Return(id1))
+        .WillOnce(Return(id2))
+        .WillRepeatedly(Return(id3));
 
     auto use_count_before  = buffer_a.use_count();
     mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_a, buffer_a});

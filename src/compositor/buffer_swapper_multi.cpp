@@ -26,55 +26,25 @@ namespace mc = mir::compositor;
 #include <iostream>
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && gen, 
                                            std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
- :
-generator(std::move(gen))
+ : generator(std::move(gen))
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
-        throw std::runtime_error("BufferSwapperMulti is not validated for 1 or >3 buffers");
+        throw std::runtime_error("BufferSwapperMulti is only validated for 2 or 3 buffers");
     }
         
     for( auto& buffer : buffer_list )
     {
         auto new_id = generator->generate_unique_id();
-        std::cout << "adding: " << buffer.use_count() << "\n";
         buffers[new_id] = buffer;
         client_queue.push_back(new_id);
-        std::cout << "added: " << buffer.use_count() << "\n";
     }
-//    generator->
-
+    for( auto& buffer : buffers )
+    {
+        std::cout << buffer.second.use_count() << std::endl;
+    }
 }
-/*
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
-                                           BufferID id_a,
-                                           std::shared_ptr<Buffer> buffer_b,
-                                           BufferID id_b)
-    : in_use_by_client{0}
-{
-    buffers[id_a] = buffer_a;
-    buffers[id_b] = buffer_b;
 
-    client_queue.push_back(id_a);
-    client_queue.push_back(id_b);
-}
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<Buffer> buffer_a,
-                       BufferID id_a,
-                       std::shared_ptr<Buffer> buffer_b,
-                       BufferID id_b,
-                       std::shared_ptr<Buffer> buffer_c,
-                       BufferID id_c)
-    : in_use_by_client{0}
-{
-    buffers[id_a] = buffer_a;
-    buffers[id_b] = buffer_b;
-    buffers[id_c] = buffer_c;
-
-    client_queue.push_back(id_a);
-    client_queue.push_back(id_b);
-    client_queue.push_back(id_c);
-}
-*/
 void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
