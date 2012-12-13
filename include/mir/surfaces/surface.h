@@ -91,7 +91,7 @@ class Surface : public graphics::Renderable
     geometry::PixelFormat pixel_format() const;
 
     void advance_client_buffer();
-    std::shared_ptr<compositor::BufferIPCPackage> get_buffer_ipc_package() const;
+    std::shared_ptr<compositor::GraphicBufferClientResource> get_buffer_ipc_package() const;
     compositor::BufferID get_buffer_id() const;
     void shutdown();
 

@@ -25,6 +25,8 @@
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
@@ -103,8 +105,11 @@ void mir::frontend::ApplicationMediator::create_surface(
 
 
         surface->advance_client_buffer();
-        auto const& id = surface->get_buffer_id();
-        auto const& ipc_package = surface->get_buffer_ipc_package();
+        auto const& client_resource = surface->get_buffer_ipc_package();
+        auto const& id = client_resource->id;
+        auto ipc_package = client_resource->buffer.lock()->get_ipc_package();
+
+
         auto buffer = response->mutable_buffer();
 
         buffer->set_buffer_id(id.as_uint32_t());
@@ -136,8 +141,9 @@ void mir::frontend::ApplicationMediator::next_buffer(
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
-    auto const& id = surface->get_buffer_id();
-    auto const& ipc_package = surface->get_buffer_ipc_package();
+    auto const& client_resource = surface->get_buffer_ipc_package();
+    auto const& id = client_resource->id;
+    auto ipc_package = client_resource->buffer.lock()->get_ipc_package();
 
     response->set_buffer_id(id.as_uint32_t());
     for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)

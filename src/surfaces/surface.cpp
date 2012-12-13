@@ -129,12 +129,9 @@ mc::BufferID ms::Surface::get_buffer_id() const
     return graphics_resource->id;
 }
 
-    /* todo: bad */
-#include "mir/compositor/buffer.h"
-std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() const
+std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::get_buffer_ipc_package() const
 {
-    /* todo: bad */
-    return graphics_resource->buffer.lock()->get_ipc_package();
+    return graphics_resource;
 }
 
 ms::SurfaceCreationParameters::SurfaceCreationParameters()

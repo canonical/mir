@@ -208,7 +208,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
-    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(ipc_package, mock_buffer, id);
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(mock_buffer, id);
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(graphics_resource));
