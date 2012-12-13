@@ -25,6 +25,7 @@
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
@@ -71,6 +72,10 @@ void mir::frontend::ApplicationMediator::connect(
     auto view_area = graphics_display->view_area();
     display_info->set_width(view_area.size.width.as_uint32_t());
     display_info->set_height(view_area.size.height.as_uint32_t());
+
+    auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
+    for (auto pf : supported_pixel_formats)
+        display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
 
     resource_cache->save_resource(response, ipc_package);
     done->Run();
