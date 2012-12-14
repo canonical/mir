@@ -85,6 +85,7 @@ static MirPixelFormat find_8888_format(MirDisplayInfo *info)
         }
     }
 
+    assert(pf != 0);
     return pf;
 }
 
