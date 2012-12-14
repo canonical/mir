@@ -50,7 +50,7 @@ private:
         google::protobuf::Closure* complete);
 
     android::sp<android::IServiceManager> const sm;
-    android::sp<android::IBinder> const binder;
+    android::sp<android::IBinder> const mir_proxy;
     std::shared_ptr<Logger> const log;
 };
 }
