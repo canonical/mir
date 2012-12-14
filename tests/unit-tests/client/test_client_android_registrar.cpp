@@ -40,7 +40,7 @@ public:
     virtual int unlock_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
 };
 
-class MockRegistrarDevice : public ICSRegistrarInterface, 
+class MockRegistrarDevice : public ICSRegistrarInterface,
                             public gralloc_module_t
 {
 public:
@@ -89,10 +89,10 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
- 
+
         mock_module = std::shared_ptr<MockRegistrarDevice>( new MockRegistrarDevice );
         mock_addr = (gralloc_module_t*) mock_module.get();
-        
+
         width = 41;
         height = 43;
         top = 0;
@@ -110,9 +110,9 @@ protected:
         EXPECT_CALL(*mock_module, unlock_interface( _, _))
             .Times(AtLeast(0));
     }
-   
+
     geom::Rectangle rect;
-    uint32_t width, height, top, left; 
+    uint32_t width, height, top, left;
 
     std::shared_ptr<const native_handle_t> fake_handle;
     std::shared_ptr<MockRegistrarDevice> mock_module;
@@ -255,7 +255,7 @@ TEST_F(ClientAndroidRegistrarTest, register_failure)
     EXPECT_CALL(*mock_module, registerBuffer_interface(_, _))
         .Times(1)
         .WillOnce(Return(-1));
-    
+
     mcla::AndroidRegistrarGralloc registrar(mock_module);
     EXPECT_THROW({
         registrar.register_buffer(fake_handle.get());

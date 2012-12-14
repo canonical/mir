@@ -37,20 +37,20 @@ class SignalDispatcher
 {
 public:
     struct Constructor;
-    
+
     typedef boost::signals2::signal<void(int)> SignalType;
-    
+
     static std::shared_ptr<SignalDispatcher> instance();
 
     ~SignalDispatcher();
-    
+
     SignalType& signal_channel();
 
     void enable_for(int signal);
 
 private:
     friend struct Constructor;
-    
+
     SignalDispatcher();
     SignalDispatcher(const SignalDispatcher&) = delete;
     SignalDispatcher& operator=(const SignalDispatcher&) = delete;

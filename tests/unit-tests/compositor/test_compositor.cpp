@@ -101,7 +101,7 @@ TEST(Compositor, render)
             .WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(render_view, for_each_if(_,_))
-		.Times(1);
+                .Times(1);
 
     EXPECT_CALL(display, post_update())
             .Times(1);
@@ -122,25 +122,25 @@ TEST(Compositor, skips_invisible_renderables)
     EXPECT_CALL(display, view_area())
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
-    
+
     NiceMock<MockRenderable> mr1, mr2, mr3;
-    
+
     EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
     EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
     EXPECT_CALL(mr3, hidden()).WillOnce(Return(false));
-    
+
     std::vector<mg::Renderable*> renderables;
     renderables.push_back(&mr1);
     renderables.push_back(&mr2);
     renderables.push_back(&mr3);
-    
+
     EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
     EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
     EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);
-    
+
     FakeRenderView render_view(renderables);
 
     mc::Compositor comp(&render_view, renderer);
-    
+
     comp.render(&display);
 }

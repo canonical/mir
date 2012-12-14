@@ -107,9 +107,9 @@ void ms::Surface::set_hidden(bool hide)
     is_hidden = hide;
 }
 
-//note: not sure the surface should be aware of pixel format. might be something that the 
+//note: not sure the surface should be aware of pixel format. might be something that the
 //texture (which goes to compositor should be aware of though
-//todo: kdub remove 
+//todo: kdub remove
 geom::PixelFormat ms::Surface::pixel_format() const
 {
     return buffer_bundle->get_bundle_pixel_format();
@@ -152,7 +152,7 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
 }
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
-    geometry::Width::ValueType width, 
+    geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
     return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));

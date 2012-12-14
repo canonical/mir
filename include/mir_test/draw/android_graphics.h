@@ -35,13 +35,13 @@ namespace draw
 class TestGrallocMapper
 {
 public:
-    TestGrallocMapper(); 
+    TestGrallocMapper();
     TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
-    ~TestGrallocMapper(); 
+    ~TestGrallocMapper();
     std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
                             const std::shared_ptr<compositor::BufferIPCPackage>& package,
                             geometry::Size sz);
- 
+
 private:
     TestGrallocMapper(TestGrallocMapper const&) = delete;
     TestGrallocMapper& operator=(TestGrallocMapper const&) = delete;

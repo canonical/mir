@@ -64,11 +64,11 @@ class Synchronizer : public SynchronizerController,
         {
             std::unique_lock<std::mutex> lk(sync_mutex);
             pause_request = true;
-            while (!paused) 
+            while (!paused)
             {
                 cv.wait(lk);
             }
-        
+
             pause_request = false;
         };
 

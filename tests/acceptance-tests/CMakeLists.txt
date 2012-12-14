@@ -20,7 +20,7 @@ include_directories(
 
 add_executable(
   acceptance-tests
-  
+
   test_client_library.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp

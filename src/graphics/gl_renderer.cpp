@@ -175,7 +175,7 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     position_attr_loc = glGetAttribLocation(program, "position");
     texcoord_attr_loc = glGetAttribLocation(program, "texcoord");
 
-    /* 
+    /*
      * Create and set screen_to_gl_coords transformation matrix.
      * The screen_to_gl_coords matrix transforms from the screen coordinate system
      * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
@@ -230,7 +230,7 @@ void mg::GLRenderer::render(Renderable& renderable)
     /* Get the center of the renderable's area */
     const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
 
-    /* 
+    /*
      * Every renderable is drawn using a 1x1 quad centered at 0,0.
      * We need to transform and scale that quad to get to its final position
      * and size.

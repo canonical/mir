@@ -90,7 +90,7 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
 std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(
-        this->shared_from_this(), 
+        this->shared_from_this(),
         listener);
 }
 

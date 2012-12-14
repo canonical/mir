@@ -29,7 +29,7 @@ namespace logging
 // logging framework from leaking implementation detail.
 class Logger
 {
-public:   
+public:
     enum Severity
     {
         critical = 0,
@@ -53,12 +53,12 @@ public:
     {
         log(severity, message, component);
     }
-    
+
   protected:
     Logger() {}
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
-    
+
     virtual void log(Severity severity,
                      const std::string& message,
                      const std::string& component) = 0;

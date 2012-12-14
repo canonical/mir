@@ -55,17 +55,17 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     using namespace ::testing;
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
-    
+
     MockApplicationSession m1(organiser, "Visual Studio 7");
     MockApplicationSession m2(organiser, "Visual Studio 8");
     MockApplicationSession m3(organiser, "Visual Studio 9");
-    
+
     std::shared_ptr<mf::Session> app1(&m1, mir::EmptyDeleter());
     std::shared_ptr<mf::Session> app2(&m2, mir::EmptyDeleter());
     std::shared_ptr<mf::Session> app3(&m3, mir::EmptyDeleter());
 
     mf::SingleVisibilityFocusMechanism focus_mechanism(model);
-    
+
     EXPECT_CALL(m1, show()).Times(1);
     EXPECT_CALL(m2, hide()).Times(1);
     EXPECT_CALL(m3, hide()).Times(1);

@@ -44,7 +44,7 @@ int query_static(const ANativeWindow* anw, int key, int* value)
 {
     auto self = static_cast<const mcla::MirNativeWindow*>(anw);
     return self->query(key, value);
-} 
+}
 
 int perform_static(ANativeWindow* window, int key, ...)
 {
@@ -55,11 +55,11 @@ int perform_static(ANativeWindow* window, int key, ...)
     va_end(args);
 
     return ret;
-} 
+}
 
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
-{   
+{
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
@@ -162,7 +162,7 @@ int mcla::MirNativeWindow::perform(int key, va_list arg_list )
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_pixel_format = va_arg(args, int); 
+            driver_pixel_format = va_arg(args, int);
             break;
         default:
             break;

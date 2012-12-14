@@ -63,12 +63,12 @@ class RenderView
 {
 public:
     virtual ~RenderView() {}
-  
+
     virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
 protected:
     RenderView() = default;
-    
+
  private:
     RenderView(RenderView const&) = delete;
     RenderView& operator=(RenderView const&) = delete;

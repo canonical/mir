@@ -29,7 +29,7 @@ set(
 )
 
 add_library(
-  mir-test-framework STATIC 
+  mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS})
 
 target_link_libraries(

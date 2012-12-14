@@ -18,16 +18,16 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra"
 
 add_executable(
   mir_demo_client
-  
+
   demo_client.c
 )
 
 target_link_libraries(
   mir_demo_client
-  
+
   mirclient
   mirprotobuf
-  
+
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -35,16 +35,16 @@ target_link_libraries(
 
 add_executable(
   mir_demo_client_unaccelerated
-  
+
   demo_client_unaccelerated.c
 )
 
 target_link_libraries(
   mir_demo_client_unaccelerated
-  
+
   mirclient
   mirprotobuf
-  
+
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -52,17 +52,17 @@ target_link_libraries(
 
 add_executable(
   mir_demo_client_accelerated
-  
+
   demo_client_accelerated.cpp
 )
 
 target_link_libraries(
   mir_demo_client_accelerated
-  
+
   mirdraw
   mirclient
   mirprotobuf
-  
+
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}

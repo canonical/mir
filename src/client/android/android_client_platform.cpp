@@ -59,7 +59,7 @@ std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create
     /* we use an empty deleter because hw_get_module does not give us the ownership of the ptr */
     EmptyDeleter empty_del;
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
-    auto registrar = std::make_shared<mcla::AndroidRegistrarGralloc>(gralloc_dev); 
+    auto registrar = std::make_shared<mcla::AndroidRegistrarGralloc>(gralloc_dev);
     return std::make_shared<mcla::AndroidClientBufferDepository>(registrar);
 }
 
@@ -86,7 +86,7 @@ std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_nat
     auto mir_native_window = new mcla::MirNativeWindow(surface);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;
-    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window); 
+    MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 

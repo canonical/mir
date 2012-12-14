@@ -61,9 +61,9 @@ TEST_F(MirGBMBufferTest, width_and_height)
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
-    EXPECT_EQ(buffer.size().height, height); 
-    EXPECT_EQ(buffer.size().width, width); 
-    EXPECT_EQ(buffer.pixel_format(), pf); 
+    EXPECT_EQ(buffer.size().height, height);
+    EXPECT_EQ(buffer.size().width, width);
+    EXPECT_EQ(buffer.pixel_format(), pf);
 }
 
 TEST_F(MirGBMBufferTest, buffer_returns_correct_stride)

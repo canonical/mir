@@ -32,13 +32,13 @@ typedef struct MirSurface MirSurface;
 
 /* Returned by asynchronous functions. Must not be free'd by
  * callers. See the individual function documentation for information
- * on the lifetime of wait handles. 
+ * on the lifetime of wait handles.
  */
 typedef struct MirWaitHandle MirWaitHandle;
 
 /* Callback to be passed when issuing a connect request. The new
  * connection is passed as an argument.
- */ 
+ */
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 
 /* Callback to be passed when a request for:
@@ -46,7 +46,7 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *   - advancing a buffer
  *   - destroying a surface
  * is issued.
- */ 
+ */
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
 /* Surface API */
@@ -61,7 +61,7 @@ typedef enum MirBufferUsage
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
 } MirBufferUsage;
- 
+
 typedef struct MirSurfaceParameters
 {
     char const *name;
@@ -136,7 +136,7 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 /* Release a connection to the MIR server. */
 void mir_connection_release(MirConnection *connection);
 
-/* Query platform specific data and/or fd's that are required to initialize gl/egl bits. */ 
+/* Query platform specific data and/or fd's that are required to initialize gl/egl bits. */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /* Query the width and height of the primary display */
@@ -158,7 +158,7 @@ MirWaitHandle *mir_surface_create(
     mir_surface_lifecycle_callback callback,
     void *client_context);
 
-/* returns an EGLNativeWindowType for a surface that the client can use for 
+/* returns an EGLNativeWindowType for a surface that the client can use for
    OpenGL ES 2.0 acceleration */
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 

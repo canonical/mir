@@ -38,7 +38,7 @@ class InputReaderPolicy : public RudimentaryInputReaderPolicy
 {
 public:
     explicit InputReaderPolicy(std::shared_ptr<graphics::ViewableArea> const& viewable_area,
-			       std::shared_ptr<CursorListener> const& cursor_listener);
+                               std::shared_ptr<CursorListener> const& cursor_listener);
 
     virtual ~InputReaderPolicy() {}
 

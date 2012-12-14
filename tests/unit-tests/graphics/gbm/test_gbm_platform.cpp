@@ -69,8 +69,8 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
         auto pkg = platform->get_ipc_package();
 
         ASSERT_TRUE(pkg.get());
-        ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size()); 
-        ASSERT_EQ(auth_fd, pkg->ipc_fds[0]); 
+        ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size());
+        ASSERT_EQ(auth_fd, pkg->ipc_fds[0]);
     );
 }
 

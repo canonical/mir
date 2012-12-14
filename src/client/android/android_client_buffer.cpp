@@ -36,7 +36,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
     buffer_registrar->register_buffer(native_handle.get());
-    
+
     pack_native_window_buffer();
 }
 
@@ -75,12 +75,12 @@ const native_handle_t* mcla::AndroidClientBuffer::convert_to_native_handle(const
         handle->data[i] = package->fd[i];
     }
 
-    int offset_i = handle->numFds; 
+    int offset_i = handle->numFds;
     for(auto i=0; i< handle->numInts; i++)
     {
         handle->data[offset_i+i] = package->data[i];
     }
- 
+
     return handle;
 }
 

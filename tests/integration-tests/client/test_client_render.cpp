@@ -74,7 +74,7 @@ static void next_callback(MirSurface *, void*)
 
 static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                    {0x34567890, 0x45678901}};
- 
+
 static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
 struct TestClient
@@ -596,7 +596,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     /* check content */
     auto region = buffer_converter->get_graphic_region_from_package(package, size);
     EXPECT_TRUE(red_pattern.check(region));
-    
+
     auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
     EXPECT_TRUE(green_pattern.check(second_region));
 }

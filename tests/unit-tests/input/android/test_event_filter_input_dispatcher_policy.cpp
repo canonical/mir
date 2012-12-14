@@ -38,7 +38,7 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     mtd::MockEventFilter filter;
     mia::EventFilterDispatcherPolicy policy(std::shared_ptr<mtd::MockEventFilter>(&filter, mir::EmptyDeleter()));
     uint32_t policy_flags;
-    
+
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));
 
     // The policy filters ALL key events before queuing

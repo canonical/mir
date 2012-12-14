@@ -156,7 +156,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
 int main (int argc, char **argv)
 {
     int output_width = get_output_width();
-    
+
     cin >> noskipws;
 
     Configuration config;

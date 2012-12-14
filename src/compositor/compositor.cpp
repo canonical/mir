@@ -78,6 +78,6 @@ void mc::Compositor::render(graphics::Display* display)
     RenderingOperatorForRenderables applicator(*renderer);
 
     render_view->for_each_if(selector, applicator);
-    
+
     display->post_update();
 }

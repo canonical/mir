@@ -17,7 +17,7 @@
 
 set(
   MIR_COMPOSITOR_SRCS
-  
+
   compositor.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
@@ -26,8 +26,8 @@ set(
   buffer_id.cpp
 )
 
-ADD_LIBRARY( 
+ADD_LIBRARY(
   mircompositor STATIC
-  
+
   ${MIR_COMPOSITOR_SRCS}
 )

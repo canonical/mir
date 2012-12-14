@@ -14,7 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
-list(APPEND UNIT_TEST_SOURCES 
+list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test-dimensions.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test-size.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test-point.cpp
