@@ -22,6 +22,7 @@
 #include "android_display.h"
 #include "android_framebuffer_window.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <ui/FramebufferNativeWindow.h>
 
@@ -34,7 +35,8 @@ namespace mc=mir::compositor;
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
 {
-    return std::make_shared<mga::AndroidBufferAllocator>();
+    std::unique_ptr<mc::BufferIDUniqueGenerator> generator(new mc::BufferIDMonotonicIncreaseGenerator);
+    return std::make_shared<mga::AndroidBufferAllocator>(std::move(generator));
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */

@@ -44,8 +44,9 @@ public:
 
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::rgba_8888;
+        auto id = mc::BufferID{333}; 
         buffer = std::shared_ptr<mc::Buffer>(
-                     new mga::AndroidBuffer(mock_alloc_dev, size, pf));
+                     new mga::AndroidBuffer(mock_alloc_dev, id, size, pf));
 
         egl_mock.silence_uninteresting();
         gl_mock.silence_uninteresting();

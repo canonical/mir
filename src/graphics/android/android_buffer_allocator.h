@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+class BufferIDUniqueGenerator;
+}
 namespace graphics
 {
 namespace android
@@ -35,14 +39,14 @@ namespace android
 class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    AndroidBufferAllocator();
+    AndroidBufferAllocator(std::unique_ptr<compositor::BufferIDUniqueGenerator> && generator);
 
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
 private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
+    std::unique_ptr<compositor::BufferIDUniqueGenerator> id_generator;
 };
 
 }
