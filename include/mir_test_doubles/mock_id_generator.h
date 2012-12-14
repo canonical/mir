@@ -16,34 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+#ifndef MIR_TEST_MOCK_ID_GENERATOR_H_
+#define MIR_TEST_MOCK_ID_GENERATOR_H_
 
-#include "mir/compositor/buffer.h"
-
-#include <memory>
+#include "mir/compositor/buffer_id.h"
 
 namespace mir
 {
-namespace compositor
+namespace test
+{
+namespace doubles
 {
 
-class BufferProperties;
-
-class GraphicBufferAllocator
+struct MockIDGenerator: public compositor::BufferIDUniqueGenerator
 {
-public:
-    virtual ~GraphicBufferAllocator() {}
+    MockIDGenerator()
+    {
+        using namespace testing;
+        id = compositor::BufferID{34};
+        ON_CALL(*this, generate_unique_id())
+            .WillByDefault(Return(id));
+    }
 
-    virtual std::shared_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
+    MOCK_METHOD0(generate_unique_id, compositor::BufferID());
 
-protected:
-    GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    compositor::BufferID id;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+}
+
+#endif /* MIR_TEST_MOCK_ID_GENERATOR_H_ */

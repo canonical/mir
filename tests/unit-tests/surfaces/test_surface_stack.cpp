@@ -47,21 +47,10 @@ namespace
 class NullBufferSwapper : public mc::BufferSwapper
 {
 public:
-    /* normally, it is a guarantee that dequeue_free_buffer or grab_last_posted
-       never returns a nullptr. this nullbuffer swapper class does though */
-    virtual mc::Buffer* client_acquire() { return 0; }
-
-    /* once a client is done with the finished buffer, it must queue
-       it. This modifies the buffer the compositor posts to the screen */
-    virtual void client_release(mc::Buffer*) {}
-
-    /* caller of grab_last_posted buffer should get no-wait access to the
-        last posted buffer. However, the client will potentially stall
-        until control of the buffer is returned via ungrab() */
-
-    virtual mc::Buffer* compositor_acquire() { return 0; }
-
-    virtual void compositor_release(mc::Buffer*) { }
+    virtual void client_acquire(std::weak_ptr<mc::Buffer>&, mc::BufferID&) {}
+    virtual void client_release(mc::BufferID) {}
+    virtual void compositor_acquire(std::weak_ptr<mc::Buffer>& , mc::BufferID&){};
+    virtual void compositor_release(mc::BufferID){}
     virtual void shutdown() {}
 };
 
@@ -70,7 +59,6 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
     MockBufferBundleFactory()
     {
         using namespace ::testing;
-        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
 
         ON_CALL(
             *this,
@@ -79,7 +67,7 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
                     Return(
                         std::shared_ptr<mc::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
-                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()), generator ))));
+                                std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD1(
@@ -109,7 +97,7 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     {
         // We just use this for expectations
         renderable_operator(r);
-        renderer->render(r, r.texture());
+        renderer->render(r, r.texture()->region.lock());
     }
     mg::Renderer* renderer;
 };
@@ -123,8 +111,7 @@ TEST(
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle), generator );
+    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
     MockBufferBundleFactory buffer_bundle_factory;
 
     EXPECT_CALL(
@@ -289,7 +276,6 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     using namespace ::testing;
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     MockBufferBundleFactory buffer_bundle_factory;
 
     geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};

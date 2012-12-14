@@ -21,6 +21,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/render_view.h"
+#include "mir/compositor/graphic_region.h"
 #include <vector>
 
 namespace mir
@@ -37,13 +38,16 @@ public:
     void operator()(graphics::Renderable& renderable)
     {
         auto resource = renderable.texture();
-        texture_resources.push_back(resource);
+        compositor_resources.push_back(resource);
+        auto texture = resource->region.lock();
+        texture_resources.push_back(texture);
 
-        renderer.render(renderable, resource);
+        renderer.render(renderable, texture);
     }
 private:
     graphics::Renderer& renderer;
 
+    std::vector<std::shared_ptr<compositor::GraphicBufferCompositorResource>> compositor_resources;
     std::vector<std::shared_ptr<compositor::GraphicRegion>> texture_resources;
 };
 

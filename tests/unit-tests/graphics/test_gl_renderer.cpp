@@ -26,6 +26,9 @@
 #include <mir/graphics/gl_renderer.h>
 #include <mir_test_doubles/mock_renderable.h>
 #include <mir_test_doubles/mock_graphic_region.h>
+#include <mir/graphics/renderable.h>
+#include <mir/compositor/graphic_region.h>
+#include <mir/compositor/buffer_bundle.h>
 #include <mir_test/gl_mock.h>
 
 using testing::SetArgPointee;
@@ -289,6 +292,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
+    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
+
     mir::geometry::Point tl;
     mir::geometry::Size  s;
     glm::mat4            transformation;

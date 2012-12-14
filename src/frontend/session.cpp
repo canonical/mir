@@ -31,9 +31,9 @@ namespace ms = mir::surfaces;
 
 mf::Session::Session(
     std::shared_ptr<mf::SurfaceOrganiser> const& organiser,
-    std::string const& application_name) :
+    std::string const& session_name) :
     surface_organiser(organiser),
-    name(application_name),
+    session_name(session_name),
     next_surface_id(0)
 {
     assert(surface_organiser);
@@ -80,9 +80,9 @@ void mf::Session::destroy_surface(mf::SurfaceId id)
     }
 }
 
-std::string mf::Session::get_name()
+std::string mf::Session::name()
 {
-    return name;
+    return session_name;
 }
 
 void mf::Session::shutdown()

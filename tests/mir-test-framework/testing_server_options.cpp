@@ -65,7 +65,7 @@ public:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer(properties));
     }

@@ -19,6 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 
 #include "mir/compositor/graphic_region.h"
+#include <gmock/gmock.h>
 namespace mir
 {
 namespace test

@@ -72,9 +72,9 @@ private:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        return std::shared_ptr<mc::Buffer>(new StubBuffer());
     }
 };
 
@@ -143,13 +143,13 @@ struct BufferCreatorThread
     }
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
-    std::unique_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mc::Buffer> buffer;
     mc::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread
 {
-    BufferDestructorThread(std::unique_ptr<mc::Buffer> buffer)
+    BufferDestructorThread(std::shared_ptr<mc::Buffer> buffer)
         : buffer{std::move(buffer)}
     {
     }
@@ -157,16 +157,16 @@ struct BufferDestructorThread
     void operator()()
     {
         using namespace testing;
-        buffer.reset(0);
+        buffer.reset();
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
     }
 
-    std::unique_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mc::Buffer> buffer;
 };
 
 struct BufferTextureInstantiatorThread
 {
-    BufferTextureInstantiatorThread(const std::unique_ptr<mc::Buffer>& buffer)
+    BufferTextureInstantiatorThread(const std::shared_ptr<mc::Buffer>& buffer)
         : buffer(buffer), exception_thrown(false)
     {
     }
@@ -187,7 +187,7 @@ struct BufferTextureInstantiatorThread
         ASSERT_NE(EGL_SUCCESS, eglGetError());
     }
 
-    const std::unique_ptr<mc::Buffer>& buffer;
+    const std::shared_ptr<mc::Buffer>& buffer;
     bool exception_thrown;
 };
 

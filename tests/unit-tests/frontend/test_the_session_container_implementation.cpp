@@ -51,7 +51,7 @@ TEST(SessionContainer, for_each)
 
         void operator()(std::shared_ptr<mf::Session> const& session)
         {
-            check_name(session->get_name());
+            check_name(session->name());
         }
     } functor;
 

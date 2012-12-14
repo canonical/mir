@@ -19,6 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 
 #include "mir/graphics/renderable.h"
+#include "mir_test_doubles/mock_graphic_region.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -33,16 +34,23 @@ class MockRenderable :  public graphics::Renderable
 public:
     MockRenderable()
     {
-        using namespace testing; 
+        using namespace testing;
+        comp_resource = std::make_shared<compositor::GraphicBufferCompositorResource>();
+        region = std::make_shared<MockGraphicRegion>();
+        comp_resource->region = region;
+
         ON_CALL(*this, texture())
-            .WillByDefault(Return(std::shared_ptr<compositor::GraphicRegion>()));
+            .WillByDefault(Return(comp_resource));
     }
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<compositor::GraphicRegion>());
+    MOCK_CONST_METHOD0(texture, std::shared_ptr<compositor::GraphicBufferCompositorResource>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(hidden, bool());
+
+    std::shared_ptr<compositor::GraphicBufferCompositorResource> comp_resource;
+    std::shared_ptr<compositor::GraphicRegion> region;
 };
 
 }

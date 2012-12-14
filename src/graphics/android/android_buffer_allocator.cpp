@@ -61,10 +61,10 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::unique_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
+std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    return std::unique_ptr<mc::Buffer>(
+    return std::shared_ptr<mc::Buffer>(
         new AndroidBuffer(alloc_device,
                           buffer_properties.size,
                           buffer_properties.format));

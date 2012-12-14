@@ -43,7 +43,9 @@ public:
     virtual ~InputReaderPolicy() {}
 
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
+    virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config);
 private:
+    std::shared_ptr<graphics::ViewableArea> viewable_area;
     droidinput::sp<droidinput::PointerControllerInterface> pointer_controller;
 };
 

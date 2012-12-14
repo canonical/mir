@@ -266,9 +266,6 @@ void mg::GLRenderer::render(Renderable& renderable,
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    /* We must release the renderableTexture as soon
-     * as the bind_to_texture operation is complete
-     * so we are using it as a temporary */
     texture_resource->bind_to_texture();
 
     /* Draw */

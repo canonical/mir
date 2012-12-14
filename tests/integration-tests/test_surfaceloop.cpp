@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -76,10 +77,12 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
                                                          mc::BufferProperties const& requested)
     {
         actual = requested;
+        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+        auto stub_buffer_a = std::make_shared<StubBuffer>();
+        auto stub_buffer_b = std::make_shared<StubBuffer>();
+        std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(
-                std::unique_ptr<mc::Buffer>(new StubBuffer()),
-                std::unique_ptr<mc::Buffer>(new StubBuffer())));
+            new mc::BufferSwapperMulti(std::move(generator), list)); 
     }
 };
 
@@ -95,7 +98,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD1(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (mc::BufferProperties const&));
+        std::shared_ptr<mc::Buffer> (mc::BufferProperties const&));
 
     std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
@@ -440,7 +443,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
      public:
-        virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+        virtual std::shared_ptr<mc::Buffer> alloc_buffer(
             mc::BufferProperties const&)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());

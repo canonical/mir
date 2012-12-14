@@ -26,7 +26,7 @@
 
 #include <memory>
 #include <deque>
-#include <vector>
+#include <map>
 
 namespace mir
 {
@@ -34,31 +34,29 @@ namespace compositor
 {
 
 class Buffer;
+class BufferIDUniqueGenerator;
 
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
-                       std::unique_ptr<Buffer> buffer_b);
+    BufferSwapperMulti(std::shared_ptr<compositor::BufferIDUniqueGenerator>&& generator,
+                       std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
 
-    BufferSwapperMulti(std::unique_ptr<Buffer> buffer_a,
-                       std::unique_ptr<Buffer> buffer_b,
-                       std::unique_ptr<Buffer> buffer_c);
-
-    Buffer* client_acquire();
-    void client_release(Buffer* queued_buffer);
-    Buffer* compositor_acquire();
-    void compositor_release(Buffer* released_buffer);
+    void client_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer);
+    void client_release(BufferID queued_buffer);
+    void compositor_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& acquired_buffer);
+    void compositor_release(BufferID released_buffer);
     void shutdown();
 
 private:
-    std::vector<std::unique_ptr<Buffer>> buffers;
+    std::map<BufferID, std::shared_ptr<Buffer>> buffers;
+    std::shared_ptr<compositor::BufferIDUniqueGenerator> generator;
 
     std::mutex swapper_mutex;
 
     std::condition_variable client_available_cv;
-    std::deque<Buffer*> client_queue;
-    std::deque<Buffer*> compositor_queue;
+    std::deque<BufferID> client_queue;
+    std::deque<BufferID> compositor_queue;
     unsigned int in_use_by_client;
 };
 

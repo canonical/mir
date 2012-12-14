@@ -21,6 +21,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 
 #include <cassert>
@@ -45,5 +46,6 @@ std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_sw
     actual_buffer_properties = BufferProperties{buf2->size(), buf2->pixel_format(),
                                                 requested_buffer_properties.usage};
 
-    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti(std::move(buf1), std::move(buf2)));
+    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
+    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti(generator, {buf1, buf2}));
 }

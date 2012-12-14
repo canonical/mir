@@ -53,6 +53,17 @@ TEST(buffer_id, equality_testable)
     EXPECT_NE(id1, id0);
 }
 
+TEST(buffer_id, less_than_testable)
+{
+    unsigned int id_as_int0 = 44; 
+    unsigned int id_as_int1 = 41;
+
+    mc::BufferID id0{id_as_int0};
+    mc::BufferID id1{id_as_int1};
+
+    EXPECT_LT(id1, id0);
+}
+
 TEST(unique_generator, generate_unique)
 {
     int ids = 542;
