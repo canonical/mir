@@ -29,6 +29,8 @@
 #include <binder/Binder.h>
 #include <binder/IServiceManager.h>
 
+#include <boost/asio.hpp>
+
 #include <iosfwd>
 
 namespace mir
@@ -49,9 +51,19 @@ private:
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
 
+    void remote_call(
+        std::shared_ptr<android::Parcel> const& request,
+        google::protobuf::Message* response,
+        google::protobuf::Closure* complete);
+
     android::sp<android::IServiceManager> const sm;
     android::sp<android::IBinder> const mir_proxy;
     std::shared_ptr<Logger> const log;
+
+    static const int threads = 1;
+    std::thread io_service_thread[threads];
+    boost::asio::io_service io_service;
+    boost::asio::io_service::work work;
 };
 }
 }
