@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/detect_server.h"
+#include "mir_test_framework/detect_server.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
@@ -24,7 +24,7 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 
-bool mir::client::detect_server(const std::string& name, std::chrono::milliseconds const& timeout)
+bool mir_test_framework::detect_server(std::string const& name, std::chrono::milliseconds const& timeout)
 {
     using std::chrono::system_clock::now;
 

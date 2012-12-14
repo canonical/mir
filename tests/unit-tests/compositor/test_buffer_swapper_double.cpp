@@ -19,7 +19,7 @@
 
 #include "mir_test_doubles/mock_buffer.h"
 
-#include "mir/compositor/buffer_swapper_double.h"
+#include "mir/compositor/buffer_swapper_multi.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,16 +35,16 @@ geom::Height h {768};
 geom::Stride s {1024};
 geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
-struct BufferSwapper : testing::Test
+struct BufferSwapperDouble : testing::Test
 {
-    BufferSwapper()
+    BufferSwapperDouble()
     {
         std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
         std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
 
         buf_a = buffer_a.get();
         buf_b = buffer_b.get();
-        swapper = std::make_shared<mc::BufferSwapperDouble>(
+        swapper = std::make_shared<mc::BufferSwapperMulti>(
                 std::move(buffer_a),
                 std::move(buffer_b));
 
@@ -58,7 +58,7 @@ struct BufferSwapper : testing::Test
 
 }
 
-TEST_F(BufferSwapper, test_valid_buffer_returned)
+TEST_F(BufferSwapperDouble, test_valid_buffer_returned)
 {
     mc::Buffer* buf_tmp;
 
@@ -68,7 +68,7 @@ TEST_F(BufferSwapper, test_valid_buffer_returned)
     swapper->client_release(buf_tmp);
 }
 
-TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
+TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -87,7 +87,7 @@ TEST_F(BufferSwapper, test_valid_and_unique_with_two_acquires)
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
 }
 
-TEST_F(BufferSwapper, test_compositor_gets_valid)
+TEST_F(BufferSwapperDouble, test_compositor_gets_valid)
 {
     mc::Buffer* buf_tmp, *buf_tmp_b;
 
@@ -98,7 +98,7 @@ TEST_F(BufferSwapper, test_compositor_gets_valid)
     EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b)); /* we should get valid buffer we supplied in constructor */
 }
 
-TEST_F(BufferSwapper, test_compositor_gets_last_posted)
+TEST_F(BufferSwapperDouble, test_compositor_gets_last_posted)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -113,7 +113,7 @@ TEST_F(BufferSwapper, test_compositor_gets_last_posted)
 }
 
 
-TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
+TEST_F(BufferSwapperDouble, test_two_grabs_without_a_client_release)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -129,7 +129,7 @@ TEST_F(BufferSwapper, test_two_grabs_without_a_client_release)
     EXPECT_EQ(buf_tmp_a, buf_tmp_b);
 }
 
-TEST_F(BufferSwapper, test_two_grabs_with_client_updates)
+TEST_F(BufferSwapperDouble, test_two_grabs_with_client_updates)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;
@@ -149,7 +149,7 @@ TEST_F(BufferSwapper, test_two_grabs_with_client_updates)
 
 }
 
-TEST_F(BufferSwapper, test_grab_release_pattern)
+TEST_F(BufferSwapperDouble, test_grab_release_pattern)
 {
     mc::Buffer* buf_tmp_a;
     mc::Buffer* buf_tmp_b;

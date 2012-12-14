@@ -310,10 +310,10 @@ Thomas Voss
         function, output from the function, or both. Input parameters
         are usually values or <code>const</code> references, while output
         and input/output parameters will be non-<code>const</code>
-        pointers. When ordering function parameters, put all output
-        parameters before any input-only parameters.  In particular, do not add
-        new parameters to the end of the function just because they are
-        new; place new output parameters before the input-only
+        references or pointers to non-<code>const</code>. When ordering function 
+        parameters, put all output parameters before any input-only parameters.
+        In particular, do not add new parameters to the end of the function just
+        because they are new; place new output parameters before the input-only
         parameters.
       </p>
       <p>

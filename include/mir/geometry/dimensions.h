@@ -47,7 +47,7 @@ public:
     }
     float as_float() const
     {
-	return value;
+        return value;
     }
 
 private:

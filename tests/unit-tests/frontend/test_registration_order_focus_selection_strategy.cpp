@@ -48,9 +48,9 @@ TEST(RegistrationOrderFocusSequence, focus_order)
     model->insert_session(app2);
     model->insert_session(app3);
 
-    EXPECT_EQ(app2->get_name(), focus_sequence.successor_of(app1).lock()->get_name());
-    EXPECT_EQ(app3->get_name(), focus_sequence.successor_of(app2).lock()->get_name());
-    EXPECT_EQ(app1->get_name(), focus_sequence.successor_of(app3).lock()->get_name());
+    EXPECT_EQ(app2->name(), focus_sequence.successor_of(app1).lock()->name());
+    EXPECT_EQ(app3->name(), focus_sequence.successor_of(app2).lock()->name());
+    EXPECT_EQ(app1->name(), focus_sequence.successor_of(app3).lock()->name());
 }
 
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
@@ -68,9 +68,9 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
     container->insert_session(app2);
     container->insert_session(app3);
 
-    EXPECT_EQ(app2->get_name(), focus_sequence.predecessor_of(app3).lock()->get_name());
-    EXPECT_EQ(app1->get_name(), focus_sequence.predecessor_of(app2).lock()->get_name());
-    EXPECT_EQ(app3->get_name(), focus_sequence.predecessor_of(app1).lock()->get_name());
+    EXPECT_EQ(app2->name(), focus_sequence.predecessor_of(app3).lock()->name());
+    EXPECT_EQ(app1->name(), focus_sequence.predecessor_of(app2).lock()->name());
+    EXPECT_EQ(app3->name(), focus_sequence.predecessor_of(app1).lock()->name());
 }
 
 TEST(RegistrationOrderFocusSequence, no_focus)
@@ -84,5 +84,5 @@ TEST(RegistrationOrderFocusSequence, no_focus)
 
     container->insert_session(app1);
 
-    EXPECT_EQ(app1->get_name(), focus_sequence.successor_of(std::shared_ptr<mf::Session>()).lock()->get_name());
+    EXPECT_EQ(app1->name(), focus_sequence.successor_of(std::shared_ptr<mf::Session>()).lock()->name());
 }
