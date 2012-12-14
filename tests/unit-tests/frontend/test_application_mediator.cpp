@@ -172,7 +172,7 @@ class StubPlatform : public mg::Platform
     std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
     {
-        return std::make_shared<MockGraphicBufferAllocator>();
+        return std::shared_ptr<mc::GraphicBufferAllocator>();
     }
 
     std::shared_ptr<mg::Display> create_display()
