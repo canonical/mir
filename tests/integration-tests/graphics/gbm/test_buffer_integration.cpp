@@ -42,7 +42,7 @@ class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer()
-     : BufferBasic(mc::BufferID{0}),
+     : BufferBasic(mc::BufferID{(int) this}),
        creation_thread_id{std::this_thread::get_id()}
     {}
 

@@ -56,7 +56,7 @@ class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer()
-     : BufferBasic(mc::BufferID{8})
+     : BufferBasic(mc::BufferID{(int) this})
     {}
     geom::Size size() const { return ::size; }
     geom::Stride stride() const { return geom::Stride(); }
@@ -82,12 +82,11 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
                                                          mc::BufferProperties const& requested)
     {
         actual = requested;
-        auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
         auto stub_buffer_a = std::make_shared<StubBuffer>();
         auto stub_buffer_b = std::make_shared<StubBuffer>();
         std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(std::move(generator), list)); 
+            new mc::BufferSwapperMulti(list)); 
     }
 };
 
@@ -418,7 +417,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     public:
 
         StubBuffer()
-         : BufferBasic(mc::BufferID{8})
+         : BufferBasic(mc::BufferID{(int) this})
         {
             int created = buffers_created.load();
             while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();

@@ -44,7 +44,7 @@ class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer(mc::BufferProperties const& properties)
-        : BufferBasic(mc::BufferID{0}),
+        : BufferBasic(mc::BufferID{(int) this}),
           buf_size{properties.size},
           buf_pixel_format{properties.format}
     {

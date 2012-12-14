@@ -27,6 +27,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace
+{
+static int global_id = 1;
+}
+
 namespace mir
 {
 namespace test
@@ -50,6 +55,8 @@ struct MockBuffer : public compositor::Buffer
                 .WillByDefault(Return(s));
         ON_CALL(*this, pixel_format())
                 .WillByDefault(Return(pf));
+        ON_CALL(*this, id())
+                .WillByDefault(Return(compositor::BufferID{global_id++}));
 
         ON_CALL(*this, get_ipc_package())
                 .WillByDefault(Return(empty_package));

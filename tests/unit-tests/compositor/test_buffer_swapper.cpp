@@ -78,10 +78,14 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction)
 {
-    auto use_count_before  = buffer_a.use_count();
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_a, buffer_a});
+    auto use_count_before_a  = buffer_a.use_count();
+    auto use_count_before_b  = buffer_b.use_count();
+    auto use_count_before_c  = buffer_c.use_count();
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
-    EXPECT_EQ(buffer_a.use_count(), use_count_before + 3);
+    EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
+    EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
+    EXPECT_EQ(buffer_c.use_count(), use_count_before_c + 1);
 
     /* just to keep ref */
     swapper.shutdown(); 
@@ -89,7 +93,6 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction)
 
 TEST_F(BufferSwapperConstruction, error_construction)
 {
-    auto mock_generator2 = std::make_shared<mtd::MockIDGenerator>();
     /* don't support single buffering with the mc::BufferSwapper interface model */
     EXPECT_THROW({
         mc::BufferSwapperMulti({buffer_a});
