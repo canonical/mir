@@ -19,18 +19,18 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
-#include <stdexcept>
+#include "mir/exception.h"
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && gen, 
+mc::BufferSwapperMulti::BufferSwapperMulti(const std::shared_ptr<mc::BufferIDUniqueGenerator>& gen, 
                                            std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
- : generator(std::move(gen)),
+ : generator(gen),
    in_use_by_client(0)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
-        throw std::runtime_error("BufferSwapperMulti is only validated for 2 or 3 buffers");
+        BOOST_THROW_EXCEPTION(std::runtime_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
         
     for( auto& buffer : buffer_list )

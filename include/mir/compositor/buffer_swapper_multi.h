@@ -39,7 +39,7 @@ class BufferIDUniqueGenerator;
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    BufferSwapperMulti(std::shared_ptr<compositor::BufferIDUniqueGenerator>&& generator,
+    BufferSwapperMulti(const std::shared_ptr<compositor::BufferIDUniqueGenerator>& generator,
                        std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
 
     void client_acquire(std::weak_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer);

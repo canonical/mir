@@ -214,7 +214,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
         .WillOnce(Return(graphics_resource));
     surf.advance_client_buffer();
 
-    auto ret_ipc = surf.get_buffer_ipc_package();
+    auto ret_ipc = surf.client_buffer_resource();
     EXPECT_EQ(ret_ipc->buffer.lock()->get_ipc_package().get(), mock_buffer->get_ipc_package().get()); 
 }
 

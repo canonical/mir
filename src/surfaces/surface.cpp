@@ -124,7 +124,7 @@ void ms::Surface::advance_client_buffer()
     graphics_resource = buffer_bundle->secure_client_buffer();
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::get_buffer_ipc_package() const
+std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::client_buffer_resource() const
 {
     return graphics_resource;
 }
