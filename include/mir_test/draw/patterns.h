@@ -24,6 +24,7 @@
 #include <stdexcept>
 /* todo: replace with color value types */
 #include <stdint.h>
+#include <cstring>
 
 namespace mir
 {
