@@ -48,7 +48,7 @@ class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer()
-     : BufferBasic(mc::BufferID{(int)this}) {}
+     : BufferBasic(mc::BufferID{(int) (long int) this}) {}
     geom::Size size() const { return geom::Size(); }
 
     geom::Stride stride() const { return geom::Stride(); }

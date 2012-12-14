@@ -56,7 +56,7 @@ class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer()
-     : BufferBasic(mc::BufferID{(int) this})
+     : BufferBasic(mc::BufferID{(int) (long int) this})
     {}
     geom::Size size() const { return ::size; }
     geom::Stride stride() const { return geom::Stride(); }
@@ -417,7 +417,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     public:
 
         StubBuffer()
-         : BufferBasic(mc::BufferID{(int) this})
+         : BufferBasic(mc::BufferID{(int) (long int) this})
         {
             int created = buffers_created.load();
             while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
