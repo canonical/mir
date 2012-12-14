@@ -24,7 +24,7 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 
-bool mir_test_framework::detect_server(const std::string& name, std::chrono::milliseconds const& timeout)
+bool mir_test_framework::detect_server(std::string const& name, std::chrono::milliseconds const& timeout)
 {
     using std::chrono::system_clock::now;
 

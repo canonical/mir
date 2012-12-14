@@ -30,10 +30,11 @@
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
 
-mf::SessionManager::SessionManager(std::shared_ptr<mf::SurfaceOrganiser> const& organiser,
-                                           std::shared_ptr<mf::SessionContainer> const& container,
-                                           std::shared_ptr<mf::FocusSequence> const& sequence,
-                                           std::shared_ptr<mf::FocusSetter> const& focus_setter) :
+mf::SessionManager::SessionManager(
+    std::shared_ptr<mf::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<mf::SessionContainer> const& container,
+    std::shared_ptr<mf::FocusSequence> const& sequence,
+    std::shared_ptr<mf::FocusSetter> const& focus_setter) :
   surface_organiser(organiser),
   app_container(container),
   focus_sequence(sequence),

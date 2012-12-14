@@ -25,7 +25,7 @@
 
 namespace mir_test_framework
 {
-bool detect_server(const std::string& name, std::chrono::milliseconds const& timeout);
+bool detect_server(std::string const& name, std::chrono::milliseconds const& timeout);
 }
 
 

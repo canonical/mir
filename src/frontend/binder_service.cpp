@@ -38,22 +38,7 @@ public:
 
     void set_processor(std::shared_ptr<MessageProcessor> const& processor);
 
-    bool process_message(android::Parcel const& request, android::Parcel* response)
-    {
-        this->response = response;
-
-        // TODO there's probably a way to refactor this to avoid copy
-        auto const& buffer = request.readString8();
-        std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
-        std::istringstream msg(inefficient_copy);
-
-        auto const result = processor->process_message(msg);
-
-        assert(response == this->response);
-        this->response = 0;
-
-        return result;
-    }
+    bool process_message(android::Parcel const& request, android::Parcel* response);
 
 private:
     void send(const std::ostringstream& buffer2);
@@ -74,6 +59,24 @@ void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& 
 {
     this->processor = processor;
 }
+
+bool mfd::BinderSession::process_message(android::Parcel const& request, android::Parcel* response)
+{
+    this->response = response;
+
+    // TODO there's probably a way to refactor this to avoid copy
+    auto const& buffer = request.readString8();
+    std::string inefficient_copy(buffer.string(), buffer.string()+buffer.size());
+    std::istringstream msg(inefficient_copy);
+
+    auto const result = processor->process_message(msg);
+
+    assert(response == this->response);
+    this->response = 0;
+
+    return result;
+}
+
 
 void mfd::BinderSession::send(const std::ostringstream& buffer)
 {
