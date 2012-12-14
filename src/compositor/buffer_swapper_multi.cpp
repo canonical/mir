@@ -25,7 +25,8 @@ namespace mc = mir::compositor;
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::shared_ptr<mc::BufferIDUniqueGenerator> && gen, 
                                            std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
- : generator(std::move(gen))
+ : generator(std::move(gen)),
+   in_use_by_client(0)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {

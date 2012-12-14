@@ -55,7 +55,7 @@ protected:
     BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
 
 private:
-    std::unique_ptr<BufferSwapper> swapper;
+    std::shared_ptr<BufferSwapper> swapper;
     std::map<Buffer*, BufferID> buffer_to_id_map;
     geometry::Size size;
     geometry::PixelFormat pixel_format;

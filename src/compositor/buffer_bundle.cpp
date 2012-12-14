@@ -32,7 +32,7 @@ namespace
 {
 struct CompositorReleaseDeleter
 {
-    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw, mc::BufferID id) :
+    explicit CompositorReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
         swapper(sw),
         id(id)
     {
@@ -40,28 +40,30 @@ struct CompositorReleaseDeleter
 
     void operator()(mc::GraphicBufferCompositorResource* compositor_resource)
     {
-        swapper->compositor_release(id);
+        if (auto res = swapper.lock())
+            res->compositor_release(id);
         delete compositor_resource;
     }
 
-    mc::BufferSwapper* const swapper;
+    std::weak_ptr<mc::BufferSwapper> swapper;
     mc::BufferID id;
 };
 
 struct ClientReleaseDeleter
 {
-    ClientReleaseDeleter(mc::BufferSwapper* sw) :
+    ClientReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw) :
         swapper(sw)
     {
     }
 
     void operator()(mc::GraphicBufferClientResource* client_resource)
     {
-        swapper->client_release(client_resource->id);
+        if (auto res = swapper.lock())
+            res->client_release(client_resource->id);
         delete client_resource;
     }
 
-    mc::BufferSwapper* const swapper;
+    std::weak_ptr<mc::BufferSwapper> swapper;
 };
 }
 
@@ -92,7 +94,7 @@ std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::l
     swapper->compositor_acquire(region, id);
 
     auto resource = new mc::GraphicBufferCompositorResource(region);
-    CompositorReleaseDeleter del(swapper.get(), id);
+    CompositorReleaseDeleter del(swapper, id);
     auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
 
     return compositor_resource;
@@ -102,7 +104,7 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
 {
     auto resource = new mc::GraphicBufferClientResource;
     swapper->client_acquire(resource->buffer, resource->id);
-    ClientReleaseDeleter del(swapper.get());
+    ClientReleaseDeleter del(swapper);
     auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
     return client_resource;
 }
