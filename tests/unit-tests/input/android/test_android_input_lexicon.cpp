@@ -44,8 +44,8 @@ TEST(AndroidInputLexicon, translates_key_events)
     const nsecs_t event_time = 10;
     
     android_key_ev->initialize(device_id, source_id, action, flags, key_code,
-			       scan_code, meta_state, repeat_count,
-			       down_time, event_time);
+                               scan_code, meta_state, repeat_count,
+                               down_time, event_time);
     
     MirEvent mir_ev;
     mia::Lexicon::translate(android_key_ev, mir_ev);
@@ -116,9 +116,9 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);  
   
     android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
-				  meta_state, button_state, x_offset, y_offset,
-				  x_precision, y_precision, down_time,
-				  event_time, pointer_count, &pointer_properties, &pointer_coords);
+                                  meta_state, button_state, x_offset, y_offset,
+                                  x_precision, y_precision, down_time,
+                                  event_time, pointer_count, &pointer_properties, &pointer_coords);
 
     MirEvent mir_ev;
     mia::Lexicon::translate(android_motion_ev, mir_ev);

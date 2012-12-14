@@ -80,7 +80,7 @@ public:
     MOCK_METHOD2(drmModeRmFB, int(int fd, uint32_t bufferId));
 
     MOCK_METHOD5(drmModePageFlip, int(int fd, uint32_t crtc_id, uint32_t fb_id,
-			                          uint32_t flags, void *user_data));
+                                                  uint32_t flags, void *user_data));
     MOCK_METHOD2(drmHandleEvent, int(int fd, drmEventContextPtr evctx));
 
     MOCK_METHOD2(drmGetMagic, int(int fd, drm_magic_t *magic));
