@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -51,8 +52,12 @@ geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
 
-class StubBuffer : public mc::Buffer
+class StubBuffer : public mc::BufferBasic
 {
+public:
+    StubBuffer()
+     : BufferBasic(mc::BufferID{8})
+    {}
     geom::Size size() const { return ::size; }
     geom::Stride stride() const { return geom::Stride(); }
     geom::PixelFormat pixel_format() const { return ::format; }
@@ -408,11 +413,12 @@ namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
 {
-    class StubBuffer : public mc::Buffer
+    class StubBuffer : public mc::BufferBasic
     {
     public:
 
         StubBuffer()
+         : BufferBasic(mc::BufferID{8})
         {
             int created = buffers_created.load();
             while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();

@@ -19,33 +19,44 @@
 /* since we're testing functions that belong to a class that shouldn't have 
    a constructor, we test via a test class */
 
-#include "mir/compositor/basic_buffer.h"
+#include "mir/compositor/buffer_basic.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
-class TestClassBuffer : public mc::BasicBuffer
+#include <gtest/gtest.h>
+
+namespace mc=mir::compositor;
+namespace geom=mir::geometry;
+
+class TestClassBuffer : public mc::BufferBasic
 {
-    StubBuffer(mc::BufferID id)
-     : BasicBuffer(id)
+public:
+    TestClassBuffer(mc::BufferID id)
+     : BufferBasic(id)
     {
     }
 
     geom::Size size() const
     {
+        return geom::Size{geom::Width{0}, geom::Height{0}};
     }
 
     geom::Stride stride() const
     {
+        return geom::Stride{0};
     }
 
     geom::PixelFormat pixel_format() const
     {
+        return geom::PixelFormat::rgba_8888;
     }
 
     void bind_to_texture()
     {
     }
 
-    std::shared_ptr<BufferIPCPackage> get_ipc_package() const
+    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const
     {
+        return std::shared_ptr<mc::BufferIPCPackage>(); 
     }
 };
 

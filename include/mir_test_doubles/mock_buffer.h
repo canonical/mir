@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -58,6 +59,7 @@ struct MockBuffer : public compositor::Buffer
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
+    MOCK_CONST_METHOD0(id, compositor::BufferID());
 
     MOCK_METHOD0(bind_to_texture, void());
 

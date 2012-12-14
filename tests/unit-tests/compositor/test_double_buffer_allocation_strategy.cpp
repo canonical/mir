@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/double_buffer_allocation_strategy.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -30,9 +30,12 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubBuffer : public mc::Buffer
+class StubBuffer : public mc::BufferBasic
 {
 public:
+    StubBuffer()
+     : BufferBasic(mc::BufferID{8})
+    {}
     geom::Size size() const { return buf_size; }
     geom::Stride stride() const { return geom::Stride(); }
     geom::PixelFormat pixel_format() const { return buf_pixel_format; }

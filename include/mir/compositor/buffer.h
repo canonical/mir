@@ -30,6 +30,7 @@ namespace mir
 namespace compositor
 {
 class BufferIPCPackage;
+class BufferID;
 
 class Buffer : public GraphicRegion
 {
@@ -43,6 +44,7 @@ public:
     virtual void bind_to_texture() = 0;
 
     virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
+    virtual BufferID id() const = 0;
 
 protected:
     Buffer() = default;

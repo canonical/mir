@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "graphic_alloc_adaptor.h"
 #include "android_buffer_handle.h"
 
@@ -41,7 +41,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidBuffer: public compositor::Buffer
+class AndroidBuffer: public compositor::BufferBasic
 {
 public:
     AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device, geometry::Size size, geometry::PixelFormat pf);

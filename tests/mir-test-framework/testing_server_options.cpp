@@ -23,7 +23,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -40,11 +40,13 @@ namespace mir
 {
 namespace
 {
-class StubBuffer : public mc::Buffer
+class StubBuffer : public mc::BufferBasic
 {
 public:
     StubBuffer(mc::BufferProperties const& properties)
-        : buf_size{properties.size}, buf_pixel_format{properties.format}
+        : BufferBasic(mc::BufferID{0}),
+          buf_size{properties.size},
+          buf_pixel_format{properties.format}
     {
     }
 

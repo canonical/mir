@@ -30,6 +30,7 @@ namespace geom=mir::geometry;
 mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
                                   geom::Size size, geom::PixelFormat pf)
     :
+    BufferBasic(mc::BufferID{0}),
     alloc_device(alloc_dev)
 {
     BufferUsage usage = mga::BufferUsage::use_hardware;
