@@ -20,6 +20,7 @@
 #define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
 
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <memory>
 
@@ -39,6 +40,7 @@ class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
     GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
+                       std::unique_ptr<compositor::BufferIDUniqueGenerator>&& generator,
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
@@ -46,6 +48,7 @@ public:
 
 private:
     std::shared_ptr<GBMPlatform> platform;
+    std::unique_ptr<compositor::BufferIDUniqueGenerator> id_generator;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 };

@@ -143,8 +143,11 @@ struct GBMBODeleter
 
 mgg::GBMBufferAllocator::GBMBufferAllocator(
         const std::shared_ptr<GBMPlatform>& platform,
+        std::unique_ptr<mc::BufferIDUniqueGenerator> && generator,
         const std::shared_ptr<BufferInitializer>& buffer_initializer)
-        : platform(platform), buffer_initializer(buffer_initializer),
+        : platform(platform),
+          id_generator(std::move(generator)),
+          buffer_initializer(buffer_initializer),
           egl_extensions(std::make_shared<EGLExtensions>())
 {
     assert(buffer_initializer.get() != 0);
@@ -177,7 +180,8 @@ std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mc::Buffer> buffer{new GBMBuffer{mc::BufferID{4}, bo, std::move(texture_binder)}};
+    auto new_id = id_generator->generate_unique_id();
+    std::shared_ptr<mc::Buffer> buffer{new GBMBuffer{mc::BufferID{new_id}, bo, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 

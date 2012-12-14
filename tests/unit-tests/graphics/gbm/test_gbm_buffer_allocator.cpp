@@ -68,7 +68,8 @@ protected:
 
         platform = std::make_shared<mgg::GBMPlatform>();
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
+        auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
+        allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), mock_buffer_initializer));
     }
 
     // Defaults
@@ -193,7 +194,8 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
+    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
+    allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), null_buffer_initializer));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);
@@ -224,8 +226,9 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
+    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
     EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
+        mgg::GBMBufferAllocator allocator(platform, std::move(generator), mock_buffer_initializer);
     }, std::runtime_error);
 }
 
@@ -237,8 +240,9 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_suppor
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
+    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
     EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
+        mgg::GBMBufferAllocator allocator(platform, std::move(generator), mock_buffer_initializer);
     }, std::runtime_error);
 }
 
@@ -257,7 +261,7 @@ TEST_F(GBMBufferAllocatorTest, basic_id_generation)
         .WillOnce(Return(id1))
         .WillRepeatedly(Return(id2));
 
-    mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
+    mgg::GBMBufferAllocator allocator(platform, std::move(mock_id_generator), mock_buffer_initializer);
 
     auto buffer1 = allocator.alloc_buffer(buffer_properties);
     auto buffer2 = allocator.alloc_buffer(buffer_properties);
