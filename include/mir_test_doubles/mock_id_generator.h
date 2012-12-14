@@ -20,6 +20,7 @@
 #define MIR_TEST_MOCK_ID_GENERATOR_H_
 
 #include "mir/compositor/buffer_id.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
