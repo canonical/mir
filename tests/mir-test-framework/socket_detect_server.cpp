@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/detect_server.h"
+#include "mir_test_framework/detect_server.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 
-bool mir::client::detect_server(
+bool mir_test_framework::detect_server(
         const std::string& socket_file,
         std::chrono::milliseconds const& timeout)
 {

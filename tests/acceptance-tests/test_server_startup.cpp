@@ -19,7 +19,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir/chrono/chrono.h"
-#include "mir_client/detect_server.h"
+#include "mir_test_framework/detect_server.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,9 +32,7 @@ namespace mir
 {
 TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
 {
-    using mir::client::detect_server;
-
-    ASSERT_FALSE(detect_server(mtf::test_socket_file(), std::chrono::milliseconds(0)));
+    ASSERT_FALSE(mtf::detect_server(mtf::test_socket_file(), std::chrono::milliseconds(0)));
 
     TestingServerConfiguration server_config;
 
@@ -44,7 +42,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
     {
         void exec()
         {
-            EXPECT_TRUE(detect_server(mtf::test_socket_file(),
+            EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
                                            std::chrono::milliseconds(100)));
         }
     } client_config;

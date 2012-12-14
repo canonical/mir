@@ -24,7 +24,7 @@
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"
 
-#include "mir_client/detect_server.h"
+#include "mir_test_framework/detect_server.h"
 
 #include <boost/asio.hpp>
 
@@ -52,7 +52,7 @@ namespace mir_test_framework
 {
 void startup_pause()
 {
-    if (!mir::client::detect_server(test_socket_file(), std::chrono::milliseconds(2000)))
+    if (!detect_server(test_socket_file(), std::chrono::milliseconds(2000)))
         throw std::runtime_error("Failed to find server");
 }
 }

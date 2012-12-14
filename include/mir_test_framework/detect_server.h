@@ -17,19 +17,16 @@
  */
 
 
-#ifndef MIR_CLIENT_DETECT_SERVER_H_
-#define MIR_CLIENT_DETECT_SERVER_H_
+#ifndef MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
+#define MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
 
 #include "mir/chrono/chrono.h"
 #include <string>
 
-namespace mir
-{
-namespace client
+namespace mir_test_framework
 {
 bool detect_server(const std::string& name, std::chrono::milliseconds const& timeout);
 }
-}
 
 
-#endif /* MIR_CLIENT_DETECT_SERVER_H_ */
+#endif /* MIR_TEST_FRAMEWORK_DETECT_SERVER_H_ */
