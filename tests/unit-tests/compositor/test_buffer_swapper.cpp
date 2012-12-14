@@ -18,7 +18,6 @@
 
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_id_generator.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -35,14 +34,25 @@ struct BufferSwapperConstruction : testing::Test
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
-        mock_generator = std::make_shared<mtd::MockIDGenerator>();
-        buffer_a = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_b = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_c = std::make_shared<mtd::MockBuffer>(size, s, pf);
-
         id1 = mc::BufferID{4};
         id2 = mc::BufferID{6};
         id3 = mc::BufferID{5};
+        buffer_a = std::make_shared<mtd::MockBuffer>(id1, size, s, pf);
+        buffer_b = std::make_shared<mtd::MockBuffer>(id2, size, s, pf);
+        buffer_c = std::make_shared<mtd::MockBuffer>(id3, size, s, pf);
+
+    }
+
+    bool check_ref(std::weak_ptr<mc::Buffer> buffer, mc::BufferID id)
+    {
+        if ((id == id1) && (buffer.lock().get() == buffer_a.get()))
+            return true;
+        if ((id == id2) && (buffer.lock().get() == buffer_b.get()))
+            return true;
+        if ((id == id3) && (buffer.lock().get() == buffer_c.get()))
+            return true;
+
+        return false;
     }
 
     mc::BufferID id1;
@@ -51,20 +61,13 @@ struct BufferSwapperConstruction : testing::Test
     std::shared_ptr<mc::Buffer> buffer_a;
     std::shared_ptr<mc::Buffer> buffer_b;
     std::shared_ptr<mc::Buffer> buffer_c;
-    std::shared_ptr<mtd::MockIDGenerator> mock_generator;
 };
 
 TEST_F(BufferSwapperConstruction, basic_double_construction)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(2)
-        .WillOnce(Return(id1))
-        .WillRepeatedly(Return(id2));
-
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
-    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_b});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
     EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
@@ -75,15 +78,8 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(3)
-        .WillOnce(Return(id1))
-        .WillOnce(Return(id2))
-        .WillRepeatedly(Return(id3));
-
     auto use_count_before  = buffer_a.use_count();
-    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_a, buffer_a});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_a, buffer_a});
 
     EXPECT_EQ(buffer_a.use_count(), use_count_before + 3);
 
@@ -96,60 +92,58 @@ TEST_F(BufferSwapperConstruction, error_construction)
     auto mock_generator2 = std::make_shared<mtd::MockIDGenerator>();
     /* don't support single buffering with the mc::BufferSwapper interface model */
     EXPECT_THROW({
-        mc::BufferSwapperMulti(std::move(mock_generator), {buffer_a});
+        mc::BufferSwapperMulti({buffer_a});
     }, std::runtime_error);
 
     /* BufferSwapperMulti algorithm is generic enough to do >=4 buffers. However, we have only tested
        for 2 or 3 buffers, so we will throw on 4 or greater until 4 or greater buffers is tested*/
     EXPECT_THROW({
-        mc::BufferSwapperMulti(std::move(mock_generator2), {buffer_a, buffer_b, buffer_c, buffer_b});
+        mc::BufferSwapperMulti({buffer_a, buffer_b, buffer_c, buffer_b});
     }, std::runtime_error);
 }
 
-TEST_F(BufferSwapperConstruction, double_assigns_unique_to_each)
+TEST_F(BufferSwapperConstruction, references_match_ids_double)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(2)
-        .WillOnce(Return(id1))
-        .WillRepeatedly(Return(id2));
-
-    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_b});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
     mc::BufferID test_id_1, test_id_2;
-    std::weak_ptr<mc::Buffer> buffer_ref; 
-    swapper.compositor_acquire(buffer_ref, test_id_1);
-    swapper.client_acquire(buffer_ref, test_id_2);
+    std::weak_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2; 
+    swapper.compositor_acquire(buffer_ref_1, test_id_1);
+    swapper.client_acquire(buffer_ref_2, test_id_2);
     /* swapper is now 'empty' */
 
+    /* test uniqueness of ids */
     EXPECT_TRUE((test_id_1 == id1) || (test_id_1 == id2));
     EXPECT_TRUE((test_id_2 == id1) || (test_id_2 == id2));
     EXPECT_NE(test_id_1, test_id_2);
+
+    /* test id's match refs */
+    EXPECT_TRUE(check_ref(buffer_ref_1, test_id_1));
+    EXPECT_TRUE(check_ref(buffer_ref_2, test_id_2));
 }
 
-TEST_F(BufferSwapperConstruction, triple_assigns_unique_to_each)
+TEST_F(BufferSwapperConstruction, references_match_ids_triple)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_generator, generate_unique_id())
-        .Times(3)
-        .WillOnce(Return(id1))
-        .WillOnce(Return(id2))
-        .WillRepeatedly(Return(id3));
-
-    mc::BufferSwapperMulti swapper(std::move(mock_generator), {buffer_a, buffer_b, buffer_c});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
     mc::BufferID test_id_1, test_id_2, test_id_3;
-    std::weak_ptr<mc::Buffer> buffer_ref; 
-    swapper.compositor_acquire(buffer_ref, test_id_1);
-    swapper.client_acquire(buffer_ref, test_id_2);
+    std::weak_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3; 
+    swapper.compositor_acquire(buffer_ref_1, test_id_1);
+    swapper.client_acquire(buffer_ref_2, test_id_2);
     swapper.client_release(test_id_2);
-    swapper.client_acquire(buffer_ref, test_id_3);
+    swapper.client_acquire(buffer_ref_3, test_id_3);
     /* swapper is now 'empty' */
 
+    /* test uniqueness of ids */
     EXPECT_TRUE((test_id_1 == id1) || (test_id_1 == id2) || (test_id_1 == id3));
     EXPECT_TRUE((test_id_2 == id1) || (test_id_2 == id2) || (test_id_2 == id3));
     EXPECT_TRUE((test_id_3 == id1) || (test_id_3 == id2) || (test_id_3 == id3));
     EXPECT_NE(test_id_1, test_id_2);
     EXPECT_NE(test_id_1, test_id_3);
     EXPECT_NE(test_id_2, test_id_3);
+
+    /* test id's match refs */
+    EXPECT_TRUE(check_ref(buffer_ref_1, test_id_1));
+    EXPECT_TRUE(check_ref(buffer_ref_2, test_id_2));
+    EXPECT_TRUE(check_ref(buffer_ref_3, test_id_3));
 }

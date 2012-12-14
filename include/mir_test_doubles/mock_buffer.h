@@ -55,6 +55,27 @@ struct MockBuffer : public compositor::Buffer
                 .WillByDefault(Return(empty_package));
         }
 
+    MockBuffer(compositor::BufferID id,
+               geometry::Size size,
+               geometry::Stride s,
+               geometry::PixelFormat pf)
+        {
+        empty_package = std::make_shared<compositor::BufferIPCPackage>();
+
+            using namespace testing;
+        ON_CALL(*this, size())
+                .WillByDefault(Return(size));
+        ON_CALL(*this, stride())
+                .WillByDefault(Return(s));
+        ON_CALL(*this, pixel_format())
+                .WillByDefault(Return(pf));
+        ON_CALL(*this, id())
+                .WillByDefault(Return(id));
+
+        ON_CALL(*this, get_ipc_package())
+                .WillByDefault(Return(empty_package));
+        }
+
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
