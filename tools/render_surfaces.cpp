@@ -73,7 +73,7 @@ struct StopWatch
     {
         now = std::chrono::high_resolution_clock::now();
     }
-    
+
     double elapsed_seconds_since_start()
     {
         auto elapsed = now - start;
@@ -92,7 +92,7 @@ struct StopWatch
     {
         std::swap(last, now);
     }
-    
+
     std::chrono::high_resolution_clock::time_point start;
     std::chrono::high_resolution_clock::time_point last;
     std::chrono::high_resolution_clock::time_point now;
@@ -129,9 +129,9 @@ struct Moveable
           y{static_cast<float>(s.top_left().y.as_uint32_t())},
           w{static_cast<float>(s.size().width.as_uint32_t())},
           h{static_cast<float>(s.size().height.as_uint32_t())},
-          dx{dx}, 
+          dx{dx},
           dy{dy},
-          rotation_axis{rotation_axis}, 
+          rotation_axis{rotation_axis},
           alpha_offset{alpha_offset}
     {
     }
@@ -142,7 +142,7 @@ struct Moveable
         float elapsed_sec = stop_watch.elapsed_seconds_since_last_restart();
         float total_elapsed_sec = stop_watch.elapsed_seconds_since_start();
         stop_watch.restart();
-        
+
         bool should_update = true;
         float new_x = x + elapsed_sec * dx;
         float new_y = y + elapsed_sec * dy;
@@ -197,14 +197,14 @@ int main(int argc, char **argv)
     ms::SurfaceStack surface_stack{&manager};
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
     mc::Compositor compositor{&surface_stack,gl_renderer};
-    
+
     /* Set up graceful exit on SIGINT */
     struct sigaction sa;
     sa.sa_handler = mir::signal_handler;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
 
-    sigaction(SIGINT, &sa, NULL);  
+    sigaction(SIGINT, &sa, NULL);
 
     /* Parse the command line */
     unsigned int num_moveables = 5;
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
         std::shared_ptr<ms::Surface> s = surface_stack.create_surface(
             ms::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})).lock();
 
-        /* 
+        /*
          * Place each surface at a different starting location and give it a
          * different speed, rotation and alpha offset.
          */
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
     /* Draw! */
     glClearColor(0.0, 1.0, 0.0, 1.0);
     uint32_t frames = 0;
-    
+
     mir::StopWatch stop_watch;
 
     while (mir::running) {
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
             std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
             frames = 0;
             stop_watch.restart();
-        }        
+        }
         /* Update surface state */
         for (unsigned int i = 0; i < num_moveables; ++i)
             m[i].step();

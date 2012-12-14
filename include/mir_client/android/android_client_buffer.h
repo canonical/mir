@@ -40,7 +40,7 @@ public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>, std::shared_ptr<MirBufferPackage> && ,
                         geometry::Size size, geometry::PixelFormat pf );
     ~AndroidClientBuffer();
-    
+
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;

@@ -27,11 +27,11 @@ set(
 )
 
 add_library(
-  mirdraw STATIC 
+  mirdraw STATIC
   ${DRAW_SRCS})
 
 target_link_libraries(
-  mirdraw 
+  mirdraw
 
   ${GLESv2_LIBRARIES}
  )

@@ -103,12 +103,12 @@ void ensure_egl_image_extensions()
 
 }
 
-mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, 
+mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
                             const std::shared_ptr<DisplayListener>& listener)
-    : last_flipped_bufobj{0}, 
+    : last_flipped_bufobj{0},
     platform(platform),
     listener(listener),
-    drm(platform->drm), 
+    drm(platform->drm),
     gbm(platform->gbm)
 {
     /* Set up all native resources */
@@ -120,7 +120,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     {
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
-    
+
     try
     {
         gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
@@ -138,7 +138,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     {
         BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
-    
+
     listener->report_successful_setup_of_native_resources();
 
     if (eglMakeCurrent(egl.display, egl.surface,
@@ -257,7 +257,7 @@ mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
         return 0;
     }
 
-    /* Create a BufferObject and associate it with the gbm_bo */ 
+    /* Create a BufferObject and associate it with the gbm_bo */
     bufobj = new BufferObject{gbm.surface, bo, fb_id};
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 

@@ -47,7 +47,7 @@ if(MIR_PLATFORM STREQUAL "gbm")
 endif()
 
 add_executable(
-  integration-tests 
+  integration-tests
   ${INTEGRATION_TESTS_SRCS})
 
 target_link_libraries(

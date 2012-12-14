@@ -74,8 +74,8 @@ TEST(Session, session_visbility_propagates_to_surfaces)
 
     {
         InSequence seq;
-        EXPECT_CALL(organiser, hide_surface(_)).Times(1); 
-        EXPECT_CALL(organiser, show_surface(_)).Times(1); 
+        EXPECT_CALL(organiser, hide_surface(_)).Times(1);
+        EXPECT_CALL(organiser, show_surface(_)).Times(1);
     }
 
     ms::SurfaceCreationParameters params;

@@ -111,14 +111,14 @@ int main(int argc, char* argv[])
     EGLNativeDisplayType native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     EGLNativeWindowType native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(surface);
     assert(native_window != NULL);
-   
+
     disp = eglGetDisplay(native_display);
     assert(disp != EGL_NO_DISPLAY);
 
     rc = eglInitialize(disp, &major, &minor);
-    assert(rc == EGL_TRUE); 
-    assert(major == 1); 
-    assert(minor == 4); 
+    assert(rc == EGL_TRUE);
+    assert(major == 1);
+    assert(minor == 4);
 
     rc = eglChooseConfig(disp, attribs, &egl_config, 1, &n);
     assert(rc == EGL_TRUE);
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     eglDestroySurface(disp, egl_surface);
     eglDestroyContext(disp, context);
     eglTerminate(disp);
-    
+
     mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
     puts("Surface released");
 

@@ -46,7 +46,7 @@ protected:
 
 // Needs to be implemented by platform/stack-specific code
 std::shared_ptr<InputManager> create_input_manager(
-    const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters, 
+    const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 }

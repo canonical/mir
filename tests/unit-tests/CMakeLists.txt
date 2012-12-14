@@ -25,7 +25,7 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
-#TODO stubbed out to run tests on emulator 
+#TODO stubbed out to run tests on emulator
 if (NOT MIR_TRANSPORT STREQUAL "binder")
 add_subdirectory(input/)
 endif()
@@ -64,7 +64,7 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
- 
+
   ${ANDROID_STDLIB}
 )
 

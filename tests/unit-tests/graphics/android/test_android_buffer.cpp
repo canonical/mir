@@ -120,7 +120,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
     using namespace testing;
 
     auto dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
- 
+
     EXPECT_CALL(*mock_buffer_handle, get_ipc_package())
         .Times(Exactly(1))
         .WillOnce(Return(dummy_ipc_package));

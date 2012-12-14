@@ -14,7 +14,7 @@
 #
 # Authored by: Thomas Guest <thomas.guest@canonical.com>,
 
-list(APPEND UNIT_TEST_SOURCES 
+list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_tex_bind.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_fb.cpp

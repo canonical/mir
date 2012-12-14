@@ -31,7 +31,7 @@ TEST(AndroidInputLexicon, translates_key_events)
 {
     using namespace ::testing;
     auto android_key_ev = new android::KeyEvent();
-    
+
     const int32_t device_id = 1;
     const int32_t source_id = 2;
     const int32_t action = 3;
@@ -42,21 +42,21 @@ TEST(AndroidInputLexicon, translates_key_events)
     const int32_t repeat_count = 8;
     const nsecs_t down_time = 9;
     const nsecs_t event_time = 10;
-    
+
     android_key_ev->initialize(device_id, source_id, action, flags, key_code,
                                scan_code, meta_state, repeat_count,
                                down_time, event_time);
-    
+
     MirEvent mir_ev;
     mia::Lexicon::translate(android_key_ev, mir_ev);
-    
+
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);
     EXPECT_EQ(source_id, mir_ev.source_id);
     EXPECT_EQ(action, mir_ev.action);
     EXPECT_EQ(flags, mir_ev.flags);
     EXPECT_EQ(meta_state, mir_ev.meta_state);
-    
+
     auto mir_key_ev = &mir_ev.details.key;
     // Key event specific properties
     EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_KEY);
@@ -75,7 +75,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 {
     using namespace ::testing;
     auto android_motion_ev = new android::MotionEvent;
-  
+
     // Common event properties
     const int32_t device_id = 1;
     const int32_t source_id = 2;
@@ -96,7 +96,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     const int pointer_id = 1;
     droidinput::PointerProperties pointer_properties;
     pointer_properties.id = pointer_id;
-  
+
     droidinput::PointerCoords pointer_coords;
     pointer_coords.clear();
     const float x_axis = 100.0;
@@ -113,8 +113,8 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, touch_minor);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_SIZE, size);
     pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, pressure);
-    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);  
-  
+    pointer_coords.setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, orientation);
+
     android_motion_ev->initialize(device_id, source_id, action, flags, edge_flags,
                                   meta_state, button_state, x_offset, y_offset,
                                   x_precision, y_precision, down_time,
@@ -122,19 +122,19 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     MirEvent mir_ev;
     mia::Lexicon::translate(android_motion_ev, mir_ev);
-    
+
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);
     EXPECT_EQ(source_id, mir_ev.source_id);
     EXPECT_EQ(action, mir_ev.action);
     EXPECT_EQ(flags, mir_ev.flags);
     EXPECT_EQ(meta_state, mir_ev.meta_state);
-    
+
     // Motion event specific properties
     EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_MOTION);
-    
+
     auto mir_motion_ev = &mir_ev.details.motion;
-    
+
     EXPECT_EQ(mir_motion_ev->edge_flags, edge_flags);
     EXPECT_EQ(mir_motion_ev->button_state, button_state);
     EXPECT_EQ(mir_motion_ev->x_offset, x_offset);
@@ -143,7 +143,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(mir_motion_ev->y_precision, y_precision);
     EXPECT_EQ(mir_motion_ev->down_time, down_time);
     EXPECT_EQ(mir_motion_ev->event_time, event_time);
-    
+
     EXPECT_EQ(mir_motion_ev->pointer_count, pointer_count);
 
     auto mir_pointer_coords = &mir_motion_ev->pointer_coordinates[0];
@@ -159,7 +159,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(mir_pointer_coords->size, size);
     EXPECT_EQ(mir_pointer_coords->pressure, pressure);
     EXPECT_EQ(mir_pointer_coords->orientation, orientation);
-    
-    
+
+
     delete android_motion_ev;
 }

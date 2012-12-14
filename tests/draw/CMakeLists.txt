@@ -31,16 +31,16 @@ if (MIR_PLATFORM STREQUAL "android")
     DRAW_SRCS
 
     android_graphics.cpp
-    ${DRAW_SRCS} 
+    ${DRAW_SRCS}
     )
 endif()
 
 add_library(
-  mirtestdraw STATIC 
+  mirtestdraw STATIC
   ${DRAW_SRCS})
 
 target_link_libraries(
-  mirtestdraw 
+  mirtestdraw
 
   ${LIBHARDWARE_LIBRARIES}
  )

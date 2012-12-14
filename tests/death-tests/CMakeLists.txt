@@ -23,7 +23,7 @@ add_executable(
 
 target_link_libraries(
   death-tests
-  
+
   mir
   miroptions
   mircompositor
@@ -34,7 +34,7 @@ target_link_libraries(
   mirclient
   mirplatformgraphics
   mirprotobuf
-  
+
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

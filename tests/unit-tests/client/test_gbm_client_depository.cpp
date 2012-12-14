@@ -53,13 +53,13 @@ TEST_F(MirGBMBufferDepositoryTest, depository_sets_width_and_height)
     using namespace testing;
 
     mclg::GBMClientBufferDepository depository{drm_fd_handler};
-    
+
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer = depository.access_buffer(8);
 
-    EXPECT_EQ(buffer->size().height, height); 
-    EXPECT_EQ(buffer->size().width, width); 
-    EXPECT_EQ(buffer->pixel_format(), pf); 
+    EXPECT_EQ(buffer->size().height, height);
+    EXPECT_EQ(buffer->size().width, width);
+    EXPECT_EQ(buffer->pixel_format(), pf);
 }
 
 TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_buffer )
@@ -67,13 +67,13 @@ TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_buffer )
     using namespace testing;
 
     mclg::GBMClientBufferDepository depository{drm_fd_handler};
-   
+
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer1 = depository.access_buffer(8);
 
     depository.deposit_package(std::move(package), 8, size, pf);
     auto buffer2 = depository.access_buffer(8);
 
-    EXPECT_NE(buffer1, buffer2); 
+    EXPECT_NE(buffer1, buffer2);
 }
 

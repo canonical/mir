@@ -37,7 +37,7 @@ void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBuf
         auto buffer = std::make_shared<mcla::AndroidClientBuffer>(registrar, std::move(package), size, pf);
         buffer_depository[id] = buffer;
     }
-} 
+}
 
 std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_buffer(int id)
 {

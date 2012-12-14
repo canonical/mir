@@ -21,7 +21,7 @@ set(
   signal_dispatcher.cpp
 )
 
-add_library( 
+add_library(
   mirprocess STATIC
 
   ${PROCESS_SOURCES}

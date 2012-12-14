@@ -12,15 +12,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com> 
-    
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+
 list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/egl_mock_test.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 
-add_library( 
+add_library(
   mirtest_eglmock STATIC
 
   gl_mock.cpp

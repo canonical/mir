@@ -31,7 +31,7 @@ namespace client
 namespace android
 {
 
-class AndroidRegistrarGralloc : public AndroidRegistrar 
+class AndroidRegistrarGralloc : public AndroidRegistrar
 {
 public:
     AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);

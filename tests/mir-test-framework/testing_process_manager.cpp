@@ -278,7 +278,7 @@ bool mtf::detect_server(
     }
     while (error && std::chrono::system_clock::now() < limit);
 
-    struct sockaddr_un remote; 
+    struct sockaddr_un remote;
     auto sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
     remote.sun_family = AF_UNIX;
     strcpy(remote.sun_path, socket_file.c_str());

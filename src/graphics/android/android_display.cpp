@@ -78,7 +78,7 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
     int display_width, display_height;
     eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
     eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
-    geom::Width w(display_width); 
+    geom::Width w(display_width);
     geom::Height h(display_height);
 
     geom::Point pt { geom::X{0},

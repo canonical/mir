@@ -58,24 +58,24 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     MockFocusSetter focus_changer;
     std::shared_ptr<mf::Session> new_session;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), 
+    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        container,
                                        std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<mf::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
-    
+
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("Microsoft Access");
     auto session3 = session_manager.open_session("WordPerfect");
-    
+
     {
       InSequence seq;
       EXPECT_CALL(focus_changer, set_focus_to(session1)).Times(1);
       EXPECT_CALL(focus_changer, set_focus_to(session2)).Times(1);
       EXPECT_CALL(focus_changer, set_focus_to(session3)).Times(1);
     }
-    
+
     session_manager.focus_next();
     session_manager.focus_next();
     session_manager.focus_next();
