@@ -19,7 +19,8 @@
 #include "src/graphics/gbm/gbm_platform.h"
 #include "src/graphics/gbm/gbm_display.h"
 #include "src/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/thread/all.h"
@@ -37,10 +38,13 @@ namespace mtf = mir_test_framework;
 namespace mir
 {
 
-class StubBuffer : public mc::Buffer
+class StubBuffer : public mc::BufferBasic
 {
 public:
-    StubBuffer() : creation_thread_id{std::this_thread::get_id()} {}
+    StubBuffer()
+     : BufferBasic(mc::BufferID{0}),
+       creation_thread_id{std::this_thread::get_id()}
+    {}
 
     geom::Size size() const { return geom::Size(); }
 

@@ -20,7 +20,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/exception.h"
@@ -44,8 +44,11 @@ namespace
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class StubBuffer : public mc::Buffer
+class StubBuffer : public mc::BufferBasic
 {
+public:
+    StubBuffer()
+     : BufferBasic(mc::BufferID{0}) {}
     geom::Size size() const { return geom::Size(); }
 
     geom::Stride stride() const { return geom::Stride(); }
