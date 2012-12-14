@@ -72,9 +72,9 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
     return gbm_pf;
 }
 
-mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+mgg::GBMBuffer::GBMBuffer(mc::BufferID id, std::shared_ptr<gbm_bo> const& handle,
                           std::unique_ptr<BufferTextureBinder> texture_binder)
-    : BufferBasic(mc::BufferID{0}), gbm_handle{handle}, texture_binder{std::move(texture_binder)}
+    : BufferBasic(id), gbm_handle{handle}, texture_binder{std::move(texture_binder)}
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;

@@ -177,7 +177,7 @@ std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
+    std::shared_ptr<mc::Buffer> buffer{new GBMBuffer{mc::BufferID{4}, bo, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 

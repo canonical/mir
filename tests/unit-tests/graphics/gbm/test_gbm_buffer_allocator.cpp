@@ -27,6 +27,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
+#include "mir_test_doubles/mock_id_generator.h"
 
 #include <memory>
 #include <stdexcept>
@@ -239,4 +240,29 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_suppor
     EXPECT_THROW({
         mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
     }, std::runtime_error);
+}
+
+TEST_F(GBMBufferAllocatorTest, basic_id_generation)
+{
+    auto id1 = mc::BufferID{4};
+    auto id2 = mc::BufferID{5};
+    auto mock_id_generator = std::unique_ptr<mtd::MockIDGenerator>(new mtd::MockIDGenerator);
+    /* we move a unique_ptr in test. google mock leak checker doesn't know how to deal with things 
+       that are moved, so we manually tell gmock to not check the object */
+    testing::Mock::AllowLeak(mock_id_generator.get());
+
+    using namespace testing;
+    EXPECT_CALL(*mock_id_generator, generate_unique_id())
+        .Times(2)
+        .WillOnce(Return(id1))
+        .WillRepeatedly(Return(id2));
+
+    mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
+
+    auto buffer1 = allocator.alloc_buffer(buffer_properties);
+    auto buffer2 = allocator.alloc_buffer(buffer_properties);
+
+    EXPECT_EQ(buffer1->id(), id1);
+    EXPECT_EQ(buffer2->id(), id2);
+
 }

@@ -41,7 +41,7 @@ class BufferTextureBinder;
 class GBMBuffer: public compositor::BufferBasic
 {
 public:
-    GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+    GBMBuffer(compositor::BufferID id, std::shared_ptr<gbm_bo> const& handle,
               std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
 

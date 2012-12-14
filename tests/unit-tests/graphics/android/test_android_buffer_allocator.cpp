@@ -51,7 +51,7 @@ protected:
     mc::BufferProperties properties;
 };
 
-TEST_F(AndroidAllocTest, basic)
+TEST_F(AndroidAllocTest, basic_allocation)
 {
     using namespace testing;
     EXPECT_CALL(*mock_id_generator, generate_unique_id())
