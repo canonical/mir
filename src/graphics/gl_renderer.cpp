@@ -216,7 +216,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 }
 
 void mg::GLRenderer::render(Renderable& renderable,
-                           const std::shared_ptr<compositor::GraphicRegion>& texture_resource)
+                            std::shared_ptr<compositor::GraphicRegion> const& texture_resource)
 {
     const geom::Point top_left = renderable.top_left();
     const geom::Size size = renderable.size();

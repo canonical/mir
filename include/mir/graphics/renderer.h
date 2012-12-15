@@ -37,7 +37,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual void render(Renderable& renderable, const std::shared_ptr<compositor::GraphicRegion>& texture_resource) = 0;
+    virtual void render(Renderable& renderable, std::shared_ptr<compositor::GraphicRegion> const& texture_resource) = 0;
 
 protected:
     Renderer() = default;
