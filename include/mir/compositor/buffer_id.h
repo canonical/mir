@@ -60,7 +60,7 @@ public:
 class BufferIDMonotonicIncreaseGenerator : public BufferIDUniqueGenerator
 {
 public:
-    BufferIDMonotonicIncreaseGenerator();   
+    BufferIDMonotonicIncreaseGenerator();
     BufferID generate_unique_id();
 private:
     uint32_t id_counter;

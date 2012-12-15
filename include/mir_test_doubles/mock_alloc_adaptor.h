@@ -39,7 +39,7 @@ public:
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
     MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
-    
+
 };
 
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor

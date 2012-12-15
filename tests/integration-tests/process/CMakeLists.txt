@@ -14,12 +14,12 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(APPEND INTEGRATION_TESTS_SRCS 
+list(APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/test_process.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_signal_dispatcher.cpp
 )
 
 set(
-  INTEGRATION_TESTS_SRCS 
-  ${INTEGRATION_TESTS_SRCS} 
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
   PARENT_SCOPE)

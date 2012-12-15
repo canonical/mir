@@ -47,7 +47,7 @@ add_dependencies(mir mirprotobuf)
 
 add_executable(
   mirds
-  
+
   main.cpp
   ${MIR_3RD_PARTY_SOURCES}
 )
@@ -56,7 +56,7 @@ set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
 
 target_link_libraries(
   mirds
-  
+
   mir
   miroptions
   mircompositor
@@ -67,9 +67,9 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
-  
+
   3rd_party
-  
+
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -81,8 +81,8 @@ target_link_libraries(
 install(
   TARGETS mirds
   RUNTIME DESTINATION bin)
-  
+
 set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES 
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES} 
+  MIR_GENERATED_INCLUDE_DIRECTORIES
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)

@@ -35,7 +35,6 @@ class GBMPlatform : public Platform,
                     public std::enable_shared_from_this<GBMPlatform>
 {
 public:
-    explicit GBMPlatform();
     explicit GBMPlatform(std::shared_ptr<DisplayListener> const& reporter);
 
     /* From Platform */

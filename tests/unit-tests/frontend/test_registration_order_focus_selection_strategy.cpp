@@ -39,7 +39,7 @@ TEST(RegistrationOrderFocusSequence, focus_order)
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(model);
-    
+
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
     std::shared_ptr<mf::Session> app3(new mf::Session(organiser, std::string("Visual Studio 9")));
@@ -59,7 +59,7 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
-    
+
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
     std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
     std::shared_ptr<mf::Session> app3(new mf::Session(organiser, std::string("Visual Studio 9")));
@@ -79,7 +79,7 @@ TEST(RegistrationOrderFocusSequence, no_focus)
     std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
     std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer);
     mf::RegistrationOrderFocusSequence focus_sequence(container);
-    
+
     std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
 
     container->insert_session(app1);

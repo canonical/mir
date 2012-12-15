@@ -24,6 +24,7 @@
 #include <stdexcept>
 /* todo: replace with color value types */
 #include <stdint.h>
+#include <cstring>
 
 namespace mir
 {
@@ -72,7 +73,7 @@ private:
     uint32_t color_pattern [Rows][Cols];
 };
 #include "mir_test/draw/draw_pattern_checkered-inl.h"
- 
+
 }
 }
 }

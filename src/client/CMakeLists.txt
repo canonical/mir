@@ -76,12 +76,12 @@ set(
   ${CLIENT_SOURCES}
 )
 
-#todo: android should be shared as well, and we should combine with 
-# gbm's add_library below. Android currently has problems with multiple 
+#todo: android should be shared as well, and we should combine with
+# gbm's add_library below. Android currently has problems with multiple
 # linkages of static protobuf
-add_library( 
+add_library(
   mirclient STATIC
-  
+
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
 )
@@ -98,16 +98,16 @@ set(
   ${CLIENT_SOURCES}
 )
 
-add_library( 
+add_library(
   mirclient SHARED
-  
+
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
 )
 endif()
 
 set_target_properties(
-  mirclient 
+  mirclient
 
   PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
@@ -139,7 +139,7 @@ set(
 
 set_target_properties(
   mirclient
-  PROPERTIES 
+  PROPERTIES
   PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
 )
 

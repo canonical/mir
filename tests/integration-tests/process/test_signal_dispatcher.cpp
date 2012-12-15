@@ -43,7 +43,7 @@ struct SignalCollector
     }
 
     int load()
-    {        
+    {
         unsigned int counter = 0;
         std::unique_lock<std::mutex> lock(mutex);
         while (signal == -1 && counter < 100)
@@ -117,7 +117,7 @@ TEST(SignalDispatcher,
     auto p = mp::fork_and_run_in_a_different_process(
         a_main_function_collecting_received_signals<SIGTERM>,
         a_successful_exit_function);
-    
+
     EXPECT_TRUE(p->wait_for_termination().succeeded());
 
     p = mp::fork_and_run_in_a_different_process(

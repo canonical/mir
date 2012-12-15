@@ -22,7 +22,7 @@
 namespace mc=mir::compositor;
 
 mc::BufferIDMonotonicIncreaseGenerator::BufferIDMonotonicIncreaseGenerator()
- : id_counter(0) 
+ : id_counter(0)
 {}
 
 mc::BufferID mc::BufferIDMonotonicIncreaseGenerator::generate_unique_id()
@@ -30,4 +30,4 @@ mc::BufferID mc::BufferIDMonotonicIncreaseGenerator::generate_unique_id()
     if (id_counter == std::numeric_limits<uint32_t>::max() )
         return mc::BufferID{0};
     return mc::BufferID{++id_counter};
-} 
+}

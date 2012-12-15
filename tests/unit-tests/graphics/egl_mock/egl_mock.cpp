@@ -35,7 +35,7 @@ EGLConfig configs[] =
 };
 EGLint config_size = 4;
 
-/* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever 
+/* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
 mir::EglMock::EglMock()
     : fake_egl_display((EGLDisplay) 0x0530),

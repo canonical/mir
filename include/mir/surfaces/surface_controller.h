@@ -41,7 +41,7 @@ class SurfaceController : public frontend::SurfaceOrganiser
     std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
 
     void destroy_surface(std::weak_ptr<Surface> const& surface);
-    
+
     void hide_surface(std::weak_ptr<Surface> const& surface);
     void show_surface(std::weak_ptr<Surface> const& surface);
 

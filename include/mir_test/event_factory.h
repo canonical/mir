@@ -31,9 +31,9 @@ enum class EventAction
     Down, Up
 };
 
-class KeyParameters 
+class KeyParameters
 {
-public:    
+public:
     KeyParameters();
 
     KeyParameters& from_device(int device_id);
@@ -48,7 +48,7 @@ KeyParameters a_key_down_event();
 
 class ButtonParameters
 {
-public: 
+public:
     ButtonParameters();
     ButtonParameters& from_device(int device_id);
     ButtonParameters& of_button(int scancode);
@@ -66,14 +66,14 @@ public:
     MotionParameters();
     MotionParameters& from_device(int device_id);
     MotionParameters& with_movement(int rel_x, int rel_y);
-    
+
     int device_id;
     int rel_x;
     int rel_y;
 };
 MotionParameters a_motion_event();
 
-}   
+}
 }
 }
 

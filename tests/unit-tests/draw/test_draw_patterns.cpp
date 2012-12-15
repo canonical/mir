@@ -39,7 +39,7 @@ protected:
 
         uint32_t colors[2][2] = {{0x12345678, 0x23456789},
                                  {0x34567890, 0x45678901}};
-        memcpy(pattern_colors, colors, sizeof(uint32_t)*4); 
+        memcpy(pattern_colors, colors, sizeof(uint32_t)*4);
 
     }
     virtual void TearDown()
@@ -56,7 +56,7 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated)
     mtd::DrawPatternSolid pattern(0x43214321);
 
     pattern.draw(test_region);
-    EXPECT_TRUE(pattern.check(test_region));  
+    EXPECT_TRUE(pattern.check(test_region));
 }
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
@@ -65,7 +65,7 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 
     pattern.draw(test_region);
     test_region->vaddr[0]++;
-    EXPECT_FALSE(pattern.check(test_region)); 
+    EXPECT_FALSE(pattern.check(test_region));
 }
 
 TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
@@ -75,11 +75,11 @@ TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
     mtd::DrawPatternSolid pattern(0x43214321);
 
     EXPECT_THROW({
-        pattern.draw(test_region); 
+        pattern.draw(test_region);
     }, std::runtime_error);
 
     EXPECT_THROW({
-        pattern.check(test_region); 
+        pattern.check(test_region);
     }, std::runtime_error);
 
 }
@@ -107,11 +107,11 @@ TEST_F(DrawPatternsTest, checkered_bad_pixel_formats)
     mtd::DrawPatternCheckered<2,2> pattern(pattern_colors);
 
     EXPECT_THROW({
-        pattern.draw(test_region); 
+        pattern.draw(test_region);
     }, std::runtime_error);
 
     EXPECT_THROW({
-        pattern.check(test_region); 
+        pattern.check(test_region);
     }, std::runtime_error);
 
 }

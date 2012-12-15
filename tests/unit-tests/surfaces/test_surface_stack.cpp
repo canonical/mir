@@ -137,7 +137,7 @@ TEST(
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
-    
+
     EXPECT_CALL(filter, filter(_)).Times(0);
     EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(0);
     EXPECT_CALL(
@@ -164,7 +164,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
-     
+
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     auto surface1 = stack.create_surface(
@@ -177,7 +177,7 @@ TEST(
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
-    
+
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
     ON_CALL(filter, filter(Ref(*surface3.lock()))).WillByDefault(Return(false));
 
@@ -202,7 +202,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
-     
+
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     auto surface1 = stack.create_surface(
@@ -215,7 +215,7 @@ TEST(
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
-    
+
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
     EXPECT_CALL(renderer, render(_,_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
@@ -240,7 +240,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
-     
+
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
     auto surface1 = stack.create_surface(
@@ -253,11 +253,11 @@ TEST(
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
-    
+
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
     EXPECT_CALL(renderer, render(_,_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
-    
+
     stack.raise_to_top(surface2);
 
     {

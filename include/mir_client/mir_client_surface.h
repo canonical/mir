@@ -36,7 +36,7 @@ class ClientSurface
   protected:
     ClientSurface() {}
     virtual ~ClientSurface() {}
-    
+
     ClientSurface(const ClientSurface&) = delete;
     ClientSurface& operator=(const ClientSurface&) = delete;
 };

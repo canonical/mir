@@ -21,7 +21,7 @@
 #define MIR_TEST_STUB_SERVER_TOOL_H_
 
 #include "mir_protobuf.pb.h"
-#include "mir/thread/all.h" 
+#include "mir/thread/all.h"
 
 namespace mir
 {

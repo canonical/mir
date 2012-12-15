@@ -54,7 +54,7 @@ namespace system_clock
 {
     inline boost::posix_time::ptime now()
     {
-	return boost::posix_time::microsec_clock::local_time();
+        return boost::posix_time::microsec_clock::local_time();
     }
 }
 

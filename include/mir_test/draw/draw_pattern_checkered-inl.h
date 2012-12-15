@@ -20,7 +20,7 @@ template<size_t Rows, size_t Cols>
 DrawPatternCheckered<Rows,Cols>::DrawPatternCheckered(uint32_t (&pattern) [Rows][Cols])
 {
     for (size_t i=0; i<Rows; i++)
-        memcpy(color_pattern[i], pattern[i], sizeof(uint32_t) * Cols); 
+        std::memcpy(color_pattern[i], pattern[i], sizeof(uint32_t) * Cols);
 }
 
 template<size_t Rows, size_t Cols>

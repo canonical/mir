@@ -38,11 +38,11 @@ list(APPEND TEST_UTILS_SRCS
 endif()
 
 add_library(
-  mir-test-doubles STATIC 
+  mir-test-doubles STATIC
   ${TEST_UTILS_SRCS})
 
 target_link_libraries(
-  mir-test-doubles 
+  mir-test-doubles
 
   mir
   miroptions

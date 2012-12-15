@@ -139,7 +139,7 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
     }
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 }
@@ -213,7 +213,7 @@ void BufferSwapperStress::test_wait_situation(std::vector<mc::BufferID>& composi
     compositor_controller.ensure_child_is_waiting();
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 
@@ -230,7 +230,7 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(std::move(id_generator), double_list);
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
-    
+
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
@@ -243,7 +243,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     mc::BufferSwapperMulti triple_swapper(std::move(id_generator), triple_list);
     /* a triple buffered client should stall on the third request without the compositor running */
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
-    
+
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
@@ -311,7 +311,7 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
     }
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 }

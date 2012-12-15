@@ -35,7 +35,7 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600), 
+                                                                 geom::Size{geom::Width(1600),
                                                                             geom::Height(1400)}};
 
 namespace
@@ -110,7 +110,7 @@ TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
     EXPECT_CALL(viewable_area, view_area()).WillOnce(Return(default_view_area));
 
     float controller_min_x, controller_min_y, controller_max_x, controller_max_y;
-    controller->getBounds(&controller_min_x, &controller_min_y, 
+    controller->getBounds(&controller_min_x, &controller_min_y,
                           &controller_max_x, &controller_max_y);
 
     const float area_min_x = default_view_area.top_left.x.as_float();

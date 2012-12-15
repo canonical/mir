@@ -18,7 +18,7 @@ find_program(VERA_EXECUTABLE vera++)
 
 if(VERA_EXECUTABLE)
   message(STATUS "vera++ available - enabling make target style_check")
-  
+
   add_custom_target(
     style_check
     COMMAND "find" "${CMAKE_SOURCE_DIR}/include" "-name" "'*.h'" "|" "xargs" "vera++" "-profile" "mir_vera_profile"

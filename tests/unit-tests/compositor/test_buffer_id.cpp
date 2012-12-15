@@ -41,7 +41,7 @@ TEST(buffer_id, invalid)
 
 TEST(buffer_id, equality_testable)
 {
-    unsigned int id_as_int0 = 44; 
+    unsigned int id_as_int0 = 44;
     unsigned int id_as_int1 = 41;
 
     mc::BufferID id0{id_as_int0};
@@ -83,6 +83,6 @@ TEST(unique_generator, generate_unique)
         for(auto it = generated_ids.begin(); it != generated_ids.end(); it++)
         {
             EXPECT_NE(*it, test_id);
-        } 
+        }
     }
 }

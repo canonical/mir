@@ -25,7 +25,7 @@ namespace mia = mir::input::android;
 namespace mg = mir::graphics;
 
 mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mg::ViewableArea> const& viewable_area,
-                                          std::shared_ptr<CursorListener> const& cursor_listener) 
+                                          std::shared_ptr<CursorListener> const& cursor_listener)
     : viewable_area(viewable_area),
       pointer_controller(new mia::PointerController(viewable_area, cursor_listener))
 {
@@ -36,11 +36,11 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
     static int32_t const default_display_id = 0;
     static bool const is_external = false;
     static int32_t const default_display_orientation = droidinput::DISPLAY_ORIENTATION_0;
-    
+
     auto bounds = viewable_area->view_area();
     auto width = bounds.size.width.as_float();
     auto height = bounds.size.height.as_float();
-    
+
     out_config->setDisplayInfo(
         default_display_id,
         is_external,

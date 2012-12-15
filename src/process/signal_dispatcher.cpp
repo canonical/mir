@@ -32,10 +32,10 @@ namespace
 struct EventSocketPair
 {
     typedef unsigned int SocketIdentifier;
-    
+
     static const SocketIdentifier socket_a = 0;
     static const SocketIdentifier socket_b = 1;
-    
+
     EventSocketPair()
     {
         if (::socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) < 0)
@@ -67,7 +67,7 @@ struct EventSocketPair
 
         return signal;
     }
-    
+
     int sockets[2];
 } event_socket_pair;
 
@@ -122,7 +122,7 @@ struct mp::SignalDispatcher::Private
             }
         }
     }
-    
+
     boost::thread worker_thread;
     mp::SignalDispatcher::SignalType signal_channel;
 };
@@ -141,7 +141,7 @@ mp::SignalDispatcher::SignalDispatcher() : p(new Private())
 mp::SignalDispatcher::~SignalDispatcher()
 {
 }
-    
+
 mp::SignalDispatcher::SignalType& mp::SignalDispatcher::signal_channel()
 {
     return p->signal_channel;

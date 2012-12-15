@@ -55,11 +55,11 @@ struct StubServerSurfaceCounter : public StubServerTool
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
-    { 
+    {
         ++surface_count;
         StubServerTool::create_surface(controller, request, response, done);
     }
-    
+
     void expect_surface_count(int expected_count)
     {
         std::unique_lock<std::mutex> ul(guard);
@@ -78,7 +78,7 @@ struct ProtobufSurfaceCounter : public ::testing::Test
     {
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
- 
+
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 

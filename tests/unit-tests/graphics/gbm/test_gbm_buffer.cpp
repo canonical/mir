@@ -28,6 +28,8 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 
+#include "mir_test_doubles/null_display_listener.h"
+
 #include <gbm.h>
 
 #include <gtest/gtest.h>
@@ -40,6 +42,7 @@ namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
+namespace mtd=mir::test::doubles;
 
 class GBMGraphicBufferBasic : public ::testing::Test
 {
@@ -75,7 +78,7 @@ protected:
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 
-        platform = std::make_shared<mgg::GBMPlatform>();
+        platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
         allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
     }
@@ -145,13 +148,13 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
-{ 
+{
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);
     return flink->handle == value;
 }
 
 ACTION_P(SetGEMFlinkName, value)
-{ 
+{
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg2);
     flink->name = value;
 }

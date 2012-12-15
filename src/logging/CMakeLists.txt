@@ -20,8 +20,8 @@ set(
   dumb_console_logger.cpp
 )
 
-add_library( 
+add_library(
   mirlogging STATIC
-  
+
   ${LOGGING_SOURCES}
 )

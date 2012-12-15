@@ -108,7 +108,7 @@ void SetUpMockGraphicsProgram(mir::GLMock &gl_mock, const std::function<void(con
 {
     /* Graphics Program */
     EXPECT_CALL(gl_mock, glCreateProgram())
-	    .WillOnce(Return(stub_program));
+            .WillOnce(Return(stub_program));
     EXPECT_CALL(gl_mock, glAttachShader(stub_program, stub_v_shader));
     EXPECT_CALL(gl_mock, glAttachShader(stub_program, stub_f_shader));
     EXPECT_CALL(gl_mock, glLinkProgram(stub_program));
@@ -224,8 +224,8 @@ TEST_F(GLRendererSetupProcess, fragment_shader_compiler_failure_recovers_and_thr
                 stub_info_log.size()));
 
     EXPECT_THROW({
-	std::unique_ptr<mg::GLRenderer> r;
-	r.reset(new mg::GLRenderer(display_size));
+        std::unique_ptr<mg::GLRenderer> r;
+        r.reset(new mg::GLRenderer(display_size));
     }, std::runtime_error);
 }
 
@@ -247,8 +247,8 @@ TEST_F(GLRendererSetupProcess, graphics_program_linker_failure_recovers_and_thro
                 stub_info_log.size()));
 
     EXPECT_THROW({
-	std::unique_ptr<mg::GLRenderer> r;
-	r.reset(new mg::GLRenderer(display_size));
+        std::unique_ptr<mg::GLRenderer> r;
+        r.reset(new mg::GLRenderer(display_size));
     }, std::runtime_error);
 }
 

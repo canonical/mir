@@ -21,9 +21,9 @@ include_directories(
     ${GLESv2_INCLUDE_DIRS}
 )
 
-add_library( 
+add_library(
   mirplatformgraphics STATIC
-  
+
   android_platform.cpp
   android_buffer_allocator.cpp
   android_buffer.cpp

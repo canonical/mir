@@ -36,7 +36,7 @@ class IntWrapper
 {
 public:
     typedef uint32_t ValueType;
-    
+
     IntWrapper() : value(0) {}
     template<typename AnyInteger>
     explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
@@ -47,7 +47,7 @@ public:
     }
     float as_float() const
     {
-	return value;
+        return value;
     }
 
 private:
