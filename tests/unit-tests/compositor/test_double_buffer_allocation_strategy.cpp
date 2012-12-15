@@ -42,6 +42,11 @@ public:
         mc::BufferProperties properties(buf_size, buf_pixel_format, mc::BufferUsage::hardware);
         return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
     }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
 };
 
 struct DoubleBufferAllocationStrategyTest : testing::Test

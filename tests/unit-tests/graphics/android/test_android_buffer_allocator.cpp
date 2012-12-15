@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "src/graphics/android/android_buffer_allocator.h"
@@ -21,15 +21,17 @@
 
 #include "mir_test_doubles/mock_id_generator.h"
 
+#include <algorithm>
+
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 
+namespace mga = mir::graphics::android;
+namespace geom = mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
-namespace mga=mir::graphics::android;
-namespace geom=mir::geometry;
 
-class AndroidAllocTest : public ::testing::Test
+class AndroidBufferAllocatorTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -51,7 +53,38 @@ protected:
     mc::BufferProperties properties;
 };
 
-TEST_F(AndroidAllocTest, basic_allocation)
+TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
+{
+    mga::AndroidBufferAllocator allocator(std::move(mock_id_generator));
+    auto supported_pixel_formats = allocator.supported_pixel_formats();
+
+    auto rgba_8888_count = std::count(supported_pixel_formats.begin(),
+                                      supported_pixel_formats.end(),
+                                      geom::PixelFormat::rgba_8888);
+
+    auto rgbx_8888_count = std::count(supported_pixel_formats.begin(),
+                                      supported_pixel_formats.end(),
+                                      geom::PixelFormat::rgbx_8888);
+
+    auto rgb_888_count = std::count(supported_pixel_formats.begin(),
+                                    supported_pixel_formats.end(),
+                                    geom::PixelFormat::rgb_888);
+
+    EXPECT_EQ(1, rgba_8888_count);
+    EXPECT_EQ(1, rgbx_8888_count);
+    EXPECT_EQ(1, rgb_888_count);
+}
+
+TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
+{
+    mga::AndroidBufferAllocator allocator(std::move(mock_id_generator));
+    auto supported_pixel_formats = allocator.supported_pixel_formats();
+
+    ASSERT_FALSE(supported_pixel_formats.empty());
+    EXPECT_EQ(geom::PixelFormat::rgba_8888, supported_pixel_formats[0]);
+}
+
+TEST_F(AndroidBufferAllocatorTest, basic_allocation)
 {
     using namespace testing;
     EXPECT_CALL(*mock_id_generator, generate_unique_id())

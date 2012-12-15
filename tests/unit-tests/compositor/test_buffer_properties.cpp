@@ -27,7 +27,7 @@ namespace geom = mir::geometry;
 TEST(buffer_properties, default_create)
 {
     geom::Size size;
-    geom::PixelFormat pixel_format{geom::PixelFormat::pixel_format_invalid};
+    geom::PixelFormat pixel_format{geom::PixelFormat::invalid};
     mc::BufferUsage usage{mc::BufferUsage::undefined};
 
     mc::BufferProperties prop;

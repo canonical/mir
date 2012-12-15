@@ -57,7 +57,7 @@ struct mir::DisplayServer::Private
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
           application_session_factory{config.make_session_manager(surface_controller)},
-          communicator{config.make_communicator(application_session_factory, display)},
+          communicator{config.make_communicator(application_session_factory, display, buffer_allocator)},
           input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
     {

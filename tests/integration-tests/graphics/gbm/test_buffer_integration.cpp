@@ -73,6 +73,11 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
         return std::shared_ptr<mc::Buffer>(new StubBufferThread());
     }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
 };
 
 class StubGraphicPlatform : public mg::Platform
