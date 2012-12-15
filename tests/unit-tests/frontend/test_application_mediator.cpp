@@ -123,9 +123,9 @@ public:
             .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
     }
 
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::shared_ptr<mc::Buffer>();
     }
 
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
