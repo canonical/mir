@@ -44,6 +44,8 @@ public:
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
 
+    std::vector<geometry::PixelFormat> supported_pixel_formats();
+
 private:
     std::shared_ptr<GBMPlatform> platform;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;

@@ -37,7 +37,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(Width(0), params.size.width);
     EXPECT_EQ(Height(0), params.size.height);
     EXPECT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
-    EXPECT_EQ(geom::PixelFormat::pixel_format_invalid, params.pixel_format);
+    EXPECT_EQ(geom::PixelFormat::invalid, params.pixel_format);
 
     EXPECT_EQ(ms::a_surface(), params);
 }

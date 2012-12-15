@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -113,6 +114,23 @@ public:
     std::shared_ptr<mf::SurfaceOrganiser> organiser;
 };
 
+class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    MockGraphicBufferAllocator()
+    {
+        ON_CALL(*this, supported_pixel_formats())
+            .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
+    }
+
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    {
+        return std::unique_ptr<mc::Buffer>();
+    }
+
+    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+};
+
 class StubDisplay : public mg::Display
 {
  public:
@@ -149,10 +167,11 @@ struct ApplicationMediatorTest : public ::testing::Test
         : session_store{std::make_shared<StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<StubDisplay>()},
+          buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           listener{std::make_shared<mf::NullApplicationListener>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
-                   listener, resource_cache},
+                   buffer_allocator, listener, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -160,6 +179,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     std::shared_ptr<mf::SessionStore> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::ApplicationMediator mediator;
@@ -295,4 +315,33 @@ TEST_F(ApplicationMediatorTest, can_reconnect_after_disconnect)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+}
+
+TEST_F(ApplicationMediatorTest, connect_queries_supported_pixel_formats)
+{
+    using namespace testing;
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    std::vector<geom::PixelFormat> const pixel_formats{
+        geom::PixelFormat::rgb_888,
+        geom::PixelFormat::rgba_8888,
+        geom::PixelFormat::rgbx_8888
+    };
+
+    EXPECT_CALL(*buffer_allocator, supported_pixel_formats())
+        .WillOnce(Return(pixel_formats));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    auto info = connection.display_info();
+
+    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(info.supported_pixel_format_size()));
+
+    for (size_t i = 0; i < pixel_formats.size(); ++i)
+    {
+        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(info.supported_pixel_format(i)))
+            << "i = " << i;
+    }
 }

@@ -69,3 +69,14 @@ std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
                           buffer_properties.size,
                           buffer_properties.format));
 }
+
+std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_formats()
+{
+    static std::vector<geom::PixelFormat> const pixel_formats{
+        geom::PixelFormat::rgba_8888,
+        geom::PixelFormat::rgbx_8888,
+        geom::PixelFormat::rgb_888
+    };
+
+    return pixel_formats;
+}

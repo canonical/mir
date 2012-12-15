@@ -22,6 +22,7 @@ set(
   test_surfaceloop.cpp
   test_error_reporting.cpp
   test_shutdown.cpp
+  test_display_info.cpp
 )
 
 add_subdirectory(client/)

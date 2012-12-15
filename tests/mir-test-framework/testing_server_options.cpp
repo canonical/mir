@@ -69,6 +69,11 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer(properties));
     }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
 };
 
 class StubDisplay : public mg::Display

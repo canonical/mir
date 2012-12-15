@@ -44,16 +44,25 @@ struct MockRpcChannel : public google::protobuf::RpcChannel
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
                     const google::protobuf::Message* parameters,
-                    google::protobuf::Message*,
+                    google::protobuf::Message* response,
                     google::protobuf::Closure* complete)
     {
         if (method->name() == "drm_auth_magic")
+        {
             drm_auth_magic(static_cast<const mp::DRMMagic*>(parameters));
+        }
+        else if (method->name() == "connect")
+        {
+            static_cast<mp::Connection*>(response)->clear_error();
+            connect(static_cast<mp::ConnectParameters const*>(parameters),
+                    static_cast<mp::Connection*>(response));
+        }
 
         complete->Run();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
+    MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform
@@ -110,7 +119,7 @@ struct MirConnectionTest : public testing::Test
         logger = std::make_shared<mcl::ConsoleLogger>();
         mock_platform = std::make_shared<NiceMock<MockClientPlatform>>();
         platform_factory = std::make_shared<StubClientPlatformFactory>(mock_platform);
-        mock_channel = std::make_shared<MockRpcChannel>();
+        mock_channel = std::make_shared<NiceMock<MockRpcChannel>>();
 
         connection = std::make_shared<MirConnection>(mock_channel, logger,
                                                      platform_factory);
@@ -119,7 +128,7 @@ struct MirConnectionTest : public testing::Test
     std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> mock_platform;
     std::shared_ptr<StubClientPlatformFactory> platform_factory;
-    std::shared_ptr<MockRpcChannel> mock_channel;
+    std::shared_ptr<testing::NiceMock<MockRpcChannel>> mock_channel;
     std::shared_ptr<MirConnection> connection;
 };
 
@@ -168,4 +177,78 @@ TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
     wait_handle->wait_for_result();
 
     EXPECT_EQ(no_error, status);
+}
+
+namespace
+{
+
+std::vector<MirPixelFormat> const supported_pixel_formats{
+    mir_pixel_format_rgba_8888,
+    mir_pixel_format_rgbx_8888
+};
+
+void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
+{
+    auto info = response->mutable_display_info();
+    for (auto pf : supported_pixel_formats)
+        info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+}
+
+void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
+{
+    auto info = response->mutable_display_info();
+    for (int i = 0; i < 100; i++)
+        info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_rgbx_8888));
+}
+
+}
+
+TEST_F(MirConnectionTest, populates_display_info_correctly)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_info));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_result();
+
+    MirDisplayInfo info;
+
+    connection->populate(info);
+
+    ASSERT_EQ(supported_pixel_formats.size(),
+              static_cast<uint32_t>(info.supported_pixel_format_items));
+
+    for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
+    {
+        EXPECT_EQ(supported_pixel_formats[i],
+                  info.supported_pixel_format[i]);
+    }
+}
+
+TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_info_100));
+
+    MirWaitHandle* wait_handle = connection->connect("MirConnectionTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_result();
+
+    MirDisplayInfo info;
+
+    connection->populate(info);
+
+    ASSERT_EQ(mir_supported_pixel_format_max,
+              info.supported_pixel_format_items);
+
+    for (size_t i = 0; i < mir_supported_pixel_format_max; ++i)
+    {
+        EXPECT_EQ(mir_pixel_format_rgbx_8888,
+                  info.supported_pixel_format[i]);
+    }
 }

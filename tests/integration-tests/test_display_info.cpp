@@ -17,27 +17,46 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/exception.h"
 #include "mir/thread/all.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/mir_client_library_drm.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
+
+namespace mir /* So that std::this_thread::yield() can be found on android... */
+{
+namespace
+{
+
+class StubDisplay : public mg::Display
+{
+public:
+    geom::Rectangle view_area() const { return rectangle; }
+    void clear() { std::this_thread::yield(); }
+    bool post_update() { return true; }
+
+    static geom::Rectangle const rectangle;
+};
+
+geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
+                                             geom::Size{geom::Width{49}, geom::Height{64}}};
+
+}
+}
+
+using mir::StubDisplay;
 
 namespace
 {
@@ -62,27 +81,27 @@ class StubBuffer : public mc::Buffer
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
- public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+public:
+    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new StubBuffer());
+        return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
     {
-        return std::vector<geom::PixelFormat>();
+        return pixel_formats;
     }
+
+    static std::vector<geom::PixelFormat> const pixel_formats;
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() { std::this_thread::yield(); }
-    bool post_update() { return true; }
+std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
+    geom::PixelFormat::rgb_888,
+    geom::PixelFormat::rgba_8888,
+    geom::PixelFormat::rgbx_8888
 };
 
-class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthenticator
+class StubPlatform : public mg::Platform
 {
 public:
     std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
@@ -101,7 +120,6 @@ public:
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    MOCK_METHOD1(drm_auth_magic, void(unsigned int));
 };
 
 void connection_callback(MirConnection* connection, void* context)
@@ -110,34 +128,23 @@ void connection_callback(MirConnection* connection, void* context)
     *connection_ptr = connection;
 }
 
-void drm_auth_magic_callback(int status, void* client_context)
-{
-    auto status_ptr = static_cast<int*>(client_context);
-    *status_ptr = status;
 }
 
-}
-
-TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
+TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 {
-    unsigned int const magic{0x10111213};
-
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mg::Platform> make_graphics_platform()
         {
             using namespace testing;
+
             if (!platform)
-            {
-                platform = std::make_shared<MockAuthenticatingPlatform>();
-                EXPECT_CALL(*platform, drm_auth_magic(magic))
-                    .Times(1);
-            }
+                platform = std::make_shared<StubPlatform>();
 
             return platform;
         }
 
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
+        std::shared_ptr<StubPlatform> platform;
     } server_config;
 
     launch_server_process(server_config);
@@ -150,60 +157,23 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            int const no_error{0};
-            int status{67};
+            MirDisplayInfo info;
 
-            mir_wait_for(mir_connection_drm_auth_magic(connection, magic,
-                                                       drm_auth_magic_callback,
-                                                       &status));
-            EXPECT_EQ(no_error, status);
+            mir_connection_get_display_info(connection, &info);
 
-            mir_connection_release(connection);
-        }
-    } client_config;
+            EXPECT_EQ(StubDisplay::rectangle.size.width.as_uint32_t(),
+                      static_cast<uint32_t>(info.width));
+            EXPECT_EQ(StubDisplay::rectangle.size.height.as_uint32_t(),
+                      static_cast<uint32_t>(info.height));
 
-    launch_client_process(client_config);
-}
+            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
+                      static_cast<uint32_t>(info.supported_pixel_format_items));
 
-TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_client)
-{
-    unsigned int const magic{0x10111213};
-    int const auth_magic_error{667};
-
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mg::Platform> make_graphics_platform()
-        {
-            using namespace testing;
-            if (!platform)
+            for (int i = 0; i < info.supported_pixel_format_items; ++i)
             {
-                platform = std::make_shared<MockAuthenticatingPlatform>();
-                EXPECT_CALL(*platform, drm_auth_magic(magic))
-                    .WillOnce(Throw(mir::Exception() << boost::errinfo_errno(auth_magic_error)));
+                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
+                          static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
             }
-
-            return platform;
-        }
-
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            MirConnection* connection{nullptr};
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
-                                     connection_callback, &connection));
-
-            int status{67};
-
-            mir_wait_for(mir_connection_drm_auth_magic(connection, magic,
-                                                       drm_auth_magic_callback,
-                                                       &status));
-            EXPECT_EQ(auth_magic_error, status);
 
             mir_connection_release(connection);
         }
