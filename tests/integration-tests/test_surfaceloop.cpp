@@ -401,7 +401,7 @@ namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
 {
-    class CountingStubBuffer : public mtd::StubBuffer //mc::BufferBasic
+    class CountingStubBuffer : public mtd::StubBuffer
     {
     public:
 

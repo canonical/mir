@@ -39,7 +39,7 @@ namespace android
 class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    AndroidBufferAllocator(std::unique_ptr<compositor::BufferIDUniqueGenerator> && generator);
+    AndroidBufferAllocator(std::unique_ptr<compositor::BufferIDUniqueGenerator>&& generator);
 
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);

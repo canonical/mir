@@ -35,6 +35,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
+  mircompositor
 
   ${LIBHARDWARE_LIBRARIES}
   ${ANDROID_UI_LIBRARIES}

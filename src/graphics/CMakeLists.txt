@@ -35,7 +35,6 @@ add_library(
 target_link_libraries(
   mirgraphics
 
-  mircompositor
   mirlogging
 
   ${GLESv2_LIBRARIES}
