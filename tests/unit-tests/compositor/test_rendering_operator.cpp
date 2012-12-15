@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator_for_renderables.h"
+#include "mir/compositor/rendering_operator.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_graphic_region.h"
 #include "mir_test_doubles/mock_renderable.h"
@@ -29,7 +29,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-#if 0
+
 TEST(RenderingOperator,
     render_operator_hold_resource)
 {
@@ -40,13 +40,19 @@ TEST(RenderingOperator,
     mtd::MockRenderable mock_renderable_b;
     mtd::MockRenderable mock_renderable_c;
 
-    auto resource_a = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource_b = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource_c = std::make_shared<mtd::MockGraphicRegion>();
+    auto resource_a = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto region_a = std::make_shared<mtd::MockGraphicRegion>();
+    resource_a->region = region_a;
+    auto resource_b = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto region_b = std::make_shared<mtd::MockGraphicRegion>();
+    resource_b->region = region_b;
+    auto resource_c = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto region_c = std::make_shared<mtd::MockGraphicRegion>();
+    resource_c->region = region_c;
 
     long use_count_a_before, use_count_b_before, use_count_c_before;
     {
-        mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
+        mc::RenderingOperator rendering_operator(mock_renderer);
 
         EXPECT_CALL(mock_renderable_a, texture())
             .Times(1)
@@ -75,7 +81,7 @@ TEST(RenderingOperator,
     EXPECT_EQ(resource_b.use_count(), use_count_b_before);
     EXPECT_EQ(resource_c.use_count(), use_count_c_before);
 }
-#endif
+
 TEST(RenderingOperator,
     render_operator_submits_resource_it_saves_to_renderer)
 {
@@ -87,7 +93,7 @@ TEST(RenderingOperator,
     auto region = std::make_shared<mtd::MockGraphicRegion>();
     resource->region = region;
 
-    mc::RenderingOperatorForRenderables rendering_operator(mock_renderer);
+    mc::RenderingOperator rendering_operator(mock_renderer);
 
     EXPECT_CALL(mock_renderable, texture())
         .Times(1)

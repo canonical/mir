@@ -16,17 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator_for_renderables.h"
+#include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/graphic_region.h"
 
 namespace mc=mir::compositor;
 
-mc::RenderingOperatorForRenderables::RenderingOperatorForRenderables(graphics::Renderer& renderer)
+mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
     : renderer(renderer)
 {
 }
 
-void mc::RenderingOperatorForRenderables::operator()(graphics::Renderable& renderable)
+void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
     auto resource = renderable.texture();
     compositor_resources.push_back(resource);

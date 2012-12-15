@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_FOR_RENDERABLES_H_
-#define MIR_COMPOSITOR_RENDERING_OPERATOR_FOR_RENDERABLES_H_
+#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
+#define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
@@ -28,10 +28,10 @@ namespace mir
 {
 namespace compositor
 {
-class RenderingOperatorForRenderables : public OperatorForRenderables
+class RenderingOperator : public OperatorForRenderables
 {
 public:
-    explicit RenderingOperatorForRenderables(graphics::Renderer& renderer);
+    explicit RenderingOperator(graphics::Renderer& renderer);
 
     void operator()(graphics::Renderable& renderable);
 
@@ -44,4 +44,4 @@ private:
 
 }
 }
-#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_FOR_RENDERABLES_H_ */
+#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_H_ */
