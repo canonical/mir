@@ -28,6 +28,7 @@
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
 #include "mir_test_doubles/mock_id_generator.h"
+#include "mir_test_doubles/null_display_listener.h"
 
 #include <memory>
 #include <stdexcept>
@@ -66,7 +67,7 @@ protected:
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 
-        platform = std::make_shared<mgg::GBMPlatform>();
+        platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
         allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), mock_buffer_initializer));
