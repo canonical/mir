@@ -1,0 +1,37 @@
+/*
+ * Copyright © 2012 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#include "mir/compositor/rendering_operator_for_renderables.h"
+#include "mir/compositor/graphic_region.h"
+
+namespace mc=mir::compositor;
+
+mc::RenderingOperatorForRenderables::RenderingOperatorForRenderables(graphics::Renderer& renderer)
+    : renderer(renderer)
+{
+}
+
+void mc::RenderingOperatorForRenderables::operator()(graphics::Renderable& renderable)
+{
+    auto resource = renderable.texture();
+    compositor_resources.push_back(resource);
+    auto texture = resource->region.lock();
+    texture_resources.push_back(texture);
+
+    renderer.render(renderable, texture);
+}

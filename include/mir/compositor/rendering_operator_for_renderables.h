@@ -31,19 +31,10 @@ namespace compositor
 class RenderingOperatorForRenderables : public OperatorForRenderables
 {
 public:
-    RenderingOperatorForRenderables(graphics::Renderer& renderer)
-        : renderer(renderer)
-    {
-    }
-    void operator()(graphics::Renderable& renderable)
-    {
-        auto resource = renderable.texture();
-        compositor_resources.push_back(resource);
-        auto texture = resource->region.lock();
-        texture_resources.push_back(texture);
+    explicit RenderingOperatorForRenderables(graphics::Renderer& renderer);
 
-        renderer.render(renderable, texture);
-    }
+    void operator()(graphics::Renderable& renderable);
+
 private:
     graphics::Renderer& renderer;
 
