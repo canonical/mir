@@ -59,12 +59,14 @@ public:
         std::shared_ptr<mf::SessionManager> const& session_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display) :
+        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_manager(session_manager),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
-        graphics_display(graphics_display)
+        graphics_display(graphics_display),
+        buffer_allocator(buffer_allocator)
     {
     }
 
@@ -74,6 +76,7 @@ private:
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
@@ -81,6 +84,7 @@ private:
             session_manager,
             graphics_platform,
             graphics_display,
+            buffer_allocator,
             listener,
             resource_cache());
     }
@@ -173,13 +177,14 @@ mir::DefaultServerConfiguration::make_input_manager(
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
     std::shared_ptr<mf::SessionManager> const& session_manager,
-    std::shared_ptr<mg::Display> const& display)
+    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return std::make_shared<DefaultIpcFactory>(
         session_manager,
         make_application_listener(),
         make_graphics_platform(),
-        display);
+        display, allocator);
 }
 
 std::shared_ptr<mf::ApplicationListener>

@@ -38,7 +38,7 @@ struct BufferProperties
 {
     BufferProperties()
         : size(),
-          format(geometry::PixelFormat::pixel_format_invalid),
+          format(geometry::PixelFormat::invalid),
           usage(BufferUsage::undefined)
     {
     }

@@ -38,6 +38,11 @@ class Platform;
 class Display;
 }
 
+namespace compositor
+{
+class GraphicBufferAllocator;
+}
+
 namespace frontend
 {
 class ResourceCache;
@@ -54,6 +59,7 @@ public:
         std::shared_ptr<SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const & graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
+        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<ApplicationListener> const& listener,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -93,6 +99,7 @@ private:
     std::shared_ptr<SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
+    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<ApplicationListener> const listener;
 
     std::shared_ptr<ResourceCache> const resource_cache;

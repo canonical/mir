@@ -53,6 +53,11 @@ public:
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
     }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
 };
 
 struct DoubleBufferAllocationStrategyTest : testing::Test
