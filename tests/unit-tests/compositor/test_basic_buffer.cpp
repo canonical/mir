@@ -60,15 +60,7 @@ public:
     }
 };
 
-class GraphicBufferBasic : public ::testing::Test
-{
-protected:
-    virtual void SetUp()
-    {
-    }
-};
-
-TEST_F(GraphicBufferBasic, id_generated)
+TEST(GraphicBufferBasic, id_generated)
 {
     mc::BufferID id{4};
 

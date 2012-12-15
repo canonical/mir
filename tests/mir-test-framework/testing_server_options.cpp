@@ -28,6 +28,7 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_manager.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
@@ -35,41 +36,19 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
 namespace
 {
-class StubBuffer : public mc::BufferBasic
-{
-public:
-    StubBuffer(mc::BufferProperties const& properties)
-        : BufferBasic(mc::BufferID{(int) (long int) this}),
-          buf_size{properties.size},
-          buf_pixel_format{properties.format}
-    {
-    }
-
-    geom::Size size() const { return buf_size; }
-
-    geom::Stride stride() const { return geom::Stride(); }
-
-    geom::PixelFormat pixel_format() const { return buf_pixel_format; }
-
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
-
-    void bind_to_texture() {}
-
-    geom::Size const buf_size;
-    geom::PixelFormat const buf_pixel_format;
-};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
     std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
     {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer(properties));
+        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
     }
 };
 
