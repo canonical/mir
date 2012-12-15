@@ -129,7 +129,7 @@ geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
 {
     if ( pf == mir_pixel_format_rgba_8888 )
         return geom::PixelFormat::rgba_8888;
-    return geom::PixelFormat::pixel_format_invalid;
+    return geom::PixelFormat::invalid;
 }
 
 void MirSurface::process_incoming_buffer()

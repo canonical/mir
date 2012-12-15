@@ -52,7 +52,7 @@ typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client
 /* Surface API */
 typedef enum MirPixelFormat
 {
-    mir_pixel_format_rgba_8888,
+    mir_pixel_format_rgba_8888 = 1,
     mir_pixel_format_rgbx_8888
 } MirPixelFormat;
 
@@ -105,10 +105,14 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
+enum { mir_supported_pixel_format_max = 32 };
+
 typedef struct MirDisplayInfo
 {
     int width;
     int height;
+    int supported_pixel_format_items;
+    MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
 
 /*

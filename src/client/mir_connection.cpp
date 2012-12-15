@@ -257,11 +257,25 @@ void MirConnection::populate(MirDisplayInfo& display_info)
 
         display_info.width = connection_display_info.width();
         display_info.height = connection_display_info.height();
+
+        auto const pf_size = connection_display_info.supported_pixel_format_size();
+
+        /* Ensure we don't overflow the supported_pixel_format array */
+        display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
+                                                    mir_supported_pixel_format_max :
+                                                    pf_size;
+
+        for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
+        {
+            display_info.supported_pixel_format[i] =
+                static_cast<MirPixelFormat>(connection_display_info.supported_pixel_format(i));
+        }
     }
     else
     {
         display_info.width = 0;
         display_info.height = 0;
+        display_info.supported_pixel_format_items = 0;
     }
 }
 

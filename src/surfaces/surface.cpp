@@ -135,7 +135,7 @@ std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() cons
 
 ms::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), buffer_usage(mc::BufferUsage::undefined),
-      pixel_format(geom::PixelFormat::pixel_format_invalid)
+      pixel_format(geom::PixelFormat::invalid)
 {
 }
 

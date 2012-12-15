@@ -97,6 +97,12 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         alloc_buffer,
         std::unique_ptr<mc::Buffer> (mc::BufferProperties const&));
 
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return std::vector<geom::PixelFormat>();
+    }
+
     std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
         return std::unique_ptr<mc::Buffer>(new StubBuffer());
@@ -444,6 +450,11 @@ struct BufferCounterConfig : TestingServerConfiguration
             mc::BufferProperties const&)
         {
             return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        }
+
+        std::vector<geom::PixelFormat> supported_pixel_formats()
+        {
+            return std::vector<geom::PixelFormat>();
         }
     };
 

@@ -44,7 +44,7 @@ geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
         pf = geom::PixelFormat::rgbx_8888;
         break;
     default:
-        pf = geom::PixelFormat::pixel_format_invalid;
+        pf = geom::PixelFormat::invalid;
         break;
     }
 

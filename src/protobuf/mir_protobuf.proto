@@ -51,6 +51,7 @@ message Platform {
 message DisplayInfo {
   required int32 width = 1;
   required int32 height = 2;
+  repeated uint32 supported_pixel_format = 3;
 }
 
 // Outside of the IPC code no-one should care as this is all wrapped up.
