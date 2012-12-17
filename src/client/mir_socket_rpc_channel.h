@@ -77,6 +77,4 @@ private:
 }
 }
 
-
-
 #endif /* MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_ */

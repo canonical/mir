@@ -28,6 +28,16 @@ set(
   display_server_test_fixture.cpp
 )
 
+if (MIR_TRANSPORT STREQUAL "socket")
+list(APPEND TEST_FRAMEWORK_SRCS
+  socket_detect_server.cpp
+)
+elseif (MIR_TRANSPORT STREQUAL "binder")
+list(APPEND TEST_FRAMEWORK_SRCS
+  binder_detect_server.cpp
+)
+endif()
+
 add_library(
   mir-test-framework STATIC 
   ${TEST_FRAMEWORK_SRCS})
@@ -45,6 +55,7 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
+  mirclient
 
   3rd_party
 

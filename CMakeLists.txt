@@ -89,6 +89,13 @@ set (MIR_TRANSPORT
   "IPC transport to build (options are 'socket' or 'binder')"
 )
 
+set (MIR_CUTDOWN_FOR_EMULATOR
+  false
+  CACHE
+  BOOL
+  "Disable parts of system that don't run on Emulator"
+)
+
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
