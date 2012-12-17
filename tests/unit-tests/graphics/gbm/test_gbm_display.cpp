@@ -409,7 +409,7 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_resources)
 {
     using namespace ::testing;
-    
+
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
@@ -466,7 +466,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
 TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_on_construction)
 {
     using namespace ::testing;
-    
+
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
