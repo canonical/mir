@@ -103,9 +103,8 @@ TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferIDUniqueGenerator> gen(new mc::BufferIDMonotonicIncreaseGenerator);
     EXPECT_NO_THROW({
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(std::move(gen));
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
     });
 
@@ -139,9 +138,8 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 {
     using namespace testing;
 
-    std::unique_ptr<mc::BufferIDUniqueGenerator> gen(new mc::BufferIDMonotonicIncreaseGenerator);
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(std::move(gen));
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
@@ -171,8 +169,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
-    std::unique_ptr<mc::BufferIDUniqueGenerator> gen(new mc::BufferIDMonotonicIncreaseGenerator);
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(std::move(gen));
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::rgba_8888);

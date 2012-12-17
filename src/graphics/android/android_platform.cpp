@@ -35,8 +35,7 @@ namespace mc=mir::compositor;
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
 {
-    std::unique_ptr<mc::BufferIDUniqueGenerator> generator(new mc::BufferIDMonotonicIncreaseGenerator);
-    return std::make_shared<mga::AndroidBufferAllocator>(std::move(generator));
+    return std::make_shared<mga::AndroidBufferAllocator>();
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */

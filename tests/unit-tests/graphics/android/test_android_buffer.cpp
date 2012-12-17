@@ -44,7 +44,6 @@ protected:
         pf = geom::PixelFormat::rgba_8888;
         size = geom::Size{geom::Width{300}, geom::Height{200}};
 
-        id = mc::BufferID{34};
         EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _))
             .Times(AtLeast(0));
     }
@@ -53,7 +52,6 @@ protected:
     std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;
-    mc::BufferID id;
 };
 
 
@@ -63,7 +61,7 @@ TEST_F(AndroidGraphicBufferBasic, basic_allocation_is_non_null)
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _));
 
-    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, id, size, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, size, pf));
 
     EXPECT_NE((int)buffer.get(), NULL);
 }
@@ -74,7 +72,7 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_is_set_to_hardware_by_default)
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_hardware));
 
-    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, id, size, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, size, pf));
 }
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)
@@ -87,7 +85,7 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
     .Times(Exactly(1))
     .WillOnce(Return(test_size));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( size, _, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, id, size, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, size, pf));
 
     EXPECT_EQ(test_size, buffer->size());
 }
@@ -97,7 +95,7 @@ TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, pf, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, id, size, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, size, pf));
 
 }
 
@@ -111,7 +109,7 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
     .Times(Exactly(1))
     .WillOnce(Return(pf2));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _ , _, _ ));
-    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, id, size, pf));
+    std::shared_ptr<mc::Buffer> buffer(new mga::AndroidBuffer(mock_alloc_device, size, pf));
 
     EXPECT_EQ(buffer->pixel_format(), pf2);
 
@@ -127,7 +125,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
         .Times(Exactly(1))
         .WillOnce(Return(dummy_ipc_package));
 
-    auto buffer = std::make_shared<mga::AndroidBuffer>(mock_alloc_device, id, size, pf);
+    auto buffer = std::make_shared<mga::AndroidBuffer>(mock_alloc_device, size, pf);
     auto returned_package = buffer->get_ipc_package();
 
     EXPECT_EQ(returned_package, dummy_ipc_package);

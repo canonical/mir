@@ -40,8 +40,7 @@ struct AllocDevDeleter
     }
 };
 
-mga::AndroidBufferAllocator::AndroidBufferAllocator(std::unique_ptr<mc::BufferIDUniqueGenerator>&& generator)
- : id_generator(std::move(generator))
+mga::AndroidBufferAllocator::AndroidBufferAllocator()
 {
     int err;
 
@@ -65,9 +64,8 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator(std::unique_ptr<mc::BufferID
 std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    auto id = id_generator->generate_unique_id();
     return std::shared_ptr<mc::Buffer>(
-        new AndroidBuffer(alloc_device, id,
+        new AndroidBuffer(alloc_device,
                           buffer_properties.size,
                           buffer_properties.format));
 }

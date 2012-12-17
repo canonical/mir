@@ -441,8 +441,6 @@ struct TestClientIPCRender : public testing::Test
 
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::rgba_8888;
-        id1 = mc::BufferID{4};
-        id2 = mc::BufferID{5};
 
         /* allocate an android buffer */
         int err;
@@ -457,8 +455,8 @@ struct TestClientIPCRender : public testing::Test
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>(hw_module, alloc_device.get());
 
 
-        android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, id1, size, pf);
-        second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, id2, size, pf);
+        android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+        second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
 
         package = android_buffer->get_ipc_package();
         second_package = second_android_buffer->get_ipc_package();
