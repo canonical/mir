@@ -63,9 +63,7 @@ mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayListener> const& listener) 
 std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    std::unique_ptr<mc::BufferIDUniqueGenerator> generator(new mc::BufferIDMonotonicIncreaseGenerator);
     return std::make_shared<mgg::GBMBufferAllocator>(this->shared_from_this(),
-                                                     std::move(generator),
                                                      buffer_initializer);
 }
 

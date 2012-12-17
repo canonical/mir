@@ -19,18 +19,13 @@
 #ifndef MIR_TEST_MOCK_BUFFER_H_
 #define MIR_TEST_MOCK_BUFFER_H_
 
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-namespace
-{
-static int global_id = 1;
-}
 
 namespace mir
 {
@@ -39,7 +34,7 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public compositor::Buffer
+struct MockBuffer : public compositor::BufferBasic
 {
  public:
     MockBuffer(geometry::Size size,
@@ -55,29 +50,6 @@ struct MockBuffer : public compositor::Buffer
                 .WillByDefault(Return(s));
         ON_CALL(*this, pixel_format())
                 .WillByDefault(Return(pf));
-        ON_CALL(*this, id())
-                .WillByDefault(Return(compositor::BufferID{global_id++}));
-
-        ON_CALL(*this, get_ipc_package())
-                .WillByDefault(Return(empty_package));
-        }
-
-    MockBuffer(compositor::BufferID id,
-               geometry::Size size,
-               geometry::Stride s,
-               geometry::PixelFormat pf)
-        {
-        empty_package = std::make_shared<compositor::BufferIPCPackage>();
-
-            using namespace testing;
-        ON_CALL(*this, size())
-                .WillByDefault(Return(size));
-        ON_CALL(*this, stride())
-                .WillByDefault(Return(s));
-        ON_CALL(*this, pixel_format())
-                .WillByDefault(Return(pf));
-        ON_CALL(*this, id())
-                .WillByDefault(Return(id));
 
         ON_CALL(*this, get_ipc_package())
                 .WillByDefault(Return(empty_package));
@@ -87,7 +59,6 @@ struct MockBuffer : public compositor::Buffer
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
-    MOCK_CONST_METHOD0(id, compositor::BufferID());
 
     MOCK_METHOD0(bind_to_texture, void());
 

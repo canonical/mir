@@ -19,6 +19,7 @@ set(
   MIR_COMPOSITOR_SRCS
 
   compositor.cpp
+  buffer_basic.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_multi.cpp

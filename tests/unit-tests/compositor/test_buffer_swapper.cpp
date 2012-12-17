@@ -34,13 +34,13 @@ struct BufferSwapperConstruction : testing::Test
         geom::Stride s {1024};
         geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
 
-        id1 = mc::BufferID{4};
-        id2 = mc::BufferID{6};
-        id3 = mc::BufferID{5};
-        buffer_a = std::make_shared<mtd::MockBuffer>(id1, size, s, pf);
-        buffer_b = std::make_shared<mtd::MockBuffer>(id2, size, s, pf);
-        buffer_c = std::make_shared<mtd::MockBuffer>(id3, size, s, pf);
+        buffer_a = std::make_shared<mtd::MockBuffer>(size, s, pf);
+        buffer_b = std::make_shared<mtd::MockBuffer>(size, s, pf);
+        buffer_c = std::make_shared<mtd::MockBuffer>(size, s, pf);
 
+        id1 = buffer_a->id();
+        id2 = buffer_b->id();
+        id3 = buffer_c->id();
     }
 
     bool check_ref(std::weak_ptr<mc::Buffer> buffer, mc::BufferID id)

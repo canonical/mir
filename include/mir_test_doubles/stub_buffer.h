@@ -28,11 +28,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace
-{
-static int global_id = 1;
-}
-
 namespace mir
 {
 namespace test
@@ -44,15 +39,13 @@ class StubBuffer : public compositor::BufferBasic
 {
 public:
     StubBuffer()
-        : BufferBasic(compositor::BufferID{global_id++}),
-          buf_size{geometry::Size{geometry::Width{0}, geometry::Height{0}}},
+        : buf_size{geometry::Size{geometry::Width{0}, geometry::Height{0}}},
           buf_pixel_format{geometry::PixelFormat::rgba_8888}
     {
     }
 
     StubBuffer(compositor::BufferProperties const& properties)
-        : BufferBasic(compositor::BufferID{ global_id++}),
-          buf_size{properties.size},
+        : buf_size{properties.size},
           buf_pixel_format{properties.format}
     {
     }

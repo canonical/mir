@@ -30,8 +30,7 @@ namespace geom=mir::geometry;
 class TestClassBuffer : public mc::BufferBasic
 {
 public:
-    TestClassBuffer(mc::BufferID id)
-     : BufferBasic(id)
+    TestClassBuffer()
     {
     }
 
@@ -59,13 +58,3 @@ public:
         return std::shared_ptr<mc::BufferIPCPackage>(); 
     }
 };
-
-TEST(GraphicBufferBasic, id_generated)
-{
-    mc::BufferID id{4};
-
-    TestClassBuffer buffer(id); 
-    auto test_id = buffer.id();
-
-    EXPECT_EQ(test_id, id);
-}

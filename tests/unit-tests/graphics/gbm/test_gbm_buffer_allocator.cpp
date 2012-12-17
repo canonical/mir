@@ -70,8 +70,7 @@ protected:
 
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
-        allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), mock_buffer_initializer));
+        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
     }
 
     // Defaults
@@ -196,8 +195,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
-    allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), null_buffer_initializer));
+    allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);
@@ -228,9 +226,8 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
-    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
     EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, std::move(generator), mock_buffer_initializer);
+        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
     }, std::runtime_error);
 }
 
@@ -242,34 +239,9 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_suppor
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
-    auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
     EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, std::move(generator), mock_buffer_initializer);
+        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
     }, std::runtime_error);
-}
-
-TEST_F(GBMBufferAllocatorTest, basic_id_generation)
-{
-    auto id1 = mc::BufferID{4};
-    auto id2 = mc::BufferID{5};
-    auto mock_id_generator = std::unique_ptr<mtd::MockIDGenerator>(new mtd::MockIDGenerator);
-    /* we move a unique_ptr in test. google mock leak checker doesn't know how to deal with things 
-       that are moved, so we manually tell gmock to not check the object */
-    testing::Mock::AllowLeak(mock_id_generator.get());
-
-    using namespace testing;
-    EXPECT_CALL(*mock_id_generator, generate_unique_id())
-        .Times(2)
-        .WillOnce(Return(id1))
-        .WillRepeatedly(Return(id2));
-
-    mgg::GBMBufferAllocator allocator(platform, std::move(mock_id_generator), mock_buffer_initializer);
-
-    auto buffer1 = allocator.alloc_buffer(buffer_properties);
-    auto buffer2 = allocator.alloc_buffer(buffer_properties);
-
-    EXPECT_EQ(buffer1->id(), id1);
-    EXPECT_EQ(buffer2->id(), id2);
 }
 
 TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)

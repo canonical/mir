@@ -80,8 +80,7 @@ protected:
 
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        auto generator = std::unique_ptr<mc::BufferIDUniqueGenerator>(new mc::BufferIDMonotonicIncreaseGenerator);
-        allocator.reset(new mgg::GBMBufferAllocator(platform, std::move(generator), null_init));
+        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
     }
 
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
