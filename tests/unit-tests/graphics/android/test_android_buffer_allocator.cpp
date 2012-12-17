@@ -17,11 +17,8 @@
  */
 
 #include "src/graphics/android/android_buffer_allocator.h"
-#include "mir/compositor/buffer_id.h"
-#include "mir/compositor/buffer_properties.h"
 
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
 
 #include <algorithm>
 
@@ -31,19 +28,6 @@ namespace mc=mir::compositor;
 
 class AndroidBufferAllocatorTest : public ::testing::Test
 {
-protected:
-    virtual void SetUp()
-    {
-        id1 = mc::BufferID{4};
-        id2 = mc::BufferID{5};
-        properties = mc::BufferProperties{geom::Size{geom::Width{44}, geom::Height{75}}, 
-                                          geom::PixelFormat::rgba_8888,
-                                          mc::BufferUsage::hardware};
-    }
-
-    mc::BufferID id1;
-    mc::BufferID id2;
-    mc::BufferProperties properties;
 };
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
