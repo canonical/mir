@@ -61,7 +61,7 @@ geom::Size mga::AndroidBuffer::size() const
 
 geom::Stride mga::AndroidBuffer::stride() const
 {
-    return geom::Stride(0);
+    return native_window_buffer_handle->stride();
 }
 
 geom::PixelFormat mga::AndroidBuffer::pixel_format() const
