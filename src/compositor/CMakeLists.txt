@@ -24,7 +24,6 @@ set(
   buffer_bundle.cpp
   buffer_swapper_multi.cpp
   double_buffer_allocation_strategy.cpp
-  buffer_id.cpp
 )
 
 ADD_LIBRARY(

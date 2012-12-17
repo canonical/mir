@@ -27,7 +27,6 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
-#include "mir_test_doubles/mock_id_generator.h"
 #include "mir_test_doubles/null_display_listener.h"
 
 #include <memory>

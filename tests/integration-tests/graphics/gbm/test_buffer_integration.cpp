@@ -43,8 +43,8 @@ namespace mir
 class StubBufferThread : public mtd::StubBuffer
 {
 public:
-    StubBufferThread()
-     : creation_thread_id{std::this_thread::get_id()}
+    StubBufferThread() :
+        creation_thread_id{std::this_thread::get_id()}
     {}
 
     void bind_to_texture()

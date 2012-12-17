@@ -25,12 +25,17 @@ namespace compositor
 {
 namespace
 {
-    BufferID generate_next_buffer_id()
-    {
-        static std::atomic<uint32_t> next_id{0};
+BufferID generate_next_buffer_id()
+{
+    static std::atomic<uint32_t> next_id{0};
 
-        return BufferID(next_id.fetch_add(1));
-    }
+    auto id = BufferID(next_id.fetch_add(1));
+
+    // Avoid returning an "invalid" id. (Not sure we need invalid ids)
+    while (!id.is_valid()) id = BufferID(next_id.fetch_add(1));
+
+    return id;
+}
 }
 }
 }

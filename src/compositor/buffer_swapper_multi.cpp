@@ -23,15 +23,15 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
- : in_use_by_client(0)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
+    in_use_by_client(0)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
-        
-    for( auto& buffer : buffer_list )
+
+    for (auto& buffer : buffer_list)
     {
         buffers[buffer->id()] = buffer;
         client_queue.push_back(buffer->id());
