@@ -339,7 +339,14 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
         {
             mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
-            EXPECT_STREQ("connect: No such file or directory", mir_connection_get_error_message(connection));
+
+            char const* error = mir_connection_get_error_message(connection);
+
+            if (std::strcmp("connect: No such file or directory", error) &&
+                std::strcmp("Can't find MIR server", error))
+            {
+                FAIL() << error;
+            }
         }
     } client_config;
 

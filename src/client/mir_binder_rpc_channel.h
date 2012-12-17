@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 #define MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_
 
@@ -30,19 +29,12 @@
 #include <binder/Binder.h>
 #include <binder/IServiceManager.h>
 
+#include <boost/asio.hpp>
+
 #include <iosfwd>
 
 namespace mir
 {
-namespace protobuf
-{
-namespace wire
-{
-class Invocation;
-class Result;
-}
-}
-
 namespace client
 {
 class MirBinderRpcChannel : public MirBasicRpcChannel
@@ -59,14 +51,21 @@ private:
         google::protobuf::Message* response,
         google::protobuf::Closure* complete);
 
+    void remote_call(
+        std::shared_ptr<android::Parcel> const& request,
+        google::protobuf::Message* response,
+        google::protobuf::Closure* complete);
+
     android::sp<android::IServiceManager> const sm;
-    android::sp<android::IBinder> const binder;
+    android::sp<android::IBinder> const mir_proxy;
     std::shared_ptr<Logger> const log;
+
+    static const int threads = 1;
+    std::thread io_service_thread[threads];
+    boost::asio::io_service io_service;
+    boost::asio::io_service::work work;
 };
-
 }
 }
-
-
 
 #endif /* MIR_CLIENT_MIR_BINDER_RPC_CHANNEL_H_ */
