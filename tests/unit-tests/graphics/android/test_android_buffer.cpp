@@ -131,3 +131,18 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
     EXPECT_EQ(returned_package, dummy_ipc_package);
 }
 
+TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
+{
+    using namespace testing;
+
+    geom::Stride dummy_stride{43};
+    EXPECT_CALL(*mock_buffer_handle, stride())
+        .Times(Exactly(1))
+        .WillOnce(Return(dummy_stride));
+
+    auto buffer = std::make_shared<mga::AndroidBuffer>(mock_alloc_device, size, pf);
+    auto returned_stride = buffer->stride();
+
+    EXPECT_EQ(returned_stride, dummy_stride);
+}
+
