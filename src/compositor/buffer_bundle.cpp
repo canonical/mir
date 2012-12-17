@@ -102,8 +102,11 @@ std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::l
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
-    auto resource = new mc::GraphicBufferClientResource;
-    swapper->client_acquire(resource->buffer, resource->id);
+    BufferID id;
+    std::weak_ptr<Buffer> buffer;
+    swapper->client_acquire(buffer, id);
+
+    auto resource = new mc::GraphicBufferClientResource(buffer, id);
     ClientReleaseDeleter del(swapper);
     auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
     return client_resource;
