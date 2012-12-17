@@ -29,6 +29,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
+#include "null_buffer_bundle.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,6 +42,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
+namespace mt = mir::test;
 
 namespace
 {
@@ -71,42 +73,13 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubBufferBundle : public mc::BufferBundle
-{
-public:
-    std::shared_ptr<mc::GraphicBufferClientResource> secure_client_buffer()
-    {
-        return std::make_shared<mc::GraphicBufferClientResource>(
-            std::make_shared<mc::BufferIPCPackage>(),
-            std::shared_ptr<mc::Buffer>(),
-            mc::BufferID{0});
-    }
-
-    std::shared_ptr<mc::GraphicRegion> lock_back_buffer()
-    {
-        return std::shared_ptr<mc::GraphicRegion>();
-    }
-
-    geom::PixelFormat get_bundle_pixel_format()
-    {
-        return geom::PixelFormat();
-    }
-
-    geom::Size bundle_size()
-    {
-        return geom::Size();
-    }
-
-    void shutdown() {}
-};
-
 class StubSurfaceOrganiser : public mf::SurfaceOrganiser
 {
  public:
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
-                                                     std::make_shared<StubBufferBundle>());
+                                                     std::make_shared<mt::NullBufferBundle>());
         surfaces.push_back(surface);
 
         return std::weak_ptr<ms::Surface>(surface);
@@ -150,9 +123,9 @@ public:
             .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
     }
 
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::shared_ptr<mc::Buffer>();
     }
 
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
@@ -276,14 +249,12 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
 
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
     }
-
     {
         mp::SurfaceId request;
         mp::Buffer response;
 
         mediator.next_buffer(nullptr, &request, &response, null_callback.get());
     }
-
     {
         mp::SurfaceId request;
 

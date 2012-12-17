@@ -25,6 +25,8 @@
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
@@ -110,20 +112,28 @@ void mir::frontend::ApplicationMediator::create_surface(
 
 
         surface->advance_client_buffer();
-        auto const& id = surface->get_buffer_id();
-        auto const& ipc_package = surface->get_buffer_ipc_package();
-        auto buffer = response->mutable_buffer();
+        auto const& client_resource = surface->client_buffer_resource();
+        auto const& id = client_resource->id;
+        if (auto buffer_resource = client_resource->buffer.lock())
+        {
+            auto ipc_package = buffer_resource->get_ipc_package();
+            auto buffer = response->mutable_buffer();
 
-        buffer->set_buffer_id(id.as_uint32_t());
-        for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-            buffer->add_data(*p);
+            buffer->set_buffer_id(id.as_uint32_t());
+            for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
+                buffer->add_data(*p);
 
-        for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-            buffer->add_fd(*p);
+            for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
+                buffer->add_fd(*p);
 
-        buffer->set_stride(ipc_package->stride);
+            buffer->set_stride(ipc_package->stride);
 
-        resource_cache->save_resource(response, ipc_package);
+            resource_cache->save_resource(response, ipc_package);
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
+        }
     }
 
     done->Run();
@@ -143,19 +153,27 @@ void mir::frontend::ApplicationMediator::next_buffer(
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
-    auto const& id = surface->get_buffer_id();
-    auto const& ipc_package = surface->get_buffer_ipc_package();
+    auto const& client_resource = surface->client_buffer_resource();
+    auto const& id = client_resource->id;
+    if (auto buffer_resource = client_resource->buffer.lock())
+    {
+        auto ipc_package = buffer_resource->get_ipc_package();
 
-    response->set_buffer_id(id.as_uint32_t());
-    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        response->add_data(*p);
+        response->set_buffer_id(id.as_uint32_t());
+        for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
+            response->add_data(*p);
 
-    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        response->add_fd(*p);
+        for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
+            response->add_fd(*p);
 
-    response->set_stride(ipc_package->stride);
+        response->set_stride(ipc_package->stride);
 
-    resource_cache->save_resource(response, ipc_package);
+        resource_cache->save_resource(response, ipc_package);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
+    }
     done->Run();
 }
 

@@ -19,9 +19,10 @@
 #ifndef MIR_TEST_MOCK_BUFFER_H_
 #define MIR_TEST_MOCK_BUFFER_H_
 
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -33,16 +34,16 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public compositor::Buffer
+struct MockBuffer : public compositor::BufferBasic
 {
  public:
     MockBuffer(geometry::Size size,
                geometry::Stride s,
                geometry::PixelFormat pf)
-        {
+    {
         empty_package = std::make_shared<compositor::BufferIPCPackage>();
 
-            using namespace testing;
+        using namespace testing;
         ON_CALL(*this, size())
                 .WillByDefault(Return(size));
         ON_CALL(*this, stride())
@@ -52,7 +53,7 @@ struct MockBuffer : public compositor::Buffer
 
         ON_CALL(*this, get_ipc_package())
                 .WillByDefault(Return(empty_package));
-        }
+    }
 
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());

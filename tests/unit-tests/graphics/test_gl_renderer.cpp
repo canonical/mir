@@ -26,6 +26,7 @@
 #include <mir/graphics/gl_renderer.h>
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/graphic_region.h>
+#include <mir/compositor/buffer_bundle.h>
 #include <mir_test/gl_mock.h>
 
 using testing::SetArgPointee;
@@ -282,7 +283,7 @@ public:
 
     MOCK_CONST_METHOD0(top_left, mir::geometry::Point());
     MOCK_CONST_METHOD0(size, mir::geometry::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
+    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicBufferCompositorResource>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(hidden, bool());
@@ -312,6 +313,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     MockRenderable rd;
     MockGraphicRegion gr;
     std::shared_ptr<MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
+    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
+
     mir::geometry::Point tl;
     mir::geometry::Size  s;
     glm::mat4            transformation;
@@ -345,7 +348,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
     EXPECT_CALL(rd, texture())
-        .WillOnce(Return(gr_ptr));
+        .WillOnce(Return(resource));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));

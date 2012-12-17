@@ -336,7 +336,6 @@ TEST_F(GBMDisplayTest, post_update)
 
     EXPECT_NO_THROW(
     {
-
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
         EXPECT_TRUE(display->post_update());

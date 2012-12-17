@@ -28,7 +28,7 @@ namespace mir
 {
 namespace compositor
 {
-class GraphicRegion;
+class GraphicBufferCompositorResource;
 }
 namespace graphics
 {
@@ -41,7 +41,7 @@ public:
 
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
-    virtual std::shared_ptr<compositor::GraphicRegion> texture() const = 0;
+    virtual std::shared_ptr<compositor::GraphicBufferCompositorResource> texture() const = 0;
     virtual glm::mat4 transformation() const = 0;
     virtual float alpha() const = 0;
     virtual bool hidden() const = 0;

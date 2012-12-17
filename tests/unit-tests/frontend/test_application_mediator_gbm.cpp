@@ -90,9 +90,9 @@ public:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>();
+        return std::shared_ptr<mc::Buffer>();
     }
 
     virtual std::vector<geom::PixelFormat> supported_pixel_formats()

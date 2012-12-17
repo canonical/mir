@@ -24,6 +24,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 bool mir_test_framework::detect_server(
     std::string const& socket_file,

@@ -39,6 +39,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
+  mircompositor
 
   ${DRM_LIBRARIES}
   ${GBM_LIBRARIES}

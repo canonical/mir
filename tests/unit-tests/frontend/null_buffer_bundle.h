@@ -20,7 +20,7 @@
 #define MIR_TEST_NULL_BUFFER_BUNDLE_H_
 
 #include <mir/compositor/buffer_bundle.h>
-
+#include <mir_test_doubles/mock_buffer.h>
 namespace mir
 {
 namespace test
@@ -29,14 +29,22 @@ namespace test
 class NullBufferBundle : public compositor::BufferBundle
 {
 public:
+    NullBufferBundle()
+    {
+        geometry::Size sz;
+        geometry::Stride st;
+        geometry::PixelFormat pf;
+        mock_buffer = std::make_shared<mir::test::doubles::MockBuffer>(sz, st, pf);
+        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>(mock_buffer, compositor::BufferID());
+    }
     std::shared_ptr<compositor::GraphicBufferClientResource> secure_client_buffer()
     {
-        return std::shared_ptr<compositor::GraphicBufferClientResource>();
+        return empty_client_resource;
     }
 
-    std::shared_ptr<compositor::GraphicRegion> lock_back_buffer()
+    std::shared_ptr<compositor::GraphicBufferCompositorResource> lock_back_buffer()
     {
-        return std::shared_ptr<compositor::GraphicRegion>();
+        return std::shared_ptr<compositor::GraphicBufferCompositorResource>();
     }
 
     geometry::PixelFormat get_bundle_pixel_format()
@@ -52,6 +60,9 @@ public:
     void shutdown()
     {
     }
+
+    std::shared_ptr<compositor::GraphicBufferClientResource> empty_client_resource;
+    std::shared_ptr<compositor::Buffer> mock_buffer;
 };
 
 }

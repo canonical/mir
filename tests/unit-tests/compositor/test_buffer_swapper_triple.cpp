@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-
 #include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/compositor/buffer_swapper_multi.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -38,23 +38,22 @@ struct BufferSwapperTriple : testing::Test
 {
     BufferSwapperTriple()
     {
-        std::unique_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
-        std::unique_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
+        std::shared_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
 
-        buf_a = buffer_a.get();
-        buf_b = buffer_b.get();
-        buf_c = buffer_c.get();
-        swapper = std::make_shared<mc::BufferSwapperMulti>(
-                std::move(buffer_a),
-                std::move(buffer_b),
-                std::move(buffer_c));
+        buffer_a_addr = buffer_a.get();
+        buffer_b_addr = buffer_b.get();
+        buffer_c_addr = buffer_c.get();
+
+        auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
 
     }
 
-    mc::Buffer* buf_a;
-    mc::Buffer* buf_b;
-    mc::Buffer* buf_c;
+    mc::Buffer* buffer_a_addr;
+    mc::Buffer* buffer_b_addr;
+    mc::Buffer* buffer_c_addr;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
@@ -63,29 +62,34 @@ struct BufferSwapperTriple : testing::Test
 
 TEST_F(BufferSwapperTriple, test_valid_buffer_returned)
 {
-    auto buf_tmp = swapper->client_acquire();
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp;
+
+    swapper->client_acquire(buffer_ref, buf_tmp);
     swapper->client_release(buf_tmp);
 
-    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b) || (buf_tmp == buf_c));
+    auto addr = buffer_ref.lock().get();
+    EXPECT_TRUE((addr == buffer_a_addr) || (addr == buffer_b_addr) || (addr = buffer_c_addr));
 }
 
 TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 {
-    auto buf_tmp_a = swapper->client_acquire();
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp_a;
+    mc::BufferID buf_tmp_b;
+    mc::BufferID buf_tmp_c;
+
+    swapper->client_acquire(buffer_ref, buf_tmp_a);
     swapper->client_release(buf_tmp_a);
 
-    auto buf_tmp_b = swapper->compositor_acquire();
+    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
     swapper->compositor_release(buf_tmp_b);
 
-    buf_tmp_b = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    auto buf_tmp_c = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_c);
     swapper->client_release(buf_tmp_c);
-
-    EXPECT_TRUE((buf_tmp_a == buf_a) || (buf_tmp_a == buf_b) || (buf_tmp_a == buf_c));
-    EXPECT_TRUE((buf_tmp_b == buf_a) || (buf_tmp_b == buf_b) || (buf_tmp_b == buf_c));
-    EXPECT_TRUE((buf_tmp_c == buf_a) || (buf_tmp_c == buf_b) || (buf_tmp_c == buf_c));
 
     EXPECT_NE(buf_tmp_a, buf_tmp_b);
     EXPECT_NE(buf_tmp_a, buf_tmp_c);
@@ -94,48 +98,57 @@ TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
 {
-    mc::Buffer* buf_tmp, *buf_tmp_b;
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp_a;
+    mc::BufferID buf_tmp_b;
 
-    buf_tmp_b = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, buf_tmp_b);
     swapper->client_release(buf_tmp_b);
 
-    buf_tmp = swapper->compositor_acquire();
-    EXPECT_TRUE((buf_tmp == buf_a) || (buf_tmp == buf_b) || (buf_tmp == buf_c));
+    swapper->compositor_acquire(buffer_ref, buf_tmp_a);
 }
 
 /* this would stall a double buffer */
 TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
 {
-    mc::Buffer* buf_tmp_c;
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID buf_tmp;
 
-    swapper->compositor_acquire();
+    swapper->compositor_acquire(buffer_ref, buf_tmp);
 
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
+    swapper->client_acquire(buffer_ref, buf_tmp);
+    swapper->client_release(buf_tmp);
 
-    buf_tmp_c = swapper->client_acquire();
-    swapper->client_release(buf_tmp_c);
+    swapper->client_acquire(buffer_ref, buf_tmp);
+    swapper->client_release(buf_tmp);
 
     SUCCEED();
 }
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 {
-    auto first_comp_buffer = swapper->compositor_acquire();
+    std::weak_ptr<mc::Buffer> buffer_ref;
+    mc::BufferID first_comp_buffer;
+    mc::BufferID first_client_buffer;
+    mc::BufferID second_comp_buffer;
+    mc::BufferID second_client_buffer;
+    mc::BufferID third_comp_buffer;
 
-    auto first_client_buffer = swapper->client_acquire();
+    swapper->compositor_acquire(buffer_ref, first_comp_buffer);
+
+    swapper->client_acquire(buffer_ref, first_client_buffer);
     swapper->client_release(first_client_buffer);
 
-    auto second_client_buffer = swapper->client_acquire();
+    swapper->client_acquire(buffer_ref, second_client_buffer);
     swapper->client_release(second_client_buffer);
 
     swapper->compositor_release(first_comp_buffer);
 
-    auto second_compositor_buffer = swapper->compositor_acquire();
-    swapper->compositor_release(second_compositor_buffer);
+    swapper->compositor_acquire(buffer_ref, second_comp_buffer);
+    swapper->compositor_release(second_comp_buffer);
+ 
+    swapper->compositor_acquire(buffer_ref, third_comp_buffer);
 
-    auto third_compositor_buffer = swapper->compositor_acquire();
-
-    EXPECT_EQ(second_compositor_buffer, first_client_buffer);
-    EXPECT_EQ(third_compositor_buffer, second_client_buffer);
+    EXPECT_EQ(second_comp_buffer, first_client_buffer);
+    EXPECT_EQ(third_comp_buffer, second_client_buffer);
 }

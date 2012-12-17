@@ -32,7 +32,7 @@ namespace doubles
 struct MockBufferBundle : public compositor::BufferBundle
 {
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<compositor::GraphicBufferClientResource>());
-    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<compositor::GraphicRegion>());
+    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<compositor::GraphicBufferCompositorResource>());
 
     MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(bundle_size, geometry::Size());

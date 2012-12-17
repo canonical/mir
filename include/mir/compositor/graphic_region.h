@@ -21,6 +21,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include <memory>
 
 namespace mir
 {
@@ -40,6 +41,16 @@ protected:
     GraphicRegion() = default;
     GraphicRegion(GraphicRegion const&) = delete;
     GraphicRegion& operator=(GraphicRegion const&) = delete;
+};
+
+struct GraphicBufferCompositorResource
+{
+    explicit GraphicBufferCompositorResource(std::weak_ptr<GraphicRegion> const& region)
+       : region(region)
+    {
+    }
+
+    std::weak_ptr<GraphicRegion> const region;
 };
 
 }

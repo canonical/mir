@@ -47,7 +47,7 @@ struct MockRenderable : mg::Renderable
 {
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicRegion>());
+    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicBufferCompositorResource>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(hidden, bool());

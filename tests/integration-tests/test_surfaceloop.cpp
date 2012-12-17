@@ -22,6 +22,8 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -31,6 +33,7 @@
 #include "mir/thread/all.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -40,6 +43,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -49,15 +53,6 @@ geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
-
-class StubBuffer : public mc::Buffer
-{
-    geom::Size size() const { return ::size; }
-    geom::Stride stride() const { return geom::Stride(); }
-    geom::PixelFormat pixel_format() const { return ::format; }
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::make_shared<mc::BufferIPCPackage>(); }
-    void bind_to_texture() {}
-};
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
@@ -76,10 +71,11 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
                                                          mc::BufferProperties const& requested)
     {
         actual = requested;
+        auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
+        auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
+        std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(
-                std::unique_ptr<mc::Buffer>(new StubBuffer()),
-                std::unique_ptr<mc::Buffer>(new StubBuffer())));
+            new mc::BufferSwapperMulti(list)); 
     }
 };
 
@@ -95,7 +91,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD1(
         alloc_buffer,
-        std::unique_ptr<mc::Buffer> (mc::BufferProperties const&));
+        std::shared_ptr<mc::Buffer> (mc::BufferProperties const&));
 
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -105,7 +101,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
 };
 }
@@ -411,33 +407,20 @@ namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
 {
-    class StubBuffer : public mc::Buffer
+    class CountingStubBuffer : public mtd::StubBuffer
     {
     public:
 
-        StubBuffer()
+        CountingStubBuffer()
         {
             int created = buffers_created.load();
             while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
         }
-        ~StubBuffer()
+        ~CountingStubBuffer()
         {
             int destroyed = buffers_destroyed.load();
             while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
         }
-
-        virtual geom::Size size() const { return geom::Size(); }
-
-        virtual geom::Stride stride() const { return geom::Stride(); }
-
-        virtual geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
-
-        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const
-        {
-            return std::make_shared<mc::BufferIPCPackage>();
-        }
-
-        virtual void bind_to_texture() {}
 
         static std::atomic<int> buffers_created;
         static std::atomic<int> buffers_destroyed;
@@ -446,10 +429,10 @@ struct BufferCounterConfig : TestingServerConfiguration
     class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
      public:
-        virtual std::unique_ptr<mc::Buffer> alloc_buffer(
+        virtual std::shared_ptr<mc::Buffer> alloc_buffer(
             mc::BufferProperties const&)
         {
-            return std::unique_ptr<mc::Buffer>(new StubBuffer());
+            return std::unique_ptr<mc::Buffer>(new CountingStubBuffer());
         }
 
         std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -489,8 +472,8 @@ struct BufferCounterConfig : TestingServerConfiguration
     std::shared_ptr<mg::Platform> platform;
 };
 
-std::atomic<int> BufferCounterConfig::StubBuffer::buffers_created;
-std::atomic<int> BufferCounterConfig::StubBuffer::buffers_destroyed;
+std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_created;
+std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 }
 }
 using mir::BufferCounterConfig;
@@ -501,8 +484,8 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     {
         void on_exit(mir::DisplayServer*)
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
@@ -550,8 +533,8 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
     {
         void on_exit(mir::DisplayServer*)
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, StubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
+            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;

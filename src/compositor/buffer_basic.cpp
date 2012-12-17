@@ -13,21 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <limits>
-#include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_basic.h"
+#include "mir/thread/all.h"
 
-namespace mc=mir::compositor;
-
-mc::BufferIDMonotonicIncreaseGenerator::BufferIDMonotonicIncreaseGenerator()
- : id_counter(0)
-{}
-
-mc::BufferID mc::BufferIDMonotonicIncreaseGenerator::generate_unique_id()
+namespace mir
 {
-    if (id_counter == std::numeric_limits<uint32_t>::max() )
-        return mc::BufferID{0};
-    return mc::BufferID{++id_counter};
+namespace compositor
+{
+namespace
+{
+BufferID generate_next_buffer_id()
+{
+    static std::atomic<uint32_t> next_id{0};
+
+    auto id = BufferID(next_id.fetch_add(1));
+
+    // Avoid returning an "invalid" id. (Not sure we need invalid ids)
+    while (!id.is_valid()) id = BufferID(next_id.fetch_add(1));
+
+    return id;
+}
+}
+}
+}
+
+mir::compositor::BufferBasic::BufferBasic() :
+    buffer_id(generate_next_buffer_id())
+{
 }

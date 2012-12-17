@@ -82,7 +82,7 @@ mir::geometry::Size ms::Surface::size() const
     return buffer_bundle->bundle_size();
 }
 
-std::shared_ptr<mc::GraphicRegion> ms::Surface::texture() const
+std::shared_ptr<mc::GraphicBufferCompositorResource> ms::Surface::texture() const
 {
     return buffer_bundle->lock_back_buffer();
 }
@@ -119,18 +119,14 @@ void ms::Surface::advance_client_buffer()
 {
     /* we must hold a reference (graphics_resource) to the resource on behalf
        of the client until it is returned to us */
+    /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
     graphics_resource.reset();  // Release old client buffer
     graphics_resource = buffer_bundle->secure_client_buffer();
 }
 
-mc::BufferID ms::Surface::get_buffer_id() const
+std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::client_buffer_resource() const
 {
-    return graphics_resource->id;
-}
-
-std::shared_ptr<mc::BufferIPCPackage> ms::Surface::get_buffer_ipc_package() const
-{
-    return graphics_resource->ipc_package;
+    return graphics_resource;
 }
 
 ms::SurfaceCreationParameters::SurfaceCreationParameters()

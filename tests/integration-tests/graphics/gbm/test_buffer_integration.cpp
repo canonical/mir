@@ -19,9 +19,11 @@
 #include "src/graphics/gbm/gbm_platform.h"
 #include "src/graphics/gbm/gbm_display.h"
 #include "src/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
+#include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir/thread/all.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
@@ -33,22 +35,17 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
 
-class StubBuffer : public mc::Buffer
+class StubBufferThread : public mtd::StubBuffer
 {
 public:
-    StubBuffer() : creation_thread_id{std::this_thread::get_id()} {}
-
-    geom::Size size() const { return geom::Size(); }
-
-    geom::Stride stride() const { return geom::Stride(); }
-
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
-
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const { return std::shared_ptr<mc::BufferIPCPackage>(); }
+    StubBufferThread() :
+        creation_thread_id{std::this_thread::get_id()}
+    {}
 
     void bind_to_texture()
     {
@@ -72,9 +69,9 @@ private:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::unique_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>(new StubBuffer());
+        return std::shared_ptr<mc::Buffer>(new StubBufferThread());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -148,13 +145,13 @@ struct BufferCreatorThread
     }
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
-    std::unique_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mc::Buffer> buffer;
     mc::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread
 {
-    BufferDestructorThread(std::unique_ptr<mc::Buffer> buffer)
+    BufferDestructorThread(std::shared_ptr<mc::Buffer> buffer)
         : buffer{std::move(buffer)}
     {
     }
@@ -162,16 +159,16 @@ struct BufferDestructorThread
     void operator()()
     {
         using namespace testing;
-        buffer.reset(0);
+        buffer.reset();
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
     }
 
-    std::unique_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mc::Buffer> buffer;
 };
 
 struct BufferTextureInstantiatorThread
 {
-    BufferTextureInstantiatorThread(const std::unique_ptr<mc::Buffer>& buffer)
+    BufferTextureInstantiatorThread(const std::shared_ptr<mc::Buffer>& buffer)
         : buffer(buffer), exception_thrown(false)
     {
     }
@@ -192,7 +189,7 @@ struct BufferTextureInstantiatorThread
         ASSERT_NE(EGL_SUCCESS, eglGetError());
     }
 
-    const std::unique_ptr<mc::Buffer>& buffer;
+    const std::shared_ptr<mc::Buffer>& buffer;
     bool exception_thrown;
 };
 

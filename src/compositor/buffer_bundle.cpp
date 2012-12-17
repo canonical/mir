@@ -32,50 +32,52 @@ namespace
 {
 struct CompositorReleaseDeleter
 {
-    explicit CompositorReleaseDeleter(mc::BufferSwapper* sw) :
-        swapper(sw)
+    explicit CompositorReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
+        swapper(sw),
+        id(id)
     {
     }
 
-    void operator()(mc::Buffer* buffer)
+    void operator()(mc::GraphicBufferCompositorResource* compositor_resource)
     {
-        swapper->compositor_release(buffer);
+        if (auto res = swapper.lock())
+            res->compositor_release(id);
+        delete compositor_resource;
     }
 
-    mc::BufferSwapper* const swapper;
+    std::weak_ptr<mc::BufferSwapper> swapper;
+    mc::BufferID id;
 };
 
 struct ClientReleaseDeleter
 {
-    ClientReleaseDeleter(mc::BufferSwapper* sw) :
+    ClientReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw) :
         swapper(sw)
     {
     }
 
-    void operator()(mc::Buffer* buffer)
+    void operator()(mc::GraphicBufferClientResource* client_resource)
     {
-        swapper->client_release(buffer);
+        if (auto res = swapper.lock())
+            res->client_release(client_resource->id);
+        delete client_resource;
     }
 
-    mc::BufferSwapper* const swapper;
+    std::weak_ptr<mc::BufferSwapper> swapper;
 };
 }
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
-    std::shared_ptr<BufferIDUniqueGenerator> gen,
     BufferProperties const& buffer_properties)
-     : generator(gen),
-       swapper(std::move(swapper)),
+     : swapper(std::move(swapper)),
        size(buffer_properties.size),
        pixel_format(buffer_properties.format)
 {
 }
 
-mc::BufferBundleSurfaces::BufferBundleSurfaces(
-    std::unique_ptr<BufferSwapper>&& swapper, std::shared_ptr<BufferIDUniqueGenerator> gen)
-     : generator(gen),
-       swapper(std::move(swapper)),
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
+     : swapper(std::move(swapper)),
        size(),
        pixel_format(geometry::PixelFormat::rgba_8888)
 {
@@ -85,27 +87,29 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
+std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::lock_back_buffer()
 {
-    std::shared_ptr<Buffer> bptr{swapper->compositor_acquire(), CompositorReleaseDeleter(swapper.get())};
+    mc::BufferID id;
+    std::weak_ptr<mc::Buffer> region;
+    swapper->compositor_acquire(region, id);
 
-    return bptr;
+    auto resource = new mc::GraphicBufferCompositorResource(region);
+    CompositorReleaseDeleter del(swapper, id);
+    auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
+
+    return compositor_resource;
 }
 
 std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
 {
-    std::shared_ptr<Buffer> bptr{swapper->client_acquire(), ClientReleaseDeleter(swapper.get())};
+    BufferID id;
+    std::weak_ptr<Buffer> buffer;
+    swapper->client_acquire(buffer, id);
 
-    auto it = buffer_to_id_map.find(bptr.get());
-    if (it == buffer_to_id_map.end())
-    {
-        auto new_id = generator->generate_unique_id();
-        buffer_to_id_map[bptr.get()] = new_id;
-    }
-
-    auto id = buffer_to_id_map[bptr.get()];
-    return std::make_shared<mc::GraphicBufferClientResource>(bptr->get_ipc_package(), bptr, id);
-
+    auto resource = new mc::GraphicBufferClientResource(buffer, id);
+    ClientReleaseDeleter del(swapper);
+    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
+    return client_resource;
 }
 
 geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()
