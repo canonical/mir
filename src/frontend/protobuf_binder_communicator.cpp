@@ -17,33 +17,41 @@
  */
 
 #include "protobuf_binder_communicator.h"
-#include "protobuf_message_processor.h"
-#include "mir/frontend/protobuf_ipc_factory.h"
+#include "binder_service.h"
+
 #include "mir/protobuf/google_protobuf_guard.h"
 
 #include <binder/ProcessState.h>
+#include <binder/IServiceManager.h>
 
 #include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 
+namespace
+{
+    android::sp<mfd::BinderService> const session(new mfd::BinderService());
+}
+
 mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
     const std::string& name,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory) :
-    ipc_factory(ipc_factory),
-    service_manager(android::defaultServiceManager())
+    ipc_factory(ipc_factory)
 {
-    auto mp = std::make_shared<detail::ProtobufMessageProcessor>(
-        &session,
-        ipc_factory->make_ipc_server(),
-        ipc_factory->resource_cache());
+    session->set_ipc_factory(ipc_factory);
 
-    session.set_processor(mp);
+    auto const& sm = android::defaultServiceManager();
 
     android::String16 const service_name(name.c_str());
 
-    if (service_manager->addService(service_name, &session) != 0)
+    auto const b = sm->checkService(service_name);
+
+    // Even after MIR exits the service remains registered...
+    bool const already_registered = b.get() != 0;
+    bool const not_registered_or_dead = !already_registered || b->pingBinder() != android::OK;
+
+    if (not_registered_or_dead && sm->addService(service_name, session) != android::OK)
     {
         throw std::runtime_error("Failed to add a new Binder service");
     }
@@ -51,6 +59,7 @@ mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
 
 mf::ProtobufBinderCommunicator::~ProtobufBinderCommunicator()
 {
+    session->set_ipc_factory(std::shared_ptr<ProtobufIpcFactory>());
 }
 
 void mf::ProtobufBinderCommunicator::start()

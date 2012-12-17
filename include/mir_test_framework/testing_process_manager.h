@@ -72,10 +72,6 @@ private:
 
 std::string const& test_socket_file();
 
-bool detect_server(
-        const std::string& socket_file,
-        std::chrono::milliseconds const& timeout);
-
 }
 
 #endif // MIR_TESTING_PROCESS_MANAGER

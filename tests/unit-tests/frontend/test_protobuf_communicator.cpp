@@ -48,13 +48,13 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
         stub_server->comm->start();
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-// TODO frigged because binder doesn't create new mediator (yet)
-//        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        // called during socket comms initialisation:
+        // there's always a server awaiting the next connection
         EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
 
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
@@ -63,6 +63,7 @@ struct ProtobufCommunicator : public ::testing::Test
 
     void TearDown()
     {
+        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         client.reset();
     }
 
@@ -175,9 +176,12 @@ TEST_F(ProtobufCommunicator,
 
     client->wait_for_disconnect_done();
 
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtLeast(1));
+    // socket based & binder based rpc fail differently, but either way
+    // the test ensures that nothing horrible happens.
+    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(1));
+    EXPECT_CALL(*client, disconnect_done()).Times(testing::AtMost(1));
 
-    // We don't expect this to be called, so it can't auto destruct
+    // We don't know if this will be called, so it can't auto destruct
     std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
     client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
     client->wait_for_disconnect_done();
