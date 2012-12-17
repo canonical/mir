@@ -30,5 +30,4 @@ ADD_LIBRARY(
   mircompositor STATIC
 
   ${MIR_COMPOSITOR_SRCS}
-    ${Boost_LIBRARIES}
 )
