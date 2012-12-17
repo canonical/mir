@@ -17,44 +17,31 @@
  */
 
 
-#ifndef MIR_COMPOSITOR_PIXEL_FORMAT_H_
-#define MIR_COMPOSITOR_PIXEL_FORMAT_H_
+#ifndef NULL_DISPLAY_LISTENER_H_
+#define NULL_DISPLAY_LISTENER_H_
 
-#include <cstdint>
-#include <cstddef>
+
+#include "mir/graphics/display_listener.h"
+
 
 namespace mir
 {
-namespace geometry
+namespace test
 {
-enum class PixelFormat : uint32_t
+namespace doubles
 {
-    invalid,
-    rgba_8888,
-    rgbx_8888,
-    rgb_888
+class NullDisplayListener : public graphics::DisplayListener
+{
+  public:
+
+    virtual void report_successful_setup_of_native_resources() {}
+    virtual void report_successful_egl_make_current_on_construction() {}
+    virtual void report_successful_egl_buffer_swap_on_construction() {}
+    virtual void report_successful_drm_mode_set_crtc_on_construction() {}
+    virtual void report_successful_display_construction() {}
 };
-
-class PixelOperation
-{
-public:
-    PixelOperation();
-
-    size_t bytes_per_pixel(PixelFormat pf)
-    {
-        switch(pf)
-        {
-            case PixelFormat::rgba_8888:
-                return 4;
-            case PixelFormat::rgb_888:
-                return 3;
-            default:
-                return 0;
-        }
-    }
-};
-
+}
 }
 }
 
-#endif /* MIR_COMPOSITOR_PIXEL_FORMAT_H_ */
+#endif /* NULL_DISPLAY_LISTENER_H_ */
