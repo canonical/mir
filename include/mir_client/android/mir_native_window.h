@@ -41,7 +41,7 @@ public:
 private:
 
     ClientSurface * surface;
-    int driver_pixel_format; 
+    int driver_pixel_format;
 };
 
 }

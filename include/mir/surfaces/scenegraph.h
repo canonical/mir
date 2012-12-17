@@ -37,12 +37,12 @@ class Surface;
 class Scenegraph : public mc::RenderView
 {
 public:
-    
+
     virtual ~Scenegraph() {}
-    
+
 protected:
     Scenegraph() = default;
-    
+
 private:
     Scenegraph(Scenegraph const&) = delete;
     Scenegraph& operator=(Scenegraph const&) = delete;

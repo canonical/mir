@@ -73,7 +73,7 @@ private:
     uint32_t color_pattern [Rows][Cols];
 };
 #include "mir_test/draw/draw_pattern_checkered-inl.h"
- 
+
 }
 }
 }

@@ -38,7 +38,7 @@ protected:
     {
         using namespace testing;
         mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
-        native_handle = mock_alloc_device->buffer_handle; 
+        native_handle = mock_alloc_device->buffer_handle;
 
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
@@ -263,28 +263,28 @@ TEST_F(AdaptorICSTest, handle_has_reffable_incref)
 {
     using namespace testing;
 
-    struct android_native_base_t *native_base=NULL; 
+    struct android_native_base_t *native_base=NULL;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
 
     ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.incRef);
     EXPECT_NO_THROW({
         buffer_cast->common.incRef(native_base);
-    }); 
+    });
 }
 
 TEST_F(AdaptorICSTest, handle_has_reffable_decref)
 {
     using namespace testing;
 
-    struct android_native_base_t *native_base=NULL; 
+    struct android_native_base_t *native_base=NULL;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
-  
+
     ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.decRef);
     EXPECT_NO_THROW({
         buffer_cast->common.decRef(native_base);
-    }); 
+    });
 }
 
 TEST_F(AdaptorICSTest, handle_has_right_magic)
@@ -294,7 +294,7 @@ TEST_F(AdaptorICSTest, handle_has_right_magic)
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
-  
+
     EXPECT_EQ( buffer_cast->common.magic, magic);
 }
 
@@ -305,6 +305,6 @@ TEST_F(AdaptorICSTest, handle_has_version)
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
-  
+
     EXPECT_EQ( buffer_cast->common.version, version);
 }

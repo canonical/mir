@@ -167,7 +167,7 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
 
     auto ret_pf = surf.pixel_format();
 
-    EXPECT_EQ(ret_pf, pf); 
+    EXPECT_EQ(ret_pf, pf);
 }
 
 TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
@@ -182,7 +182,7 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
 
     auto ret_size = surf.size();
 
-    EXPECT_EQ(ret_size, size); 
+    EXPECT_EQ(ret_size, size);
 }
 
 TEST_F(SurfaceCreation, test_surface_advance_buffer)
@@ -215,7 +215,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     surf.advance_client_buffer();
 
     auto ret_ipc = surf.get_buffer_ipc_package();
-    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get()); 
+    EXPECT_EQ(ret_ipc.get(), graphics_resource->ipc_package.get());
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
@@ -236,7 +236,7 @@ TEST_F(SurfaceCreation, test_surface_gets_id_from_bundle)
     surf.advance_client_buffer();
 
     auto ret_id = surf.get_buffer_id();
-    EXPECT_EQ(ret_id, id); 
+    EXPECT_EQ(ret_id, id);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -247,7 +247,7 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
 
     auto ret_top_left = surf.top_left();
 
-    EXPECT_EQ(geom::Point(), ret_top_left); 
+    EXPECT_EQ(geom::Point(), ret_top_left);
 }
 
 TEST_F(SurfaceCreation, test_surface_move_to)
@@ -262,7 +262,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
 
     auto ret_top_left = surf.top_left();
 
-    EXPECT_EQ(p, ret_top_left); 
+    EXPECT_EQ(p, ret_top_left);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
@@ -273,7 +273,7 @@ TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
 
     auto ret_transformation = surf.transformation();
 
-    EXPECT_EQ(glm::mat4(), ret_transformation); 
+    EXPECT_EQ(glm::mat4(), ret_transformation);
 }
 
 TEST_F(SurfaceCreation, test_surface_set_rotation)
@@ -285,7 +285,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
 
     auto ret_transformation = surf.transformation();
 
-    EXPECT_NE(glm::mat4(), ret_transformation); 
+    EXPECT_NE(glm::mat4(), ret_transformation);
 }
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
@@ -301,7 +301,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
 
     auto ret_texture = surf.texture();
 
-    EXPECT_EQ(buffer.get(), ret_texture.get()); 
+    EXPECT_EQ(buffer.get(), ret_texture.get());
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
@@ -312,7 +312,7 @@ TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
 
     auto ret_alpha = surf.alpha();
 
-    EXPECT_EQ(1.0f, ret_alpha); 
+    EXPECT_EQ(1.0f, ret_alpha);
 }
 
 TEST_F(SurfaceCreation, test_surface_set_alpha)
@@ -325,5 +325,5 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     surf.set_alpha(0.67);
     auto ret_alpha = surf.alpha();
 
-    EXPECT_EQ(alpha, ret_alpha); 
+    EXPECT_EQ(alpha, ret_alpha);
 }

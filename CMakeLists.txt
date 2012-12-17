@@ -31,8 +31,8 @@ project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin) 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) 
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
@@ -145,7 +145,7 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 #   (1.) a matching gmock/gtest version
 #   (2.) a stream-lined cross-compilation workflow
 set(
-  GTEST_INCLUDE_DIR 
+  GTEST_INCLUDE_DIR
 
   3rd_party/gmock-1.6.0/include
   3rd_party/gmock-1.6.0/gtest/include)

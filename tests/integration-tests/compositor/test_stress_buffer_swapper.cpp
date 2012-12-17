@@ -133,7 +133,7 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
     }
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 }
@@ -177,7 +177,7 @@ void BufferSwapperStress::test_valid_buffers(mc::BufferSwapper& swapper)
     }
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 }
@@ -240,7 +240,7 @@ void BufferSwapperStress::test_wait_situation(std::vector<mc::Buffer*>& composit
     compositor_controller.ensure_child_is_waiting();
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 
@@ -255,7 +255,7 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     /* a double buffered client should stall on the second request without the compositor running */
     mc::BufferSwapperMulti double_swapper(std::move(buffer_a), std::move(buffer_b));
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
-    
+
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
@@ -266,7 +266,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     /* a triple buffered client should stall on the third request without the compositor running */
     mc::BufferSwapperMulti triple_swapper(std::move(buffer_a), std::move(buffer_b), std::move(buffer_c));
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
-    
+
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
@@ -333,7 +333,7 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
     }
 
     terminate_child_thread(client_controller);
-    terminate_child_thread(compositor_controller); 
+    terminate_child_thread(compositor_controller);
     thread2.join();
     thread1.join();
 }

@@ -27,7 +27,7 @@ void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
                                 const std::string& component)
 {
 
-    static const char* lut[5] = 
+    static const char* lut[5] =
             {
                 "CC",
                 "EE",
@@ -38,6 +38,6 @@ void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
 
     std::ostream& out = severity < Logger::informational ? std::cerr : std::cout;
 
-    out << "[" << lut[severity] << ", " << component << "] " 
-        << message << "\n"; 
+    out << "[" << lut[severity] << ", " << component << "] "
+        << message << "\n";
 }

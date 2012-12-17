@@ -63,7 +63,7 @@ struct ClientReleaseDeleter
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
-    std::shared_ptr<BufferIDUniqueGenerator> gen, 
+    std::shared_ptr<BufferIDUniqueGenerator> gen,
     BufferProperties const& buffer_properties)
      : generator(gen),
        swapper(std::move(swapper)),

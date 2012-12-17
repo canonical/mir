@@ -33,7 +33,7 @@ MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
     const std::shared_ptr<mir::client::Logger>& logger,
-    const std::shared_ptr<mcl::ClientBufferDepository>& depository, 
+    const std::shared_ptr<mcl::ClientBufferDepository>& depository,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
@@ -114,7 +114,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, 
         &surface.id(),
         surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
-    
+
     return &next_buffer_wait_handle;
 }
 
@@ -123,7 +123,7 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
     return &create_wait_handle;
 }
 
-/* todo: all these conversion functions are a bit of a kludge, probably 
+/* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
 geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
 {
@@ -139,20 +139,20 @@ void MirSurface::process_incoming_buffer()
 
     auto surface_width = geom::Width(surface.width());
     auto surface_height = geom::Height(surface.height());
-    auto surface_size = geom::Size{surface_width, surface_height}; 
+    auto surface_size = geom::Size{surface_width, surface_height};
     auto surface_pf = convert_ipc_pf_to_geometry(surface.pixel_format());
 
     auto ipc_package = std::make_shared<MirBufferPackage>();
     populate(*ipc_package);
 
-    try 
+    try
     {
-        buffer_depository->deposit_package(std::move(ipc_package), 
+        buffer_depository->deposit_package(std::move(ipc_package),
                                 last_buffer_id,
                                 surface_size, surface_pf);
     } catch (const std::runtime_error& err)
     {
-        logger->error() << err.what(); 
+        logger->error() << err.what();
     }
 }
 
@@ -206,7 +206,7 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         }
 
         buffer_package.fd_items = buffer.fd_size();
-        
+
         for (int i = 0; i != buffer.fd_size(); ++i)
         {
             buffer_package.fd[i] = buffer.fd(i);
@@ -221,7 +221,7 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
         buffer_package.stride = 0;
     }
 }
-    
+
 EGLNativeWindowType MirSurface::generate_native_window()
 {
     return *accelerated_window;

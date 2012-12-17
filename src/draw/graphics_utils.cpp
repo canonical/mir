@@ -132,7 +132,7 @@ void md::glAnimationBasic::render_gl()
     glDisableVertexAttribArray(uvCoord);
     glDisableVertexAttribArray(vPositionAttr);
 }
- 
+
 void md::glAnimationBasic::step()
 {
     slide += 0.01f;

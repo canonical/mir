@@ -148,13 +148,13 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
-{ 
+{
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);
     return flink->handle == value;
 }
 
 ACTION_P(SetGEMFlinkName, value)
-{ 
+{
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg2);
     flink->name = value;
 }

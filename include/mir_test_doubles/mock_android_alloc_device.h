@@ -93,7 +93,7 @@ public:
     {
         native_handle_t *handle;
         int total=numFd + numInt;
-        int header_offset=3; 
+        int header_offset=3;
 
         handle = (native_handle_t*) malloc(sizeof(int) * (header_offset+ total));
         handle->version = 0x389;

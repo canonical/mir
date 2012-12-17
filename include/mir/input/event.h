@@ -59,7 +59,7 @@ extern "C" {
                 int32_t switch_value;
             } hw_switch;
             struct KeyEvent
-            {                
+            {
                 int32_t key_code;
                 int32_t scan_code;
                 int32_t repeat_count;
@@ -77,7 +77,7 @@ extern "C" {
                 float y_precision;
                 nsecs_t down_time;
                 nsecs_t event_time;
-                
+
                 size_t pointer_count;
                 struct PointerCoordinates {
                     int id;
@@ -88,7 +88,7 @@ extern "C" {
                     float size;
                     float pressure;
                     float orientation;
-                }; 
+                };
                 PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;

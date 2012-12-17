@@ -126,8 +126,8 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
 {
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
-  
-    EXPECT_EQ(anwb.handle->numInts, (int) package->ipc_data.size()); 
+
+    EXPECT_EQ(anwb.handle->numInts, (int) package->ipc_data.size());
 }
 
 TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
@@ -137,11 +137,11 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
 
-    int fd_offset = anwb.handle->numFds; 
+    int fd_offset = anwb.handle->numFds;
     for(auto it= package->ipc_data.begin(); it != package->ipc_data.end(); it++)
-    { 
+    {
         EXPECT_EQ(anwb.handle->data[fd_offset++], *it);
-    } 
+    }
 }
 
 TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_size)
@@ -149,8 +149,8 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_size)
     using namespace testing;
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
-  
-    EXPECT_EQ(anwb.handle->numFds, (int) package->ipc_fds.size()); 
+
+    EXPECT_EQ(anwb.handle->numFds, (int) package->ipc_fds.size());
 }
 
 TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
@@ -158,10 +158,10 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
     using namespace testing;
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
-  
-    int offset = 0; 
+
+    int offset = 0;
     for(auto it=package->ipc_fds.begin(); it != package->ipc_fds.end(); it++)
-    { 
+    {
         EXPECT_EQ(anwb.handle->data[offset++], *it);
-    } 
+    }
 }

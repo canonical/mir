@@ -64,7 +64,7 @@ public:
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 #endif
     }
-    
+
     std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 #ifndef ANDROID
@@ -99,11 +99,11 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
 
-    ASSERT_TRUE(buffer.get() != NULL); 
+    ASSERT_TRUE(buffer.get() != NULL);
 
     EXPECT_EQ(buffer->size(), size);
     EXPECT_EQ(buffer->pixel_format(), pf );
- 
+
 }
 
 TEST_F(GraphicsPlatform, get_ipc_package)
@@ -111,5 +111,5 @@ TEST_F(GraphicsPlatform, get_ipc_package)
     auto platform = mg::create_platform();
     auto pkg = platform->get_ipc_package();
 
-    ASSERT_TRUE(pkg.get() != NULL); 
+    ASSERT_TRUE(pkg.get() != NULL);
 }

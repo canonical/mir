@@ -157,8 +157,8 @@ void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buff
     buffer_package_out->fd_items = package->fd_items;
     for(auto i=0; i<mir_buffer_package_max; i++)
     {
-        buffer_package_out->data[i] = package->data[i]; 
-        buffer_package_out->fd[i] = package->fd[i]; 
+        buffer_package_out->data[i] = package->data[i];
+        buffer_package_out->fd[i] = package->fd[i];
     }
 
     buffer_package_out->stride = package->stride;

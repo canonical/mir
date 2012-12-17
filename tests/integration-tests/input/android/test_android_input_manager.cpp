@@ -63,7 +63,7 @@ public:
         input_manager.reset(
             new mia::InputManager(
                 event_hub,
-                {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())}, 
+                {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())},
                 std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
                 null_cursor_listener));
 

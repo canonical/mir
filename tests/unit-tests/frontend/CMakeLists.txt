@@ -14,7 +14,7 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(APPEND UNIT_TEST_SOURCES 
+list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
@@ -52,6 +52,6 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
 endif()
 
 set(
-  UNIT_TEST_SOURCES 
-  ${UNIT_TEST_SOURCES} 
+  UNIT_TEST_SOURCES
+  ${UNIT_TEST_SOURCES}
   PARENT_SCOPE)

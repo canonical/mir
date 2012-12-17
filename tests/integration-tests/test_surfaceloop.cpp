@@ -432,7 +432,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         virtual geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
 
-        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const 
+        virtual std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const
         {
             return std::make_shared<mc::BufferIPCPackage>();
         }

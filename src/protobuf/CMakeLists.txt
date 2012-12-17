@@ -29,9 +29,9 @@ protobuf_generate_cpp(
   ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
-add_library( 
+add_library(
   mirprotobuf STATIC
-  
+
   google_protobuf_guard.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
@@ -50,12 +50,12 @@ set_target_properties(
   SOVERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
 )
 
-# Export the include directories 
+# Export the include directories
 list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 
 set(
-  MIR_GENERATED_INCLUDE_DIRECTORIES 
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES} 
+  MIR_GENERATED_INCLUDE_DIRECTORIES
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
 # Install the protobuf library

@@ -32,7 +32,7 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
 static geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600), 
+                                                                 geom::Size{geom::Width(1600),
                                                                             geom::Height(1400)}};
 
 namespace
@@ -47,7 +47,7 @@ public:
         reader_policy = std::make_shared<mia::InputReaderPolicy>(
             std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
             std::shared_ptr<mi::CursorListener>());
-        
+
         ON_CALL(viewable_area, view_area()).WillByDefault(Return(default_view_area));
     }
     mtd::MockViewableArea viewable_area;
@@ -59,18 +59,18 @@ TEST_F(AndroidInputReaderPolicySetup, configuration_has_display_info_filled_from
 {
     static int32_t const testing_display_id = 0;
     static bool const testing_display_is_external = false;
-    
+
     EXPECT_CALL(viewable_area, view_area()).Times(1);
 
     droidinput::InputReaderConfiguration configuration;
     reader_policy->getReaderConfiguration(&configuration);
 
     int32_t configured_height, configured_width, configured_orientation;
-    
+
     bool configuration_has_display_info = configuration.getDisplayInfo(
         testing_display_id, testing_display_is_external, &configured_width, &configured_height,
         &configured_orientation);
-    
+
     ASSERT_TRUE(configuration_has_display_info);
 
     EXPECT_EQ(default_view_area.size.width.as_uint32_t(),  (uint32_t)configured_width);

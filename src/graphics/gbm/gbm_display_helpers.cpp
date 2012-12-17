@@ -276,7 +276,7 @@ void mggh::EGLHelper::setup(const GBMHelper& gbm)
         // TODO: Insert egl version major and minor into exception
     }
     eglBindAPI(EGL_OPENGL_ES_API);
-    
+
     if (!eglChooseConfig(display, config_attr, &config, 1, &num_configs) ||
         num_configs != 1)
     {

@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace test 
+namespace test
 {
 namespace doubles
 {

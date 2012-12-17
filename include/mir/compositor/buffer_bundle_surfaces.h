@@ -36,7 +36,7 @@ class BufferBundleSurfaces : public BufferBundle
 {
 public:
     BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper, 
+        std::unique_ptr<BufferSwapper>&& swapper,
         std::shared_ptr<BufferIDUniqueGenerator> generator );
 
     BufferBundleSurfaces(

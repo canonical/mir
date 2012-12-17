@@ -126,8 +126,8 @@ MirWaitHandle* MirConnection::release_surface(
 {
     auto new_wait_handle = new MirWaitHandle;
 
-    SurfaceRelease surf_release{surface, new_wait_handle, callback, context}; 
- 
+    SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
+
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
     server.release_surface(0, &message, &void_response,

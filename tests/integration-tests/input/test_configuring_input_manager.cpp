@@ -42,6 +42,6 @@ TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_man
         }
         std::shared_ptr<mtd::MockInputManager> input_manager;
     } server_config;
-    
+
     launch_server_process(server_config);
 }

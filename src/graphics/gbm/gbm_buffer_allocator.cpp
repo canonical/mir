@@ -162,12 +162,12 @@ std::unique_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         bo_flags |= GBM_BO_USE_RENDERING;
 
     gbm_bo *bo_raw = gbm_bo_create(
-        platform->gbm.device, 
+        platform->gbm.device,
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
         mgg::mir_format_to_gbm_format(buffer_properties.format),
         bo_flags);
-    
+
     if (!bo_raw)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
 

@@ -40,7 +40,7 @@ class SurfaceOrganiser
     virtual std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
-    
+
     virtual void hide_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
     virtual void show_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
 

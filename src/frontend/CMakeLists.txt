@@ -62,9 +62,9 @@ set_source_files_properties(
   COMPILE_FLAGS "-fno-rtti")
 endif()
 
-add_library( 
+add_library(
   mirfrontend STATIC
-  
+
   ${FRONTEND_SOURCES}
 )
 

@@ -33,9 +33,9 @@
 #include <stdexcept>
 
 namespace mc=mir::compositor;
-namespace geom=mir::geometry; 
-namespace mga=mir::graphics::android; 
-namespace mg=mir::graphics; 
+namespace geom=mir::geometry;
+namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
 namespace md=mir::draw;
 namespace mtd=mir::test::draw;
 
@@ -52,14 +52,14 @@ protected:
         {
             platform = mg::create_platform();
             display = platform->create_display();
-        }); 
+        });
     }
 
     virtual void SetUp()
     {
         ASSERT_TRUE(platform != NULL);
         ASSERT_TRUE(display != NULL);
-        
+
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
@@ -80,12 +80,12 @@ protected:
     /* note about display: android drivers seem to only be able to open fb once
        per process (gralloc's framebuffer_close() doesn't seem to work). once we
        figure out why, we can put display in the test fixture */
-    static std::shared_ptr<mg::Platform> platform; 
+    static std::shared_ptr<mg::Platform> platform;
     static std::shared_ptr<mg::Display> display;
 };
 
 std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
-std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform; 
+std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform;
 
 }
 
@@ -103,7 +103,7 @@ TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 {
     using namespace testing;
 
-    EXPECT_NO_THROW({ 
+    EXPECT_NO_THROW({
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
     });
@@ -116,7 +116,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_ok)
 
     mc::BufferProperties actual;
 
-    EXPECT_NO_THROW({ 
+    EXPECT_NO_THROW({
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
     });
 }
