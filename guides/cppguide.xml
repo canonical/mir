@@ -775,56 +775,6 @@ Thomas Voss
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
-
-  <STYLEPOINT title="Variables at Namespace or Class Scope">
-    <SUMMARY>
-      Variables of class and non-constant POD type are forbidden at namespace
-      and class scope: they cause hard-to-find bugs due to race conditions and
-      indeterminate order of construction and destruction.
-    </SUMMARY>
-    <BODY>
-      <p>
-        Objects with static storage duration, including global variables,
-        static variables, static class member variables, must be constant
-        Plain Old Data (POD): only ints, chars, floats, or
-        pointers, or arrays/structs of POD.
-      </p>
-      <p>
-        The order in which class constructors and initializers for
-        static variables are called is only partially specified in C++ and can
-        even change from build to build, which can cause bugs that are difficult
-        to find.  Therefore in addition to banning globals of class type, we do
-        not allow static POD variables to be initialized with the result of a
-        function, unless that function (such as getenv(), or getpid()) does not
-        itself depend on any other globals.
-      </p>
-      <p>
-        Likewise, the order in which destructors are called is defined to be the
-        reverse of the order in which the constructors were called.  Since
-        constructor order is indeterminate, so is destructor order.
-        For example, at program-end time a static variable might have
-        been destroyed, but code still running -- perhaps in another thread --
-        tries to access it and fails.  Or the destructor for a static 'string'
-        variable might be run prior to the destructor for another variable that
-        contains a reference to that string.
-      </p>
-      <p>
-        As a result we only allow static variables to contain POD data.  This
-        rule completely disallows <code>vector</code> (use C arrays instead), or
-        <code>string</code> (use <code>char const[]</code>).
-      </p>
-
-      <p>
-        If you need a static or global variable of a class type, consider
-        initializing a pointer (which will never be freed), from either your
-        main() function or from pthread_once().  Note that this must be a raw
-        pointer, not a "smart" pointer, since the smart pointer's destructor
-        will have the order-of-destructor issue that we are trying to avoid.
-      </p>
-
-
-    </BODY>
-  </STYLEPOINT>
 </CATEGORY>
 
 <CATEGORY title="Classes">
