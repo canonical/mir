@@ -1123,7 +1123,7 @@ Thomas Voss
 
   <STYLEPOINT title="Multiple Inheritance">
     <SUMMARY>
-      Only very rarely is multiple implementation inheritance of implementation
+      Only very rarely is multiple inheritance of implementation
       actually useful.  We allow multiple inheritance only when at most one of
       the base classes has an implementation; all other base classes
       must be <A HREF="#Interfaces">interface</A> classes.
