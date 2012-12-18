@@ -34,26 +34,6 @@ enum class PixelFormat : uint32_t
     rgbx_8888,
     rgb_888
 };
-
-class PixelOperation
-{
-public:
-    PixelOperation();
-
-    size_t bytes_per_pixel(PixelFormat pf)
-    {
-        switch(pf)
-        {
-            case PixelFormat::rgba_8888:
-                return 4;
-            case PixelFormat::rgb_888:
-                return 3;
-            default:
-                return 0;
-        }
-    }
-};
-
 }
 }
 

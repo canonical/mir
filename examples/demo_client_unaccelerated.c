@@ -72,7 +72,7 @@ static void render_pattern(MirGraphicsRegion *region, int pf)
 
 static MirPixelFormat find_8888_format(MirDisplayInfo *info)
 {
-    MirPixelFormat pf = 0;
+    MirPixelFormat pf = mir_pixel_format_invalid;
 
     for (int i = 0; i < info->supported_pixel_format_items; ++i)
     {
@@ -85,7 +85,7 @@ static MirPixelFormat find_8888_format(MirDisplayInfo *info)
         }
     }
 
-    assert(pf != 0);
+    assert(pf != mir_pixel_format_invalid);
     return pf;
 }
 
