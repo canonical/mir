@@ -178,7 +178,7 @@ TEST_F(ProtobufCommunicator,
 
     // socket based & binder based rpc fail differently, but either way
     // the test ensures that nothing horrible happens.
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(1));
+    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(3));
     EXPECT_CALL(*client, disconnect_done()).Times(testing::AtMost(1));
 
     // We don't know if this will be called, so it can't auto destruct
