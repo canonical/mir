@@ -1123,18 +1123,16 @@ Thomas Voss
 
   <STYLEPOINT title="Multiple Inheritance">
     <SUMMARY>
-      Only very rarely is multiple implementation inheritance actually
-      useful.  We allow multiple inheritance only when at most one of
+      Only very rarely is multiple implementation inheritance of implementation
+      actually useful.  We allow multiple inheritance only when at most one of
       the base classes has an implementation; all other base classes
-      must be <A HREF="#Interfaces">pure interface</A> classes tagged
-      with the <code>Interface</code> suffix.
+      must be <A HREF="#Interfaces">interface</A> classes.
     </SUMMARY>
     <BODY>
       <DEFINITION>
         Multiple inheritance allows a sub-class to have more than one
         base class.  We distinguish between base classes that are
-        <em>pure interfaces</em> and those that have an
-        <em>implementation</em>.
+        <em>interfaces</em> and those that have an <em>implementation</em>.
       </DEFINITION>
       <PROS>
         Multiple implementation inheritance may let you re-use even more code
@@ -1148,26 +1146,20 @@ Thomas Voss
       </CONS>
       <DECISION>
         Multiple inheritance is allowed only when all superclasses, with the
-        possible exception of the first one, are <A HREF="#Interfaces">pure
-        interfaces</A>.  In order to ensure that they remain pure interfaces,
-        they must end with the <code>Interface</code> suffix.
-        <SUBSECTION title="Note:">
-          There is an <a HREF="#Windows_Code">exception</a> to this
-          rule on Windows.
-        </SUBSECTION>
+        possible exception of the first one, are <A HREF="#Interfaces">
+        interfaces</A>.
       </DECISION>
     </BODY>
   </STYLEPOINT>
 
   <STYLEPOINT title="Interfaces">
     <SUMMARY>
-      Classes that satisfy certain conditions are allowed, but not required, to
-      end with an <code>Interface</code> suffix.
+      Classes that satisfy certain conditions are interfaces.
     </SUMMARY>
     <BODY>
       <DEFINITION>
         <p>
-        A class is a pure interface if it meets the following requirements:
+        A class is an interface if it meets the following requirements:
         </p>
         <ul>
           <li> It has only public pure virtual ("<code>= 0</code>") methods
@@ -1179,40 +1171,19 @@ Thomas Voss
                provided, it must take no arguments and it must be protected.
                </li>
           <li> If it is a subclass, it may only be derived from classes
-               that satisfy these conditions and are tagged with the
-               <code>Interface</code> suffix.
+               that satisfy these conditions.
                </li>
         </ul>
         <p>
           An interface class can never be directly instantiated
           because of the pure virtual method(s) it declares.  To make
           sure all implementations of the interface can be destroyed
-          correctly, they must also declare a virtual destructor (in
+          correctly, they must also declare a virtual, or protected, destructor (in
           an exception to the first rule, this should not be pure).  See
           Stroustrup, <cite>The C++ Programming Language</cite>, 3rd
           edition, section 12.4 for details.
         </p>
       </DEFINITION>
-      <PROS>
-        Tagging a class with the <code>Interface</code> suffix lets
-        others know that they must not add implemented methods or non
-        static data members.  This is particularly important in the case of
-        <A HREF="#Multiple_Inheritance">multiple inheritance</A>.
-        Additionally, the interface concept is already well-understood by
-        Java programmers.
-      </PROS>
-      <CONS>
-        The <code>Interface</code> suffix lengthens the class name, which
-        can make it harder to read and understand.  Also, the interface
-        property may be considered an implementation detail that shouldn't
-        be exposed to clients.
-      </CONS>
-      <DECISION>
-        A class may end with <code>Interface</code> only if it meets the
-        above requirements.  We do not require the converse, however:
-        classes that meet the above requirements are not required to end
-        with <code>Interface</code>.
-      </DECISION>
     </BODY>
   </STYLEPOINT>
 
