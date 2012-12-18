@@ -21,7 +21,6 @@
 
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir_test_doubles/mock_id_generator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -47,10 +46,8 @@ struct BufferSwapperDouble : testing::Test
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
  
-        auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-
         auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(std::move(id_generator), double_list);
+        swapper = std::make_shared<mc::BufferSwapperMulti>(double_list);
 
     }
 

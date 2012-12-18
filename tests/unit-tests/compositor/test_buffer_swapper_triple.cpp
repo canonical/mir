@@ -46,9 +46,8 @@ struct BufferSwapperTriple : testing::Test
         buffer_b_addr = buffer_b.get();
         buffer_c_addr = buffer_c.get();
 
-        auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
         auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(std::move(id_generator), triple_list);
+        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
 
     }
 

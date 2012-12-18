@@ -13,21 +13,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <limits>
-#include "mir/compositor/buffer_id.h"
+#include "android_input_manager.h"
 
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
+namespace mi = mir::input;
+namespace mia = mi::android;
 
-mc::BufferIDMonotonicIncreaseGenerator::BufferIDMonotonicIncreaseGenerator()
- : id_counter(0)
-{}
-
-mc::BufferID mc::BufferIDMonotonicIncreaseGenerator::generate_unique_id()
+std::shared_ptr<mi::InputManager> mi::create_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
+    std::shared_ptr<mg::ViewableArea> const& )
 {
-    if (id_counter == std::numeric_limits<uint32_t>::max() )
-        return mc::BufferID{0};
-    return mc::BufferID{++id_counter};
+    return std::shared_ptr<mia::InputManager>();
 }

@@ -22,6 +22,7 @@
 #include "android_display.h"
 #include "android_framebuffer_window.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <ui/FramebufferNativeWindow.h>
 

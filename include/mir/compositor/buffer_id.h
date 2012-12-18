@@ -28,7 +28,7 @@ class BufferID
 {
 public:
     BufferID() : value(id_invalid){}
-    BufferID(uint32_t val) : value(val){}
+    explicit BufferID(uint32_t val) : value(val) {}
     bool is_valid() const { return (id_invalid != value); }
     uint32_t as_uint32_t() const { return value; };
 
@@ -50,21 +50,6 @@ inline bool operator != (BufferID const& lhs, BufferID const& rhs)
 {
     return lhs.as_uint32_t() != rhs.as_uint32_t();
 }
-
-class BufferIDUniqueGenerator
-{
-public:
-    virtual BufferID generate_unique_id() = 0;
-};
-
-class BufferIDMonotonicIncreaseGenerator : public BufferIDUniqueGenerator
-{
-public:
-    BufferIDMonotonicIncreaseGenerator();
-    BufferID generate_unique_id();
-private:
-    uint32_t id_counter;
-};
 
 }
 }

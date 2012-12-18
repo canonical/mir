@@ -20,12 +20,13 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/exception.h"
 #include "mir/thread/all.h"
 
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
@@ -38,34 +39,18 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
-
+namespace mtd = mir::test::doubles;
 namespace
 {
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-class StubBuffer : public mc::Buffer
-{
-    geom::Size size() const { return geom::Size(); }
-
-    geom::Stride stride() const { return geom::Stride(); }
-
-    geom::PixelFormat pixel_format() const { return geom::PixelFormat(); }
-
-    std::shared_ptr<mc::BufferIPCPackage> get_ipc_package() const
-    {
-        return std::make_shared<mc::BufferIPCPackage>();
-    }
-
-    void bind_to_texture() {}
-};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
     std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new StubBuffer());
+        return std::shared_ptr<mc::Buffer>(new mtd::StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()

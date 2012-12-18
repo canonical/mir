@@ -13,38 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_MOCK_ID_GENERATOR_H_
-#define MIR_TEST_MOCK_ID_GENERATOR_H_
 
-#include "mir/compositor/buffer_id.h"
+#ifndef MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
+#define MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
 
-namespace mir
+#include "mir/chrono/chrono.h"
+#include <string>
+
+namespace mir_test_framework
 {
-namespace test
-{
-namespace doubles
-{
-
-struct MockIDGenerator: public compositor::BufferIDUniqueGenerator
-{
-    MockIDGenerator()
-    {
-        using namespace testing;
-        id = compositor::BufferID{34};
-        ON_CALL(*this, generate_unique_id())
-            .WillByDefault(Return(id));
-    }
-
-    MOCK_METHOD0(generate_unique_id, compositor::BufferID());
-
-    compositor::BufferID id;
-};
-
-}
-}
+bool detect_server(std::string const& name, std::chrono::milliseconds const& timeout);
 }
 
-#endif /* MIR_TEST_MOCK_ID_GENERATOR_H_ */
+
+#endif /* MIR_TEST_FRAMEWORK_DETECT_SERVER_H_ */

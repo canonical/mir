@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+class BufferIDUniqueGenerator;
+}
 namespace graphics
 {
 namespace android
@@ -45,7 +49,6 @@ public:
 private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
 };
 
 }

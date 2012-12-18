@@ -146,17 +146,15 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, distinct_and_valid_double_buffers_in_client_and_compositor)
 {
-    auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-    mc::BufferSwapperMulti double_swapper(std::move(id_generator), double_list);
+    mc::BufferSwapperMulti double_swapper(double_list);
     test_distinct_buffers(double_swapper);
 }
 
 TEST_F(BufferSwapperStress, distinct_and_valid_triple_buffers_in_client_and_compositor)
 {
-    auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-    mc::BufferSwapperMulti triple_swapper(std::move(id_generator), triple_list);
+    mc::BufferSwapperMulti triple_swapper(triple_list);
     test_distinct_buffers(triple_swapper);
 }
 
@@ -226,9 +224,8 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     std::vector<mc::BufferID> client_buffers;
     std::vector<mc::BufferID> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
-    auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-    mc::BufferSwapperMulti double_swapper(std::move(id_generator), double_list);
+    mc::BufferSwapperMulti double_swapper(double_list);
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
 
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
@@ -238,9 +235,8 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
 {
     std::vector<mc::BufferID> client_buffers;
     std::vector<mc::BufferID> compositor_buffers;
-    auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-    mc::BufferSwapperMulti triple_swapper(std::move(id_generator), triple_list);
+    mc::BufferSwapperMulti triple_swapper(triple_list);
     /* a triple buffered client should stall on the third request without the compositor running */
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
 
@@ -318,9 +314,8 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
-    auto id_generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
     auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-    mc::BufferSwapperMulti double_swapper(std::move(id_generator), double_list);
+    mc::BufferSwapperMulti double_swapper(double_list);
     test_last_posted(double_swapper);
 }
 }

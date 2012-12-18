@@ -18,21 +18,21 @@
 
 #include "src/graphics/android/android_buffer_allocator.h"
 
-#include <algorithm>
-
 #include <gtest/gtest.h>
+
+#include <algorithm>
 
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+namespace mc=mir::compositor;
 
 class AndroidBufferAllocatorTest : public ::testing::Test
 {
-public:
-    mga::AndroidBufferAllocator allocator;
 };
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
+    mga::AndroidBufferAllocator allocator;
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     auto rgba_8888_count = std::count(supported_pixel_formats.begin(),
@@ -54,8 +54,10 @@ TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_format
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
 {
+    mga::AndroidBufferAllocator allocator;
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
     EXPECT_EQ(geom::PixelFormat::rgba_8888, supported_pixel_formats[0]);
 }
+

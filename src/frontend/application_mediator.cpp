@@ -129,7 +129,8 @@ void mir::frontend::ApplicationMediator::create_surface(
             buffer->set_stride(ipc_package->stride);
 
             resource_cache->save_resource(response, ipc_package);
-        } else
+        }
+        else
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
         }
@@ -168,7 +169,8 @@ void mir::frontend::ApplicationMediator::next_buffer(
         response->set_stride(ipc_package->stride);
 
         resource_cache->save_resource(response, ipc_package);
-    } else
+    }
+    else
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
     }

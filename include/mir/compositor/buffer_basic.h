@@ -13,35 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_COMPOSITOR_BUFFER_BASIC_H_
+#define MIR_COMPOSITOR_BUFFER_BASIC_H_
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
-
-#include "mir/compositor/graphic_region.h"
-
-#include <memory>
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_id.h"
 
 namespace mir
 {
 namespace compositor
 {
-class BufferIPCPackage;
-class BufferID;
 
-class Buffer : public GraphicRegion
+class BufferBasic : public Buffer
 {
 public:
-    virtual ~Buffer() {}
+    BufferBasic();
 
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-    virtual BufferID id() const = 0;
+    BufferID id() const
+    {
+        return buffer_id;
+    }
 
-protected:
-    Buffer() = default;
+private:
+    BufferID const buffer_id;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+#endif /* MIR_COMPOSITOR_BUFFER_BASIC_H_ */

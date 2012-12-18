@@ -40,15 +40,12 @@ TEST(RenderingOperator,
     mtd::MockRenderable mock_renderable_b;
     mtd::MockRenderable mock_renderable_c;
 
-    auto resource_a = std::make_shared<mc::GraphicBufferCompositorResource>();
     auto region_a = std::make_shared<mtd::MockGraphicRegion>();
-    resource_a->region = region_a;
-    auto resource_b = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto resource_a = std::make_shared<mc::GraphicBufferCompositorResource>(region_a);
     auto region_b = std::make_shared<mtd::MockGraphicRegion>();
-    resource_b->region = region_b;
-    auto resource_c = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto resource_b = std::make_shared<mc::GraphicBufferCompositorResource>(region_b);
     auto region_c = std::make_shared<mtd::MockGraphicRegion>();
-    resource_c->region = region_c;
+    auto resource_c = std::make_shared<mc::GraphicBufferCompositorResource>(region_c);
 
     long use_count_a_before, use_count_b_before, use_count_c_before;
     {
@@ -89,9 +86,8 @@ TEST(RenderingOperator,
 
     mtd::MockSurfaceRenderer mock_renderer;
     mtd::MockRenderable mock_renderable;
-    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>();
     auto region = std::make_shared<mtd::MockGraphicRegion>();
-    resource->region = region;
+    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(region);
 
     mc::RenderingOperator rendering_operator(mock_renderer);
 

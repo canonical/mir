@@ -16,22 +16,31 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_server.h"
-#include "src/frontend/protobuf_binder_communicator.h"
+#include "mir/compositor/buffer_basic.h"
+#include "mir/thread/all.h"
 
-namespace mt = mir::test;
-namespace mf = mir::frontend;
-
-
-mt::TestProtobufServer::TestProtobufServer(
-    std::string socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<mt::doubles::MockIpcFactory>(*tool)),
-    comm(make_communicator(socket_name, factory))
+namespace mir
 {
+namespace compositor
+{
+namespace
+{
+BufferID generate_next_buffer_id()
+{
+    static std::atomic<uint32_t> next_id{0};
+
+    auto id = BufferID(next_id.fetch_add(1));
+
+    // Avoid returning an "invalid" id. (Not sure we need invalid ids)
+    while (!id.is_valid()) id = BufferID(next_id.fetch_add(1));
+
+    return id;
+}
+}
+}
 }
 
-std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
+mir::compositor::BufferBasic::BufferBasic() :
+    buffer_id(generate_next_buffer_id())
 {
-    return std::make_shared<mf::ProtobufBinderCommunicator>(name, factory);
 }

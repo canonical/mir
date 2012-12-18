@@ -189,7 +189,9 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
 {
     using namespace testing;
     ms::Surface surf(surface_name, mock_buffer_bundle );
-    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>();
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(
+        std::weak_ptr<mc::Buffer>(),
+        mc::BufferID());
 
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
@@ -272,7 +274,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     using namespace testing;
 
     ms::Surface surf{surface_name, mock_buffer_bundle};
-    auto buffer_resource = std::make_shared<mc::GraphicBufferCompositorResource>();
+    auto buffer_resource = std::make_shared<mc::GraphicBufferCompositorResource>(std::weak_ptr<mc::Buffer>());
 
     EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
         .Times(AtLeast(1))

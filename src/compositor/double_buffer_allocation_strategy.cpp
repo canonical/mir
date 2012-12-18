@@ -46,6 +46,5 @@ std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_sw
     actual_buffer_properties = BufferProperties{buf2->size(), buf2->pixel_format(),
                                                 requested_buffer_properties.usage};
 
-    auto generator = std::make_shared<mc::BufferIDMonotonicIncreaseGenerator>();
-    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti(generator, {buf1, buf2}));
+    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti({buf1, buf2}));
 }

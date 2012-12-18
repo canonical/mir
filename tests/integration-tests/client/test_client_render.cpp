@@ -482,6 +482,8 @@ struct TestClientIPCRender : public testing::Test
 
     geom::Size size;
     geom::PixelFormat pf;
+    mc::BufferID id1;
+    mc::BufferID id2;
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mp::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;

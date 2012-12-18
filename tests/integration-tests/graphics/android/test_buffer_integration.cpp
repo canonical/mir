@@ -109,7 +109,6 @@ TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
     });
 
 }
-
 TEST_F(AndroidBufferIntegration, swapper_creation_ok)
 {
     using namespace testing;

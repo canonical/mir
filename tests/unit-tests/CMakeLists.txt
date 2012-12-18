@@ -25,8 +25,8 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
-#TODO stubbed out to run tests on emulator
-if (NOT MIR_TRANSPORT STREQUAL "binder")
+#TODO stubbed out to run tests on emulator 
+if (NOT MIR_CUTDOWN_FOR_EMULATOR)
 add_subdirectory(input/)
 endif()
 add_subdirectory(surfaces/)

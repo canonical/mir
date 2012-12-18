@@ -144,7 +144,8 @@ struct GBMBODeleter
 mgg::GBMBufferAllocator::GBMBufferAllocator(
         const std::shared_ptr<GBMPlatform>& platform,
         const std::shared_ptr<BufferInitializer>& buffer_initializer)
-        : platform(platform), buffer_initializer(buffer_initializer),
+        : platform(platform),
+          buffer_initializer(buffer_initializer),
           egl_extensions(std::make_shared<EGLExtensions>())
 {
     assert(buffer_initializer.get() != 0);

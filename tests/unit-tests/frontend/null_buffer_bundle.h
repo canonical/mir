@@ -31,12 +31,11 @@ class NullBufferBundle : public compositor::BufferBundle
 public:
     NullBufferBundle()
     {
-        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>();
         geometry::Size sz;
         geometry::Stride st;
         geometry::PixelFormat pf;
         mock_buffer = std::make_shared<mir::test::doubles::MockBuffer>(sz, st, pf);
-        empty_client_resource->buffer = mock_buffer;
+        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>(mock_buffer, compositor::BufferID());
     }
     std::shared_ptr<compositor::GraphicBufferClientResource> secure_client_buffer()
     {

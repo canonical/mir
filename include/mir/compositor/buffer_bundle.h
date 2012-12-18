@@ -38,7 +38,6 @@ class GraphicBufferCompositorResource;
 
 struct GraphicBufferClientResource
 {
-    GraphicBufferClientResource() {}
     GraphicBufferClientResource(
         std::weak_ptr<Buffer> const& buffer,
         BufferID id) :
@@ -46,8 +45,8 @@ struct GraphicBufferClientResource
     {
     }
 
-    BufferID id;
-    std::weak_ptr<Buffer> buffer;
+    BufferID const id;
+    std::weak_ptr<Buffer> const buffer;
 };
 
 class BufferBundle
