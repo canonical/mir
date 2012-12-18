@@ -108,23 +108,56 @@ typedef detail::IntWrapper<detail::dx> DeltaX;
 typedef detail::IntWrapper<detail::dy> DeltaY;
 
 // Adding deltas is fine
-inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline DeltaX operator+(DeltaX lhs, DeltaX rhs)
+{
+    return DeltaX(lhs.as_uint32_t() + rhs.as_uint32_t());
+}
+inline DeltaY operator+(DeltaY lhs, DeltaY rhs)
+{
+    return DeltaY(lhs.as_uint32_t() + rhs.as_uint32_t());
+}
+inline DeltaX operator-(DeltaX lhs, DeltaX rhs)
+{
+    return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
+inline DeltaY operator-(DeltaY lhs, DeltaY rhs)
+{
+    return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
 
 // Adding deltas to co-ordinates is fine
-inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline X operator-(X lhs, DeltaX rhs) { return X(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline X operator+(X lhs, DeltaX rhs)
+{
+    return X(lhs.as_uint32_t() + rhs.as_uint32_t());
+}
+inline Y operator+(Y lhs, DeltaY rhs)
+{
+    return Y(lhs.as_uint32_t() + rhs.as_uint32_t());
+}
+inline X operator-(X lhs, DeltaX rhs)
+{
+    return X(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
+inline Y operator-(Y lhs, DeltaY rhs)
+{
+    return Y(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
 
 // Subtracting coordinates is fine
-inline DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline DeltaX operator-(X lhs, X rhs)
+{
+    return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
+inline DeltaY operator-(Y lhs, Y rhs)
+{
+    return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t());
+}
 
 template<typename Target, typename Source>
-inline Target dim_cast(Source s) { return Target(s.as_uint32_t()); }
+inline Target dim_cast(Source s)
+{
+    return Target(s.as_uint32_t());
+}
 }
 }
 

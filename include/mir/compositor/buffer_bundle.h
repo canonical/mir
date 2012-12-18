@@ -38,10 +38,9 @@ class GraphicBufferCompositorResource;
 
 struct GraphicBufferClientResource
 {
-    GraphicBufferClientResource(
-        std::weak_ptr<Buffer> const& buffer,
-        BufferID id) :
-            id(id), buffer(buffer)
+    GraphicBufferClientResource(std::weak_ptr<Buffer> const& buffer, BufferID id) :
+        id(id),
+        buffer(buffer)
     {
     }
 

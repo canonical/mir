@@ -53,27 +53,27 @@ inline std::ostream& operator<<(std::ostream& out, Displacement const& value)
 
 inline Displacement operator+(Displacement const& lhs, Displacement const& rhs)
 {
-    return Displacement{lhs.dx + rhs.dx, lhs.dy + rhs.dy};
+    return Displacement {lhs.dx + rhs.dx, lhs.dy + rhs.dy};
 }
 
 inline Displacement operator-(Displacement const& lhs, Displacement const& rhs)
 {
-    return Displacement{lhs.dx - rhs.dx, lhs.dy - rhs.dy};
+    return Displacement {lhs.dx - rhs.dx, lhs.dy - rhs.dy};
 }
 
 inline Point operator+(Point const& lhs, Displacement const& rhs)
 {
-    return Point{lhs.x + rhs.dx, lhs.y + rhs.dy};
+    return Point {lhs.x + rhs.dx, lhs.y + rhs.dy};
 }
 
 inline Point operator-(Point const& lhs, Displacement const& rhs)
 {
-    return Point{lhs.x - rhs.dx, lhs.y - rhs.dy};
+    return Point {lhs.x - rhs.dx, lhs.y - rhs.dy};
 }
 
 inline Displacement operator-(Point const& lhs, Point const& rhs)
 {
-    return Displacement{lhs.x - rhs.x, lhs.y - rhs.y};
+    return Displacement {lhs.x - rhs.x, lhs.y - rhs.y};
 }
 
 }

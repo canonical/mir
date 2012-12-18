@@ -27,7 +27,7 @@ namespace graphics
 
 class DisplayListener
 {
-  public:
+public:
 
     virtual void report_successful_setup_of_native_resources() = 0;
     virtual void report_successful_egl_make_current_on_construction() = 0;
@@ -35,7 +35,7 @@ class DisplayListener
     virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_successful_display_construction() = 0;
 
-  protected:
+protected:
     DisplayListener() = default;
     ~DisplayListener() = default;
     DisplayListener(const DisplayListener&) = delete;

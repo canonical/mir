@@ -35,11 +35,11 @@ class FocusSetter;
 
 class SessionManager : public SessionStore
 {
- public:
+public:
     explicit SessionManager(std::shared_ptr<SurfaceOrganiser> const& surface_organiser,
-                                std::shared_ptr<SessionContainer> const& session_container,
-                                std::shared_ptr<FocusSequence> const& focus_sequence,
-                                std::shared_ptr<FocusSetter> const& focus_setter);
+                            std::shared_ptr<SessionContainer> const& session_container,
+                            std::shared_ptr<FocusSequence> const& focus_sequence,
+                            std::shared_ptr<FocusSetter> const& focus_setter);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<Session> open_session(std::string const& name);

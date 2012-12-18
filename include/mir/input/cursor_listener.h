@@ -26,12 +26,12 @@ namespace input
 
 class CursorListener
 {
-  public:
+public:
     virtual ~CursorListener() {}
 
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
 
-  protected:
+protected:
     CursorListener() = default;
     CursorListener(const CursorListener&) = delete;
     CursorListener& operator=(const CursorListener&) = delete;

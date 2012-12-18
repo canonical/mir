@@ -44,12 +44,12 @@ public:
     {
         switch(pf)
         {
-            case PixelFormat::rgba_8888:
-                return 4;
-            case PixelFormat::rgb_888:
-                return 3;
-            default:
-                return 0;
+        case PixelFormat::rgba_8888:
+            return 4;
+        case PixelFormat::rgb_888:
+            return 3;
+        default:
+            return 0;
         }
     }
 };

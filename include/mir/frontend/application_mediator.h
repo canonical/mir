@@ -57,7 +57,7 @@ public:
 
     ApplicationMediator(
         std::shared_ptr<SessionStore> const& session_store,
-        std::shared_ptr<graphics::Platform> const & graphics_platform,
+        std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<ApplicationListener> const& listener,
@@ -65,14 +65,14 @@ public:
 
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
-                         const ::mir::protobuf::ConnectParameters* request,
-                         ::mir::protobuf::Connection* response,
-                         ::google::protobuf::Closure* done);
+                 const ::mir::protobuf::ConnectParameters* request,
+                 ::mir::protobuf::Connection* response,
+                 ::google::protobuf::Closure* done);
 
     void create_surface(google::protobuf::RpcController* controller,
-                 const mir::protobuf::SurfaceParameters* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done);
+                        const mir::protobuf::SurfaceParameters* request,
+                        mir::protobuf::Surface* response,
+                        google::protobuf::Closure* done);
 
     void next_buffer(
         google::protobuf::RpcController* controller,
@@ -86,9 +86,9 @@ public:
                          google::protobuf::Closure* done);
 
     void disconnect(google::protobuf::RpcController* controller,
-                 const mir::protobuf::Void* request,
-                 mir::protobuf::Void* response,
-                 google::protobuf::Closure* done);
+                    const mir::protobuf::Void* request,
+                    mir::protobuf::Void* response,
+                    google::protobuf::Closure* done);
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,

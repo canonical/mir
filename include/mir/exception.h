@@ -27,7 +27,7 @@ namespace mir
 {
 class Exception : public boost::exception, public std::exception
 {
-  public:
+public:
 
     template<typename ErrorInfoType>
     bool has_error_info() const
@@ -36,7 +36,7 @@ class Exception : public boost::exception, public std::exception
     }
 
     template<typename ErrorInfoType>
-    typename ErrorInfoType::value_type const * error_info() const
+    typename ErrorInfoType::value_type const* error_info() const
     {
         return boost::get_error_info<ErrorInfoType>(*this);
     }

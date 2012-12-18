@@ -52,10 +52,10 @@ using ::boost::posix_time::hours;
 
 namespace system_clock
 {
-    inline boost::posix_time::ptime now()
-    {
-        return boost::posix_time::microsec_clock::local_time();
-    }
+inline boost::posix_time::ptime now()
+{
+    return boost::posix_time::microsec_clock::local_time();
+}
 }
 
 // Clocks
@@ -65,7 +65,13 @@ using ::boost::chrono::high_resolution_clock;
 }
 }
 
-namespace mir_test_framework { namespace std { using namespace ::mir::std; } }
+namespace mir_test_framework
+{
+namespace std
+{
+using namespace ::mir::std;
+}
+}
 #endif
 
 #endif // MIR_CHRONO_CHRONO_H_
