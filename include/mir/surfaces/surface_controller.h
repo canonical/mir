@@ -25,6 +25,9 @@
 
 namespace mir
 {
+
+/// Management of Surface objects. Includes the model (Scenegraph and Surface
+/// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
 

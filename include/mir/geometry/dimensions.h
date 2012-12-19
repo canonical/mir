@@ -24,6 +24,9 @@
 
 namespace mir
 {
+
+/// Basic image geometry types. Types for dimensions, displacements, etc.
+/// and the operations that they support.
 namespace geometry
 {
 
