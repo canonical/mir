@@ -51,7 +51,7 @@ protected:
         using namespace testing;
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::argb_8888;
         usage = mc::BufferUsage::hardware;
         buffer_properties = mc::BufferProperties{size, pf, usage};
 
@@ -96,24 +96,34 @@ TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)
     EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgba_8888)
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::argb_8888, usage});
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgbx_8888)
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgbx_8888, usage});
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
+}
+
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgba_8888_to_invalid)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,std::numeric_limits<uint32_t>::max(),_));
+    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
+
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")
@@ -247,16 +257,16 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
-    auto rgba_8888_count = std::count(supported_pixel_formats.begin(),
+    auto argb_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::rgba_8888);
+                                      geom::PixelFormat::argb_8888);
 
-    auto rgbx_8888_count = std::count(supported_pixel_formats.begin(),
+    auto xrgb_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::rgbx_8888);
+                                      geom::PixelFormat::xrgb_8888);
 
-    EXPECT_EQ(1, rgba_8888_count);
-    EXPECT_EQ(1, rgbx_8888_count);
+    EXPECT_EQ(1, argb_8888_count);
+    EXPECT_EQ(1, xrgb_8888_count);
 }
 
 TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
@@ -264,5 +274,5 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_firs
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
-    EXPECT_EQ(geom::PixelFormat::rgba_8888, supported_pixel_formats[0]);
+    EXPECT_EQ(geom::PixelFormat::argb_8888, supported_pixel_formats[0]);
 }

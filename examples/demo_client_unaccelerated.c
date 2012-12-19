@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <stdint.h>
 
 static char const *socket_file = "/tmp/mir_socket";
 static MirConnection *connection = 0;
@@ -54,12 +55,9 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
     surface = 0;
 }
 
-static void render_pattern(MirGraphicsRegion *region, int pf)
+static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
-    if (region->pixel_format != mir_pixel_format_rgba_8888 )
-        return;
-
-    int *pixel = (int*) region->vaddr; 
+    uint32_t *pixel = (uint32_t*) region->vaddr;
     int i,j;
     for(i=0; i< region->width; i++)
     {
@@ -78,7 +76,9 @@ static MirPixelFormat find_8888_format(MirDisplayInfo *info)
     {
         MirPixelFormat cur_pf = info->supported_pixel_format[i];
         if (cur_pf == mir_pixel_format_rgba_8888 ||
-            cur_pf == mir_pixel_format_rgbx_8888)
+            cur_pf == mir_pixel_format_rgbx_8888 ||
+            cur_pf == mir_pixel_format_argb_8888 ||
+            cur_pf == mir_pixel_format_xrgb_8888)
         {
             pf = cur_pf;
             break;
@@ -87,6 +87,27 @@ static MirPixelFormat find_8888_format(MirDisplayInfo *info)
 
     assert(pf != mir_pixel_format_invalid);
     return pf;
+}
+
+static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
+{
+    switch(pf)
+    {
+    case mir_pixel_format_rgba_8888:
+    case mir_pixel_format_rgbx_8888:
+        pattern[0] = 0xFF00FF00;
+        pattern[1] = 0xFFFF0000;
+        break;
+
+    case mir_pixel_format_argb_8888:
+    case mir_pixel_format_xrgb_8888:
+        pattern[0] = 0xFF00FF00;
+        pattern[1] = 0xFF0000FF;
+        break;
+
+    default:
+        assert(0 && "Invalid pixel format");
+    };
 }
 
 int main(int argc, char* argv[])
@@ -136,6 +157,9 @@ int main(int argc, char* argv[])
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
 
+    uint32_t pattern[2] = {0};
+    fill_pattern(pattern, pixel_format);
+
     MirGraphicsRegion graphics_region;
     int i=0; 
     while (1)
@@ -143,9 +167,9 @@ int main(int argc, char* argv[])
         mir_wait_for(mir_surface_next_buffer(surface, surface_next_callback, 0 ));
         mir_surface_get_graphics_region( surface, &graphics_region);
         if ((i++ % 2) == 0)
-            render_pattern(&graphics_region, 0xFF00FF00);
+            render_pattern(&graphics_region, pattern[0]);
         else 
-            render_pattern(&graphics_region, 0xFFFF0000);
+            render_pattern(&graphics_region, pattern[1]);
     }
 
     mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
