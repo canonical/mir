@@ -30,72 +30,25 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
-TEST(RenderingOperator,
-    render_operator_hold_resource)
-{
-    using namespace testing;
-
-    NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
-    mtd::MockRenderable mock_renderable_a;
-    mtd::MockRenderable mock_renderable_b;
-    mtd::MockRenderable mock_renderable_c;
-
-    auto region_a = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource_a = std::make_shared<mc::GraphicBufferCompositorResource>(region_a);
-    auto region_b = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource_b = std::make_shared<mc::GraphicBufferCompositorResource>(region_b);
-    auto region_c = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource_c = std::make_shared<mc::GraphicBufferCompositorResource>(region_c);
-
-    long use_count_a_before, use_count_b_before, use_count_c_before;
-    {
-        mc::RenderingOperator rendering_operator(mock_renderer);
-
-        EXPECT_CALL(mock_renderable_a, texture())
-            .Times(1)
-            .WillOnce(Return(resource_a));
-        EXPECT_CALL(mock_renderable_b, texture())
-            .Times(1)
-            .WillOnce(Return(resource_b));
-        EXPECT_CALL(mock_renderable_c, texture())
-            .Times(1)
-            .WillOnce(Return(resource_c));
-
-        use_count_a_before = resource_a.use_count();
-        use_count_b_before = resource_b.use_count();
-        use_count_c_before = resource_c.use_count();
-
-        rendering_operator(mock_renderable_a);
-        rendering_operator(mock_renderable_b);
-        rendering_operator(mock_renderable_c);
-
-        EXPECT_GT(resource_a.use_count(), use_count_a_before);
-        EXPECT_GT(resource_b.use_count(), use_count_b_before);
-        EXPECT_GT(resource_c.use_count(), use_count_c_before);
-    }
-
-    EXPECT_EQ(resource_a.use_count(), use_count_a_before);
-    EXPECT_EQ(resource_b.use_count(), use_count_b_before);
-    EXPECT_EQ(resource_c.use_count(), use_count_c_before);
-}
-
-TEST(RenderingOperator,
-    render_operator_submits_resource_it_saves_to_renderer)
+TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
 {
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
     mtd::MockRenderable mock_renderable;
-    auto region = std::make_shared<mtd::MockGraphicRegion>();
-    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(region);
+    auto test_render_resource = std::make_shared<int>();
 
     mc::RenderingOperator rendering_operator(mock_renderer);
 
-    EXPECT_CALL(mock_renderable, texture())
+    EXPECT_CALL(mock_renderer, render( mock_renderable )
         .Times(1)
-        .WillOnce(Return(resource));
-    EXPECT_CALL(mock_renderer, render(_, resource->region.lock()))
-        .Times(1);
+        .WillOnce(Return(test_render_resource));
 
-    rendering_operator(mock_renderable);
+    auto use_count_before = test_render_resource.count();
+    {
+        rendering_operator(mock_renderable);
+        EXPECT_EQ(use_count_before, test_render_resource.count()+1);
+    }
+
+    EXPECT_EQ(use_count_before, test_render_resource.count()); 
 }
