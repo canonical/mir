@@ -17,7 +17,6 @@
  */
 
 #include "mir/compositor/compositor.h"
-#include "mir/surfaces/scenegraph.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
@@ -29,7 +28,6 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mt = mir::test;
