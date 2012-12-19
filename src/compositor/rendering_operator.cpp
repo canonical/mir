@@ -17,9 +17,7 @@
  */
 
 #include "mir/compositor/rendering_operator.h"
-#include "mir/compositor/graphic_region.h"
 
-#include <iostream>
 namespace mc=mir::compositor;
 
 mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
@@ -30,6 +28,4 @@ mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
     renderer.render(resources, renderable);
-    //std::cout << res.use_count() << std::endl;
-    //resources.push_back(res);
 }

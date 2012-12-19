@@ -20,6 +20,7 @@
 
 #include "mir/compositor/graphic_region.h"
 #include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test
@@ -30,7 +31,6 @@ namespace doubles
 class MockGraphicRegion : public compositor::GraphicRegion
 {
 public:
-
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
@@ -40,4 +40,5 @@ public:
 }
 }
 }
+
 #endif /* MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_ */

@@ -24,10 +24,6 @@
 
 namespace mir
 {
-namespace compositor
-{
-class GraphicRegion;
-}
 namespace graphics
 {
 

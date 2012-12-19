@@ -19,15 +19,16 @@
 #define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/render_view.h"
-#include "mir/compositor/graphic_region.h"
 #include <vector>
 
 namespace mir
 {
 namespace compositor
 {
+
+class Renderable;
+
 class RenderingOperator : public OperatorForRenderables
 {
 public:

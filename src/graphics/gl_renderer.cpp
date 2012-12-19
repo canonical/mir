@@ -9,7 +9,6 @@
 
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
-namespace mc=mir::compositor;
 
 namespace
 {
