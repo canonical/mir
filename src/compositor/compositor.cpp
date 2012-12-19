@@ -23,7 +23,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
-#include "mir/surfaces/scenegraph.h"
 #include "mir/surfaces/surface.h"
 
 #include <cassert>
