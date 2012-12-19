@@ -32,7 +32,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 static geom::Size const buf_size{geom::Width{100}, geom::Height{121}};
-static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::rgbx_8888};
+static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::xbgr_8888};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -64,7 +64,7 @@ struct DoubleBufferAllocationStrategyTest : testing::Test
 TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_returns_actual_properties_from_buffer)
 {
     geom::Size const size{geom::Width{10},geom::Height{20}};
-    geom::PixelFormat const pf{geom::PixelFormat::rgba_8888};
+    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
 
     mc::DoubleBufferAllocationStrategy strategy{stub_allocator};

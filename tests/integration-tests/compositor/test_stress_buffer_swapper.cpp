@@ -40,7 +40,7 @@ public:
     {
         geom::Size size{geom::Width{1024}, geom::Height{768}};
         geom::Stride s {1024};
-        geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+        geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
 
         buffer_a = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
         buffer_b = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));

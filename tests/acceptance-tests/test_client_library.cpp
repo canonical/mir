@@ -140,7 +140,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -215,7 +215,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
                 {
                     __PRETTY_FUNCTION__,
                     640, 480,
-                    mir_pixel_format_rgba_8888,
+                    mir_pixel_format_abgr_8888,
                     mir_buffer_usage_hardware
                 };
 
@@ -263,7 +263,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -365,7 +365,7 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 

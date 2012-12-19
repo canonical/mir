@@ -48,7 +48,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
 const geom::Stride stride{geom::dim_cast<geom::Stride>(size.width)};
-const geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+const geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
 const mc::BufferUsage usage{mc::BufferUsage::software};
 const mc::BufferProperties buffer_properties{size, pixel_format, usage};
 

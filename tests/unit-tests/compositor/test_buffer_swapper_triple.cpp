@@ -32,7 +32,7 @@ namespace
 geom::Size size {geom::Width{1024}, geom::Height{768}};
 geom::Height h {768};
 geom::Stride s {1024};
-geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
 
 struct BufferSwapperTriple : testing::Test
 {
