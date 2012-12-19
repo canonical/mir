@@ -353,20 +353,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
     using namespace std::placeholders;
 
     mtd::MockRenderable rd;
-    auto empty_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>();
+    std::shared_ptr<mc::GraphicRegion> empty_region;
+    auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
     std::vector<std::shared_ptr<void>> saved_resources;
-
-    mir::geometry::Point tl;
-    mir::geometry::Size  s;
-    glm::mat4            transformation;
-
-    tl.x = mir::geometry::X(1);
-    tl.y = mir::geometry::Y(2);
-
-    s.width = mir::geometry::Width(10);
-    s.height = mir::geometry::Height(20);
-
-    empty_resource.reset();
 
     InSequence seq;
 
