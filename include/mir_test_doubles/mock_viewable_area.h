@@ -17,7 +17,7 @@
  */
 
 #ifndef MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
-#define MIR_TEST_DOUBLES_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
+#define MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
 
 #include "mir/graphics/viewable_area.h"
 
