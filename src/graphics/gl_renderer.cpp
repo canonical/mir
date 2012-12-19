@@ -9,6 +9,7 @@
 
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
+namespace mc=mir::compositor;
 
 namespace
 {
@@ -267,7 +268,8 @@ std::shared_ptr<void> mg::GLRenderer::render(Renderable& renderable)
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
     auto texture_resource = renderable.texture();
-    texture_resource->region.lock()->bind_to_texture();
+    auto region_resource = texture_resource->region.lock();
+    region_resource->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);

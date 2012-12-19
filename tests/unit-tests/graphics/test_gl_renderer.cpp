@@ -294,6 +294,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
     auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
 
+    std::vector<std::shared_ptr<void>> saved_resources;
+
     mir::geometry::Point tl;
     mir::geometry::Size  s;
     glm::mat4            transformation;
@@ -305,6 +307,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     s.height = mir::geometry::Height(20);
 
     InSequence seq;
+
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(Return(resource));
 
     EXPECT_CALL(rd, top_left()).WillOnce(Return(tl));
     EXPECT_CALL(rd, size()).WillOnce(Return(s));
@@ -325,9 +331,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(rd, texture())
-        .Times(1)
-        .WillOnce(Return(resource));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
@@ -338,5 +341,39 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(rd);
+    renderer->render(saved_resources, rd);
+
+    ASSERT_EQ(2, saved_resources.size());
+    EXPECT_EQ(resource.get(), saved_resources[0].get()
+    EXPECT_EQ(gr_ptr.get(),   saved_resources[1].get()
+}
+
+TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
+{
+    using namespace std::placeholders;
+
+    mtd::MockRenderable rd;
+    auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>();
+    std::vector<std::shared_ptr<void>> saved_resources;
+
+    mir::geometry::Point tl;
+    mir::geometry::Size  s;
+    glm::mat4            transformation;
+
+    tl.x = mir::geometry::X(1);
+    tl.y = mir::geometry::Y(2);
+
+    s.width = mir::geometry::Width(10);
+    s.height = mir::geometry::Height(20);
+
+    empty_resource.reset();
+
+    InSequence seq;
+
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(Return(empty_resource));
+
+    renderer->render(saved_resources, rd);
+    EXPECT_EQ(0, saved_resources.size());
 }
