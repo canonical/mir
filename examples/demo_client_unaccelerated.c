@@ -106,7 +106,7 @@ static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
         break;
 
     default:
-        assert("Invalid pixel format");
+        assert(0 && "Invalid pixel format");
     };
 }
 
