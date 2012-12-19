@@ -216,6 +216,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 }
 
 std::shared_ptr<void> mg::GLRenderer::render(Renderable& renderable)
+//                            std::shared_ptr<compositor::GraphicRegion> const& texture_resource)
 {
     const geom::Point top_left = renderable.top_left();
     const geom::Size size = renderable.size();
@@ -265,8 +266,8 @@ std::shared_ptr<void> mg::GLRenderer::render(Renderable& renderable)
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-//    renderable.texture()->region.lock()->bind_to_texture();
-//    texture_resource->bind_to_texture();
+    auto texture_resource = renderable.texture();
+    texture_resource->region.lock()->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);

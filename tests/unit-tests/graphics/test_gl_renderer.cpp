@@ -291,6 +291,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
+    std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
+    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
 
     mir::geometry::Point tl;
     mir::geometry::Size  s;
@@ -306,7 +308,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(rd, top_left()).WillOnce(Return(tl));
     EXPECT_CALL(rd, size()).WillOnce(Return(s));
-
     EXPECT_CALL(gl_mock, glUseProgram(stub_program));
     EXPECT_CALL(gl_mock, glEnable(GL_BLEND));
     EXPECT_CALL(gl_mock, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -324,6 +325,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(Return(resource));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
