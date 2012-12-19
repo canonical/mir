@@ -40,15 +40,15 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
 
     mc::RenderingOperator rendering_operator(mock_renderer);
 
-    EXPECT_CALL(mock_renderer, render( mock_renderable )
+    EXPECT_CALL(mock_renderer, render(_))
         .Times(1)
         .WillOnce(Return(test_render_resource));
 
-    auto use_count_before = test_render_resource.count();
+    auto use_count_before = test_render_resource.use_count();
     {
         rendering_operator(mock_renderable);
-        EXPECT_EQ(use_count_before, test_render_resource.count()+1);
+        EXPECT_EQ(use_count_before, test_render_resource.use_count()+1);
     }
 
-    EXPECT_EQ(use_count_before, test_render_resource.count()); 
+    EXPECT_EQ(use_count_before, test_render_resource.use_count());
 }

@@ -97,7 +97,7 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     {
         // We just use this for expectations
         renderable_operator(r);
-        renderer->render(r, r.texture()->region.lock());
+        renderer->render(r);
     }
     mg::Renderer* renderer;
 };
@@ -143,7 +143,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(0);
-    EXPECT_CALL(renderer, render(_,_)).Times(0);
+    EXPECT_CALL(renderer, render(_)).Times(0);
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
@@ -185,9 +185,9 @@ TEST(
     EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(2);
 
     EXPECT_CALL(renderer,
-                render(Ref(*surface1.lock()),_)).Times(Exactly(1));
+                render(Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
-                render(Ref(*surface2.lock()),_)).Times(Exactly(1));
+                render(Ref(*surface2.lock()))).Times(Exactly(1));
     
     stack.for_each_if(filter, renderable_operator);
 }
@@ -217,7 +217,7 @@ TEST(
     MockOperatorForRenderables renderable_operator(&renderer);
 
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_,_)).Times(3);
+    EXPECT_CALL(renderer, render(_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
 
     {
@@ -255,7 +255,7 @@ TEST(
     MockOperatorForRenderables renderable_operator(&renderer);
 
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_,_)).Times(3);
+    EXPECT_CALL(renderer, render(_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
 
     stack.raise_to_top(surface2);

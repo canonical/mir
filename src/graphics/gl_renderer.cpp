@@ -215,8 +215,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(Renderable& renderable,
-                            std::shared_ptr<compositor::GraphicRegion> const& texture_resource)
+std::shared_ptr<void> mg::GLRenderer::render(Renderable& renderable)
 {
     const geom::Point top_left = renderable.top_left();
     const geom::Size size = renderable.size();
@@ -266,7 +265,7 @@ void mg::GLRenderer::render(Renderable& renderable,
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    texture_resource->bind_to_texture();
+//    texture_resource->bind_to_texture();
 
     /* Draw */
     glEnableVertexAttribArray(resources.position_attr_loc);
@@ -274,4 +273,6 @@ void mg::GLRenderer::render(Renderable& renderable,
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glDisableVertexAttribArray(resources.texcoord_attr_loc);
     glDisableVertexAttribArray(resources.position_attr_loc);
+
+    return std::shared_ptr<void>();
 }

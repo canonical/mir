@@ -33,5 +33,5 @@ void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
     auto texture = resource->region.lock();
     texture_resources.push_back(texture);
 
-    renderer.render(renderable, texture);
+    renderer.render(renderable);
 }

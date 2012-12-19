@@ -336,5 +336,5 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(rd, gr_ptr);
+    renderer->render(rd);
 }

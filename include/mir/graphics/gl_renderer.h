@@ -36,7 +36,7 @@ public:
     GLRenderer(const geometry::Size& display_size);
 
     /* From renderer */
-    void render(Renderable& renderable, const std::shared_ptr<compositor::GraphicRegion>& texture_resource);
+    std::shared_ptr<void> render(Renderable& renderable);
 
 private:
     class Resources

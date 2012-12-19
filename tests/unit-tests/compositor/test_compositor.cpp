@@ -24,6 +24,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test/empty_deleter.h"
 
 #include <gmock/gmock.h>
@@ -38,11 +39,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-struct MockSurfaceRenderer : public mg::Renderer
-{
-    MOCK_METHOD2(render, void(mg::Renderable&, const std::shared_ptr<mc::GraphicRegion>&));
-};
 
 struct MockRenderView : mc::RenderView
 {
@@ -76,7 +72,7 @@ TEST(Compositor, render)
 {
     using namespace testing;
 
-    MockSurfaceRenderer mock_renderer;
+    mtd::MockSurfaceRenderer mock_renderer;
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
@@ -85,7 +81,7 @@ TEST(Compositor, render)
 
     mc::Compositor comp(&render_view, renderer);
 
-    EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_)).Times(0);
 
     EXPECT_CALL(display, view_area())
             .Times(1)
@@ -104,7 +100,7 @@ TEST(Compositor, skips_invisible_renderables)
 {
     using namespace testing;
 
-    MockSurfaceRenderer mock_renderer;
+    mtd::MockSurfaceRenderer mock_renderer;
     std::shared_ptr<mg::Renderer> renderer(
         &mock_renderer,
         mir::EmptyDeleter());
@@ -125,9 +121,9 @@ TEST(Compositor, skips_invisible_renderables)
     renderables.push_back(&mr2);
     renderables.push_back(&mr3);
     
-    EXPECT_CALL(mock_renderer, render(Ref(mr1),_)).Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(mr2),_)).Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(mr3),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
+    EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
+    EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);
     
     FakeRenderView render_view(renderables);
 
