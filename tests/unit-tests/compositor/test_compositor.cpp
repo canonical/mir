@@ -120,7 +120,7 @@ TEST(Compositor, skips_invisible_renderables)
     renderables.push_back(&mr1);
     renderables.push_back(&mr2);
     renderables.push_back(&mr3);
-    
+
     EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
     EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
     EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);

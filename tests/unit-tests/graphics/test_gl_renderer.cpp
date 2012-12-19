@@ -291,8 +291,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
-    std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
-    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
 
     mir::geometry::Point tl;
     mir::geometry::Size  s;

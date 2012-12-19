@@ -31,6 +31,13 @@ namespace doubles
 
 struct MockSurfaceRenderer : public graphics::Renderer
 {
+    MockSurfaceRenderer()
+    {
+        using namespace testing;
+
+        ON_CALL(*this, render(_))
+            .WillByDefault(Return(std::shared_ptr<void>()));
+    }
     MOCK_METHOD1(render, std::shared_ptr<void>(graphics::Renderable&));
 };
 

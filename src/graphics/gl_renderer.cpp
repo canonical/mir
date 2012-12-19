@@ -265,6 +265,7 @@ std::shared_ptr<void> mg::GLRenderer::render(Renderable& renderable)
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
+//    renderable.texture()->region.lock()->bind_to_texture();
 //    texture_resource->bind_to_texture();
 
     /* Draw */

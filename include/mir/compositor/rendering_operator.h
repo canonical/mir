@@ -38,8 +38,7 @@ public:
 private:
     graphics::Renderer& renderer;
 
-    std::vector<std::shared_ptr<compositor::GraphicBufferCompositorResource>> compositor_resources;
-    std::vector<std::shared_ptr<compositor::GraphicRegion>> texture_resources;
+    std::vector<std::shared_ptr<void>> resources;
 };
 
 }

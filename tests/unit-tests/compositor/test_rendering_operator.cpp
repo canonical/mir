@@ -38,16 +38,16 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
     mtd::MockRenderable mock_renderable;
     auto test_render_resource = std::make_shared<int>();
 
-    mc::RenderingOperator rendering_operator(mock_renderer);
-
     EXPECT_CALL(mock_renderer, render(_))
         .Times(1)
         .WillOnce(Return(test_render_resource));
 
     auto use_count_before = test_render_resource.use_count();
+
     {
+        mc::RenderingOperator rendering_operator(mock_renderer);
         rendering_operator(mock_renderable);
-        EXPECT_EQ(use_count_before, test_render_resource.use_count()+1);
+        EXPECT_EQ(use_count_before + 1, test_render_resource.use_count());
     }
 
     EXPECT_EQ(use_count_before, test_render_resource.use_count());
