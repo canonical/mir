@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_CLIENT_CONTEXT_
-#define MIR_TEST_MOCK_CLIENT_CONTEXT_
+#ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_
+#define MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_context.h"
@@ -52,4 +52,4 @@ struct MockClientContext : public client::ClientContext
 }
 }
 
-#endif /* MIR_TEST_MOCK_CLIENT_CONTEXT_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_ */

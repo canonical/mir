@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_MOCK_DISPLAY_H_
-#define MIR_COMPOSITOR_MOCK_DISPLAY_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include <gmock/gmock.h>
@@ -40,4 +40,5 @@ public:
 }
 }
 }
-#endif /* MIR_COMPOSITOR_MOCK_DISPLAY_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_H_ */
