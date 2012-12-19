@@ -52,7 +52,7 @@ protected:
         using namespace testing;
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::argb_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         usage = mc::BufferUsage::hardware;
         buffer_properties = mc::BufferProperties{size, pf, usage};
