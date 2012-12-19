@@ -17,7 +17,7 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include <errno.h>
 #include <signal.h>

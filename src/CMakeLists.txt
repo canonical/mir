@@ -24,7 +24,6 @@ add_subdirectory(draw/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(logging/)
-add_subdirectory(process/)
 add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(client/)
@@ -63,7 +62,6 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirprocess
   mirsurfaces
   mirplatformgraphics
   mirprotobuf

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include <gtest/gtest.h>
 

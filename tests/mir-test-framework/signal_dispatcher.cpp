@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/process/signal_dispatcher.h"
+#include "mir_test_framework/signal_dispatcher.h"
 
 #include <boost/thread.hpp>
 

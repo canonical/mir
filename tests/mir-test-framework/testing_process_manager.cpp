@@ -19,7 +19,7 @@
 #include "mir_test_framework/testing_process_manager.h"
 
 #include "mir/display_server.h"
-#include "mir/process/signal_dispatcher.h"
+#include "mir_test_framework/signal_dispatcher.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/thread/all.h"

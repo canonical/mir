@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include "mir_client/mir_client_library.h"
 

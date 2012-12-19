@@ -26,6 +26,8 @@ set(
   testing_server_options.cpp
   testing_process_manager.cpp
   display_server_test_fixture.cpp
+  process.cpp
+  signal_dispatcher.cpp
 )
 
 if (MIR_TRANSPORT STREQUAL "socket")
@@ -51,7 +53,6 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirprocess
   mirsurfaces
   mirplatformgraphics
   mirprotobuf

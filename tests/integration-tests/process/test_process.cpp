@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include "mir/thread/all.h"
 

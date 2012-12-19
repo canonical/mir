@@ -17,8 +17,8 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_PROCESS_PROCESS_H_
-#define MIR_PROCESS_PROCESS_H_
+#ifndef MIR_TEST_FRAMEWORK_PROCESS_H_
+#define MIR_TEST_FRAMEWORK_PROCESS_H_
 
 #include <cstdlib>
 #include <functional>
@@ -120,4 +120,4 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
 }
 }
 
-#endif // MIR_PROCESS_PROCESS_H_
+#endif // MIR_TEST_FRAMEWORK_PROCESS_H_
