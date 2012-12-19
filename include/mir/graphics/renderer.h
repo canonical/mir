@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_RENDERER_H_
 
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -37,7 +38,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual std::shared_ptr<void> render(Renderable& renderable) = 0;
+    virtual void render(std::vector<std::shared_ptr<void>>& vector, Renderable& renderable) = 0;
 
 protected:
     Renderer() = default;

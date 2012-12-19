@@ -87,9 +87,8 @@ class StubGraphicPlatform : public mg::Platform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual std::shared_ptr<void> render(mg::Renderable& /*renderable*/)
+    virtual void render(std::vector<std::shared_ptr<void>>&, mg::Renderable&)
     {
-        return std::shared_ptr<void>();
     }
 };
 

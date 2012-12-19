@@ -29,7 +29,7 @@ mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
 
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
-    auto res = renderer.render(renderable);
-    std::cout << res.use_count() << std::endl;
-    resources.push_back(res);
+    renderer.render(resources, renderable);
+    //std::cout << res.use_count() << std::endl;
+    //resources.push_back(res);
 }

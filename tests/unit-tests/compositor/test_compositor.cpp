@@ -81,7 +81,7 @@ TEST(Compositor, render)
 
     mc::Compositor comp(&render_view, renderer);
 
-    EXPECT_CALL(mock_renderer, render(_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
     EXPECT_CALL(display, view_area())
             .Times(1)
@@ -121,9 +121,9 @@ TEST(Compositor, skips_invisible_renderables)
     renderables.push_back(&mr2);
     renderables.push_back(&mr3);
 
-    EXPECT_CALL(mock_renderer, render(Ref(mr1))).Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(mr2))).Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(mr3))).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr1))).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr2))).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr3))).Times(1);
     
     FakeRenderView render_view(renderables);
 
