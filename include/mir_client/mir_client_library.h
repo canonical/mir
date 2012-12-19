@@ -54,7 +54,10 @@ typedef enum MirPixelFormat
 {
     mir_pixel_format_invalid,
     mir_pixel_format_rgba_8888,
-    mir_pixel_format_rgbx_8888
+    mir_pixel_format_rgbx_8888,
+    mir_pixel_format_argb_8888,
+    mir_pixel_format_xrgb_8888,
+    mir_pixel_format_rgb_888
 } MirPixelFormat;
 
 typedef enum MirBufferUsage

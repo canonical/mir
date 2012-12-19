@@ -32,6 +32,8 @@ enum class PixelFormat : uint32_t
     invalid,
     rgba_8888,
     rgbx_8888,
+    argb_8888,
+    xrgb_8888,
     rgb_888
 };
 }
