@@ -20,6 +20,7 @@
 #include "protobuf_message_processor.h"
 
 #include "mir/frontend/protobuf_ipc_factory.h"
+#include "mir/thread/all.h"
 
 #include <binder/Parcel.h>
 #include <binder/IPCThreadState.h>
@@ -116,6 +117,13 @@ android::status_t mfd::BinderService::onTransact(
     uint32_t /*flags*/)
 {
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
+
+    // TODO this mutex/lock serializes calls from the client. It is a
+    // TODO workaround for the need to supply response into send() and
+    // TODO send_fds(). And for the thread-unsafe use of sessions.
+    static std::mutex mutex;
+    std::lock_guard<std::mutex> lock(mutex);
+
     auto& session = sessions[client_pid];
 
     if (!session)
