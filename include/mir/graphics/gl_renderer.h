@@ -36,7 +36,7 @@ public:
     GLRenderer(const geometry::Size& display_size);
 
     /* From renderer */
-    void render(std::vector<std::shared_ptr<void>>& saved_resources, Renderable& renderable);
+    void render(std::function<void(std::shared_ptr<void>&)> save_resource, Renderable& renderable);
 
 private:
     class Resources

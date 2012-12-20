@@ -349,7 +349,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     renderer->render(saving_lambda, rd);
 
-    ASSERT_EQ(static_cast<size_t>(2), saved_resources.size());
+    EXPECT_EQ(2, save_count);
     EXPECT_EQ(resource.get(), saved_resources[0].get());
     EXPECT_EQ(gr_ptr.get(),   saved_resources[1].get());
 }
@@ -363,7 +363,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
     auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
     
     int save_count = 0;
-    auto saving_lambda = [&] (std::shared_ptr<void>& saved_resource)
+    auto saving_lambda = [&] (std::shared_ptr<void>&)
     {
         save_count++;
     };

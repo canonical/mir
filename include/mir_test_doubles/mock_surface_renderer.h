@@ -31,7 +31,7 @@ namespace doubles
 
 struct MockSurfaceRenderer : public graphics::Renderer
 {
-    MOCK_METHOD2(render, void(std::vector<std::shared_ptr<void>>&, graphics::Renderable&));
+    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void>&)>, graphics::Renderable&));
 };
 
 }
