@@ -44,6 +44,13 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 
     io_service_thread = std::move(std::thread(run_io_service));
+
+    boost::asio::async_read(
+        socket,
+        boost::asio::buffer(header_bytes),
+        boost::asio::transfer_exactly(sizeof header_bytes),
+        boost::bind(&MirSocketRpcChannel::on_header_read, this,
+            boost::asio::placeholders::error));
 }
 
 mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
@@ -175,8 +182,31 @@ void mcl::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& 
             << "\n... " << error.message() << std::endl;
         return;
     }
+}
+
+void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
+{
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
+
+    if (error)
+    {
+        // If we see "eof" then we're probably in a shutdown
+        if (error != boost::asio::error::eof)
+        {
+            log->error() << __PRETTY_FUNCTION__
+                << "\n... " << error.message() << std::endl;
+        }
+        return;
+    }
 
     read_message();
+
+    boost::asio::async_read(
+        socket,
+        boost::asio::buffer(header_bytes),
+        boost::asio::transfer_exactly(sizeof header_bytes),
+        boost::bind(&MirSocketRpcChannel::on_header_read, this,
+            boost::asio::placeholders::error));
 }
 
 
@@ -204,14 +234,6 @@ void mcl::MirSocketRpcChannel::read_message()
 
 size_t mcl::MirSocketRpcChannel::read_message_header()
 {
-    unsigned char header_bytes[2];
-    boost::system::error_code error;
-    boost::asio::read(socket, boost::asio::buffer(header_bytes), boost::asio::transfer_exactly(sizeof header_bytes), error);
-    if (error)
-    {
-        throw std::runtime_error(error.message());
-    }
-
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
 }
