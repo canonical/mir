@@ -23,6 +23,9 @@
 
 namespace mir
 {
+
+/// System options. Interface for extracting configuration options from wherever
+/// they may be (e.g. program arguments, config files or environment variables).
 namespace options
 {
 class Option
