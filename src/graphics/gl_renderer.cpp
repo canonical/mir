@@ -215,7 +215,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(std::function<void(std::shared_ptr<void>&)> save_resource, Renderable& renderable) 
+void mg::GLRenderer::render(std::function<void(std::shared_ptr<void>&)> save_resource, Renderable& renderable)
 {
     /* TODO: acquiring two resources that are tighly bound like this in two steps is funny. we should
              make the GraphicBufferCompositorResource struct better */ 
