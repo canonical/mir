@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-namespace mp = mir::process;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -73,7 +73,7 @@ struct EventSocketPair
 
 }
 
-struct mp::SignalDispatcher::Constructor
+struct mtf::SignalDispatcher::Constructor
 {
     static SignalDispatcher* construct()
     {
@@ -83,12 +83,12 @@ struct mp::SignalDispatcher::Constructor
 
 namespace global
 {
-std::shared_ptr<mp::SignalDispatcher> instance;
+std::shared_ptr<mtf::SignalDispatcher> instance;
 boost::once_flag init_flag;
 
 void init()
 {
-    instance.reset(mp::SignalDispatcher::Constructor::construct());
+    instance.reset(mtf::SignalDispatcher::Constructor::construct());
 }
 
 void signal_handler(int signal)
@@ -100,7 +100,7 @@ void signal_handler(int signal)
 
 }
 
-struct mp::SignalDispatcher::Private
+struct mtf::SignalDispatcher::Private
 {
     Private() : worker_thread(std::bind(&Private::worker, this))
     {
@@ -124,30 +124,30 @@ struct mp::SignalDispatcher::Private
     }
 
     boost::thread worker_thread;
-    mp::SignalDispatcher::SignalType signal_channel;
+    mtf::SignalDispatcher::SignalType signal_channel;
 };
 
-std::shared_ptr<mp::SignalDispatcher> mp::SignalDispatcher::instance()
+std::shared_ptr<mtf::SignalDispatcher> mtf::SignalDispatcher::instance()
 {
     boost::call_once(global::init_flag, global::init);
 
     return global::instance;
 }
 
-mp::SignalDispatcher::SignalDispatcher() : p(new Private())
+mtf::SignalDispatcher::SignalDispatcher() : p(new Private())
 {
 }
 
-mp::SignalDispatcher::~SignalDispatcher()
+mtf::SignalDispatcher::~SignalDispatcher()
 {
 }
 
-mp::SignalDispatcher::SignalType& mp::SignalDispatcher::signal_channel()
+mtf::SignalDispatcher::SignalType& mtf::SignalDispatcher::signal_channel()
 {
     return p->signal_channel;
 }
 
-void mp::SignalDispatcher::enable_for(int signal)
+void mtf::SignalDispatcher::enable_for(int signal)
 {
     struct sigaction action;
     ::memset(&action, 0, sizeof(action));

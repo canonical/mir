@@ -24,7 +24,7 @@
 
 #include <gtest/gtest.h>
 
-namespace mp = mir::process;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
@@ -65,7 +65,7 @@ struct SignalCollector
 void a_main_function_accessing_the_signal_dispatcher()
 {
     // Ensure that the SignalDispatcher has been created.
-    mp::SignalDispatcher::instance();
+    mtf::SignalDispatcher::instance();
     // Don't return (and exit) before the parent process has a chance to signal
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
@@ -73,10 +73,10 @@ void a_main_function_accessing_the_signal_dispatcher()
 template<int signal>
 void a_main_function_collecting_received_signals()
 {
-    mp::SignalDispatcher::instance()->enable_for(signal);
+    mtf::SignalDispatcher::instance()->enable_for(signal);
     SignalCollector sc;
     boost::signals2::scoped_connection conn(
-        mp::SignalDispatcher::instance()->signal_channel().connect(boost::ref(sc)));
+        mtf::SignalDispatcher::instance()->signal_channel().connect(boost::ref(sc)));
 
     ::kill(getpid(), signal);
 
@@ -102,7 +102,7 @@ using mir::a_main_function_collecting_received_signals;
 TEST(SignalDispatcher,
     DISABLED_a_default_dispatcher_does_not_catch_any_signals)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         a_main_function_accessing_the_signal_dispatcher,
         a_successful_exit_function);
 
@@ -114,13 +114,13 @@ TEST(SignalDispatcher,
 TEST(SignalDispatcher,
     DISABLED_enabling_a_signal_results_in_signal_channel_delivering_the_signal)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         a_main_function_collecting_received_signals<SIGTERM>,
         a_successful_exit_function);
 
     EXPECT_TRUE(p->wait_for_termination().succeeded());
 
-    p = mp::fork_and_run_in_a_different_process(
+    p = mtf::fork_and_run_in_a_different_process(
         a_main_function_collecting_received_signals<SIGINT>,
         a_successful_exit_function);
 

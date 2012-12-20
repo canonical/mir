@@ -28,9 +28,7 @@
 
 #include <unistd.h>
 
-namespace mir
-{
-namespace process
+namespace mir_test_framework
 {
 
 enum class TerminationReason
@@ -115,8 +113,6 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
     }
 
     return std::shared_ptr<Process>(new Process(pid));
-}
-
 }
 }
 

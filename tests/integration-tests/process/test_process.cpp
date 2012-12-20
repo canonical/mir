@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 
-namespace mp = mir::process;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
@@ -77,7 +77,7 @@ struct ExitFunctionFactory
 TEST(ProcessResult,
      a_default_result_never_succeeds)
 {
-    mp::Result r;
+    mtf::Result r;
 
     EXPECT_FALSE(r.succeeded());
 }
@@ -85,8 +85,8 @@ TEST(ProcessResult,
 TEST(ProcessResult,
      a_signalled_result_does_not_succeed)
 {
-    mp::Result r;
-    r.reason = mp::TerminationReason::child_terminated_by_signal;
+    mtf::Result r;
+    r.reason = mtf::TerminationReason::child_terminated_by_signal;
 
     EXPECT_FALSE(r.succeeded());
 }
@@ -94,8 +94,8 @@ TEST(ProcessResult,
 TEST(ProcessResult,
      a_normally_terminated_result_succeeds_only_with_exit_success)
 {
-    mp::Result r;
-    r.reason = mp::TerminationReason::child_terminated_normally;
+    mtf::Result r;
+    r.reason = mtf::TerminationReason::child_terminated_normally;
     r.exit_code = EXIT_FAILURE;
     EXPECT_FALSE(r.succeeded());
     r.exit_code = EXIT_SUCCESS;
@@ -107,7 +107,7 @@ TEST(Process,
 {
     int value = 0;
 
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         std::bind(
             MainFunctionFactory::a_value_altering_main_function,
             value,
@@ -120,7 +120,7 @@ TEST(Process,
 TEST(Process,
      a_successful_exit_function_succeeds)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         MainFunctionFactory::an_empty_main_function,
         ExitFunctionFactory::a_successful_exit_function);
 
@@ -130,7 +130,7 @@ TEST(Process,
 TEST(Process,
      a_failing_exit_function_does_not_succeed)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         MainFunctionFactory::an_empty_main_function,
         ExitFunctionFactory::a_failing_exit_function);
 
@@ -140,7 +140,7 @@ TEST(Process,
 TEST(Process,
      a_terminated_child_is_recognized_as_being_signalled)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         MainFunctionFactory::an_infinitely_waiting_main_function,
         ExitFunctionFactory::a_successful_exit_function);
 
@@ -152,7 +152,7 @@ TEST(Process,
 TEST(Process,
      a_killed_child_is_recognized_as_being_signalled)
 {
-    auto p = mp::fork_and_run_in_a_different_process(
+    auto p = mtf::fork_and_run_in_a_different_process(
         MainFunctionFactory::an_infinitely_waiting_main_function,
         ExitFunctionFactory::a_successful_exit_function);
 

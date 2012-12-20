@@ -38,8 +38,7 @@
 #include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
 
-
-namespace mp=mir::process;
+namespace mtf = mir_test_framework;
 namespace mt=mir::test;
 namespace mtd=mir::test::draw;
 namespace mc=mir::compositor;
@@ -412,26 +411,26 @@ struct TestClientIPCRender : public testing::Test
        yet the driver uses the info and bad things happen.
        Fork all needed processes before touching the blob! */
     static void SetUpTestCase() {
-        render_single_client_process = mp::fork_and_run_in_a_different_process(
+        render_single_client_process = mtf::fork_and_run_in_a_different_process(
             mt::TestClient::render_single,
             mt::TestClient::exit_function);
 
-        render_double_client_process = mp::fork_and_run_in_a_different_process(
+        render_double_client_process = mtf::fork_and_run_in_a_different_process(
             mt::TestClient::render_double,
             mt::TestClient::exit_function);
 
         second_render_with_same_buffer_client_process
-             = mp::fork_and_run_in_a_different_process(
+             = mtf::fork_and_run_in_a_different_process(
                             mt::TestClient::render_double,
                             mt::TestClient::exit_function);
 
         render_accelerated_process
-             = mp::fork_and_run_in_a_different_process(
+             = mtf::fork_and_run_in_a_different_process(
                             mt::TestClient::render_accelerated,
                             mt::TestClient::exit_function);
 
         render_accelerated_process_double
-             = mp::fork_and_run_in_a_different_process(
+             = mtf::fork_and_run_in_a_different_process(
                             mt::TestClient::render_accelerated_double,
                             mt::TestClient::exit_function);
     }
@@ -485,24 +484,24 @@ struct TestClientIPCRender : public testing::Test
     mc::BufferID id1;
     mc::BufferID id2;
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
-    std::shared_ptr<mp::Process> client_process;
+    std::shared_ptr<mtf::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
     std::shared_ptr<mga::AndroidBuffer> second_android_buffer;
     std::shared_ptr<struct alloc_device_t> alloc_device;
 
-    static std::shared_ptr<mp::Process> render_single_client_process;
-    static std::shared_ptr<mp::Process> render_double_client_process;
-    static std::shared_ptr<mp::Process> second_render_with_same_buffer_client_process;
-    static std::shared_ptr<mp::Process> render_accelerated_process;
-    static std::shared_ptr<mp::Process> render_accelerated_process_double;
+    static std::shared_ptr<mtf::Process> render_single_client_process;
+    static std::shared_ptr<mtf::Process> render_double_client_process;
+    static std::shared_ptr<mtf::Process> second_render_with_same_buffer_client_process;
+    static std::shared_ptr<mtf::Process> render_accelerated_process;
+    static std::shared_ptr<mtf::Process> render_accelerated_process_double;
 };
-std::shared_ptr<mp::Process> TestClientIPCRender::render_single_client_process;
-std::shared_ptr<mp::Process> TestClientIPCRender::render_double_client_process;
-std::shared_ptr<mp::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
-std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process;
-std::shared_ptr<mp::Process> TestClientIPCRender::render_accelerated_process_double;
+std::shared_ptr<mtf::Process> TestClientIPCRender::render_single_client_process;
+std::shared_ptr<mtf::Process> TestClientIPCRender::render_double_client_process;
+std::shared_ptr<mtf::Process> TestClientIPCRender::second_render_with_same_buffer_client_process;
+std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process;
+std::shared_ptr<mtf::Process> TestClientIPCRender::render_accelerated_process_double;
 
 TEST_F(TestClientIPCRender, test_render_single)
 {

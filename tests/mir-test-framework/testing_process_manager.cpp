@@ -33,13 +33,12 @@
 #include <stdexcept>
 
 namespace mc = mir::compositor;
-namespace mp = mir::process;
 namespace mtf = mir_test_framework;
 
 namespace
 {
 ::testing::AssertionResult WasStarted(
-    std::shared_ptr<mir::process::Process> const& server_process)
+    std::shared_ptr<mtf::Process> const& server_process)
 {
     if (server_process)
         return ::testing::AssertionSuccess() << "server started";
@@ -92,8 +91,8 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        mp::SignalDispatcher::instance()->enable_for(SIGTERM);
-        mp::SignalDispatcher::instance()->signal_channel().connect(
+        SignalDispatcher::instance()->enable_for(SIGTERM);
+        SignalDispatcher::instance()->signal_channel().connect(
                 boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
         mir::DisplayServer server(config);
@@ -116,7 +115,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     }
     else
     {
-        server_process = std::shared_ptr<mp::Process>(new mp::Process(pid));
+        server_process = std::shared_ptr<Process>(new Process(pid));
         server_process_was_started = true;
     }
 }
@@ -159,7 +158,7 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     }
     else
     {
-        clients.push_back(std::shared_ptr<mp::Process>(new mp::Process(pid)));
+        clients.push_back(std::shared_ptr<Process>(new Process(pid)));
     }
 }
 
@@ -193,9 +192,9 @@ void mtf::TestingProcessManager::tear_down_clients()
     }
 }
 
-mp::Result mtf::TestingProcessManager::shutdown_server_process()
+mtf::Result mtf::TestingProcessManager::shutdown_server_process()
 {
-    mp::Result result;
+    Result result;
 
     if (server_process)
     {
@@ -206,7 +205,7 @@ mp::Result mtf::TestingProcessManager::shutdown_server_process()
     }
     else
     {
-        result.reason = mp::TerminationReason::child_terminated_normally;
+        result.reason = TerminationReason::child_terminated_normally;
         result.exit_code = EXIT_SUCCESS;
     }
 

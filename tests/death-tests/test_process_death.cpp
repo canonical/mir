@@ -25,7 +25,7 @@ TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
 {
     EXPECT_EXIT(
-        mir::process::Process p(0),
+        mir_test_framework::Process p(0),
         ::testing::KilledBySignal(SIGABRT),
         ".*");
 }

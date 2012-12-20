@@ -23,9 +23,7 @@
 
 #include <memory>
 
-namespace mir
-{
-namespace process
+namespace mir_test_framework
 {
 
 // Singleton class that decouples
@@ -58,8 +56,6 @@ private:
     struct Private;
     std::unique_ptr<Private> p;
 };
-
-}
 }
 
 #endif // MIR_TEST_FRAMEWORK_SIGNAL_DISPATCHER_H_
