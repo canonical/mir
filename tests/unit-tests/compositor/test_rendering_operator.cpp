@@ -61,7 +61,7 @@ public:
                 save_resource(tmp);
                 break;
             default:
-                FAIL() << "stub renderer can only have render() called 3 times";
+                FAIL() << "this stub renderer can only have render() called 3 times";
                 break;
         }
     }

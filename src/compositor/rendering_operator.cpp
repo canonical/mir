@@ -27,8 +27,9 @@ mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
 
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
-    auto saving_lambda = [] (std::shared_ptr<void>&)
+    auto saving_lambda = [&] (std::shared_ptr<void>& saved_resource)
     {
+        resources.push_back(saved_resource);
     };
     renderer.render(saving_lambda, renderable);
 }
