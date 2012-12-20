@@ -215,7 +215,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(std::function<void(std::shared_ptr<void>&)> /*save_resource*/, Renderable& renderable) 
+void mg::GLRenderer::render(std::function<void(std::shared_ptr<void>&)> save_resource, Renderable& renderable) 
 {
     /* TODO: acquiring two resources that are tighly bound like this in two steps is funny. we should
              make the GraphicBufferCompositorResource struct better */ 
@@ -223,8 +223,10 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void>&)> /*save_r
     auto region_resource = texture_resource->region.lock();
     if (region_resource)
     {
-        //resources_to_hold.push_back(texture_resource);
-        //resources_to_hold.push_back(region_resource);
+        std::shared_ptr<void> tmp = texture_resource;
+        save_resource(std::ref(tmp));
+        tmp = region_resource;
+        save_resource(std::ref(tmp));
  
         const geom::Point top_left = renderable.top_left();
         const geom::Size size = renderable.size();

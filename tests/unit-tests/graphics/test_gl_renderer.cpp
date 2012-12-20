@@ -350,8 +350,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     renderer->render(saving_lambda, rd);
 
     EXPECT_EQ(2, save_count);
-    EXPECT_EQ(resource.get(), saved_resources[0].get());
-    EXPECT_EQ(gr_ptr.get(),   saved_resources[1].get());
+    auto result1 = std::find(saved_resources.begin(), saved_resources.end(), resource);
+    auto result2 = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    EXPECT_NE(saved_resources.end(), result1);
+    EXPECT_NE(saved_resources.end(), result2);
 }
 
 TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
