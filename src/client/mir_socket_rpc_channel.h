@@ -57,8 +57,7 @@ private:
         google::protobuf::Closure* complete);
     std::shared_ptr<Logger> log;
     detail::PendingCallCache pending_calls;
-    static const int threads = 1;
-    std::thread io_service_thread[threads];
+    std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
