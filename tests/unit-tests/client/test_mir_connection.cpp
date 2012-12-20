@@ -183,8 +183,8 @@ namespace
 {
 
 std::vector<MirPixelFormat> const supported_pixel_formats{
-    mir_pixel_format_rgba_8888,
-    mir_pixel_format_rgbx_8888
+    mir_pixel_format_abgr_8888,
+    mir_pixel_format_xbgr_8888
 };
 
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
@@ -198,7 +198,7 @@ void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* respons
 {
     auto info = response->mutable_display_info();
     for (int i = 0; i < 100; i++)
-        info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_rgbx_8888));
+        info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }
 
 }
@@ -248,7 +248,7 @@ TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
 
     for (size_t i = 0; i < mir_supported_pixel_format_max; ++i)
     {
-        EXPECT_EQ(mir_pixel_format_rgbx_8888,
+        EXPECT_EQ(mir_pixel_format_xbgr_8888,
                   info.supported_pixel_format[i]);
     }
 }

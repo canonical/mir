@@ -50,14 +50,23 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
 /* Surface API */
+/*
+ * The order of components in a format enum matches the
+ * order of the components as they would be written in an
+ * integer representing a pixel value of that format.
+ *
+ * For example, abgr_8888 corresponds to 0xAABBGGRR, which will
+ * end up as R,G,B,A in memory in a little endian system, and
+ * as A,B,G,R in memory in a big endian system.
+ */
 typedef enum MirPixelFormat
 {
     mir_pixel_format_invalid,
-    mir_pixel_format_rgba_8888,
-    mir_pixel_format_rgbx_8888,
+    mir_pixel_format_abgr_8888,
+    mir_pixel_format_xbgr_8888,
     mir_pixel_format_argb_8888,
     mir_pixel_format_xrgb_8888,
-    mir_pixel_format_rgb_888
+    mir_pixel_format_bgr_888
 } MirPixelFormat;
 
 typedef enum MirBufferUsage

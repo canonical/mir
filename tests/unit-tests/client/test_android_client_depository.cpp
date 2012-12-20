@@ -36,7 +36,7 @@ struct MirBufferDepositoryTest : public testing::Test
         width = geom::Width(12);
         height =geom::Height(14);
         size = geom::Size{width, height};
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
 
         mock_registrar = std::make_shared<mtd::MockAndroidRegistrar>();
         package1 = std::make_shared<MirBufferPackage>();

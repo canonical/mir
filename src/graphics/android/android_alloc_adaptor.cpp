@@ -116,11 +116,11 @@ int mga::AndroidAllocAdaptor::convert_to_android_pixel_code(geom::PixelFormat mi
 {
     switch(mir_pixel_format)
     {
-        case geom::PixelFormat::rgba_8888:
+        case geom::PixelFormat::abgr_8888:
             return HAL_PIXEL_FORMAT_RGBA_8888;
-        case geom::PixelFormat::rgbx_8888:
+        case geom::PixelFormat::xbgr_8888:
             return HAL_PIXEL_FORMAT_RGBX_8888;
-        case geom::PixelFormat::rgb_888:
+        case geom::PixelFormat::bgr_888:
             return HAL_PIXEL_FORMAT_RGB_888;
         default:
             return 0;

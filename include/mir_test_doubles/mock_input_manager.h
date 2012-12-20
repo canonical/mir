@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
 
@@ -41,4 +41,4 @@ struct MockInputManager : public input::InputManager
 }
 }
 
-#endif // MIR_TEST_MOCK_INPUT_MANAGER_H
+#endif // MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H

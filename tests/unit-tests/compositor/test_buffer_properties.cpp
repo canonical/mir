@@ -40,7 +40,7 @@ TEST(buffer_properties, default_create)
 TEST(buffer_properties, custom_create)
 {
     geom::Size size{geom::Width{66}, geom::Height{166}};
-    geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+    geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
     mc::BufferUsage usage{mc::BufferUsage::hardware};
 
     mc::BufferProperties prop{size, pixel_format, usage};
@@ -53,7 +53,7 @@ TEST(buffer_properties, custom_create)
 TEST(buffer_properties, equal_properties_test_equal)
 {
     geom::Size size{geom::Width{66}, geom::Height{166}};
-    geom::PixelFormat pixel_format{geom::PixelFormat::rgba_8888};
+    geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
     mc::BufferUsage usage{mc::BufferUsage::hardware};
 
     mc::BufferProperties prop0{size, pixel_format, usage};
@@ -75,8 +75,8 @@ TEST(buffer_properties, unequal_properties_test_unequal)
 
     geom::PixelFormat pixel_format[2] =
     {
-        geom::PixelFormat::rgba_8888,
-        geom::PixelFormat::rgb_888
+        geom::PixelFormat::abgr_8888,
+        geom::PixelFormat::bgr_888
     };
 
     mc::BufferUsage usage[2] =

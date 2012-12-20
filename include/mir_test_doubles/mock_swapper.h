@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_MOCK_SWAPPER_H_
-#define MIR_TEST_MOCK_SWAPPER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SWAPPER_H_
+#define MIR_TEST_DOUBLES_MOCK_SWAPPER_H_
 
 #include "mir/compositor/buffer_swapper.h"
 
@@ -57,4 +57,4 @@ private:
 }
 }
 
-#endif /* MIR_TEST_MOCK_SWAPPER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_SWAPPER_H_ */

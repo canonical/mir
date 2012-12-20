@@ -52,7 +52,7 @@ struct MockServerPackageGenerator : public StubServerTool
         generate_unique_buffer();
         width_sent  = 891;
         height_sent = 458;
-        pf_sent = mir_pixel_format_rgba_8888;
+        pf_sent = mir_pixel_format_abgr_8888;
     }
 
     void create_surface(google::protobuf::RpcController* ,
@@ -222,7 +222,7 @@ struct MirClientSurfaceTest : public testing::Test
 
         mock_depository = std::make_shared<mt::MockClientDepository>();
 
-        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_rgba_8888,
+        params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_abgr_8888,
                                       mir_buffer_usage_hardware};
 
         /* connect dummy server */
@@ -374,6 +374,6 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
-    EXPECT_EQ(pf, geom::PixelFormat::rgba_8888);
+    EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
 }
 

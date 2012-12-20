@@ -280,7 +280,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     MockBufferBundleFactory buffer_bundle_factory;
 
     geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};
-    geom::PixelFormat const format{geom::PixelFormat::rgb_888};
+    geom::PixelFormat const format{geom::PixelFormat::bgr_888};
     mc::BufferUsage const usage{mc::BufferUsage::software};
 
     EXPECT_CALL(buffer_bundle_factory,

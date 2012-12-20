@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_CLIENT_SURFACE_
-#define MIR_TEST_MOCK_CLIENT_SURFACE_
+#ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_
 
 #include "mir_client/mir_client_surface.h"
 #include <gmock/gmock.h>
@@ -39,4 +39,4 @@ struct MockClientSurface : public client::ClientSurface
 }
 }
 }
-#endif /* MIR_TEST_MOCK_CLIENT_SURFACE_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_CLIENT_SURFACE_H_ */

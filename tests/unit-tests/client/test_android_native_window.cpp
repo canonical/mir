@@ -77,7 +77,7 @@ protected:
         using namespace testing;
         surf_params.width = 530;
         surf_params.height = 715;
-        surf_params.pixel_format = mir_pixel_format_rgba_8888;
+        surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_surface = std::make_shared<NiceMock<MockMirSurface>>(surf_params);
         mock_client_buffer =

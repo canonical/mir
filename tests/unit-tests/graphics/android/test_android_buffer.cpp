@@ -40,7 +40,7 @@ protected:
         mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>(mock_buffer_handle);
 
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{300}, geom::Height{200}};
     }
 
@@ -96,7 +96,7 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
 {
     using namespace testing;
 
-    geom::PixelFormat expected_pf = geom::PixelFormat::rgb_888;
+    geom::PixelFormat expected_pf = geom::PixelFormat::bgr_888;
 
     EXPECT_CALL(*mock_buffer_handle, format())
     .Times(Exactly(1))
