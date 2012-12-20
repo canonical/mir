@@ -49,7 +49,7 @@ protected:
 
         stride = geom::Stride{66};
 
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         pf_copy = geom::PixelFormat(pf);
 
         package = std::make_shared<MirBufferPackage>();

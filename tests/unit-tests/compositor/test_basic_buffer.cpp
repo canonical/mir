@@ -46,7 +46,7 @@ public:
 
     geom::PixelFormat pixel_format() const
     {
-        return geom::PixelFormat::rgba_8888;
+        return geom::PixelFormat::abgr_8888;
     }
 
     void bind_to_texture()

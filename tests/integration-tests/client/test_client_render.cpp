@@ -105,7 +105,7 @@ struct TestClient
         surface_parameters.name = "testsurface";
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
 
@@ -145,7 +145,7 @@ struct TestClient
         surface_parameters.name = "testsurface";
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
@@ -189,7 +189,7 @@ struct TestClient
         surface_parameters.name = "testsurface";
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
@@ -251,7 +251,7 @@ struct TestClient
         surface_parameters.name = "testsurface";
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
-        surface_parameters.pixel_format = mir_pixel_format_rgba_8888;
+        surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create( connection, &surface_parameters,
                                           &create_callback, &surface));
@@ -440,7 +440,7 @@ struct TestClientIPCRender : public testing::Test
         ASSERT_FALSE(mtd::is_surface_flinger_running());
 
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
 
         /* allocate an android buffer */
         int err;

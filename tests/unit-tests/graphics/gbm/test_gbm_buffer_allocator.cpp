@@ -116,14 +116,14 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
     allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_rgba_8888_to_invalid)
+TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_abgr_8888_to_invalid)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,std::numeric_limits<uint32_t>::max(),_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::rgba_8888, usage});
+    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")

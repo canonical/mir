@@ -80,7 +80,7 @@ struct Client : TestingClientConfiguration
         {
             __PRETTY_FUNCTION__,
             640, 480,
-            mir_pixel_format_rgba_8888,
+            mir_pixel_format_abgr_8888,
             mir_buffer_usage_hardware
         };
 

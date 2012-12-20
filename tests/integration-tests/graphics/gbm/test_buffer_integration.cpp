@@ -116,7 +116,7 @@ protected:
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
         size = geom::Size{geom::Width{100}, geom::Height{100}};
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         usage = mc::BufferUsage::hardware;
         buffer_properties = mc::BufferProperties{size, pf, usage};
     }

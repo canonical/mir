@@ -38,7 +38,7 @@ protected:
         using namespace testing;
         size = geom::Size{geom::Width{1024}, geom::Height{768}};
         stride = geom::Stride{1024};
-        pixel_format = geom::PixelFormat{geom::PixelFormat::rgba_8888};
+        pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
         second_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
