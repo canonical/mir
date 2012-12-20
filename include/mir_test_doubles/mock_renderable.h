@@ -33,11 +33,10 @@ class MockRenderable :  public graphics::Renderable
 {
 public:
     MockRenderable()
+     : region(std::make_shared<MockGraphicRegion>()),
+       comp_resource(std::make_shared<compositor::GraphicBufferCompositorResource>(region))
     {
         using namespace testing;
-        region = std::make_shared<MockGraphicRegion>();
-        comp_resource = std::make_shared<compositor::GraphicBufferCompositorResource>(region);
-
         ON_CALL(*this, texture())
             .WillByDefault(Return(comp_resource));
     }
@@ -48,8 +47,8 @@ public:
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(hidden, bool());
 
-    std::shared_ptr<compositor::GraphicBufferCompositorResource> comp_resource;
-    std::shared_ptr<compositor::GraphicRegion> region;
+    std::shared_ptr<compositor::GraphicRegion> const region;
+    std::shared_ptr<compositor::GraphicBufferCompositorResource> const comp_resource;
 };
 
 }
