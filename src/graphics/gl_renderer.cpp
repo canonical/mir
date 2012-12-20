@@ -217,7 +217,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 
 void mg::GLRenderer::render(std::vector<std::shared_ptr<void>>& resources_to_hold, Renderable& renderable) 
 {
-    /* note: acquiring two resources that are tighly bound like this in two steps is funny. we should
+    /* TODO: acquiring two resources that are tighly bound like this in two steps is funny. we should
              make the GraphicBufferCompositorResource struct better */ 
     auto texture_resource = renderable.texture();
     auto region_resource = texture_resource->region.lock();

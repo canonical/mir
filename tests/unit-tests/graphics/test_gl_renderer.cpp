@@ -294,7 +294,13 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
     auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
 
+    int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
+    auto saving_lambda = [&] (std::shared_ptr<void>& saved_resource)
+    {
+        save_count++;
+        saved_resources.push_back(saved_resource);
+    };
 
     mir::geometry::Point tl;
     mir::geometry::Size  s;
@@ -341,7 +347,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saved_resources, rd);
+    renderer->render(saving_lambda, rd);
 
     ASSERT_EQ(static_cast<size_t>(2), saved_resources.size());
     EXPECT_EQ(resource.get(), saved_resources[0].get());
@@ -355,7 +361,12 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
     mtd::MockRenderable rd;
     std::shared_ptr<mc::GraphicRegion> empty_region;
     auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
-    std::vector<std::shared_ptr<void>> saved_resources;
+    
+    int save_count = 0;
+    auto saving_lambda = [&] (std::shared_ptr<void>& saved_resource)
+    {
+        save_count++;
+    };
 
     InSequence seq;
 
@@ -363,6 +374,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
         .Times(1)
         .WillOnce(Return(empty_resource));
 
-    renderer->render(saved_resources, rd);
-    EXPECT_EQ(static_cast<size_t>(0), saved_resources.size());
+    renderer->render(saving_lambda, rd);
+    EXPECT_EQ(0, save_count);
 }
