@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_RENDERER_H_
 
 #include <memory>
-#include <vector>
+#include <functional>
 
 namespace mir
 {
