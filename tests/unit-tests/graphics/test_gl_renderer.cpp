@@ -24,6 +24,8 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/gl_renderer.h>
+#include <mir_test_doubles/mock_renderable.h>
+#include <mir_test_doubles/mock_graphic_region.h>
 #include <mir/graphics/renderable.h>
 #include <mir/compositor/graphic_region.h>
 #include <mir/compositor/buffer_bundle.h>
@@ -34,6 +36,7 @@ using testing::InSequence;
 using testing::Return;
 using testing::_;
 
+namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 
@@ -276,31 +279,7 @@ public:
     std::unique_ptr<mg::GLRenderer> renderer;
 };
 
-class MockRenderable :
-    public mg::Renderable
-{
-public:
-
-    MOCK_CONST_METHOD0(top_left, mir::geometry::Point());
-    MOCK_CONST_METHOD0(size, mir::geometry::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<mc::GraphicBufferCompositorResource>());
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(hidden, bool());
-};
-
-class MockGraphicRegion :
-    public mc::GraphicRegion
-{
-public:
-
-    MOCK_CONST_METHOD0(size, mir::geometry::Size());
-    MOCK_CONST_METHOD0(stride, mir::geometry::Stride());
-    MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat());
-    MOCK_METHOD0(bind_to_texture, void());
-};
-
-void NullGraphicRegionDeleter(MockGraphicRegion * /* gr */)
+void NullGraphicRegionDeleter(mtd::MockGraphicRegion * /* gr */)
 {
 }
 
@@ -310,10 +289,18 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 {
     using namespace std::placeholders;
 
-    MockRenderable rd;
-    MockGraphicRegion gr;
-    std::shared_ptr<MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
+    mtd::MockRenderable rd;
+    mtd::MockGraphicRegion gr;
+    std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
     auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
+
+    int save_count = 0;
+    std::vector<std::shared_ptr<void>> saved_resources;
+    auto saving_lambda = [&] (std::shared_ptr<void> const& saved_resource)
+    {
+        save_count++;
+        saved_resources.push_back(saved_resource);
+    };
 
     mir::geometry::Point tl;
     mir::geometry::Size  s;
@@ -327,9 +314,12 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     InSequence seq;
 
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(Return(resource));
+
     EXPECT_CALL(rd, top_left()).WillOnce(Return(tl));
     EXPECT_CALL(rd, size()).WillOnce(Return(s));
-
     EXPECT_CALL(gl_mock, glUseProgram(stub_program));
     EXPECT_CALL(gl_mock, glEnable(GL_BLEND));
     EXPECT_CALL(gl_mock, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -347,8 +337,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(rd, texture())
-        .WillOnce(Return(resource));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
@@ -359,5 +347,35 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(gl_mock, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(rd);
+    renderer->render(saving_lambda, rd);
+
+    EXPECT_EQ(2, save_count);
+    auto result1 = std::find(saved_resources.begin(), saved_resources.end(), resource);
+    auto result2 = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    EXPECT_NE(saved_resources.end(), result1);
+    EXPECT_NE(saved_resources.end(), result2);
+}
+
+TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
+{
+    using namespace std::placeholders;
+
+    mtd::MockRenderable rd;
+    std::shared_ptr<mc::GraphicRegion> empty_region;
+    auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
+    
+    int save_count = 0;
+    auto saving_lambda = [&] (std::shared_ptr<void> const&)
+    {
+        save_count++;
+    };
+
+    InSequence seq;
+
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(Return(empty_resource));
+
+    renderer->render(saving_lambda, rd);
+    EXPECT_EQ(0, save_count);
 }
