@@ -296,7 +296,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
-    auto saving_lambda = [&] (std::shared_ptr<void>& saved_resource)
+    auto saving_lambda = [&] (std::shared_ptr<void> const& saved_resource)
     {
         save_count++;
         saved_resources.push_back(saved_resource);
@@ -365,7 +365,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
     auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
     
     int save_count = 0;
-    auto saving_lambda = [&] (std::shared_ptr<void>&)
+    auto saving_lambda = [&] (std::shared_ptr<void> const&)
     {
         save_count++;
     };

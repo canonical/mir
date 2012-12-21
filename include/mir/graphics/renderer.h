@@ -34,7 +34,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual void render(std::function<void(std::shared_ptr<void>&)> save_resource, Renderable& renderable) = 0;
+    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable) = 0;
 
 protected:
     Renderer() = default;

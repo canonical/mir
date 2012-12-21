@@ -96,9 +96,8 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     void operator()(mg::Renderable& r)
     {
         // We just use this for expectations
-        auto saving_lambda = [] (std::shared_ptr<void>&) {};
         renderable_operator(r);
-        renderer->render(saving_lambda, r);
+        renderer->render([] (std::shared_ptr<void> const&) {}, r);
     }
     mg::Renderer* renderer;
 };
