@@ -189,12 +189,14 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
 
     if (error)
     {
-        // If we see "eof" then we're probably in a shutdown
-        if (error != boost::asio::error::eof)
+        // If we've not got a response to a call pending
+        // then during shutdown we expect to see "eof"
+        if (!pending_calls.empty() || error != boost::asio::error::eof)
         {
             log->error() << __PRETTY_FUNCTION__
                 << "\n... " << error.message() << std::endl;
         }
+
         return;
     }
 
