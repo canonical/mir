@@ -34,7 +34,7 @@ void google_protobuf_guard();
 // initialized (and cleaned up) in a sensible sequence.
 namespace
 {
-bool force_google_protobuf_init {(mir::protobuf::google_protobuf_guard(), true)};
+bool force_google_protobuf_init{(mir::protobuf::google_protobuf_guard(), true)};
 }
 
 #endif /* MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_ */

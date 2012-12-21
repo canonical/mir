@@ -60,22 +60,13 @@ using ::boost::thread;
 using ::boost::mutex;
 
 template <typename R>
-class future : ::boost::unique_future<R>
-{
+class future : ::boost::unique_future<R> {
 public:
     future() : ::boost::unique_future<R>() { }
     future(future&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
     future(::boost::unique_future<R>&& rhs) : ::boost::unique_future<R>(std::move(rhs)) { }
-    future& operator=(future&& rhs)
-    {
-        ::boost::unique_future<R>::operator=(std::move(rhs));
-        return *this;
-    }
-    future& operator=(::boost::unique_future<R>&& rhs)
-    {
-        ::boost::unique_future<R>::operator=(std::move(rhs));
-        return *this;
-    }
+    future& operator=(future&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
+    future& operator=(::boost::unique_future<R>&& rhs) { ::boost::unique_future<R>::operator=(std::move(rhs)); return *this; }
 
     using ::boost::unique_future<R>::wait;
     using ::boost::unique_future<R>::get;
@@ -153,13 +144,7 @@ void sleep_for(const Duration& rel_time)
 }
 }
 }
-namespace mir_test_framework
-{
-namespace std
-{
-using namespace ::mir::std;
-}
-}
+namespace mir_test_framework { namespace std { using namespace ::mir::std; } }
 #endif
 
 #endif // MIR_THREAD_ALL_H_

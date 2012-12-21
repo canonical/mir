@@ -38,10 +38,7 @@ public:
     IntWrapper() : value(0) {}
 
     explicit IntWrapper(ValueType value) : value(value) {}
-    ValueType as_value() const
-    {
-        return value;
-    }
+    ValueType as_value() const { return value; }
 
 private:
     ValueType value;

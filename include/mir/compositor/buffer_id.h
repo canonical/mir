@@ -27,16 +27,10 @@ namespace compositor
 class BufferID
 {
 public:
-    BufferID() : value(id_invalid) {}
+    BufferID() : value(id_invalid){}
     explicit BufferID(uint32_t val) : value(val) {}
-    bool is_valid() const
-    {
-        return (id_invalid != value);
-    }
-    uint32_t as_uint32_t() const
-    {
-        return value;
-    };
+    bool is_valid() const { return (id_invalid != value); }
+    uint32_t as_uint32_t() const { return value; };
 
 private:
     uint32_t value;
