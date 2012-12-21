@@ -29,7 +29,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/mir_logger.h"
 #include "mir/thread/all.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"

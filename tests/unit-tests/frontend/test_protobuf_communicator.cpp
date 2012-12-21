@@ -47,16 +47,15 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
-        // called during socket comms initialisation:
-        // there's always a server awaiting the next connection
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
         stub_server->comm->start();
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
+        // always called during socket comms
+        // only called when binder comms recognises a new client
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
