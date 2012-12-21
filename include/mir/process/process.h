@@ -30,6 +30,8 @@
 
 namespace mir
 {
+
+/// Process. Interprocess operations - forking, waiting, signalling.
 namespace process
 {
 

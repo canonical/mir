@@ -17,8 +17,8 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_MOCK_IPC_FACTORY_H_
-#define MIR_TEST_MOCK_IPC_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_
+#define MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_
 
 #include "mir_test/empty_deleter.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
@@ -66,4 +66,5 @@ private:
 }
 }
 }
-#endif /* MIR_TEST_MOCK_IPC_FACTORY_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_ */

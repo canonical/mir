@@ -33,6 +33,7 @@ class Renderer;
 
 }
 
+///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 

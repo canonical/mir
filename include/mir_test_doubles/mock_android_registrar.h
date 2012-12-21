@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
-#define MIR_TEST_MOCK_ANDROID_REGISTRAR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_
+#define MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_
 
 #include <gmock/gmock.h>
 #include "mir_client/android/android_registrar.h"
@@ -43,4 +43,4 @@ struct MockAndroidRegistrar : public client::android::AndroidRegistrar
 }
 }
 
-#endif /* MIR_TEST_MOCK_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_ */

@@ -16,8 +16,8 @@
  * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_EVENT_FILTER_H_
-#define MIR_TEST_MOCK_EVENT_FILTER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
+#define MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_
 
 #include "mir/input/event_filter.h"
 
@@ -72,4 +72,4 @@ MATCHER_P2(MotionEvent, dx, dy, "")
 }
 }
 
-#endif // MIR_TEST_MOCK_EVENT_FILTER_H_
+#endif // MIR_TEST_DOUBLES_MOCK_EVENT_FILTER_H_

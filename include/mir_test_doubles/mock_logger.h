@@ -17,8 +17,8 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_MOCK_LOGGER_H_
-#define MIR_TEST_MOCK_LOGGER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_LOGGER_H_
+#define MIR_TEST_DOUBLES_MOCK_LOGGER_H_
 
 #include "mir_client/mir_logger.h"
 
@@ -57,4 +57,4 @@ public:
 }
 } // namespace mir
 
-#endif /* MIR_TEST_MOCK_LOGGER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_LOGGER_H_ */
