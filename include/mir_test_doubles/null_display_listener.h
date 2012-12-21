@@ -17,8 +17,8 @@
  */
 
 
-#ifndef NULL_DISPLAY_LISTENER_H_
-#define NULL_DISPLAY_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_
 
 
 #include "mir/graphics/display_listener.h"
@@ -44,4 +44,4 @@ class NullDisplayListener : public graphics::DisplayListener
 }
 }
 
-#endif /* NULL_DISPLAY_LISTENER_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_ */

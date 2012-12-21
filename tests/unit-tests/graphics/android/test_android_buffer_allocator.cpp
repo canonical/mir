@@ -35,21 +35,21 @@ TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_format
     mga::AndroidBufferAllocator allocator;
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
-    auto rgba_8888_count = std::count(supported_pixel_formats.begin(),
+    auto abgr_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::rgba_8888);
+                                      geom::PixelFormat::abgr_8888);
 
-    auto rgbx_8888_count = std::count(supported_pixel_formats.begin(),
+    auto xbgr_8888_count = std::count(supported_pixel_formats.begin(),
                                       supported_pixel_formats.end(),
-                                      geom::PixelFormat::rgbx_8888);
+                                      geom::PixelFormat::xbgr_8888);
 
-    auto rgb_888_count = std::count(supported_pixel_formats.begin(),
+    auto bgr_888_count = std::count(supported_pixel_formats.begin(),
                                     supported_pixel_formats.end(),
-                                    geom::PixelFormat::rgb_888);
+                                    geom::PixelFormat::bgr_888);
 
-    EXPECT_EQ(1, rgba_8888_count);
-    EXPECT_EQ(1, rgbx_8888_count);
-    EXPECT_EQ(1, rgb_888_count);
+    EXPECT_EQ(1, abgr_8888_count);
+    EXPECT_EQ(1, xbgr_8888_count);
+    EXPECT_EQ(1, bgr_888_count);
 }
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
@@ -58,6 +58,6 @@ TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
-    EXPECT_EQ(geom::PixelFormat::rgba_8888, supported_pixel_formats[0]);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, supported_pixel_formats[0]);
 }
 

@@ -43,6 +43,8 @@ namespace compositor
 class GraphicBufferAllocator;
 }
 
+/// Frontend interface. Mediates the interaction between client
+/// applications and the core of the mir system.
 namespace frontend
 {
 class ResourceCache;

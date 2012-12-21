@@ -19,8 +19,8 @@
 #ifndef MIR_SURFACES_SURFACESTACK_H_
 #define MIR_SURFACES_SURFACESTACK_H_
 
-#include "scenegraph.h"
 #include "surface_stack_model.h"
+#include "mir/compositor/render_view.h"
 #include "mir/thread/all.h"
 
 #include <memory>
@@ -32,6 +32,8 @@ namespace compositor
 {
 class BufferBundleFactory;
 class RenderableCollection;
+class FilterForRenderables;
+class OperatorForRenderables;
 }
 
 namespace surfaces
@@ -39,14 +41,14 @@ namespace surfaces
 class Surface;
 class SurfaceCreationParameters;
 
-class SurfaceStack : public Scenegraph, public SurfaceStackModel
+class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(compositor::BufferBundleFactory* bb_factory);
     virtual ~SurfaceStack() {}
 
     // From RenderView
-    virtual void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator);
+    virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);

@@ -29,11 +29,11 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirinput
-  mirprocess
   mirsurfaces
   mirclient
   mirplatformgraphics
   mirprotobuf
+  mir-test-framework
 
   3rd_party
 

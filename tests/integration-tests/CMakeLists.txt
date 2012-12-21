@@ -68,10 +68,8 @@ target_link_libraries(
   mirfrontend
   mirgraphics
   mirinput
-  mirprocess
   mirsurfaces
   mirplatformgraphics
-  mirprocess
   mirprotobuf
 
   3rd_party

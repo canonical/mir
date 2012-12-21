@@ -21,6 +21,8 @@
 
 namespace mir
 {
+
+/// subsystem dealing with Google protobuf protocol.
 namespace protobuf
 {
 void google_protobuf_guard();

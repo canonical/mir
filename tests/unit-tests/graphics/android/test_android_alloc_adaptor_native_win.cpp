@@ -39,7 +39,7 @@ protected:
         mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
 
         /* set up common defaults */
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{110}, geom::Height{230}};
         usage = mga::BufferUsage::use_hardware;
         stride = geom::Stride(300*4);

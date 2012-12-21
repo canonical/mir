@@ -37,11 +37,11 @@ geom::PixelFormat mgg::gbm_format_to_mir_format(uint32_t format)
     {
     case GBM_BO_FORMAT_ARGB8888:
     case GBM_FORMAT_ARGB8888:
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::argb_8888;
         break;
     case GBM_BO_FORMAT_XRGB8888:
     case GBM_FORMAT_XRGB8888:
-        pf = geom::PixelFormat::rgbx_8888;
+        pf = geom::PixelFormat::xrgb_8888;
         break;
     default:
         pf = geom::PixelFormat::invalid;
@@ -57,15 +57,15 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
     switch (format)
     {
-    case geom::PixelFormat::rgba_8888:
+    case geom::PixelFormat::argb_8888:
         gbm_pf = GBM_FORMAT_ARGB8888;
         break;
-    case geom::PixelFormat::rgbx_8888:
+    case geom::PixelFormat::xrgb_8888:
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
         /* There is no explicit invalid GBM pixel format! */
-        gbm_pf = UINT32_MAX;
+        gbm_pf = std::numeric_limits<uint32_t>::max();
         break;
     }
 

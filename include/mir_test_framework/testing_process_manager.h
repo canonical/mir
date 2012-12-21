@@ -22,7 +22,7 @@
 #include "mir/server_configuration.h"
 
 #include "mir/chrono/chrono.h"
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -57,14 +57,14 @@ public:
     void tear_down_clients();
     void tear_down_server();
     void tear_down_all();
-    mir::process::Result shutdown_server_process();
+    Result shutdown_server_process();
     void kill_client_processes();
 
 private:
     void os_signal_handler(int signal);
 
-    std::shared_ptr<mir::process::Process> server_process;
-    std::list<std::shared_ptr<mir::process::Process>> clients;
+    std::shared_ptr<Process> server_process;
+    std::list<std::shared_ptr<Process>> clients;
 
     bool is_test_process;
     bool server_process_was_started;

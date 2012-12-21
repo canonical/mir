@@ -32,14 +32,8 @@ namespace graphics
 class Renderer;
 
 }
-namespace surfaces
-{
 
-// scenegraph is the interface compositor uses onto the surface stack
-class Scenegraph;
-
-}
-
+///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 

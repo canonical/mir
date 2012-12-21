@@ -121,7 +121,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_fr
     region->vaddr = (char*) vaddr;
     region->width = sz.width.as_uint32_t();
     region->height = sz.height.as_uint32_t();
-    region->pixel_format = mir_pixel_format_rgba_8888;
+    region->pixel_format = mir_pixel_format_abgr_8888;
 
     return std::shared_ptr<MirGraphicsRegion>(region, del);
 }

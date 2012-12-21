@@ -92,8 +92,12 @@ TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = mg::create_platform();
     auto allocator = platform->create_buffer_allocator(buffer_initializer);
+    auto supported_pixel_formats = allocator->supported_pixel_formats();
+
+    ASSERT_NE(0u, supported_pixel_formats.size());
+
     geom::Size size{geom::Width{320}, geom::Height{240}};
-    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
+    geom::PixelFormat const pf{supported_pixel_formats[0]};
     mc::BufferUsage usage{mc::BufferUsage::hardware};
     mc::BufferProperties buffer_properties{size, pf, usage};
 

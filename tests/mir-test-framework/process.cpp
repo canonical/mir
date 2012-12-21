@@ -17,7 +17,7 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -29,7 +29,7 @@
 #include <ostream>
 #include <string>
 
-namespace mp = mir::process;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -43,25 +43,25 @@ void signal_process(pid_t pid, int signum)
 }
 }
 
-mp::Result::Result()
+mtf::Result::Result()
     : reason(TerminationReason::unknown)
     , exit_code(EXIT_FAILURE)
     , signal(_NSIG+1)
 {
 }
 
-bool mp::Result::succeeded() const
+bool mtf::Result::succeeded() const
 {
     return reason == TerminationReason::child_terminated_normally &&
         exit_code == EXIT_SUCCESS;
 }
 
-bool mp::Result::signalled() const
+bool mtf::Result::signalled() const
 {
     return reason == TerminationReason::child_terminated_by_signal;
 }
 
-mp::Process::Process(pid_t pid)
+mtf::Process::Process(pid_t pid)
     : pid(pid)
     , terminated(false)
     , detached(false)
@@ -69,7 +69,7 @@ mp::Process::Process(pid_t pid)
     assert(pid > 0);
 }
 
-mp::Process::~Process()
+mtf::Process::~Process()
 {
     if (!detached && !terminated)
     {
@@ -85,7 +85,7 @@ mp::Process::~Process()
     }
 }
 
-mp::Result mp::Process::wait_for_termination()
+mtf::Result mtf::Process::wait_for_termination()
 {
     Result result;
     int status;
@@ -111,53 +111,53 @@ mp::Result mp::Process::wait_for_termination()
     return result;
 }
 
-void mp::Process::kill()
+void mtf::Process::kill()
 {
     if (!detached) signal_process(pid, SIGKILL);
 }
 
-void mp::Process::terminate()
+void mtf::Process::terminate()
 {
     if (!detached) signal_process(pid, SIGTERM);
 }
 
-void mp::Process::stop()
+void mtf::Process::stop()
 {
     if (!detached) signal_process(pid, SIGSTOP);
 }
 
-void mp::Process::cont()
+void mtf::Process::cont()
 {
     if (!detached) signal_process(pid, SIGCONT);
 }
 
-void mp::Process::detach()
+void mtf::Process::detach()
 {
     detached = true;
 }
 
 namespace
 {
-std::ostream& print_reason(std::ostream & out, mp::TerminationReason reason)
+std::ostream& print_reason(std::ostream & out, mtf::TerminationReason reason)
 {
     switch (reason)
     {
-    case mp::TerminationReason::unknown:
+    case mtf::TerminationReason::unknown:
         out << "unknown";
         break;
-    case mp::TerminationReason::child_terminated_normally:
+    case mtf::TerminationReason::child_terminated_normally:
         out << "child_terminated_normally";
         break;
-    case mp::TerminationReason::child_terminated_by_signal:
+    case mtf::TerminationReason::child_terminated_by_signal:
         out << "child_terminated_by_signal";
         break;
-    case mp::TerminationReason::child_terminated_with_core_dump:
+    case mtf::TerminationReason::child_terminated_with_core_dump:
         out << "child_terminated_with_core_dump";
         break;
-    case mp::TerminationReason::child_stopped_by_signal:
+    case mtf::TerminationReason::child_stopped_by_signal:
         out << "child_stopped_by_signal";
         break;
-    case mp::TerminationReason::child_resumed_by_signal:
+    case mtf::TerminationReason::child_resumed_by_signal:
         out << "child_resumed_by_signal";
         break;
     }
@@ -185,7 +185,7 @@ std::ostream& print_exit_code(std::ostream& out, int exit_code)
 }
 }
 
-std::ostream& mir::process::operator<<(std::ostream& out, const mp::Result& result)
+std::ostream& mtf::operator<<(std::ostream& out, const mtf::Result& result)
 {
     out << "process::Result(";
     print_reason(out, result.reason);

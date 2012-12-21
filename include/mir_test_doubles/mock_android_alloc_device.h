@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_MOCK_ANDROID_ALLOC_DEVICE_H_
-#define MIR_TEST_MOCK_ANDROID_ALLOC_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_ALLOC_DEVICE_H_
+#define MIR_TEST_DOUBLES_MOCK_ANDROID_ALLOC_DEVICE_H_
 
 #include <gmock/gmock.h>
 #include <hardware/gralloc.h>
@@ -118,4 +118,4 @@ public:
 }
 } // namespace mir
 
-#endif /* MIR_TEST_MOCK_ANDROID_ALLOC_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_ANDROID_ALLOC_DEVICE_H_ */

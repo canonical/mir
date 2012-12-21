@@ -47,16 +47,16 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
+        // called during socket comms initialisation:
+        // there's always a server awaiting the next connection
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
         stub_server->comm->start();
         ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        // called during socket comms initialisation:
-        // there's always a server awaiting the next connection
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
-
+        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
@@ -178,7 +178,7 @@ TEST_F(ProtobufCommunicator,
 
     // socket based & binder based rpc fail differently, but either way
     // the test ensures that nothing horrible happens.
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(1));
+    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(3));
     EXPECT_CALL(*client, disconnect_done()).Times(testing::AtMost(1));
 
     // We don't know if this will be called, so it can't auto destruct

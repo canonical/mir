@@ -30,30 +30,12 @@ namespace geometry
 enum class PixelFormat : uint32_t
 {
     invalid,
-    rgba_8888,
-    rgbx_8888,
-    rgb_888
+    abgr_8888,
+    xbgr_8888,
+    argb_8888,
+    xrgb_8888,
+    bgr_888
 };
-
-class PixelOperation
-{
-public:
-    PixelOperation();
-
-    size_t bytes_per_pixel(PixelFormat pf)
-    {
-        switch(pf)
-        {
-        case PixelFormat::rgba_8888:
-            return 4;
-        case PixelFormat::rgb_888:
-            return 3;
-        default:
-            return 0;
-        }
-    }
-};
-
 }
 }
 
