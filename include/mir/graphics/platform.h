@@ -22,7 +22,6 @@
 
 #include <memory>
 
-// Interface to platform specific support for graphics operations.
 
 namespace mir
 {
@@ -31,6 +30,8 @@ namespace compositor
 class GraphicBufferAllocator;
 }
 
+/// Graphics subsystem. Mediates interaction between core system and
+/// the graphics environment.
 namespace graphics
 {
 
@@ -40,6 +41,7 @@ class BufferInitializer;
 
 class DisplayListener;
 
+/// Interface to platform specific support for graphics operations.
 class Platform
 {
 public:
