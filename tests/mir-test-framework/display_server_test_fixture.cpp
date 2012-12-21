@@ -69,7 +69,7 @@ bool BespokeDisplayServerTestFixture::shutdown_server_process()
     // EXIT_SUCCESS but the test process sees TerminationReason::unknown
     auto const& result = process_manager.shutdown_server_process();
     return result.succeeded()
-        || result.reason == process::TerminationReason::unknown;
+        || result.reason == TerminationReason::unknown;
 }
 
 void BespokeDisplayServerTestFixture::kill_client_processes()

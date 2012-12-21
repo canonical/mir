@@ -19,7 +19,7 @@
 #ifndef MIR_DISPLAY_SERVER_TEST_FIXTURE
 #define MIR_DISPLAY_SERVER_TEST_FIXTURE
 
-#include "mir/process/process.h"
+#include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_process_manager.h"
 #include <gtest/gtest.h>
