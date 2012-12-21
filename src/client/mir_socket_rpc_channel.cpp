@@ -180,7 +180,6 @@ void mcl::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& 
     {
         log->error() << __PRETTY_FUNCTION__
             << "\n... " << error.message() << std::endl;
-        return;
     }
 }
 
