@@ -43,7 +43,7 @@ protected:
         alloc_adaptor = std::shared_ptr<mga::AndroidAllocAdaptor> (new mga::AndroidAllocAdaptor(mock_alloc_device));
 
         /* set up common defaults */
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         usage = mga::BufferUsage::use_hardware;
 
@@ -140,7 +140,7 @@ TEST_F(AdaptorICSTest, resource_type_test_deleter_deletes_correct_handle)
     alloc_adaptor->alloc_buffer(size, pf, usage );
 }
 
-TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_rgba8888)
+TEST_F(AdaptorICSTest, adaptor_gralloc_format_conversion_abgr8888)
 {
     using namespace testing;
 
@@ -223,7 +223,7 @@ TEST_F(AdaptorICSTest, handle_buffer_is_correct)
     EXPECT_EQ(buffer_cast->handle, mock_alloc_device->buffer_handle);
 }
 
-TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_rgba_8888)
+TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
 {
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
@@ -235,13 +235,13 @@ TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_rgba_8888)
     EXPECT_EQ(buffer_cast->format, HAL_PIXEL_FORMAT_RGBA_8888);
 }
 
-TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_rgbx_8888)
+TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
 {
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    auto handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::rgbx_8888, usage);
+    auto handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
 
     EXPECT_EQ(buffer_cast->format, HAL_PIXEL_FORMAT_RGBX_8888);

@@ -65,7 +65,7 @@ protected:
         strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
-        pf  = geom::PixelFormat::rgba_8888;
+        pf  = geom::PixelFormat::abgr_8888;
         buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
     }
 
@@ -142,7 +142,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
-    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::abgr_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
     mc::BufferProperties actual;
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
@@ -172,7 +172,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
     auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
 
-    geom::PixelFormat pf(geom::PixelFormat::rgba_8888);
+    geom::PixelFormat pf(geom::PixelFormat::abgr_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
     mc::BufferProperties actual;
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);

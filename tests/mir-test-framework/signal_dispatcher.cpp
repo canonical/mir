@@ -81,7 +81,7 @@ struct mtf::SignalDispatcher::Constructor
     }
 };
 
-namespace global
+namespace
 {
 std::shared_ptr<mtf::SignalDispatcher> instance;
 boost::once_flag init_flag;
@@ -129,9 +129,9 @@ struct mtf::SignalDispatcher::Private
 
 std::shared_ptr<mtf::SignalDispatcher> mtf::SignalDispatcher::instance()
 {
-    boost::call_once(global::init_flag, global::init);
+    boost::call_once(::init_flag, ::init);
 
-    return global::instance;
+    return ::instance;
 }
 
 mtf::SignalDispatcher::SignalDispatcher() : p(new Private())
@@ -153,7 +153,7 @@ void mtf::SignalDispatcher::enable_for(int signal)
     ::memset(&action, 0, sizeof(action));
     ::sigemptyset(&action.sa_mask);
     ::sigaddset(&action.sa_mask, signal);
-    action.sa_handler = global::signal_handler;
+    action.sa_handler = ::signal_handler;
     action.sa_flags = SA_RESTART | SA_NODEFER;
     ::sigaction(signal, &action, NULL);
 }

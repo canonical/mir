@@ -32,7 +32,7 @@ struct BufferSwapperConstruction : testing::Test
         geom::Size size {geom::Width{1024}, geom::Height{768}};
         geom::Height h {768};
         geom::Stride s {1024};
-        geom::PixelFormat pf {geom::PixelFormat::rgba_8888};
+        geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
 
         buffer_a = std::make_shared<mtd::MockBuffer>(size, s, pf);
         buffer_b = std::make_shared<mtd::MockBuffer>(size, s, pf);

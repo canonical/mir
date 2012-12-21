@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_BUFFER_BUNDLE_H_
-#define MIR_TEST_MOCK_BUFFER_BUNDLE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_BUNDLE_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_BUNDLE_H_
 
 #include "mir/compositor/buffer_bundle.h"
 
@@ -41,4 +41,5 @@ struct MockBufferBundle : public compositor::BufferBundle
 }
 }
 }
-#endif /* MIR_TEST_MOCK_BUFFER_BUNDLE_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_BUNDLE_H_ */

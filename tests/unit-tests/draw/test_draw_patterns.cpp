@@ -34,7 +34,7 @@ protected:
         test_region->width  = 50;
         test_region->height = 100;
         test_region->stride = bytes_pp*100;
-        test_region->pixel_format = mir_pixel_format_rgba_8888;
+        test_region->pixel_format = mir_pixel_format_abgr_8888;
         test_region->vaddr = (char*) malloc(sizeof(char) * bytes_pp * test_region->height * test_region->stride);
 
         uint32_t colors[2][2] = {{0x12345678, 0x23456789},
@@ -70,7 +70,7 @@ TEST_F(DrawPatternsTest, solid_color_unaccelerated_error)
 
 TEST_F(DrawPatternsTest, solid_bad_pixel_formats)
 {
-    test_region->pixel_format = mir_pixel_format_rgbx_8888;
+    test_region->pixel_format = mir_pixel_format_xbgr_8888;
 
     mtd::DrawPatternSolid pattern(0x43214321);
 
@@ -102,7 +102,7 @@ TEST_F(DrawPatternsTest, checkered_pattern_error)
 
 TEST_F(DrawPatternsTest, checkered_bad_pixel_formats)
 {
-    test_region->pixel_format = mir_pixel_format_rgbx_8888;
+    test_region->pixel_format = mir_pixel_format_xbgr_8888;
 
     mtd::DrawPatternCheckered<2,2> pattern(pattern_colors);
 

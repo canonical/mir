@@ -50,7 +50,7 @@ namespace
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
-geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
 
@@ -266,7 +266,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -369,7 +369,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
             mir_surface_create(connection, &request_params, create_surface_callback, ssync);
@@ -504,7 +504,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -553,7 +553,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 

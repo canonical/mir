@@ -58,6 +58,7 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
     uint32_t *pixel = (uint32_t*) region->vaddr;
+
     int i,j;
     for(i=0; i< region->width; i++)
     {
@@ -75,8 +76,8 @@ static MirPixelFormat find_8888_format(MirDisplayInfo *info)
     for (int i = 0; i < info->supported_pixel_format_items; ++i)
     {
         MirPixelFormat cur_pf = info->supported_pixel_format[i];
-        if (cur_pf == mir_pixel_format_rgba_8888 ||
-            cur_pf == mir_pixel_format_rgbx_8888 ||
+        if (cur_pf == mir_pixel_format_abgr_8888 ||
+            cur_pf == mir_pixel_format_xbgr_8888 ||
             cur_pf == mir_pixel_format_argb_8888 ||
             cur_pf == mir_pixel_format_xrgb_8888)
         {
@@ -93,8 +94,8 @@ static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
 {
     switch(pf)
     {
-    case mir_pixel_format_rgba_8888:
-    case mir_pixel_format_rgbx_8888:
+    case mir_pixel_format_abgr_8888:
+    case mir_pixel_format_xbgr_8888:
         pattern[0] = 0xFF00FF00;
         pattern[1] = 0xFFFF0000;
         break;

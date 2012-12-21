@@ -47,7 +47,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
-    geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+    geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
     std::string name{"surface"};
 
     auto params = ms::a_surface().of_name(name)
@@ -66,7 +66,7 @@ TEST(SurfaceCreationParametersTest, equality)
     using namespace geom;
     Size const size{Width{1024}, Height{768}};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
-    geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+    geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
     auto params0 = ms::a_surface().of_name("surface0")
                                   .of_size(size)
@@ -92,8 +92,8 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<mc::BufferUsage> const usages{mc::BufferUsage::hardware,
                                               mc::BufferUsage::software};
 
-    std::vector<geom::PixelFormat> const formats{geom::PixelFormat::rgba_8888,
-                                                 geom::PixelFormat::rgb_888};
+    std::vector<geom::PixelFormat> const formats{geom::PixelFormat::abgr_8888,
+                                                 geom::PixelFormat::bgr_888};
 
     std::vector<ms::SurfaceCreationParameters> params_vec;
 
@@ -132,7 +132,7 @@ struct SurfaceCreation : public ::testing::Test
     virtual void SetUp()
     {
         surface_name = "test_surfaceA";
-        pf = geom::PixelFormat::rgba_8888;
+        pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
@@ -207,7 +207,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
-    auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::rgba_8888);
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::abgr_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(mock_buffer, id);

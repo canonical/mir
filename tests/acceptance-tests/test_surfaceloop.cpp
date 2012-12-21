@@ -42,7 +42,7 @@ namespace
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{geom::Width{640}, geom::Height{480}};
-geom::PixelFormat const format{geom::PixelFormat::rgba_8888};
+geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 }
 
 namespace mir
@@ -169,7 +169,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -186,13 +186,13 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
             mir_surface_get_parameters(ssync->surface, &response_params);
             EXPECT_EQ(640, response_params.width);
             EXPECT_EQ(480, response_params.height);
-            EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
             EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_get_parameters(ssync[1].surface, &response_params);
             EXPECT_EQ(1600, response_params.width);
             EXPECT_EQ(1200, response_params.height);
-            EXPECT_EQ(mir_pixel_format_rgba_8888, response_params.pixel_format);
+            EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
             EXPECT_EQ(mir_buffer_usage_hardware, response_params.buffer_usage);
 
             mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
@@ -222,7 +222,7 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 
@@ -266,7 +266,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
             {
                 __PRETTY_FUNCTION__,
                 640, 480,
-                mir_pixel_format_rgba_8888,
+                mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
 

@@ -82,9 +82,9 @@ public:
 };
 
 std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
-    geom::PixelFormat::rgb_888,
-    geom::PixelFormat::rgba_8888,
-    geom::PixelFormat::rgbx_8888
+    geom::PixelFormat::bgr_888,
+    geom::PixelFormat::abgr_8888,
+    geom::PixelFormat::xbgr_8888
 };
 
 class StubPlatform : public mg::Platform

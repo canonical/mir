@@ -16,6 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
+#define MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
+
 #include "src/graphics/android/graphic_alloc_adaptor.h"
 #include "src/graphics/android/android_buffer.h"
 
@@ -65,3 +68,5 @@ public:
 }
 }
 }
+
+#endif /* MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_ */

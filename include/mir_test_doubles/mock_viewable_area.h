@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
-#define MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
+#define MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
 
 #include "mir/graphics/viewable_area.h"
 
@@ -40,4 +40,4 @@ public:
 }
 } // namespace mir
 
-#endif /* MIR_COMPOSITOR_MOCK_VIEWABLE_AREA_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_ */

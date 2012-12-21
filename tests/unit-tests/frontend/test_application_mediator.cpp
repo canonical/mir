@@ -325,9 +325,9 @@ TEST_F(ApplicationMediatorTest, connect_queries_supported_pixel_formats)
     mp::Connection connection;
 
     std::vector<geom::PixelFormat> const pixel_formats{
-        geom::PixelFormat::rgb_888,
-        geom::PixelFormat::rgba_8888,
-        geom::PixelFormat::rgbx_8888
+        geom::PixelFormat::bgr_888,
+        geom::PixelFormat::abgr_8888,
+        geom::PixelFormat::xbgr_8888
     };
 
     EXPECT_CALL(*buffer_allocator, supported_pixel_formats())

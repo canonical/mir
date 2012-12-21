@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TEST_MOCK_BUFFER_H_
-#define MIR_TEST_MOCK_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_H_
 
 #include "mir/compositor/buffer_basic.h"
 #include "mir/geometry/size.h"
@@ -69,4 +69,4 @@ struct MockBuffer : public compositor::BufferBasic
 }
 }
 
-#endif // MIR_TEST_MOCK_BUFFER_H_
+#endif // MIR_TEST_DOUBLES_MOCK_BUFFER_H_
