@@ -24,7 +24,7 @@ set(
 
   test_protobuf_client.cpp
   event_factory.cpp
-  fake_event_hub.cpp
+ # fake_event_hub.cpp
 )
 
 if (MIR_TRANSPORT STREQUAL "socket")
@@ -45,13 +45,14 @@ target_link_libraries(
   mir-test-doubles
 
   mir
+  mirclient
   miroptions
   mircompositor
   mirfrontend
-  mirgraphics
-  mirinput
+#  mirgraphics
+#  mirinput
   mirsurfaces
-  mirplatformgraphics
+#  mirplatformgraphics
   mirprotobuf
 
   3rd_party

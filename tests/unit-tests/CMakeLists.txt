@@ -26,9 +26,9 @@ add_subdirectory(frontend/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
-if (NOT MIR_CUTDOWN_FOR_EMULATOR)
-add_subdirectory(input/)
-endif()
+#if (NOT MIR_CUTDOWN_FOR_EMULATOR)
+#add_subdirectory(input/)
+#endif()
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 
@@ -44,15 +44,18 @@ target_link_libraries(
   mirfrontend
   mirplatformgraphics
   mirgraphics
-  mirinput
-  mirlogging
-  miroptions
-  mirprotobuf
-  mirsurfaces
+ # mirinput
+ mirlogging
+ miroptions
+ mirprotobuf
+ mirsurfaces
 
+/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   mir-test-doubles
 
   3rd_party
+
+  pthread
 
   mirtest_eglmock
 
@@ -61,10 +64,10 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-  ${EVEMU_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+#  ${EVEMU_LIBRARIES}
+#  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
-  ${ANDROID_STDLIB}
+#  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)

@@ -46,7 +46,8 @@ include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
@@ -101,19 +102,71 @@ find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
 if (MIR_PLATFORM STREQUAL "android")
-  include (cmake/AndroidFlags.cmake)
-  get_android_flags()
-  add_definitions( ${ANDROID_DEFINITIONS} )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
+#  include (cmake/AndroidFlags.cmake)
+#  get_android_flags()
+#  add_definitions( ${ANDROID_DEFINITIONS} )
+#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+#  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
 
+  add_definitions(
+
+    -D_GLIBCXX_HAS_GTHREADS;
+    -D_GLIBCXX_USE_C99_STDINT_TR1;
+    -DHAVE_ANDROID_OS=1;
+    -D_GLIBCXX_USE_SCHED_YIELD;
+    -DHAVE_FUTEX; 
+    -DHAVE_FUTEX_WRAPPERS=1; 
+    -DHAVE_FORKEXEC; 
+    -DHAVE_OOM_ADJ; 
+    -DHAVE_ANDROID_IPC; 
+    -DHAVE_POSIX_FILEMAP; 
+    -DHAVE_TERMIO_H; 
+    -DHAVE_SYS_UIO_H; 
+    -DHAVE_SYMLINKS; 
+    -DHAVE_IOCTL; 
+    -DHAVE_POSIX_CLOCKS; 
+    -DHAVE_TIMEDWAIT_MONOTONIC; 
+    -DHAVE_EPOLL; 
+    -DHAVE_ENDIAN_H; 
+    -DHAVE_LITTLE_ENDIAN; 
+    -DHAVE_BACKTRACE=0; 
+    -DHAVE_DLADDR=0; 
+    -DHAVE_CXXABI=0; 
+    -DHAVE_SCHED_SETSCHEDULER; 
+    -D__linux__; 
+    -DHAVE_MALLOC_H; 
+    -DHAVE_LINUX_LOCAL_SOCKET_NAMESPACE=1; 
+    -DHAVE_INOTIFY=1; 
+    -DHAVE_MADVISE=1; 
+    -DHAVE_TM_GMTOFF=1; 
+    -DHAVE_DIRENT_D_TYPE=1; 
+    -DARCH_ARM; 
+    -DOS_SHARED_LIB_FORMAT_STR="lib%s.so"; 
+    -DHAVE__MEMCMP16=1; 
+    -DMINCORE_POINTER_TYPE="unsigned char *"; 
+    -DHAVE_SA_NOCLDWAIT; 
+    -DOS_PATH_SEPARATOR='/';
+    -DOS_CASE_SENSITIVE; 
+    -DHAVE_SYS_SOCKET_H=1; 
+    -DHAVE_PRCTL=1; 
+    -DHAVE_WRITEV=1 ;
+    -DHAVE_STDINT_H=1 ;
+    -DHAVE_STDBOOL_H=1 ;
+    -DHAVE_SCHED_H=1 ;
+    -D__STDC_INT64__;
+    -DANDROID_SMP;
+  
+ -DANDROID )
+
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath-link,/opt/bundle/usr/lib/arm-linux-gnueabihf")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/bundle/junk -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
-  set(gtest_disable_pthreads ON)
+#  set(gtest_disable_pthreads ON)
 
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
