@@ -24,6 +24,7 @@ set(
   buffer_bundle.cpp
   buffer_swapper_multi.cpp
   double_buffer_allocation_strategy.cpp
+  rendering_operator.cpp
 )
 
 ADD_LIBRARY(

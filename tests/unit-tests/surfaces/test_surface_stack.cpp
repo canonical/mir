@@ -26,6 +26,8 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
+#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_surface_renderer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,6 +39,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -72,11 +75,6 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
         std::shared_ptr<mc::BufferBundle>(mc::BufferProperties const&));
 };
 
-struct MockSurfaceRenderer : public mg::Renderer
-{
-    MOCK_METHOD1(render, void(mg::Renderable&));
-};
-
 struct MockFilterForRenderables : public mc::FilterForRenderables
 {
     // Can not mock operator overload so need to forward
@@ -99,7 +97,7 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     {
         // We just use this for expectations
         renderable_operator(r);
-        renderer->render(r);
+        renderer->render([] (std::shared_ptr<void> const&) {}, r);
     }
     mg::Renderer* renderer;
 };
@@ -136,7 +134,7 @@ TEST(
     using namespace ::testing;
 
     MockBufferBundleFactory buffer_bundle_factory;
-    MockSurfaceRenderer renderer;
+    mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
 
@@ -145,7 +143,7 @@ TEST(
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(0);
-    EXPECT_CALL(renderer, render(_)).Times(0);
+    EXPECT_CALL(renderer, render(_,_)).Times(0);
 
     ms::SurfaceStack stack(&buffer_bundle_factory);
 
@@ -176,7 +174,7 @@ TEST(
     auto surface3 = stack.create_surface(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
-    MockSurfaceRenderer renderer;
+    mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
 
@@ -187,10 +185,10 @@ TEST(
     EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(2);
 
     EXPECT_CALL(renderer,
-                render(Ref(*surface1.lock()))).Times(Exactly(1));
+                render(_,Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
-                render(Ref(*surface2.lock()))).Times(Exactly(1));
-
+                render(_,Ref(*surface2.lock()))).Times(Exactly(1));
+    
     stack.for_each_if(filter, renderable_operator);
 }
 
@@ -214,12 +212,12 @@ TEST(
     auto surface3 = stack.create_surface(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
-    MockSurfaceRenderer renderer;
+    mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
 
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_)).Times(3);
+    EXPECT_CALL(renderer, render(_,_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
 
     {
@@ -252,12 +250,12 @@ TEST(
     auto surface3 = stack.create_surface(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
-    MockSurfaceRenderer renderer;
+    mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
 
     ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_)).Times(3);
+    EXPECT_CALL(renderer, render(_,_)).Times(3);
     EXPECT_CALL(filter, filter(_)).Times(3);
 
     stack.raise_to_top(surface2);
