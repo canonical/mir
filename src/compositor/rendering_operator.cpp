@@ -13,23 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_framework/process.h"
+#include "mir/compositor/rendering_operator.h"
 
-#include <gtest/gtest.h>
+namespace mc=mir::compositor;
 
-#if defined(MIR_DEATH_TESTS_ENABLED)
-TEST(ProcessDeathTest,
-     construction_with_an_invalid_pid_triggers_assertion)
+mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
+    : renderer(renderer)
 {
-    EXPECT_EXIT(
-        mir_test_framework::Process p(0),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
 
-
-
+void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
+{
+    renderer.render(
+        [&](std::shared_ptr<void> const& r) { resources.push_back(r); },
+        renderable);
+}

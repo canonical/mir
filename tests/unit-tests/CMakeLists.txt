@@ -46,7 +46,6 @@ target_link_libraries(
   mirgraphics
   mirinput
   mirlogging
-  mirprocess
   miroptions
   mirprotobuf
   mirsurfaces

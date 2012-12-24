@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_RENDERER_H_
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -33,7 +34,7 @@ class Renderer
 public:
     virtual ~Renderer() {}
 
-    virtual void render(Renderable& renderable) = 0;
+    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable) = 0;
 
 protected:
     Renderer() = default;

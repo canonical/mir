@@ -13,23 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
+#define MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 
-#include "mir_test_framework/process.h"
+#include "mir/compositor/graphic_region.h"
+#include <gmock/gmock.h>
 
-#include <gtest/gtest.h>
-
-#if defined(MIR_DEATH_TESTS_ENABLED)
-TEST(ProcessDeathTest,
-     construction_with_an_invalid_pid_triggers_assertion)
+namespace mir
 {
-    EXPECT_EXIT(
-        mir_test_framework::Process p(0),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
+namespace test
+{
+namespace doubles
+{
+
+class MockGraphicRegion : public compositor::GraphicRegion
+{
+public:
+    MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(stride, geometry::Stride());
+    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
+    MOCK_METHOD0(bind_to_texture, void());
+};
+
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
+}
+}
 
-
-
+#endif /* MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_ */

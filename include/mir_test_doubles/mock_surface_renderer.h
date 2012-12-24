@@ -13,23 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 
-#include "mir_test_framework/process.h"
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/renderer.h"
+#include <gmock/gmock.h>
 
-#include <gtest/gtest.h>
-
-#if defined(MIR_DEATH_TESTS_ENABLED)
-TEST(ProcessDeathTest,
-     construction_with_an_invalid_pid_triggers_assertion)
+namespace mir
 {
-    EXPECT_EXIT(
-        mir_test_framework::Process p(0),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
+namespace test
+{
+namespace doubles
+{
+
+struct MockSurfaceRenderer : public graphics::Renderer
+{
+    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, graphics::Renderable&));
+};
+
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
-
-
-
+}
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_ */

@@ -17,8 +17,8 @@
  *              Thomas Guest <thomas.guest@canonical.com>
  */
 
-#ifndef MIR_PROCESS_PROCESS_H_
-#define MIR_PROCESS_PROCESS_H_
+#ifndef MIR_TEST_FRAMEWORK_PROCESS_H_
+#define MIR_TEST_FRAMEWORK_PROCESS_H_
 
 #include <cstdlib>
 #include <functional>
@@ -28,11 +28,7 @@
 
 #include <unistd.h>
 
-namespace mir
-{
-
-/// Process. Interprocess operations - forking, waiting, signalling.
-namespace process
+namespace mir_test_framework
 {
 
 enum class TerminationReason
@@ -118,8 +114,6 @@ std::shared_ptr<Process> fork_and_run_in_a_different_process(
 
     return std::shared_ptr<Process>(new Process(pid));
 }
-
-}
 }
 
-#endif // MIR_PROCESS_PROCESS_H_
+#endif // MIR_TEST_FRAMEWORK_PROCESS_H_

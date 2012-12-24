@@ -18,6 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 
+#include "mir/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
@@ -57,24 +58,12 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
     mir::geometry::Rectangle& enclosing_region;
 };
 
-struct RenderingOperatorForRenderables : public mc::OperatorForRenderables
-{
-    RenderingOperatorForRenderables(mg::Renderer& renderer)
-        : renderer(renderer)
-    {
-    }
-    void operator()(mg::Renderable& renderable)
-    {
-        renderer.render(renderable);
-    }
-    mg::Renderer& renderer;
-};
 }
 
 void mc::Compositor::render(graphics::Display* display)
 {
     FilterForVisibleRenderablesInRegion selector(display->view_area());
-    RenderingOperatorForRenderables applicator(*renderer);
+    RenderingOperator applicator(*renderer);
 
     render_view->for_each_if(selector, applicator);
 

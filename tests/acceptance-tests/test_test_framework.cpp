@@ -26,7 +26,6 @@
 #include <thread>
 #include <list>
 
-namespace mp = mir::process;
 namespace mf = mir::frontend;
 
 // We need some tests to prove that errors are reported by the

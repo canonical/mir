@@ -13,23 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
+#define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "mir_test_framework/process.h"
+#include "mir/graphics/renderer.h"
+#include "mir/compositor/render_view.h"
+#include <vector>
 
-#include <gtest/gtest.h>
-
-#if defined(MIR_DEATH_TESTS_ENABLED)
-TEST(ProcessDeathTest,
-     construction_with_an_invalid_pid_triggers_assertion)
+namespace mir
 {
-    EXPECT_EXIT(
-        mir_test_framework::Process p(0),
-        ::testing::KilledBySignal(SIGABRT),
-        ".*");
+namespace compositor
+{
+
+class Renderable;
+
+class RenderingOperator : public OperatorForRenderables
+{
+public:
+    explicit RenderingOperator(graphics::Renderer& renderer);
+
+    void operator()(graphics::Renderable& renderable);
+
+private:
+    graphics::Renderer& renderer;
+
+    std::vector<std::shared_ptr<void>> resources;
+};
+
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
-
-
-
+}
+#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_H_ */
