@@ -24,7 +24,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/thread/all.h"
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 
 #include "mir_protobuf.pb.h"
 
