@@ -85,7 +85,6 @@ private:
 
     MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
-    mir::protobuf::Surface surface;
     std::shared_ptr<ResourceCache> const resource_cache;
 };
 }
