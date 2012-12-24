@@ -51,6 +51,9 @@ private:
                                  android::Parcel* response,
                                  uint32_t flags);
 
+    std::shared_ptr<protobuf::DisplayServer> get_session_for(int client_pid);
+    void close_session_for(int client_pid);
+
     std::mutex mutex;
     std::shared_ptr<ProtobufIpcFactory> ipc_factory;
     std::map<int, std::shared_ptr<protobuf::DisplayServer>> sessions;
