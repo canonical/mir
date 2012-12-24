@@ -46,7 +46,7 @@ protected:
 struct GraphicBufferCompositorResource
 {
     explicit GraphicBufferCompositorResource(std::weak_ptr<GraphicRegion> const& region)
-       : region(region)
+        : region(region)
     {
     }
 
