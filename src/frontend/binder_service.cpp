@@ -20,7 +20,6 @@
 #include "protobuf_message_processor.h"
 
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/thread/all.h"
 
 #include <binder/Parcel.h>
 #include <binder/IPCThreadState.h>
@@ -35,9 +34,9 @@ class mfd::BinderSession : public MessageSender
 {
 public:
 
-    BinderSession();
-
-    void set_processor(std::shared_ptr<MessageProcessor> const& processor);
+    BinderSession(
+        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
     bool process_message(android::Parcel const& request, android::Parcel* response);
 
@@ -50,15 +49,15 @@ private:
     android::Parcel* response;
 };
 
-mfd::BinderSession::BinderSession() :
-    processor(std::make_shared<NullMessageProcessor>()),
+mfd::BinderSession::BinderSession(
+    std::shared_ptr<protobuf::DisplayServer> const& mediator,
+    std::shared_ptr<ResourceCache> const& resource_cache) :
+    processor(std::make_shared<detail::ProtobufMessageProcessor>(
+            this,
+            mediator,
+            resource_cache)),
     response(0)
 {
-}
-
-void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& processor)
-{
-    this->processor = processor;
 }
 
 bool mfd::BinderSession::process_message(android::Parcel const& request, android::Parcel* response)
@@ -106,8 +105,9 @@ mfd::BinderService::~BinderService()
 
 void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     this->ipc_factory = ipc_factory;
-    sessions.clear();
+    mediators.clear();
 }
 
 android::status_t mfd::BinderService::onTransact(
@@ -118,27 +118,27 @@ android::status_t mfd::BinderService::onTransact(
 {
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
 
-    // TODO this mutex/lock serializes calls from the client. It is a
-    // TODO workaround for the need to supply response into send() and
-    // TODO send_fds(). And for the thread-unsafe use of sessions.
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock(mutex);
-
-    auto& session = sessions[client_pid];
-
-    if (!session)
+    std::shared_ptr<protobuf::DisplayServer> mediator;
     {
-        session = std::make_shared<BinderSession>();
+        std::lock_guard<std::mutex> lock(mutex);
 
-        session->set_processor(
-            std::make_shared<detail::ProtobufMessageProcessor>(
-                session.get(),
-                ipc_factory->make_ipc_server(),
-                ipc_factory->resource_cache()));
+        auto& tmp = mediators[client_pid];
+
+        if (!tmp)
+        {
+            tmp = ipc_factory->make_ipc_server();
+        }
+
+        mediator = tmp;
     }
 
-    if (!session->process_message(request, response))
-        sessions.erase(client_pid);
+    BinderSession session(mediator, ipc_factory->resource_cache());
+
+    if (!session.process_message(request, response))
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        mediators.erase(client_pid);
+    }
 
     return android::OK;
 }

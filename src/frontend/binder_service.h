@@ -20,6 +20,8 @@
 #ifndef MIR_FRONTEND_BINDER_SERVICE_H_
 #define MIR_FRONTEND_BINDER_SERVICE_H_
 
+#include "mir/thread/all.h"
+
 #include <binder/Binder.h>
 
 #include <map>
@@ -27,6 +29,7 @@
 
 namespace mir
 {
+namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ProtobufIpcFactory;
@@ -48,8 +51,9 @@ private:
                                  android::Parcel* response,
                                  uint32_t flags);
 
+    std::mutex mutex;
     std::shared_ptr<ProtobufIpcFactory> ipc_factory;
-    std::map<int, std::shared_ptr<BinderSession>> sessions;
+    std::map<int, std::shared_ptr<protobuf::DisplayServer>> mediators;
 };
 }
 }
