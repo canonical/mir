@@ -76,16 +76,23 @@ int mf::ProtobufSocketCommunicator::next_id()
 void mf::ProtobufSocketCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
-    io_service_thread = std::move(std::thread(run_io_service));
+
+    for (int i = 0; i != threads; ++i)
+    {
+        io_service_thread[i] = std::move(std::thread(run_io_service));
+    }
 }
 
 mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     io_service.stop();
 
-    if (io_service_thread.joinable())
+    for (int i = 0; i != threads; ++i)
     {
-        io_service_thread.join();
+        if (io_service_thread[i].joinable())
+        {
+            io_service_thread[i].join();
+        }
     }
 
     connected_sessions.clear();
