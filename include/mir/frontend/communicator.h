@@ -26,12 +26,12 @@ namespace frontend
 
 class Communicator
 {
- public:
+public:
 
     virtual void start() = 0;
     virtual ~Communicator() {}
 
- protected:
+protected:
     Communicator() = default;
     Communicator(const Communicator&) = delete;
     Communicator& operator=(const Communicator&) = delete;

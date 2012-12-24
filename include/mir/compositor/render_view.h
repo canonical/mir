@@ -69,7 +69,7 @@ public:
 protected:
     RenderView() = default;
 
- private:
+private:
     RenderView(RenderView const&) = delete;
     RenderView& operator=(RenderView const&) = delete;
 };
