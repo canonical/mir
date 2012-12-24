@@ -35,7 +35,7 @@ namespace frontend
 class ProtobufIpcFactory;
 namespace detail
 {
-class BinderSession;
+class BinderCallContext;
 
 class BinderService : public android::BBinder
 {
@@ -53,7 +53,7 @@ private:
 
     std::mutex mutex;
     std::shared_ptr<ProtobufIpcFactory> ipc_factory;
-    std::map<int, std::shared_ptr<protobuf::DisplayServer>> mediators;
+    std::map<int, std::shared_ptr<protobuf::DisplayServer>> sessions;
 };
 }
 }

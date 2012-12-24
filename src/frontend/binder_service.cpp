@@ -30,11 +30,11 @@
 
 namespace mfd = mir::frontend::detail;
 
-class mfd::BinderSession : public MessageSender
+class mfd::BinderCallContext : public MessageSender
 {
 public:
 
-    BinderSession(
+    BinderCallContext(
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -49,7 +49,7 @@ private:
     android::Parcel* response;
 };
 
-mfd::BinderSession::BinderSession(
+mfd::BinderCallContext::BinderCallContext(
     std::shared_ptr<protobuf::DisplayServer> const& mediator,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     processor(std::make_shared<detail::ProtobufMessageProcessor>(
@@ -60,7 +60,7 @@ mfd::BinderSession::BinderSession(
 {
 }
 
-bool mfd::BinderSession::process_message(android::Parcel const& request, android::Parcel* response)
+bool mfd::BinderCallContext::process_message(android::Parcel const& request, android::Parcel* response)
 {
     this->response = response;
 
@@ -78,7 +78,7 @@ bool mfd::BinderSession::process_message(android::Parcel const& request, android
 }
 
 
-void mfd::BinderSession::send(const std::ostringstream& buffer)
+void mfd::BinderCallContext::send(const std::ostringstream& buffer)
 {
     assert(response);
 
@@ -87,7 +87,7 @@ void mfd::BinderSession::send(const std::ostringstream& buffer)
     response->writeString8(android::String8(as_str.data(), as_str.length()));
 }
 
-void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
+void mfd::BinderCallContext::send_fds(std::vector<int32_t> const& fds)
 {
     assert(response);
 
@@ -107,7 +107,7 @@ void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> con
 {
     std::lock_guard<std::mutex> lock(mutex);
     this->ipc_factory = ipc_factory;
-    mediators.clear();
+    sessions.clear();
 }
 
 android::status_t mfd::BinderService::onTransact(
@@ -118,26 +118,26 @@ android::status_t mfd::BinderService::onTransact(
 {
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
 
-    std::shared_ptr<protobuf::DisplayServer> mediator;
+    std::shared_ptr<protobuf::DisplayServer> session;
     {
         std::lock_guard<std::mutex> lock(mutex);
 
-        auto& tmp = mediators[client_pid];
+        auto& tmp = sessions[client_pid];
 
         if (!tmp)
         {
             tmp = ipc_factory->make_ipc_server();
         }
 
-        mediator = tmp;
+        session = tmp;
     }
 
-    BinderSession session(mediator, ipc_factory->resource_cache());
+    BinderCallContext context(session, ipc_factory->resource_cache());
 
-    if (!session.process_message(request, response))
+    if (!context.process_message(request, response))
     {
         std::lock_guard<std::mutex> lock(mutex);
-        mediators.erase(client_pid);
+        sessions.erase(client_pid);
     }
 
     return android::OK;
