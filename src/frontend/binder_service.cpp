@@ -105,14 +105,14 @@ mfd::BinderService::~BinderService()
 
 void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(guard);
     this->ipc_factory = ipc_factory;
     sessions.clear();
 }
 
-std::shared_ptr<mir::protobuf::DisplayServer> mfd::BinderService::get_session_for(int client_pid)
+std::shared_ptr<mir::protobuf::DisplayServer> mfd::BinderService::get_session_for(pid_t client_pid)
 {
-    std::lock_guard < std::mutex > lock(mutex);
+    std::lock_guard<std::mutex> lock(guard);
     auto& session = sessions[client_pid];
     if (!session)
     {
@@ -122,9 +122,9 @@ std::shared_ptr<mir::protobuf::DisplayServer> mfd::BinderService::get_session_fo
     return session;
 }
 
-void mfd::BinderService::close_session_for(int client_pid)
+void mfd::BinderService::close_session_for(pid_t client_pid)
 {
-    std::lock_guard < std::mutex > lock(mutex);
+    std::lock_guard<std::mutex> lock(guard);
     sessions.erase(client_pid);
 }
 
