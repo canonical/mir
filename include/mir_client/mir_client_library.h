@@ -30,35 +30,31 @@ typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 
-/* Returned by asynchronous functions. Must not be free'd by
- * callers. See the individual function documentation for information
- * on the lifetime of wait handles.
- */
+/// Returned by asynchronous functions. Must not be free'd by
+/// callers. See the individual function documentation for information
+/// on the lifetime of wait handles.
 typedef struct MirWaitHandle MirWaitHandle;
 
-/* Callback to be passed when issuing a connect request. The new
- * connection is passed as an argument.
- */
+/// Callback to be passed when issuing a mir_connect request.
+///\param in connection the new connection
+///\param inout client_context context provided by client in calling mir_connect
 typedef void (*mir_connected_callback)(MirConnection *connection, void *client_context);
 
-/* Callback to be passed when a request for:
- *   - creating a surface
- *   - advancing a buffer
- *   - destroying a surface
- * is issued.
- */
+/// Callback to be passed when calling
+///  - mir_surface_create
+///  - mir_surface_next_buffer
+///  - mir_surface_release
+///\param   in  surface the surface being updated
+///\param   inout   client_context context provided by client in calling mir_connect
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
 
-/* Surface API */
-/*
- * The order of components in a format enum matches the
- * order of the components as they would be written in an
- * integer representing a pixel value of that format.
- *
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will
- * end up as R,G,B,A in memory in a little endian system, and
- * as A,B,G,R in memory in a big endian system.
- */
+/// The order of components in a format enum matches the
+/// order of the components as they would be written in an
+/// integer representing a pixel value of that format.
+///
+/// For example, abgr_8888 corresponds to 0xAABBGGRR, which will
+/// end up as R,G,B,A in memory in a little endian system, and
+/// as A,B,G,R in memory in a big endian system.
 typedef enum MirPixelFormat
 {
     mir_pixel_format_invalid,
@@ -69,12 +65,14 @@ typedef enum MirPixelFormat
     mir_pixel_format_bgr_888
 } MirPixelFormat;
 
+///
 typedef enum MirBufferUsage
 {
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
 } MirBufferUsage;
 
+///
 typedef struct MirSurfaceParameters
 {
     char const *name;
@@ -86,6 +84,7 @@ typedef struct MirSurfaceParameters
 
 enum { mir_platform_package_max = 32 };
 
+///
 typedef struct MirPlatformPackage
 {
     int data_items;
@@ -97,6 +96,7 @@ typedef struct MirPlatformPackage
 
 enum { mir_buffer_package_max = 32 };
 
+///
 typedef struct MirBufferPackage
 {
     int data_items;
@@ -108,6 +108,7 @@ typedef struct MirBufferPackage
     int stride;
 } MirBufferPackage;
 
+///
 typedef struct MirGraphicsRegion
 {
     int width;
@@ -120,6 +121,7 @@ typedef struct MirGraphicsRegion
 
 enum { mir_supported_pixel_format_max = 32 };
 
+///
 typedef struct MirDisplayInfo
 {
     int width;
@@ -128,100 +130,134 @@ typedef struct MirDisplayInfo
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
 
-/*
- * Request a connection to the MIR server. The supplied callback is
- * called when the connection is established, or fails. The returned
- * handle remains valid until the connection has been released.
- */
+/// Request a connection to the MIR server. The supplied callback is
+/// called when the connection is established, or fails. The returned
+/// wait handle remains valid until the connection has been released.
+/// \param in   server a name identifying the server
+/// \param in   app_name a name referring to the application
+/// \param in   callback callback function to be invoked when request completes
+/// \param inout context passed to the callback function
+/// \return a handle that can be passed to mir_wait_for
 MirWaitHandle *mir_connect(
-    char const *socket_file,
+    char const *server,
     char const *app_name,
     mir_connected_callback callback,
     void *client_context);
 
-/* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
+/// Test for a valid connection
+///\param in connection the connection
+/// \return a non-zero value if the supplied connection is valid, 0 otherwise
 int mir_connection_is_valid(MirConnection *connection);
 
-/*
- * Returns a text description of any error resulting in an invalid
- * connection, or the empty string "" if the connection is valid. The
- * returned string is owned by the library and remains valid until the
- * connection has been released.
- */
+/// Retrieve a text description of the last error. The returned string is owned
+/// by the library and remains valid until the connection has been released.
+///\param in connection the connection
+/// \return a text description of any error resulting in an invalid
+/// connection, or the empty string "" if the connection is valid.
 char const *mir_connection_get_error_message(MirConnection *connection);
 
-/* Release a connection to the MIR server. */
+/// Release a connection to the MIR server
+///\param in connection the connection
 void mir_connection_release(MirConnection *connection);
 
-/* Query platform specific data and/or fd's that are required to initialize gl/egl bits. */
+/// Query platform specific data and/or fd's that are required to initialize gl/egl bits.
+///\param   in  connection the connection
+///\param   out platform_package structure to be populated
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
-/* Query the width and height of the primary display */
+/// Query the display
+///\param   in  connection the connection
+///\param   out display_info structure to be populated
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
-/*
- * Returns an EGLNativeDisplayType that the client can use for
- * OpenGL ES 2.0 acceleration.
- */
+/// Get a display type that can be used for OpenGL ES 2.0 acceleration.
+///\param   in  connection the connection
+/// \return an EGLNativeDisplayType that the client can use
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
 
-/* Request a new MIR surface on the supplied connection with the
- * supplied parameters. The returned handle remains valid until
- * the surface has been released.
- */
+/// Request a new MIR surface on the supplied connection with the
+/// supplied parameters. The returned handle remains valid until
+/// the surface has been released.
+///\param   in  connection the connection
+///\param   in  surface_parameters request surface parameters
+///\param   in  callback callback function to be invoked when request completes
+///\param inout client_context passed to the callback function
+/// \return a handle that can be passed to mir_wait_for
 MirWaitHandle *mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_lifecycle_callback callback,
     void *client_context);
 
-/* returns an EGLNativeWindowType for a surface that the client can use for
-   OpenGL ES 2.0 acceleration */
+/// Get a window type that can be used for OpenGL ES 2.0 acceleration
+///\param   in  surface the surface
+/// \return an EGLNativeWindowType that the client can use
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
 
-/* Return a non-zero value if the supplied connection is valid, 0 otherwise. */
+/// Test for a valid surface
+///\param in surface the surface
+/// \return a non-zero value if the supplied surface is valid, 0 otherwise
 int mir_surface_is_valid(MirSurface *surface);
 
-/* Returns a text description of any error resulting in an invalid
- * surface, or the empty string "" if the surface is valid. The
- * returned string is owned by the library remains valid until the
- * surface or the associated connection is released.
- */
+/// Retrieve a text description of the error. The returned string is owned
+/// by the library and remains valid until the surface or the associated
+/// connection has been released.
+///\param in surface the surface
+/// \return a text description of any error resulting in an invalid
+/// surface, or the empty string "" if the connection is valid.
 char const *mir_surface_get_error_message(MirSurface *surface);
 
-/* Get a valid surface's parameters. */
+/// Get a surface's parameters.
+///\pre the surface is valid
+///\param in    surface the surface
+///\param out   parameters structure to be populated
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
-/* Get a surface's buffer in "raw" representation. */
+/// Get a surface's buffer in "raw" representation
+///\pre the surface is valid
+///\param in    surface the surface
+///\param out   buffer_package structure to be populated
 void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
 
-/* Get a surface's graphics_region, i.e., map the graphics buffer to main memory. */
+/// Get a surface's graphics_region, i.e., map the graphics buffer to main memory
+///\pre the surface is valid
+///\param in    surface the surface
+///\param out   buffer_package structure to be populated
 void mir_surface_get_graphics_region(
     MirSurface *surface,
     MirGraphicsRegion *graphics_region);
 
-/* Advance a surface's buffer. The returned handle remains valid until
- * the next call to mir_surface_next_buffer, until the surface has
- * been released or the connection to the server has been released.
- */
+/// Advance a surface's buffer. The returned handle remains valid until
+/// the next call to mir_surface_next_buffer, until the surface has
+/// been released or the connection to the server has been released.
+///\param   in  surface the surface
+///\param   in  callback callback function to be invoked when request completes
+///\param inout client_context passed to the callback function
+/// \return a handle that can be passed to mir_wait_for
 MirWaitHandle *mir_surface_next_buffer(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);
 
-/* Release the supplied surface and any associated buffer. The
- * returned wait handle remains valid until the connection to the
- * server is released.
- */
+/// Release the supplied surface and any associated buffer. The
+/// returned wait handle remains valid until the connection to the
+/// server is released.
+///\param   in  surface the surface
+///\param   in  callback callback function to be invoked when request completes
+///\param inout client_context passed to the callback function
+/// \return a handle that can be passed to mir_wait_for
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);
 
-/* Wait on the supplied handle until the associated request has completed. */
+/// Wait on the supplied handle until the associated request has completed.
+///\param in wait_handle handle returned by an asynchronous request
 void mir_wait_for(MirWaitHandle *wait_handle);
 
-/* Return the id of the surface. (Only useful for debug output.) */
+/// Return the id of the surface. (Only useful for debug output.)
+///\param   in  surface the surface
+/// \return an internal id that identifies the surfaceS
 int mir_debug_surface_id(MirSurface *surface);
 
 #ifdef __cplusplus
