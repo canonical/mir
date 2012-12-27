@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
@@ -30,6 +30,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <fcntl.h>
 
 #include <stdexcept>
 #include <memory>

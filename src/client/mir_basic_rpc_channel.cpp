@@ -63,6 +63,13 @@ void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& resu
     }
 }
 
+bool mcld::PendingCallCache::empty() const
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    return pending_calls.empty();
+}
+
+
 
 mcl::MirBasicRpcChannel::MirBasicRpcChannel() :
     next_message_id(0)

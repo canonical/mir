@@ -30,13 +30,13 @@
 
 namespace mfd = mir::frontend::detail;
 
-class mfd::BinderSession : public MessageSender
+class mfd::BinderCallContext : public MessageSender
 {
 public:
 
-    BinderSession();
-
-    void set_processor(std::shared_ptr<MessageProcessor> const& processor);
+    BinderCallContext(
+        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<ResourceCache> const& resource_cache);
 
     bool process_message(android::Parcel const& request, android::Parcel* response);
 
@@ -44,23 +44,23 @@ private:
     void send(const std::ostringstream& buffer2);
     void send_fds(std::vector<int32_t> const& fd);
 
-    std::shared_ptr<MessageProcessor> processor;
+    std::shared_ptr<MessageProcessor> const processor;
 
     android::Parcel* response;
 };
 
-mfd::BinderSession::BinderSession() :
-    processor(std::make_shared<NullMessageProcessor>()),
+mfd::BinderCallContext::BinderCallContext(
+    std::shared_ptr<protobuf::DisplayServer> const& mediator,
+    std::shared_ptr<ResourceCache> const& resource_cache) :
+    processor(std::make_shared<detail::ProtobufMessageProcessor>(
+            this,
+            mediator,
+            resource_cache)),
     response(0)
 {
 }
 
-void mfd::BinderSession::set_processor(std::shared_ptr<MessageProcessor> const& processor)
-{
-    this->processor = processor;
-}
-
-bool mfd::BinderSession::process_message(android::Parcel const& request, android::Parcel* response)
+bool mfd::BinderCallContext::process_message(android::Parcel const& request, android::Parcel* response)
 {
     this->response = response;
 
@@ -78,7 +78,7 @@ bool mfd::BinderSession::process_message(android::Parcel const& request, android
 }
 
 
-void mfd::BinderSession::send(const std::ostringstream& buffer)
+void mfd::BinderCallContext::send(const std::ostringstream& buffer)
 {
     assert(response);
 
@@ -87,7 +87,7 @@ void mfd::BinderSession::send(const std::ostringstream& buffer)
     response->writeString8(android::String8(as_str.data(), as_str.length()));
 }
 
-void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
+void mfd::BinderCallContext::send_fds(std::vector<int32_t> const& fds)
 {
     assert(response);
 
@@ -105,8 +105,27 @@ mfd::BinderService::~BinderService()
 
 void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
+    std::lock_guard<std::mutex> lock(guard);
     this->ipc_factory = ipc_factory;
     sessions.clear();
+}
+
+std::shared_ptr<mir::protobuf::DisplayServer> mfd::BinderService::get_session_for(pid_t client_pid)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    auto& session = sessions[client_pid];
+    if (!session)
+    {
+        session = ipc_factory->make_ipc_server();
+    }
+
+    return session;
+}
+
+void mfd::BinderService::close_session_for(pid_t client_pid)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    sessions.erase(client_pid);
 }
 
 android::status_t mfd::BinderService::onTransact(
@@ -116,21 +135,13 @@ android::status_t mfd::BinderService::onTransact(
     uint32_t /*flags*/)
 {
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
-    auto& session = sessions[client_pid];
 
-    if (!session)
+    BinderCallContext context(get_session_for(client_pid), ipc_factory->resource_cache());
+
+    if (!context.process_message(request, response))
     {
-        session = std::make_shared<BinderSession>();
-
-        session->set_processor(
-            std::make_shared<detail::ProtobufMessageProcessor>(
-                session.get(),
-                ipc_factory->make_ipc_server(),
-                ipc_factory->resource_cache()));
+        close_session_for(client_pid);
     }
-
-    if (!session->process_message(request, response))
-        sessions.erase(client_pid);
 
     return android::OK;
 }

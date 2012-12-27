@@ -57,15 +57,19 @@ private:
         google::protobuf::Closure* complete);
     std::shared_ptr<Logger> log;
     detail::PendingCallCache pending_calls;
-    static const int threads = 1;
-    std::thread io_service_thread[threads];
+    std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
+
+    static size_t const size_of_header = 2;
+    unsigned char header_bytes[size_of_header];
+
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
     void send_message(const std::string& body, detail::SendBuffer& buffer);
     void on_message_sent(const boost::system::error_code& error);
+    void on_header_read(const boost::system::error_code& error);
 
     void read_message();
 
