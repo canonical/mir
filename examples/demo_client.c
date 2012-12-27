@@ -59,6 +59,7 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
     ((MirDemoState*)context)->surface = 0;
 }
 
+// demo_client shows the use of mir API
 void demo_client(const char* socket_file, int buffer_swap_count)
 {
     MirDemoState mcd;
