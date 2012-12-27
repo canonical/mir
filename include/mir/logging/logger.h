@@ -54,7 +54,7 @@ public:
         log(severity, message, component);
     }
 
-  protected:
+protected:
     Logger() {}
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;

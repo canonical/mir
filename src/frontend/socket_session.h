@@ -70,7 +70,8 @@ private:
     ConnectedSessions<SocketSession>* const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
     boost::asio::streambuf message;
-    unsigned char message_header_bytes[2];
+    static size_t const size_of_header = 2;
+    unsigned char message_header_bytes[size_of_header];
     std::vector<char> whole_message;
 };
 

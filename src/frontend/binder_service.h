@@ -35,7 +35,7 @@ namespace frontend
 class ProtobufIpcFactory;
 namespace detail
 {
-class BinderSession;
+class BinderCallContext;
 
 class BinderService : public android::BBinder
 {
@@ -51,11 +51,12 @@ private:
                                  android::Parcel* response,
                                  uint32_t flags);
 
-    std::shared_ptr<ProtobufIpcFactory> ipc_factory;
+    std::shared_ptr<protobuf::DisplayServer> get_session_for(pid_t client_pid);
+    void close_session_for(pid_t client_pid);
 
-    std::mutex mutex;
-    std::map<int, std::shared_ptr<BinderSession>> sessions;
-    std::map<int, std::shared_ptr<protobuf::DisplayServer>> mediators;
+    std::mutex guard;
+    std::shared_ptr<ProtobufIpcFactory> ipc_factory;
+    std::map<pid_t, std::shared_ptr<protobuf::DisplayServer>> sessions;
 };
 }
 }

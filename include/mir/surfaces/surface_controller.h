@@ -37,7 +37,7 @@ class SurfaceStackModel;
 
 class SurfaceController : public frontend::SurfaceOrganiser
 {
- public:
+public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);
     virtual ~SurfaceController() {}
 
@@ -48,11 +48,11 @@ class SurfaceController : public frontend::SurfaceOrganiser
     void hide_surface(std::weak_ptr<Surface> const& surface);
     void show_surface(std::weak_ptr<Surface> const& surface);
 
- protected:
+protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
 
- private:
+private:
     SurfaceStackModel* surface_stack;
 };
 

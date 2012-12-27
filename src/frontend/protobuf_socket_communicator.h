@@ -69,7 +69,8 @@ private:
     const std::string socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
-    std::thread io_service_thread;
+    static int const threads = 10; // TODO make configurable
+    std::thread io_service_thread[threads];
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
     detail::ConnectedSessions<detail::SocketSession> connected_sessions;

@@ -31,9 +31,7 @@ struct Size
 {
     Size() {}
 
-    Size(const Width& w, const Height& h)
-            : width{w},
-              height{h}
+    Size(const Width& w, const Height& h) : width {w}, height {h}
     {
     }
 

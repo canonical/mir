@@ -62,7 +62,9 @@ private:
     boost::asio::io_service::work work;
     boost::asio::local::stream_protocol::endpoint endpoint;
     boost::asio::local::stream_protocol::socket socket;
-    unsigned char header_bytes[2];
+
+    static size_t const size_of_header = 2;
+    unsigned char header_bytes[size_of_header];
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
     void send_message(const std::string& body, detail::SendBuffer& buffer);

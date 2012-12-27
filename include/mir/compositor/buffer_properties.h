@@ -36,19 +36,19 @@ enum class BufferUsage
 
 struct BufferProperties
 {
-    BufferProperties()
-        : size(),
-          format(geometry::PixelFormat::invalid),
-          usage(BufferUsage::undefined)
+    BufferProperties() :
+        size(),
+        format(geometry::PixelFormat::invalid),
+        usage(BufferUsage::undefined)
     {
     }
 
     BufferProperties(const geometry::Size& size,
                      const geometry::PixelFormat& format,
-                     BufferUsage usage)
-        : size{size},
-          format{format},
-          usage{usage}
+                     BufferUsage usage) :
+        size{size},
+        format{format},
+        usage{usage}
     {
     }
 

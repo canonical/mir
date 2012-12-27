@@ -30,11 +30,11 @@
 
 namespace mfd = mir::frontend::detail;
 
-class mfd::BinderSession : public MessageSender
+class mfd::BinderCallContext : public MessageSender
 {
 public:
 
-    BinderSession(
+    BinderCallContext(
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
@@ -44,12 +44,12 @@ private:
     void send(const std::ostringstream& buffer2);
     void send_fds(std::vector<int32_t> const& fd);
 
-    std::shared_ptr<MessageProcessor> processor;
+    std::shared_ptr<MessageProcessor> const processor;
 
     android::Parcel* response;
 };
 
-mfd::BinderSession::BinderSession(
+mfd::BinderCallContext::BinderCallContext(
     std::shared_ptr<protobuf::DisplayServer> const& mediator,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     processor(std::make_shared<detail::ProtobufMessageProcessor>(
@@ -60,10 +60,8 @@ mfd::BinderSession::BinderSession(
 {
 }
 
-#include <iostream>
-bool mfd::BinderSession::process_message(android::Parcel const& request, android::Parcel* response)
+bool mfd::BinderCallContext::process_message(android::Parcel const& request, android::Parcel* response)
 {
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
     this->response = response;
 
     // TODO there's probably a way to refactor this to avoid copy
@@ -76,12 +74,11 @@ bool mfd::BinderSession::process_message(android::Parcel const& request, android
     assert(response == this->response);
     this->response = 0;
 
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << " - exit " << std::endl;
     return result;
 }
 
 
-void mfd::BinderSession::send(const std::ostringstream& buffer)
+void mfd::BinderCallContext::send(const std::ostringstream& buffer)
 {
     assert(response);
 
@@ -90,7 +87,7 @@ void mfd::BinderSession::send(const std::ostringstream& buffer)
     response->writeString8(android::String8(as_str.data(), as_str.length()));
 }
 
-void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
+void mfd::BinderCallContext::send_fds(std::vector<int32_t> const& fds)
 {
     assert(response);
 
@@ -100,7 +97,6 @@ void mfd::BinderSession::send_fds(std::vector<int32_t> const& fds)
 
 mfd::BinderService::BinderService()
 {
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
 }
 
 mfd::BinderService::~BinderService()
@@ -109,10 +105,27 @@ mfd::BinderService::~BinderService()
 
 void mfd::BinderService::set_ipc_factory(std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
 {
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
+    std::lock_guard<std::mutex> lock(guard);
     this->ipc_factory = ipc_factory;
-    std::lock_guard<std::mutex> lock(mutex);
-    mediators.clear();
+    sessions.clear();
+}
+
+std::shared_ptr<mir::protobuf::DisplayServer> mfd::BinderService::get_session_for(pid_t client_pid)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    auto& session = sessions[client_pid];
+    if (!session)
+    {
+        session = ipc_factory->make_ipc_server();
+    }
+
+    return session;
+}
+
+void mfd::BinderService::close_session_for(pid_t client_pid)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    sessions.erase(client_pid);
 }
 
 android::status_t mfd::BinderService::onTransact(
@@ -121,38 +134,14 @@ android::status_t mfd::BinderService::onTransact(
     android::Parcel* response,
     uint32_t /*flags*/)
 {
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
 
-    static std::mutex bigmutex;
-    std::lock_guard<std::mutex> biglock(bigmutex);
+    BinderCallContext context(get_session_for(client_pid), ipc_factory->resource_cache());
 
-    std::shared_ptr<protobuf::DisplayServer> mediator;
+    if (!context.process_message(request, response))
     {
-        std::lock_guard<std::mutex> lock(mutex);
-
-        auto& tmp = mediators[client_pid];
-
-        if (!tmp)
-        {
-            tmp = ipc_factory->make_ipc_server();
-        }
-
-        mediator = tmp;
+        close_session_for(client_pid);
     }
 
-    BinderSession bs(mediator, ipc_factory->resource_cache());
-
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ <<
-        " got to line: " << __LINE__ << std::endl;
-    if (!bs.process_message(request, response))
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        mediators.erase(client_pid);
-    }
-
-    std::cout.flush();
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    std::cout << "DEBUG: " << __PRETTY_FUNCTION__ << " - exit " << std::endl;
     return android::OK;
 }

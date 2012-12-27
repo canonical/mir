@@ -79,7 +79,8 @@ extern "C" {
                 nsecs_t event_time;
 
                 size_t pointer_count;
-                struct PointerCoordinates {
+                struct PointerCoordinates
+                {
                     int id;
                     float x, raw_x;
                     float y, raw_y;
