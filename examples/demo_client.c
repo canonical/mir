@@ -19,28 +19,28 @@
 #include "mir_client/mir_client_library.h"
 
 #include <assert.h>
-#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <getopt.h>
 
-static char const *socket_file = "/tmp/mir_socket";
-static int buffer_swap_count = 0;
-static MirConnection *connection = 0;
-static MirSurface *surface = 0;
+/// \example demo_client.c A simple mir client
 
-static void set_connection(MirConnection *new_connection, void * context)
+// Utility structure for the state of a single surface session.
+typedef struct MirDemoState
 {
-    (void)context;
-    connection = new_connection;
+    MirConnection *connection;
+    MirSurface *surface;
+} MirDemoState;
+
+static void set_connection(MirConnection *new_connection, void *context)
+{
+    ((MirDemoState*)context)->connection = new_connection;
 }
 
 static void surface_create_callback(MirSurface *new_surface, void *context)
 {
-    (void)context;
-    surface = new_surface;
+    ((MirDemoState*)context)->surface = new_surface;
 }
 
 static void surface_next_buffer_callback(MirSurface* surface, void *context)
@@ -52,25 +52,30 @@ static void surface_next_buffer_callback(MirSurface* surface, void *context)
 static void surface_release_callback(MirSurface *old_surface, void *context)
 {
     (void)old_surface;
-    (void)context;
-    surface = 0;
+    ((MirDemoState*)context)->surface = 0;
 }
 
 int main(int argc, char* argv[])
 {
-    int arg;
-    opterr = 0;
-    while ((arg = getopt (argc, argv, "c:hf:")) != -1)
+    // Some variables for holding command line options
+    char const *socket_file = "/tmp/mir_socket";
+    int buffer_swap_count = 0;
+
+    // Parse the command line
     {
-        switch (arg)
+        int arg;
+        opterr = 0;
+        while ((arg = getopt (argc, argv, "c:hf:")) != -1)
         {
+            switch (arg)
+            {
             case 'c':
                 buffer_swap_count = atoi(optarg);
                 break;
             case 'f':
                 socket_file = optarg;
                 break;
-                
+
             case '?':
             case 'h':
             default:
@@ -79,67 +84,94 @@ int main(int argc, char* argv[])
                 puts("    -f <socket filename>");
                 puts("    -h: this help text");
                 return -1;
+            }
         }
     }
 
+    MirDemoState mcd;
+    mcd.connection = 0;
+    mcd.surface = 0;
+
     puts("Starting");
 
-    mir_wait_for(mir_connect(socket_file, __PRETTY_FUNCTION__, set_connection, 0));
+    // Call mir_connect and wait for callback to complete.
+    mir_wait_for(mir_connect(socket_file, __PRETTY_FUNCTION__, set_connection, &mcd));
     puts("Connected");
 
-    assert(connection != NULL);
-    assert(mir_connection_is_valid(connection));
-    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
+    // We expect a connection handle;
+    // we expect it to be valid; and,
+    // we don't expect an error description
+    assert(mcd.connection != NULL);
+    assert(mir_connection_is_valid(mcd.connection));
+    assert(strcmp(mir_connection_get_error_message(mcd.connection), "") == 0);
 
-    MirPlatformPackage platform_package;
-    platform_package.data_items = -1;
-    platform_package.fd_items = -1;
+    // We can query information about the platform we're running on
+    {
+        MirPlatformPackage platform_package;
+        platform_package.data_items = -1;
+        platform_package.fd_items = -1;
 
-    mir_connection_get_platform(connection, &platform_package);
-    assert(0 <= platform_package.data_items);
-    assert(0 <= platform_package.fd_items);
+        mir_connection_get_platform(mcd.connection, &platform_package);
+        assert(0 <= platform_package.data_items);
+        assert(0 <= platform_package.fd_items);
+    }
 
+    // We should identify a supported pixel format before...
     MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection, &display_info);
+    mir_connection_get_display_info(mcd.connection, &display_info);
     assert(display_info.supported_pixel_format_items > 0);
 
-    MirPixelFormat pixel_format = display_info.supported_pixel_format[0];
+    MirPixelFormat const pixel_format = display_info.supported_pixel_format[0];
 
+    // ...we create a surface using that format
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
-    mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
+    mir_wait_for(mir_surface_create(mcd.connection, &request_params, surface_create_callback, &mcd));
     puts("Surface created");
 
-    assert(surface != NULL);
-    assert(mir_surface_is_valid(surface));
-    assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
+    // We expect a surface handle;
+    // we expect it to be valid; and,
+    // we don't expect an error description
+    assert(mcd.surface != NULL);
+    assert(mir_surface_is_valid(mcd.surface));
+    assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
 
-    MirSurfaceParameters response_params;
-    mir_surface_get_parameters(surface, &response_params);
-    assert(request_params.width == response_params.width);
-    assert(request_params.height ==  response_params.height);
-    assert(request_params.pixel_format == response_params.pixel_format);
+    // We can query the surface parameters...
+    {
+        MirSurfaceParameters response_params;
+        mir_surface_get_parameters(mcd.surface, &response_params);
 
-    MirBufferPackage buffer_package;
-    buffer_package.data_items = -1;
-    buffer_package.fd_items = -1;
-    mir_surface_get_current_buffer(surface, &buffer_package);
-    assert(0 <= buffer_package.data_items);
-    assert(0 <= buffer_package.fd_items);
+        // ...and they should match the request
+        assert(request_params.width == response_params.width);
+        assert(request_params.height ==  response_params.height);
+        assert(request_params.pixel_format == response_params.pixel_format);
+    }
 
+    // We can keep exchanging the current buffer for a new one
     for(int i = 0; i < buffer_swap_count; i++)
     {
-        mir_wait_for(mir_surface_next_buffer(surface, surface_next_buffer_callback, 0));
+        // We can query the current graphics buffer attributes
+        {
+            MirBufferPackage buffer_package;
+            buffer_package.data_items = -1;
+            buffer_package.fd_items = -1;
+            mir_surface_get_current_buffer(mcd.surface, &buffer_package);
+            assert(0 <= buffer_package.data_items);
+            assert(0 <= buffer_package.fd_items);
+
+            // In a real application we'd render into the current buffer
+        }
+
+        mir_wait_for(mir_surface_next_buffer(mcd.surface, surface_next_buffer_callback, &mcd));
     }
-    
-    mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
+
+    // We should release our surface
+    mir_wait_for(mir_surface_release(mcd.surface, surface_release_callback, &mcd));
     puts("Surface released");
 
-    mir_connection_release(connection);
+    // We should release our connection
+    mir_connection_release(mcd.connection);
     puts("Connection released");
 
     return 0;
 }
-
-
-

@@ -669,6 +669,7 @@ INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/HACKING.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/doc \
                          @CMAKE_CURRENT_SOURCE_DIR@/src \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples \
                          @CMAKE_CURRENT_SOURCE_DIR@/include
 
 # This tag can be used to specify the character encoding of the source files
@@ -762,7 +763,7 @@ EXCLUDE_SYMBOLS        = android google mfd mgg mp
 # directories that contain example code fragments that are included (see
 # the \include command).
 
-EXAMPLE_PATH           = @CMAKE_CURRENT_SOURCE_DIR@
+EXAMPLE_PATH           = @CMAKE_CURRENT_SOURCE_DIR@/examples
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp
