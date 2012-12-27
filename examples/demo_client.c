@@ -24,15 +24,30 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+///\page demo_client.c demo_client.c: A simple mir client
+/// demo_client shows the use of mir API
 /// \example demo_client.c A simple mir client
 
+///\page demo_client.c
+///\section MirDemoState MirDemoState
+/// This program opens a mir connection and creates a surface. The handles
+/// needs to be accessible both to callbacks and to the control function.
+/// \snippet demo_client.c MirDemoState_tag
+///\internal [MirDemoState_tag]
 // Utility structure for the state of a single surface session.
 typedef struct MirDemoState
 {
     MirConnection *connection;
     MirSurface *surface;
 } MirDemoState;
+///\internal [MirDemoState_tag]
 
+///\page demo_client.c
+///\section Callbacks Callbacks
+/// This program opens a mir connection and creates a surface. The handles
+/// needs to be accessible both to callbacks and to the control function.
+/// \snippet demo_client.c Callback_tag
+///\internal [Callback_tag]
 // Callback to update MirDemoState on connection
 static void connection_callback(MirConnection *new_connection, void *context)
 {
@@ -58,9 +73,14 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
     (void)old_surface;
     ((MirDemoState*)context)->surface = 0;
 }
+///\internal [Callback_tag]
 
-// demo_client shows the use of mir API
-void demo_client(const char* socket_file, int buffer_swap_count)
+
+///\page demo_client.c
+///\section demo_client demo_client()
+/// Opens a mir connection and creates a surface and advances the
+/// current buffer before closing the surface and connection.
+void demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
     mcd.connection = 0;
@@ -68,9 +88,14 @@ void demo_client(const char* socket_file, int buffer_swap_count)
 
     puts("Starting");
 
+    ///\page demo_client.c
+    ///\subsection connect request and wait for connection handle
+    /// \snippet demo_client.c connect_tag
+    ///\internal [connect_tag]
     // Call mir_connect and wait for callback to complete.
-    mir_wait_for(mir_connect(socket_file, __PRETTY_FUNCTION__, connection_callback, &mcd));
+    mir_wait_for(mir_connect(server, __PRETTY_FUNCTION__, connection_callback, &mcd));
     puts("Connected");
+    ///\internal [connect_tag]
 
     // We expect a connection handle;
     // we expect it to be valid; and,
@@ -99,9 +124,14 @@ void demo_client(const char* socket_file, int buffer_swap_count)
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
 
+    ///\page demo_client.c
+    ///\subsection surface_create request and wait for surface handle
+    /// \snippet demo_client.c surface_create_tag
+    ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
     mir_wait_for(mir_surface_create(mcd.connection, &request_params, surface_create_callback, &mcd));
     puts("Surface created");
+    ///\internal [surface_create_tag]
 
     // We expect a surface handle;
     // we expect it to be valid; and,
@@ -136,23 +166,40 @@ void demo_client(const char* socket_file, int buffer_swap_count)
             // In a real application we'd render into the current buffer
         }
 
+        ///\page demo_client.c
+        ///\subsection next_buffer exchange the current buffer for a new one
+        /// \snippet demo_client.c next_buffer_tag
+        ///\internal [next_buffer_tag]
         mir_wait_for(mir_surface_next_buffer(mcd.surface, surface_next_buffer_callback, &mcd));
+        ///\internal [next_buffer_tag]
     }
 
+    ///\page demo_client.c
+    ///\subsection surface_release We release our surface
+    /// \snippet demo_client.c surface_release_tag
+    ///\internal [surface_release_tag]
     // We should release our surface
     mir_wait_for(mir_surface_release(mcd.surface, surface_release_callback, &mcd));
     puts("Surface released");
+    ///\internal [surface_release_tag]
 
+    ///\page demo_client.c
+    ///\subsection connection_release We release our connection
+    /// \snippet demo_client.c connection_release_tag
+    ///\internal [connection_release_tag]
     // We should release our connection
     mir_connection_release(mcd.connection);
     puts("Connection released");
+    ///\internal [connection_release_tag]
 }
+///\page demo_client.c
+/// \example demo_client.c A simple mir client
 
 // The main() function deals with parsing arguments and defaults
 int main(int argc, char* argv[])
 {
     // Some variables for holding command line options
-    char const *socket_file = "/tmp/mir_socket";
+    char const *server = "/tmp/mir_socket";
     int buffer_swap_count = 0;
 
     // Parse the command line
@@ -167,7 +214,7 @@ int main(int argc, char* argv[])
                 buffer_swap_count = atoi(optarg);
                 break;
             case 'f':
-                socket_file = optarg;
+                server = optarg;
                 break;
 
             case '?':
@@ -175,13 +222,13 @@ int main(int argc, char* argv[])
             default:
                 puts(argv[0]);
                 puts("Usage:");
-                puts("    -f <socket filename>");
+                puts("    -f <server name>");
                 puts("    -h: this help text");
                 return -1;
             }
         }
     }
 
-    demo_client(socket_file, buffer_swap_count);
+    demo_client(server, buffer_swap_count);
     return 0;
 }
