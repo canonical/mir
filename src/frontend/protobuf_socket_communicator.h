@@ -27,7 +27,6 @@
 #include <boost/asio.hpp>
 
 #include <string>
-#include <map>
 
 namespace google
 {
