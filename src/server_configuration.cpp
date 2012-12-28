@@ -112,8 +112,8 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
             ("android_sdk_dir", po::value<std::string>(), "dummy")
             ("android_ndk_dir", po::value<std::string>(), "dummy")
             ("client_debug", po::value<std::string>(), "dummy")
-            ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
             ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+            ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
             ("tests_use_real_input", po::value<bool>(), "use real input in tests");
 
         auto options = std::make_shared<mir::options::ProgramOption>();
