@@ -33,9 +33,11 @@ namespace ba = boost::asio;
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
-    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    int threads)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
+    io_service_thread(threads),
     ipc_factory(ipc_factory),
     next_session_id(0)
 {
@@ -77,9 +79,9 @@ void mf::ProtobufSocketCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
 
-    for (int i = 0; i != threads; ++i)
+    for (auto& thread : io_service_thread)
     {
-        io_service_thread[i] = std::move(std::thread(run_io_service));
+        thread = std::move(std::thread(run_io_service));
     }
 }
 
@@ -87,11 +89,11 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     io_service.stop();
 
-    for (int i = 0; i != threads; ++i)
+    for (auto& thread : io_service_thread)
     {
-        if (io_service_thread[i].joinable())
+        if (thread.joinable())
         {
-            io_service_thread[i].join();
+            thread.join();
         }
     }
 
