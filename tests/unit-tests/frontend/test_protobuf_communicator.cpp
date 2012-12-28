@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/mock_ipc_factory.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -48,21 +48,16 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
         stub_server->comm->start();
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        // always called during socket comms
-        // only called when binder comms recognises a new client
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         client.reset();
     }
 
