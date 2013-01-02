@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir_client/client_buffer.h"
 #include "mir/thread/all.h"
 namespace mcl=mir::client;

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android/android_registrar_gralloc.h"
+#include "android_registrar_gralloc.h"
 #include "mir_client/client_buffer.h"
 
 #include <stdexcept>

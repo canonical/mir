@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_surface.h"
-#include "mir_client/android/mir_native_window.h"
+#include "src/client/android/mir_native_window.h"
 #include "mir_client/client_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

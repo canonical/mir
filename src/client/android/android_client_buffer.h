@@ -22,7 +22,7 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/client_buffer.h"
-#include "mir_client/android/android_registrar.h"
+#include "android_registrar.h"
 
 #include <system/window.h>
 #include <memory>
