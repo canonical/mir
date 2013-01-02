@@ -37,7 +37,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     int threads)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
-    io_service_thread(threads),
+    io_service_threads(threads),
     ipc_factory(ipc_factory),
     next_session_id(0)
 {
@@ -79,7 +79,7 @@ void mf::ProtobufSocketCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
 
-    for (auto& thread : io_service_thread)
+    for (auto& thread : io_service_threads)
     {
         thread = std::move(std::thread(run_io_service));
     }
@@ -89,7 +89,7 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     io_service.stop();
 
-    for (auto& thread : io_service_thread)
+    for (auto& thread : io_service_threads)
     {
         if (thread.joinable())
         {
