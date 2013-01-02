@@ -217,7 +217,6 @@ struct MirClientSurfaceTest : public testing::Test
         mock_server_tool = std::make_shared<mt::MockServerPackageGenerator>();
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
 
-        EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
         test_server->comm->start();
 
         mock_depository = std::make_shared<mt::MockClientDepository>();

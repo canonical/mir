@@ -22,7 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/mock_ipc_factory.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -78,9 +78,6 @@ struct ProtobufSurfaceCounter : public ::testing::Test
     {
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
-
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
 
         stub_server->comm->start();
 
@@ -181,9 +178,6 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
 
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(AtLeast(0));
-
         stub_server->comm->start();
 
         for(int i=0; i<number_of_clients; i++)

@@ -17,8 +17,8 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_
 
 #include "mir_test/empty_deleter.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
@@ -35,23 +35,19 @@ namespace test
 namespace doubles
 {
 
-class MockIpcFactory : public mf::ProtobufIpcFactory
+class StubIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    MockIpcFactory(mir::protobuf::DisplayServer& server) :
+    StubIpcFactory(mir::protobuf::DisplayServer& server) :
         server(&server, EmptyDeleter()),
         cache(std::make_shared<mf::ResourceCache>())
     {
-        using namespace testing;
-
-        ON_CALL(*this, make_ipc_server()).WillByDefault(Return(this->server));
-
-        // called during socket comms initialisation:
-        // there's always a server awaiting the next connection
-        EXPECT_CALL(*this, make_ipc_server()).Times(AtMost(1));
     }
 
-    MOCK_METHOD0(make_ipc_server, std::shared_ptr<mir::protobuf::DisplayServer>());
+    std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    {
+        return server;
+    }
 
 private:
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
@@ -67,4 +63,4 @@ private:
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_IPC_FACTORY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_ */

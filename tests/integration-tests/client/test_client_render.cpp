@@ -463,8 +463,6 @@ struct TestClientIPCRender : public testing::Test
         /* start a server */
         mock_server = std::make_shared<mt::StubServerGenerator>(package, 14);
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
-        EXPECT_CALL(*test_server->factory, make_ipc_server()).Times(testing::AtLeast(0));
-
         test_server->comm->start();
     }
 
