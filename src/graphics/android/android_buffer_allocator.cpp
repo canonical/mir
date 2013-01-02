@@ -30,7 +30,8 @@ namespace mga = mir::graphics::android;
 namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
-
+namespace
+{
 struct AllocDevDeleter
 {
     void operator()(alloc_device_t* t)
@@ -39,6 +40,7 @@ struct AllocDevDeleter
         t->common.close((hw_device_t*)t);
     }
 };
+}
 
 mga::AndroidBufferAllocator::AndroidBufferAllocator()
 {
