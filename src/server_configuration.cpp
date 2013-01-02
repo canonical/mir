@@ -110,6 +110,7 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
         po::options_description desc("Environment options");
         desc.add_options()
             ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+            ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
             ("tests_use_real_input", po::value<bool>(), "use real input in tests");
 
         auto options = std::make_shared<mir::options::ProgramOption>();
