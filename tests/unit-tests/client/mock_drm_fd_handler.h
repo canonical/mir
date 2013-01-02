@@ -21,7 +21,7 @@
 
 #include <gmock/gmock.h>
 
-#include "mir_client/gbm/drm_fd_handler.h"
+#include "src/client/gbm/drm_fd_handler.h"
 
 namespace mir
 {

@@ -17,8 +17,8 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/gbm/gbm_client_buffer_depository.h"
-#include "mir_client/gbm/gbm_client_buffer.h"
+#include "src/client/gbm/gbm_client_buffer_depository.h"
+#include "src/client/gbm/gbm_client_buffer.h"
 #include "mock_drm_fd_handler.h"
 
 #include <xf86drm.h>

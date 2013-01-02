@@ -17,8 +17,8 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/gbm/gbm_client_buffer.h"
-#include "mir_client/gbm/drm_fd_handler.h"
+#include "gbm_client_buffer.h"
+#include "drm_fd_handler.h"
 #include "mir/exception.h"
 
 #include <stdexcept>
