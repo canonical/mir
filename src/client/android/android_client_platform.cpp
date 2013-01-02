@@ -20,8 +20,8 @@
 #include "android_client_platform.h"
 #include "android_registrar_gralloc.h"
 #include "android_client_buffer_depository.h"
-#include "mir_client/mir_connection.h"
-#include "mir_client/native_client_platform_factory.h"
+#include "../mir_connection.h"
+#include "../native_client_platform_factory.h"
 
 #include <EGL/egl.h>
 

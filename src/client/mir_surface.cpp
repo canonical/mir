@@ -17,10 +17,10 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/mir_logger.h"
-#include "mir_client/client_buffer.h"
-#include "mir_client/mir_surface.h"
-#include "mir_client/mir_connection.h"
+#include "mir_logger.h"
+#include "client_buffer.h"
+#include "mir_surface.h"
+#include "mir_connection.h"
 
 #include <cassert>
 

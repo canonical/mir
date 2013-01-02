@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
 #define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
 
-#include "mir_client/client_buffer.h"
+#include "../client_buffer.h"
 #include "mir_client/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
 

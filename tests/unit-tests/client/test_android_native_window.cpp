@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_client_surface.h"
+#include "src/client/mir_client_surface.h"
 #include "src/client/android/mir_native_window.h"
-#include "mir_client/client_buffer.h"
+#include "src/client/client_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>

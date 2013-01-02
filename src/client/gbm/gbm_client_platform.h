@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 #define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#include "../client_platform.h"
 
 namespace mir
 {

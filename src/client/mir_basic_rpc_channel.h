@@ -21,7 +21,7 @@
 #define MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_
 
 #include "mir/thread/all.h"
-#include "mir_client/mir_logger.h"
+#include "mir_logger.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>

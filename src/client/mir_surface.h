@@ -23,10 +23,10 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_client/mir_client_library.h"
-#include "mir_client/client_buffer_depository.h"
-#include "mir_client/mir_wait_handle.h"
-#include "mir_client/mir_client_surface.h"
-#include "mir_client/client_platform.h"
+#include "client_buffer_depository.h"
+#include "mir_wait_handle.h"
+#include "mir_client_surface.h"
+#include "client_platform.h"
 
 #include <memory>
 

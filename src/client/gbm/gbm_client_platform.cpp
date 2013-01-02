@@ -20,8 +20,8 @@
 #include "gbm_client_platform.h"
 #include "gbm_client_buffer_depository.h"
 #include "drm_fd_handler.h"
-#include "mir_client/mir_connection.h"
-#include "mir_client/native_client_platform_factory.h"
+#include "../mir_connection.h"
+#include "../native_client_platform_factory.h"
 
 #include <xf86drm.h>
 #include <sys/mman.h>

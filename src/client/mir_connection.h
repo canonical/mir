@@ -28,8 +28,8 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_client_library_drm.h"
-#include "mir_client/client_platform.h"
-#include "mir_client/client_context.h"
+#include "client_platform.h"
+#include "client_context.h"
 
 #include "mir_wait_handle.h"
 

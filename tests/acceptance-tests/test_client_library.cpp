@@ -19,13 +19,13 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/client_buffer.h"
+#include "src/client/client_buffer.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/frontend/communicator.h"
 #include "mir/thread/all.h"
 
-#include "mir_client/mir_logger.h"
+#include "src/client/mir_logger.h"
 
 #include "mir_protobuf.pb.h"
 

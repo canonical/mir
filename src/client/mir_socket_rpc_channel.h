@@ -22,7 +22,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "mir/thread/all.h"
-#include "mir_client/mir_logger.h"
+#include "mir_logger.h"
 
 #include <boost/asio.hpp>
 

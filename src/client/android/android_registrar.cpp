@@ -17,7 +17,7 @@
  */
 
 #include "android_registrar_gralloc.h"
-#include "mir_client/client_buffer.h"
+#include "../client_buffer.h"
 
 #include <stdexcept>
 
