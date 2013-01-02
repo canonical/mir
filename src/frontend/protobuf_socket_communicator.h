@@ -27,7 +27,7 @@
 #include <boost/asio.hpp>
 
 #include <string>
-#include <map>
+#include <vector>
 
 namespace google
 {
@@ -57,7 +57,8 @@ public:
     // using the supplied socket.
     explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
-        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory);
+        std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+        int threads);
     ~ProtobufSocketCommunicator();
     void start();
 
@@ -69,8 +70,7 @@ private:
     const std::string socket_file;
     boost::asio::io_service io_service;
     boost::asio::local::stream_protocol::acceptor acceptor;
-    static int const threads = 10; // TODO make configurable
-    std::thread io_service_thread[threads];
+    std::vector<std::thread> io_service_threads;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
     detail::ConnectedSessions<detail::SocketSession> connected_sessions;

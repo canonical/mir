@@ -105,3 +105,13 @@ std::string mo::ProgramOption::get(char const* name, char const* default_) const
 
     return default_;
 }
+
+int mo::ProgramOption::get(char const* name, int default_) const
+{
+    if (options.count(name))
+    {
+        return options[name].as<int>();
+    }
+
+    return default_;
+}
