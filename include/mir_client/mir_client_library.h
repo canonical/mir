@@ -65,14 +65,14 @@ typedef enum MirPixelFormat
     mir_pixel_format_bgr_888
 } MirPixelFormat;
 
-///
+/// TODO
 typedef enum MirBufferUsage
 {
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
 } MirBufferUsage;
 
-///
+/// TODO
 typedef struct MirSurfaceParameters
 {
     char const *name;
@@ -84,7 +84,7 @@ typedef struct MirSurfaceParameters
 
 enum { mir_platform_package_max = 32 };
 
-///
+/// TODO
 typedef struct MirPlatformPackage
 {
     int data_items;
@@ -96,7 +96,7 @@ typedef struct MirPlatformPackage
 
 enum { mir_buffer_package_max = 32 };
 
-///
+/// TODO
 typedef struct MirBufferPackage
 {
     int data_items;
@@ -108,7 +108,7 @@ typedef struct MirBufferPackage
     int stride;
 } MirBufferPackage;
 
-///
+/// TODO
 typedef struct MirGraphicsRegion
 {
     int width;
@@ -121,7 +121,7 @@ typedef struct MirGraphicsRegion
 
 enum { mir_supported_pixel_format_max = 32 };
 
-///
+/// TODO
 typedef struct MirDisplayInfo
 {
     int width;
