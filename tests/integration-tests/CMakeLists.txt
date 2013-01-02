@@ -29,7 +29,7 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(process/)
 if (NOT MIR_CUTDOWN_FOR_EMULATOR)
-add_subdirectory(input/)
+#add_subdirectory(input/)
 endif()
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -66,11 +66,13 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirgraphics
-  mirinput
+#  mirinput
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
 
+/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
+/opt/bundle/usr/lib/arm-linux-gnueabihf/libEGL.so
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

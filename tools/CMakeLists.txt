@@ -23,22 +23,23 @@ target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
+/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
     mirlogging
     mirdraw
     mircompositor
     ${Boost_LIBRARIES}
 )
 
-set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
-add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(
-    render_surfaces
-
-    mircompositor
-    mirsurfaces
-    mirgraphics
-    mirplatformgraphics
-    ${Boost_LIBRARIES}
-)
+#set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
+#add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
+#target_link_libraries(
+ #   render_surfaces
+#
+ #   mircompositor
+  #  mirsurfaces
+   # mirgraphics
+    #mirplatformgraphics
+    #${Boost_LIBRARIES}
+#
 
 add_subdirectory(vera++)
