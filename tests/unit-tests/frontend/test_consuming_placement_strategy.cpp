@@ -56,7 +56,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_receieve_geo
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
 
     mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
-    ms::SurfaceCreationParameters const input_params, placed_params;
+    ms::SurfaceCreationParameters input_params, placed_params;
     
     placement_strategy.place(input_params, placed_params);
     EXPECT_EQ(default_view_area.size.width.as_uint32_t(), placed_params.size.width.as_uint32_t());
@@ -72,7 +72,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_forwarded)
     EXPECT_CALL(*viewable_area, view_area()).Times(0);
 
     mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
-    ms::SurfaceCreationParameters const input_params, placed_params;
+    ms::SurfaceCreationParameters input_params, placed_params;
     
     input_params.size = requested_size;
     
