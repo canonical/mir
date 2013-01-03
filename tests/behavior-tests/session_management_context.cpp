@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,11 +36,12 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
 struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
 {
     StubSurfaceOrganiser()
     {
-        // TODO: Width and height
+        // TODO: Width and height will require a non null buffer bundle...
         dummy_surface = std::make_shared<ms::Surface>(ms::a_surface().name,
                                                       std::make_shared<mtd::NullBufferBundle>());
     }
@@ -52,24 +53,21 @@ struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
 
     void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
     {
-        // noo
     }
     
     void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
     {
-        // noop
     }
 
     void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
     {
-        // noop
     }
     
     std::shared_ptr<ms::Surface> dummy_surface;
 };
+
 }
 
-// TODO: This should be a stub surface organiser?
 mtc::SessionManagementContext::SessionManagementContext()
 {
     auto model = std::make_shared<mf::SessionContainer>();
@@ -78,10 +76,6 @@ mtc::SessionManagementContext::SessionManagementContext()
             model,
             std::make_shared<mf::RegistrationOrderFocusSequence>(model),
             std::make_shared<mf::SingleVisibilityFocusMechanism>(model));
-}
-
-mtc::SessionManagementContext::~SessionManagementContext()
-{
 }
 
 bool mtc::SessionManagementContext::open_session(const std::string& session_name)

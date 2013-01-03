@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSION_MANAGEMENT_CONTEXT_H_
-#define MIR_SESSION_MANAGER_CONTEXT_H_
+#ifndef MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
+#define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
 #include <string>
 #include <map>
@@ -41,7 +41,7 @@ class SessionManagementContext
 {
 public:
     SessionManagementContext();
-    virtual ~SessionManagementContext();
+    virtual ~SessionManagementContext() {}
     
     bool open_session(const std::string& session_name);
 
@@ -55,6 +55,6 @@ private:
 
 }
 }
-}
+} // namespace mir
 
-#endif // MIR_SESSION_MANAGEMENT_CONTEXT_H_
+#endif // MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_

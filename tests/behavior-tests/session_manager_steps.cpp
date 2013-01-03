@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,7 +40,7 @@ GIVEN("^The display-size is (.+)x(.+)$")
     // TODO: Implement
 }
 
-// TODO: Maybe session names should be quoted because of spaces
+// TODO: Maybe session names should be quoted to allow for spaces
 WHEN("^(.+) is opened in consuming mode$") 
 {
     REGEX_PARAM(std::string, session_name);
