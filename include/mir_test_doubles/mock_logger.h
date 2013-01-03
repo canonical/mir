@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_LOGGER_H_
 #define MIR_TEST_DOUBLES_MOCK_LOGGER_H_
 
-#include "mir_client/mir_logger.h"
+#include "src/client/mir_logger.h"
 
 #include <gmock/gmock.h>
 

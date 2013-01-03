@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
 #define MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
 
-#include "mir_client/client_platform_factory.h"
+#include "client_platform_factory.h"
 
 namespace mir
 {

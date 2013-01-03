@@ -17,8 +17,8 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/android/android_client_buffer_depository.h"
-#include "mir_client/android/android_client_buffer.h"
+#include "src/client/android/android_client_buffer_depository.h"
+#include "src/client/android/android_client_buffer.h"
 #include "mir_test_doubles/mock_android_registrar.h"
 
 #include <gtest/gtest.h>

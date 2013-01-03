@@ -70,6 +70,7 @@ private:
     std::atomic<int> next_surface_id;
 
     typedef std::map<SurfaceId, std::weak_ptr<surfaces::Surface>> Surfaces;
+    std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 };
 

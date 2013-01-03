@@ -15,39 +15,30 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
-#define MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
+#define MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_
 
-#include "mir_client/client_platform.h"
+#include "../client_platform.h"
 
 namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
 
-namespace gbm
+class ClientBufferDepository;
+namespace android
 {
 
-class DRMFDHandler;
-
-class GBMClientPlatform : public ClientPlatform
+class AndroidClientPlatform : public ClientPlatform
 {
 public:
-    GBMClientPlatform(ClientContext* const context,
-                      std::shared_ptr<DRMFDHandler> const& drm_fd_handler);
-
     std::shared_ptr<ClientBufferDepository> create_platform_depository ();
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface);
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
-
-private:
-    ClientContext* const context;
-    std::shared_ptr<DRMFDHandler> const drm_fd_handler;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_GBM_GBM_CLIENT_PLATFORM_H_ */
+#endif /* MIR_CLIENT_ANDROID_ANDROID_CLIENT_PLATFORM_H_ */

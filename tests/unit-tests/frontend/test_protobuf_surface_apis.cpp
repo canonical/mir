@@ -56,7 +56,10 @@ struct StubServerSurfaceCounter : public StubServerTool
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        ++surface_count;
+        {
+            std::unique_lock<std::mutex> lock(guard);
+            ++surface_count;
+        }
         StubServerTool::create_surface(controller, request, response, done);
     }
 
@@ -189,7 +192,9 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
 
     void TearDown()
     {
+        clients.clear();
         stub_server.reset();
+        stub_server_tool.reset();
     }
 
     std::vector<std::shared_ptr<mt::TestProtobufClient>> clients;

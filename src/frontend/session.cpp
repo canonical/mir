@@ -41,6 +41,7 @@ mf::Session::Session(
 
 mf::Session::~Session()
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
         auto surface = it->second;
@@ -60,17 +61,20 @@ mf::SurfaceId mf::Session::create_surface(const ms::SurfaceCreationParameters& p
     auto surf = surface_organiser->create_surface(params);
     auto const id = next_id();
 
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
     return id;
 }
 
 std::shared_ptr<ms::Surface> mf::Session::get_surface(mf::SurfaceId id) const
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     return surfaces.find(id)->second.lock();
 }
 
 void mf::Session::destroy_surface(mf::SurfaceId id)
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = surfaces.find(id);
 
     if (p != surfaces.end())
@@ -87,6 +91,7 @@ std::string mf::Session::name()
 
 void mf::Session::shutdown()
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
     {
         if (auto surface = id_s.second.lock())
@@ -96,6 +101,7 @@ void mf::Session::shutdown()
 
 void mf::Session::hide()
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
         auto& surface = it->second;
@@ -105,6 +111,7 @@ void mf::Session::hide()
 
 void mf::Session::show()
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto it = surfaces.begin(); it != surfaces.end(); it++)
     {
         auto& surface = it->second;
