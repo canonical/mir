@@ -65,6 +65,7 @@ list(APPEND CLIENT_SOURCES
 endif()
 
 if( MIR_PLATFORM STREQUAL "android")
+include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 

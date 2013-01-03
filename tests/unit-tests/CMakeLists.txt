@@ -64,7 +64,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
   ${ANDROID_STDLIB}
-pthread
 )
 
 mir_discover_tests(unit-tests)
