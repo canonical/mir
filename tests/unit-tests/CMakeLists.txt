@@ -53,7 +53,6 @@ target_link_libraries(
   mir-test-doubles
 
   3rd_party
-
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}
@@ -65,6 +64,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
   ${ANDROID_STDLIB}
+pthread
 )
 
 mir_discover_tests(unit-tests)

@@ -125,12 +125,13 @@ add_subdirectory(3rd_party/)
     #we work around this by using boost in the code 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_THREADS")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_CHRONO")
+    set(gtest_disable_pthreads ON)
   else()
     message(STATUS "android build is using vanilla STDC++")
 
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,/opt/bundle/usr/lib/arm-linux-gnueabihf")
 
-add_subdirectory(3rd_party/)
+    add_subdirectory(3rd_party/)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/bundle/android-deps -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
 
     add_definitions( -DANDROID )
@@ -144,7 +145,7 @@ add_subdirectory(3rd_party/)
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
-  set(gtest_disable_pthreads ON)
+#  set(gtest_disable_pthreads ON)
 
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
