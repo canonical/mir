@@ -101,6 +101,17 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
+set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
+set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
+set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
+set(MIR_3RD_PARTY_SOURCES)
+add_subdirectory(3rd_party/)
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
+
 if (MIR_PLATFORM STREQUAL "android")
 #  include (cmake/AndroidFlags.cmake)
 #  get_android_flags()
@@ -177,16 +188,6 @@ else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
-set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
-set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
-set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
-set(MIR_3RD_PARTY_SOURCES)
-add_subdirectory(3rd_party/)
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)

@@ -35,7 +35,7 @@ SET(MIR_3RD_PARTY_SOURCES ${MIR_3RD_PARTY_SOURCES} PARENT_SCOPE)
 set(MIR_INPUT_ANDROID_COMPILE_FLAGS ${MIR_INPUT_ANDROID_COMPILE_FLAGS}
   PARENT_SCOPE)
 
-#add_subdirectory(android-input)
+add_subdirectory(android-input)
   
 set(MIR_ANDROID_INCLUDE_DIRECTORIES ${MIR_ANDROID_INCLUDE_DIRECTORIES} PARENT_SCOPE)
 set(
@@ -43,7 +43,7 @@ set(
   ${MIR_ANDROID_INPUT_COMPILE_FLAGS}
   PARENT_SCOPE)
   
-#target_link_libraries(
-#  3rd_party
+target_link_libraries(
+  3rd_party
   
-#  android-input)
+  android-input)

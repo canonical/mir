@@ -22,7 +22,7 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 add_subdirectory(compositor/)
 add_subdirectory(draw/)
 add_subdirectory(graphics/)
-#add_subdirectory(input/)
+add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(surfaces/)
 add_subdirectory(options/)
@@ -61,13 +61,14 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirgraphics
-  #mirinput
+  mirinput
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
 
   3rd_party
-
+pthread
+/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

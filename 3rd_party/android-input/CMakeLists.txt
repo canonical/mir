@@ -13,7 +13,8 @@ endif()
 
 if(MIR_PLATFORM STREQUAL "android")
   set(ANDROID_INPUT_COMPILE_FLAGS
-  "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
+    "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-x86/AndroidConfig.h")
+#  "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
 endif()
 
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS
@@ -21,7 +22,7 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
     PARENT_SCOPE)
 
 add_subdirectory(android)
-add_subdirectory(tools)
+#add_subdirectory(tools)
 
 # Make those include directories available to mir source code
 list(

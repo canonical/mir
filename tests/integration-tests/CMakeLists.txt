@@ -29,7 +29,7 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(process/)
 if (NOT MIR_CUTDOWN_FOR_EMULATOR)
-#add_subdirectory(input/)
+add_subdirectory(input/)
 endif()
 
 if (MIR_PLATFORM STREQUAL "android")
@@ -66,7 +66,7 @@ target_link_libraries(
   mircompositor
   mirfrontend
   mirgraphics
-#  mirinput
+  mirinput
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
