@@ -31,6 +31,7 @@
 #include <mutex>
 #else
 #define _GLIBCXX_USE_NANOSLEEP
+#include <atomic>
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/condition_variable.hpp>

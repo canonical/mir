@@ -54,8 +54,6 @@ target_link_libraries(
 
   3rd_party
 
-  pthread
-
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}

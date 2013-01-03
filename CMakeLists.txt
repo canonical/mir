@@ -101,37 +101,50 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
+
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_SOURCES)
-add_subdirectory(3rd_party/)
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
 
 if (MIR_PLATFORM STREQUAL "android")
-#  include (cmake/AndroidFlags.cmake)
-#  get_android_flags()
-#  add_definitions( ${ANDROID_DEFINITIONS} )
-#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
-#  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
-#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
+  if (MIR_USES_BIONIC)
+    message(STATUS "android build is using BIONIC")
 
-  add_definitions(
+    include (cmake/AndroidFlags.cmake)
+    get_android_flags()
+    add_definitions( ${ANDROID_DEFINITIONS} )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
 
- -DANDROID )
+add_subdirectory(3rd_party/)
+    #bionic does not support the c++11 functionality we require for the <thread> and <chrono> library
+    #we work around this by using boost in the code 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_THREADS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_CHRONO")
+  else()
+    message(STATUS "android build is using vanilla STDC++")
 
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath-link,/opt/bundle/usr/lib/arm-linux-gnueabihf")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/bundle/junk -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,/opt/bundle/usr/lib/arm-linux-gnueabihf")
+
+add_subdirectory(3rd_party/)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/bundle/android-deps -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
+
+    add_definitions( -DANDROID )
+  endif()
+ 
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
 
+  #TODO: this should probably go in only the directories that need it
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
-#  set(gtest_disable_pthreads ON)
+  set(gtest_disable_pthreads ON)
 
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
@@ -143,6 +156,8 @@ else ()
 endif()
 
 
+include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
+include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})

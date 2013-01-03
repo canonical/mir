@@ -5,7 +5,6 @@ include_directories(
   hardware/libhardware_legacy/include
   system/core/include
   system/extras/ext4_utils
-  /opt/bundle/junk
 )
 
 add_definitions(

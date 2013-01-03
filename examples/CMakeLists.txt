@@ -31,7 +31,6 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  pthread
 )
 
 add_executable(
@@ -49,7 +48,6 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  pthread
 )
 
 add_executable(
@@ -70,7 +68,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
-  pthread
 )
 
 install(

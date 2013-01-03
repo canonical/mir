@@ -11,13 +11,13 @@ find_path(LIBHARDWARE_INCLUDE_DIR
                  cutils/native_handle.h
                  system/graphics.h
                  system/window.h
-   HINTS         /opt/bundle/junk
+   HINTS         ${CMAKE_FIND_ROOT_PATH}/android-deps
+   HINTS         ${CMAKE_FIND_ROOT_PATH}/usr/lib
    )
 
 find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so.1 
-   HINTS         /opt/bundle/usr/lib
-                /opt/bundle/usr/lib/arm-linux-gnueabihf
+                 libhardware.so 
    )
 
 set(LIBHARDWARE_LIBRARIES ${LIBHARDWARE_LIBRARY})
