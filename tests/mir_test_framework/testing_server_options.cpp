@@ -106,11 +106,9 @@ class StubInputManager : public mi::InputManager
 std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters, std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
     auto options = make_options();
-#if 0
     if (options->get("tests_use_real_input", false))
         return mi::create_input_manager(event_filters, viewable_area);
     else
-#endif
         return std::make_shared<StubInputManager>();
 }
 

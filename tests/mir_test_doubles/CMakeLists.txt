@@ -49,10 +49,10 @@ target_link_libraries(
   miroptions
   mircompositor
   mirfrontend
-#  mirgraphics
-#  mirinput
+  mirgraphics
+  mirinput
   mirsurfaces
-#  mirplatformgraphics
+  mirplatformgraphics
   mirprotobuf
 
   3rd_party

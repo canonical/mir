@@ -45,10 +45,10 @@ target_link_libraries(
   mirplatformgraphics
   mirgraphics
   mirinput
- mirlogging
- miroptions
- mirprotobuf
- mirsurfaces
+  mirlogging
+  miroptions
+  mirprotobuf
+  mirsurfaces
 
   mir-test-doubles
 
@@ -63,10 +63,10 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-#  ${EVEMU_LIBRARIES}
-#  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${EVEMU_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
-#  ${ANDROID_STDLIB}
+  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)

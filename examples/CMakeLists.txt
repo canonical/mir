@@ -28,10 +28,10 @@ target_link_libraries(
   mirclient
   mirprotobuf
 
-pthread
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  pthread
 )
 
 add_executable(
@@ -46,10 +46,10 @@ target_link_libraries(
   mirclient
   mirprotobuf
 
-pthread
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  pthread
 )
 
 add_executable(
@@ -65,13 +65,12 @@ target_link_libraries(
   mirclient
   mirprotobuf
 
-pthread
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
-
+  pthread
 )
 
 install(
