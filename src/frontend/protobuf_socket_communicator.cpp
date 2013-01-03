@@ -39,7 +39,8 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     acceptor(io_service, socket_file),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
-    next_session_id(0)
+    next_session_id(0),
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
 {
     start_accept();
 }
@@ -49,7 +50,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
-        &connected_sessions);
+        connected_sessions);
 
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
@@ -97,7 +98,7 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
         }
     }
 
-    connected_sessions.clear();
+    connected_sessions->clear();
 
     std::remove(socket_file.c_str());
 }
@@ -108,7 +109,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        connected_sessions.add(session);
+        connected_sessions->add(session);
 
         session->read_next_message();
     }

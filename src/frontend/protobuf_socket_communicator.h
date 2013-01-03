@@ -73,7 +73,7 @@ private:
     std::vector<std::thread> io_service_threads;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
-    detail::ConnectedSessions<detail::SocketSession> connected_sessions;
+    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
 };
 
 }
