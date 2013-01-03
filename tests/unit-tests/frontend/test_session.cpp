@@ -22,7 +22,7 @@
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
 #include "mir_test_doubles/mock_surface_organiser.h"
-#include "null_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,14 +30,13 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
-namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 TEST(Session, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mt::NullBufferBundle());
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,
@@ -60,7 +59,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mt::NullBufferBundle());
+    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
             ms::a_surface().name,

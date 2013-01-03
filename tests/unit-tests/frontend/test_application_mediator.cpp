@@ -29,7 +29,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
-#include "null_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_bundle.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -42,7 +42,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -79,7 +79,7 @@ class StubSurfaceOrganiser : public mf::SurfaceOrganiser
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
-                                                     std::make_shared<mt::NullBufferBundle>());
+                                                     std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
         return std::weak_ptr<ms::Surface>(surface);
