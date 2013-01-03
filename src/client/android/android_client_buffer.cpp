@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/android/android_client_buffer.h"
+#include "android_client_buffer.h"
 
 #include <hardware/gralloc.h>
 namespace mcl=mir::client;

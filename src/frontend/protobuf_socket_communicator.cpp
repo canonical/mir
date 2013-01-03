@@ -33,11 +33,14 @@ namespace ba = boost::asio;
 
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
-    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory)
+    std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    int threads)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
+    io_service_threads(threads),
     ipc_factory(ipc_factory),
-    next_session_id(0)
+    next_session_id(0),
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
 {
     start_accept();
 }
@@ -47,7 +50,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
-        &connected_sessions);
+        connected_sessions);
 
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
@@ -77,9 +80,9 @@ void mf::ProtobufSocketCommunicator::start()
 {
     auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
 
-    for (int i = 0; i != threads; ++i)
+    for (auto& thread : io_service_threads)
     {
-        io_service_thread[i] = std::move(std::thread(run_io_service));
+        thread = std::move(std::thread(run_io_service));
     }
 }
 
@@ -87,15 +90,15 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 {
     io_service.stop();
 
-    for (int i = 0; i != threads; ++i)
+    for (auto& thread : io_service_threads)
     {
-        if (io_service_thread[i].joinable())
+        if (thread.joinable())
         {
-            io_service_thread[i].join();
+            thread.join();
         }
     }
 
-    connected_sessions.clear();
+    connected_sessions->clear();
 
     std::remove(socket_file.c_str());
 }
@@ -106,7 +109,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        connected_sessions.add(session);
+        connected_sessions->add(session);
 
         session->read_next_message();
     }

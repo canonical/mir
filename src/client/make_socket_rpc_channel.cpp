@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/make_rpc_channel.h"
+#include "make_rpc_channel.h"
 #include "mir_socket_rpc_channel.h"
 
 namespace mcl = mir::client;

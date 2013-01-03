@@ -37,7 +37,7 @@ struct SocketSession : public MessageSender
     SocketSession(
         boost::asio::io_service& io_service,
         int id_,
-        ConnectedSessions<SocketSession>* connected_sessions) :
+        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions) :
         socket(io_service),
         id_(id_),
         connected_sessions(connected_sessions),
@@ -67,7 +67,7 @@ private:
 
     boost::asio::local::stream_protocol::socket socket;
     int const id_;
-    ConnectedSessions<SocketSession>* const connected_sessions;
+    std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
     boost::asio::streambuf message;
     static size_t const size_of_header = 2;

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/mir_logger.h"
+#include "mir_logger.h"
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/null.hpp>

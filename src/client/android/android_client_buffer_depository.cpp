@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android/android_client_buffer_depository.h"
-#include "mir_client/android/android_client_buffer.h"
+#include "android_client_buffer_depository.h"
+#include "android_client_buffer.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;

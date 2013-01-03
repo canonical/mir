@@ -13,26 +13,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
-#define MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_
+#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
 
-#include "mir_client/client_platform_factory.h"
+#include "../mir_client_surface.h"
+#include <system/window.h>
 
 namespace mir
 {
 namespace client
 {
+namespace android
+{
 
-class NativeClientPlatformFactory : public ClientPlatformFactory
+class MirNativeWindow : public ANativeWindow
 {
 public:
-    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
+    explicit MirNativeWindow(ClientSurface* surface);
+
+    int query(int key, int* value) const;
+    int perform(int key, va_list args );
+    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
+    int queueBuffer(struct ANativeWindowBuffer* buffer);
+private:
+
+    ClientSurface * surface;
+    int driver_pixel_format;
 };
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_NATIVE_CLIENT_PLATFORM_FACTORY_ */
+#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */

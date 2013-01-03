@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/client_platform.h"
-#include "mir_client/native_client_platform_factory.h"
-#include "mir_client/mir_client_surface.h"
+#include "src/client/client_platform.h"
+#include "src/client/native_client_platform_factory.h"
+#include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 

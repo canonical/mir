@@ -21,7 +21,7 @@
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_
 
 #include <gmock/gmock.h>
-#include "mir_client/android/android_registrar.h"
+#include "src/client/android/android_registrar.h"
 
 namespace mir
 {

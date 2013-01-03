@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_client/android/android_registrar_gralloc.h"
-#include "mir_client/client_buffer.h"
+#include "android_registrar_gralloc.h"
+#include "../client_buffer.h"
 
 #include <stdexcept>
 
@@ -25,22 +25,8 @@ namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
-: gralloc_module(gr_module)
+namespace
 {
-}
-
-void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
-{
-    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
-        throw std::runtime_error("error registering graphics buffer for client use\n");
-}
-
-void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
-{
-    gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
-}
-
 struct MemoryRegionDeleter
 {
     MemoryRegionDeleter(const std::shared_ptr<const gralloc_module_t>& mod,
@@ -58,6 +44,23 @@ private:
     const std::shared_ptr<const native_handle_t>  handle;
     const std::shared_ptr<const gralloc_module_t> module;
 };
+}
+
+mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
+: gralloc_module(gr_module)
+{
+}
+
+void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
+{
+    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+        throw std::runtime_error("error registering graphics buffer for client use\n");
+}
+
+void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
+{
+    gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
+}
 
 std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
 {

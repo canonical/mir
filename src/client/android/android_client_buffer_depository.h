@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_DEPOSITORY_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_DEPOSITORY_H_
 
-#include "mir_client/client_buffer_depository.h"
+#include "../client_buffer_depository.h"
 
 #include <stdexcept>
 #include <map>

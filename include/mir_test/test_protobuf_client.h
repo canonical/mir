@@ -21,7 +21,7 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
-#include "mir_client/make_rpc_channel.h"
+#include "src/client/make_rpc_channel.h"
 #include "mir/thread/all.h"
 
 #include "mir_test_doubles/mock_logger.h"

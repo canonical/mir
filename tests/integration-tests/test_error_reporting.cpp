@@ -18,7 +18,7 @@
 
 
 #include "mir_client/mir_client_library.h"
-#include "mir_client/mir_logger.h"
+#include "src/client/mir_logger.h"
 
 #include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_ipc_factory.h"

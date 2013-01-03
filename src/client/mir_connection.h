@@ -20,7 +20,6 @@
 
 #include <string>
 #include <memory>
-#include <set>
 #include <unordered_set>
 
 #include "mir/thread/all.h"
@@ -29,13 +28,14 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_client_library_drm.h"
-#include "mir_client/client_platform.h"
-#include "mir_client/client_context.h"
+#include "client_platform.h"
+#include "client_context.h"
 
 #include "mir_wait_handle.h"
 
 namespace mir
 {
+/// The client-side library implementation namespace
 namespace client
 {
 class Logger;
@@ -43,8 +43,6 @@ class ClientBufferDepository;
 class ClientPlatformFactory;
 }
 }
-
-struct SurfaceRelease;
 
 class MirConnection : public mir::client::ClientContext
 {
@@ -118,6 +116,8 @@ private:
 
     static mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
+
+    struct SurfaceRelease;
 
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);

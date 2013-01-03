@@ -16,14 +16,14 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/mir_logger.h"
+#include "mir_logger.h"
 
-#include "mir_client/mir_connection.h"
-#include "mir_client/mir_surface.h"
-#include "mir_client/client_platform.h"
-#include "mir_client/client_platform_factory.h"
-#include "mir_client/client_buffer_depository.h"
-#include "mir_client/make_rpc_channel.h"
+#include "mir_connection.h"
+#include "mir_surface.h"
+#include "client_platform.h"
+#include "client_platform_factory.h"
+#include "client_buffer_depository.h"
+#include "make_rpc_channel.h"
 
 #include <cstddef>
 
@@ -104,7 +104,7 @@ void MirConnection::set_error_message(std::string const& error)
 
 /* struct exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
-struct SurfaceRelease
+struct MirConnection::SurfaceRelease
 {
     MirSurface * surface;
     MirWaitHandle * handle;
