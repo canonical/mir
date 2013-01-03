@@ -127,7 +127,6 @@ if (MIR_PLATFORM STREQUAL "android")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
 
     add_definitions( -DANDROID )
-
   endif()
  
   find_package( LibHardware REQUIRED )
@@ -154,7 +153,6 @@ include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 
-include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 

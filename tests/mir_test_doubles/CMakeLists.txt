@@ -24,7 +24,7 @@ set(
 
   test_protobuf_client.cpp
   event_factory.cpp
- # fake_event_hub.cpp
+  fake_event_hub.cpp
 )
 
 if (MIR_TRANSPORT STREQUAL "socket")
