@@ -47,3 +47,7 @@ target_link_libraries(
   3rd_party
   
   android-input)
+
+add_subdirectory(cucumber-cpp)
+set(CUKE_LIBRARIES ${CUKE_LIBRARIES} PARENT_SCOPE)
+set(CUKE_INCLUDE_DIRS ${CUKE_INCLUDE_DIRS} PARENT_SCOPE)

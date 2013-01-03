@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/augustwest/src/cucumber-cpp/examples/Calc/Calc/Calculator.cpp
+limits
+-
+Calculator.h
+/home/augustwest/src/cucumber-cpp/examples/Calc/Calc/Calculator.h
+
+/home/augustwest/src/cucumber-cpp/examples/Calc/Calc/Calculator.h
+list
+-
+
