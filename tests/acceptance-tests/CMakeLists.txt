@@ -53,7 +53,6 @@ target_link_libraries(
   mirgraphics
   mirinput
   mirsurfaces
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   mirplatformgraphics
   mirprotobuf
 

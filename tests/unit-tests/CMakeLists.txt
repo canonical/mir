@@ -50,7 +50,6 @@ target_link_libraries(
  mirprotobuf
  mirsurfaces
 
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   mir-test-doubles
 
   3rd_party

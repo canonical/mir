@@ -23,7 +23,6 @@ target_link_libraries(
     render_to_fb
 
     mirplatformgraphics
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
     mirlogging
     mirdraw
     mircompositor

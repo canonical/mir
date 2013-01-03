@@ -71,7 +71,6 @@ target_link_libraries(
   mirplatformgraphics
   mirprotobuf
 
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
 /opt/bundle/usr/lib/arm-linux-gnueabihf/libEGL.so
   3rd_party
 

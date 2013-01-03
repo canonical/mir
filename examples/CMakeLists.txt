@@ -29,7 +29,6 @@ target_link_libraries(
   mirprotobuf
 
 pthread
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -48,7 +47,6 @@ target_link_libraries(
   mirprotobuf
 
 pthread
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -68,7 +66,6 @@ target_link_libraries(
   mirprotobuf
 
 pthread
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}

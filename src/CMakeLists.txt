@@ -68,7 +68,6 @@ target_link_libraries(
 
   3rd_party
 pthread
-/opt/bundle/usr/lib/arm-linux-gnueabihf/libhardware.so.1
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
