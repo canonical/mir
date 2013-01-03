@@ -24,6 +24,7 @@ set(
   session_manager.cpp
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
+  consuming_placement_strategy.cpp
   null_application_listener.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
