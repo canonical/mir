@@ -27,7 +27,6 @@ set(
 )
 
 if (MIR_PLATFORM STREQUAL "android")
-  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
   set(
     DRAW_SRCS
 

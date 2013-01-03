@@ -12,7 +12,6 @@ find_path(LIBHARDWARE_INCLUDE_DIR
                  system/graphics.h
                  system/window.h
    HINTS         ${CMAKE_FIND_ROOT_PATH}/android-deps
-   HINTS         ${CMAKE_FIND_ROOT_PATH}/usr/lib
    )
 
 find_library(LIBHARDWARE_LIBRARY
@@ -26,7 +25,6 @@ set(LIBHARDWARE_INCLUDE_DIRS ${LIBHARDWARE_INCLUDE_DIR})
 # handle the QUIETLY and REQUIRED arguments and set LIBHARDWARE_FOUND to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(LIBHARDWARE DEFAULT_MSG
-#                                  LIBHARDWARE_INCLUDE_DIR)
                                   LIBHARDWARE_LIBRARY LIBHARDWARE_INCLUDE_DIR)
 
 mark_as_advanced(LIBHARDWARE_INCLUDE_DIR LIBHARDWARE_LIBRARY )

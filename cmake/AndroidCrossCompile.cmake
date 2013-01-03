@@ -7,7 +7,7 @@ set(CMAKE_C_COMPILER   ${MIR_NDK_PATH}/bin/arm-linux-androideabi-gcc)
 set(CMAKE_CXX_COMPILER ${MIR_NDK_PATH}/bin/arm-linux-androideabi-g++)
 
 # where too look to find dependencies in the target environment 
-set(CMAKE_FIND_ROOT_PATH ${MIR_NDK_PATH}/sysroot)
+set(CMAKE_FIND_ROOT_PATH  ${MIR_NDK_PATH}/sysroot)
 
 #use only the cross compile system
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

@@ -67,6 +67,7 @@ target_link_libraries(
   mirprotobuf
 
   3rd_party
+
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}

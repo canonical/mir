@@ -53,6 +53,7 @@ target_link_libraries(
   mir-test-doubles
 
   3rd_party
+
   mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}

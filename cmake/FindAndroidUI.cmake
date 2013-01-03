@@ -58,7 +58,6 @@ else()
 endif()
 
 set(ANDROID_UI_LIBRARIES ${ANDROID_UI_LIBRARY})
-
 set(ANDROID_UI_INCLUDE_DIRS ${ANDROID_UI_INCLUDE_DIR})
 
 # handle the QUIETLY and REQUIRED arguments and set ANDROID_UI_FOUND to TRUE
@@ -67,3 +66,5 @@ find_package_handle_standard_args(ANDROID_UI DEFAULT_MSG
                                   ANDROID_UI_LIBRARY ANDROID_UI_INCLUDE_DIR)
 
 mark_as_advanced(ANDROID_UI_INCLUDE_DIR ANDROID_UI_LIBRARY )
+
+
