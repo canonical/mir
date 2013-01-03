@@ -19,11 +19,11 @@
 #include "mir_client/mir_client_library.h"
 #include "mir_client/mir_client_library_drm.h"
 
-#include "mir_client/mir_connection.h"
-#include "mir_client/mir_surface.h"
-#include "mir_client/native_client_platform_factory.h"
-#include "mir_client/mir_logger.h"
-#include "mir_client/make_rpc_channel.h"
+#include "mir_connection.h"
+#include "mir_surface.h"
+#include "native_client_platform_factory.h"
+#include "mir_logger.h"
+#include "make_rpc_channel.h"
 
 
 #include "mir_protobuf.pb.h"

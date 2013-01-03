@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_wait_handle.h"
+#include "mir_wait_handle.h"
 
 MirWaitHandle::MirWaitHandle() :
     guard(),

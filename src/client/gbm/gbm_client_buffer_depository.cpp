@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/gbm/gbm_client_buffer_depository.h"
-#include "mir_client/gbm/gbm_client_buffer.h"
+#include "gbm_client_buffer_depository.h"
+#include "gbm_client_buffer.h"
 
 #include <stdexcept>
 #include <map>
