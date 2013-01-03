@@ -50,6 +50,7 @@ public:
     bool is_set(char const* name) const;
     bool get(char const* name, bool default_) const;
     std::string get(char const*, char const* default_) const;
+    int get(char const* name, int default_) const;
 
 private:
     boost::program_options::variables_map options;

@@ -60,7 +60,7 @@ private:
     android::sp<android::IBinder> const mir_proxy;
     std::shared_ptr<Logger> const log;
 
-    static const int threads = 1;
+    static const int threads = 3;
     std::thread io_service_thread[threads];
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;

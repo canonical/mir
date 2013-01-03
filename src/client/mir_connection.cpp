@@ -104,7 +104,7 @@ void MirConnection::set_error_message(std::string const& error)
 
 /* struct exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
-struct SurfaceRelease
+struct MirConnection::SurfaceRelease
 {
     MirSurface * surface;
     MirWaitHandle * handle;

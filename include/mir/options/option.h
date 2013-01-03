@@ -35,6 +35,7 @@ public:
 
     virtual bool get(char const* name, bool default_) const = 0;
     virtual std::string get(char const* name, char const* default_) const = 0;
+    virtual int get(char const* name, int default_) const = 0;
 
 protected:
     Option() = default;

@@ -59,6 +59,8 @@ public:
 
     void complete_response(mir::protobuf::wire::Result& result);
 
+    bool empty() const;
+
 private:
 
     struct PendingCall

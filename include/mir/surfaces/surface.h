@@ -69,7 +69,7 @@ SurfaceCreationParameters a_surface();
 
 class Surface : public graphics::Renderable
 {
- public:
+public:
     Surface(const std::string& name,
             std::shared_ptr<compositor::BufferBundle> buffer_bundle);
 
@@ -95,7 +95,7 @@ class Surface : public graphics::Renderable
     std::shared_ptr<compositor::GraphicBufferClientResource> client_buffer_resource() const;
     void shutdown();
 
- private:
+private:
     std::string surface_name;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
     std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;

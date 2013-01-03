@@ -28,13 +28,14 @@ namespace mir
 
 typedef std::chrono::high_resolution_clock::time_point Timestamp;
 
-class TimeSource {
- public:
+class TimeSource
+{
+public:
     virtual ~TimeSource() {}
 
     virtual Timestamp sample() const = 0;
 
- protected:
+protected:
     TimeSource() = default;
 };
 

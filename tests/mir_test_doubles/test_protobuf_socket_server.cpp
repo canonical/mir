@@ -27,12 +27,12 @@ namespace mf = mir::frontend;
 mt::TestProtobufServer::TestProtobufServer(
     std::string socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<mtd::MockIpcFactory>(*tool)),
+    factory(std::make_shared<mtd::StubIpcFactory>(*tool)),
     comm(make_communicator(socket_name, factory))
 {
 }
 
 std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& socket_name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory);
+    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory, 10);
 }

@@ -17,12 +17,12 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/mock_ipc_factory.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -30,6 +30,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <fcntl.h>
 
 #include <stdexcept>
 #include <memory>
@@ -89,10 +91,6 @@ struct ProtobufSocketCommunicatorFD : public ::testing::Test
     {
         stub_server_tool = std::make_shared<mt::StubServerFd>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
-
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
-
         stub_server->comm->start();
 
         stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 500);

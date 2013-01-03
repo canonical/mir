@@ -17,11 +17,11 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test_doubles/mock_ipc_factory.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test/test_protobuf_client.h"
 
 namespace mt = mir::test;
@@ -94,9 +94,6 @@ struct ProtobufErrorTestFixture : public ::testing::Test
         stub_services = std::make_shared<mt::ErrorServer>();
         server = std::make_shared<mt::TestProtobufServer>("./test_error_fixture", stub_services);
         client = std::make_shared<mt::TestProtobufClient>("./test_error_fixture", 100);
-
-        ::testing::Mock::VerifyAndClearExpectations(server->factory.get());
-        EXPECT_CALL(*server->factory, make_ipc_server()).Times(1);
         server->comm->start();
     }
 

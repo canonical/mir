@@ -31,7 +31,7 @@ class Session;
 
 class SessionStore
 {
- public:
+public:
     virtual ~SessionStore() {}
 
     virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;

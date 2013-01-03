@@ -23,6 +23,7 @@
 
 #include <memory>
 
+/// All things Mir
 namespace mir
 {
 namespace compositor

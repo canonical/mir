@@ -37,7 +37,7 @@ public:
     virtual ~GraphicBufferAllocator() {}
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
-            BufferProperties const& buffer_properties) = 0;
+        BufferProperties const& buffer_properties) = 0;
 
     virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
 

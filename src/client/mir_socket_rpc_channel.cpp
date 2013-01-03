@@ -43,22 +43,23 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 
-    for (int i = 0; i != threads; ++i)
-    {
-        io_service_thread[i] = std::move(std::thread(run_io_service));
-    }
+    io_service_thread = std::move(std::thread(run_io_service));
+
+    boost::asio::async_read(
+        socket,
+        boost::asio::buffer(header_bytes),
+        boost::asio::transfer_exactly(sizeof header_bytes),
+        boost::bind(&MirSocketRpcChannel::on_header_read, this,
+            boost::asio::placeholders::error));
 }
 
 mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
     io_service.stop();
 
-    for (int i = 0; i != threads; ++i)
+    if (io_service_thread.joinable())
     {
-        if (io_service_thread[i].joinable())
-        {
-            io_service_thread[i].join();
-        }
+        io_service_thread.join();
     }
 }
 
@@ -174,38 +175,66 @@ void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::Sen
 void mcl::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& error)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
+
     if (error)
     {
-        log->error() << error.message() << std::endl;
+        log->error() << __PRETTY_FUNCTION__
+            << "\n... " << error.message() << std::endl;
+    }
+}
+
+void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
+{
+    log->debug() << __PRETTY_FUNCTION__ << std::endl;
+
+    if (error)
+    {
+        // If we've not got a response to a call pending
+        // then during shutdown we expect to see "eof"
+        if (!pending_calls.empty() || error != boost::asio::error::eof)
+        {
+            log->error() << __PRETTY_FUNCTION__
+                << "\n... " << error.message() << std::endl;
+        }
+
         return;
     }
 
     read_message();
+
+    boost::asio::async_read(
+        socket,
+        boost::asio::buffer(header_bytes),
+        boost::asio::transfer_exactly(sizeof header_bytes),
+        boost::bind(&MirSocketRpcChannel::on_header_read, this,
+            boost::asio::placeholders::error));
 }
 
 
 void mcl::MirSocketRpcChannel::read_message()
 {
-    log->debug() << __PRETTY_FUNCTION__ << std::endl;
-    const size_t body_size = read_message_header();
+    try
+    {
+        log->debug() << __PRETTY_FUNCTION__ << std::endl;
+        const size_t body_size = read_message_header();
 
-    log->debug() << __PRETTY_FUNCTION__ << " body_size:" << body_size << std::endl;
+        log->debug() << __PRETTY_FUNCTION__ << " body_size:" << body_size << std::endl;
 
-    mir::protobuf::wire::Result result = read_message_body(body_size);
+        mir::protobuf::wire::Result result = read_message_body(body_size);
 
-    log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
+        log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
-    pending_calls.complete_response(result);
+        pending_calls.complete_response(result);
+    }
+    catch (std::exception const& x)
+    {
+        log->error() << __PRETTY_FUNCTION__
+            << "\n... " << x.what() << std::endl;
+    }
 }
 
 size_t mcl::MirSocketRpcChannel::read_message_header()
 {
-    unsigned char header_bytes[2];
-    boost::system::error_code error;
-    boost::asio::read(socket, boost::asio::buffer(header_bytes), boost::asio::transfer_exactly(sizeof header_bytes), error);
-    if (error)
-        log->error() << error.message() << std::endl;
-
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
 }
@@ -216,7 +245,9 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     boost::asio::streambuf message;
     boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
     if (error)
-        log->error() << error.message() << std::endl;
+    {
+        throw std::runtime_error(error.message());
+    }
 
     std::istream in(&message);
     mir::protobuf::wire::Result result;

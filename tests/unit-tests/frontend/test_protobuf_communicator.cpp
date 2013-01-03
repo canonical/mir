@@ -17,12 +17,12 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/mock_ipc_factory.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -47,23 +47,17 @@ struct ProtobufCommunicator : public ::testing::Test
         stub_server_tool = std::make_shared<mt::StubServerTool>();
         stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
 
-        // called during socket comms initialisation:
-        // there's always a server awaiting the next connection
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(testing::AtMost(1));
         stub_server->comm->start();
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
     }
 
     void SetUp()
     {
-        EXPECT_CALL(*stub_server->factory, make_ipc_server()).Times(1);
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
-        ::testing::Mock::VerifyAndClearExpectations(stub_server->factory.get());
         client.reset();
     }
 
