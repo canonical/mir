@@ -34,7 +34,7 @@ class PlacementStrategySurfaceOrganiser : public SurfaceOrganiser
 public:
     PlacementStrategySurfaceOrganiser(std::shared_ptr<SurfaceOrganiser> const& underlying_organiser,
                                       std::shared_ptr<PlacementStrategy> const& placement_strategy);
-    virtual ~PlacementStrategySurfaceOrganiser() {}
+    virtual ~PlacementStrategySurfaceOrganiser();
     
     std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params);
     void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface);
