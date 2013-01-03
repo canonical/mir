@@ -17,7 +17,11 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
     PARENT_SCOPE)
 
 add_subdirectory(android)
-#add_subdirectory(tools)
+
+#we don't have these tools dependencies hybrisized to build the tool
+if(MIR_USE_BIONIC)
+  add_subdirectory(tools)
+endif()
 
 # Make those include directories available to mir source code
 list(
