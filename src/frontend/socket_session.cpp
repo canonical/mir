@@ -87,6 +87,10 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
         std::istream msg(&message);
         alive = processor->process_message(msg);
     }
+    else
+    {
+        std::cerr << "ERROR reading message: " << ec.message() << std::endl;
+    }
 
     if (alive)
     {

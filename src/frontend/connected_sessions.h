@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_CONNECTED_SESSIONS_H_
 #define MIR_FRONTEND_CONNECTED_SESSIONS_H_
 
+#include "mir/thread/all.h"
 #include <memory>
 #include <map>
 
@@ -33,25 +34,29 @@ class ConnectedSessions
 {
 public:
     ConnectedSessions() {}
-    ~ConnectedSessions() {}
+    ~ConnectedSessions() { clear(); }
 
     void add(std::shared_ptr<Session> const& session)
     {
+        std::unique_lock<std::mutex> lock(mutex);
         sessions_list[session->id()] = session;
     }
 
     void remove(int id)
     {
+        std::unique_lock<std::mutex> lock(mutex);
         sessions_list.erase(id);
     }
 
     bool includes(int id) const
     {
+        std::unique_lock<std::mutex> lock(mutex);
         return sessions_list.find(id) != sessions_list.end();
     }
 
     void clear()
     {
+        std::unique_lock<std::mutex> lock(mutex);
         sessions_list.clear();
     }
 
@@ -60,6 +65,7 @@ private:
     ConnectedSessions(ConnectedSessions const&) = delete;
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;
 
+    std::mutex mutex;
     std::map<int, std::shared_ptr<Session>> sessions_list;
 };
 }
