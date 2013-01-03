@@ -68,7 +68,7 @@ enable_testing()
 include_directories(include/)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
