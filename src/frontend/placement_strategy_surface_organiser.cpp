@@ -35,21 +35,20 @@ mf::PlacementStrategySurfaceOrganiser::~PlacementStrategySurfaceOrganiser()
 
 std::weak_ptr<ms::Surface> mf::PlacementStrategySurfaceOrganiser::create_surface(const ms::SurfaceCreationParameters& params)
 {
-    (void)params;
-    return std::weak_ptr<ms::Surface>();
+    return underlying_organiser->create_surface(params);
 }
 
 void mf::PlacementStrategySurfaceOrganiser::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
-    (void)surface;
+    underlying_organiser->destroy_surface(surface);
 }
 
 void mf::PlacementStrategySurfaceOrganiser::hide_surface(std::weak_ptr<ms::Surface> const& surface)
 {
-    (void)surface;
+    underlying_organiser->hide_surface(surface);
 }
 
 void mf::PlacementStrategySurfaceOrganiser::show_surface(std::weak_ptr<ms::Surface> const& surface)
 {
-    (void)surface;
+    underlying_organiser->show_surface(surface);
 }
