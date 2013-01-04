@@ -35,6 +35,10 @@ mf::PlacementStrategySurfaceOrganiser::~PlacementStrategySurfaceOrganiser()
 
 std::weak_ptr<ms::Surface> mf::PlacementStrategySurfaceOrganiser::create_surface(const ms::SurfaceCreationParameters& params)
 {
+    ms::SurfaceCreationParameters placed_parameters;
+
+    placement_strategy->place(params, placed_parameters);
+
     return underlying_organiser->create_surface(params);
 }
 
