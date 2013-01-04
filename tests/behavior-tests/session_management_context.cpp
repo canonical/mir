@@ -27,6 +27,8 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/session_manager.h"
 #include "mir/frontend/surface_organiser.h"
+#include "mir/frontend/consuming_placement_strategy.h"
+#include "mir/frontend/placement_strategy_surface_organiser.h"
 #include "mir/graphics/viewable_area.h"
 
 namespace mf = mir::frontend;
@@ -48,22 +50,41 @@ static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
                                                                             geom::Height(1400)}};
 
-struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
+struct SizedBufferBundle : public mtd::NullBufferBundle
 {
-    explicit StubSurfaceOrganiser()
+    SizedBufferBundle(geom::Size const& buffer_size) 
+        : NullBufferBundle(),
+          buffer_size(buffer_size)
     {
-        // TODO: Width and height will require a non null buffer bundle...
-        dummy_surface = std::make_shared<ms::Surface>(ms::a_surface().name,
-                                                      std::make_shared<mtd::NullBufferBundle>());
     }
 
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    geometry::Size bundle_size()
     {
-        return dummy_surface;
+        return buffer_size;
+    }
+
+    geom::Size const buffer_size;
+};
+
+struct DummySurfaceOrganiser : public mf::SurfaceOrganiser
+{
+    explicit DummySurfaceOrganiser()
+    {
+    }
+
+    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params)
+    {
+        auto name = params.name;
+        auto surf = std::make_shared<ms::Surface>(name,
+                                                  std::make_shared<SizedBufferBundle>(params.size));
+        surfaces_by_name[name] = surf;
+        
+        return surf;
     }
 
     void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
     {
+        // TODO: Implement
     }
     
     void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
@@ -74,7 +95,7 @@ struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
     {
     }
     
-    std::shared_ptr<ms::Surface> dummy_surface;
+    std::map<std::string, std::shared_ptr<ms::Surface>> surfaces_by_name;
 };
 
 struct DummyViewableArea : public mg::ViewableArea
@@ -106,14 +127,20 @@ mtc::SessionManagementContext::SessionManagementContext()
     // TODO: This should use a method from server configuration to construct session manager 
     // to ensure code stays in sync.
     auto model = std::make_shared<mf::SessionContainer>();
+    auto underlying_organiser = std::make_shared<mtc::DummySurfaceOrganiser>();
+
+    // TODO: Needs to be passed to the placement strategy when this is implemented
+    view_area = std::make_shared<DummyViewableArea>();
+    auto placement_strategy = std::make_shared<mf::ConsumingPlacementStrategy>(view_area);
+    auto organiser = std::make_shared<mf::PlacementStrategySurfaceOrganiser>(underlying_organiser, placement_strategy);
+
     session_manager = std::make_shared<mf::SessionManager>(
-            std::make_shared<mtc::StubSurfaceOrganiser>(),
+            organiser,
             model,
             std::make_shared<mf::RegistrationOrderFocusSequence>(model),
             std::make_shared<mf::SingleVisibilityFocusMechanism>(model));
     
-    // TODO: Needs to be passed to the placement strategy when this is implemented
-    view_area = std::make_shared<DummyViewableArea>();
+
 }
 
 // TODO: This would be less awkward with the ApplicationWindow class.
@@ -121,8 +148,9 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 {
     auto params = ms::a_surface().of_name(window_name);
     auto session = session_manager->open_session(window_name);
+    auto surface_id = session->create_surface(params);
 
-    open_windows[window_name] = std::make_tuple(session, session->create_surface(params));
+    open_windows[window_name] = std::make_tuple(session, surface_id);
 
     return true;
 }
