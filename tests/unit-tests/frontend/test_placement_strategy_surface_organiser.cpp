@@ -74,6 +74,26 @@ struct SurfaceParameterUpdater
 
 } // namespace 
 
+TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_calls_to_underlying_organiser)
+{
+    using namespace ::testing;
+
+    {
+        InSequence seq;
+        EXPECT_CALL(*underlying_surface_organiser, create_surface(_)).Times(1);
+        EXPECT_CALL(*underlying_surface_organiser, hide_surface(_)).Times(1);
+        EXPECT_CALL(*underlying_surface_organiser, show_surface(_)).Times(1);
+        EXPECT_CALL(*underlying_surface_organiser, destroy_surface(_)).Times(1);
+    }
+
+    mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
+    auto params = ms::a_surface();
+    
+    auto surface = organiser.create_surface(params);
+    organiser.hide_surface(surface);
+    organiser.show_surface(surface);
+    organiser.destroy_surface(surface);
+}
 
 TEST_F(PlacementStrategySurfaceOrganiserSetup, offers_create_surface_parameters_to_placement_strategy)
 {
@@ -109,4 +129,6 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_surface_creation_paramet
     
     EXPECT_EQ(placed_params, forwarded_params);
 }
+
+
 

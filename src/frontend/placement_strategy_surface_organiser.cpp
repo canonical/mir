@@ -35,7 +35,6 @@ mf::PlacementStrategySurfaceOrganiser::~PlacementStrategySurfaceOrganiser()
 
 std::weak_ptr<ms::Surface> mf::PlacementStrategySurfaceOrganiser::create_surface(const ms::SurfaceCreationParameters& params)
 {
-    // TODO: Unimplemented so we can see tests fail.
     (void)params;
     return std::weak_ptr<ms::Surface>();
 }
