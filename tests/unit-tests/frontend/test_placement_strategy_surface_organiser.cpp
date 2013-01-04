@@ -85,6 +85,8 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_calls_to_underlying_orga
         EXPECT_CALL(*underlying_surface_organiser, show_surface(_)).Times(1);
         EXPECT_CALL(*underlying_surface_organiser, destroy_surface(_)).Times(1);
     }
+    
+    EXPECT_CALL(*placement_strategy, place(_,_)).Times(1);
 
     mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     auto params = ms::a_surface();
@@ -101,8 +103,9 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, offers_create_surface_parameters_
 
     mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     
+    EXPECT_CALL(*underlying_surface_organiser, create_surface(_)).Times(1);
+    
     auto params = ms::a_surface();
-    // TODO: Matcher
     EXPECT_CALL(*placement_strategy, place(Ref(params), _)).Times(1);
     
     organiser.create_surface(params);
@@ -115,19 +118,16 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_surface_creation_paramet
     mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     
     auto params = ms::a_surface();
+
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
     SurfaceParameterUpdater param_updater(placed_params);
-    auto forwarded_params = ms::a_surface();
     
     EXPECT_CALL(*placement_strategy, place(Ref(params), _)).Times(1)
         .WillOnce(Invoke(&param_updater, &SurfaceParameterUpdater::update_parameters));
-    // TODO: MATCH!
     EXPECT_CALL(*underlying_surface_organiser, create_surface(placed_params));
     
     organiser.create_surface(params);
-    
-    EXPECT_EQ(placed_params, forwarded_params);
 }
 
 
