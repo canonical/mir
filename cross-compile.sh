@@ -1,43 +1,65 @@
-#!/bin/sh
+#!/bin/bash
 # build script for Mir on android arm devices
-# set $MIR_ANDROID_NDK_DIR to the android toolchain noted in DEPENDENCIES
-# test run requires package 'android-tools-adb' 
+# test run requires package 'android-tools-adb'
+#
+# you should use this file if you have to do an integration test, or as 
+# an example of how to build. this script will do more downloading than you 
+# might want in a development workflow
 #
 set -e
 
-if [ ! -e $MIR_ANDROID_NDK_DIR ]; then
-    echo "aborting: MIR_ANDROID_NDK_DIR not set. set to path containing mir NDK"
-    exit
-fi
-
-export MIR_NDK_PATH=$MIR_ANDROID_NDK_DIR
 BUILD_DIR=build-android-arm
-if [ ! -e ${BUILD_DIR} ]; then
-    mkdir ${BUILD_DIR}
-    ( cd ${BUILD_DIR} &&
-      cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/AndroidCrossCompile.cmake \
-          -DBoost_COMPILER=-gcc \
-          -DMIR_ENABLE_DEATH_TESTS=NO \
-          -DMIR_INPUT_ENABLE_EVEMU=NO \
-          -DMIR_PLATFORM=android \
-          .. )
+
+#note:ndk-rewrite is just temporary until the real is pushed
+export MIR_NDK_PATH=`pwd`/ndk-rewrite
+
+if [[ -d ndk-rewrite ]]; then
+    pushd ndk-rewrite
+    bzr pull
+    popd
+else
+    bzr branch lp:~kdub/mir/ndk-rewrite 
 fi
 
-cmake --build ${BUILD_DIR}
+pushd ndk-rewrite > /dev/null
+    ./generate-armhf-deps.sh 
+popd > /dev/null
 
-adb wait-for-device
-adb root
-adb wait-for-device
-adb shell stop
+#start with a clean build every time
+rm -rf ${BUILD_DIR}
+mkdir ${BUILD_DIR}
+pushd ${BUILD_DIR} > /dev/null 
 
-adb push ${BUILD_DIR}/bin/acceptance-tests /data
-adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./acceptance-tests'
-adb pull '/data/acceptance-tests.xml'
+    cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
+      -DBoost_COMPILER=-gcc \
+      -DMIR_ENABLE_DEATH_TESTS=NO \
+      -DMIR_INPUT_ENABLE_EVEMU=NO \
+      -DMIR_PLATFORM=android \
+      -DMIR_CUTDOWN_FOR_EMULATOR=true \
+      .. 
 
-adb push ${BUILD_DIR}/bin/integration-tests /data
-adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./integration-tests'
-adb pull '/data/integration-tests.xml'
+    cmake --build .
 
-adb push ${BUILD_DIR}/bin/unit-tests /data
-adb shell 'cd /data && GTEST_OUTPUT=xml:./ ./unit-tests'
-adb pull '/data/unit-tests.xml'
+    adb wait-for-device
+    adb root
+    adb wait-for-device
+    adb shell stop
+
+    adb push bin/acceptance-tests /data
+    adb push bin/integration-tests /data
+    adb push bin/unit-tests /data
+
+    echo 'ubuntu_chroot shell;
+        cd /root;
+        export GTEST_OUTPUT=xml:./
+        ./unit-tests;
+        ./integration-tests;
+        ./acceptance-tests;
+        exit;
+        exit' | adb shell
+
+    adb pull '/data/ubuntu/root/acceptance-tests.xml'
+    adb pull '/data/ubuntu/root/integration-tests.xml'
+    adb pull '/data/ubuntu/root/unit-tests.xml'
+
+popd ${BUILD_DIR} > /dev/null 
