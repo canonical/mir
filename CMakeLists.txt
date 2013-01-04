@@ -121,9 +121,9 @@ if (MIR_PLATFORM STREQUAL "android")
   else()
     message(STATUS "android build is using vanilla STDC++")
 
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,/opt/bundle/usr/lib/arm-linux-gnueabihf")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,/opt/bundle/lib/arm-linux-gnueabihf")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,${MIR_NDK_PATH}/lib/arm-linux-gnueabihf")
 
     add_definitions( -DANDROID )
   endif()
