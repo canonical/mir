@@ -19,9 +19,13 @@
 #ifndef MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 #define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
+#include "mir/geometry/rectangle.h"
+#include "mir/frontend/session.h" // TODO: This is for SurfaceId only? Seems weird
+
 #include <string>
 #include <map>
 #include <memory>
+#include <tuple>
 
 namespace mir
 {
@@ -37,20 +41,26 @@ namespace test
 namespace cucumber
 {
 
+class DummyViewableArea;
+
 class SessionManagementContext
 {
 public:
     SessionManagementContext();
     virtual ~SessionManagementContext() {}
     
-    bool open_session(const std::string& session_name);
+    bool open_window_consuming(std::string const& window_name);
+    geometry::Size get_window_size(std::string const& window_name);
+    
+    void set_view_area(geometry::Rectangle const& new_view_region);
 
 protected:
     SessionManagementContext(const SessionManagementContext&) = delete;
     SessionManagementContext& operator=(const SessionManagementContext&) = delete;
 private:
-    std::map<std::string, std::weak_ptr<frontend::Session>> open_sessions;
+    std::map<std::string, std::tuple<std::shared_ptr<frontend::Session>, frontend::SurfaceId>> open_windows;
     std::shared_ptr<frontend::SessionManager> session_manager;
+    std::shared_ptr<DummyViewableArea> view_area;
 };
 
 }

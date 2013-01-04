@@ -27,19 +27,30 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/session_manager.h"
 #include "mir/frontend/surface_organiser.h"
+#include "mir/graphics/viewable_area.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
 namespace mtd = mt::doubles;
 
-namespace
+namespace mir
 {
+namespace test
+{
+namespace cucumber
+{
+
+static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
+                                                                 geom::Size{geom::Width(1600),
+                                                                            geom::Height(1400)}};
 
 struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
 {
-    StubSurfaceOrganiser()
+    explicit StubSurfaceOrganiser()
     {
         // TODO: Width and height will require a non null buffer bundle...
         dummy_surface = std::make_shared<ms::Surface>(ms::a_surface().name,
@@ -66,20 +77,66 @@ struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
+struct DummyViewableArea : public mg::ViewableArea
+{
+    explicit DummyViewableArea(geom::Rectangle const& view_area = default_view_area)
+        : area(view_area)
+    {
+    }
+    
+    geom::Rectangle view_area() const
+    {
+        return area;
+    }
+    
+    void set_view_area(geom::Rectangle const& new_view_area)
+    {
+        area = new_view_area;
+    }
+    
+    geom::Rectangle area;
+};
+
+}
+}
 }
 
 mtc::SessionManagementContext::SessionManagementContext()
 {
+    // TODO: This should use a method from server configuration to construct session manager 
+    // to ensure code stays in sync.
     auto model = std::make_shared<mf::SessionContainer>();
     session_manager = std::make_shared<mf::SessionManager>(
-            std::make_shared<StubSurfaceOrganiser>(),
+            std::make_shared<mtc::StubSurfaceOrganiser>(),
             model,
             std::make_shared<mf::RegistrationOrderFocusSequence>(model),
             std::make_shared<mf::SingleVisibilityFocusMechanism>(model));
+    
+    // TODO: Needs to be passed to the placement strategy when this is implemented
+    view_area = std::make_shared<DummyViewableArea>();
 }
 
-bool mtc::SessionManagementContext::open_session(const std::string& session_name)
+// TODO: This would be less awkward with the ApplicationWindow class.
+bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    open_sessions[session_name] = session_manager->open_session(session_name);
+    auto params = ms::a_surface().of_name(window_name);
+    auto session = session_manager->open_session(window_name);
+
+    open_windows[window_name] = std::make_tuple(session, session->create_surface(params));
+
     return true;
+}
+
+geom::Size mtc::SessionManagementContext::get_window_size(std::string const& window_name)
+{
+    auto window = open_windows[window_name];
+    auto session = std::get<0>(window);
+    auto surface_id = std::get<1>(window);
+    
+    return session->get_surface(surface_id)->size();
+}
+
+void mtc::SessionManagementContext::set_view_area(geom::Rectangle const& new_view_region)
+{
+    view_area->set_view_area(new_view_region);
 }
