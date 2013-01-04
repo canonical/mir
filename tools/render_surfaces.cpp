@@ -17,6 +17,7 @@
  */
 
 #include "mir/chrono/chrono.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/double_buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
@@ -229,7 +230,10 @@ int main(int argc, char **argv)
         const float angular_step = 2.0 * M_PI / num_moveables;
 
         std::shared_ptr<ms::Surface> s = surface_stack.create_surface(
-            ms::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})).lock();
+            ms::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
+                           .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
+                           .of_buffer_usage(mc::BufferUsage::hardware)
+            ).lock();
 
         /*
          * Place each surface at a different starting location and give it a
