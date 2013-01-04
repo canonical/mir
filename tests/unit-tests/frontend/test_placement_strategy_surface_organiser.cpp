@@ -111,7 +111,7 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, offers_create_surface_parameters_
     organiser.create_surface(params);
 }
 
-TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_surface_creation_parameters_from_placement_strategy_to_underlying_organiser)
+TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_organiser)
 {
     using namespace ::testing;
 
