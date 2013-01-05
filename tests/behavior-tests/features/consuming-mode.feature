@@ -1,4 +1,6 @@
-Feature: In order to best use screen space an application may fill the screen
+Feature: In order to best use screen space an application may fill the screen. This is the best use of space and so
+  Should be the default behavior. Sometimes the application may know best though so we should let the application request
+  a size as well.
 
 Scenario Outline: Application is open in consuming mode
   Given the display-size is <display_size>
