@@ -30,6 +30,7 @@
 #include "mir/frontend/consuming_placement_strategy.h"
 #include "mir/frontend/placement_strategy_surface_organiser.h"
 #include "mir/graphics/viewable_area.h"
+#include "mir/server_configuration.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::surfaces;
@@ -126,21 +127,11 @@ mtc::SessionManagementContext::SessionManagementContext()
 {
     // TODO: This should use a method from server configuration to construct session manager 
     // to ensure code stays in sync.
-    auto model = std::make_shared<mf::SessionContainer>();
+    auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
     auto underlying_organiser = std::make_shared<mtc::DummySurfaceOrganiser>();
-
-    // TODO: Needs to be passed to the placement strategy when this is implemented
     view_area = std::make_shared<DummyViewableArea>();
-    auto placement_strategy = std::make_shared<mf::ConsumingPlacementStrategy>(view_area);
-    auto organiser = std::make_shared<mf::PlacementStrategySurfaceOrganiser>(underlying_organiser, placement_strategy);
-
-    session_manager = std::make_shared<mf::SessionManager>(
-            organiser,
-            model,
-            std::make_shared<mf::RegistrationOrderFocusSequence>(model),
-            std::make_shared<mf::SingleVisibilityFocusMechanism>(model));
     
-
+    session_manager = server_configuration->make_session_manager(underlying_organiser, view_area);
 }
 
 // TODO: This would be less awkward with the ApplicationWindow class.

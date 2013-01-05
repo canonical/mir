@@ -22,7 +22,15 @@ add_executable(session-manager-steps session_manager_steps.cpp session_managemen
 target_link_libraries(
   session-manager-steps
   
+  mir
+  miroptions
+  mircompositor
   mirfrontend
+  mirgraphics
+  mirinput
+  mirsurfaces
+  mirplatformgraphics
+  mirprotobuf
   
   mir-test-doubles
   3rd_party
