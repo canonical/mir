@@ -29,7 +29,7 @@
 namespace mtc = mir::test::cucumber;
 namespace geom = mir::geometry;
 
-GIVEN("^The display-size is (.+)x(.+)$")
+GIVEN("^the display-size is (.+)x(.+)$")
 {
     REGEX_PARAM(int, width);
     REGEX_PARAM(int, height);
@@ -48,6 +48,18 @@ WHEN("^(.+) is opened in consuming mode$")
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
     EXPECT_TRUE(ctx->open_window_consuming(window_name));
+    
+}
+
+WHEN("^(.+) is opened with size (.+)x(.+)$")
+{
+    REGEX_PARAM(std::string, window_name);
+    REGEX_PARAM(int, request_width);
+    REGEX_PARAM(int, request_height);
+    USING_CONTEXT(mtc::SessionManagementContext, ctx);
+    
+    EXPECT_TRUE(ctx->open_window_sized(window_name, geom::Size{geom::Width{request_width},
+                                                    geom::Height{request_height}}));
     
 }
 

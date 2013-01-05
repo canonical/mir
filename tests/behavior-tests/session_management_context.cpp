@@ -125,8 +125,6 @@ struct DummyViewableArea : public mg::ViewableArea
 
 mtc::SessionManagementContext::SessionManagementContext()
 {
-    // TODO: This should use a method from server configuration to construct session manager 
-    // to ensure code stays in sync.
     auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
     auto underlying_organiser = std::make_shared<mtc::DummySurfaceOrganiser>();
     view_area = std::make_shared<DummyViewableArea>();
@@ -138,6 +136,18 @@ mtc::SessionManagementContext::SessionManagementContext()
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
     auto params = ms::a_surface().of_name(window_name);
+    auto session = session_manager->open_session(window_name);
+    auto surface_id = session->create_surface(params);
+
+    open_windows[window_name] = std::make_tuple(session, surface_id);
+
+    return true;
+}
+
+bool mtc::SessionManagementContext::open_window_sized(std::string const& window_name,
+                                                      geom::Size const& size)
+{
+    auto params = ms::a_surface().of_name(window_name).of_size(size);
     auto session = session_manager->open_session(window_name);
     auto surface_id = session->create_surface(params);
 
