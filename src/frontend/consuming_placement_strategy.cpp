@@ -19,9 +19,12 @@
 #include "mir/frontend/consuming_placement_strategy.h"
 #include "mir/graphics/viewable_area.h"
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 mf::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
     : display_area(display_area)
@@ -35,9 +38,14 @@ void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& 
 
     // If we have a requested size use it. It seems a little strange to allow 0 as one dimension but 
     // it does not seem like this is the place to check for that.
-    if (input_parameters.size.width.as_uint32_t() != 0 ||
-        input_parameters.size.height.as_uint32_t() != 0)
+    auto input_width = input_parameters.size.width.as_uint32_t();
+    auto input_height = input_parameters.size.height.as_uint32_t();
+    auto view_area = display_area->view_area();
+    
+    if (input_width != 0 || input_height != 0)
     {
+        output_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
+        output_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
         return;
     }
     
