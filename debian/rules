@@ -1,4 +1,9 @@
 #!/usr/bin/make -f
 
+#overrding dh_auto_test to get rid of --parallel during testing
 %:
 	dh $@ --parallel
+
+override_dh_auto_test:
+	dh_auto_test --max-parallel=1
+

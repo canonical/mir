@@ -47,7 +47,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
-    auto const& socket_session = std::make_shared<mfd::SocketSession>(
+    auto socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
         connected_sessions);
@@ -115,4 +115,3 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     }
     start_accept();
 }
-

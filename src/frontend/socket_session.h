@@ -25,6 +25,22 @@
 
 #include <boost/asio.hpp>
 
+#include <memory>
+
+namespace boost { 
+template<class T> 
+const T* get_pointer(const std::shared_ptr<T>& ptr) 
+{
+    return ptr.get();
+}
+
+template<class T> 
+T* get_pointer(std::shared_ptr<T>& ptr)
+{
+    return ptr.get();
+}
+}
+
 namespace mir
 {
 namespace frontend
@@ -32,7 +48,8 @@ namespace frontend
 namespace detail
 {
 
-struct SocketSession : public MessageSender
+struct SocketSession : public MessageSender, 
+                       public std::enable_shared_from_this<SocketSession>
 {
     SocketSession(
         boost::asio::io_service& io_service,

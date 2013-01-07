@@ -25,7 +25,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     int timeout_ms) :
     logger(std::make_shared<mtd::MockLogger>()),
     channel(mir::client::make_rpc_channel(socket_file, logger)),
-    display_server(channel.get()),
+    display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),
@@ -178,7 +178,7 @@ void mir::test::TestProtobufClient::tfd_done()
 
 void mir::test::TestProtobufClient::wait_for_tfd_done()
 {
-    for (int i = 0; !tfd_done_called.load() && i < maxwait; ++i)
+    for (int i = 0; !tfd_done_called.load() && i < 10000; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
