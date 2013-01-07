@@ -57,9 +57,9 @@ struct PlacementStrategySurfaceOrganiserSetup : public testing::Test
     std::shared_ptr<MockPlacementStrategy> placement_strategy;
 };
 
-struct SurfaceParameterUpdater
+struct SurfaceParameterUpdatingAction
 {
-    SurfaceParameterUpdater(ms::SurfaceCreationParameters const& parameters)
+    SurfaceParameterUpdatingAction(ms::SurfaceCreationParameters const& parameters)
         : parameters(parameters)
     {
     }
@@ -121,10 +121,10 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_create_surface_parameter
 
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
-    SurfaceParameterUpdater param_updater(placed_params);
+    SurfaceParameterUpdatingAction param_updater(placed_params);
     
     EXPECT_CALL(*placement_strategy, place(Ref(params), _)).Times(1)
-        .WillOnce(Invoke(&param_updater, &SurfaceParameterUpdater::update_parameters));
+        .WillOnce(Invoke(&param_updater, &SurfaceParameterUpdatingAction::update_parameters));
     EXPECT_CALL(*underlying_surface_organiser, create_surface(placed_params));
     
     organiser.create_surface(params);
