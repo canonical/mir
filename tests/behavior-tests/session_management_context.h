@@ -48,6 +48,7 @@ public:
 protected:
     SessionManagementContext(const SessionManagementContext&) = delete;
     SessionManagementContext& operator=(const SessionManagementContext&) = delete;
+
 private:
     std::map<std::string, std::weak_ptr<frontend::Session>> open_sessions;
     std::shared_ptr<frontend::SessionManager> session_manager;
