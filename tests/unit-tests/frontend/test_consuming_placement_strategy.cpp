@@ -79,3 +79,24 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_forwarded)
     placement_strategy.place(input_params, placed_params);
     EXPECT_EQ(requested_size, placed_params.size);
 }
+
+TEST_F(ConsumingPlacementStrategySetup, parameters_with_unreasonable_geometry_are_clipped)
+{
+    using namespace ::testing;
+    
+    const geom::Width unreasonable_width = default_view_area.size.width+1;
+    const geom::Width unreasonable_height = default_view_area.size.width+1;
+    const geom::Size unreasonable_size = geom::Size{unreasonable_width, unreasonable_height};
+
+    EXPECT_CALL(*viewable_area, view_area()).Times(1);
+    mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
+    ms::SurfaceCreationParameters input_params, placed_params;
+    
+    input_params.size = unreasonable_size;
+
+    placement_strategy.place(input_params, placed_params);
+    
+    auto const& clipped_size = default_view_area.size;
+    EXPECT_EQ(placed_params.size, default_view_area);
+    
+}
