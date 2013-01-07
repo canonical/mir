@@ -25,6 +25,8 @@ namespace mir
 {
 namespace test
 {
+namespace doubles
+{
 
 class NullBufferBundle : public compositor::BufferBundle
 {
@@ -65,6 +67,7 @@ public:
     std::shared_ptr<compositor::Buffer> mock_buffer;
 };
 
+}
 }
 }
 
