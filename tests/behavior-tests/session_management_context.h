@@ -20,7 +20,8 @@
 #define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
 #include "mir/geometry/rectangle.h"
-#include "mir/frontend/session.h" // TODO: This is for SurfaceId only? Seems weird
+// TODO: This is for SurfaceId only? Seems incorrect
+#include "mir/frontend/session.h"
 
 #include <string>
 #include <map>
@@ -52,7 +53,7 @@ public:
     bool open_window_consuming(std::string const& window_name);
     bool open_window_sized(std::string const& window_name, geometry::Size const& size);
 
-    geometry::Size get_window_size(std::string const& window_name);
+    geometry::Size get_window_size(std::string const& window_name) const;
     
     void set_view_area(geometry::Rectangle const& new_view_region);
 

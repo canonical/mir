@@ -156,7 +156,7 @@ bool mtc::SessionManagementContext::open_window_sized(std::string const& window_
     return true;
 }
 
-geom::Size mtc::SessionManagementContext::get_window_size(std::string const& window_name)
+geom::Size mtc::SessionManagementContext::get_window_size(std::string const& window_name) const
 {
     auto const window = open_windows[window_name];
     auto const session = std::get<0>(window);
