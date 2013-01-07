@@ -77,7 +77,7 @@ struct DummySurfaceOrganiser : public mf::SurfaceOrganiser
     {
         auto name = params.name;
         auto surf = std::make_shared<ms::Surface>(name,
-                                                  std::make_shared<SizedBufferBundle>(params.size));
+            std::make_shared<SizedBufferBundle>(params.size));
         surfaces_by_name[name] = surf;
         
         return surf;
@@ -121,7 +121,7 @@ struct DummyViewableArea : public mg::ViewableArea
 
 }
 }
-}
+} // namespace mir
 
 mtc::SessionManagementContext::SessionManagementContext()
 {
@@ -132,7 +132,7 @@ mtc::SessionManagementContext::SessionManagementContext()
     session_manager = server_configuration->make_session_manager(underlying_organiser, view_area);
 }
 
-// TODO: This would be less awkward with the ApplicationWindow class.
+// TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
     auto params = ms::a_surface().of_name(window_name);
