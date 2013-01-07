@@ -17,10 +17,10 @@
 include_directories(${CUKE_INCLUDE_DIRS})
 
 set(SESSION_MANAGER_BEHAVIOR_SOURCES <SOURCES>)
-add_executable(session-manager-steps session_manager_steps.cpp session_management_context.cpp)
+add_executable(session-management-cucumber-steps session_manager_steps.cpp session_management_context.cpp)
 
 target_link_libraries(
-  session-manager-steps
+  session-management-cucumber-steps
   
   mirfrontend
   
