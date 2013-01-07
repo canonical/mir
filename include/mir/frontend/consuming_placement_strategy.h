@@ -35,7 +35,7 @@ namespace frontend
 class ConsumingPlacementStrategy : public PlacementStrategy
 {
 public:
-    ConsumingPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
+    explicit ConsumingPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
     virtual ~ConsumingPlacementStrategy() {}
     
     void place(surfaces::SurfaceCreationParameters const& input_parameters,
