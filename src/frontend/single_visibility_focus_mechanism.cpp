@@ -28,18 +28,18 @@
 #include <stdio.h>
 
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
-mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::SessionContainer> const& app_container) :
+msess::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msess::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 }
 
-void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
+void msess::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msess::Session> const& focus_session)
 {
     app_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session) {
+        [&](std::shared_ptr<msess::Session> const& session) {
         if (session == focus_session)
         {
             session->show();

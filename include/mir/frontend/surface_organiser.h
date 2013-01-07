@@ -30,7 +30,7 @@ class Surface;
 class SurfaceCreationParameters;
 }
 
-namespace frontend
+namespace sessions
 {
 class SurfaceOrganiser
 {

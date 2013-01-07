@@ -35,7 +35,7 @@ class Surface;
 class SurfaceCreationParameters;
 class SurfaceStackModel;
 
-class SurfaceController : public frontend::SurfaceOrganiser
+class SurfaceController : public sessions::SurfaceOrganiser
 {
 public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);

@@ -31,16 +31,16 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
 
-struct MockApplicationSession : public mf::Session
+struct MockApplicationSession : public msess::Session
 {
-  MockApplicationSession(std::shared_ptr<mf::SurfaceOrganiser> organiser,
+  MockApplicationSession(std::shared_ptr<msess::SurfaceOrganiser> organiser,
                          std::string name) : Session(organiser, name)
   {
   }
@@ -53,18 +53,18 @@ struct MockApplicationSession : public mf::Session
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
-    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer);
+    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
+    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
 
     MockApplicationSession m1(organiser, "Visual Studio 7");
     MockApplicationSession m2(organiser, "Visual Studio 8");
     MockApplicationSession m3(organiser, "Visual Studio 9");
 
-    std::shared_ptr<mf::Session> app1(&m1, mir::EmptyDeleter());
-    std::shared_ptr<mf::Session> app2(&m2, mir::EmptyDeleter());
-    std::shared_ptr<mf::Session> app3(&m3, mir::EmptyDeleter());
+    std::shared_ptr<msess::Session> app1(&m1, mir::EmptyDeleter());
+    std::shared_ptr<msess::Session> app2(&m2, mir::EmptyDeleter());
+    std::shared_ptr<msess::Session> app3(&m3, mir::EmptyDeleter());
 
-    mf::SingleVisibilityFocusMechanism focus_mechanism(model);
+    msess::SingleVisibilityFocusMechanism focus_mechanism(model);
 
     EXPECT_CALL(m1, show()).Times(1);
     EXPECT_CALL(m2, hide()).Times(1);

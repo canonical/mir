@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 namespace detail
 {

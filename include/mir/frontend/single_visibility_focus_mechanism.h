@@ -30,7 +30,7 @@ namespace surfaces
 class SurfaceOrganiser;
 }
 
-namespace frontend
+namespace sessions
 {
 class Session;
 class SessionContainer;

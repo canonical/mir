@@ -24,7 +24,7 @@
 namespace mir
 {
 
-namespace frontend
+namespace sessions
 {
 
 class Session;
