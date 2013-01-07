@@ -135,9 +135,9 @@ mtc::SessionManagementContext::SessionManagementContext()
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    auto params = ms::a_surface().of_name(window_name);
+    auto const params = ms::a_surface().of_name(window_name);
     auto session = session_manager->open_session(window_name);
-    auto surface_id = session->create_surface(params);
+    auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
 
@@ -147,9 +147,9 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 bool mtc::SessionManagementContext::open_window_sized(std::string const& window_name,
                                                       geom::Size const& size)
 {
-    auto params = ms::a_surface().of_name(window_name).of_size(size);
+    auto const params = ms::a_surface().of_name(window_name).of_size(size);
     auto session = session_manager->open_session(window_name);
-    auto surface_id = session->create_surface(params);
+    auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
 
@@ -158,9 +158,9 @@ bool mtc::SessionManagementContext::open_window_sized(std::string const& window_
 
 geom::Size mtc::SessionManagementContext::get_window_size(std::string const& window_name)
 {
-    auto window = open_windows[window_name];
-    auto session = std::get<0>(window);
-    auto surface_id = std::get<1>(window);
+    auto const window = open_windows[window_name];
+    auto const session = std::get<0>(window);
+    auto const surface_id = std::get<1>(window);
     
     return session->get_surface(surface_id)->size();
 }
