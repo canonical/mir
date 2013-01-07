@@ -53,5 +53,5 @@ void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& 
     }
     
     // Otherwise default to display size (consuming-mode.feature: l5)
-    placed_parameters.size = display_area->view_area().size;
+    placed_parameters.size = view_area.size;
 }

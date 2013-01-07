@@ -69,7 +69,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_forwarded)
     
     const geom::Size requested_size = geom::Size{geom::Width{100}, geom::Height{100}};
 
-    EXPECT_CALL(*viewable_area, view_area()).Times(0);
+    EXPECT_CALL(*viewable_area, view_area()).Times(1);
 
     mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
     ms::SurfaceCreationParameters input_params, placed_params;
