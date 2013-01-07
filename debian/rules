@@ -5,7 +5,7 @@
 	dh $@ --parallel
 
 override_dh_auto_test:
-	dh_auto_test --max-parallel=1
+	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
 
 # We need to rely on the select-based reactor to fix the ppa builds.
 # TODO: Get rid of this workaround by either switching to boost 1.51 or
