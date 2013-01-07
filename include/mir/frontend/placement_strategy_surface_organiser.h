@@ -47,8 +47,8 @@ protected:
     PlacementStrategySurfaceOrganiser& operator=(const PlacementStrategySurfaceOrganiser&) = delete;
 
 private:
-    std::shared_ptr<SurfaceOrganiser> underlying_organiser;
-    std::shared_ptr<PlacementStrategy> placement_strategy;
+    std::shared_ptr<SurfaceOrganiser> const underlying_organiser;
+    std::shared_ptr<PlacementStrategy> const placement_strategy;
 };
 
 }
