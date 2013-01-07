@@ -40,8 +40,11 @@ void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& 
     auto input_height = request_parameters.size.height.as_uint32_t();
     auto view_area = display_area->view_area();
 
-    // If we have a request try and fill it. We may have to clip to the screen size though
-    // (consuming-mode.feature: l23)
+    // If we have a request try and fill it. We may have to clip to 
+    // the screen size though (consuming-mode.feature: l23).
+    //
+    // TODO: It seems a little strange that we allow one dimension to be 0
+    // but this does not seem like the right place to correct for that.
     if (input_width != 0 || input_height != 0)
     {
         placed_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
