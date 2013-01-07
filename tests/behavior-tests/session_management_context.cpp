@@ -158,9 +158,9 @@ bool mtc::SessionManagementContext::open_window_sized(std::string const& window_
 
 geom::Size mtc::SessionManagementContext::get_window_size(std::string const& window_name) const
 {
-    auto const window = open_windows[window_name];
-    auto const session = std::get<0>(window);
-    auto const surface_id = std::get<1>(window);
+    auto window = open_windows[window_name];
+    auto session = std::get<0>(window);
+    auto surface_id = std::get<1>(window);
     
     return session->get_surface(surface_id)->size();
 }

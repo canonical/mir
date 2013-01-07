@@ -84,8 +84,8 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_unreasonable_geometry_ar
 {
     using namespace ::testing;
     
-    const geom::Width unreasonable_width = default_view_area.size.width+1;
-    const geom::Width unreasonable_height = default_view_area.size.width+1;
+    const geom::Width unreasonable_width = geom::Width{default_view_area.size.width.as_uint32_t() + 1};
+    const geom::Height unreasonable_height = geom::Height{default_view_area.size.width.as_uint32_t() + 1};
     const geom::Size unreasonable_size = geom::Size{unreasonable_width, unreasonable_height};
 
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
@@ -97,6 +97,6 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_unreasonable_geometry_ar
     placement_strategy.place(input_params, placed_params);
     
     auto const& clipped_size = default_view_area.size;
-    EXPECT_EQ(placed_params.size, default_view_area);
+    EXPECT_EQ(placed_params.size, clipped_size);
     
 }
