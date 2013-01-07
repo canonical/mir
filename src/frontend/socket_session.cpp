@@ -61,7 +61,7 @@ void mfd::SocketSession::read_next_message()
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
         boost::bind(&mfd::SocketSession::on_read_size,
-                    shared_from_this(), ba::placeholders::error));
+                    this, ba::placeholders::error));
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
@@ -75,7 +75,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
              message,
              boost::asio::transfer_exactly(body_size),
              boost::bind(&mfd::SocketSession::on_new_message,
-                         shared_from_this(), ba::placeholders::error));
+                         this, ba::placeholders::error));
     }
 }
 
@@ -92,7 +92,7 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
     {
         std::cerr << "ERROR reading message: " << ec.message() << std::endl;
     }
-
+    
     if (alive)
     {
         read_next_message();
