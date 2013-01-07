@@ -163,6 +163,8 @@ set(GTEST_FOUND TRUE)
 include_directories (
   ${GTEST_INCLUDE_DIR}
 )
+# We need to build cucumber after gtest
+add_subdirectory(3rd_party/cucumber-cpp)
 
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
