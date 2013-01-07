@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_H_
-#define MIR_FRONTEND_SESSION_H_
+#ifndef MIR_SESSIONS_SESSION_H_
+#define MIR_SESSIONS_SESSION_H_
 
 #include "mir/sessions/int_wrapper.h"
 #include "mir/thread/all.h"
@@ -77,4 +77,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_SESSION_H_
+#endif // MIR_SESSIONS_SESSION_H_

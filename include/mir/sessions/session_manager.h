@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_MANAGER_H_
-#define MIR_FRONTEND_APPLICATION_MANAGER_H_
+#ifndef MIR_SESSIONS_APPLICATION_MANAGER_H_
+#define MIR_SESSIONS_APPLICATION_MANAGER_H_
 
 #include <memory>
 #include "mir/sessions/session_store.h"
@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_MANAGER_H_
+#endif // MIR_SESSIONS_APPLICATION_MANAGER_H_

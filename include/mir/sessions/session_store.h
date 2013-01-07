@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_STORE_H_
-#define MIR_FRONTEND_SESSION_STORE_H_
+#ifndef MIR_SESSIONS_SESSION_STORE_H_
+#define MIR_SESSIONS_SESSION_STORE_H_
 
 #include <memory>
 
@@ -48,4 +48,4 @@ protected:
 }
 }
 
-#endif // MIR_FRONTEND_SESSION_STORE_H_
+#endif // MIR_SESSIONS_SESSION_STORE_H_
