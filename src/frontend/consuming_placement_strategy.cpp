@@ -31,24 +31,24 @@ mf::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::V
 {
 }
 
-void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& input_parameters,
-                                      ms::SurfaceCreationParameters &output_parameters)
+void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& request_parameters,
+                                      ms::SurfaceCreationParameters &placed_parameters)
 {
-    output_parameters = input_parameters;
+    placed_parameters = request_parameters;
 
-    // If we have a requested size use it. It seems a little strange to allow 0 as one dimension but 
-    // it does not seem like this is the place to check for that.
-    auto input_width = input_parameters.size.width.as_uint32_t();
-    auto input_height = input_parameters.size.height.as_uint32_t();
+    auto input_width = request_parameters.size.width.as_uint32_t();
+    auto input_height = request_parameters.size.height.as_uint32_t();
     auto view_area = display_area->view_area();
-    
+
+    // If we have a request try and fill it. We may have to clip to the screen size though
+    // (consuming-mode.feature: l23)
     if (input_width != 0 || input_height != 0)
     {
-        output_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
-        output_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
+        placed_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
+        placed_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
         return;
     }
     
-    // Otherwise default to display size
-    output_parameters.size = display_area->view_area().size;
+    // Otherwise default to display size (consuming-mode.feature: l5)
+    placed_parameters.size = display_area->view_area().size;
 }
