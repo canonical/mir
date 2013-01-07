@@ -15,7 +15,7 @@ set(CUKE_SOURCES
     main.cpp
 )
 
-include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${GTEST_INCLUDE_DIR})
 set(CUKE_SOURCES ${CUKE_SOURCES} drivers/GTestDriver.cpp)
 
 #if(CPPSPEC_FOUND)
