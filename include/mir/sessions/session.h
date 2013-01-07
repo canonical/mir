@@ -37,6 +37,7 @@ class Surface;
 
 }
 
+/// Management of client application sessions
 namespace sessions
 {
 class SurfaceOrganiser;
