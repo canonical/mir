@@ -30,22 +30,21 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-    static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                     geom::Size{geom::Width(1600),
-                                                                                geom::Height(1600)}};
+static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
+                                                                 geom::Size{geom::Width(1600),
+                                                                            geom::Height(1600)}};
     
-    struct ConsumingPlacementStrategySetup : public testing::Test
+struct ConsumingPlacementStrategySetup : public testing::Test
+{
+    void SetUp()
     {
-        void SetUp()
-        {
-            using namespace ::testing;
+        using namespace ::testing;
+        viewable_area = std::make_shared<mtd::MockViewableArea>();
+        ON_CALL(*viewable_area, view_area()).WillByDefault(Return(default_view_area));
+    }
 
-            viewable_area = std::make_shared<mtd::MockViewableArea>();
-            ON_CALL(*viewable_area, view_area()).WillByDefault(Return(default_view_area));
-        }
-
-        std::shared_ptr<mtd::MockViewableArea> viewable_area;
-    };
+    std::shared_ptr<mtd::MockViewableArea> viewable_area;
+};
 }
 
 

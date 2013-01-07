@@ -110,10 +110,14 @@ namespace mir
 namespace
 {
 
+static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
+                                                                 geom::Size{geom::Width(1600),
+                                                                            geom::Height(1600)}};
+
 class StubDisplay : public mg::Display
 {
  public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
+    geom::Rectangle view_area() const { return default_view_area; }
     void clear() { std::this_thread::yield(); }
     bool post_update() { return true; }
 };
