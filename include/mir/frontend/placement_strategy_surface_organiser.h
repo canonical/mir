@@ -36,7 +36,7 @@ public:
                                       std::shared_ptr<PlacementStrategy> const& placement_strategy);
     virtual ~PlacementStrategySurfaceOrganiser();
     
-    std::weak_ptr<surfaces::Surface> create_surface(const surfaces::SurfaceCreationParameters& params);
+    std::weak_ptr<surfaces::Surface> create_surface(surfaces::SurfaceCreationParameters const& params);
     void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface);
 
     void hide_surface(std::weak_ptr<surfaces::Surface> const& surface);
