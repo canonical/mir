@@ -1,2 +1,0 @@
-/usr/bin/ar cr libCalc.a  CMakeFiles/Calc.dir/Calc/Calculator.cpp.o
-/usr/bin/ranlib libCalc.a

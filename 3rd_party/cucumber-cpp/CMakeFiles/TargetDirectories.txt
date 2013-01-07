@@ -1,2 +1,0 @@
-/home/augustwest/src/cucumber-cpp/examples/Calc/CMakeFiles/Calc.dir
-/home/augustwest/src/cucumber-cpp/src/CMakeFiles/cucumber-cpp.dir

@@ -59,6 +59,7 @@ public:
 protected:
     SessionManagementContext(const SessionManagementContext&) = delete;
     SessionManagementContext& operator=(const SessionManagementContext&) = delete;
+
 private:
     std::map<std::string, std::tuple<std::shared_ptr<frontend::Session>, frontend::SurfaceId>> open_windows;
     std::shared_ptr<frontend::SessionManager> session_manager;

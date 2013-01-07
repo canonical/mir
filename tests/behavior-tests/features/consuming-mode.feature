@@ -30,3 +30,5 @@ Scenario Outline: Application requests an unreasonable size and is clipped to th
     | 2048x2048    | 2500x2500                   | 2048x2048    |
     | 2048x2048    | 2100x2047                   | 2048x2047    |
     | 2048x2048    | 2040x2049                   | 2040x2048    |
+
+
