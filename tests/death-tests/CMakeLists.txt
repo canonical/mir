@@ -28,6 +28,7 @@ target_link_libraries(
   miroptions
   mircompositor
   mirfrontend
+  mirsurfaces
   mirinput
   mirsurfaces
   mirclient

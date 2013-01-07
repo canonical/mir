@@ -28,6 +28,7 @@ add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(frontend/)
+add_subdirectory(sessions/)
 
 
 set(
@@ -60,6 +61,7 @@ target_link_libraries(
   miroptions
   mircompositor
   mirfrontend
+  mirsurfaces
   mirgraphics
   mirinput
   mirsurfaces
