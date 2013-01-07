@@ -7,3 +7,5 @@
 override_dh_auto_test:
 	dh_auto_test --max-parallel=1
 
+override_dh_auto_configure:
+	dh_auto_configure -- -DMIR_DISABLE_EPOLL_REACTOR=YES
