@@ -30,8 +30,10 @@ class PlacementStrategy
 {
 public:
     virtual ~PlacementStrategy() {}
-    virtual void place(surfaces::SurfaceCreationParameters const& input_parameters,
-                       surfaces::SurfaceCreationParameters &output_parameters) = 0;
+    // TODO: It is strange to pass SurfaceCreationParameters here, perhaps a new interface
+    // is needed.
+    virtual void place(surfaces::SurfaceCreationParameters const& request_parameters,
+                       surfaces::SurfaceCreationParameters &placed_parameters) = 0;
 
 protected:
     PlacementStrategy() = default;
