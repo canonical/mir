@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_H_
 #define MIR_FRONTEND_SESSION_H_
 
-#include "mir/frontend/int_wrapper.h"
+#include "mir/sessions/int_wrapper.h"
 #include "mir/thread/all.h"
 
 #include <memory>

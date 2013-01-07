@@ -16,12 +16,12 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/surface_organiser.h"
-#include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus_setter.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/focus_sequence.h"
+#include "mir/sessions/focus_setter.h"
 
 #include <memory>
 #include <cassert>

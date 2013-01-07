@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/session.h"
+#include "mir/sessions/session.h"
 #include "mir/exception.h"
 
 void mir::frontend::ApplicationMediator::drm_auth_magic(

@@ -16,10 +16,10 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/surface_organiser.h"
-#include "mir/frontend/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
 
 #include <memory>
 #include <cassert>

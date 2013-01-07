@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/render_view.h"
-#include "mir/frontend/session_manager.h"
+#include "mir/sessions/session_manager.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"

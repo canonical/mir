@@ -16,16 +16,16 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/session_manager.h"
+#include "mir/sessions/session_manager.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus_setter.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/session_container.h"
+#include "mir/sessions/focus_sequence.h"
+#include "mir/sessions/focus_setter.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/session_container.h"
 
 
 #include <gmock/gmock.h>

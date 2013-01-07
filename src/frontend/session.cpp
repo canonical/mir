@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/frontend/session.h"
+#include "mir/sessions/session.h"
 
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_controller.h"

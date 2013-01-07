@@ -17,9 +17,9 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_organiser.h"

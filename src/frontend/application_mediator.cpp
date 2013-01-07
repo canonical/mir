@@ -18,9 +18,9 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/session_store.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/session_store.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
