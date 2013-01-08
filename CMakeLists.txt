@@ -73,6 +73,17 @@ include_directories (
   ${Boost_INCLUDE_DIRS}
 )
 
+option(
+  MIR_DISABLE_EPOLL_REACTOR
+  "Disable boost::asio's epoll implementation and switch to a select-based reactor to account for ancient kernels on ppa builders."
+  OFF
+)
+if(MIR_DISABLE_EPOLL_REACTOR)
+add_definitions(
+  -DBOOST_ASIO_DISABLE_EPOLL -DBOOST_ASIO_DISABLE_KQUEUE -DBOOST_ASIO_DISABLE_DEV_POLL
+)
+endif(MIR_DISABLE_EPOLL_REACTOR)
+
 # Default to gbm backend
 set(
   MIR_PLATFORM

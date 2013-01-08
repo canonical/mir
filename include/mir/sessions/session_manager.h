@@ -16,16 +16,16 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_APPLICATION_MANAGER_H_
-#define MIR_FRONTEND_APPLICATION_MANAGER_H_
+#ifndef MIR_SESSIONS_APPLICATION_MANAGER_H_
+#define MIR_SESSIONS_APPLICATION_MANAGER_H_
 
 #include <memory>
-#include "mir/frontend/session_store.h"
+#include "mir/sessions/session_store.h"
 
 namespace mir
 {
 
-namespace frontend
+namespace sessions
 {
 class SurfaceOrganiser;
 class Session;
@@ -53,7 +53,7 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<frontend::SurfaceOrganiser> surface_organiser;
+    std::shared_ptr<sessions::SurfaceOrganiser> surface_organiser;
     std::shared_ptr<SessionContainer> app_container;
     std::shared_ptr<FocusSequence> focus_sequence;
     std::shared_ptr<FocusSetter> focus_setter;
@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_APPLICATION_MANAGER_H_
+#endif // MIR_SESSIONS_APPLICATION_MANAGER_H_

@@ -25,7 +25,7 @@ namespace mc = mir::compositor;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::make_communicator(
-    std::shared_ptr<mf::SessionManager> const& session_manager,
+    std::shared_ptr<sessions::SessionManager> const& session_manager,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {

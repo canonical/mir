@@ -16,16 +16,16 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/session_manager.h"
+#include "mir/sessions/session_manager.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus_setter.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/session_container.h"
+#include "mir/sessions/focus_sequence.h"
+#include "mir/sessions/focus_setter.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/session_container.h"
 
 
 #include <gmock/gmock.h>
@@ -35,16 +35,16 @@
 #include "mir_test_doubles/mock_surface_organiser.h"
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
 
-struct MockFocusSetter: public mf::FocusSetter
+struct MockFocusSetter: public msess::FocusSetter
 {
-  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
+  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msess::Session> const&));
 };
 
 }
@@ -53,15 +53,15 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     mtd::MockSurfaceOrganiser organiser;
-    std::shared_ptr<mf::SessionContainer> container(new mf::SessionContainer());
-    mf::RegistrationOrderFocusSequence sequence(container);
+    std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer());
+    msess::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
-    std::shared_ptr<mf::Session> new_session;
+    std::shared_ptr<msess::Session> new_session;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        container,
-                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
@@ -85,15 +85,15 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 {
     using namespace ::testing;
     mtd::MockSurfaceOrganiser organiser;
-    std::shared_ptr<mf::SessionContainer> model(new mf::SessionContainer());
-    mf::RegistrationOrderFocusSequence sequence(model);
+    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer());
+    msess::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;
-    std::shared_ptr<mf::Session> new_session;
+    std::shared_ptr<msess::Session> new_session;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
                                        model,
-                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 

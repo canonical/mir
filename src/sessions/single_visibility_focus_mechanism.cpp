@@ -16,10 +16,10 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/surface_organiser.h"
-#include "mir/frontend/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
 
 #include <memory>
 #include <cassert>
@@ -28,18 +28,18 @@
 #include <stdio.h>
 
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
-mf::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<mf::SessionContainer> const& app_container) :
+msess::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msess::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 }
 
-void mf::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
+void msess::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msess::Session> const& focus_session)
 {
     app_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session) {
+        [&](std::shared_ptr<msess::Session> const& session) {
         if (session == focus_session)
         {
             session->show();

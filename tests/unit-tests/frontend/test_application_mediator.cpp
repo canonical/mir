@@ -22,14 +22,14 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_store.h"
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_store.h"
+#include "mir/sessions/surface_organiser.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
-#include "null_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_bundle.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -42,7 +42,8 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace mt = mir::test;
+namespace msess = mir::sessions;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -57,11 +58,11 @@ namespace
  * stubable/mockable.
  */
 
-class DestructionRecordingSession : public mf::Session
+class DestructionRecordingSession : public msess::Session
 {
 public:
-    DestructionRecordingSession(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser)
-        : mf::Session{surface_organiser, "Stub"}
+    DestructionRecordingSession(std::shared_ptr<msess::SurfaceOrganiser> const& surface_organiser)
+        : msess::Session{surface_organiser, "Stub"}
     {
         destroyed = false;
     }
@@ -73,13 +74,13 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubSurfaceOrganiser : public mf::SurfaceOrganiser
+class StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
  public:
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
-                                                     std::make_shared<mt::NullBufferBundle>());
+                                                     std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
         return std::weak_ptr<ms::Surface>(surface);
@@ -94,7 +95,7 @@ class StubSurfaceOrganiser : public mf::SurfaceOrganiser
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
-class StubSessionStore : public mf::SessionStore
+class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
@@ -102,16 +103,16 @@ public:
     {
     }
 
-    std::shared_ptr<mf::Session> open_session(std::string const& /*name*/)
+    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
         return std::make_shared<DestructionRecordingSession>(organiser);
     }
 
-    void close_session(std::shared_ptr<mf::Session> const& /*session*/) {}
+    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<mf::SurfaceOrganiser> organiser;
+    std::shared_ptr<msess::SurfaceOrganiser> organiser;
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -176,7 +177,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<mf::SessionStore> const session_store;
+    std::shared_ptr<msess::SessionStore> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;

@@ -17,8 +17,8 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_container.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -29,18 +29,18 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
-    mf::SessionContainer container;
+    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
+    msess::SessionContainer container;
 
-    std::shared_ptr<mf::Session> app1(new mf::Session(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<mf::Session> app2(new mf::Session(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::Session> app1(new msess::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::Session> app2(new msess::Session(organiser, std::string("Visual Studio 8")));
 
     container.insert_session(app1);
     container.insert_session(app2);
@@ -49,7 +49,7 @@ TEST(SessionContainer, for_each)
     {
         MOCK_METHOD1(check_name, void (std::string const&));
 
-        void operator()(std::shared_ptr<mf::Session> const& session)
+        void operator()(std::shared_ptr<msess::Session> const& session)
         {
             check_name(session->name());
         }

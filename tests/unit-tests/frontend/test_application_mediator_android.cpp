@@ -20,9 +20,9 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_store.h"
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_store.h"
+#include "mir/sessions/surface_organiser.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -37,6 +37,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
+namespace msess = mir::sessions;
 
 namespace
 {
@@ -49,7 +50,7 @@ namespace
  * In particular, it would be nice if mf::Session was stubable/mockable.
  */
 
-class StubSurfaceOrganiser : public mf::SurfaceOrganiser
+class StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
  public:
     std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
@@ -66,7 +67,7 @@ class StubSurfaceOrganiser : public mf::SurfaceOrganiser
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
-class StubSessionStore : public mf::SessionStore
+class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
@@ -74,16 +75,16 @@ public:
     {
     }
 
-    std::shared_ptr<mf::Session> open_session(std::string const& /*name*/)
+    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<mf::Session>(organiser, "stub");
+        return std::make_shared<msess::Session>(organiser, "stub");
     }
 
-    void close_session(std::shared_ptr<mf::Session> const& /*session*/) {}
+    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<mf::SurfaceOrganiser> organiser;
+    std::shared_ptr<msess::SurfaceOrganiser> organiser;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -145,7 +146,7 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<mf::SessionStore> const session_store;
+    std::shared_ptr<msess::SessionStore> const session_store;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

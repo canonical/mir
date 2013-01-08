@@ -16,26 +16,26 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 
-mf::SessionContainer::SessionContainer()
+msess::SessionContainer::SessionContainer()
 {
 
 }
 
-mf::SessionContainer::~SessionContainer()
+msess::SessionContainer::~SessionContainer()
 {
 }
 
-void mf::SessionContainer::insert_session(std::shared_ptr<mf::Session> const& session)
+void msess::SessionContainer::insert_session(std::shared_ptr<msess::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
     auto name = session->name();
@@ -43,7 +43,7 @@ void mf::SessionContainer::insert_session(std::shared_ptr<mf::Session> const& se
     apps.push_back(session);
 }
 
-void mf::SessionContainer::remove_session(std::shared_ptr<mf::Session> const& session)
+void msess::SessionContainer::remove_session(std::shared_ptr<msess::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -51,7 +51,7 @@ void mf::SessionContainer::remove_session(std::shared_ptr<mf::Session> const& se
     apps.erase(it);
 }
 
-void mf::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
+void msess::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 

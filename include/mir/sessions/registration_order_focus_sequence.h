@@ -16,14 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_REGISTRATION_FOCUS_SEQUENCE_H_
-#define MIR_FRONTEND_REGISTRATION_FOCUS_SEQUENCE_H_
+#ifndef MIR_SESSIONS_REGISTRATION_FOCUS_SEQUENCE_H_
+#define MIR_SESSIONS_REGISTRATION_FOCUS_SEQUENCE_H_
 
-#include "mir/frontend/focus_sequence.h"
+#include "mir/sessions/focus_sequence.h"
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 class SessionContainer;
 
@@ -47,4 +47,4 @@ private:
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_STRATEGY_H_
+#endif // MIR_SESSIONS_FOCUS_STRATEGY_H_
