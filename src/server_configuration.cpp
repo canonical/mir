@@ -48,7 +48,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
-namespace mses = mir::sessions;
+namespace msess = mir::sessions;
 namespace mi = mir::input;
 
 namespace
@@ -57,7 +57,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mses::SessionManager> const& session_manager,
+        std::shared_ptr<msess::SessionManager> const& session_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
@@ -72,7 +72,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mses::SessionManager> session_manager;
+    std::shared_ptr<msess::SessionManager> session_manager;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -157,13 +157,13 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<mses::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<mses::SurfaceOrganiser> const& surface_organiser)
+std::shared_ptr<msess::SessionManager>
+mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceOrganiser> const& surface_organiser)
 {
-    auto session_container = std::make_shared<mses::SessionContainer>();
-    auto focus_mechanism = std::make_shared<mses::SingleVisibilityFocusMechanism>(session_container);
-    auto focus_selection_strategy = std::make_shared<mses::RegistrationOrderFocusSequence>(session_container);
-    return std::make_shared<mses::SessionManager>(surface_organiser, session_container, focus_selection_strategy, focus_mechanism);
+    auto session_container = std::make_shared<msess::SessionContainer>();
+    auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
+    auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
+    return std::make_shared<msess::SessionManager>(surface_organiser, session_container, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>
@@ -176,7 +176,7 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<mses::SessionManager> const& session_manager,
+    std::shared_ptr<msess::SessionManager> const& session_manager,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {

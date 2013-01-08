@@ -43,7 +43,6 @@ target_link_libraries(
   mirdraw
   mirtestdraw
   mirfrontend
-  mirsurfaces
   mirplatformgraphics
   mirgraphics
   mirinput
