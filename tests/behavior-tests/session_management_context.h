@@ -26,7 +26,7 @@
 namespace mir
 {
 
-namespace frontend
+namespace sessions
 {
 class Session;
 class SessionManager;
@@ -50,8 +50,8 @@ protected:
     SessionManagementContext& operator=(const SessionManagementContext&) = delete;
 
 private:
-    std::map<std::string, std::weak_ptr<frontend::Session>> open_sessions;
-    std::shared_ptr<frontend::SessionManager> session_manager;
+    std::map<std::string, std::weak_ptr<sessions::Session>> open_sessions;
+    std::shared_ptr<sessions::SessionManager> session_manager;
 };
 
 }

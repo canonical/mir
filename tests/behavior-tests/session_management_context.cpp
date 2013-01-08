@@ -21,14 +21,14 @@
 #include "mir_test_doubles/null_buffer_bundle.h"
 
 #include "mir/surfaces/surface.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/single_visibility_focus_mechanism.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/surface_organiser.h"
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
@@ -37,7 +37,7 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
+struct StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
     StubSurfaceOrganiser()
     {
@@ -70,12 +70,12 @@ struct StubSurfaceOrganiser : public mf::SurfaceOrganiser
 
 mtc::SessionManagementContext::SessionManagementContext()
 {
-    auto model = std::make_shared<mf::SessionContainer>();
-    session_manager = std::make_shared<mf::SessionManager>(
+    auto model = std::make_shared<msess::SessionContainer>();
+    session_manager = std::make_shared<msess::SessionManager>(
             std::make_shared<StubSurfaceOrganiser>(),
             model,
-            std::make_shared<mf::RegistrationOrderFocusSequence>(model),
-            std::make_shared<mf::SingleVisibilityFocusMechanism>(model));
+            std::make_shared<msess::RegistrationOrderFocusSequence>(model),
+            std::make_shared<msess::SingleVisibilityFocusMechanism>(model));
 }
 
 bool mtc::SessionManagementContext::open_session(const std::string& session_name)
