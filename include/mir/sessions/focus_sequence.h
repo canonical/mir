@@ -16,32 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_FOCUS_SETTER_H_
-#define MIR_FRONTEND_FOCUS_SETTER_H_
+#ifndef MIR_SESSIONS_FOCUS_STRATEGY_H_
+#define MIR_SESSIONS_FOCUS_STRATEGY_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 class Session;
 
-class FocusSetter
+class FocusSequence
 {
 public:
-    virtual ~FocusSetter() {}
+    virtual ~FocusSequence() {}
 
-    virtual void set_focus_to(std::shared_ptr<Session> const& new_focus) = 0;
+    virtual std::weak_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::weak_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
 
 protected:
-    FocusSetter() = default;
-    FocusSetter(const FocusSetter&) = delete;
-    FocusSetter& operator=(const FocusSetter&) = delete;
+    FocusSequence() = default;
+    FocusSequence(const FocusSequence&) = delete;
+    FocusSequence& operator=(const FocusSequence&) = delete;
 };
 
 }
 }
 
 
-#endif // MIR_FRONTEND_FOCUS_SETTER_H_
+#endif // MIR_SESSIONS_FOCUS_SEQUENCE_H_

@@ -71,6 +71,34 @@ target_link_libraries(
 
 )
 
+include_directories(${GLESv2_INCLUDE_DIRS})
+
+set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
+add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
+
+target_link_libraries(
+    render_to_fb
+
+    mirplatformgraphics
+    mirlogging
+    mirdraw
+    mircompositor
+    ${Boost_LIBRARIES}
+)
+
+set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
+add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
+target_link_libraries(
+    render_surfaces
+
+    mircompositor
+    mirsurfaces
+    mirgraphics
+    mirplatformgraphics
+    ${Boost_LIBRARIES}
+)
+
+
 install(
   TARGETS mir_demo_client
   RUNTIME DESTINATION bin)

@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/session.h"
+#include "mir/sessions/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/exception.h"

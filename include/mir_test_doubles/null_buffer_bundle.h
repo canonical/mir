@@ -16,14 +16,16 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_NULL_BUFFER_BUNDLE_H_
-#define MIR_TEST_NULL_BUFFER_BUNDLE_H_
+#ifndef MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_
+#define MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_
 
 #include <mir/compositor/buffer_bundle.h>
 #include <mir_test_doubles/mock_buffer.h>
 namespace mir
 {
 namespace test
+{
+namespace doubles
 {
 
 class NullBufferBundle : public compositor::BufferBundle
@@ -67,5 +69,6 @@ public:
 
 }
 }
+}
 
-#endif /* MIR_TEST_NULL_BUFFER_BUNDLE_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_ */

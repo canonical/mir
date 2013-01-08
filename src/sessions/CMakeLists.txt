@@ -12,6 +12,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-add_subdirectory(vera++)
+
+set(
+  SESSIONS_SOURCES
+
+  session.cpp
+  session_container.cpp
+  session_manager.cpp
+  registration_order_focus_sequence.cpp
+  single_visibility_focus_mechanism.cpp
+)
+
+add_library(
+  mirsessions STATIC
+
+  ${SESSIONS_SOURCES}
+)

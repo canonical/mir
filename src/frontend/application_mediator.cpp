@@ -18,9 +18,9 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
-#include "mir/frontend/session_store.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/session_store.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/surface_organiser.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -36,7 +36,7 @@
 #include "mir/exception.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<SessionStore> const& session_store,
+    std::shared_ptr<sessions::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
@@ -145,6 +145,8 @@ void mir::frontend::ApplicationMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
+    using sessions::SurfaceId;
+
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
@@ -189,7 +191,7 @@ void mir::frontend::ApplicationMediator::release_surface(
 
     listener->application_release_surface_called(application_session->name());
 
-    auto const id = SurfaceId(request->value());
+    auto const id = sessions::SurfaceId(request->value());
 
     application_session->destroy_surface(id);
 
