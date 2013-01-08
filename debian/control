@@ -14,7 +14,8 @@ Build-Depends: cmake,
                libgles2-mesa-dev,
                libgbm-dev,
                libprotobuf-dev,
-               pkg-config
+               pkg-config,
+               libhybris-dev [linux-armhf]
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir/ubuntu

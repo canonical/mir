@@ -11,7 +11,7 @@ find_path(LIBHARDWARE_INCLUDE_DIR
                  cutils/native_handle.h
                  system/graphics.h
                  system/window.h
-   HINTS         ${CMAKE_FIND_ROOT_PATH}/android-deps
+   HINTS         ${PROJECT_SOURCE_DIR}/3rd_party/android-deps
    )
 
 find_library(LIBHARDWARE_LIBRARY

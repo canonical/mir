@@ -22,7 +22,7 @@ find_path(ANDROID_UI_INCLUDE_DIR
                  ui/Rect.h
                  ui/Point.h
                  ui/egl/android_natives.h
-   HINTS         ${CMAKE_FIND_ROOT_PATH}/android-deps
+   HINTS         ${PROJECT_SOURCE_DIR}/3rd_party/android-deps
    )
 
 #todo: the function we need from libui.so is compiled into two different places, depending on whether we're 
