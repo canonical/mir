@@ -124,9 +124,9 @@ if (MIR_PLATFORM STREQUAL "android")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
 
     #bionic does not support the c++11 functionality we require for the <thread> and <chrono> library
-    #we work around this by using boost in the code 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_THREADS")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMIR_USING_BOOST_CHRONO")
+    #we work around this by using boost in the code
+    add_definitions( -DMIR_USING_BOOST_THREADS) 
+    add_definitions( -DMIR_USING_BOOST_CHRONO) 
     set(gtest_disable_pthreads ON)
 
   else()
