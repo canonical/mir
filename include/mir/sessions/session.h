@@ -16,10 +16,10 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_H_
-#define MIR_FRONTEND_SESSION_H_
+#ifndef MIR_SESSIONS_SESSION_H_
+#define MIR_SESSIONS_SESSION_H_
 
-#include "mir/frontend/int_wrapper.h"
+#include "mir/sessions/int_wrapper.h"
 #include "mir/thread/all.h"
 
 #include <memory>
@@ -37,7 +37,8 @@ class Surface;
 
 }
 
-namespace frontend
+/// Management of client application sessions
+namespace sessions
 {
 class SurfaceOrganiser;
 typedef detail::IntWrapper<> SurfaceId;
@@ -45,7 +46,7 @@ typedef detail::IntWrapper<> SurfaceId;
 class Session
 {
 public:
-    explicit Session(std::shared_ptr<frontend::SurfaceOrganiser> const& surface_organiser, std::string const& session_name);
+    explicit Session(std::shared_ptr<SurfaceOrganiser> const& surface_organiser, std::string const& session_name);
     virtual ~Session();
 
     SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
@@ -62,7 +63,7 @@ protected:
     Session& operator=(const Session&) = delete;
 
 private:
-    std::shared_ptr<frontend::SurfaceOrganiser> const surface_organiser;
+    std::shared_ptr<SurfaceOrganiser> const surface_organiser;
     std::string const session_name;
 
     SurfaceId next_id();
@@ -77,4 +78,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_SESSION_H_
+#endif // MIR_SESSIONS_SESSION_H_

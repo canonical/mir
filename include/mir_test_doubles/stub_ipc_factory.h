@@ -26,7 +26,7 @@
 
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
+namespace msess = mir::frontend;
 
 namespace mir
 {
@@ -35,12 +35,12 @@ namespace test
 namespace doubles
 {
 
-class StubIpcFactory : public mf::ProtobufIpcFactory
+class StubIpcFactory : public msess::ProtobufIpcFactory
 {
 public:
     StubIpcFactory(mir::protobuf::DisplayServer& server) :
         server(&server, EmptyDeleter()),
-        cache(std::make_shared<mf::ResourceCache>())
+        cache(std::make_shared<msess::ResourceCache>())
     {
     }
 
@@ -50,13 +50,13 @@ public:
     }
 
 private:
-    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    virtual std::shared_ptr<msess::ResourceCache> resource_cache()
     {
         return cache;
     }
 
     std::shared_ptr<mir::protobuf::DisplayServer> server;
-    std::shared_ptr<mf::ResourceCache> const cache;
+    std::shared_ptr<msess::ResourceCache> const cache;
 };
 
 }
