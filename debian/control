@@ -9,13 +9,13 @@ Build-Depends: cmake,
                g++-4.6,
                libboost1.48-all-dev | libboost-all-dev,
                protobuf-compiler,
-               libdrm-dev,
+               libdrm-dev [!armhf],
+               libgbm-dev [!armhf],
                libegl1-mesa-dev,
                libgles2-mesa-dev,
-               libgbm-dev,
                libprotobuf-dev,
                pkg-config,
-               libhybris-dev [linux-armhf]
+               libhybris-dev [armhf]
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir/ubuntu
