@@ -5,6 +5,7 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(LIBHARDWARE_INCLUDE_DIR
    NAMES         hardware/hardware.h
                  hardware/gralloc.h

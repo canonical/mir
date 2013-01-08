@@ -5,6 +5,7 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(ANDROID_UI_INCLUDE_DIR
    NAMES         ui/FramebufferNativeWindow.h
                  pixelflinger/pixelflinger.h

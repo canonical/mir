@@ -10,7 +10,7 @@ pkg_check_modules(PC_EGL QUIET egl)
 find_path(EGL_INCLUDE_DIR EGL/egl.h
           HINTS ${PC_EGL_INCLUDEDIR} ${PC_EGL_INCLUDE_DIRS})
 
-if (MIR_PLATFORM STREQUAL "android")
+if ((MIR_PLATFORM STREQUAL "android") AND (NOT MIR_USES_BIONIC)) 
 find_library(EGL_LIBRARY libEGL.so.1
              HINTS /usr/lib/arm-linux-gnueabihf/libhybris-egl/)
 else()
