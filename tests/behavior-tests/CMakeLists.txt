@@ -16,8 +16,8 @@
 
 include_directories(${CUKE_INCLUDE_DIRS})
 
-set(SESSION_MANAGER_BEHAVIOR_SOURCES <SOURCES>)
-add_executable(session-management-cucumber-steps session_manager_steps.cpp session_management_context.cpp)
+set(SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES session_manager_steps.cpp session_management_context.cpp)
+add_executable(session-management-cucumber-steps ${SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES})
 
 target_link_libraries(
   session-management-cucumber-steps
