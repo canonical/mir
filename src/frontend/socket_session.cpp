@@ -92,7 +92,7 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
     {
         std::cerr << "ERROR reading message: " << ec.message() << std::endl;
     }
-    
+
     if (alive)
     {
         read_next_message();
