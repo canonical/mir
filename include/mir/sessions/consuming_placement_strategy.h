@@ -40,6 +40,7 @@ public:
     
     void place(surfaces::SurfaceCreationParameters const& request_parameters,
                surfaces::SurfaceCreationParameters &placed_parameters);
+
 protected:
     ConsumingPlacementStrategy(const ConsumingPlacementStrategy&) = delete;
     ConsumingPlacementStrategy& operator=(const ConsumingPlacementStrategy&) = delete;
