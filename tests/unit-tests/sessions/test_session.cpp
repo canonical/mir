@@ -49,7 +49,7 @@ TEST(Session, create_and_destroy_surface)
     mtd::MockSurfaceOrganiser organiser;
     msess::Session session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::ProxySurface>(dummy_surface)));
+        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 
@@ -73,7 +73,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     mtd::MockSurfaceOrganiser organiser;
     msess::Session app_session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(
-        std::make_shared<ms::ProxySurface>(dummy_surface)));
+        std::make_shared<ms::BasicProxySurface>(dummy_surface)));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 

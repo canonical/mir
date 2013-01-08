@@ -85,7 +85,7 @@ class StubSurfaceOrganiser : public msess::SurfaceOrganiser
                                                      std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
-        return std::make_shared<ms::ProxySurface>(std::weak_ptr<ms::Surface>(surface));
+        return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface));
     }
 
     void destroy_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
