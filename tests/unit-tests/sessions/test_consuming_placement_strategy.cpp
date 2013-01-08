@@ -18,12 +18,12 @@
 
 #include "mir_test_doubles/mock_viewable_area.h"
 
-#include "mir/frontend/consuming_placement_strategy.h"
+#include "mir/sessions/consuming_placement_strategy.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -54,7 +54,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_receieve_geo
 
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
 
-    mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
+    msess::ConsumingPlacementStrategy placement_strategy(viewable_area);
     ms::SurfaceCreationParameters input_params, placed_params;
     
     placement_strategy.place(input_params, placed_params);
@@ -70,7 +70,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_forwarded)
 
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
 
-    mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
+    msess::ConsumingPlacementStrategy placement_strategy(viewable_area);
     ms::SurfaceCreationParameters input_params, placed_params;
     
     input_params.size = requested_size;
@@ -88,7 +88,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_unreasonable_geometry_ar
     const geom::Size unreasonable_size = geom::Size{unreasonable_width, unreasonable_height};
 
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
-    mf::ConsumingPlacementStrategy placement_strategy(viewable_area);
+    msess::ConsumingPlacementStrategy placement_strategy(viewable_area);
     ms::SurfaceCreationParameters input_params, placed_params;
     
     input_params.size = unreasonable_size;

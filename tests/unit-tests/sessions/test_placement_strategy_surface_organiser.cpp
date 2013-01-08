@@ -19,13 +19,13 @@
 #include <mir_test_doubles/null_buffer_bundle.h>
 #include <mir_test_doubles/mock_surface_organiser.h>
 
-#include <mir/frontend/placement_strategy_surface_organiser.h>
-#include <mir/frontend/placement_strategy.h>
+#include <mir/sessions/placement_strategy_surface_organiser.h>
+#include <mir/sessions/placement_strategy.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -33,7 +33,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockPlacementStrategy : public mf::PlacementStrategy
+struct MockPlacementStrategy : public msess::PlacementStrategy
 {
     MOCK_METHOD2(place, void(ms::SurfaceCreationParameters const&, ms::SurfaceCreationParameters&));
 };
@@ -88,7 +88,7 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_calls_to_underlying_orga
     
     EXPECT_CALL(*placement_strategy, place(_,_)).Times(1);
 
-    mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
+    msess::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     auto params = ms::a_surface();
     
     auto surface = organiser.create_surface(params);
@@ -101,7 +101,7 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, offers_create_surface_parameters_
 {
     using namespace ::testing;
 
-    mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
+    msess::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     
     EXPECT_CALL(*underlying_surface_organiser, create_surface(_)).Times(1);
     
@@ -115,7 +115,7 @@ TEST_F(PlacementStrategySurfaceOrganiserSetup, forwards_create_surface_parameter
 {
     using namespace ::testing;
 
-    mf::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
+    msess::PlacementStrategySurfaceOrganiser organiser(underlying_surface_organiser, placement_strategy);
     
     auto params = ms::a_surface();
 

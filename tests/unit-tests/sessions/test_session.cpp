@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/session.h"
+#include "mir/sessions/session.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
@@ -43,7 +43,7 @@ TEST(Session, create_and_destroy_surface)
             buffer_bundle));
 
     mtd::MockSurfaceOrganiser organiser;
-    mf::Session session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
@@ -66,7 +66,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
             buffer_bundle));
 
     mtd::MockSurfaceOrganiser organiser;
-    mf::Session app_session(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session app_session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));

@@ -16,22 +16,22 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/consuming_placement_strategy.h"
+#include "mir/sessions/consuming_placement_strategy.h"
 #include "mir/graphics/viewable_area.h"
 
 #include <algorithm>
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
-mf::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
+msess::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
     : display_area(display_area)
 {
 }
 
-void mf::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& request_parameters,
+void msess::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& request_parameters,
                                       ms::SurfaceCreationParameters &placed_parameters)
 {
     placed_parameters = request_parameters;

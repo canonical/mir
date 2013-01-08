@@ -16,14 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_PLACEMENT_STRATEGY_H_
-#define MIR_FRONTEND_PLACEMENT_STRATEGY_H_
+#ifndef MIR_SESSIONS_PLACEMENT_STRATEGY_H_
+#define MIR_SESSIONS_PLACEMENT_STRATEGY_H_
 
 #include "mir/surfaces/surface.h"
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 
 class PlacementStrategy
@@ -44,4 +44,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_FRONTEND_PLACEMENT_STRATEGY_H_
+#endif // MIR_SESSIONS_PLACEMENT_STRATEGY_H_

@@ -21,7 +21,7 @@
 
 #include "mir/geometry/rectangle.h"
 // TODO: This is for SurfaceId only? Seems incorrect
-#include "mir/frontend/session.h"
+#include "mir/sessions/session.h"
 
 #include <string>
 #include <map>
@@ -31,9 +31,8 @@
 namespace mir
 {
 
-namespace frontend
+namespace sessions
 {
-class Session;
 class SessionManager;
 }
 
@@ -62,8 +61,8 @@ protected:
     SessionManagementContext& operator=(const SessionManagementContext&) = delete;
 
 private:
-    std::map<std::string, std::tuple<std::shared_ptr<frontend::Session>, frontend::SurfaceId>> open_windows;
-    std::shared_ptr<frontend::SessionManager> session_manager;
+    std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;
+    std::shared_ptr<sessions::SessionManager> session_manager;
     std::shared_ptr<DummyViewableArea> view_area;
 };
 

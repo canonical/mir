@@ -17,11 +17,11 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus_setter.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/focus_sequence.h"
+#include "mir/sessions/focus_setter.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -32,7 +32,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -40,23 +40,23 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockSessionContainer : public mf::SessionContainer
+struct MockSessionContainer : public msess::SessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<msess::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<msess::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
 };
 
-struct MockFocusSequence: public mf::FocusSequence
+struct MockFocusSequence: public msess::FocusSequence
 {
-    MOCK_CONST_METHOD1(successor_of, std::weak_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
-    MOCK_CONST_METHOD1(predecessor_of, std::weak_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
+    MOCK_CONST_METHOD1(successor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD1(predecessor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
 };
 
-struct MockFocusSetter: public mf::FocusSetter
+struct MockFocusSetter: public msess::FocusSetter
 {
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msess::Session> const&));
 };
 
 }
@@ -69,17 +69,17 @@ TEST(SessionManager, open_and_close_session)
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&focus_setter, mir::EmptyDeleter()));
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&focus_setter, mir::EmptyDeleter()));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
-    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msess::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session_manager.close_session(session);
@@ -93,10 +93,10 @@ TEST(SessionManager, closing_session_removes_surfaces)
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
 
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
     std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
@@ -111,9 +111,9 @@ TEST(SessionManager, closing_session_removes_surfaces)
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(1);
-    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
+    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<msess::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -128,12 +128,12 @@ TEST(SessionManager, new_applications_receive_focus)
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
-    std::shared_ptr<mf::Session> new_session;
+    std::shared_ptr<msess::Session> new_session;
 
-    mf::SessionManager session_manager(std::shared_ptr<mf::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::SessionContainer>(&container, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<mf::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));

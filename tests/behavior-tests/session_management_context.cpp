@@ -21,18 +21,18 @@
 #include "mir_test_doubles/null_buffer_bundle.h"
 
 #include "mir/surfaces/surface.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/single_visibility_focus_mechanism.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/surface_organiser.h"
-#include "mir/frontend/consuming_placement_strategy.h"
-#include "mir/frontend/placement_strategy_surface_organiser.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/consuming_placement_strategy.h"
+#include "mir/sessions/placement_strategy_surface_organiser.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/server_configuration.h"
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -67,7 +67,7 @@ struct SizedBufferBundle : public mtd::NullBufferBundle
     geom::Size const buffer_size;
 };
 
-struct DummySurfaceOrganiser : public mf::SurfaceOrganiser
+struct DummySurfaceOrganiser : public msess::SurfaceOrganiser
 {
     explicit DummySurfaceOrganiser()
     {
@@ -169,3 +169,4 @@ void mtc::SessionManagementContext::set_view_area(geom::Rectangle const& new_vie
 {
     view_area->set_view_area(new_view_region);
 }
+

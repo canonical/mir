@@ -27,12 +27,12 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/single_visibility_focus_mechanism.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/consuming_placement_strategy.h"
-#include "mir/frontend/placement_strategy_surface_organiser.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/consuming_placement_strategy.h"
+#include "mir/sessions/placement_strategy_surface_organiser.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -50,6 +50,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
+namespace msess = mir::sessions;
 namespace mi = mir::input;
 
 namespace
@@ -58,7 +59,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<mf::SessionManager> const& session_manager,
+        std::shared_ptr<msess::SessionManager> const& session_manager,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
@@ -73,7 +74,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::SessionManager> session_manager;
+    std::shared_ptr<msess::SessionManager> session_manager;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -158,17 +159,17 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<mf::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<mf::SurfaceOrganiser> const& surface_organiser,
+std::shared_ptr<msess::SessionManager>
+mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceOrganiser> const& surface_organiser,
                                                       std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
-    auto session_container = std::make_shared<mf::SessionContainer>();
-    auto focus_mechanism = std::make_shared<mf::SingleVisibilityFocusMechanism>(session_container);
-    auto focus_selection_strategy = std::make_shared<mf::RegistrationOrderFocusSequence>(session_container);
-    auto placement_strategy = std::make_shared<mf::ConsumingPlacementStrategy>(viewable_area);
-    auto placing_organiser = std::make_shared<mf::PlacementStrategySurfaceOrganiser>(surface_organiser, placement_strategy);
+    auto session_container = std::make_shared<msess::SessionContainer>();
+    auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
+    auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
+    auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
+    auto placing_organiser = std::make_shared<msess::PlacementStrategySurfaceOrganiser>(surface_organiser, placement_strategy);
 
-    return std::make_shared<mf::SessionManager>(placing_organiser, session_container, focus_selection_strategy, focus_mechanism);
+    return std::make_shared<msess::SessionManager>(placing_organiser, session_container, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>
@@ -181,7 +182,7 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<mf::SessionManager> const& session_manager,
+    std::shared_ptr<msess::SessionManager> const& session_manager,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {

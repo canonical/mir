@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_CONSUMING_PLACEMENT_STRATEGY_H_
-#define MIR_FRONTEND_CONSUMING_PLACEMENT_STRATEGY_H_
+#ifndef MIR_SESSIONS_CONSUMING_PLACEMENT_STRATEGY_H_
+#define MIR_SESSIONS_CONSUMING_PLACEMENT_STRATEGY_H_
 
-#include "mir/frontend/placement_strategy.h"
+#include "mir/sessions/placement_strategy.h"
 
 #include <memory>
 
@@ -29,7 +29,7 @@ namespace graphics
 {
 class ViewableArea;
 }
-namespace frontend
+namespace sessions
 {
 
 class ConsumingPlacementStrategy : public PlacementStrategy
@@ -51,4 +51,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_FRONTEND_CONSUMING_PLACEMENT_STRATEGY_H_
+#endif // MIR_SESSIONS_CONSUMING_PLACEMENT_STRATEGY_H_

@@ -16,31 +16,31 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/registration_order_focus_sequence.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_container.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_container.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 
-mf::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<mf::SessionContainer> const& app_container) :
+msess::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<msess::SessionContainer> const& app_container) :
   session_container(app_container)
 {
 
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app) const
+std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
-    std::shared_ptr<mf::Session> first;
-    std::shared_ptr<mf::Session> result;
+    std::shared_ptr<msess::Session> first;
+    std::shared_ptr<msess::Session> result;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session)
+        [&](std::shared_ptr<msess::Session> const& session)
          {
              if (!first) first = session;
 
@@ -58,14 +58,14 @@ std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::successor_of(std:
     return first;
 }
 
-std::weak_ptr<mf::Session> mf::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app) const
+std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
-    std::shared_ptr<mf::Session> last;
-    std::shared_ptr<mf::Session> result;
+    std::shared_ptr<msess::Session> last;
+    std::shared_ptr<msess::Session> result;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session)
+        [&](std::shared_ptr<msess::Session> const& session)
         {
             last = session;
 

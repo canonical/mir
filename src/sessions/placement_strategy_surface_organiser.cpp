@@ -16,24 +16,24 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/placement_strategy_surface_organiser.h"
-#include "mir/frontend/placement_strategy.h"
+#include "mir/sessions/placement_strategy_surface_organiser.h"
+#include "mir/sessions/placement_strategy.h"
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
-mf::PlacementStrategySurfaceOrganiser::PlacementStrategySurfaceOrganiser(std::shared_ptr<mf::SurfaceOrganiser> const& underlying_organiser,
-                                                                         std::shared_ptr<mf::PlacementStrategy> const& placement_strategy)
+msess::PlacementStrategySurfaceOrganiser::PlacementStrategySurfaceOrganiser(std::shared_ptr<msess::SurfaceOrganiser> const& underlying_organiser,
+                                                                         std::shared_ptr<msess::PlacementStrategy> const& placement_strategy)
  : underlying_organiser(underlying_organiser),
    placement_strategy(placement_strategy)
 {
 }
 
-mf::PlacementStrategySurfaceOrganiser::~PlacementStrategySurfaceOrganiser()
+msess::PlacementStrategySurfaceOrganiser::~PlacementStrategySurfaceOrganiser()
 {
 }
 
-std::weak_ptr<ms::Surface> mf::PlacementStrategySurfaceOrganiser::create_surface(const ms::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> msess::PlacementStrategySurfaceOrganiser::create_surface(const ms::SurfaceCreationParameters& params)
 {
     ms::SurfaceCreationParameters placed_params;
 
@@ -42,17 +42,17 @@ std::weak_ptr<ms::Surface> mf::PlacementStrategySurfaceOrganiser::create_surface
     return underlying_organiser->create_surface(placed_params);
 }
 
-void mf::PlacementStrategySurfaceOrganiser::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
+void msess::PlacementStrategySurfaceOrganiser::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     underlying_organiser->destroy_surface(surface);
 }
 
-void mf::PlacementStrategySurfaceOrganiser::hide_surface(std::weak_ptr<ms::Surface> const& surface)
+void msess::PlacementStrategySurfaceOrganiser::hide_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     underlying_organiser->hide_surface(surface);
 }
 
-void mf::PlacementStrategySurfaceOrganiser::show_surface(std::weak_ptr<ms::Surface> const& surface)
+void msess::PlacementStrategySurfaceOrganiser::show_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     underlying_organiser->show_surface(surface);
 }

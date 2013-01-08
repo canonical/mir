@@ -43,14 +43,18 @@ namespace compositor
 class GraphicBufferAllocator;
 }
 
+namespace sessions
+{
+class SessionStore;
+class Session;
+}
+
 /// Frontend interface. Mediates the interaction between client
 /// applications and the core of the mir system.
 namespace frontend
 {
 class ResourceCache;
 class ApplicationListener;
-class SessionStore;
-class Session;
 
 // ApplicationMediator relays requests from the client into the server process.
 class ApplicationMediator : public mir::protobuf::DisplayServer
@@ -58,7 +62,7 @@ class ApplicationMediator : public mir::protobuf::DisplayServer
 public:
 
     ApplicationMediator(
-        std::shared_ptr<SessionStore> const& session_store,
+        std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
@@ -98,7 +102,7 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done);
 private:
-    std::shared_ptr<SessionStore> const session_store;
+    std::shared_ptr<sessions::SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
@@ -106,7 +110,7 @@ private:
 
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::shared_ptr<frontend::Session> application_session;
+    std::shared_ptr<sessions::Session> application_session;
 };
 
 }

@@ -16,16 +16,16 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_
-#define MIR_FRONTEND_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_
+#ifndef MIR_SESSIONS_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_
+#define MIR_SESSIONS_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_
 
-#include "mir/frontend/surface_organiser.h"
+#include "mir/sessions/surface_organiser.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 class PlacementStrategy;
 
@@ -54,4 +54,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_FRONTEND_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_
+#endif // MIR_SESSIONS_PLACEMENT_STRATEGY_SURFACE_ORGANISER_H_

@@ -42,9 +42,10 @@ void mfd::SocketSession::send(const std::ostringstream& buffer2)
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
 
-    ba::async_write(socket, ba::buffer(whole_message),
-        boost::bind(&mfd::SocketSession::on_response_sent, this, boost::asio::placeholders::error,
-            boost::asio::placeholders::bytes_transferred));
+    // TODO: This should be asynchronous, but we are not making sure
+    // that a potential call to send_fds is executed _after_ this
+    // function has completed (if it would be executed asynchronously.
+    ba::write(socket, ba::buffer(whole_message));
 }
 
 void mfd::SocketSession::send_fds(std::vector<int32_t> const& fd)
@@ -60,7 +61,7 @@ void mfd::SocketSession::read_next_message()
     boost::asio::async_read(socket,
         boost::asio::buffer(message_header_bytes),
         boost::bind(&mfd::SocketSession::on_read_size,
-            this, ba::placeholders::error));
+                    this, ba::placeholders::error));
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
@@ -107,4 +108,3 @@ void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size
     if (error)
         std::cerr << "ERROR sending response: " << error.message() << std::endl;
 }
-

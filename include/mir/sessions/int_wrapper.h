@@ -16,14 +16,14 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_INT_WRAPPER_H_
-#define MIR_FRONTEND_INT_WRAPPER_H_
+#ifndef MIR_SESSIONS_INT_WRAPPER_H_
+#define MIR_SESSIONS_INT_WRAPPER_H_
 
 #include <iosfwd>
 
 namespace mir
 {
-namespace frontend
+namespace sessions
 {
 namespace detail
 {
@@ -84,4 +84,4 @@ inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,Val
 }
 }
 
-#endif // MIR_FRONTEND_INT_WRAPPER_H_
+#endif // MIR_SESSIONS_INT_WRAPPER_H_

@@ -55,10 +55,10 @@ MirConnection::MirConnection(
     std::shared_ptr<google::protobuf::RpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
-      channel(channel)
-    , server(channel.get())
-    , log(log)
-    , client_platform_factory(client_platform_factory)
+        channel(channel),
+        server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+        log(log),
+        client_platform_factory(client_platform_factory)
 {
     {
         lock_guard<mutex> lock(connection_guard);
