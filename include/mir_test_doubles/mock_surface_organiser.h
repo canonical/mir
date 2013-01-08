@@ -33,10 +33,10 @@ namespace doubles
 
 struct MockSurfaceOrganiser : public sessions::SurfaceOrganiser
 {
-    MOCK_METHOD1(create_surface, std::weak_ptr<surfaces::Surface>(const surfaces::SurfaceCreationParameters&));
-    MOCK_METHOD1(destroy_surface, void(std::weak_ptr<surfaces::Surface> const&));
-    MOCK_METHOD1(hide_surface, void(std::weak_ptr<surfaces::Surface> const&));
-    MOCK_METHOD1(show_surface, void(std::weak_ptr<surfaces::Surface> const&));
+    MOCK_METHOD1(create_surface, std::shared_ptr<sessions::Surface>(const sessions::SurfaceCreationParameters&));
+    MOCK_METHOD1(destroy_surface, void(std::shared_ptr<sessions::Surface> const&));
+    MOCK_METHOD1(hide_surface, void(std::shared_ptr<sessions::Surface> const&));
+    MOCK_METHOD1(show_surface, void(std::shared_ptr<sessions::Surface> const&));
 };
 
 }

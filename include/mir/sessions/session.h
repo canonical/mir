@@ -29,18 +29,12 @@
 namespace mir
 {
 
-namespace surfaces
-{
-
-class SurfaceCreationParameters;
-class Surface;
-
-}
-
 /// Management of client application sessions
 namespace sessions
 {
+class Surface;
 class SurfaceOrganiser;
+class SurfaceCreationParameters;
 typedef detail::IntWrapper<> SurfaceId;
 
 class Session
@@ -49,9 +43,9 @@ public:
     explicit Session(std::shared_ptr<SurfaceOrganiser> const& surface_organiser, std::string const& session_name);
     virtual ~Session();
 
-    SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
+    SurfaceId create_surface(const SurfaceCreationParameters& params);
     void destroy_surface(SurfaceId surface);
-    std::shared_ptr<surfaces::Surface> get_surface(SurfaceId surface) const;
+    std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
 
     std::string name();
     void shutdown();
@@ -70,7 +64,7 @@ private:
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<SurfaceId, std::weak_ptr<surfaces::Surface>> Surfaces;
+    typedef std::map<SurfaceId, std::shared_ptr<Surface>> Surfaces;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 };

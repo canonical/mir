@@ -21,6 +21,7 @@
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/sessions/single_visibility_focus_mechanism.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"

@@ -28,7 +28,6 @@
 #include <algorithm>
 
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 
 msess::SessionManager::SessionManager(
     std::shared_ptr<msess::SurfaceOrganiser> const& organiser,

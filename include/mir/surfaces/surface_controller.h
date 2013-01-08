@@ -32,7 +32,6 @@ namespace surfaces
 {
 
 class Surface;
-class SurfaceCreationParameters;
 class SurfaceStackModel;
 
 class SurfaceController : public sessions::SurfaceOrganiser
@@ -41,19 +40,19 @@ public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);
     virtual ~SurfaceController() {}
 
-    std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
+    std::shared_ptr<sessions::Surface> create_surface(const sessions::SurfaceCreationParameters& params);
 
-    void destroy_surface(std::weak_ptr<Surface> const& surface);
+    void destroy_surface(std::shared_ptr<sessions::Surface> const& surface);
 
-    void hide_surface(std::weak_ptr<Surface> const& surface);
-    void show_surface(std::weak_ptr<Surface> const& surface);
+    void hide_surface(std::shared_ptr<sessions::Surface> const& surface);
+    void show_surface(std::shared_ptr<sessions::Surface> const& surface);
 
 protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    SurfaceStackModel* surface_stack;
+    SurfaceStackModel* const surface_stack;
 };
 
 }

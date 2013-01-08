@@ -93,6 +93,7 @@ target_link_libraries(
 
     mircompositor
     mirsurfaces
+    mirsessions
     mirgraphics
     mirplatformgraphics
     ${Boost_LIBRARIES}

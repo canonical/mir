@@ -20,6 +20,7 @@
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/sessions/focus_sequence.h"
 #include "mir/sessions/focus_setter.h"
 #include "mir/surfaces/surface.h"
@@ -27,6 +28,8 @@
 #include "mir_test/empty_deleter.h"
 #include "mir_test_doubles/mock_surface_organiser.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
+
+#include "src/surfaces/proxy_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -102,10 +105,11 @@ TEST(SessionManager, closing_session_removes_surfaces)
     EXPECT_CALL(organiser, create_surface(_)).Times(1);
     std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            ms::a_surface().name,
+        std::make_shared<ms::Surface>(
+            msess::a_surface().name,
             buffer_bundle));
-    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(dummy_surface));
+    ON_CALL(organiser, create_surface(_)).WillByDefault(
+        Return(std::make_shared<ms::ProxySurface>(dummy_surface)));
     EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -117,7 +121,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
     EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
-    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
 }

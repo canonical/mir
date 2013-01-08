@@ -23,18 +23,22 @@
 
 namespace mir
 {
+namespace sessions
+{
+class SurfaceCreationParameters;
+}
+
 namespace surfaces
 {
 
 class Surface;
-class SurfaceCreationParameters;
 
 class SurfaceStackModel
 {
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
+    virtual std::weak_ptr<Surface> create_surface(const sessions::SurfaceCreationParameters& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 

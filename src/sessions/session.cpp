@@ -17,6 +17,7 @@
  */
 
 #include "mir/sessions/session.h"
+#include "mir/sessions/surface.h"
 
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_controller.h"
@@ -56,7 +57,7 @@ msess::SurfaceId msess::Session::next_id()
     return SurfaceId(id);
 }
 
-msess::SurfaceId msess::Session::create_surface(const ms::SurfaceCreationParameters& params)
+msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
     auto const id = next_id();
@@ -66,10 +67,10 @@ msess::SurfaceId msess::Session::create_surface(const ms::SurfaceCreationParamet
     return id;
 }
 
-std::shared_ptr<ms::Surface> msess::Session::get_surface(msess::SurfaceId id) const
+std::shared_ptr<msess::Surface> msess::Session::get_surface(msess::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    return surfaces.find(id)->second.lock();
+    return surfaces.find(id)->second;
 }
 
 void msess::Session::destroy_surface(msess::SurfaceId id)
@@ -94,8 +95,7 @@ void msess::Session::shutdown()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
     {
-        if (auto surface = id_s.second.lock())
-            surface->shutdown();
+        id_s.second->shutdown();
     }
 }
 

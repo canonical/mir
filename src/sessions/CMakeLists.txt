@@ -23,6 +23,7 @@ set(
   session_manager.cpp
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
+  surface_creation_parameters.cpp
 )
 
 add_library(

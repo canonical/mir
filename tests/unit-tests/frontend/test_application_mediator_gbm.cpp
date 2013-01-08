@@ -54,18 +54,16 @@ namespace
 class StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
  public:
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
-        return std::weak_ptr<ms::Surface>();
+        return std::shared_ptr<msess::Surface>();
     }
 
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void destroy_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void hide_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    std::vector<std::shared_ptr<ms::Surface>> surfaces;
+    void show_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 };
 
 class StubSessionStore : public msess::SessionStore

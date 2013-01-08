@@ -31,6 +31,8 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 
+#include "src/surfaces/proxy_surface.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -77,20 +79,20 @@ bool DestructionRecordingSession::destroyed{true};
 class StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
  public:
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
                                                      std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
-        return std::weak_ptr<ms::Surface>(surface);
+        return std::make_shared<ms::ProxySurface>(std::weak_ptr<ms::Surface>(surface));
     }
 
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void destroy_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void hide_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void show_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
