@@ -1,26 +1,26 @@
 #!/usr/bin/make -f
 
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
 %:
 	dh $@ --parallel
-	else
-		dh $@ --parallel
-	endif
+
+override_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH),armhf)
+	dh_auto_configure -- \
+      -DBoost_COMPILER=-gcc \
+      -DMIR_ENABLE_DEATH_TESTS=NO \
+      -DMIR_INPUT_ENABLE_EVEMU=NO \
+      -DMIR_PLATFORM=android \
+      -DMIR_CUTDOWN_FOR_EMULATOR=true
+else
+	dh_auto_configure --
+endif
 
 override_dh_auto_test:
-	ifeq ($(DEB_HOST_ARCH),armhf)
-		@echo "not testing mir package on armhf build"
-	else
-		dh_auto_test
-	endif
-override_dh_auto_configure:
-	ifeq ($(DEB_HOST_ARCH),armhf)
-		dh_auto_configure -- \
-			-DMIR_PLATFORM=android \
-        	-DMIR_USES_BIONIC=NO \
-			-DBoost_COMPILER=-gcc \
-			-DMIR_ENABLE_DEATH_TESTS=NO \
-			-DMIR_INPUT_ENABLE_EVEMU=NO \
-			-DMIR_CUTDOWN_FOR_EMULATOR=YES
-	else
-		dh_auto_configure
-	endif
+ifeq ($(DEB_HOST_ARCH),armhf)
+	@echo "not testing"
+else
+	dh_auto_test
+endif
+
