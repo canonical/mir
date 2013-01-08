@@ -178,7 +178,7 @@ void mir::test::TestProtobufClient::tfd_done()
 
 void mir::test::TestProtobufClient::wait_for_tfd_done()
 {
-    for (int i = 0; !tfd_done_called.load() && i < 10000; ++i)
+    for (int i = 0; !tfd_done_called.load() && i < maxwait; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
