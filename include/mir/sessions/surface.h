@@ -51,6 +51,11 @@ public:
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual void advance_client_buffer() = 0;
     virtual std::shared_ptr<compositor::GraphicBufferClientResource> client_buffer_resource() const = 0;
+
+protected:
+    Surface() = default;
+    Surface(Surface const&) = delete;
+    Surface& operator=(Surface const&) = delete;
 };
 
 }
