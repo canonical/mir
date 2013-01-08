@@ -77,7 +77,7 @@ bool DestructionRecordingSession::destroyed{true};
 class StubSurfaceOrganiser : public msess::SurfaceOrganiser
 {
  public:
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::weak_ptr<ms::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
                                                      std::make_shared<mtd::NullBufferBundle>());

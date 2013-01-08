@@ -18,6 +18,7 @@
 
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/sessions/session.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
@@ -40,7 +41,7 @@ TEST(Session, create_and_destroy_surface)
     std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
-            ms::a_surface().name,
+            msess::a_surface().name,
             buffer_bundle));
 
     mtd::MockSurfaceOrganiser organiser;
@@ -49,7 +50,7 @@ TEST(Session, create_and_destroy_surface)
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(organiser, destroy_surface(_));
 
-    ms::SurfaceCreationParameters params;
+    msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
 
     session.destroy_surface(surf);
@@ -63,7 +64,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         new ms::Surface(
-            ms::a_surface().name,
+            msess::a_surface().name,
             buffer_bundle));
 
     mtd::MockSurfaceOrganiser organiser;
@@ -78,7 +79,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
         EXPECT_CALL(organiser, show_surface(_)).Times(1);
     }
 
-    ms::SurfaceCreationParameters params;
+    msess::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
     app_session.hide();

@@ -26,7 +26,7 @@
 #include "mir/sessions/focus_setter.h"
 #include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/sessions/session_container.h"
-
+#include "mir/sessions/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -28,6 +28,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -47,6 +48,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ml=mir::logging;
 namespace ms=mir::surfaces;
+namespace msess = mir::sessions;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
@@ -230,7 +232,7 @@ int main(int argc, char **argv)
         const float angular_step = 2.0 * M_PI / num_moveables;
 
         std::shared_ptr<ms::Surface> s = surface_stack.create_surface(
-            ms::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
+            msess::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
                            .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
                            .of_buffer_usage(mc::BufferUsage::hardware)
             ).lock();

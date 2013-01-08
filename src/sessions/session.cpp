@@ -56,7 +56,7 @@ msess::SurfaceId msess::Session::next_id()
     return SurfaceId(id);
 }
 
-msess::SurfaceId msess::Session::create_surface(const ms::SurfaceCreationParameters& params)
+msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters& params)
 {
     auto surf = surface_organiser->create_surface(params);
     auto const id = next_id();

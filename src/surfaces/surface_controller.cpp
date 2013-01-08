@@ -29,7 +29,7 @@ ms::SurfaceController::SurfaceController(ms::SurfaceStackModel* surface_stack) :
     assert(surface_stack);
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(const ms::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(const sessions::SurfaceCreationParameters& params)
 {
     return surface_stack->create_surface(params);
 }
