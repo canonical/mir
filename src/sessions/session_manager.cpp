@@ -16,25 +16,25 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/frontend/session_manager.h"
-#include "mir/frontend/session.h"
-#include "mir/frontend/session_container.h"
-#include "mir/frontend/surface_organiser.h"
-#include "mir/frontend/focus_sequence.h"
-#include "mir/frontend/focus_setter.h"
+#include "mir/sessions/session_manager.h"
+#include "mir/sessions/session.h"
+#include "mir/sessions/session_container.h"
+#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/focus_sequence.h"
+#include "mir/sessions/focus_setter.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
-namespace mf = mir::frontend;
+namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
-mf::SessionManager::SessionManager(
-    std::shared_ptr<mf::SurfaceOrganiser> const& organiser,
-    std::shared_ptr<mf::SessionContainer> const& container,
-    std::shared_ptr<mf::FocusSequence> const& sequence,
-    std::shared_ptr<mf::FocusSetter> const& focus_setter) :
+msess::SessionManager::SessionManager(
+    std::shared_ptr<msess::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<msess::SessionContainer> const& container,
+    std::shared_ptr<msess::FocusSequence> const& sequence,
+    std::shared_ptr<msess::FocusSetter> const& focus_setter) :
     surface_organiser(organiser),
     app_container(container),
     focus_sequence(sequence),
@@ -46,13 +46,13 @@ mf::SessionManager::SessionManager(
     assert(focus_setter);
 }
 
-mf::SessionManager::~SessionManager()
+msess::SessionManager::~SessionManager()
 {
 }
 
-std::shared_ptr<mf::Session> mf::SessionManager::open_session(std::string const& name)
+std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<mf::Session>(surface_organiser, name);
+    auto new_session = std::make_shared<msess::Session>(surface_organiser, name);
 
     app_container->insert_session(new_session);
     focus_application = new_session;
@@ -61,7 +61,7 @@ std::shared_ptr<mf::Session> mf::SessionManager::open_session(std::string const&
     return new_session;
 }
 
-void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
+void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const& session)
 {
     if (session == focus_application.lock())
     {
@@ -71,7 +71,7 @@ void mf::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     app_container->remove_session(session);
 }
 
-void mf::SessionManager::focus_next()
+void msess::SessionManager::focus_next()
 {
     auto focused = focus_application.lock();
     if (focused == NULL)
@@ -83,7 +83,7 @@ void mf::SessionManager::focus_next()
     focus_setter->set_focus_to(next_focus);
 }
 
-void mf::SessionManager::shutdown()
+void msess::SessionManager::shutdown()
 {
     app_container->for_each([](std::shared_ptr<Session> const& session)
     {

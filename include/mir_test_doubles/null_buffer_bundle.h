@@ -72,4 +72,5 @@ public:
 }
 } // namespace mir
 
+
 #endif /* MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_ */

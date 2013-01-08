@@ -19,11 +19,6 @@ set(
   FRONTEND_SOURCES
 
   application_mediator.cpp
-  session.cpp
-  session_container.cpp
-  session_manager.cpp
-  registration_order_focus_sequence.cpp
-  single_visibility_focus_mechanism.cpp
   null_application_listener.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
@@ -71,6 +66,7 @@ add_library(
 target_link_libraries(
   mirfrontend
 
+  mirsessions
   mirlogging
   3rd_party
 )

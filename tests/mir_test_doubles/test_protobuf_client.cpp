@@ -25,7 +25,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     int timeout_ms) :
     logger(std::make_shared<mtd::MockLogger>()),
     channel(mir::client::make_rpc_channel(socket_file, logger)),
-    display_server(channel.get()),
+    display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),

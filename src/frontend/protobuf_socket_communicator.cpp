@@ -115,4 +115,3 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     }
     start_accept();
 }
-

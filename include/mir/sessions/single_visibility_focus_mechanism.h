@@ -16,11 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
-#define MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#ifndef MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#define MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
 #include <memory>
-#include "mir/frontend/focus_setter.h"
+#include "mir/sessions/focus_setter.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ namespace surfaces
 class SurfaceOrganiser;
 }
 
-namespace frontend
+namespace sessions
 {
 class Session;
 class SessionContainer;
@@ -54,4 +54,4 @@ private:
 }
 
 
-#endif // MIR_FRONTEND_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#endif // MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_

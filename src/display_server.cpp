@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/render_view.h"
-#include "mir/frontend/session_manager.h"
+#include "mir/sessions/session_manager.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -73,7 +73,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<ms::SurfaceController> surface_controller;
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<frontend::SessionManager> application_session_factory;
+    std::shared_ptr<sessions::SessionManager> application_session_factory;
     std::shared_ptr<frontend::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
