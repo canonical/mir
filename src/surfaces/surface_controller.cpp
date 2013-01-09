@@ -37,13 +37,3 @@ std::shared_ptr<msess::Surface> ms::SurfaceController::create_surface(const mses
 {
     return std::make_shared<ProxySurface>(surface_stack, params);
 }
-
-void ms::SurfaceController::hide_surface(std::shared_ptr<msess::Surface> const& surface)
-{
-    surface->hide();
-}
-
-void ms::SurfaceController::show_surface(std::shared_ptr<msess::Surface> const& surface)
-{
-    surface->show();
-}

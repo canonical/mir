@@ -101,19 +101,17 @@ void msess::Session::shutdown()
 void msess::Session::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto& id_s : surfaces)
     {
-        auto& surface = it->second;
-        surface_organiser->hide_surface(surface);
+        id_s.second->hide();
     }
 }
 
 void msess::Session::show()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto& id_s : surfaces)
     {
-        auto& surface = it->second;
-        surface_organiser->show_surface(surface);
+        id_s.second->show();
     }
 }

@@ -36,11 +36,6 @@ public:
 
     virtual std::shared_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
 
-    // TODO I think we can just call the Surface function
-    virtual void hide_surface(std::shared_ptr<Surface> const& surface) = 0;
-    // TODO I think we can just call the Surface function
-    virtual void show_surface(std::shared_ptr<Surface> const& surface) = 0;
-
 protected:
     SurfaceOrganiser() = default;
     SurfaceOrganiser(const SurfaceOrganiser&) = delete;
