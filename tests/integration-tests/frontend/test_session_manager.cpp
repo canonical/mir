@@ -52,13 +52,13 @@ struct MockFocusSetter: public msess::FocusSetter
 TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory organiser;
+    mtd::MockSurfaceFactory surface_factory;
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer());
     msess::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
                                        container,
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
@@ -84,13 +84,13 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory organiser;
+    mtd::MockSurfaceFactory surface_factory;
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer());
     msess::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
                                        model,
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));

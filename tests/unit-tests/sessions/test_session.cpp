@@ -73,13 +73,13 @@ TEST(Session, create_and_destroy_surface)
     using namespace ::testing;
 
     auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
-    mtd::MockSurfaceFactory organiser;
-    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
+    mtd::MockSurfaceFactory surface_factory;
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(organiser, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msess::Session session(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session session(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()), "Foo");
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -93,12 +93,12 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     using namespace ::testing;
 
     auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
-    mtd::MockSurfaceFactory organiser;
-    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
+    mtd::MockSurfaceFactory surface_factory;
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
-    msess::Session app_session(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session app_session(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()), "Foo");
 
-    EXPECT_CALL(organiser, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_));
 
     {
         InSequence seq;

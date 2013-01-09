@@ -58,7 +58,7 @@ private:
     {
         surface = std::make_shared<ms::Surface>(
             params.name,
-            std::make_shared<mtd::MockBufferBundle>());
+            std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>());
         return surface;
     }
 
