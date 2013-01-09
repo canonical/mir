@@ -30,11 +30,11 @@
 namespace msess = mir::sessions;
 
 msess::SessionManager::SessionManager(
-    std::shared_ptr<msess::SurfaceFactory> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
     std::shared_ptr<msess::SessionContainer> const& container,
     std::shared_ptr<msess::FocusSequence> const& sequence,
     std::shared_ptr<msess::FocusSetter> const& focus_setter) :
-    surface_factory(organiser),
+    surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
     focus_setter(focus_setter)
