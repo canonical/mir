@@ -40,7 +40,7 @@ typedef detail::IntWrapper<> SurfaceId;
 class Session
 {
 public:
-    explicit Session(std::shared_ptr<SurfaceFactory> const& surface_organiser, std::string const& session_name);
+    explicit Session(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
     virtual ~Session();
 
     SurfaceId create_surface(const SurfaceCreationParameters& params);
@@ -57,7 +57,7 @@ protected:
     Session& operator=(const Session&) = delete;
 
 private:
-    std::shared_ptr<SurfaceFactory> const surface_organiser;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
 
     SurfaceId next_id();

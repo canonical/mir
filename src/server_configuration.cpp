@@ -158,12 +158,12 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 }
 
 std::shared_ptr<msess::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceFactory> const& surface_organiser)
+mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
 {
     auto session_container = std::make_shared<msess::SessionContainer>();
     auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
     auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
-    return std::make_shared<msess::SessionManager>(surface_organiser, session_container, focus_selection_strategy, focus_mechanism);
+    return std::make_shared<msess::SessionManager>(surface_factory, session_container, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>

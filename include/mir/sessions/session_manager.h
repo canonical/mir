@@ -36,7 +36,7 @@ class FocusSetter;
 class SessionManager : public SessionStore
 {
 public:
-    explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_organiser,
+    explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
                             std::shared_ptr<SessionContainer> const& session_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter);
@@ -53,7 +53,7 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<sessions::SurfaceFactory> surface_organiser;
+    std::shared_ptr<sessions::SurfaceFactory> surface_factory;
     std::shared_ptr<SessionContainer> app_container;
     std::shared_ptr<FocusSequence> focus_sequence;
     std::shared_ptr<FocusSetter> focus_setter;

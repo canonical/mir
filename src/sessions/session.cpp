@@ -31,13 +31,13 @@ namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
 msess::Session::Session(
-    std::shared_ptr<msess::SurfaceFactory> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
-    surface_organiser(organiser),
+    surface_factory(surface_factory),
     session_name(session_name),
     next_surface_id(0)
 {
-    assert(surface_organiser);
+    assert(surface_factory);
 }
 
 msess::Session::~Session()
@@ -56,7 +56,7 @@ msess::SurfaceId msess::Session::next_id()
 
 msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters& params)
 {
-    auto surf = surface_organiser->create_surface(params);
+    auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);

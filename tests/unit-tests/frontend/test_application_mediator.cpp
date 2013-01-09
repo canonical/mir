@@ -63,8 +63,8 @@ namespace
 class DestructionRecordingSession : public msess::Session
 {
 public:
-    DestructionRecordingSession(std::shared_ptr<msess::SurfaceFactory> const& surface_organiser)
-        : msess::Session{surface_organiser, "Stub"}
+    DestructionRecordingSession(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+        : msess::Session{surface_factory, "Stub"}
     {
         destroyed = false;
     }
