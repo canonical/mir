@@ -16,18 +16,16 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INT_WRAPPER_INT_WRAPPER_H_
-#define MIR_INT_WRAPPER_INT_WRAPPER_H_
+#ifndef MIR_INT_WRAPPER_H_
+#define MIR_INT_WRAPPER_H_
 
 #include <iosfwd>
 
 namespace mir
 {
-namespace intwrapper
-{
-enum TypeTag { SessionsSurfaceId };
+enum class IntWrapperTypeTag { SessionsSurfaceId };
 
-template<TypeTag Tag, typename ValueType_ = int>
+template<IntWrapperTypeTag Tag, typename ValueType_ = int>
 class IntWrapper
 {
 public:
@@ -42,43 +40,42 @@ private:
     ValueType value;
 };
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 inline bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() == rhs.as_value();
 }
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 inline bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() != rhs.as_value();
 }
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 inline bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() <= rhs.as_value();
 }
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 inline bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() >= rhs.as_value();
 }
 
-template<TypeTag Tag, typename ValueType>
+template<IntWrapperTypeTag Tag, typename ValueType>
 inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
 }
 }
-}
 
-#endif // MIR_SESSIONS_INT_WRAPPER_H_
+#endif // MIR_INT_WRAPPER_H_

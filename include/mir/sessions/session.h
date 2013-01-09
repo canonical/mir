@@ -41,7 +41,7 @@ class Surface;
 namespace sessions
 {
 class SurfaceOrganiser;
-typedef intwrapper::IntWrapper<intwrapper::SessionsSurfaceId> SurfaceId;
+typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
 
 class Session
 {
