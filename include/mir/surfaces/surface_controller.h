@@ -42,8 +42,6 @@ public:
 
     std::shared_ptr<sessions::Surface> create_surface(const sessions::SurfaceCreationParameters& params);
 
-    void destroy_surface(std::shared_ptr<sessions::Surface> const& surface);
-
     void hide_surface(std::shared_ptr<sessions::Surface> const& surface);
     void show_surface(std::shared_ptr<sessions::Surface> const& surface);
 

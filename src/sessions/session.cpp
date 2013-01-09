@@ -43,10 +43,9 @@ msess::Session::Session(
 msess::Session::~Session()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto const& pair_id_surface : surfaces)
     {
-        auto surface = it->second;
-        surface_organiser->destroy_surface(surface);
+        pair_id_surface.second->destroy();
     }
 }
 
@@ -80,7 +79,7 @@ void msess::Session::destroy_surface(msess::SurfaceId id)
 
     if (p != surfaces.end())
     {
-        surface_organiser->destroy_surface(p->second);
+        p->second->destroy();
         surfaces.erase(p);
     }
 }

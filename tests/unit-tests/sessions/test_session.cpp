@@ -51,7 +51,6 @@ TEST(Session, create_and_destroy_surface)
     ON_CALL(organiser, create_surface(_)).WillByDefault(
         Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
     EXPECT_CALL(organiser, create_surface(_));
-    EXPECT_CALL(organiser, destroy_surface(_));
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -75,7 +74,6 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(
         std::make_shared<ms::BasicProxySurface>(dummy_surface)));
     EXPECT_CALL(organiser, create_surface(_));
-    EXPECT_CALL(organiser, destroy_surface(_));
 
     {
         InSequence seq;

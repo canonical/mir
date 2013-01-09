@@ -110,7 +110,6 @@ TEST(SessionManager, closing_session_removes_surfaces)
             buffer_bundle));
     ON_CALL(organiser, create_surface(_)).WillByDefault(
         Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
-    EXPECT_CALL(organiser, destroy_surface(_)).Times(1);
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
