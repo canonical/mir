@@ -20,6 +20,10 @@
 
 #include "mir/surfaces/surface_stack_model.h"
 
+#include <boost/exception/all.hpp>
+
+#include <stdexcept>
+
 namespace ms = mir::surfaces;
 
 ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
@@ -63,7 +67,7 @@ mir::geometry::Size ms::BasicProxySurface::size() const
     }
     else
     {
-        return geometry::Size();
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
@@ -75,7 +79,7 @@ mir::geometry::PixelFormat ms::BasicProxySurface::pixel_format() const
     }
     else
     {
-        return geometry::PixelFormat();
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
@@ -95,7 +99,7 @@ std::shared_ptr<mir::compositor::GraphicBufferClientResource> ms::BasicProxySurf
     }
     else
     {
-        return std::shared_ptr<compositor::GraphicBufferClientResource>();
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
