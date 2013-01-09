@@ -78,7 +78,7 @@ protected:
 TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ((int) package.get(), NULL);
+    EXPECT_EQ(package, nullptr);
 }
 
 TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
@@ -92,7 +92,7 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    ASSERT_NE((int)handle, NULL);
+    ASSERT_NE((int) handle, (int) NULL);
     ASSERT_EQ(handle->numFds, (int) package_copy->fd_items);
     for(auto i = 0; i < package_copy->fd_items; i++)
         EXPECT_EQ(package_copy->fd[i], handle->data[i]);
@@ -109,7 +109,7 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    ASSERT_NE((int)handle, NULL);
+    ASSERT_NE(handle, nullptr);
     ASSERT_EQ(handle->numInts, (int) package_copy->data_items);
     for(auto i = 0; i < package_copy->data_items; i++)
         EXPECT_EQ(package_copy->data[i], handle->data[i + package_copy->fd_items]);
@@ -310,7 +310,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE(native_handle, nullptr);
     EXPECT_EQ(native_handle->handle, buffer_handle);
 }
 
@@ -324,7 +324,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE(native_handle, nullptr);
     EXPECT_EQ(native_handle->width,  (int) width_copy.as_uint32_t());
     EXPECT_EQ(native_handle->height, (int) height_copy.as_uint32_t());
 }
@@ -338,7 +338,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
 
     auto native_handle = buffer->get_native_handle();
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
+    ASSERT_NE(native_handle, nullptr);
     EXPECT_EQ(native_handle->usage,  correct_usage);
 }
 
@@ -351,9 +351,9 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, (ANativeWindowBuffer*) NULL);
-    ASSERT_NE((int) native_handle->common.incRef,  NULL);
-    ASSERT_NE((int) native_handle->common.decRef,  NULL);
+    ASSERT_NE(native_handle, (ANativeWindowBuffer*) nullptr);
+    ASSERT_NE((int) native_handle->common.incRef,  (int) NULL);
+    ASSERT_NE((int) native_handle->common.decRef,  (int) NULL);
 
     native_handle->common.incRef(NULL);
     native_handle->common.decRef(NULL);

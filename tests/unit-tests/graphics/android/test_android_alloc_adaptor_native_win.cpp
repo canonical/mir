@@ -118,7 +118,7 @@ TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
 {
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto ipc_package = buffer_handle->get_ipc_package();
-    ASSERT_NE((int)ipc_package.get(), NULL);
+    ASSERT_NE(ipc_package, nullptr);
 }
 
 /* ipc packaging tests */

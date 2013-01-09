@@ -46,7 +46,6 @@ include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 #####################################################################
@@ -108,6 +107,9 @@ set (MIR_CUTDOWN_FOR_EMULATOR
   "Disable parts of system that don't run on Emulator"
 )
 
+
+
+message( "potato ${CMAKE_SYSTEM_INCLUDE_PATH}")
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
@@ -130,6 +132,7 @@ if (MIR_PLATFORM STREQUAL "android")
     set(gtest_disable_pthreads ON)
 
   else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     message(STATUS "android build is using vanilla STDC++")
 
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
@@ -145,6 +148,7 @@ if (MIR_PLATFORM STREQUAL "android")
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
 elseif (MIR_PLATFORM STREQUAL "gbm")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )

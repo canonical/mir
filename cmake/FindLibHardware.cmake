@@ -5,6 +5,7 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
+#todo remove this override
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(LIBHARDWARE_INCLUDE_DIR
    NAMES         hardware/hardware.h
@@ -12,7 +13,6 @@ find_path(LIBHARDWARE_INCLUDE_DIR
                  cutils/native_handle.h
                  system/graphics.h
                  system/window.h
-   HINTS         ${PROJECT_SOURCE_DIR}/3rd_party/android-deps
    )
 
 find_library(LIBHARDWARE_LIBRARY
