@@ -34,7 +34,6 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msess = mir::sessions;
@@ -50,7 +49,7 @@ namespace
  * In particular, it would be nice if mf::Session was stubable/mockable.
  */
 
-class StubSurfaceOrganiser : public msess::SurfaceFactory
+class StubSurfaceFactory : public msess::SurfaceFactory
 {
  public:
     std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
@@ -69,7 +68,7 @@ class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
-        : organiser{std::make_shared<StubSurfaceOrganiser>()}
+        : organiser{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
