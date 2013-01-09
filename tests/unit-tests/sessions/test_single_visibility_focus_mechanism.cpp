@@ -25,7 +25,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test_doubles/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,7 +41,7 @@ namespace
 
 struct MockApplicationSession : public msess::Session
 {
-  MockApplicationSession(std::shared_ptr<msess::SurfaceOrganiser> organiser,
+  MockApplicationSession(std::shared_ptr<msess::SurfaceFactory> organiser,
                          std::string name) : Session(organiser, name)
   {
   }
@@ -54,7 +54,7 @@ struct MockApplicationSession : public msess::Session
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser);
+    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory);
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
 
     MockApplicationSession m1(organiser, "Visual Studio 7");

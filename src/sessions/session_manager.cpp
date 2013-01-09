@@ -19,7 +19,7 @@
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/sessions/focus_sequence.h"
 #include "mir/sessions/focus_setter.h"
 
@@ -30,7 +30,7 @@
 namespace msess = mir::sessions;
 
 msess::SessionManager::SessionManager(
-    std::shared_ptr<msess::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& organiser,
     std::shared_ptr<msess::SessionContainer> const& container,
     std::shared_ptr<msess::FocusSequence> const& sequence,
     std::shared_ptr<msess::FocusSetter> const& focus_setter) :

@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_ORGANISER_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_ORGANISER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
 
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceOrganiser : public sessions::SurfaceOrganiser
+struct MockSurfaceFactory : public sessions::SurfaceFactory
 {
     MOCK_METHOD1(create_surface, std::shared_ptr<sessions::Surface>(const sessions::SurfaceCreationParameters&));
 };
@@ -40,4 +40,4 @@ struct MockSurfaceOrganiser : public sessions::SurfaceOrganiser
 }
 }
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_ORGANISER_H_
+#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_

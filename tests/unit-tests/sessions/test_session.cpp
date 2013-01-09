@@ -19,7 +19,7 @@
 #include "mir/sessions/session.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test_doubles/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_factory.h"
 
 #include "src/surfaces/proxy_surface.h"
 
@@ -73,13 +73,13 @@ TEST(Session, create_and_destroy_surface)
     using namespace ::testing;
 
     auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
 
     EXPECT_CALL(organiser, create_surface(_));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msess::Session session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session session(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()), "Foo");
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -93,10 +93,10 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     using namespace ::testing;
 
     auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
 
-    msess::Session app_session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
+    msess::Session app_session(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()), "Foo");
 
     EXPECT_CALL(organiser, create_surface(_));
 

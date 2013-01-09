@@ -32,7 +32,7 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test_doubles/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_factory.h"
 
 namespace mc = mir::compositor;
 namespace msess = mir::sessions;
@@ -52,13 +52,13 @@ struct MockFocusSetter: public msess::FocusSetter
 TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer());
     msess::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
                                        container,
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
@@ -84,13 +84,13 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer());
     msess::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
                                        model,
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));

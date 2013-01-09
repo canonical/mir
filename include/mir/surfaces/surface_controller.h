@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 
 #include <memory>
 
@@ -34,7 +34,7 @@ namespace surfaces
 class Surface;
 class SurfaceStackModel;
 
-class SurfaceController : public sessions::SurfaceOrganiser
+class SurfaceController : public sessions::SurfaceFactory
 {
 public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);

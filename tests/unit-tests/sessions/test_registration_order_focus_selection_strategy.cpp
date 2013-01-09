@@ -23,7 +23,7 @@
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test_doubles/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,7 +37,7 @@ namespace mtd = mir::test::doubles;
 TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
+    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(model);
 
@@ -57,7 +57,7 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
+    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
@@ -77,7 +77,7 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceOrganiser> organiser(new mtd::MockSurfaceOrganiser());
+    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 

@@ -26,7 +26,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/empty_deleter.h"
-#include "mir_test_doubles/mock_surface_organiser.h"
+#include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 
 #include "src/surfaces/proxy_surface.h"
@@ -68,12 +68,12 @@ struct MockFocusSetter: public msess::FocusSetter
 TEST(SessionManager, open_and_close_session)
 {
     using namespace ::testing;
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&focus_setter, mir::EmptyDeleter()));
@@ -92,12 +92,12 @@ TEST(SessionManager, open_and_close_session)
 TEST(SessionManager, closing_session_removes_surfaces)
 {
     using namespace ::testing;
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
@@ -128,13 +128,13 @@ TEST(SessionManager, closing_session_removes_surfaces)
 TEST(SessionManager, new_applications_receive_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceOrganiser organiser;
+    mtd::MockSurfaceFactory organiser;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter mechanism;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()),
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&organiser, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
                                        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));

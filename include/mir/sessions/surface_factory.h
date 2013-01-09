@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_SURFACE_ORGANISER_H_
-#define MIR_SESSIONS_SURFACE_ORGANISER_H_
+#ifndef MIR_SESSIONS_SURFACE_FACTORY_H_
+#define MIR_SESSIONS_SURFACE_FACTORY_H_
 
 #include <memory>
 
@@ -29,19 +29,19 @@ namespace sessions
 class SurfaceCreationParameters;
 class Surface;
 
-class SurfaceOrganiser
+class SurfaceFactory
 {
 public:
-    virtual ~SurfaceOrganiser() {}
+    virtual ~SurfaceFactory() {}
 
     virtual std::shared_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
 
 protected:
-    SurfaceOrganiser() = default;
-    SurfaceOrganiser(const SurfaceOrganiser&) = delete;
-    SurfaceOrganiser& operator=(const SurfaceOrganiser&) = delete;
+    SurfaceFactory() = default;
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
 }
 }
 
-#endif // MIR_SESSIONS_SURFACE_ORGANISER_H_
+#endif // MIR_SESSIONS_SURFACE_FACTORY_H_

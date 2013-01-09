@@ -22,7 +22,7 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -50,7 +50,7 @@ namespace
  * In particular, it would be nice if mf::Session was stubable/mockable.
  */
 
-class StubSurfaceOrganiser : public msess::SurfaceOrganiser
+class StubSurfaceOrganiser : public msess::SurfaceFactory
 {
  public:
     std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
@@ -82,7 +82,7 @@ public:
 
     void shutdown() {}
 
-    std::shared_ptr<msess::SurfaceOrganiser> organiser;
+    std::shared_ptr<msess::SurfaceFactory> organiser;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator

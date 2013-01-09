@@ -31,7 +31,7 @@ namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
 msess::Session::Session(
-    std::shared_ptr<msess::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& organiser,
     std::string const& session_name) :
     surface_organiser(organiser),
     session_name(session_name),
