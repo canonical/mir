@@ -19,7 +19,7 @@
 #ifndef MIR_SESSIONS_SESSION_H_
 #define MIR_SESSIONS_SESSION_H_
 
-#include "mir/sessions/int_wrapper.h"
+#include "mir/int_wrapper.h"
 #include "mir/thread/all.h"
 
 #include <memory>
@@ -35,7 +35,7 @@ namespace sessions
 class Surface;
 class SurfaceFactory;
 class SurfaceCreationParameters;
-typedef detail::IntWrapper<> SurfaceId;
+typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
 
 class Session
 {
