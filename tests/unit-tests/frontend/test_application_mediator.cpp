@@ -76,7 +76,7 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubSurfaceOrganiser : public msess::SurfaceFactory
+class StubSurfaceFactory : public msess::SurfaceFactory
 {
  public:
     std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
@@ -101,7 +101,7 @@ class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
-        : organiser{std::make_shared<StubSurfaceOrganiser>()}
+        : organiser{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
