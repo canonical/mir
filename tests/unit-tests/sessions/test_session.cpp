@@ -36,23 +36,54 @@ namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+class MockSurface : public msess::Surface
+{
+public:
+    MockSurface(std::weak_ptr<ms::Surface> const& surface) :
+        impl(surface)
+    {
+        using namespace testing;
+
+        ON_CALL(*this, hide()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::hide));
+        ON_CALL(*this, show()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::show));
+        ON_CALL(*this, destroy()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::destroy));
+        ON_CALL(*this, shutdown()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::shutdown));
+        ON_CALL(*this, advance_client_buffer()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::advance_client_buffer));
+
+        ON_CALL(*this, size()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::size));
+        ON_CALL(*this, pixel_format()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::pixel_format));
+        ON_CALL(*this, client_buffer_resource()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer_resource));
+    }
+
+    MOCK_METHOD0(hide, void());
+    MOCK_METHOD0(show, void());
+    MOCK_METHOD0(destroy, void());
+    MOCK_METHOD0(shutdown, void());
+    MOCK_METHOD0(advance_client_buffer, void());
+
+    MOCK_CONST_METHOD0(size, mir::geometry::Size ());
+    MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
+    MOCK_CONST_METHOD0(client_buffer_resource, std::shared_ptr<mc::GraphicBufferClientResource> ());
+
+private:
+    ms::BasicProxySurface impl;
+};
+}
+
 TEST(Session, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            msess::a_surface().name,
-            buffer_bundle));
-
+    auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
     mtd::MockSurfaceOrganiser organiser;
-    msess::Session session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
-    ON_CALL(organiser, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
+
     EXPECT_CALL(organiser, create_surface(_));
-// TODO introduce a MockSurface and set expectations on that
-//    EXPECT_CALL(organiser, destroy_surface(_));
+    EXPECT_CALL(*mock_surface, destroy());
+
+    msess::Session session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -65,25 +96,20 @@ TEST(Session, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        new ms::Surface(
-            msess::a_surface().name,
-            buffer_bundle));
-
+    auto const mock_surface = std::make_shared<MockSurface>(std::shared_ptr<ms::Surface>());
     mtd::MockSurfaceOrganiser organiser;
+    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(mock_surface));
+
     msess::Session app_session(std::shared_ptr<msess::SurfaceOrganiser>(&organiser, mir::EmptyDeleter()), "Foo");
-    ON_CALL(organiser, create_surface(_)).WillByDefault(Return(
-        std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+
     EXPECT_CALL(organiser, create_surface(_));
-// TODO introduce a MockSurface and set expectations on that
-//    EXPECT_CALL(organiser, destroy_surface(_));
-//
-//    {
-//        InSequence seq;
-//        EXPECT_CALL(organiser, hide_surface(_)).Times(1);
-//        EXPECT_CALL(organiser, show_surface(_)).Times(1);
-//    }
+
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface, hide()).Times(1);
+        EXPECT_CALL(*mock_surface, show()).Times(1);
+        EXPECT_CALL(*mock_surface, destroy()).Times(1);
+    }
 
     msess::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
