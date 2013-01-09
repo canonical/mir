@@ -57,12 +57,6 @@ class StubSurfaceFactory : public msess::SurfaceFactory
     {
         return std::shared_ptr<msess::Surface>();
     }
-
-    void destroy_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
-
-    void hide_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
-
-    void show_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
 };
 
 class StubSessionStore : public msess::SessionStore

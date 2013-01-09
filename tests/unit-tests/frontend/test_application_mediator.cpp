@@ -88,12 +88,7 @@ class StubSurfaceFactory : public msess::SurfaceFactory
         return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface));
     }
 
-    void destroy_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
-
-    void hide_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
-
-    void show_surface(std::shared_ptr<msess::Surface> const& /*surface*/) {}
-
+private:
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
