@@ -57,6 +57,9 @@ public:
     std::shared_ptr<compositor::GraphicBufferClientResource> client_buffer_resource() const;
 
 protected:
+    void destroy_surface(SurfaceStackModel* const surface_stack) const;
+
+private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
 };
 

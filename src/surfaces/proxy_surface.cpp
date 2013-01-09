@@ -103,6 +103,12 @@ std::shared_ptr<mir::compositor::GraphicBufferClientResource> ms::BasicProxySurf
     }
 }
 
+void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_stack) const
+{
+    surface_stack->destroy_surface(surface);
+}
+
+
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,
         sessions::SurfaceCreationParameters const& params) :
@@ -113,7 +119,7 @@ ms::ProxySurface::ProxySurface(
 
 void ms::ProxySurface::destroy()
 {
-    surface_stack->destroy_surface(surface);
+    destroy_surface(surface_stack);
 }
 
 ms::ProxySurface::~ProxySurface()
