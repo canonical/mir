@@ -51,9 +51,7 @@ msess::Session::~Session()
 
 msess::SurfaceId msess::Session::next_id()
 {
-    int id = next_surface_id.load();
-    while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return SurfaceId(id);
+    return SurfaceId(next_surface_id.fetch_add(1));
 }
 
 msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters& params)
