@@ -19,7 +19,6 @@
 #include "mir/sessions/session.h"
 #include "mir/sessions/surface.h"
 
-#include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_controller.h"
 
 #include <memory>
