@@ -34,7 +34,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/surface.h"
 #include "mir/exception.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
