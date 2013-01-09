@@ -22,6 +22,8 @@
 #include <google/protobuf/descriptor.h>
 
 
+namespace mir
+{
 namespace
 {
 std::once_flag init_flag;
@@ -44,6 +46,7 @@ struct google_protobuf_guard_t
     google_protobuf_guard_t() { std::call_once(init_flag, init_google_protobuf); }
     ~google_protobuf_guard_t() { std::call_once(shutdown_flag, shutdown_google_protobuf); }
 };
+}
 }
 
 void mir::protobuf::google_protobuf_guard()
