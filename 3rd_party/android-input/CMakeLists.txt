@@ -4,7 +4,7 @@
 STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 STRING(REGEX REPLACE "-W[^ ]*" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-if(MIR_USE_BIONIC)
+if(MIR_USES_BIONIC)
   set(ANDROID_INPUT_COMPILE_FLAGS
     "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
 else()
