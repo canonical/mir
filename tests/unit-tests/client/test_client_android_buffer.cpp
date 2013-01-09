@@ -92,7 +92,7 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    ASSERT_NE((int) handle, (int) NULL);
+    ASSERT_NE(handle, nullptr);
     ASSERT_EQ(handle->numFds, (int) package_copy->fd_items);
     for(auto i = 0; i < package_copy->fd_items; i++)
         EXPECT_EQ(package_copy->fd[i], handle->data[i]);
@@ -351,9 +351,9 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, (ANativeWindowBuffer*) nullptr);
-    ASSERT_NE((int) native_handle->common.incRef,  (int) NULL);
-    ASSERT_NE((int) native_handle->common.decRef,  (int) NULL);
+    ASSERT_NE(native_handle, nullptr);
+    ASSERT_NE(native_handle->common.incRef, nullptr);
+    ASSERT_NE(native_handle->common.decRef, nullptr);
 
     native_handle->common.incRef(NULL);
     native_handle->common.decRef(NULL);
