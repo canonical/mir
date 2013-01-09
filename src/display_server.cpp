@@ -94,7 +94,7 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::start()
 {
     p->communicator->start();
-//    p->input_manager->start();
+    p->input_manager->start();
 
     std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
@@ -104,7 +104,7 @@ void mir::DisplayServer::start()
         lk.lock();
     }
 
-//    p->input_manager->stop();
+    p->input_manager->stop();
 }
 
 void mir::DisplayServer::do_stuff()
