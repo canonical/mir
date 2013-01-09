@@ -16,20 +16,18 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SESSIONS_INT_WRAPPER_H_
-#define MIR_SESSIONS_INT_WRAPPER_H_
+#ifndef MIR_INT_WRAPPER_INT_WRAPPER_H_
+#define MIR_INT_WRAPPER_INT_WRAPPER_H_
 
 #include <iosfwd>
 
 namespace mir
 {
-namespace sessions
+namespace intwrapper
 {
-namespace detail
-{
-enum TypeTag { SurfaceId };
+enum TypeTag { SessionsSurfaceId };
 
-template<TypeTag Tag = SurfaceId, typename ValueType_ = int>
+template<TypeTag Tag, typename ValueType_ = int>
 class IntWrapper
 {
 public:
@@ -79,7 +77,6 @@ template<TypeTag Tag, typename ValueType>
 inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
-}
 }
 }
 }
