@@ -107,14 +107,13 @@ set (MIR_CUTDOWN_FOR_EMULATOR
   "Disable parts of system that don't run on Emulator"
 )
 
-
-
-message( "potato ${CMAKE_SYSTEM_INCLUDE_PATH}")
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
 if (MIR_PLATFORM STREQUAL "android")
+  #todo: bionic support is to be deprecated a short while after landing
+  #      hybris support. remove this and MIR_USES_BIONIC variable
   if (MIR_USES_BIONIC)
     message(STATUS "android build is using BIONIC")
 
@@ -133,6 +132,9 @@ if (MIR_PLATFORM STREQUAL "android")
 
   else()
     message(STATUS "android build is using vanilla STDC++")
+
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
+    list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
 
