@@ -2,8 +2,8 @@ Feature: In order to best use screen space an application may fill the screen. T
 
 Scenario Outline: Application is open in consuming mode
   Given the display-size is <display_size>
-  When Firefox is opened in consuming mode
-  Then Firefox will have size <display_size>
+  When "Firefox" is opened in consuming mode
+  Then "Firefox" will have size <display_size>
 
   Examples:
     | display_size |
@@ -11,8 +11,8 @@ Scenario Outline: Application is open in consuming mode
 
 Scenario Outline: Application requests a reasonable size
   Given the display-size is <display_size>
-  When Firefox is opened with size <reasonable_requested_size>
-  Then Firefox will have size <reasonable_requested_size>
+  When "Firefox" is opened with size <reasonable_requested_size>
+  Then "Firefox" will have size <reasonable_requested_size>
   
   Examples:
     | display_size | reasonable_requested_size |
@@ -20,8 +20,8 @@ Scenario Outline: Application requests a reasonable size
 
 Scenario Outline: Application requests an unreasonable size and is clipped to the screen dimensions
   Given the display-size is <display_size>
-  When Firefox is opened with size <unreasonable_requested_size>
-  Then Firefox will have size <clipped_size>
+  When "Firefox" is opened with size <unreasonable_requested_size>
+  Then "Firefox" will have size <clipped_size>
   
   Examples:
     | display_size | unreasonable_requested_size | clipped_size |

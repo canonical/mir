@@ -29,7 +29,10 @@
 namespace mtc = mir::test::cucumber;
 namespace geom = mir::geometry;
 
-GIVEN("^the display-size is (.+)x(.+)$")
+#define STEP_APPLICATION_NAME_PARAMETER_REGEX "\"(.+)\""
+#define STEP_SIZE_PARAMETER_REGEX "(.+)x(.+)$"
+
+GIVEN("^the display-size is " STEP_SIZE_PARAMETER_REGEX "$")
 {
     REGEX_PARAM(int, width);
     REGEX_PARAM(int, height);
@@ -42,7 +45,7 @@ GIVEN("^the display-size is (.+)x(.+)$")
 }
 
 // TODO: Maybe session names should be quoted to allow for spaces
-WHEN("^(.+) is opened in consuming mode$") 
+WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened in consuming mode$") 
 {
     REGEX_PARAM(std::string, window_name);
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
@@ -51,7 +54,7 @@ WHEN("^(.+) is opened in consuming mode$")
     
 }
 
-WHEN("^(.+) is opened with size (.+)x(.+)$")
+WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened with size " STEP_SIZE_PARAMETER_REGEX "$")
 {
     REGEX_PARAM(std::string, window_name);
     REGEX_PARAM(int, request_width);
@@ -63,7 +66,7 @@ WHEN("^(.+) is opened with size (.+)x(.+)$")
     
 }
 
-THEN("^(.+) will have size (.+)x(.+)$")
+THEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " will have size " STEP_SIZE_PARAMETER_REGEX "$")
 {
     REGEX_PARAM(std::string, window_name);
     REGEX_PARAM(int, expected_width);
