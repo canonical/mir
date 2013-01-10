@@ -103,13 +103,27 @@ TEST(SurfaceProxy, destroy)
     Mock::VerifyAndClearExpectations(&surface_stack);
 }
 
-TEST(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
+namespace
 {
-    using namespace testing;
+struct BasicSurfaceProxy : testing::Test
+{
+    std::shared_ptr<StubBufferBundle> buffer_bundle;
 
-    auto surface = std::make_shared<ms::Surface>(
-        __PRETTY_FUNCTION__,
-        std::make_shared<StubBufferBundle>());
+    BasicSurfaceProxy() :
+        buffer_bundle(std::make_shared<StubBufferBundle>())
+    {
+        using namespace testing;
+
+        ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
+        ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
+        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mc::GraphicBufferClientResource>()));
+    }
+};
+}
+
+TEST_F(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
@@ -124,14 +138,9 @@ TEST(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST(BasicSurfaceProxy, size_throw_behavior)
+TEST_F(BasicSurfaceProxy, size_throw_behavior)
 {
-    using namespace testing;
-
-    auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
-    ON_CALL(*mock_buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
-
-    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, mock_buffer_bundle);
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
@@ -146,15 +155,9 @@ TEST(BasicSurfaceProxy, size_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST(BasicSurfaceProxy, pixel_format_throw_behavior)
+TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
 {
-    using namespace testing;
-
-    auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
-    ON_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
-        .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-
-    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, mock_buffer_bundle);
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
@@ -167,4 +170,89 @@ TEST(BasicSurfaceProxy, pixel_format_throw_behavior)
     EXPECT_THROW({
         proxy_surface.pixel_format();
     }, std::runtime_error);
+}
+
+TEST_F(BasicSurfaceProxy, hide_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.hide();
+    });
+
+    surface.reset();
+
+    EXPECT_NO_THROW({
+        proxy_surface.hide();
+    });
+}
+
+TEST_F(BasicSurfaceProxy, show_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.show();
+    });
+
+    surface.reset();
+
+    EXPECT_NO_THROW({
+        proxy_surface.show();
+    });
+}
+
+TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.destroy();
+    });
+
+    surface.reset();
+
+    EXPECT_NO_THROW({
+        proxy_surface.destroy();
+    });
+}
+
+TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.shutdown();
+    });
+
+    surface.reset();
+
+    EXPECT_NO_THROW({
+        proxy_surface.shutdown();
+    });
+}
+
+TEST_F(BasicSurfaceProxy, advance_client_buffer_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.advance_client_buffer();
+    });
+
+    surface.reset();
+
+    EXPECT_NO_THROW({
+        proxy_surface.advance_client_buffer();
+    });
 }
