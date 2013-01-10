@@ -36,6 +36,8 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+typedef testing::NiceMock<mtd::MockBufferBundle> StubBufferBundle;
+
 class MockSurfaceStackModel : public ms::SurfaceStackModel
 {
 public:
@@ -59,7 +61,7 @@ private:
     {
         surface = std::make_shared<ms::Surface>(
             params.name,
-            std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>());
+            std::make_shared<StubBufferBundle>());
         return surface;
     }
 
@@ -70,7 +72,6 @@ private:
 
     std::shared_ptr<ms::Surface> surface;
 };
-
 }
 
 TEST(SurfaceProxy, creation_and_destruction)
@@ -109,7 +110,7 @@ TEST(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
     msess::SurfaceCreationParameters params;
     auto surface = std::make_shared<ms::Surface>(
         params.name,
-        std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>());
+        std::make_shared<StubBufferBundle>());
 
     ms::BasicProxySurface proxy_surface(surface);
 
@@ -129,7 +130,7 @@ TEST(BasicSurfaceProxy, size_throw_behavior)
     using namespace testing;
 
     msess::SurfaceCreationParameters params;
-    auto mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+    auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
     EXPECT_CALL(*mock_buffer_bundle, bundle_size())
         .Times(1)
         .WillOnce(Return(geom::Size())); 
@@ -153,7 +154,7 @@ TEST(BasicSurfaceProxy, pixel_format_throw_behavior)
     using namespace testing;
 
     msess::SurfaceCreationParameters params;
-    auto mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+    auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
     EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
         .Times(1)
         .WillOnce(Return(geom::PixelFormat::abgr_8888)); 
