@@ -48,6 +48,8 @@
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/once.hpp>
+
 namespace mir
 {
 namespace std
@@ -58,6 +60,8 @@ using ::boost::lock_guard;
 using ::boost::thread;
 using ::boost::thread;
 using ::boost::mutex;
+using ::boost::once_flag;
+using ::boost::call_once;
 
 template <typename R>
 class future : ::boost::unique_future<R> {

@@ -19,32 +19,21 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/sessions/surface.h"
+
+#include "proxy_surface.h"
 
 #include <cassert>
 
 namespace ms = mir::surfaces;
+namespace msess = mir::sessions;
 
 ms::SurfaceController::SurfaceController(ms::SurfaceStackModel* surface_stack) : surface_stack(surface_stack)
 {
     assert(surface_stack);
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(const ms::SurfaceCreationParameters& params)
+std::shared_ptr<msess::Surface> ms::SurfaceController::create_surface(const msess::SurfaceCreationParameters& params)
 {
-    return surface_stack->create_surface(params);
-}
-
-void ms::SurfaceController::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
-{
-    surface_stack->destroy_surface(surface);
-}
-
-void ms::SurfaceController::hide_surface(std::weak_ptr<ms::Surface> const& surface)
-{
-    surface.lock()->set_hidden(true);
-}
-
-void ms::SurfaceController::show_surface(std::weak_ptr<ms::Surface> const& surface)
-{
-    surface.lock()->set_hidden(false);
+    return std::make_shared<ProxySurface>(surface_stack, params);
 }
