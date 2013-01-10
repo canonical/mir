@@ -32,27 +32,6 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
-// TODO frig to make it compile
-MirWaitHandle *mir_connect_with_lightdm_id(
-    char const *server,
-    int /*lightdm_id*/,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *client_context)
-{
-    return mir_connect(
-        server,
-        app_name,
-        callback,
-        client_context);
-}
-
-// TODO frig to make it compile
-void mir_select_focus_by_lightdm_id(int /*lightdm_id*/)
-{
-}
-
-
 namespace mir
 {
 namespace
@@ -138,11 +117,27 @@ TEST_F(DefaultDisplayServerTestFixture, focus_management)
         }
     } client_config;
 
+    struct LightdmConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_wait_for(mir_connect(
+                mir_test_socket,
+                __PRETTY_FUNCTION__,
+                connection_callback,
+                this));
+
+            mir_select_focus_by_lightdm_id(connection, lightdm_id);
+
+            // TODO check that focus becomes set.
+
+            mir_connection_release(connection);
+        }
+    } lightdm_config;
+
+
     launch_client_process(client_config);
-
     // TODO Wait for client to init
-    mir_select_focus_by_lightdm_id(int lightdm_id);
-
-    // TODO check that focus was set.
+    launch_client_process(lightdm_config);
 }
 }

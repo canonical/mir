@@ -44,7 +44,7 @@ MirWaitHandle *mir_connect_with_lightdm_id(
 /// Request focus to be set to a specific application.
 /// \param in   lightdm_id an id referring to the application
 /// \return nothing - if an unrecognized id is supplied it is ignored
-void mir_select_focus_by_lightdm_id(int lightdm_id);
+void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id);
 
 #ifdef __cplusplus
 }
