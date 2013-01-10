@@ -41,32 +41,6 @@ class BufferID;
 namespace surfaces
 {
 
-struct SurfaceCreationParameters
-{
-    SurfaceCreationParameters();
-
-    SurfaceCreationParameters& of_name(std::string const& new_name);
-
-    SurfaceCreationParameters& of_size(geometry::Size new_size);
-
-    SurfaceCreationParameters& of_size(geometry::Width::ValueType width, geometry::Height::ValueType height);
-
-    SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
-
-    SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
-
-    std::string name;
-    geometry::Size size;
-    compositor::BufferUsage buffer_usage;
-    geometry::PixelFormat pixel_format;
-};
-
-bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
-bool operator!=(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
-
-
-SurfaceCreationParameters a_surface();
-
 class Surface : public graphics::Renderable
 {
 public:

@@ -19,7 +19,7 @@
 #ifndef MIR_SESSIONS_SESSION_H_
 #define MIR_SESSIONS_SESSION_H_
 
-#include "mir/sessions/int_wrapper.h"
+#include "mir/int_wrapper.h"
 #include "mir/thread/all.h"
 
 #include <memory>
@@ -29,29 +29,23 @@
 namespace mir
 {
 
-namespace surfaces
-{
-
-class SurfaceCreationParameters;
-class Surface;
-
-}
-
 /// Management of client application sessions
 namespace sessions
 {
-class SurfaceOrganiser;
-typedef detail::IntWrapper<> SurfaceId;
+class Surface;
+class SurfaceFactory;
+class SurfaceCreationParameters;
+typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
 
 class Session
 {
 public:
-    explicit Session(std::shared_ptr<SurfaceOrganiser> const& surface_organiser, std::string const& session_name);
+    explicit Session(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
     virtual ~Session();
 
-    SurfaceId create_surface(const surfaces::SurfaceCreationParameters& params);
+    SurfaceId create_surface(const SurfaceCreationParameters& params);
     void destroy_surface(SurfaceId surface);
-    std::shared_ptr<surfaces::Surface> get_surface(SurfaceId surface) const;
+    std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
 
     std::string name();
     void shutdown();
@@ -63,14 +57,14 @@ protected:
     Session& operator=(const Session&) = delete;
 
 private:
-    std::shared_ptr<SurfaceOrganiser> const surface_organiser;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
 
     SurfaceId next_id();
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<SurfaceId, std::weak_ptr<surfaces::Surface>> Surfaces;
+    typedef std::map<SurfaceId, std::shared_ptr<Surface>> Surfaces;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 };

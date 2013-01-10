@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 
 #include <memory>
 
@@ -32,28 +32,22 @@ namespace surfaces
 {
 
 class Surface;
-class SurfaceCreationParameters;
 class SurfaceStackModel;
 
-class SurfaceController : public sessions::SurfaceOrganiser
+class SurfaceController : public sessions::SurfaceFactory
 {
 public:
     explicit SurfaceController(SurfaceStackModel* surface_stack);
     virtual ~SurfaceController() {}
 
-    std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
-
-    void destroy_surface(std::weak_ptr<Surface> const& surface);
-
-    void hide_surface(std::weak_ptr<Surface> const& surface);
-    void show_surface(std::weak_ptr<Surface> const& surface);
+    std::shared_ptr<sessions::Surface> create_surface(const sessions::SurfaceCreationParameters& params);
 
 protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    SurfaceStackModel* surface_stack;
+    SurfaceStackModel* const surface_stack;
 };
 
 }

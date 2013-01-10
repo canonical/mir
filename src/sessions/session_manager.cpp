@@ -19,7 +19,7 @@
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/sessions/focus_sequence.h"
 #include "mir/sessions/focus_setter.h"
 
@@ -28,19 +28,18 @@
 #include <algorithm>
 
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 
 msess::SessionManager::SessionManager(
-    std::shared_ptr<msess::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
     std::shared_ptr<msess::SessionContainer> const& container,
     std::shared_ptr<msess::FocusSequence> const& sequence,
     std::shared_ptr<msess::FocusSetter> const& focus_setter) :
-    surface_organiser(organiser),
+    surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
     focus_setter(focus_setter)
 {
-    assert(surface_organiser);
+    assert(surface_factory);
     assert(sequence);
     assert(container);
     assert(focus_setter);
@@ -52,7 +51,7 @@ msess::SessionManager::~SessionManager()
 
 std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msess::Session>(surface_organiser, name);
+    auto new_session = std::make_shared<msess::Session>(surface_factory, name);
 
     app_container->insert_session(new_session);
     focus_application = new_session;

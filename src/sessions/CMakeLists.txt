@@ -24,7 +24,8 @@ set(
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp
   consuming_placement_strategy.cpp
-  placement_strategy_surface_organiser.cpp
+  organising_surface_factory.cpp
+  surface_creation_parameters.cpp
 )
 
 add_library(

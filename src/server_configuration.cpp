@@ -32,7 +32,7 @@
 #include "mir/sessions/single_visibility_focus_mechanism.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/consuming_placement_strategy.h"
-#include "mir/sessions/placement_strategy_surface_organiser.h"
+#include "mir/sessions/organising_surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -160,16 +160,17 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 }
 
 std::shared_ptr<msess::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceOrganiser> const& surface_organiser,
+mir::DefaultServerConfiguration::make_surface_factory(std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
                                                       std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
     auto session_container = std::make_shared<msess::SessionContainer>();
     auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
     auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
-    auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
-    auto placing_organiser = std::make_shared<msess::PlacementStrategySurfaceOrganiser>(surface_organiser, placement_strategy);
 
-    return std::make_shared<msess::SessionManager>(placing_organiser, session_container, focus_selection_strategy, focus_mechanism);
+    auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
+    auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_organiser, placement_strategy);
+
+    return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
 }
 
 std::shared_ptr<mi::InputManager>
