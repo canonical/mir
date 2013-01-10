@@ -53,8 +53,7 @@ Architecture: any
 Depends: libmirprotobuf0 (= ${binary:Version}),
          libmirclient0 (= ${binary:Version}),
          mir (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
+         ${misc:Depends}
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
  .
