@@ -80,6 +80,10 @@ void mir::frontend::ApplicationMediator::connect(
         display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
 
     resource_cache->save_resource(response, ipc_package);
+
+    if (request->has_lightdm_id())
+        session_store->tag_session_with_lightdm_id(application_session, request->lightdm_id());
+
     done->Run();
 }
 
@@ -181,14 +185,14 @@ void mir::frontend::ApplicationMediator::next_buffer(
 
 void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
     google::protobuf::RpcController*,// controller,
-    mir::protobuf::LightdmId const*,// request,
+    mir::protobuf::LightdmId const* request,
     mir::protobuf::Void*,// response,
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    //TODO
+    session_store->select_session_with_lightdm_id(request->value());
 
     done->Run();
 }
