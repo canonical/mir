@@ -27,6 +27,7 @@
 #include "mir/thread/all.h"
 
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
@@ -59,14 +60,6 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() { std::this_thread::yield(); }
-    bool post_update() { return true; }
-};
-
 class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthenticator
 {
 public:
@@ -78,7 +71,7 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::make_shared<mtd::NullDisplay>();
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
