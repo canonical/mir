@@ -81,7 +81,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
+    std::shared_ptr<mc::Buffer> texture = buffer_bundle.lock_back_buffer();
     auto buffer = texture->region.lock();
     buffer->bind_to_texture();
 }
@@ -109,7 +109,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     .WillOnce(Return(dummy_ipc_package));
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
+    std::shared_ptr<mc::Buffer> buffer_resource = buffer_bundle.secure_client_buffer();
     auto buffer_package = buffer_resource->buffer.lock()->get_ipc_package();
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }

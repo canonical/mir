@@ -210,14 +210,14 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::abgr_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
-    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(mock_buffer);
+    auto graphics_resource = std::make_shared<mtd::StubBuffer>();
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(graphics_resource));
     surf.advance_client_buffer();
 
     auto ret_ipc = surf.client_buffer_resource();
-    EXPECT_EQ(ret_ipc->buffer.lock()->get_ipc_package().get(), mock_buffer->get_ipc_package().get()); 
+    EXPECT_EQ(graphics_resource, ret_ipc); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -274,16 +274,16 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     using namespace testing;
 
     ms::Surface surf{surface_name, mock_buffer_bundle};
-    auto buffer_resource = std::make_shared<mc::GraphicBufferCompositorResource>(std::weak_ptr<mc::Buffer>());
+    std::shared_ptr<mc::GraphicRegion> buffer_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
         .Times(AtLeast(1))
         .WillOnce(Return(buffer_resource));
 
-    std::shared_ptr<mc::GraphicBufferCompositorResource> comp_resource;
+    std::shared_ptr<mc::GraphicRegion> comp_resource;
     comp_resource = surf.texture();
 
-    EXPECT_EQ(buffer_resource.get(), comp_resource.get());
+    EXPECT_EQ(buffer_resource, comp_resource);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
