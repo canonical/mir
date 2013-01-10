@@ -20,10 +20,8 @@
 
 #include "mir_test_doubles/null_buffer_bundle.h"
 
-#include "mir/surfaces/surface.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/single_visibility_focus_mechanism.h"
-#include "mir/sessions/session_container.h"
+#include "mir/sessions/surface.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/surface_factory.h"
@@ -31,8 +29,8 @@
 #include "mir/server_configuration.h"
 
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
@@ -49,52 +47,58 @@ static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
                                                                             geom::Height(1400)}};
 
-struct SizedBufferBundle : public mtd::NullBufferBundle
+struct DummySurface : public msess::Surface
 {
-    SizedBufferBundle(geom::Size const& buffer_size) 
-        : NullBufferBundle(),
-          buffer_size(buffer_size)
+    explicit DummySurface() {}
+    virtual ~DummySurface() {}
+    
+    virtual void hide() {}
+    virtual void show() {}
+    virtual void destroy() {}
+    virtual void shutdown() {}
+    
+    virtual geom::Size size() const
     {
+        return geom::Size();
+    }
+    virtual geom::PixelFormat pixel_format() const
+    {
+        return geom::PixelFormat();
     }
 
-    geometry::Size bundle_size()
+    virtual void advance_client_buffer() {}
+    virtual std::shared_ptr<mc::GraphicBufferClientResource> client_buffer_resource() const
     {
-        return buffer_size;
+        return std::shared_ptr<mc::GraphicBufferClientResource>();
     }
+};
 
-    geom::Size const buffer_size;
+struct SizedDummySurface : public DummySurface
+{
+    explicit SizedDummySurface(geom::Size const& size)
+        : surface_size(size)
+    {
+    }
+    
+    geom::Size size() const
+    {
+        return surface_size;
+    }
+    
+    geom::Size const surface_size;
 };
 
 struct DummySurfaceFactory : public msess::SurfaceFactory
 {
-    explicit DummySurfaceOrganiser()
+    explicit DummySurfaceFactory()
     {
     }
 
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& params)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& params)
     {
         auto name = params.name;
-        auto surf = std::make_shared<ms::Surface>(name,
-            std::make_shared<SizedBufferBundle>(params.size));
-        surfaces_by_name[name] = surf;
-        
-        return surf;
+        return std::make_shared<SizedDummySurface>(params.size);
     }
-
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-        // TODO: Implement
-    }
-    
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-    }
-
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-    }
-    
-    std::map<std::string, std::shared_ptr<ms::Surface>> surfaces_by_name;
 };
 
 struct DummyViewableArea : public mg::ViewableArea
@@ -124,16 +128,16 @@ struct DummyViewableArea : public mg::ViewableArea
 mtc::SessionManagementContext::SessionManagementContext()
 {
     auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
-    auto underlying_organiser = std::make_shared<mtc::DummySurfaceOrganiser>();
+    auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
     view_area = std::make_shared<DummyViewableArea>();
     
-    session_manager = server_configuration->make_session_manager(underlying_organiser, view_area);
+    session_manager = server_configuration->make_session_manager(underlying_factory, view_area);
 }
 
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    auto const params = ms::a_surface().of_name(window_name);
+    auto const params = msess::a_surface().of_name(window_name);
     auto session = session_manager->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
@@ -145,7 +149,7 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 bool mtc::SessionManagementContext::open_window_sized(std::string const& window_name,
                                                       geom::Size const& size)
 {
-    auto const params = ms::a_surface().of_name(window_name).of_size(size);
+    auto const params = msess::a_surface().of_name(window_name).of_size(size);
     auto session = session_manager->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
