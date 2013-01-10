@@ -18,18 +18,9 @@
 
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
-#include "mir/sessions/surface_factory.h"
 #include "mir/sessions/single_visibility_focus_mechanism.h"
 
-#include <memory>
-#include <cassert>
-#include <algorithm>
-
-#include <stdio.h>
-
-
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 
 msess::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msess::SessionContainer> const& app_container) :
   app_container(app_container)
