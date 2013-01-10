@@ -97,7 +97,7 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->query, nullptr);
+    ASSERT_NE(nullptr, anw->query);
     EXPECT_NO_THROW({
         anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
     });
@@ -119,8 +119,8 @@ TEST_F(AndroidNativeWindowTest, native_window_width_query_hook)
 
     auto rc = anw->query(anw, NATIVE_WINDOW_WIDTH ,&value);
 
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, surf_params.width);
+    EXPECT_EQ(0, rc);
+    EXPECT_EQ(surf_params.width, value);
 
     delete anw;
 }
@@ -137,8 +137,8 @@ TEST_F(AndroidNativeWindowTest, native_window_height_query_hook)
 
     auto rc = anw->query(anw, NATIVE_WINDOW_HEIGHT ,&value);
 
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, surf_params.height);
+    EXPECT_EQ(0, rc);
+    EXPECT_EQ(surf_params.height, value);
 
     delete anw;
 }
@@ -156,8 +156,8 @@ TEST_F(AndroidNativeWindowTest, native_window_hint_query_hook)
 
     auto rc = anw->query(anw, NATIVE_WINDOW_TRANSFORM_HINT ,&value);
 
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, transform_hint_zero);
+    EXPECT_EQ(0, rc);
+    EXPECT_EQ(transform_hint_zero, value);
 
     delete anw;
 }
@@ -172,8 +172,8 @@ TEST_F(AndroidNativeWindowTest, native_window_default_width_query_hook)
 
     auto rc = anw->query(anw, NATIVE_WINDOW_DEFAULT_WIDTH ,&value);
 
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, surf_params.width);
+    EXPECT_EQ(0, rc);
+    EXPECT_EQ(surf_params.width, value);
 
     delete anw;
 }
@@ -188,8 +188,8 @@ TEST_F(AndroidNativeWindowTest, native_window_default_height_query_hook)
 
     auto rc = anw->query(anw, NATIVE_WINDOW_DEFAULT_HEIGHT ,&value);
 
-    EXPECT_EQ(rc, 0);
-    EXPECT_EQ(value, surf_params.height);
+    EXPECT_EQ(0, rc);
+    EXPECT_EQ(surf_params.height, value);
 
     delete anw;
 }
@@ -201,7 +201,7 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->perform, nullptr);
+    ASSERT_NE(nullptr, anw->perform);
     EXPECT_NO_THROW({
         anw->perform(anw, NATIVE_WINDOW_SET_BUFFERS_DIMENSIONS , 40, 22);
     });
@@ -222,7 +222,7 @@ TEST_F(AndroidNativeWindowTest, native_window_perform_remembers_format)
     int tmp_format = 0;
     anw->query(anw, NATIVE_WINDOW_FORMAT, &tmp_format);
 
-    EXPECT_EQ(format, tmp_format);
+    EXPECT_EQ(tmp_format, format);
 
     delete anw;
 }
@@ -234,7 +234,7 @@ TEST_F(AndroidNativeWindowTest, native_window_setswapinterval_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->setSwapInterval, nullptr);
+    ASSERT_NE(nullptr, anw->setSwapInterval);
     EXPECT_NO_THROW({
         anw->setSwapInterval(anw, 22);
     });
@@ -250,7 +250,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->dequeueBuffer, nullptr);
+    ASSERT_NE(nullptr, anw->dequeueBuffer);
     EXPECT_NO_THROW({
         anw->dequeueBuffer(anw, &tmp);
     });
@@ -295,7 +295,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
 
     anw->dequeueBuffer(anw, &tmp);
 
-    EXPECT_EQ(&buffer, tmp);
+    EXPECT_EQ(tmp, &buffer);
     delete anw;
 }
 
@@ -309,7 +309,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
     auto ret = anw->dequeueBuffer(anw, &tmp);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(0, ret);
 
     delete anw;
 }
@@ -322,7 +322,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->queueBuffer, nullptr);
+    ASSERT_NE(nullptr, anw->queueBuffer);
     EXPECT_NO_THROW({
         anw->queueBuffer(anw, tmp);
     });
@@ -353,7 +353,7 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->cancelBuffer, nullptr);
+    ASSERT_NE(nullptr, anw->cancelBuffer);
     EXPECT_NO_THROW({
         anw->cancelBuffer(anw, tmp);
     });
@@ -369,7 +369,7 @@ TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->lockBuffer, nullptr);
+    ASSERT_NE(nullptr, anw->lockBuffer);
     EXPECT_NO_THROW({
         anw->lockBuffer(anw, tmp);
     });
@@ -383,7 +383,7 @@ TEST_F(AndroidNativeWindowTest, native_window_incref_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->common.incRef, nullptr);
+    ASSERT_NE(nullptr, anw->common.incRef);
     EXPECT_NO_THROW({
         anw->common.incRef(NULL);
     });
@@ -398,7 +398,7 @@ TEST_F(AndroidNativeWindowTest, native_window_decref_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(anw->common.decRef, nullptr);
+    ASSERT_NE(nullptr, anw->common.decRef);
     EXPECT_NO_THROW({
         anw->common.decRef(NULL);
     });

@@ -78,7 +78,7 @@ protected:
 TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(package, nullptr);
+    EXPECT_EQ(nullptr, package);
 }
 
 TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
@@ -92,8 +92,8 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    ASSERT_NE(handle, nullptr);
-    ASSERT_EQ(handle->numFds, (int) package_copy->fd_items);
+    ASSERT_NE(nullptr, handle);
+    ASSERT_EQ(package_copy->fd_items, handle->numFds);
     for(auto i = 0; i < package_copy->fd_items; i++)
         EXPECT_EQ(package_copy->fd[i], handle->data[i]);
 }
@@ -109,8 +109,8 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    ASSERT_NE(handle, nullptr);
-    ASSERT_EQ(handle->numInts, (int) package_copy->data_items);
+    ASSERT_NE(nullptr, handle);
+    ASSERT_EQ(package_copy->data_items, handle->numInts);
     for(auto i = 0; i < package_copy->data_items; i++)
         EXPECT_EQ(package_copy->data[i], handle->data[i + package_copy->fd_items]);
 }
@@ -176,31 +176,31 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
             Return(empty_char)));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(buffer_handle_sp.get(), buffer_handle);
+    EXPECT_EQ(buffer_handle, buffer_handle_sp.get());
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_width_without_modifying)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(buffer->size().width, width_copy);
+    EXPECT_EQ(width_copy, buffer->size().width);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_height_without_modifying)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(buffer->size().height, height_copy);
+    EXPECT_EQ(height_copy, buffer->size().height);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_pf_without_modifying)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(buffer->pixel_format(), pf_copy);
+    EXPECT_EQ(pf_copy, buffer->pixel_format());
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_returns_correct_stride)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(buffer->stride(), stride);
+    EXPECT_EQ(stride, buffer->stride());
 }
 
 TEST_F(ClientAndroidBufferTest, check_bounds_on_secure)
@@ -232,7 +232,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_vaddr)
         .WillOnce(Return(empty_char));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(region->vaddr.get(), empty_char.get());
+    EXPECT_EQ(empty_char, region->vaddr);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_width)
@@ -247,7 +247,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_width)
         .WillOnce(Return(empty_char));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(region->width, width_copy);
+    EXPECT_EQ(width_copy, region->width);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_height)
@@ -262,7 +262,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_height)
         .WillOnce(Return(empty_char));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(region->height, height_copy);
+    EXPECT_EQ(height_copy, region->height);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_stride)
@@ -277,7 +277,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_stride)
         .WillOnce(Return(empty_char));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(region->stride, stride);
+    EXPECT_EQ(stride, region->stride);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
@@ -292,7 +292,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_memory_region_with_right_pf)
         .WillOnce(Return(empty_char));
     auto region = buffer->secure_for_cpu_write();
 
-    EXPECT_EQ(region->format, pf_copy);
+    EXPECT_EQ(pf_copy, region->format);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
@@ -310,8 +310,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, nullptr);
-    EXPECT_EQ(native_handle->handle, buffer_handle);
+    ASSERT_NE(nullptr, native_handle);
+    EXPECT_EQ(buffer_handle, native_handle->handle);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
@@ -324,9 +324,9 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, nullptr);
-    EXPECT_EQ(native_handle->width,  (int) width_copy.as_uint32_t());
-    EXPECT_EQ(native_handle->height, (int) height_copy.as_uint32_t());
+    ASSERT_NE(nullptr, native_handle);
+    EXPECT_EQ(width_copy.as_uint32_t(), static_cast<uint32_t>(native_handle->width));
+    EXPECT_EQ(height_copy.as_uint32_t(), static_cast<uint32_t>(native_handle->height));
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
@@ -338,8 +338,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
 
     auto native_handle = buffer->get_native_handle();
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    ASSERT_NE(native_handle, nullptr);
-    EXPECT_EQ(native_handle->usage,  correct_usage);
+    ASSERT_NE(nullptr, native_handle);
+    EXPECT_EQ(correct_usage, native_handle->usage);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
@@ -351,9 +351,9 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
 
     auto native_handle = buffer->get_native_handle();
 
-    ASSERT_NE(native_handle, nullptr);
-    ASSERT_NE(native_handle->common.incRef, nullptr);
-    ASSERT_NE(native_handle->common.decRef, nullptr);
+    ASSERT_NE(nullptr, native_handle);
+    ASSERT_NE(nullptr, native_handle->common.incRef);
+    ASSERT_NE(nullptr, native_handle->common.decRef);
 
     native_handle->common.incRef(NULL);
     native_handle->common.decRef(NULL);
@@ -368,12 +368,12 @@ TEST_F(ClientAndroidBufferTest, buffer_returns_creation_package)
 
     auto package_return = buffer->get_buffer_package();
 
-    EXPECT_EQ(package_return->data_items, package_copy->data_items);
-    EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
-    EXPECT_EQ(package_return->stride, package_copy->stride);
+    EXPECT_EQ(package_copy->data_items, package_return->data_items);
+    EXPECT_EQ(package_copy->fd_items, package_return->fd_items);
+    EXPECT_EQ(package_copy->stride, package_return->stride);
     for(auto i=0; i<mir_buffer_package_max; i++)
-        EXPECT_EQ(package_return->data[i], package_copy->data[i]);
+        EXPECT_EQ(package_copy->data[i], package_return->data[i]);
     for(auto i=0; i<mir_buffer_package_max; i++)
-        EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
+        EXPECT_EQ(package_copy->fd[i], package_return->fd[i]);
 }
 
