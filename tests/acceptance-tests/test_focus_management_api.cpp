@@ -40,7 +40,7 @@ MirWaitHandle *mir_connect_with_lightdm_id(
     mir_connected_callback callback,
     void *client_context)
 {
-    return mir_connect_with_lightdm_id(
+    return mir_connect(
         server,
         app_name,
         callback,
