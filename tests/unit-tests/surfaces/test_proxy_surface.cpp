@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 
+#include <stdexcept>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -99,4 +100,74 @@ TEST(SurfaceProxy, destroy)
     test.destroy();
 
     Mock::VerifyAndClearExpectations(&surface_stack);
+}
+
+TEST(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
+{
+    using namespace testing;
+
+    msess::SurfaceCreationParameters params;
+    auto surface = std::make_shared<ms::Surface>(
+        params.name,
+        std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>());
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.client_buffer_resource();
+    });
+
+    surface.reset();
+
+    EXPECT_THROW({
+        proxy_surface.client_buffer_resource();
+    }, std::runtime_error);
+}
+
+TEST(BasicSurfaceProxy, size_throw_behavior)
+{
+    using namespace testing;
+
+    msess::SurfaceCreationParameters params;
+    auto mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+    EXPECT_CALL(*mock_buffer_bundle, bundle_size())
+        .Times(1)
+        .WillOnce(Return(geom::Size())); 
+    auto surface = std::make_shared<ms::Surface>(params.name, mock_buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.size();
+    });
+
+    surface.reset();
+
+    EXPECT_THROW({
+        proxy_surface.size();
+    }, std::runtime_error);
+}
+
+TEST(BasicSurfaceProxy, pixel_format_throw_behavior)
+{
+    using namespace testing;
+
+    msess::SurfaceCreationParameters params;
+    auto mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+    EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
+        .Times(1)
+        .WillOnce(Return(geom::PixelFormat::abgr_8888)); 
+    auto surface = std::make_shared<ms::Surface>(params.name, mock_buffer_bundle);
+
+    ms::BasicProxySurface proxy_surface(surface);
+
+    EXPECT_NO_THROW({
+        proxy_surface.pixel_format();
+    });
+
+    surface.reset();
+
+    EXPECT_THROW({
+        proxy_surface.pixel_format();
+    }, std::runtime_error);
 }
