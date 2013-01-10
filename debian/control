@@ -1,7 +1,7 @@
 Source: mir
 Section: x11
 Priority: extra
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
                debhelper (>= 9),
@@ -17,10 +17,45 @@ Build-Depends: cmake,
                pkg-config
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
-Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir/ubuntu
+Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir
 
-Package: mir
+Package: libmirprotobuf0
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
+ .
+ Contains the protocol symbols and proto files.
+
+Package: libmirclient0
+Architecture: any
+Depends: libmirprotobuf0,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Ubuntu display server
+ Mir is the next generation display server for Ubuntu.
+ .
+ Contains the symbols needed by client applications for Mir.
+
+Package: mir-bin
+Architecture: any
+Depends: libmirprotobuf0 (= ${binary:Version}),
+         libmirclient0 (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Ubuntu display server
+ Mir is the next generation display server for Ubuntu.
+ .
+ Contains the main server executable.
+
+Package: mir-dev
+Architecture: any
+Depends: libmirprotobuf0 (= ${binary:Version}),
+         libmirclient0 (= ${binary:Version}),
+         mir (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Description: Ubuntu display server
+ Mir is the next generation display server for Ubuntu.
+ .
+ Contains header files required to develop against Mir.
