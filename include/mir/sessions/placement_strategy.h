@@ -19,12 +19,11 @@
 #ifndef MIR_SESSIONS_PLACEMENT_STRATEGY_H_
 #define MIR_SESSIONS_PLACEMENT_STRATEGY_H_
 
-#include "mir/surfaces/surface.h"
-
 namespace mir
 {
 namespace sessions
 {
+class SurfaceCreationParameters;
 
 class PlacementStrategy
 {
@@ -32,8 +31,8 @@ public:
     virtual ~PlacementStrategy() {}
     // TODO: It is strange to pass SurfaceCreationParameters here, perhaps a new interface
     // is needed.
-    virtual void place(surfaces::SurfaceCreationParameters const& request_parameters,
-                       surfaces::SurfaceCreationParameters &placed_parameters) = 0;
+    virtual void place(SurfaceCreationParameters const& request_parameters,
+                       SurfaceCreationParameters &placed_parameters) = 0;
 
 protected:
     PlacementStrategy() = default;

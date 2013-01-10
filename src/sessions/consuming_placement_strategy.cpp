@@ -17,13 +17,13 @@
  */
 
 #include "mir/sessions/consuming_placement_strategy.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include <algorithm>
 
 namespace msess = mir::sessions;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 msess::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
@@ -31,8 +31,8 @@ msess::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg
 {
 }
 
-void msess::ConsumingPlacementStrategy::place(ms::SurfaceCreationParameters const& request_parameters,
-                                      ms::SurfaceCreationParameters &placed_parameters)
+void msess::ConsumingPlacementStrategy::place(msess::SurfaceCreationParameters const& request_parameters,
+                                      msess::SurfaceCreationParameters &placed_parameters)
 {
     placed_parameters = request_parameters;
 

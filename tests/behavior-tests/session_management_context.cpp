@@ -26,9 +26,7 @@
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_manager.h"
-#include "mir/sessions/surface_organiser.h"
-#include "mir/sessions/consuming_placement_strategy.h"
-#include "mir/sessions/placement_strategy_surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/server_configuration.h"
 
@@ -67,7 +65,7 @@ struct SizedBufferBundle : public mtd::NullBufferBundle
     geom::Size const buffer_size;
 };
 
-struct DummySurfaceOrganiser : public msess::SurfaceOrganiser
+struct DummySurfaceFactory : public msess::SurfaceFactory
 {
     explicit DummySurfaceOrganiser()
     {
