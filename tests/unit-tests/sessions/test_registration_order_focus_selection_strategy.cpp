@@ -37,13 +37,13 @@ namespace mtd = mir::test::doubles;
 TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
+    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(model);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(organiser, std::string("Visual Studio 9")));
+    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -57,13 +57,13 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
+    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(organiser, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(organiser, std::string("Visual Studio 9")));
+    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
 
     container->insert_session(app1);
     container->insert_session(app2);
@@ -77,11 +77,11 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
+    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(organiser, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
 
     container->insert_session(app1);
 

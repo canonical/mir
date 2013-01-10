@@ -62,20 +62,20 @@ class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
-        : organiser{std::make_shared<StubSurfaceFactory>()}
+        : factory{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::Session>(organiser, "stub");
+        return std::make_shared<msess::Session>(factory, "stub");
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<msess::SurfaceFactory> organiser;
+    std::shared_ptr<msess::SurfaceFactory> factory;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator

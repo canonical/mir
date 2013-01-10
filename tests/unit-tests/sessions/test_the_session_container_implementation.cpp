@@ -37,11 +37,11 @@ namespace mtd = mir::test::doubles;
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> organiser(new mtd::MockSurfaceFactory());
+    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
     msess::SessionContainer container;
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(organiser, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(organiser, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
 
     container.insert_session(app1);
     container.insert_session(app2);
