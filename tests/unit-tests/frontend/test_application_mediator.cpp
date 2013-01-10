@@ -24,12 +24,14 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
+
+#include "src/surfaces/proxy_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -61,8 +63,8 @@ namespace
 class DestructionRecordingSession : public msess::Session
 {
 public:
-    DestructionRecordingSession(std::shared_ptr<msess::SurfaceOrganiser> const& surface_organiser)
-        : msess::Session{surface_organiser, "Stub"}
+    DestructionRecordingSession(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+        : msess::Session{surface_factory, "Stub"}
     {
         destroyed = false;
     }
@@ -74,24 +76,19 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubSurfaceOrganiser : public msess::SurfaceOrganiser
+class StubSurfaceFactory : public msess::SurfaceFactory
 {
  public:
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
                                                      std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
-        return std::weak_ptr<ms::Surface>(surface);
+        return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface));
     }
 
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
+private:
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
@@ -99,20 +96,20 @@ class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
-        : organiser{std::make_shared<StubSurfaceOrganiser>()}
+        : factory{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<DestructionRecordingSession>(organiser);
+        return std::make_shared<DestructionRecordingSession>(factory);
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<msess::SurfaceOrganiser> organiser;
+    std::shared_ptr<msess::SurfaceFactory> factory;
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator

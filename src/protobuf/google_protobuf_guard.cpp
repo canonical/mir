@@ -17,19 +17,36 @@
  */
 
 #include <mir/protobuf/google_protobuf_guard.h>
+#include <mir/thread/all.h>
 
 #include <google/protobuf/descriptor.h>
 
 
+namespace mir
+{
 namespace
 {
+std::once_flag init_flag;
+std::once_flag shutdown_flag;
+
+void init_google_protobuf()
+{
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+}
+
+void shutdown_google_protobuf()
+{
+    google::protobuf::ShutdownProtobufLibrary();
+}
+
 // Too clever? The idea is to ensure protbuf version is verified once (on
 // the first google_protobuf_guard() call) and memory is released on exit.
 struct google_protobuf_guard_t
 {
-    google_protobuf_guard_t() { GOOGLE_PROTOBUF_VERIFY_VERSION; }
-    ~google_protobuf_guard_t() { google::protobuf::ShutdownProtobufLibrary(); }
+    google_protobuf_guard_t() { std::call_once(init_flag, init_google_protobuf); }
+    ~google_protobuf_guard_t() { std::call_once(shutdown_flag, shutdown_google_protobuf); }
 };
+}
 }
 
 void mir::protobuf::google_protobuf_guard()
