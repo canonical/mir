@@ -25,11 +25,6 @@
 namespace mir
 {
 
-namespace surfaces
-{
-class SurfaceOrganiser;
-}
-
 namespace sessions
 {
 class Session;

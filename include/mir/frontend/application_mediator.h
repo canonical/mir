@@ -27,11 +27,6 @@
 
 namespace mir
 {
-namespace surfaces
-{
-class Surface;
-}
-
 namespace graphics
 {
 class Platform;

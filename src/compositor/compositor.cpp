@@ -23,14 +23,12 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
-#include "mir/surfaces/surface.h"
 
 #include <cassert>
 #include <functional>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 
 mc::Compositor::Compositor(
     RenderView *view,

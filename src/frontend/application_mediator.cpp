@@ -20,7 +20,8 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/session.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -32,7 +33,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/surfaces/surface.h"
 #include "mir/exception.h"
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
@@ -95,7 +95,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     listener->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
-        surfaces::SurfaceCreationParameters()
+        sessions::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))

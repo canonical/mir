@@ -22,7 +22,7 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -34,7 +34,6 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msess = mir::sessions;
@@ -50,41 +49,33 @@ namespace
  * In particular, it would be nice if mf::Session was stubable/mockable.
  */
 
-class StubSurfaceOrganiser : public msess::SurfaceOrganiser
+class StubSurfaceFactory : public msess::SurfaceFactory
 {
  public:
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
-        return std::weak_ptr<ms::Surface>();
+        return std::shared_ptr<msess::Surface>();
     }
-
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/) {}
-
-    std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
 class StubSessionStore : public msess::SessionStore
 {
 public:
     StubSessionStore()
-        : organiser{std::make_shared<StubSurfaceOrganiser>()}
+        : factory{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::Session>(organiser, "stub");
+        return std::make_shared<msess::Session>(factory, "stub");
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<msess::SurfaceOrganiser> organiser;
+    std::shared_ptr<msess::SurfaceFactory> factory;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
