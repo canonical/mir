@@ -151,7 +151,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     gl_animation.init_gl();
 
     auto client_buffer = bundle->secure_client_buffer();
-    auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+    auto ipc_package = client_buffer->get_ipc_package();
     auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
     red_pattern.draw(region);
     client_buffer.reset();
@@ -184,7 +184,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        auto ipc_package = client_buffer->get_ipc_package();
         auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         red_pattern.draw(region);
         client_buffer.reset();
@@ -197,7 +197,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        ipc_package = client_buffer->get_ipc_package();
         region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         green_pattern.draw(region);
         client_buffer.reset();

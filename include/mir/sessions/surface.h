@@ -30,7 +30,7 @@ namespace mir
 {
 namespace compositor
 {
-class GraphicRegion;
+class Buffer;
 }
 
 namespace sessions
@@ -50,7 +50,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual void advance_client_buffer() = 0;
-    virtual std::shared_ptr<compositor::GraphicRegion> client_buffer_resource() const = 0;
+    virtual std::shared_ptr<compositor::Buffer> client_buffer_resource() const = 0;
 
 protected:
     Surface() = default;

@@ -292,7 +292,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
-    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
+    auto resource = std::make_shared<testing::NiceMock<mtd::MockGraphicRegion>>();
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -362,7 +362,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
 
     mtd::MockRenderable rd;
     std::shared_ptr<mc::GraphicRegion> empty_region;
-    auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
+    auto empty_resource = std::make_shared<testing::NiceMock<mtd::MockGraphicRegion>>();
     
     int save_count = 0;
     auto saving_lambda = [&] (std::shared_ptr<void> const&)

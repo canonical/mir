@@ -92,7 +92,7 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mir::compositor::GraphicRegion> ms::BasicProxySurface::client_buffer_resource() const
+std::shared_ptr<mir::compositor::Buffer> ms::BasicProxySurface::client_buffer_resource() const
 {
     if (auto const& s = surface.lock())
     {

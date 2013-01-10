@@ -23,6 +23,7 @@
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -116,7 +117,7 @@ struct BasicSurfaceProxy : testing::Test
 
         ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mc::GraphicBufferClientResource>()));
+        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
     }
 };
 }
