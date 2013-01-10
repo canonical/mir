@@ -37,6 +37,9 @@ public:
     virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
+    virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id) = 0;
+    virtual void select_session_with_lightdm_id(int id) = 0;
+
     virtual void shutdown() = 0;
 
 protected:

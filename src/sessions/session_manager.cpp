@@ -68,6 +68,15 @@ void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const&
         focus_setter->set_focus_to(focus_application.lock());
     }
     app_container->remove_session(session);
+
+    typedef Tags::value_type Pair;
+    auto match = std::find_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.second == session;});
+
+    if (tags.end() != match)
+    {
+        tags.erase(match);
+    }
 }
 
 void msess::SessionManager::focus_next()
@@ -88,4 +97,34 @@ void msess::SessionManager::shutdown()
     {
         session->shutdown();
     });
+}
+
+void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id)
+{
+    typedef Tags::value_type Pair;
+
+    auto match = std::find_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.first == id || v.second == session;});
+
+    while (tags.end() != match)
+    {
+        tags.erase(match);
+        match = std::find_if(tags.begin(), tags.end(),
+            [&](Pair const& v) { return v.first == id || v.second == session;});
+    }
+
+    tags.push_back(Pair(id, session));
+}
+
+void msess::SessionManager::select_session_with_lightdm_id(int id)
+{
+    typedef Tags::value_type Pair;
+
+    auto match = std::find_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.first == id; });
+
+    if (tags.end() != match)
+    {
+        focus_setter->set_focus_to(match->second);
+    }
 }
