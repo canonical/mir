@@ -219,11 +219,10 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
 {
     /* TODO: acquiring two resources that are tighly bound like this in two steps is funny. we should
              make the GraphicBufferCompositorResource struct better */ 
-    auto texture_resource = renderable.texture();
-    auto region_resource = texture_resource->region.lock();
+    auto region_resource = renderable.texture();
     if (region_resource)
     {
-        save_resource(texture_resource);
+//        save_resource(texture_resource);
         save_resource(region_resource);
  
         const geom::Point top_left = renderable.top_left();

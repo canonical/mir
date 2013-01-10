@@ -82,7 +82,7 @@ mir::geometry::Size ms::Surface::size() const
     return buffer_bundle->bundle_size();
 }
 
-std::shared_ptr<mc::GraphicBufferCompositorResource> ms::Surface::texture() const
+std::shared_ptr<mc::GraphicRegion> ms::Surface::texture() const
 {
     return buffer_bundle->lock_back_buffer();
 }
@@ -124,7 +124,7 @@ void ms::Surface::advance_client_buffer()
     graphics_resource = buffer_bundle->secure_client_buffer();
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> ms::Surface::client_buffer_resource() const
+std::shared_ptr<mc::Buffer> ms::Surface::client_buffer_resource() const
 {
     return graphics_resource;
 }

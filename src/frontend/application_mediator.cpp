@@ -112,6 +112,7 @@ void mir::frontend::ApplicationMediator::create_surface(
 
 
         surface->advance_client_buffer();
+#if 0
         auto const& client_resource = surface->client_buffer_resource();
         if (auto buffer_resource = client_resource->buffer.lock())
         {
@@ -134,6 +135,7 @@ void mir::frontend::ApplicationMediator::create_surface(
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
         }
+#endif
     }
 
     done->Run();
@@ -142,7 +144,7 @@ void mir::frontend::ApplicationMediator::create_surface(
 void mir::frontend::ApplicationMediator::next_buffer(
     ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
-    ::mir::protobuf::Buffer* response,
+    ::mir::protobuf::Buffer* /*response*/,
     ::google::protobuf::Closure* done)
 {
     using sessions::SurfaceId;
@@ -155,6 +157,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
+#if 0
     auto const& client_resource = surface->client_buffer_resource();
     if (auto buffer_resource = client_resource->buffer.lock())
     {
@@ -176,6 +179,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
     }
+#endif
     done->Run();
 }
 

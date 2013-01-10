@@ -19,6 +19,7 @@
 #include "proxy_surface.h"
 
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/compositor/buffer.h"
 
 #include <boost/exception/all.hpp>
 
@@ -91,7 +92,7 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mir::compositor::GraphicBufferClientResource> ms::BasicProxySurface::client_buffer_resource() const
+std::shared_ptr<mir::compositor::GraphicRegion> ms::BasicProxySurface::client_buffer_resource() const
 {
     if (auto const& s = surface.lock())
     {

@@ -38,7 +38,7 @@ struct CompositorReleaseDeleter
     {
     }
 
-    void operator()(mc::GraphicBufferCompositorResource* compositor_resource)
+    void operator()(mc::GraphicRegion* compositor_resource)
     {
         if (auto res = swapper.lock())
             res->compositor_release(id);
@@ -57,7 +57,7 @@ struct ClientReleaseDeleter
     {
     }
 
-    void operator()(mc::GraphicBufferClientResource* client_resource)
+    void operator()(mc::Buffer* client_resource)
     {
         if (auto res = swapper.lock())
             res->client_release(id);
@@ -89,28 +89,33 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::lock_back_buffer()
+std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
     mc::BufferID id;
     std::weak_ptr<mc::Buffer> region;
     swapper->compositor_acquire(region, id);
 
+#if 0
     auto resource = new mc::GraphicBufferCompositorResource(region);
     CompositorReleaseDeleter del(swapper, id);
     auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
-
+#endif
+    auto compositor_resource = std::shared_ptr<mc::Buffer>();
     return compositor_resource;
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
+std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
 {
     BufferID id;
     std::weak_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
+#if 0
     auto resource = new mc::GraphicBufferClientResource(buffer);
     ClientReleaseDeleter del(swapper, id);
-    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
+    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del);
+#endif
+    auto client_resource = std::shared_ptr<mc::Buffer>();
     return client_resource;
 }
 

@@ -54,7 +54,7 @@ public:
 
     void advance_client_buffer();
 
-    std::shared_ptr<compositor::GraphicBufferClientResource> client_buffer_resource() const;
+    std::shared_ptr<compositor::GraphicRegion> client_buffer_resource() const;
 
 protected:
     void destroy_surface(SurfaceStackModel* const surface_stack) const;
