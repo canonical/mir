@@ -107,9 +107,8 @@ TEST(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
 {
     using namespace testing;
 
-    msess::SurfaceCreationParameters params;
     auto surface = std::make_shared<ms::Surface>(
-        params.name,
+        __PRETTY_FUNCTION__,
         std::make_shared<StubBufferBundle>());
 
     ms::BasicProxySurface proxy_surface(surface);
@@ -129,12 +128,10 @@ TEST(BasicSurfaceProxy, size_throw_behavior)
 {
     using namespace testing;
 
-    msess::SurfaceCreationParameters params;
     auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
-    EXPECT_CALL(*mock_buffer_bundle, bundle_size())
-        .Times(1)
-        .WillOnce(Return(geom::Size())); 
-    auto surface = std::make_shared<ms::Surface>(params.name, mock_buffer_bundle);
+    ON_CALL(*mock_buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
+
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, mock_buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
@@ -153,12 +150,11 @@ TEST(BasicSurfaceProxy, pixel_format_throw_behavior)
 {
     using namespace testing;
 
-    msess::SurfaceCreationParameters params;
     auto mock_buffer_bundle = std::make_shared<StubBufferBundle>();
-    EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
-        .Times(1)
-        .WillOnce(Return(geom::PixelFormat::abgr_8888)); 
-    auto surface = std::make_shared<ms::Surface>(params.name, mock_buffer_bundle);
+    ON_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
+        .WillByDefault(Return(geom::PixelFormat::abgr_8888));
+
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, mock_buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
