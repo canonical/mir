@@ -61,8 +61,8 @@ WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened with size " STEP_SIZE
     REGEX_PARAM(int, request_height);
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
-    EXPECT_TRUE(ctx->open_window_sized(window_name, geom::Size{geom::Width{request_width},
-                                                    geom::Height{request_height}}));
+    EXPECT_TRUE(ctx->open_window_with_size(window_name, geom::Size{geom::Width{request_width},
+                                                                   geom::Height{request_height}}));
     
 }
 

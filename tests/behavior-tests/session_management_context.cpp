@@ -147,8 +147,8 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
     return true;
 }
 
-bool mtc::SessionManagementContext::open_window_sized(std::string const& window_name,
-                                                      geom::Size const& size)
+bool mtc::SessionManagementContext::open_window_with_size(std::string const& window_name,
+                                                          geom::Size const& size)
 {
     auto const params = msess::a_surface().of_name(window_name).of_size(size);
     auto session = session_manager->open_session(window_name);

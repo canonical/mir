@@ -50,7 +50,7 @@ public:
     virtual ~SessionManagementContext() {}
     
     bool open_window_consuming(std::string const& window_name);
-    bool open_window_sized(std::string const& window_name, geometry::Size const& size);
+    bool open_window_with_size(std::string const& window_name, geometry::Size const& size);
 
     geometry::Size get_window_size(std::string const& window_name);
     
