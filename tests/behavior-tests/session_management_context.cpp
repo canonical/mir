@@ -18,8 +18,6 @@
 
 #include "session_management_context.h"
 
-#include "mir_test_doubles/null_buffer_bundle.h"
-
 #include "mir/sessions/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/sessions/session.h"
@@ -34,7 +32,6 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
-namespace mtd = mt::doubles;
 
 namespace mir
 {
@@ -43,9 +40,13 @@ namespace test
 namespace cucumber
 {
 
+static const geom::Width default_view_width = geom::Width{1600};
+static const geom::Height default_view_height = geom::Height{1400};
+
+static const geom::Size default_view_size = geom::Size{default_view_width,
+                                                       default_view_height};
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600),
-                                                                            geom::Height(1400)}};
+                                                                 default_view_size};
 
 struct DummySurface : public msess::Surface
 {
