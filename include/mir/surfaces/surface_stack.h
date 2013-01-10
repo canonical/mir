@@ -36,10 +36,14 @@ class FilterForRenderables;
 class OperatorForRenderables;
 }
 
+namespace sessions
+{
+class SurfaceCreationParameters;
+}
+
 namespace surfaces
 {
 class Surface;
-class SurfaceCreationParameters;
 
 class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
 {
@@ -51,7 +55,7 @@ public:
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const SurfaceCreationParameters& params);
+    virtual std::weak_ptr<Surface> create_surface(const sessions::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 

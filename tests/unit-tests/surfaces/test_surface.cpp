@@ -17,6 +17,7 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/sessions/surface_creation_parameters.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 
@@ -24,6 +25,7 @@
 #include <gtest/gtest.h>
 
 namespace ms = mir::surfaces;
+namespace msess = mir::sessions;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -31,7 +33,7 @@ namespace mtd = mir::test::doubles;
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
     using namespace geom;
-    ms::SurfaceCreationParameters params;
+    msess::SurfaceCreationParameters params;
 
     EXPECT_EQ(std::string(), params.name);
     EXPECT_EQ(Width(0), params.size.width);
@@ -39,7 +41,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(geom::PixelFormat::invalid, params.pixel_format);
 
-    EXPECT_EQ(ms::a_surface(), params);
+    EXPECT_EQ(msess::a_surface(), params);
 }
 
 TEST(SurfaceCreationParametersTest, builder_mutators)
@@ -50,7 +52,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
     std::string name{"surface"};
 
-    auto params = ms::a_surface().of_name(name)
+    auto params = msess::a_surface().of_name(name)
                                  .of_size(size)
                                  .of_buffer_usage(usage)
                                  .of_pixel_format(format);
@@ -68,12 +70,12 @@ TEST(SurfaceCreationParametersTest, equality)
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
-    auto params0 = ms::a_surface().of_name("surface0")
+    auto params0 = msess::a_surface().of_name("surface0")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    auto params1 = ms::a_surface().of_name("surface1")
+    auto params1 = msess::a_surface().of_name("surface1")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
@@ -95,7 +97,7 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<geom::PixelFormat> const formats{geom::PixelFormat::abgr_8888,
                                                  geom::PixelFormat::bgr_888};
 
-    std::vector<ms::SurfaceCreationParameters> params_vec;
+    std::vector<msess::SurfaceCreationParameters> params_vec;
 
     for (auto const& size : sizes)
     {
@@ -103,7 +105,7 @@ TEST(SurfaceCreationParametersTest, inequality)
         {
             for (auto const& format : formats)
             {
-                auto cur_params = ms::a_surface().of_name("surface0")
+                auto cur_params = msess::a_surface().of_name("surface0")
                                                  .of_size(size)
                                                  .of_buffer_usage(usage)
                                                  .of_pixel_format(format);

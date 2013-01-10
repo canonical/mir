@@ -17,8 +17,8 @@
  */
 
 #include "mir/sessions/session.h"
+#include "mir/sessions/surface.h"
 
-#include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_controller.h"
 
 #include <memory>
@@ -30,35 +30,32 @@ namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 
 msess::Session::Session(
-    std::shared_ptr<msess::SurfaceOrganiser> const& organiser,
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
-    surface_organiser(organiser),
+    surface_factory(surface_factory),
     session_name(session_name),
     next_surface_id(0)
 {
-    assert(surface_organiser);
+    assert(surface_factory);
 }
 
 msess::Session::~Session()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto const& pair_id_surface : surfaces)
     {
-        auto surface = it->second;
-        surface_organiser->destroy_surface(surface);
+        pair_id_surface.second->destroy();
     }
 }
 
 msess::SurfaceId msess::Session::next_id()
 {
-    int id = next_surface_id.load();
-    while (!next_surface_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return SurfaceId(id);
+    return SurfaceId(next_surface_id.fetch_add(1));
 }
 
-msess::SurfaceId msess::Session::create_surface(const ms::SurfaceCreationParameters& params)
+msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters& params)
 {
-    auto surf = surface_organiser->create_surface(params);
+    auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
@@ -66,10 +63,10 @@ msess::SurfaceId msess::Session::create_surface(const ms::SurfaceCreationParamet
     return id;
 }
 
-std::shared_ptr<ms::Surface> msess::Session::get_surface(msess::SurfaceId id) const
+std::shared_ptr<msess::Surface> msess::Session::get_surface(msess::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    return surfaces.find(id)->second.lock();
+    return surfaces.find(id)->second;
 }
 
 void msess::Session::destroy_surface(msess::SurfaceId id)
@@ -79,7 +76,7 @@ void msess::Session::destroy_surface(msess::SurfaceId id)
 
     if (p != surfaces.end())
     {
-        surface_organiser->destroy_surface(p->second);
+        p->second->destroy();
         surfaces.erase(p);
     }
 }
@@ -94,27 +91,24 @@ void msess::Session::shutdown()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
     {
-        if (auto surface = id_s.second.lock())
-            surface->shutdown();
+        id_s.second->shutdown();
     }
 }
 
 void msess::Session::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto& id_s : surfaces)
     {
-        auto& surface = it->second;
-        surface_organiser->hide_surface(surface);
+        id_s.second->hide();
     }
 }
 
 void msess::Session::show()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    for (auto it = surfaces.begin(); it != surfaces.end(); it++)
+    for (auto& id_s : surfaces)
     {
-        auto& surface = it->second;
-        surface_organiser->show_surface(surface);
+        id_s.second->show();
     }
 }
