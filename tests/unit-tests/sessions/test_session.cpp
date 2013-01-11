@@ -51,7 +51,7 @@ public:
 
         ON_CALL(*this, size()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::size));
         ON_CALL(*this, pixel_format()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::pixel_format));
-//        ON_CALL(*this, client_buffer_resource()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer_resource));
+        ON_CALL(*this, client_buffer_resource()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer_resource));
     }
 
     MOCK_METHOD0(hide, void());

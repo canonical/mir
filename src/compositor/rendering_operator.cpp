@@ -35,6 +35,5 @@ void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
     }
     catch (std::exception&)
     {
-
     }
 }
