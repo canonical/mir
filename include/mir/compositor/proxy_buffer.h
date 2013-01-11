@@ -38,6 +38,8 @@ public:
 
     std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
     BufferID id() const;
+private:
+    std::weak_ptr<Buffer> buffer;
 }; 
 
 }
