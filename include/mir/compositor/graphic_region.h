@@ -43,16 +43,6 @@ protected:
     GraphicRegion& operator=(GraphicRegion const&) = delete;
 };
 
-struct GraphicBufferCompositorResource
-{
-    explicit GraphicBufferCompositorResource(std::weak_ptr<GraphicRegion> const& region)
-        : region(region)
-    {
-    }
-
-    std::weak_ptr<GraphicRegion> const region;
-};
-
 }
 }
 
