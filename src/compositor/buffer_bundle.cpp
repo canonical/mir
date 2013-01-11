@@ -17,7 +17,7 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
+#include "mir/compositor/proxy_buffer.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
@@ -95,12 +95,10 @@ std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
     std::weak_ptr<mc::Buffer> region;
     swapper->compositor_acquire(region, id);
 
-#if 0
-    auto resource = new mc::GraphicBufferCompositorResource(region);
+    auto resource = new mc::ProxyBuffer(region);
     CompositorReleaseDeleter del(swapper, id);
-    auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
-#endif
-    auto compositor_resource = std::shared_ptr<mc::Buffer>();
+    auto compositor_resource = std::shared_ptr<mc::Buffer>(resource, del);
+
     return compositor_resource;
 }
 
@@ -110,12 +108,10 @@ std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
     std::weak_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
-#if 0
-    auto resource = new mc::GraphicBufferClientResource(buffer);
+    auto resource = new mc::ProxyBuffer(buffer);
     ClientReleaseDeleter del(swapper, id);
-    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del);
-#endif
-    auto client_resource = std::shared_ptr<mc::Buffer>();
+    auto client_resource = std::shared_ptr<mc::Buffer>(resource, del);
+
     return client_resource;
 }
 

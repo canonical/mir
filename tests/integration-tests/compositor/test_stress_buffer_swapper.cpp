@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "multithread_harness.h"
 
 #include "mir/chrono/chrono.h"
@@ -38,13 +38,9 @@ public:
      : sleep_duration(50),
        num_iterations(500)
     {
-        geom::Size size{geom::Width{1024}, geom::Height{768}};
-        geom::Stride s {1024};
-        geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
-
-        buffer_a = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
-        buffer_b = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
-        buffer_c = std::shared_ptr<mc::Buffer>(new mtd::MockBuffer(size, s, pf));
+        buffer_a = std::make_shared<mtd::StubBuffer>();
+        buffer_b = std::make_shared<mtd::StubBuffer>();
+        buffer_c = std::make_shared<mtd::StubBuffer>();
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)

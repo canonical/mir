@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -29,14 +29,9 @@ struct BufferSwapperConstruction : testing::Test
 {
     BufferSwapperConstruction()
     {
-        geom::Size size {geom::Width{1024}, geom::Height{768}};
-        geom::Height h {768};
-        geom::Stride s {1024};
-        geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
-
-        buffer_a = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_b = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_c = std::make_shared<mtd::MockBuffer>(size, s, pf);
+        buffer_a = std::make_shared<mtd::StubBuffer>();
+        buffer_b = std::make_shared<mtd::StubBuffer>();
+        buffer_c = std::make_shared<mtd::StubBuffer>();
 
         id1 = buffer_a->id();
         id2 = buffer_b->id();

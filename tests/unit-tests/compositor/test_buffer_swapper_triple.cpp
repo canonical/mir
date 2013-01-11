@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_id.h"
@@ -29,18 +29,14 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace
 {
-geom::Size size {geom::Width{1024}, geom::Height{768}};
-geom::Height h {768};
-geom::Stride s {1024};
-geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
 
 struct BufferSwapperTriple : testing::Test
 {
     BufferSwapperTriple()
     {
-        std::shared_ptr<mc::Buffer> buffer_a(new mtd::MockBuffer(size, s, pf));
-        std::shared_ptr<mc::Buffer> buffer_b(new mtd::MockBuffer(size, s, pf));
-        std::shared_ptr<mc::Buffer> buffer_c(new mtd::MockBuffer(size, s, pf));
+        auto buffer_a = std::make_shared<mtd::StubBuffer>();
+        auto buffer_b = std::make_shared<mtd::StubBuffer>();
+        auto buffer_c = std::make_shared<mtd::StubBuffer>();
 
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
