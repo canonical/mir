@@ -30,6 +30,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/null_display.h"
 
 #include "src/surfaces/proxy_surface.h"
 
@@ -129,14 +130,6 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
-
 class StubPlatform : public mg::Platform
 {
  public:
@@ -148,7 +141,7 @@ class StubPlatform : public mg::Platform
 
     std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::make_shared<mtd::NullDisplay>();
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -164,7 +157,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     ApplicationMediatorTest()
         : session_store{std::make_shared<StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
-          graphics_display{std::make_shared<StubDisplay>()},
+          graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           listener{std::make_shared<mf::NullApplicationListener>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},

@@ -2,10 +2,10 @@
 
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-#overrding dh_auto_test to get rid of --parallel during testing
 %:
 	dh $@ --parallel
 
+#overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	@echo "not testing"
@@ -28,3 +28,6 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 else
 	dh_auto_configure -- -DMIR_DISABLE_EPOLL_REACTOR=YES
 endif
+
+override_dh_makeshlibs:
+	dh_makeshlibs -V

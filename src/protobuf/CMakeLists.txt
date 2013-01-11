@@ -29,25 +29,32 @@ protobuf_generate_cpp(
   ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
-add_library(
-  mirprotobuf STATIC
+if(MIR_PLATFORM STREQUAL "android")
+  add_library(
+    mirprotobuf STATIC
+    
+    google_protobuf_guard.cpp
+    ${GENERATED_PROTOBUF_SRCS}
+    ${GENERATED_PROTOBUF_HDRS})
+elseif(MIR_PLATFORM STREQUAL "gbm")
+  add_library(
+    mirprotobuf SHARED
+    
+    google_protobuf_guard.cpp
+    ${GENERATED_PROTOBUF_SRCS}
+    ${GENERATED_PROTOBUF_HDRS})
 
-  google_protobuf_guard.cpp
-  ${GENERATED_PROTOBUF_SRCS}
-  ${GENERATED_PROTOBUF_HDRS}
-)
+  set_target_properties(
+    mirprotobuf
+    PROPERTIES
+    VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+    SOVERSION ${MIR_VERSION_MAJOR})
+endif()
 
 target_link_libraries(
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}
-)
-
-set_target_properties(
-  mirprotobuf
-  PROPERTIES
-  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
 )
 
 # Export the include directories
@@ -61,6 +68,7 @@ set(
 # Install the protobuf library
 install(
   TARGETS mirprotobuf
+  RUNTIME DESTINATION lib
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )

@@ -29,6 +29,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_manager.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_display.h"
 #include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
@@ -57,14 +58,6 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() { std::this_thread::yield(); }
-    bool post_update() { return true; }
-};
-
 class StubGraphicPlatform : public mg::Platform
 {
     virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
@@ -75,7 +68,7 @@ class StubGraphicPlatform : public mg::Platform
 
     virtual std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::make_shared<mtd::NullDisplay>();
     }
 
     virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
