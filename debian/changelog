@@ -1,4 +1,4 @@
-mir (0.0.1) precise; urgency=low
+mir (0.0.1-0ubuntu1) raring; urgency=low
 
   * Adjust packaging setup
 

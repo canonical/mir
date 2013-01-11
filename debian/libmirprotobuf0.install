@@ -1,2 +1,2 @@
-debian/tmp/usr/lib/libmirprotobuf.so.*
-debian/tmp/usr/share/mir/protocol
+usr/lib/libmirprotobuf.so.*
+usr/share/mir/protocol

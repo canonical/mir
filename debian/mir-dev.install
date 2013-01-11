@@ -1,4 +1,0 @@
-debian/tmp/usr/include/mir
-debian/tmp/usr/lib/pkgconfig
-debian/tmp/usr/lib/libmirclient.so
-debian/tmp/usr/lib/libmirprotobuf.so

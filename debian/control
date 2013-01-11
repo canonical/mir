@@ -1,7 +1,8 @@
 Source: mir
 Section: x11
 Priority: extra
-Maintainer: Thomas Voß <thomas.voss@canonical.com>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
                debhelper (>= 9),
@@ -14,46 +15,44 @@ Build-Depends: cmake,
                libgles2-mesa-dev,
                libgbm-dev,
                libprotobuf-dev,
-               pkg-config
+               pkg-config,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir
 
 Package: libmirprotobuf0
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
  .
- Contains the protocol symbols and proto files.
+ Contains the protocol's shared library and protocol definition files.
 
 Package: libmirclient0
 Architecture: any
-Depends: libmirprotobuf0,
-         ${misc:Depends},
-         ${shlibs:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
  .
- Contains the symbols needed by client applications for Mir.
+ Contains the shared library needed by client applications for Mir.
 
-Package: mir-bin
+Package: mir
 Architecture: any
-Depends: libmirprotobuf0 (= ${binary:Version}),
-         libmirclient0 (= ${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
  .
  Contains the main server executable.
 
-Package: mir-dev
+Package: libmirclient-dev
 Architecture: any
 Depends: libmirprotobuf0 (= ${binary:Version}),
          libmirclient0 (= ${binary:Version}),
          mir (= ${binary:Version}),
-         ${misc:Depends}
+         ${misc:Depends},
 Description: Ubuntu display server
  Mir is the next generation display server for Ubuntu.
  .
