@@ -18,9 +18,12 @@ Build-Depends: cmake,
                pkg-config,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
+# If you aren't a member of ~rocket-scientists but need to upload packaging changes,
+# just go ahead. ~rocket-scientists will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir
 
 Package: libmirprotobuf0
+Section: libs
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -30,6 +33,7 @@ Description: Ubuntu display server
  Contains the protocol's shared library and protocol definition files.
 
 Package: libmirclient0
+Section: libs
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -39,6 +43,7 @@ Description: Ubuntu display server
  Contains the shared library needed by client applications for Mir.
 
 Package: mir
+Section: x11
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -48,6 +53,7 @@ Description: Ubuntu display server
  Contains the main server executable.
 
 Package: libmirclient-dev
+Section: libdevel
 Architecture: any
 Depends: libmirprotobuf0 (= ${binary:Version}),
          libmirclient0 (= ${binary:Version}),
