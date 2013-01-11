@@ -19,8 +19,8 @@
 #include "mir/options/program_option.h"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
-#include "mir/thread/all.h"
 
+#include <thread>
 #include <csignal>
 #include <iostream>
 #include <stdexcept>

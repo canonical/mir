@@ -18,11 +18,14 @@
 
 #include "multithread_harness.h"
 
+#include <thread>
+
 namespace mt = mir::testing;
 
 namespace
 {
-void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
+void test_func (mt::SynchronizerSpawned* synchronizer, int* data)
+{
     *data = 1;
     synchronizer->child_enter_wait();
     *data = 2;
@@ -30,8 +33,6 @@ void test_func (mt::SynchronizerSpawned* synchronizer, int* data) {
 }
 }
 
-namespace mir
-{
 TEST(Synchronizer, thread_stop_start) {
     int data = 0;
 
@@ -49,6 +50,8 @@ TEST(Synchronizer, thread_stop_start) {
     t1.join();
 }
 
+namespace
+{
 void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
     bool wait_request;
     for(;;)
@@ -62,6 +65,7 @@ void test_func_pause (mt::SynchronizerSpawned* synchronizer, int* data) {
         }
         std::this_thread::yield();
     }
+}
 }
 
 TEST(Synchronizer, thread_pause_req) {
@@ -84,5 +88,4 @@ TEST(Synchronizer, thread_pause_req) {
     synchronizer.activate_waiting_child();
 
     t1.join();
-}
 }

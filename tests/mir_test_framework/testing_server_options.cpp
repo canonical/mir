@@ -30,7 +30,6 @@
 #include "mir/input/input_manager.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir/thread/all.h"
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;

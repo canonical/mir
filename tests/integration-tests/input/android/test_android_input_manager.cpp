@@ -19,7 +19,6 @@
 
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
-#include "mir/thread/all.h"
 
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"

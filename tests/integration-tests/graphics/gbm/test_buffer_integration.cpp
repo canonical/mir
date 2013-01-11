@@ -24,10 +24,10 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
+#include <thread>
 #include <gtest/gtest.h>
 #include <stdexcept>
 

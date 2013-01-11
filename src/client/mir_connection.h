@@ -22,7 +22,7 @@
 #include <memory>
 #include <unordered_set>
 
-#include "mir/thread/all.h"
+#include <mutex> 
 
 #include "mir_protobuf.pb.h"
 
@@ -111,10 +111,10 @@ private:
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
 
-    mutex release_wait_handle_guard;
+    std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
-    static mutex connection_guard;
+    static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
     struct SurfaceRelease;

@@ -20,7 +20,6 @@
 #include "src/input/android/event_filter_dispatcher_policy.h"
 #include "src/input/android/rudimentary_input_reader_policy.h"
 #include "src/input/android/android_input_constants.h"
-#include "mir/thread/all.h"
 
 #include "mir_test/empty_deleter.h"
 #include "mir_test/fake_event_hub.h"

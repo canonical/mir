@@ -25,7 +25,6 @@
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
-#include "mir/thread/all.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
@@ -35,6 +34,7 @@
 
 #include <gmock/gmock.h>
 
+#include <thread>
 #include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
 

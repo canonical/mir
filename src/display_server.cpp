@@ -32,7 +32,7 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_manager.h"
 
-#include "mir/thread/all.h"
+#include <thread>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;

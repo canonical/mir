@@ -29,12 +29,13 @@
 #include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_client/mir_client_library.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
 
+#include <thread>
+#include <atomic>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"

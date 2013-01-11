@@ -19,11 +19,11 @@
 #ifndef MIR_FRONTEND_RESOURCE_CACHE_H_
 #define MIR_FRONTEND_RESOURCE_CACHE_H_
 
-#include "mir/thread/all.h"
 #include "mir_protobuf.pb.h"
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {

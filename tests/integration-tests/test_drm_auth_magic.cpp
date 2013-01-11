@@ -24,7 +24,6 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/exception.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"

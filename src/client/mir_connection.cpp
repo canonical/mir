@@ -25,24 +25,12 @@
 #include "client_buffer_depository.h"
 #include "make_rpc_channel.h"
 
+#include <thread>
 #include <cstddef>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
-
-#ifdef MIR_USING_BOOST_THREADS
-    using ::mir::std::condition_variable;
-    using ::boost::unique_lock;
-    using ::boost::lock_guard;
-    using ::boost::thread;
-    using ::boost::mutex;
-    using ::mir::std::this_thread::yield;
-#else
-    using namespace std;
-    using std::this_thread::yield;
-#endif
-
 
 MirConnection::MirConnection() :
     channel(),
@@ -61,7 +49,7 @@ MirConnection::MirConnection(
         client_platform_factory(client_platform_factory)
 {
     {
-        lock_guard<mutex> lock(connection_guard);
+        std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
     }
     connect_result.set_error("connect not called");
@@ -69,7 +57,7 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection()
 {
-    lock_guard<mutex> lock(connection_guard);
+    std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);
 }
 
@@ -133,7 +121,7 @@ MirWaitHandle* MirConnection::release_surface(
     server.release_surface(0, &message, &void_response,
                     gp::NewCallback(this, &MirConnection::released, surf_release));
 
-    lock_guard<mutex> lock(release_wait_handle_guard);
+    std::lock_guard<std::mutex> lock(release_wait_handle_guard);
     release_wait_handles.push_back(new_wait_handle);
     return new_wait_handle;
 }
@@ -172,7 +160,7 @@ void MirConnection::done_disconnect()
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
-        lock_guard<mutex> lock(release_wait_handle_guard);
+        std::lock_guard<std::mutex> lock(release_wait_handle_guard);
         for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
             delete *it;
     }
@@ -220,7 +208,7 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
-        lock_guard<mutex> lock(connection_guard);
+        std::lock_guard<std::mutex> lock(connection_guard);
         if (valid_connections.count(connection) == 0)
            return false;
     }
