@@ -20,7 +20,7 @@
 #include "mir/compositor/buffer_id.h"
 
 #include <boost/exception/all.hpp>
-#include <iostream>
+
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 

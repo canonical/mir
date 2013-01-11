@@ -292,7 +292,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
-    auto resource = std::make_shared<testing::NiceMock<mtd::MockGraphicRegion>>();
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -316,7 +315,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(rd, texture())
         .Times(1)
-        .WillOnce(Return(resource));
+        .WillOnce(Return(gr_ptr));
 
     EXPECT_CALL(rd, top_left()).WillOnce(Return(tl));
     EXPECT_CALL(rd, size()).WillOnce(Return(s));
@@ -349,11 +348,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     renderer->render(saving_lambda, rd);
 
-    EXPECT_EQ(2, save_count);
-    auto result1 = std::find(saved_resources.begin(), saved_resources.end(), resource);
-    auto result2 = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
-    EXPECT_NE(saved_resources.end(), result1);
-    EXPECT_NE(saved_resources.end(), result2);
+    EXPECT_EQ(1, save_count);
+    auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    EXPECT_NE(saved_resources.end(), result);
 }
 
 TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
@@ -374,7 +371,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
 
     EXPECT_CALL(rd, texture())
         .Times(1)
-        .WillOnce(Return(empty_resource));
+        .WillOnce(testing::Throw(std::runtime_error("test")));
 
     renderer->render(saving_lambda, rd);
     EXPECT_EQ(0, save_count);

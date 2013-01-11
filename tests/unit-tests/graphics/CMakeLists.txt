@@ -16,7 +16,7 @@
 
 list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
-#    ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_renderer.cpp
 )
 
 add_subdirectory(egl_mock/)
