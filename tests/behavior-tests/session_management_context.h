@@ -57,8 +57,8 @@ public:
     void set_view_area(geometry::Rectangle const& new_view_region);
 
 protected:
-    SessionManagementContext(const SessionManagementContext&) = delete;
-    SessionManagementContext& operator=(const SessionManagementContext&) = delete;
+    SessionManagementContext(SessionManagementContext const&) = delete;
+    SessionManagementContext& operator=(SessionManagementContext const&) = delete;
 
 private:
     std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;

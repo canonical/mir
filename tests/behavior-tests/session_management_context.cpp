@@ -126,6 +126,7 @@ struct DummyViewableArea : public mg::ViewableArea
 }
 } // namespace mir
 
+
 mtc::SessionManagementContext::SessionManagementContext()
 {
     auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);

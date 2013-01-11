@@ -21,11 +21,6 @@
 #include <gtest/gtest.h>
 #include <cucumber-cpp/defs.hpp>
 
-#include <memory>
-#include <map>
-
-#include <cstdio>
-
 namespace mtc = mir::test::cucumber;
 namespace geom = mir::geometry;
 
