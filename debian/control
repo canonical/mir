@@ -2,6 +2,7 @@ Source: mir
 Section: x11
 Priority: extra
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
                debhelper (>= 9),
@@ -14,13 +15,66 @@ Build-Depends: cmake,
                libgles2-mesa-dev,
                libgbm-dev,
                libprotobuf-dev,
-               pkg-config
+               pkg-config,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
-Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir/ubuntu
+# If you aren't a member of ~rocket-scientists but need to upload packaging changes,
+# just go ahead. ~rocket-scientists will notice and sync up the code again.
+Vcs-Bzr: https://code.launchpad.net/~rocket-scientists/mir
+
+Package: libmirprotobuf0
+Section: libs
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - protocol implementation
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains the protocol's shared library.
+
+Package: libmirprotobuf-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - protocol definition
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains the protocol's definition files.
+
+Package: libmirclient0
+Section: libs
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - client library
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared library needed by client applications for Mir.
+
+Package: libmirclient-dev
+Section: libdevel
+Architecture: any
+Depends: libmirprotobuf0 (= ${binary:Version}),
+         libmirclient0 (= ${binary:Version}),
+         mir (= ${binary:Version}),
+         ${misc:Depends},
+Description: Display server for Ubuntu - development headers
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains header files required to develop against Mir.
 
 Package: mir
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: Ubuntu display server
- Mir is the next generation display server for Ubuntu.
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - server executable
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains the main server executable.
+
