@@ -26,6 +26,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_display.h"
 
 #include "mir_client/mir_client_library.h"
 
@@ -42,12 +43,10 @@ namespace mir /* So that std::this_thread::yield() can be found on android... */
 namespace
 {
 
-class StubDisplay : public mg::Display
+class StubDisplay : public mtd::NullDisplay
 {
 public:
     geom::Rectangle view_area() const { return rectangle; }
-    void clear() { std::this_thread::yield(); }
-    bool post_update() { return true; }
 
     static geom::Rectangle const rectangle;
 };

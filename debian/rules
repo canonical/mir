@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 
-#overrding dh_auto_test to get rid of --parallel during testing
 %:
 	dh $@ --parallel
 
+#overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
 
@@ -12,3 +12,6 @@ override_dh_auto_test:
 # updating the ppa builders kernel version.
 override_dh_auto_configure:
 	dh_auto_configure -- -DMIR_DISABLE_EPOLL_REACTOR=YES
+
+override_dh_makeshlibs:
+	dh_makeshlibs -V
