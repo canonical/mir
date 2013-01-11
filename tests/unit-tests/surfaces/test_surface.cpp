@@ -192,8 +192,7 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
     using namespace testing;
     ms::Surface surf(surface_name, mock_buffer_bundle );
     auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(
-        std::weak_ptr<mc::Buffer>(),
-        mc::BufferID());
+        std::weak_ptr<mc::Buffer>());
 
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
@@ -206,13 +205,12 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 {
     using namespace testing;
 
-    mc::BufferID id{4};
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
     auto mock_buffer = std::make_shared<mtd::MockBuffer>(size, geom::Stride{4}, geom::PixelFormat::abgr_8888);
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
-    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(mock_buffer, id);
+    auto graphics_resource = std::make_shared<mc::GraphicBufferClientResource>(mock_buffer);
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(graphics_resource));
