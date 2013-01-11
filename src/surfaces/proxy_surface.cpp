@@ -19,13 +19,13 @@
 #include "proxy_surface.h"
 
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/compositor/buffer.h"
 
 #include <boost/exception/all.hpp>
 
 #include <stdexcept>
 
 namespace ms = mir::surfaces;
+namespace mc = mir::compositor;
 
 ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
     surface(surface)
@@ -92,7 +92,7 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mir::compositor::Buffer> ms::BasicProxySurface::client_buffer_resource() const
+std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer_resource() const
 {
     if (auto const& s = surface.lock())
     {
