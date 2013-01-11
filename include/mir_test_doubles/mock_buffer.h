@@ -34,7 +34,7 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public compositor::BufferBasic
+struct MockBuffer : public compositor::Buffer
 {
  public:
     MockBuffer(geometry::Size size,
@@ -53,6 +53,8 @@ struct MockBuffer : public compositor::BufferBasic
 
         ON_CALL(*this, get_ipc_package())
                 .WillByDefault(Return(empty_package));
+        ON_CALL(*this, id())
+                .WillByDefault(Return(compositor::BufferID{4}));
     }
 
     MOCK_CONST_METHOD0(size, geometry::Size());
@@ -61,7 +63,7 @@ struct MockBuffer : public compositor::BufferBasic
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
 
     MOCK_METHOD0(bind_to_texture, void());
-    MOCK_METHOD0(id, compositor::BufferID());
+    MOCK_CONST_METHOD0(id, compositor::BufferID());
 
     std::shared_ptr<compositor::BufferIPCPackage> empty_package;
 };

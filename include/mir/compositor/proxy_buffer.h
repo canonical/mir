@@ -38,7 +38,9 @@ public:
 
     std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
     BufferID id() const;
+
 private:
+    std::shared_ptr<Buffer> acquire_buffer_ownership() const;
     std::weak_ptr<Buffer> buffer;
 }; 
 

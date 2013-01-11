@@ -135,13 +135,12 @@ TEST_F(ProxyBufferTest, get_ipc_package)
 
 TEST_F(ProxyBufferTest, test_id)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, id())
         .Times(1);
+    mc::ProxyBuffer proxy_buffer(buffer);
 
-    mc::BufferID id;
     EXPECT_NO_THROW({
-        id = proxy_buffer.id();
+        proxy_buffer.id();
     });
 
     buffer.reset();

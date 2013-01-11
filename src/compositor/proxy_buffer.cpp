@@ -19,6 +19,8 @@
 #include "mir/compositor/proxy_buffer.h"
 #include "mir/compositor/buffer_id.h"
 
+#include <boost/exception/all.hpp>
+#include <iostream>
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
@@ -26,38 +28,43 @@ mc::ProxyBuffer::ProxyBuffer(std::weak_ptr<mc::Buffer> buffer)
  : buffer(buffer)
 {
 }
-/*
-std::shared_ptr<mc::Buffer> mc::ProxyBuffer::acquire_buffer_ownership()
-{
 
+std::shared_ptr<mc::Buffer> mc::ProxyBuffer::acquire_buffer_ownership() const
+{
+    if (auto ret = buffer.lock())
+    {
+        return ret;
+    } else {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer Lost"));
+    }
 }
-*/
 
 geom::Size mc::ProxyBuffer::size() const
 {
-    return geom::Size();
+    return acquire_buffer_ownership()->size();
 }
 
 geom::Stride mc::ProxyBuffer::stride() const
 {
-    return geom::Stride();
+    return acquire_buffer_ownership()->stride();
 }
 
 geom::PixelFormat mc::ProxyBuffer::pixel_format() const
 {
-    return geom::PixelFormat();
+    return acquire_buffer_ownership()->pixel_format();
 }
 
 void mc::ProxyBuffer::bind_to_texture()
 {
+    return acquire_buffer_ownership()->bind_to_texture();
 }
 
 std::shared_ptr<mc::BufferIPCPackage> mc::ProxyBuffer::get_ipc_package() const
 {
-    return std::shared_ptr<mc::BufferIPCPackage>();
+    return acquire_buffer_ownership()->get_ipc_package();
 }
 
 mc::BufferID mc::ProxyBuffer::id() const
 {
-    return mc::BufferID(2);
+    return acquire_buffer_ownership()->id();
 }
