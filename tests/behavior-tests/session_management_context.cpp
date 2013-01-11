@@ -26,10 +26,9 @@
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_manager.h"
-#include "mir/sessions/surface_organiser.h"
+#include "mir/sessions/surface_factory.h"
 
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
 namespace mtd = mt::doubles;
@@ -37,33 +36,20 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-struct StubSurfaceOrganiser : public msess::SurfaceOrganiser
+struct StubSurfaceFactory : public msess::SurfaceFactory
 {
-    StubSurfaceOrganiser()
+    StubSurfaceFactory()
     {
         // TODO: Width and height will require a non null buffer bundle...
-        dummy_surface = std::make_shared<ms::Surface>(ms::a_surface().name,
-                                                      std::make_shared<mtd::NullBufferBundle>());
+        null_surface = std::shared_ptr<msess::Surface>();
     }
 
-    std::weak_ptr<ms::Surface> create_surface(const ms::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
     {
-        return dummy_surface;
+        return null_surface;
     }
 
-    void destroy_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-    }
-    
-    void hide_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-    }
-
-    void show_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
-    {
-    }
-    
-    std::shared_ptr<ms::Surface> dummy_surface;
+    std::shared_ptr<msess::Surface> null_surface;
 };
 
 }
@@ -72,13 +58,13 @@ mtc::SessionManagementContext::SessionManagementContext()
 {
     auto model = std::make_shared<msess::SessionContainer>();
     session_manager = std::make_shared<msess::SessionManager>(
-            std::make_shared<StubSurfaceOrganiser>(),
+            std::make_shared<StubSurfaceFactory>(),
             model,
             std::make_shared<msess::RegistrationOrderFocusSequence>(model),
             std::make_shared<msess::SingleVisibilityFocusMechanism>(model));
 }
 
-bool mtc::SessionManagementContext::open_session(const std::string& session_name)
+bool mtc::SessionManagementContext::open_session(std::string const& session_name)
 {
     open_sessions[session_name] = session_manager->open_session(session_name);
     return true;

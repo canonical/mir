@@ -43,11 +43,11 @@ public:
     SessionManagementContext();
     virtual ~SessionManagementContext() {}
     
-    bool open_session(const std::string& session_name);
+    bool open_session(std::string const& session_name);
 
 protected:
-    SessionManagementContext(const SessionManagementContext&) = delete;
-    SessionManagementContext& operator=(const SessionManagementContext&) = delete;
+    SessionManagementContext(SessionManagementContext const&) = delete;
+    SessionManagementContext& operator=(SessionManagementContext const&) = delete;
 
 private:
     std::map<std::string, std::weak_ptr<sessions::Session>> open_sessions;
