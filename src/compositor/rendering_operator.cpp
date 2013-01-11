@@ -27,7 +27,14 @@ mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
 
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
-    renderer.render(
-        [&](std::shared_ptr<void> const& r) { resources.push_back(r); },
-        renderable);
+    try
+    {
+        renderer.render(
+            [&](std::shared_ptr<void> const& r) { resources.push_back(r); },
+            renderable);
+    }
+    catch (std::exception&)
+    {
+
+    }
 }
