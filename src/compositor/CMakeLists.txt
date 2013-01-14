@@ -20,7 +20,7 @@ set(
 
   compositor.cpp
   buffer_basic.cpp
-  proxy_buffer.cpp
+  temporary_buffer.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_multi.cpp

@@ -17,7 +17,7 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/proxy_buffer.h"
+#include "mir/compositor/temporary_buffer.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"

@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_PROXY_BUFFER_H_
-#define MIR_COMPOSITOR_PROXY_BUFFER_H_
+#ifndef MIR_COMPOSITOR_TEMPORARY_BUFFER_H_
+#define MIR_COMPOSITOR_TEMPORARY_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
 
@@ -46,4 +46,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_PROXY_BUFFER_H_ */
+#endif /* MIR_COMPOSITOR_TEMPORARY_BUFFER_H_ */
