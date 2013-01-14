@@ -116,6 +116,19 @@ TEST_F(ProxyBufferTest, bind_to_texture)
     }, std::runtime_error);
 } 
 
+TEST_F(ProxyBufferTest, bind_to_texture_preserves_ownership)
+{
+    {
+        mc::ProxyBuffer proxy_buffer(buffer);
+        EXPECT_CALL(*buffer, bind_to_texture())
+            .Times(1);
+
+        proxy_buffer.bind_to_texture();
+        EXPECT_EQ(buffer.use_count(), 2);
+    }
+    EXPECT_EQ(buffer.use_count(), 1);
+} 
+
 TEST_F(ProxyBufferTest, get_ipc_package)
 {
     mc::ProxyBuffer proxy_buffer(buffer);

@@ -42,6 +42,7 @@ public:
 private:
     std::shared_ptr<Buffer> acquire_buffer_ownership() const;
     std::weak_ptr<Buffer> buffer;
+    std::shared_ptr<Buffer> held_buffer;
 }; 
 
 }
