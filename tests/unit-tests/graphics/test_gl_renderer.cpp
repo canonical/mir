@@ -352,3 +352,23 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
     EXPECT_NE(saved_resources.end(), result);
 }
+
+TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
+{
+    using namespace std::placeholders;
+
+    mtd::MockRenderable rd;
+    
+    int save_count = 0;
+    auto saving_lambda = [&] (std::shared_ptr<void> const&)
+    {
+        save_count++;
+    };
+
+    EXPECT_CALL(rd, texture())
+        .Times(1)
+        .WillOnce(testing::Throw(std::runtime_error("error")));
+
+    renderer->render(saving_lambda, rd);
+    EXPECT_EQ(0, save_count);
+}

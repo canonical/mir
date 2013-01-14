@@ -21,7 +21,6 @@
 #include "mir_test_doubles/mock_graphic_region.h"
 #include "mir_test_doubles/mock_renderable.h"
 
-#include <boost/exception/all.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
@@ -72,19 +71,6 @@ public:
     std::shared_ptr<int> resource2;
     int counter;
 };
-
-class ThrowingStubRenderer : public mg::Renderer
-{
-public:
-    ThrowingStubRenderer()
-    {
-    }
-
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("always throwing for this stub"));
-    }
-};
 }
 
 TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
@@ -111,18 +97,4 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
     EXPECT_EQ(use_count_before0, stub_renderer.resource0.use_count());
     EXPECT_EQ(use_count_before1, stub_renderer.resource1.use_count());
     EXPECT_EQ(use_count_before2, stub_renderer.resource2.use_count());
-}
-
-TEST(RenderingOperator, render_operator_handles_throw_from_renderer)
-{
-    using namespace testing;
-
-    ThrowingStubRenderer stub_renderer;
-    mtd::MockRenderable mock_renderable;
-
-    mc::RenderingOperator rendering_operator(stub_renderer);
-
-    EXPECT_NO_THROW({
-    rendering_operator(mock_renderable);
-    });
 }
