@@ -41,15 +41,11 @@ protected:
         pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        second_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        third_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
             new NiceMock<mtd::MockSwapper>(mock_buffer));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
-    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> second_mock_buffer;
-    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> third_mock_buffer;
     std::unique_ptr<testing::NiceMock<mtd::MockSwapper>> mock_swapper;
     geom::Size size;
     geom::Stride stride;
