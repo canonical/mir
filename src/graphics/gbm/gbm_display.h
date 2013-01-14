@@ -24,8 +24,6 @@
 #include "mir/graphics/platform.h"
 #include "gbm_display_helpers.h"
 
-#include <memory>
-
 namespace mir
 {
 namespace geometry
@@ -57,6 +55,8 @@ public:
     geometry::Rectangle view_area() const;
     void clear();
     bool post_update();
+
+    std::shared_ptr<DisplayConfiguration> configuration();
 
 private:
     BufferObject* get_front_buffer_object();

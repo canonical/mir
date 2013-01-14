@@ -99,3 +99,8 @@ bool mga::AndroidDisplay::post_update()
         return false;
     return true;
 }
+
+std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
+{
+    return std::shared_ptr<mg::DisplayConfiguration>();
+}
