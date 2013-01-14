@@ -26,10 +26,10 @@ namespace mir
 namespace compositor
 {
 
-class ProxyBuffer : public Buffer
+class TemporaryBuffer : public Buffer
 {
 public:
-    explicit ProxyBuffer(std::weak_ptr<Buffer> buffer);
+    explicit TemporaryBuffer(const std::shared_ptr<Buffer>& buffer);
 
     geometry::Size size() const;
     geometry::Stride stride() const;
@@ -40,9 +40,7 @@ public:
     BufferID id() const;
 
 private:
-    std::shared_ptr<Buffer> acquire_buffer_ownership() const;
-    std::weak_ptr<Buffer> buffer;
-    std::shared_ptr<Buffer> held_buffer;
+    std::shared_ptr<Buffer> buffer;
 }; 
 
 }

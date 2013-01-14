@@ -25,7 +25,7 @@ namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-class ProxyBufferTest : public ::testing::Test
+class TemporaryBufferTest : public ::testing::Test
 {
 public:
     void SetUp()
@@ -42,18 +42,18 @@ public:
     geom::PixelFormat buffer_pixel_format;
 };
 
-TEST_F(ProxyBufferTest, buffer_preserves_ownership)
+TEST_F(TemporaryBufferTest, buffer_has_ownership)
 {
     {
-        mc::ProxyBuffer proxy_buffer(buffer);
+        mc::TemporaryBuffer proxy_buffer(buffer);
         EXPECT_EQ(buffer.use_count(), 2);
     }
     EXPECT_EQ(buffer.use_count(), 1);
 } 
 
-TEST_F(ProxyBufferTest, test_size)
+TEST_F(TemporaryBufferTest, test_size)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, size())
         .Times(1);
 
@@ -62,9 +62,9 @@ TEST_F(ProxyBufferTest, test_size)
     EXPECT_EQ(buffer_size, size);
 } 
 
-TEST_F(ProxyBufferTest, test_stride)
+TEST_F(TemporaryBufferTest, test_stride)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, stride())
         .Times(1);
 
@@ -73,9 +73,9 @@ TEST_F(ProxyBufferTest, test_stride)
     EXPECT_EQ(buffer_stride, stride);
 } 
 
-TEST_F(ProxyBufferTest, test_pixel_format)
+TEST_F(TemporaryBufferTest, test_pixel_format)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, pixel_format())
         .Times(1);
 
@@ -84,29 +84,29 @@ TEST_F(ProxyBufferTest, test_pixel_format)
     EXPECT_EQ(buffer_pixel_format, pixel_format);
 } 
 
-TEST_F(ProxyBufferTest, bind_to_texture)
+TEST_F(TemporaryBufferTest, bind_to_texture)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, bind_to_texture())
         .Times(1);
 
     proxy_buffer.bind_to_texture();
 } 
 
-TEST_F(ProxyBufferTest, get_ipc_package)
+TEST_F(TemporaryBufferTest, get_ipc_package)
 {
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
     EXPECT_CALL(*buffer, get_ipc_package())
         .Times(1);
 
     proxy_buffer.get_ipc_package();
 } 
 
-TEST_F(ProxyBufferTest, test_id)
+TEST_F(TemporaryBufferTest, test_id)
 {
     EXPECT_CALL(*buffer, id())
         .Times(1);
-    mc::ProxyBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(buffer);
 
     proxy_buffer.id();
 } 

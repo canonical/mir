@@ -24,56 +24,38 @@
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mc::ProxyBuffer::ProxyBuffer(std::weak_ptr<mc::Buffer> buffer)
+mc::TemporaryBuffer::TemporaryBuffer(const std::shared_ptr<mc::Buffer>& buffer)
  : buffer(buffer)
 {
 }
 
-std::shared_ptr<mc::Buffer> mc::ProxyBuffer::acquire_buffer_ownership() const
+geom::Size mc::TemporaryBuffer::size() const
 {
-    if (held_buffer)
-    {
-        return held_buffer;
-    }
-
-    if (auto ret = buffer.lock())
-    {
-        return ret;
-    }
-
-    BOOST_THROW_EXCEPTION(std::runtime_error("Buffer Lost"));
+    return buffer->size();
 }
 
-geom::Size mc::ProxyBuffer::size() const
+geom::Stride mc::TemporaryBuffer::stride() const
 {
-    return acquire_buffer_ownership()->size();
+    return buffer->stride();
 }
 
-geom::Stride mc::ProxyBuffer::stride() const
+geom::PixelFormat mc::TemporaryBuffer::pixel_format() const
 {
-    return acquire_buffer_ownership()->stride();
+    return buffer->pixel_format();
 }
 
-geom::PixelFormat mc::ProxyBuffer::pixel_format() const
+mc::BufferID mc::TemporaryBuffer::id() const
 {
-    return acquire_buffer_ownership()->pixel_format();
+    return buffer->id();
 }
 
-mc::BufferID mc::ProxyBuffer::id() const
+void mc::TemporaryBuffer::bind_to_texture()
 {
-    return acquire_buffer_ownership()->id();
+    buffer->bind_to_texture();
 }
 
-/* when the user of the api calls bind_to_texture(), the resource that has been bound (the buffer), must exist from the time that the user calls bind_to_texture() successfully until the time the resource is released. This allows the user to be sure the object they have bound using GL commands exists at the time that the GL draw commands are called */
-void mc::ProxyBuffer::bind_to_texture()
-{
-    held_buffer.reset();
-    held_buffer = acquire_buffer_ownership();
-    held_buffer->bind_to_texture();
-}
-
-std::shared_ptr<mc::BufferIPCPackage> mc::ProxyBuffer::get_ipc_package() const
+std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() const
 {   
-    return acquire_buffer_ownership()->get_ipc_package();
+    return buffer->get_ipc_package();
 }
 

@@ -95,7 +95,7 @@ std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
     std::weak_ptr<mc::Buffer> region;
     swapper->compositor_acquire(region, id);
 
-    auto resource = new mc::ProxyBuffer(region);
+    auto resource = new mc::TemporaryBuffer(region.lock());
     CompositorReleaseDeleter del(swapper, id);
     auto compositor_resource = std::shared_ptr<mc::Buffer>(resource, del);
 
@@ -108,7 +108,7 @@ std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
     std::weak_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
-    auto resource = new mc::ProxyBuffer(buffer);
+    auto resource = new mc::TemporaryBuffer(buffer.lock());
     ClientReleaseDeleter del(swapper, id);
     auto client_resource = std::shared_ptr<mc::Buffer>(resource, del);
 
