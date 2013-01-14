@@ -31,12 +31,17 @@ mc::ProxyBuffer::ProxyBuffer(std::weak_ptr<mc::Buffer> buffer)
 
 std::shared_ptr<mc::Buffer> mc::ProxyBuffer::acquire_buffer_ownership() const
 {
+    if (held_buffer)
+    {
+        return held_buffer;
+    }
+
     if (auto ret = buffer.lock())
     {
         return ret;
-    } else {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer Lost"));
     }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Buffer Lost"));
 }
 
 geom::Size mc::ProxyBuffer::size() const
@@ -54,6 +59,12 @@ geom::PixelFormat mc::ProxyBuffer::pixel_format() const
     return acquire_buffer_ownership()->pixel_format();
 }
 
+mc::BufferID mc::ProxyBuffer::id() const
+{
+    return acquire_buffer_ownership()->id();
+}
+
+/* when the user of the api calls bind_to_texture(), the resource that has been bound (the buffer), must exist from the time that the user calls bind_to_texture() successfully until the time the resource is released. This allows the user to be sure the object they have bound using GL commands exists at the time that the GL draw commands are called */
 void mc::ProxyBuffer::bind_to_texture()
 {
     held_buffer.reset();
@@ -62,11 +73,7 @@ void mc::ProxyBuffer::bind_to_texture()
 }
 
 std::shared_ptr<mc::BufferIPCPackage> mc::ProxyBuffer::get_ipc_package() const
-{
+{   
     return acquire_buffer_ownership()->get_ipc_package();
 }
 
-mc::BufferID mc::ProxyBuffer::id() const
-{
-    return acquire_buffer_ownership()->id();
-}

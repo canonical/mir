@@ -42,6 +42,15 @@ public:
     geom::PixelFormat buffer_pixel_format;
 };
 
+TEST_F(ProxyBufferTest, buffer_preserves_ownership)
+{
+    {
+        mc::ProxyBuffer proxy_buffer(buffer);
+        EXPECT_EQ(buffer.use_count(), 2);
+    }
+    EXPECT_EQ(buffer.use_count(), 1);
+} 
+
 TEST_F(ProxyBufferTest, test_size)
 {
     mc::ProxyBuffer proxy_buffer(buffer);
@@ -49,16 +58,8 @@ TEST_F(ProxyBufferTest, test_size)
         .Times(1);
 
     geom::Size size;
-    EXPECT_NO_THROW({
-        size = proxy_buffer.size();
-    });
+    size = proxy_buffer.size();
     EXPECT_EQ(buffer_size, size);
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.size();
-    }, std::runtime_error);
 } 
 
 TEST_F(ProxyBufferTest, test_stride)
@@ -68,16 +69,8 @@ TEST_F(ProxyBufferTest, test_stride)
         .Times(1);
 
     geom::Stride stride;
-    EXPECT_NO_THROW({
-        stride = proxy_buffer.stride();
-    });
+    stride = proxy_buffer.stride();
     EXPECT_EQ(buffer_stride, stride);
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.stride();
-    }, std::runtime_error);
 } 
 
 TEST_F(ProxyBufferTest, test_pixel_format)
@@ -87,16 +80,8 @@ TEST_F(ProxyBufferTest, test_pixel_format)
         .Times(1);
 
     geom::PixelFormat pixel_format;
-    EXPECT_NO_THROW({
-        pixel_format = proxy_buffer.pixel_format();
-    });
+    pixel_format = proxy_buffer.pixel_format();
     EXPECT_EQ(buffer_pixel_format, pixel_format);
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.pixel_format();
-    }, std::runtime_error);
 } 
 
 TEST_F(ProxyBufferTest, bind_to_texture)
@@ -105,28 +90,7 @@ TEST_F(ProxyBufferTest, bind_to_texture)
     EXPECT_CALL(*buffer, bind_to_texture())
         .Times(1);
 
-    EXPECT_NO_THROW({
-        proxy_buffer.bind_to_texture();
-    });
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.bind_to_texture();
-    }, std::runtime_error);
-} 
-
-TEST_F(ProxyBufferTest, bind_to_texture_preserves_ownership)
-{
-    {
-        mc::ProxyBuffer proxy_buffer(buffer);
-        EXPECT_CALL(*buffer, bind_to_texture())
-            .Times(1);
-
-        proxy_buffer.bind_to_texture();
-        EXPECT_EQ(buffer.use_count(), 2);
-    }
-    EXPECT_EQ(buffer.use_count(), 1);
+    proxy_buffer.bind_to_texture();
 } 
 
 TEST_F(ProxyBufferTest, get_ipc_package)
@@ -135,15 +99,7 @@ TEST_F(ProxyBufferTest, get_ipc_package)
     EXPECT_CALL(*buffer, get_ipc_package())
         .Times(1);
 
-    EXPECT_NO_THROW({
-        proxy_buffer.get_ipc_package();
-    });
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.get_ipc_package();
-    }, std::runtime_error);
+    proxy_buffer.get_ipc_package();
 } 
 
 TEST_F(ProxyBufferTest, test_id)
@@ -152,13 +108,5 @@ TEST_F(ProxyBufferTest, test_id)
         .Times(1);
     mc::ProxyBuffer proxy_buffer(buffer);
 
-    EXPECT_NO_THROW({
-        proxy_buffer.id();
-    });
-
-    buffer.reset();
-
-    EXPECT_THROW({
-        proxy_buffer.id();
-    }, std::runtime_error);
+    proxy_buffer.id();
 } 
