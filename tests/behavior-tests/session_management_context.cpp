@@ -21,6 +21,9 @@
 #include "mir/sessions/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/sessions/session.h"
+#include "mir/sessions/registration_order_focus_sequence.h"
+#include "mir/sessions/single_visibility_focus_mechanism.h"
+#include "mir/sessions/session_container.h"
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/viewable_area.h"
@@ -30,8 +33,7 @@ namespace msess = mir::sessions;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-namespace mt = mir::test;
-namespace mtc = mt::cucumber;
+namespace mtc = mir::test::cucumber;
 
 namespace mir
 {
@@ -125,7 +127,6 @@ struct DummyViewableArea : public mg::ViewableArea
 }
 }
 } // namespace mir
-
 
 mtc::SessionManagementContext::SessionManagementContext()
 {
