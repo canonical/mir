@@ -56,7 +56,9 @@ geom::PixelFormat mc::ProxyBuffer::pixel_format() const
 
 void mc::ProxyBuffer::bind_to_texture()
 {
-    return acquire_buffer_ownership()->bind_to_texture();
+    held_buffer.reset();
+    held_buffer = acquire_buffer_ownership();
+    held_buffer->bind_to_texture();
 }
 
 std::shared_ptr<mc::BufferIPCPackage> mc::ProxyBuffer::get_ipc_package() const
