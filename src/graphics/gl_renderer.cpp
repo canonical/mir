@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 namespace mg=mir::graphics;
+namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 namespace
@@ -217,7 +218,17 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 
 void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable)
 {
-    auto region_resource = renderable.texture();
+    std::shared_ptr<mc::GraphicRegion> region_resource;
+    try
+    {
+        region_resource = renderable.texture();
+    } catch (std::exception&)
+    {
+        /* if this throws here, that means that the client has died
+           and there is no valid buffer to render. return before changing
+           any gl state */
+        return;
+    }
 
     const geom::Point top_left = renderable.top_left();
     const geom::Size size = renderable.size();

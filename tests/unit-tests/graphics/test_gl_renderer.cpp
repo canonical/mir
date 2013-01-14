@@ -369,6 +369,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
         .Times(1)
         .WillOnce(testing::Throw(std::runtime_error("error")));
 
-    renderer->render(saving_lambda, rd);
+    EXPECT_NO_THROW({
+        renderer->render(saving_lambda, rd);
+    });
     EXPECT_EQ(0, save_count);
 }
