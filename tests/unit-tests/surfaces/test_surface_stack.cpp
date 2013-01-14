@@ -49,9 +49,9 @@ namespace
 class NullBufferSwapper : public mc::BufferSwapper
 {
 public:
-    virtual void client_acquire(std::weak_ptr<mc::Buffer>&, mc::BufferID&) {}
+    virtual void client_acquire(std::shared_ptr<mc::Buffer>&, mc::BufferID&) {}
     virtual void client_release(mc::BufferID) {}
-    virtual void compositor_acquire(std::weak_ptr<mc::Buffer>& , mc::BufferID&){};
+    virtual void compositor_acquire(std::shared_ptr<mc::Buffer>& , mc::BufferID&){};
     virtual void compositor_release(mc::BufferID){}
     virtual void shutdown() {}
 };

@@ -79,11 +79,11 @@ void main_test_loop_pause(std::chrono::microseconds duration) {
 void client_request_loop(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& synchronizer,
                          mc::BufferSwapper& swapper)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     for(;;)
     {
         swapper.client_acquire(buffer_ref, out_buffer_id);
-        EXPECT_NE(buffer_ref.lock(), nullptr);
+        EXPECT_NE(buffer_ref, nullptr);
         if (synchronizer.child_enter_wait()) return;
 
         swapper.client_release(out_buffer_id);
@@ -96,11 +96,11 @@ void client_request_loop(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& s
 void compositor_grab_loop(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& synchronizer,
                           mc::BufferSwapper& swapper)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     for(;;)
     {
         swapper.compositor_acquire(buffer_ref, out_buffer_id);
-        EXPECT_NE(buffer_ref.lock(), nullptr);
+        EXPECT_NE(buffer_ref, nullptr);
         if (synchronizer.child_enter_wait()) return;
 
         swapper.compositor_release(out_buffer_id);
@@ -159,7 +159,7 @@ void client_request_loop_finite(std::vector<mc::BufferID>& buffers,
                       mc::BufferSwapper& swapper,
                       int const number_of_requests_to_make)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID tmp;
     for(auto i=0; i < number_of_requests_to_make; i++)
     {
@@ -176,7 +176,7 @@ void compositor_grab(std::vector<mc::BufferID>& buffers,
                      mt::SynchronizerSpawned& synchronizer,
                      mc::BufferSwapper& swapper)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID tmp;
 
     synchronizer.child_enter_wait();
@@ -242,7 +242,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
 void client_request_loop_with_wait(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& synchronizer,
                                    mc::BufferSwapper& swapper)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     bool wait_request = false;
     for(;;)
     {
@@ -261,7 +261,7 @@ void client_request_loop_with_wait(mc::BufferID& out_buffer_id, mt::Synchronizer
 void compositor_grab_loop_with_wait(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& synchronizer,
                                     mc::BufferSwapper& swapper)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     bool wait_request = false;
     for(;;)
     {

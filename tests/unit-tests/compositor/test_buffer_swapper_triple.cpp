@@ -58,19 +58,19 @@ struct BufferSwapperTriple : testing::Test
 
 TEST_F(BufferSwapperTriple, test_valid_buffer_returned)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID buf_tmp;
 
     swapper->client_acquire(buffer_ref, buf_tmp);
     swapper->client_release(buf_tmp);
 
-    auto addr = buffer_ref.lock().get();
+    auto addr = buffer_ref.get();
     EXPECT_TRUE((addr == buffer_a_addr) || (addr == buffer_b_addr) || (addr = buffer_c_addr));
 }
 
 TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID buf_tmp_a;
     mc::BufferID buf_tmp_b;
     mc::BufferID buf_tmp_c;
@@ -94,7 +94,7 @@ TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID buf_tmp_a;
     mc::BufferID buf_tmp_b;
 
@@ -107,7 +107,7 @@ TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
 /* this would stall a double buffer */
 TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID buf_tmp;
 
     swapper->compositor_acquire(buffer_ref, buf_tmp);
@@ -123,7 +123,7 @@ TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 {
-    std::weak_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mc::Buffer> buffer_ref;
     mc::BufferID first_comp_buffer;
     mc::BufferID first_client_buffer;
     mc::BufferID second_comp_buffer;
