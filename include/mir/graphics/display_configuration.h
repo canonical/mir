@@ -59,8 +59,8 @@ class DisplayConfiguration
 public:
     virtual ~DisplayConfiguration() {}
 
-    virtual void for_each_card(std::function<void(DisplayConfigurationCard&)> f) = 0;
-    virtual void for_each_output(std::function<void(DisplayConfigurationOutput&)> f) = 0;
+    virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) = 0;
+    virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) = 0;
 
 protected:
     DisplayConfiguration() = default;

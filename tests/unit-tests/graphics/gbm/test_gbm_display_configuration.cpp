@@ -303,7 +303,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
 
     size_t output_count{0};
 
-    conf->for_each_output([&](mg::DisplayConfigurationOutput& output)
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         ASSERT_LT(output_count, expected_outputs.size());
         outputs_eq(expected_outputs[output_count], output, output_count);

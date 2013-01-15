@@ -37,8 +37,8 @@ class KMSDisplayConfiguration : public DisplayConfiguration
 public:
     KMSDisplayConfiguration(int drm_fd);
 
-    void for_each_card(std::function<void(DisplayConfigurationCard&)> f);
-    void for_each_output(std::function<void(DisplayConfigurationOutput&)> f);
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f);
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f);
 
 private:
     void add_output(drmModeRes const& resources, drmModeConnector const& connector);
