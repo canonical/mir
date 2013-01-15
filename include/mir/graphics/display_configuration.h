@@ -54,6 +54,14 @@ struct DisplayConfigurationOutput
     size_t current_mode_index;
 };
 
+std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
+bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
+bool operator!=(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
+
+std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& val);
+bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
+bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
+
 class DisplayConfiguration
 {
 public:

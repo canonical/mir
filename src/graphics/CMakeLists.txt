@@ -30,6 +30,7 @@ add_library(
   mirgraphics STATIC
 
   gl_renderer.cpp
+  display_configuration.cpp
 )
 
 target_link_libraries(
