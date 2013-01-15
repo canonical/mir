@@ -59,7 +59,7 @@ Description: Display server for Ubuntu - client library
 Package: libmirclient-dev
 Section: libdevel
 Architecture: any
-Depends: libmirprotobuf0 (= ${binary:Version}),
+Depends: libmirprotobuf-dev (= ${binary:Version}),
          libmirclient0 (= ${binary:Version}),
          mir (= ${binary:Version}),
          ${misc:Depends},
