@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/display_configuration.h"
 #include "android_display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -34,6 +35,18 @@ static const EGLint default_egl_context_attr [] =
 {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
+};
+
+class NullDisplayConfiguration : public mg::DisplayConfiguration
+{
+public:
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>)
+    {
+    }
+
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>)
+    {
+    }
 };
 }
 
@@ -102,5 +115,5 @@ bool mga::AndroidDisplay::post_update()
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    return std::shared_ptr<mg::DisplayConfiguration>();
+    return std::make_shared<NullDisplayConfiguration>();
 }
