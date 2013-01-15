@@ -19,6 +19,7 @@ add_executable(
   death-tests
   test_buffer_allocation_strategy.cpp
   test_process_death.cpp
+  test_application_manager_death.cpp
 )
 
 target_link_libraries(

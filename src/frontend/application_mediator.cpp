@@ -117,9 +117,9 @@ void mir::frontend::ApplicationMediator::create_surface(
 
         surface->advance_client_buffer();
         auto const& client_resource = surface->client_buffer_resource();
-        auto const& id = client_resource->id;
         if (auto buffer_resource = client_resource->buffer.lock())
         {
+            auto const& id = buffer_resource->id();
             auto ipc_package = buffer_resource->get_ipc_package();
             auto buffer = response->mutable_buffer();
 
@@ -160,9 +160,9 @@ void mir::frontend::ApplicationMediator::next_buffer(
 
     surface->advance_client_buffer();
     auto const& client_resource = surface->client_buffer_resource();
-    auto const& id = client_resource->id;
     if (auto buffer_resource = client_resource->buffer.lock())
     {
+        auto const& id = buffer_resource->id();
         auto ipc_package = buffer_resource->get_ipc_package();
 
         response->set_buffer_id(id.as_uint32_t());

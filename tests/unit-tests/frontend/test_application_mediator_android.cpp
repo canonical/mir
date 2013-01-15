@@ -27,6 +27,8 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 
+#include "mir_test_doubles/null_display.h"
+
 #include <gtest/gtest.h>
 
 #include <stdexcept>
@@ -37,6 +39,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msess = mir::sessions;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -72,6 +75,8 @@ public:
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const& /*session*/, int /*id*/) {}
+    void select_session_with_lightdm_id(int /*id*/) {}
 
     void shutdown() {}
 
@@ -92,14 +97,6 @@ public:
     }
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
-
 class StubPlatform : public mg::Platform
 {
  public:
@@ -111,7 +108,7 @@ class StubPlatform : public mg::Platform
 
     std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::make_shared<mtd::NullDisplay>();
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -127,7 +124,7 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     ApplicationMediatorAndroidTest()
         : session_store{std::make_shared<StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
-          graphics_display{std::make_shared<StubDisplay>()},
+          graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           listener{std::make_shared<mf::NullApplicationListener>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
