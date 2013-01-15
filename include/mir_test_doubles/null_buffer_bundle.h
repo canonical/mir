@@ -38,7 +38,7 @@ public:
         geometry::Stride st;
         geometry::PixelFormat pf;
         mock_buffer = std::make_shared<mir::test::doubles::MockBuffer>(sz, st, pf);
-        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>(mock_buffer, compositor::BufferID());
+        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>(mock_buffer);
     }
     std::shared_ptr<compositor::GraphicBufferClientResource> secure_client_buffer()
     {

@@ -32,7 +32,7 @@ namespace
 {
 struct CompositorReleaseDeleter
 {
-    explicit CompositorReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
+    CompositorReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
         swapper(sw),
         id(id)
     {
@@ -51,19 +51,21 @@ struct CompositorReleaseDeleter
 
 struct ClientReleaseDeleter
 {
-    ClientReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw) :
-        swapper(sw)
+    ClientReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
+        swapper(sw),
+        id(id)
     {
     }
 
     void operator()(mc::GraphicBufferClientResource* client_resource)
     {
         if (auto res = swapper.lock())
-            res->client_release(client_resource->id);
+            res->client_release(id);
         delete client_resource;
     }
 
     std::weak_ptr<mc::BufferSwapper> swapper;
+    mc::BufferID id;
 };
 }
 
@@ -106,8 +108,8 @@ std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secur
     std::weak_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
-    auto resource = new mc::GraphicBufferClientResource(buffer, id);
-    ClientReleaseDeleter del(swapper);
+    auto resource = new mc::GraphicBufferClientResource(buffer);
+    ClientReleaseDeleter del(swapper, id);
     auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
     return client_resource;
 }
