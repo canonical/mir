@@ -33,6 +33,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_display.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -109,15 +110,6 @@ namespace mir
 {
 namespace
 {
-
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() { std::this_thread::yield(); }
-    bool post_update() { return true; }
-};
-
 struct SurfaceSync
 {
     SurfaceSync() :
@@ -196,7 +188,6 @@ const int ClientConfigCommon::max_surface_count;
 }
 }
 
-using mir::StubDisplay;
 using mir::SurfaceSync;
 using mir::ClientConfigCommon;
 
@@ -322,7 +313,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<StubDisplay>();
+            return std::make_shared<mtd::NullDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -451,7 +442,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<StubDisplay>();
+            return std::make_shared<mtd::NullDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
