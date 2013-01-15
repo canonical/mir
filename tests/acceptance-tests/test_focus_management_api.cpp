@@ -111,10 +111,28 @@ struct ClientConfigCommon : TestingClientConfiguration
         close(fd);
     }
 };
+
+
 }
 
-TEST_F(DefaultDisplayServerTestFixture, focus_management)
+TEST_F(BespokeDisplayServerTestFixture, focus_management)
 {
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<sessions::SessionStore>
+        make_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory)
+        {
+            auto real_session_store =
+             DefaultServerConfiguration::make_session_store(surface_factory);
+
+            // TODO wrap the real_session_store and check focus gets set
+
+            return real_session_store;
+        }
+    } server_config;
+
+    launch_server_process(server_config);
+
     int const lightdm_id = __LINE__;
     static char const* const focus_ready = "focus_management_focus_client_ready.tmp";
     static char const* const manager_done = "focus_management_focus_manager_done.tmp";
