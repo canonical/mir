@@ -40,7 +40,8 @@ class ApplicationListener;
 
 namespace sessions
 {
-class SessionManager;
+class SessionStore;
+class SessionManager; // TODO get rid
 class SurfaceFactory;
 }
 namespace graphics
@@ -68,7 +69,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<sessions::SessionManager> const& session_manager,
+        std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
     virtual std::shared_ptr<sessions::SessionManager> make_session_manager(
@@ -98,7 +99,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
-        std::shared_ptr<sessions::SessionManager> const& session_manager,
+        std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
     virtual std::shared_ptr<sessions::SessionManager> make_session_manager(
@@ -115,7 +116,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
-        std::shared_ptr<sessions::SessionManager> const& session_manager,
+        std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 

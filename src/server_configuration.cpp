@@ -176,12 +176,12 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<msess::SessionManager> const& session_manager,
+    std::shared_ptr<msess::SessionStore> const& session_store,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return std::make_shared<DefaultIpcFactory>(
-        session_manager,
+        session_store,
         make_application_listener(),
         make_graphics_platform(),
         display, allocator);
