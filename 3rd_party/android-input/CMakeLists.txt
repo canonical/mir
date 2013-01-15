@@ -4,13 +4,8 @@
 STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 STRING(REGEX REPLACE "-W[^ ]*" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-if(MIR_USES_BIONIC)
-  set(ANDROID_INPUT_COMPILE_FLAGS
-    "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
-else()
-  set(ANDROID_INPUT_COMPILE_FLAGS
+set(ANDROID_INPUT_COMPILE_FLAGS
     "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-x86/AndroidConfig.h")
-endif()
 
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS
     "${ANDROID_INPUT_COMPILE_FLAGS} -DUSING_STD_CPP11"
@@ -19,7 +14,7 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
 add_subdirectory(android)
 
 #we don't have these tools dependencies hybrisized to build the tool
-if(MIR_USE_BIONIC)
+if("${MIR_PLATFROM}" STREQUAL "gbm")
   add_subdirectory(tools)
 endif()
 
