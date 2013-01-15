@@ -41,7 +41,6 @@ class ApplicationListener;
 namespace sessions
 {
 class SessionStore;
-class SessionManager; // TODO get rid
 class SurfaceFactory;
 }
 namespace graphics
@@ -72,7 +71,7 @@ public:
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
-    virtual std::shared_ptr<sessions::SessionManager> make_session_manager(
+    virtual std::shared_ptr<sessions::SessionStore> make_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
@@ -102,7 +101,7 @@ public:
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
-    virtual std::shared_ptr<sessions::SessionManager> make_session_manager(
+    virtual std::shared_ptr<sessions::SessionStore> make_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,

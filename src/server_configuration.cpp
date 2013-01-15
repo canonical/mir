@@ -157,8 +157,8 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<msess::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+std::shared_ptr<msess::SessionStore>
+mir::DefaultServerConfiguration::make_session_store(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
 {
     auto session_container = std::make_shared<msess::SessionContainer>();
     auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
