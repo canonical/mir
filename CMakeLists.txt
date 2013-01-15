@@ -68,7 +68,7 @@ enable_testing()
 include_directories(include/)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
@@ -174,6 +174,11 @@ set(GTEST_FOUND TRUE)
 include_directories (
   ${GTEST_INCLUDE_DIR}
 )
+# We need to build cucumber after gtest
+# We disable building on android for now until hybrisization is complete
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(3rd_party/cucumber-cpp)
+endif()
 
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
