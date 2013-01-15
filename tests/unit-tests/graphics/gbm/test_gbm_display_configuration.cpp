@@ -92,25 +92,6 @@ drmModeConnector create_connector(uint32_t connector_id, drmModeConnection conne
     return connector;
 }
 
-void outputs_eq(mg::DisplayConfigurationOutput const& expected_out,
-                mg::DisplayConfigurationOutput const& out,
-                size_t index)
-{
-    EXPECT_EQ(expected_out.id, out.id) << "output " << index;
-    EXPECT_EQ(expected_out.card_id, out.card_id) << "output " << index;
-    EXPECT_EQ(expected_out.physical_size_mm, out.physical_size_mm) << "output " << index;
-    EXPECT_EQ(expected_out.connected, out.connected) << "output " << index;
-    EXPECT_EQ(expected_out.current_mode_index, out.current_mode_index) << "output " << index;
-
-    ASSERT_EQ(expected_out.modes.size(), out.modes.size()) << index;
-
-    for (size_t i = 0; i < expected_out.modes.size(); i++)
-    {
-        EXPECT_EQ(expected_out.modes[i].size, out.modes[i].size) << "output" << index << "mode " << i;
-        EXPECT_EQ(expected_out.modes[i].vrefresh_hz, out.modes[i].vrefresh_hz) << "output" << index << "mode " << i;
-    }
-}
-
 struct FakeDRMResources
 {
     FakeDRMResources()
@@ -306,9 +287,9 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         ASSERT_LT(output_count, expected_outputs.size());
-        outputs_eq(expected_outputs[output_count], output, output_count);
+        EXPECT_EQ(expected_outputs[output_count], output) << "output_count: " << output_count;
         ++output_count;
     });
 
-    ASSERT_EQ(expected_outputs.size(), output_count);
+    EXPECT_EQ(expected_outputs.size(), output_count);
 }
