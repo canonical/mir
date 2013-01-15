@@ -29,6 +29,8 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/exception.h"
 
+#include "mir_test_doubles/null_display.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -38,6 +40,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msess = mir::sessions;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -93,14 +96,6 @@ public:
     }
 };
 
-class StubDisplay : public mg::Display
-{
- public:
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void clear() {}
-    bool post_update() { return true; }
-};
-
 class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthenticator
 {
  public:
@@ -112,7 +107,7 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
 
     std::shared_ptr<mg::Display> create_display()
     {
-        return std::make_shared<StubDisplay>();
+        return std::make_shared<mtd::NullDisplay>();
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -130,7 +125,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     ApplicationMediatorGBMTest()
         : session_store{std::make_shared<StubSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
-          graphics_display{std::make_shared<StubDisplay>()},
+          graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           listener{std::make_shared<mf::NullApplicationListener>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
