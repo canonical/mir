@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include <fcntl.h>
+
 namespace mtf = mir_test_framework;
 
 namespace
@@ -92,12 +94,33 @@ struct ClientConfigCommon : TestingClientConfiguration
     MirConnection* connection;
     MirSurface* surface;
     std::atomic<int> buffers;
+
+    void set_flag(const char* const flag_file)
+    {
+        close(open(flag_file, O_CREAT, S_IWUSR | S_IRUSR));
+    }
+
+    void wait_flag(const char* const flag_file)
+    {
+        int fd = -1;
+        while (-1 == (fd = open(flag_file, O_RDONLY, S_IWUSR | S_IRUSR)))
+        {
+            // Wait for focus_config process to init
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        close(fd);
+    }
 };
 }
 
 TEST_F(DefaultDisplayServerTestFixture, focus_management)
 {
     int const lightdm_id = __LINE__;
+    static char const* const focus_ready = "focus_management_focus_client_ready.tmp";
+    static char const* const manager_done = "focus_management_focus_manager_done.tmp";
+    std::remove(focus_ready);
+    std::remove(manager_done);
+
     struct ClientConfig : ClientConfigCommon
     {
         void exec()
@@ -111,11 +134,22 @@ TEST_F(DefaultDisplayServerTestFixture, focus_management)
 
             ASSERT_TRUE(connection != NULL);
 
-            // TODO Create a suface and wait for test to finish
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
 
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+
+            set_flag(focus_ready);
+
+            wait_flag(manager_done);
             mir_connection_release(connection);
         }
-    } client_config;
+    } focus_config;
 
     struct LightdmConfig : ClientConfigCommon
     {
@@ -127,17 +161,17 @@ TEST_F(DefaultDisplayServerTestFixture, focus_management)
                 connection_callback,
                 this));
 
+            wait_flag(focus_ready);
             mir_select_focus_by_lightdm_id(connection, lightdm_id);
 
-            // TODO check that focus becomes set.
+            // TODO check focus gets set
 
             mir_connection_release(connection);
+            set_flag(manager_done);
         }
     } lightdm_config;
 
-
-    launch_client_process(client_config);
-    // TODO Wait for client to init
+    launch_client_process(focus_config);
     launch_client_process(lightdm_config);
 }
 }

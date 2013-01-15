@@ -20,7 +20,7 @@
 #define MIR_SESSIONS_APPLICATION_MANAGER_H_
 
 #include "mir/sessions/session_store.h"
-
+#include "mir/thread/all.h"
 #include <memory>
 #include <vector>
 
@@ -63,6 +63,7 @@ private:
     std::shared_ptr<FocusSequence> focus_sequence;
     std::shared_ptr<FocusSetter> focus_setter;
 
+    std::mutex mutex;
     std::weak_ptr<Session> focus_application;
     typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
     Tags tags;

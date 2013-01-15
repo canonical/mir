@@ -169,7 +169,7 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     {
         invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
     }
-    else if ("select_session_with_lightdm_id" == invocation.method_name())
+    else if ("select_focus_by_lightdm_id" == invocation.method_name())
     {
         invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
     }
