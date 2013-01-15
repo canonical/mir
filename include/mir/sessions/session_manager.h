@@ -58,10 +58,10 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<sessions::SurfaceFactory> surface_factory;
-    std::shared_ptr<SessionContainer> app_container;
-    std::shared_ptr<FocusSequence> focus_sequence;
-    std::shared_ptr<FocusSetter> focus_setter;
+    std::shared_ptr<sessions::SurfaceFactory> const surface_factory;
+    std::shared_ptr<SessionContainer> const app_container;
+    std::shared_ptr<FocusSequence> const focus_sequence;
+    std::shared_ptr<FocusSetter> const focus_setter;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;
