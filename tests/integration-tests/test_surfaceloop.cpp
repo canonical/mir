@@ -33,7 +33,6 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/null_display.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,6 +52,10 @@ geom::Size const size{geom::Width{640}, geom::Height{480}};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
+
+geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
+                                                          geom::Size{geom::Width(1600),
+                                                                     geom::Height(1600)}};
 
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
@@ -104,6 +107,24 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
 };
+
+class StubDisplay : public mg::Display
+{
+public:
+    geom::Rectangle view_area() const
+    {
+        return default_view_area;
+    }
+    void clear()
+    {
+        std::this_thread::yield();
+    }
+    bool post_update()
+    {
+        return true;
+    }
+};
+
 }
 
 namespace mir
@@ -313,7 +334,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<mtd::NullDisplay>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -442,7 +463,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<mtd::NullDisplay>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
