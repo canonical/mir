@@ -120,6 +120,36 @@ struct FakeDRMResources
         resources.connectors = connector_ids.data();
     }
 
+    drmModeCrtc* find_crtc(uint32_t id)
+    {
+        for (auto& crtc : crtcs)
+        {
+            if (crtc.crtc_id == id)
+                return &crtc;
+        }
+        return nullptr;
+    }
+
+    drmModeEncoder* find_encoder(uint32_t id)
+    {
+        for (auto& encoder : encoders)
+        {
+            if (encoder.encoder_id == id)
+                return &encoder;
+        }
+        return nullptr;
+    }
+
+    drmModeConnector* find_connector(uint32_t id)
+    {
+        for (auto& connector : connectors)
+        {
+            if (connector.connector_id == id)
+                return &connector;
+        }
+        return nullptr;
+    }
+
     drmModeRes resources;
     std::vector<drmModeCrtc> crtcs;
     std::vector<drmModeEncoder> encoders;
@@ -167,43 +197,13 @@ public:
         .WillByDefault(Return(&resources.resources));
 
         ON_CALL(mock_drm, drmModeGetCrtc(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(this, &GBMDisplayConfigurationTest::find_crtc)));
+        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_crtc)));
 
         ON_CALL(mock_drm, drmModeGetEncoder(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(this, &GBMDisplayConfigurationTest::find_encoder)));
+        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_encoder)));
 
         ON_CALL(mock_drm, drmModeGetConnector(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(this, &GBMDisplayConfigurationTest::find_connector)));
-    }
-
-    drmModeCrtc* find_crtc(uint32_t id)
-    {
-        for (auto& crtc : resources.crtcs)
-        {
-            if (crtc.crtc_id == id)
-                return &crtc;
-        }
-        return nullptr;
-    }
-
-    drmModeEncoder* find_encoder(uint32_t id)
-    {
-        for (auto& encoder : resources.encoders)
-        {
-            if (encoder.encoder_id == id)
-                return &encoder;
-        }
-        return nullptr;
-    }
-
-    drmModeConnector* find_connector(uint32_t id)
-    {
-        for (auto& connector : resources.connectors)
-        {
-            if (connector.connector_id == id)
-                return &connector;
-        }
-        return nullptr;
+        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_connector)));
     }
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
