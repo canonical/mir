@@ -37,7 +37,9 @@ Description: Display server for Ubuntu - protocol implementation
 Package: libmirprotobuf-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends},
+Depends: libmirprotobuf0 (= ${binary:Version}),
+         libprotobuf-dev,
+         ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - protocol definition
  Mir is a display server running on linux systems, with a focus on efficiency, 
@@ -59,8 +61,8 @@ Description: Display server for Ubuntu - client library
 Package: libmirclient-dev
 Section: libdevel
 Architecture: any
-Depends: libmirprotobuf-dev (= ${binary:Version}),
-         libmirclient0 (= ${binary:Version}),
+Depends: libmirclient0 (= ${binary:Version}),
+         libmirprotobuf-dev (= ${source:Version}),
          mir (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
