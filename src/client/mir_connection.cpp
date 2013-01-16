@@ -184,14 +184,12 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
-namespace { void do_nothing() {} }
-
 void MirConnection::select_focus_by_lightdm_id(int lightdm_id)
 {
     mir::protobuf::LightdmId id;
     id.set_value(lightdm_id);
     server.select_focus_by_lightdm_id(0, &id, &ignored,
-        google::protobuf::NewCallback(do_nothing));
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
 
 
