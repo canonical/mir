@@ -19,11 +19,13 @@
 #include "mir_client/mir_client_library_lightdm.h"
 
 #include "mir/chrono/chrono.h"
+#include "mir/sessions/session_store.h"
 #include "mir/thread/all.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <fcntl.h>
 
@@ -112,7 +114,35 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
+class MockSession : public sessions::SessionStore
+{
+public:
+    MockSession(std::shared_ptr<SessionStore> const& impl) :
+        impl(impl)
+    {
+        using namespace testing;
+        using sessions::SessionStore;
+        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::open_session));
+        ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::close_session));
 
+        ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::tag_session_with_lightdm_id));
+        ON_CALL(*this, select_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::select_session_with_lightdm_id));
+
+        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
+    }
+
+    MOCK_METHOD1(open_session, std::shared_ptr<sessions::Session> (std::string const& name));
+    MOCK_METHOD1(close_session, void (std::shared_ptr<sessions::Session> const& session));
+
+    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<sessions::Session> const& session, int id));
+    MOCK_METHOD1(select_session_with_lightdm_id, void (int id));
+
+    MOCK_METHOD0(shutdown, void ());
+
+
+private:
+    std::shared_ptr<sessions::SessionStore> const impl;
+};
 }
 
 TEST_F(BespokeDisplayServerTestFixture, focus_management)
@@ -125,9 +155,23 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
             auto real_session_store =
              DefaultServerConfiguration::make_session_store(surface_factory);
 
-            // TODO wrap the real_session_store and check focus gets set
+            auto mock_session_store =
+                std::make_shared<MockSession>(real_session_store);
 
-            return real_session_store;
+            using namespace testing;
+
+            EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
+            EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
+            EXPECT_CALL(*mock_session_store, shutdown());
+
+            {
+                InSequence sequence;
+
+                EXPECT_CALL(*mock_session_store, tag_session_with_lightdm_id(_, _));
+                EXPECT_CALL(*mock_session_store, select_session_with_lightdm_id(_));
+            }
+
+            return mock_session_store;
         }
     } server_config;
 

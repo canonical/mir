@@ -116,7 +116,6 @@ void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session>
     tags.push_back(Pair(id, session));
 }
 
-#include <iostream>
 void msess::SessionManager::select_session_with_lightdm_id(int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
@@ -127,7 +126,6 @@ void msess::SessionManager::select_session_with_lightdm_id(int id)
 
     if (tags.end() != match)
     {
-        std::cerr << "DEBUG got here!" << std::endl;
         focus_setter->set_focus_to(match->second);
     }
 }
