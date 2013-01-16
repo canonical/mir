@@ -114,10 +114,10 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
-class MockSession : public sessions::SessionStore
+class MockSessionStore : public sessions::SessionStore
 {
 public:
-    MockSession(std::shared_ptr<SessionStore> const& impl) :
+    MockSessionStore(std::shared_ptr<SessionStore> const& impl) :
         impl(impl)
     {
         using namespace testing;
@@ -139,7 +139,6 @@ public:
 
     MOCK_METHOD0(shutdown, void ());
 
-
 private:
     std::shared_ptr<sessions::SessionStore> const impl;
 };
@@ -152,11 +151,8 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
         std::shared_ptr<sessions::SessionStore>
         make_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory)
         {
-            auto real_session_store =
-             DefaultServerConfiguration::make_session_store(surface_factory);
-
-            auto mock_session_store =
-                std::make_shared<MockSession>(real_session_store);
+            auto const& mock_session_store = std::make_shared<MockSessionStore>(
+                DefaultServerConfiguration::make_session_store(surface_factory));
 
             {
                 using namespace testing;
@@ -227,8 +223,6 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
             wait_flag(focus_ready);
             mir_select_focus_by_lightdm_id(connection, lightdm_id);
-
-            // TODO check focus gets set
 
             mir_connection_release(connection);
             set_flag(manager_done);
