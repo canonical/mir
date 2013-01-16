@@ -92,14 +92,25 @@ drmModeConnector create_connector(uint32_t connector_id, drmModeConnection conne
     return connector;
 }
 
+mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode)
+{
+    geom::Size const size{geom::Width{mode.hdisplay}, geom::Height{mode.vdisplay}};
+    double vrefresh_hz{0.0};
+
+    /* Calculate vertical refresh rate from DRM mode information */
+    if (mode.htotal != 0.0 && mode.vtotal != 0.0)
+    {
+        vrefresh_hz = mode.clock * 1000.0 / (mode.htotal * mode.vtotal);
+        vrefresh_hz = round(vrefresh_hz * 10.0) / 10.0;
+    }
+
+    return mg::DisplayConfigurationMode{size, vrefresh_hz};
+}
+
 struct FakeDRMResources
 {
     FakeDRMResources()
     {
-        modes1.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
-        modes1.push_back(create_mode(1920, 1080, 148500, 2200, 1125));
-        modes1.push_back(create_mode(1680, 1050, 119000, 1840, 1080));
-        modes1.push_back(create_mode(832, 624, 57284, 1152, 667));
     }
 
     void prepare()
@@ -158,9 +169,6 @@ struct FakeDRMResources
     std::vector<uint32_t> crtc_ids;
     std::vector<uint32_t> encoder_ids;
     std::vector<uint32_t> connector_ids;
-
-    std::vector<drmModeModeInfo> modes1;
-    std::vector<drmModeModeInfo> modes_empty;
 };
 
 class GBMDisplayConfigurationTest : public ::testing::Test
@@ -184,8 +192,22 @@ public:
         .WillByDefault(Return(egl_exts));
         ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
         .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
+        setup_sample_modes();
     }
 
+    void setup_sample_modes()
+    {
+        /* Add DRM modes */
+        modes0.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
+        modes0.push_back(create_mode(1920, 1080, 148500, 2200, 1125));
+        modes0.push_back(create_mode(1680, 1050, 119000, 1840, 1080));
+        modes0.push_back(create_mode(832, 624, 57284, 1152, 667));
+
+        /* Add the DisplayConfiguration modes corresponding to the DRM modes */
+        for (auto const& mode : modes0)
+            conf_modes0.push_back(conf_mode_from_drm_mode(mode));
+    }
 
     void setup_drm_call_defaults()
     {
@@ -213,6 +235,10 @@ public:
     std::shared_ptr<mg::DisplayListener> const null_listener;
 
     FakeDRMResources resources;
+
+    std::vector<drmModeModeInfo> modes0;
+    std::vector<mg::DisplayConfigurationMode> conf_modes0;
+    std::vector<drmModeModeInfo> modes_empty;
 };
 
 }
@@ -220,43 +246,6 @@ public:
 TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
 {
     using namespace ::testing;
-
-    /* Expected results */
-    std::vector<mg::DisplayConfigurationMode> const expected_conf_modes
-    {
-        { geom::Size{geom::Width{1920}, geom::Height{1080}}, 59.9 },
-        { geom::Size{geom::Width{1920}, geom::Height{1080}}, 60.0 },
-        { geom::Size{geom::Width{1680}, geom::Height{1050}}, 59.9 },
-        { geom::Size{geom::Width{832}, geom::Height{624}}, 74.6 }
-    };
-
-    std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
-    {
-        {
-            mg::DisplayConfigurationOutputId{0},
-            mg::DisplayConfigurationCardId{0},
-            expected_conf_modes,
-            geom::Size{geom::Width{480}, geom::Height{270}},
-            true,
-            1
-        },
-        {
-            mg::DisplayConfigurationOutputId{1},
-            mg::DisplayConfigurationCardId{0},
-            std::vector<mg::DisplayConfigurationMode>(),
-            geom::Size(),
-            false,
-            std::numeric_limits<size_t>::max()
-        },
-        {
-            mg::DisplayConfigurationOutputId{2},
-            mg::DisplayConfigurationCardId{0},
-            std::vector<mg::DisplayConfigurationMode>(),
-            geom::Size(),
-            false,
-            std::numeric_limits<size_t>::max()
-        }
-    };
 
     /* Set up DRM resources */
     uint32_t const invalid_id{0};
@@ -266,23 +255,55 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     uint32_t const connector0_id{30};
     uint32_t const connector1_id{31};
     uint32_t const connector2_id{32};
+    geom::Size const connector0_physical_size_mm{geom::Width{480}, geom::Height{270}};
+    geom::Size const connector1_physical_size_mm{};
+    geom::Size const connector2_physical_size_mm{};
 
-    resources.crtcs.push_back(create_crtc(crtc0_id, resources.modes1[1]));
+    resources.crtcs.push_back(create_crtc(crtc0_id, modes0[1]));
 
     resources.encoders.push_back(create_encoder(encoder0_id, crtc0_id));
     resources.encoders.push_back(create_encoder(encoder1_id, invalid_id));
 
     resources.connectors.push_back(create_connector(connector0_id, DRM_MODE_CONNECTED,
-                                                    encoder0_id, resources.modes1,
-                                                    expected_outputs[0].physical_size_mm));
+                                                    encoder0_id, modes0,
+                                                    connector0_physical_size_mm));
     resources.connectors.push_back(create_connector(connector1_id, DRM_MODE_DISCONNECTED,
-                                                    invalid_id, resources.modes_empty,
-                                                    expected_outputs[1].physical_size_mm));
+                                                    invalid_id, modes_empty,
+                                                    connector1_physical_size_mm));
     resources.connectors.push_back(create_connector(connector2_id, DRM_MODE_DISCONNECTED,
-                                                    encoder1_id, resources.modes_empty,
-                                                    expected_outputs[2].physical_size_mm));
+                                                    encoder1_id, modes_empty,
+                                                    connector2_physical_size_mm));
 
     setup_drm_call_defaults();
+
+    /* Expected results */
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
+    {
+        {
+            mg::DisplayConfigurationOutputId{0},
+            mg::DisplayConfigurationCardId{0},
+            conf_modes0,
+            connector0_physical_size_mm,
+            true,
+            1
+        },
+        {
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{0},
+            std::vector<mg::DisplayConfigurationMode>(),
+            connector1_physical_size_mm,
+            false,
+            std::numeric_limits<size_t>::max()
+        },
+        {
+            mg::DisplayConfigurationOutputId{2},
+            mg::DisplayConfigurationCardId{0},
+            std::vector<mg::DisplayConfigurationMode>(),
+            connector2_physical_size_mm,
+            false,
+            std::numeric_limits<size_t>::max()
+        }
+    };
 
     /* Test body */
     auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
