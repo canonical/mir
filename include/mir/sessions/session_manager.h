@@ -19,8 +19,10 @@
 #ifndef MIR_SESSIONS_APPLICATION_MANAGER_H_
 #define MIR_SESSIONS_APPLICATION_MANAGER_H_
 
-#include <memory>
 #include "mir/sessions/session_store.h"
+#include "mir/thread/all.h"
+#include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -46,6 +48,9 @@ public:
     virtual void close_session(std::shared_ptr<Session> const& session);
     virtual void shutdown();
 
+    virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
+    virtual void focus_session_with_lightdm_id(int id);
+
     void focus_next();
 
 protected:
@@ -53,12 +58,15 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<sessions::SurfaceFactory> surface_factory;
-    std::shared_ptr<SessionContainer> app_container;
-    std::shared_ptr<FocusSequence> focus_sequence;
-    std::shared_ptr<FocusSetter> focus_setter;
+    std::shared_ptr<sessions::SurfaceFactory> const surface_factory;
+    std::shared_ptr<SessionContainer> const app_container;
+    std::shared_ptr<FocusSequence> const focus_sequence;
+    std::shared_ptr<FocusSetter> const focus_setter;
 
+    std::mutex mutex;
     std::weak_ptr<Session> focus_application;
+    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
+    Tags tags;
 };
 
 }

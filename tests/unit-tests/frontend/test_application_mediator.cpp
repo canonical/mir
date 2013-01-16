@@ -109,6 +109,8 @@ public:
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
 
     void shutdown() {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
+    void focus_session_with_lightdm_id(int) {}
 
     std::shared_ptr<msess::SurfaceFactory> factory;
 };
