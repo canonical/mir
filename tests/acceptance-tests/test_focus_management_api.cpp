@@ -44,8 +44,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon() :
         connection(0),
-        surface(0),
-        buffers(0)
+        surface(0)
     {
     }
 
@@ -85,7 +84,6 @@ struct ClientConfigCommon : TestingClientConfiguration
 
     virtual void next_buffer(MirSurface*)
     {
-        buffers.fetch_add(1);
     }
 
     virtual void surface_released(MirSurface* /*released_surface*/)
@@ -95,14 +93,13 @@ struct ClientConfigCommon : TestingClientConfiguration
 
     MirConnection* connection;
     MirSurface* surface;
-    std::atomic<int> buffers;
 
     void set_flag(const char* const flag_file)
     {
         close(open(flag_file, O_CREAT, S_IWUSR | S_IRUSR));
     }
 
-    void wait_flag(const char* const flag_file)
+    void wait_for(const char* const flag_file)
     {
         int fd = -1;
         while (-1 == (fd = open(flag_file, O_RDONLY, S_IWUSR | S_IRUSR)))
@@ -206,7 +203,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
             set_flag(focus_ready);
 
-            wait_flag(manager_done);
+            wait_for(manager_done);
             mir_connection_release(connection);
         }
     } focus_config;
@@ -221,7 +218,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                 connection_callback,
                 this));
 
-            wait_flag(focus_ready);
+            wait_for(focus_ready);
             mir_select_focus_by_lightdm_id(connection, lightdm_id);
 
             mir_connection_release(connection);
