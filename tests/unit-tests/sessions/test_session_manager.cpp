@@ -38,7 +38,6 @@ namespace mc = mir::compositor;
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
-namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace

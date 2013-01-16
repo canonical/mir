@@ -29,7 +29,6 @@
 namespace mc = mir::compositor;
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
-namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace

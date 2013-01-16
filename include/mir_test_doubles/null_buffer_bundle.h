@@ -21,6 +21,7 @@
 
 #include <mir/compositor/buffer_bundle.h>
 #include <mir_test_doubles/mock_buffer.h>
+
 namespace mir
 {
 namespace test
@@ -69,6 +70,6 @@ public:
 
 }
 }
-}
+} // namespace mir
 
 #endif /* MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_ */
