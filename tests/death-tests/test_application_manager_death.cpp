@@ -22,7 +22,7 @@
 
 namespace msess = mir::sessions;
 
-TEST(ApplicationManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_assertion)
+TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_assertion)
 {
 // Trying to avoid "[WARNING] /usr/src/gtest/src/gtest-death-test.cc:789::
 // Death tests use fork(), which is unsafe particularly in a threaded context.
