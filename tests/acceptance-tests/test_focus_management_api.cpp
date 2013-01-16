@@ -158,14 +158,16 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
             auto mock_session_store =
                 std::make_shared<MockSession>(real_session_store);
 
-            using namespace testing;
-
-            EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
-            EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
-            EXPECT_CALL(*mock_session_store, shutdown());
-
             {
-                InSequence sequence;
+                using namespace testing;
+                InSequence setup;
+                EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
+                EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
+                EXPECT_CALL(*mock_session_store, shutdown());
+            }
+            {
+                using namespace testing;
+                InSequence test;
 
                 EXPECT_CALL(*mock_session_store, tag_session_with_lightdm_id(_, _));
                 EXPECT_CALL(*mock_session_store, select_session_with_lightdm_id(_));
