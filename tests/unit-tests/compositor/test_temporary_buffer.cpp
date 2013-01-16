@@ -18,6 +18,8 @@
 
 #include "mir/compositor/temporary_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_swapper.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -31,12 +33,16 @@ public:
     void SetUp()
     {
         using testing::NiceMock;
+        auto swapper_buffer = std::make_shared<mtd::StubBuffer>();
+        mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(swapper_buffer);
+
         buffer_size = geom::Size{geom::Width{1024}, geom::Height{768}};
         buffer_stride = geom::Stride{1024};
         buffer_pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
         buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(buffer_size, buffer_stride, buffer_pixel_format);
     }
     std::shared_ptr<mtd::MockBuffer> buffer;
+    std::shared_ptr<mtd::MockSwapper> mock_swapper;
     geom::Size buffer_size;
     geom::Stride buffer_stride;
     geom::PixelFormat buffer_pixel_format;
@@ -45,7 +51,7 @@ public:
 TEST_F(TemporaryBufferTest, buffer_has_ownership)
 {
     {
-        mc::TemporaryBuffer proxy_buffer(buffer);
+        mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
         EXPECT_EQ(buffer.use_count(), 2);
     }
     EXPECT_EQ(buffer.use_count(), 1);
@@ -53,7 +59,7 @@ TEST_F(TemporaryBufferTest, buffer_has_ownership)
 
 TEST_F(TemporaryBufferTest, test_size)
 {
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
     EXPECT_CALL(*buffer, size())
         .Times(1);
 
@@ -64,7 +70,7 @@ TEST_F(TemporaryBufferTest, test_size)
 
 TEST_F(TemporaryBufferTest, test_stride)
 {
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
     EXPECT_CALL(*buffer, stride())
         .Times(1);
 
@@ -75,7 +81,7 @@ TEST_F(TemporaryBufferTest, test_stride)
 
 TEST_F(TemporaryBufferTest, test_pixel_format)
 {
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
     EXPECT_CALL(*buffer, pixel_format())
         .Times(1);
 
@@ -86,7 +92,7 @@ TEST_F(TemporaryBufferTest, test_pixel_format)
 
 TEST_F(TemporaryBufferTest, bind_to_texture)
 {
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
     EXPECT_CALL(*buffer, bind_to_texture())
         .Times(1);
 
@@ -95,7 +101,7 @@ TEST_F(TemporaryBufferTest, bind_to_texture)
 
 TEST_F(TemporaryBufferTest, get_ipc_package)
 {
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
     EXPECT_CALL(*buffer, get_ipc_package())
         .Times(1);
 
@@ -106,7 +112,7 @@ TEST_F(TemporaryBufferTest, test_id)
 {
     EXPECT_CALL(*buffer, id())
         .Times(1);
-    mc::TemporaryBuffer proxy_buffer(buffer);
+    mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
 
     proxy_buffer.id();
 } 
