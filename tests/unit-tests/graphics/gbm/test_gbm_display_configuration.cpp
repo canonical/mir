@@ -259,19 +259,27 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     };
 
     /* Set up DRM resources */
-    resources.crtcs.push_back(create_crtc(10, resources.modes1[1]));
+    uint32_t const invalid_id{0};
+    uint32_t const crtc0_id{10};
+    uint32_t const encoder0_id{20};
+    uint32_t const encoder1_id{21};
+    uint32_t const connector0_id{30};
+    uint32_t const connector1_id{31};
+    uint32_t const connector2_id{32};
 
-    resources.encoders.push_back(create_encoder(20, 10));
-    resources.encoders.push_back(create_encoder(21, 0));
+    resources.crtcs.push_back(create_crtc(crtc0_id, resources.modes1[1]));
 
-    resources.connectors.push_back(create_connector(30, DRM_MODE_CONNECTED, 20,
-                                                    resources.modes1,
+    resources.encoders.push_back(create_encoder(encoder0_id, crtc0_id));
+    resources.encoders.push_back(create_encoder(encoder1_id, invalid_id));
+
+    resources.connectors.push_back(create_connector(connector0_id, DRM_MODE_CONNECTED,
+                                                    encoder0_id, resources.modes1,
                                                     expected_outputs[0].physical_size_mm));
-    resources.connectors.push_back(create_connector(31, DRM_MODE_DISCONNECTED, 0,
-                                                    resources.modes_empty,
+    resources.connectors.push_back(create_connector(connector1_id, DRM_MODE_DISCONNECTED,
+                                                    invalid_id, resources.modes_empty,
                                                     expected_outputs[1].physical_size_mm));
-    resources.connectors.push_back(create_connector(32, DRM_MODE_DISCONNECTED, 21,
-                                                    resources.modes_empty,
+    resources.connectors.push_back(create_connector(connector2_id, DRM_MODE_DISCONNECTED,
+                                                    encoder1_id, resources.modes_empty,
                                                     expected_outputs[2].physical_size_mm));
 
     setup_drm_call_defaults();
