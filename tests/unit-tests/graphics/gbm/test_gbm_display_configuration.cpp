@@ -109,10 +109,6 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
 
 struct FakeDRMResources
 {
-    FakeDRMResources()
-    {
-    }
-
     void prepare()
     {
         resources.count_crtcs = crtcs.size();
