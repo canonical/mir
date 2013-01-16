@@ -1,17 +1,33 @@
 #!/usr/bin/make -f
 
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
 %:
 	dh $@ --parallel
 
 #overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
+ifeq ($(DEB_HOST_ARCH),armhf)
+	@echo "not testing"
+else
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
+endif
 
 # We need to rely on the select-based reactor to fix the ppa builds.
 # TODO: Get rid of this workaround by either switching to boost 1.51 or
 # updating the ppa builders kernel version.
 override_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH),armhf)
+	dh_auto_configure -- \
+      -DMIR_DISABLE_EPOLL_REACTOR=YES \
+      -DBoost_COMPILER=-gcc \
+      -DMIR_ENABLE_DEATH_TESTS=NO \
+      -DMIR_INPUT_ENABLE_EVEMU=NO \
+      -DMIR_PLATFORM=android \
+      -DMIR_CUTDOWN_FOR_EMULATOR=true
+else
 	dh_auto_configure -- -DMIR_DISABLE_EPOLL_REACTOR=YES
+endif
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V

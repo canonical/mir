@@ -21,6 +21,7 @@
 
 #include "../mir_client_surface.h"
 #include <system/window.h>
+#include <cstdarg>
 
 namespace mir
 {

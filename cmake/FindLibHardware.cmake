@@ -5,19 +5,18 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(LIBHARDWARE_INCLUDE_DIR
    NAMES         hardware/hardware.h
                  hardware/gralloc.h
                  cutils/native_handle.h
                  system/graphics.h
                  system/window.h
-   HINTS         ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot
    )
 
 find_library(LIBHARDWARE_LIBRARY
-   NAMES         libhardware.so 
-   HINTS         ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot/usr/lib
-                 ${ANDROID_STANDALONE_TOOLCHAIN}/sysroot/lib
+   NAMES         libhardware.so.1 
+                 libhardware.so 
    )
 
 set(LIBHARDWARE_LIBRARIES ${LIBHARDWARE_LIBRARY})

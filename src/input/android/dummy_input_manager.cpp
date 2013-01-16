@@ -22,9 +22,18 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
+namespace
+{
+class DummyInputManager : public mi::InputManager
+{
+    void stop() {};
+    void start() {};
+}; 
+}
+
 std::shared_ptr<mi::InputManager> mi::create_input_manager(
     const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
     std::shared_ptr<mg::ViewableArea> const& )
 {
-    return std::shared_ptr<mia::InputManager>();
+    return std::make_shared<DummyInputManager>();
 }
