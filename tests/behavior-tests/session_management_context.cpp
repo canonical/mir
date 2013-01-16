@@ -26,7 +26,7 @@
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/surface_factory.h"
-#include "mir/graphics/viewable_area.h"
+#include "mir/graphics/display.h"
 #include "mir/server_configuration.h"
 
 namespace msess = mir::sessions;
@@ -104,9 +104,10 @@ struct DummySurfaceFactory : public msess::SurfaceFactory
     }
 };
 
-struct DummyViewableArea : public mg::ViewableArea
+class SizedDisplay : public mg::Display
 {
-    explicit DummyViewableArea(geom::Rectangle const& view_area = default_view_area)
+public:
+    explicit SizedDisplay(geom::Rectangle const& view_area = default_view_area)
         : area(view_area)
     {
     }
@@ -114,6 +115,15 @@ struct DummyViewableArea : public mg::ViewableArea
     geom::Rectangle view_area() const
     {
         return area;
+    }
+
+    void clear()
+    {
+    }
+
+    bool post_update()
+    {
+        return true;
     }
     
     void set_view_area(geom::Rectangle const& new_view_area)
@@ -132,7 +142,7 @@ mtc::SessionManagementContext::SessionManagementContext()
 {
     auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
     auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
-    view_area = std::make_shared<DummyViewableArea>();
+    view_area = std::make_shared<mtc::SizedDisplay>();
     
     session_manager = server_configuration->make_session_manager(underlying_factory, view_area);
 }
