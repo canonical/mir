@@ -79,7 +79,7 @@ public:
 
     void shutdown() {}
     void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
-    void select_session_with_lightdm_id(int) {}
+    void focus_session_with_lightdm_id(int) {}
 
     std::shared_ptr<msess::SurfaceFactory> factory;
 };

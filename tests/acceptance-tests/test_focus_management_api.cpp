@@ -123,7 +123,7 @@ public:
         ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::close_session));
 
         ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::tag_session_with_lightdm_id));
-        ON_CALL(*this, select_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::select_session_with_lightdm_id));
+        ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::focus_session_with_lightdm_id));
 
         ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
     }
@@ -132,7 +132,7 @@ public:
     MOCK_METHOD1(close_session, void (std::shared_ptr<sessions::Session> const& session));
 
     MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<sessions::Session> const& session, int id));
-    MOCK_METHOD1(select_session_with_lightdm_id, void (int id));
+    MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD0(shutdown, void ());
 
@@ -163,7 +163,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                 InSequence test;
 
                 EXPECT_CALL(*mock_session_store, tag_session_with_lightdm_id(_, _));
-                EXPECT_CALL(*mock_session_store, select_session_with_lightdm_id(_));
+                EXPECT_CALL(*mock_session_store, focus_session_with_lightdm_id(_));
             }
 
             return mock_session_store;

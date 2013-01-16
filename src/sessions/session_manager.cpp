@@ -116,7 +116,7 @@ void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session>
     tags.push_back(Pair(id, session));
 }
 
-void msess::SessionManager::select_session_with_lightdm_id(int id)
+void msess::SessionManager::focus_session_with_lightdm_id(int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;

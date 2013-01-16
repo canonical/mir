@@ -192,7 +192,7 @@ void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
 
-    session_store->select_session_with_lightdm_id(request->value());
+    session_store->focus_session_with_lightdm_id(request->value());
 
     done->Run();
 }

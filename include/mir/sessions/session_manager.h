@@ -49,7 +49,7 @@ public:
     virtual void shutdown();
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
-    virtual void select_session_with_lightdm_id(int id);
+    virtual void focus_session_with_lightdm_id(int id);
 
     void focus_next();
 
