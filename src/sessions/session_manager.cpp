@@ -64,13 +64,18 @@ std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string 
     return new_session;
 }
 
+inline void msess::SessionManager::set_focus_to(std::shared_ptr<Session> const& next_focus)
+{
+    focus_application = next_focus;
+    focus_setter->set_focus_to(next_focus);
+}
+
 void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const& session)
 {
     std::unique_lock<std::mutex> lock(mutex);
     if (session == focus_application.lock())
     {
-        focus_application = focus_sequence->predecessor_of(session);
-        focus_setter->set_focus_to(focus_application.lock());
+        set_focus_to(focus_sequence->predecessor_of(session).lock());
     }
     app_container->remove_session(session);
 
@@ -91,8 +96,7 @@ void msess::SessionManager::focus_next()
         return;
     }
     auto next_focus = focus_sequence->successor_of(focused).lock();
-    focus_application = next_focus;
-    focus_setter->set_focus_to(next_focus);
+    set_focus_to(next_focus);
 }
 
 void msess::SessionManager::shutdown()
@@ -126,6 +130,6 @@ void msess::SessionManager::focus_session_with_lightdm_id(int id)
 
     if (tags.end() != match)
     {
-        focus_setter->set_focus_to(match->second);
+        set_focus_to(match->second);
     }
 }
