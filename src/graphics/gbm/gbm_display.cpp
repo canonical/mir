@@ -17,9 +17,10 @@
  */
 
 #include "gbm_display.h"
+#include "gbm_platform.h"
+#include "kms_display_configuration.h"
 
 #include "mir/exception.h"
-#include "gbm_platform.h"
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>
@@ -318,4 +319,9 @@ bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
     }
 
     return true;
+}
+
+std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
+{
+    return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
 }
