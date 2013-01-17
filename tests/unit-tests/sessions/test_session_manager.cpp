@@ -158,10 +158,10 @@ TEST(SessionManager, apps_selected_by_id_receive_focus)
     NiceMock<MockFocusSetter> mechanism;
 
     msess::SessionManager session_manager(
-        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
-        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+        mt::fake_shared(surface_factory),
+        mt::fake_shared(container),
+        mt::fake_shared(sequence),
+        mt::fake_shared(mechanism));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
@@ -181,10 +181,10 @@ TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
     NiceMock<MockFocusSetter> mechanism;
 
     msess::SessionManager session_manager(
-        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
-        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+        mt::fake_shared(surface_factory),
+        mt::fake_shared(container),
+        mt::fake_shared(sequence),
+        mt::fake_shared(mechanism));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
