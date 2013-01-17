@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,19 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_EMPTY_DELETER_H_
-#define MIR_TEST_EMPTY_DELETER_H_
+#ifndef MIR_TEST_FAKE_SHARED_H_
+#define MIR_TEST_FAKE_SHARED_H_
+
+#include "mir_test/empty_deleter.h"
+
+#include <memory>
 
 namespace mir
 {
-struct EmptyDeleter
+namespace test
 {
-    void operator()(void* )
-    {
-    }
-};
+template <typename Type>
+std::shared_ptr<Type> fake_shared(Type& t) { return {&t, EmptyDeleter()}; }
 }
-#endif /* MIR_TEST_EMPTY_DELETER_H_ */
+}
+
+#endif /* MIR_TEST_FAKE_SHARED_H_ */
