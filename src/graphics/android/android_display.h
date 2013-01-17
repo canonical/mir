@@ -45,6 +45,9 @@ public:
     geometry::Rectangle view_area() const;
     void clear();
     bool post_update();
+
+    std::shared_ptr<DisplayConfiguration> configuration();
+
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
     EGLDisplay egl_display;

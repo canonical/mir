@@ -24,12 +24,13 @@
 #include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/sessions/single_visibility_focus_mechanism.h"
 #include "mir/sessions/session_container.h"
-#include "mir/sessions/session_manager.h"
+#include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/server_configuration.h"
 
 namespace msess = mir::sessions;
+
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -134,14 +135,14 @@ mtc::SessionManagementContext::SessionManagementContext()
     auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
     view_area = std::make_shared<DummyViewableArea>();
     
-    session_manager = server_configuration->make_session_manager(underlying_factory, view_area);
+    session_store = server_configuration->make_session_store(underlying_factory, view_area);
 }
 
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
     auto const params = msess::a_surface().of_name(window_name);
-    auto session = session_manager->open_session(window_name);
+    auto session = session_store->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
@@ -153,7 +154,7 @@ bool mtc::SessionManagementContext::open_window_with_size(std::string const& win
                                                           geom::Size const& size)
 {
     auto const params = msess::a_surface().of_name(window_name).of_size(size);
-    auto session = session_manager->open_session(window_name);
+    auto session = session_store->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);

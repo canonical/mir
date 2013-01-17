@@ -54,32 +54,49 @@ std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string 
     auto new_session = std::make_shared<msess::Session>(surface_factory, name);
 
     app_container->insert_session(new_session);
-    focus_application = new_session;
+
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        focus_application = new_session;
+    }
     focus_setter->set_focus_to(new_session);
  
     return new_session;
 }
 
+inline void msess::SessionManager::set_focus_to(std::shared_ptr<Session> const& next_focus)
+{
+    focus_application = next_focus;
+    focus_setter->set_focus_to(next_focus);
+}
+
 void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const& session)
 {
+    std::unique_lock<std::mutex> lock(mutex);
     if (session == focus_application.lock())
     {
-        focus_application = focus_sequence->predecessor_of(session);
-        focus_setter->set_focus_to(focus_application.lock());
+        set_focus_to(focus_sequence->predecessor_of(session).lock());
     }
     app_container->remove_session(session);
+
+    typedef Tags::value_type Pair;
+
+    auto remove = std::remove_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.second == session;});
+
+    tags.erase(remove, tags.end());
 }
 
 void msess::SessionManager::focus_next()
 {
+    std::unique_lock<std::mutex> lock(mutex);
     auto focused = focus_application.lock();
     if (focused == NULL)
     {
         return;
     }
     auto next_focus = focus_sequence->successor_of(focused).lock();
-    focus_application = next_focus;
-    focus_setter->set_focus_to(next_focus);
+    set_focus_to(next_focus);
 }
 
 void msess::SessionManager::shutdown()
@@ -88,4 +105,31 @@ void msess::SessionManager::shutdown()
     {
         session->shutdown();
     });
+}
+
+void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    typedef Tags::value_type Pair;
+
+    auto remove = std::remove_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.first == id || v.second == session;});
+
+    tags.erase(remove, tags.end());
+
+    tags.push_back(Pair(id, session));
+}
+
+void msess::SessionManager::focus_session_with_lightdm_id(int id)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    typedef Tags::value_type Pair;
+
+    auto match = std::find_if(tags.begin(), tags.end(),
+        [&](Pair const& v) { return v.first == id; });
+
+    if (tags.end() != match)
+    {
+        set_focus_to(match->second);
+    }
 }

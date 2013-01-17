@@ -59,12 +59,12 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<msess::SessionManager> const& session_manager,
+        std::shared_ptr<msess::SessionStore> const& session_store,
         std::shared_ptr<mf::ApplicationListener> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
-        session_manager(session_manager),
+        session_store(session_store),
         listener(listener),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    std::shared_ptr<msess::SessionManager> session_manager;
+    std::shared_ptr<msess::SessionStore> session_store;
     std::shared_ptr<mf::ApplicationListener> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -84,7 +84,7 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
         return std::make_shared<mf::ApplicationMediator>(
-            session_manager,
+            session_store,
             graphics_platform,
             graphics_display,
             buffer_allocator,
@@ -159,8 +159,8 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
     return std::make_shared<mg::GLRenderer>(display->view_area().size);
 }
 
-std::shared_ptr<msess::SessionManager>
-mir::DefaultServerConfiguration::make_session_manager(std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
+std::shared_ptr<msess::SessionStore>
+mir::DefaultServerConfiguration::make_session_store(std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
                                                       std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
     auto session_container = std::make_shared<msess::SessionContainer>();
@@ -183,12 +183,12 @@ mir::DefaultServerConfiguration::make_input_manager(
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::make_ipc_factory(
-    std::shared_ptr<msess::SessionManager> const& session_manager,
+    std::shared_ptr<msess::SessionStore> const& session_store,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return std::make_shared<DefaultIpcFactory>(
-        session_manager,
+        session_store,
         make_application_listener(),
         make_graphics_platform(),
         display, allocator);
