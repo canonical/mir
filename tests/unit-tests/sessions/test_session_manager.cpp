@@ -149,49 +149,38 @@ TEST(SessionManager, apps_selected_by_id_receive_focus)
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
+    NiceMock<MockSessionContainer> container;
     MockFocusSequence sequence;
-    MockFocusSetter mechanism;
+    NiceMock<MockFocusSetter> mechanism;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
-
-    EXPECT_CALL(container, insert_session(_)).Times(AnyNumber());
-    EXPECT_CALL(mechanism, set_focus_to(_)).Times(AnyNumber());
+    msess::SessionManager session_manager(
+        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
+        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
 
-    Mock::VerifyAndClearExpectations(&container);
-    Mock::VerifyAndClearExpectations(&mechanism);
-
     session_manager.tag_session_with_lightdm_id(session1, 1);
 
-    std::shared_ptr<msess::Session> new_session;
-    EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
-
+    EXPECT_CALL(mechanism, set_focus_to(session1));
     session_manager.focus_session_with_lightdm_id(1);
-
-    EXPECT_EQ(session1, new_session);
 }
 
 TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
+    NiceMock<MockSessionContainer> container;
     MockFocusSequence sequence;
-    MockFocusSetter mechanism;
+    NiceMock<MockFocusSetter> mechanism;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
-
-    EXPECT_CALL(container, insert_session(_)).Times(AnyNumber());
-    EXPECT_CALL(mechanism, set_focus_to(_)).Times(AnyNumber());
+    msess::SessionManager session_manager(
+        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
+        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
@@ -199,16 +188,8 @@ TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
     session_manager.tag_session_with_lightdm_id(session1, 1);
     session_manager.focus_session_with_lightdm_id(1);
 
-    Mock::VerifyAndClearExpectations(&container);
-    Mock::VerifyAndClearExpectations(&mechanism);
-
-    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return(session2));
-    EXPECT_CALL(container, remove_session(session1)).Times(AnyNumber());
-
-    std::shared_ptr<msess::Session> new_session;
-    EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
+    EXPECT_CALL(sequence, predecessor_of(session1)).WillOnce(Return(session2));
+    EXPECT_CALL(mechanism, set_focus_to(session2));
 
     session_manager.close_session(session1);
-
-    EXPECT_EQ(session2, new_session);
 }
