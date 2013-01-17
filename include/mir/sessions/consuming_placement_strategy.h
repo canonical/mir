@@ -42,8 +42,8 @@ public:
                SurfaceCreationParameters &placed_parameters);
 
 protected:
-    ConsumingPlacementStrategy(const ConsumingPlacementStrategy&) = delete;
-    ConsumingPlacementStrategy& operator=(const ConsumingPlacementStrategy&) = delete;
+    ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;
+    ConsumingPlacementStrategy& operator=(ConsumingPlacementStrategy const&) = delete;
 
 private:
     std::shared_ptr<graphics::ViewableArea> const display_area;    

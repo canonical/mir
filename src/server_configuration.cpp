@@ -160,8 +160,9 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
 }
 
 std::shared_ptr<msess::SessionStore>
-mir::DefaultServerConfiguration::make_session_store(std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
-                                                      std::shared_ptr<mg::ViewableArea> const& viewable_area)
+mir::DefaultServerConfiguration::make_session_store(
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
     auto session_container = std::make_shared<msess::SessionContainer>();
     auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);

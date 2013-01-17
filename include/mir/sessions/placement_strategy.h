@@ -36,8 +36,8 @@ public:
 
 protected:
     PlacementStrategy() = default;
-    PlacementStrategy(const PlacementStrategy&) = delete;
-    PlacementStrategy& operator=(const PlacementStrategy&) = delete;
+    PlacementStrategy(PlacementStrategy const&) = delete;
+    PlacementStrategy& operator=(PlacementStrategy const&) = delete;
 };
 
 }
