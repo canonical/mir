@@ -67,6 +67,8 @@ private:
     std::weak_ptr<Session> focus_application;
     typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
     Tags tags;
+
+    void set_focus_to(std::shared_ptr<Session> const& next_focus);
 };
 
 }
