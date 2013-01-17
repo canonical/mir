@@ -144,3 +144,35 @@ TEST(SessionManager, new_applications_receive_focus)
     auto session = session_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
+
+TEST(SessionManager, apps_selected_by_id_receive_focus)
+{
+    using namespace ::testing;
+    mtd::MockSurfaceFactory surface_factory;
+    MockSessionContainer container;
+    MockFocusSequence sequence;
+    MockFocusSetter mechanism;
+
+    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+                                       std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+
+    EXPECT_CALL(container, insert_session(_)).Times(AnyNumber());
+    EXPECT_CALL(mechanism, set_focus_to(_)).Times(AnyNumber());
+
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("IntelliJ IDEA");
+
+    Mock::VerifyAndClearExpectations(&container);
+    Mock::VerifyAndClearExpectations(&mechanism);
+
+    session_manager.tag_session_with_lightdm_id(session1, 1);
+
+    std::shared_ptr<msess::Session> new_session;
+    EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
+
+    session_manager.focus_session_with_lightdm_id(1);
+
+    EXPECT_EQ(session1, new_session);
+}
