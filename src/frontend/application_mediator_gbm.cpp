@@ -44,7 +44,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
         authenticator->drm_auth_magic(magic);
         response->set_status_code(0);
     }
-    catch (mir::Exception e)
+    catch (std::exception const& e)
     {
         auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
 
