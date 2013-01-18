@@ -22,7 +22,6 @@
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test/empty_deleter.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>

@@ -24,7 +24,7 @@
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>
@@ -34,6 +34,7 @@
 namespace mc = mir::compositor;
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -61,9 +62,9 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     MockApplicationSession m2(factory, "Visual Studio 8");
     MockApplicationSession m3(factory, "Visual Studio 9");
 
-    std::shared_ptr<msess::Session> app1(&m1, mir::EmptyDeleter());
-    std::shared_ptr<msess::Session> app2(&m2, mir::EmptyDeleter());
-    std::shared_ptr<msess::Session> app3(&m3, mir::EmptyDeleter());
+    auto app1 = mt::fake_shared(m1);
+    auto app2 = mt::fake_shared(m2);
+    auto app3 = mt::fake_shared(m3);
 
     msess::SingleVisibilityFocusMechanism focus_mechanism(model);
 

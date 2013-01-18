@@ -20,13 +20,9 @@
 #ifndef MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_
 #define MIR_TEST_DOUBLES_STUB_IPC_FACTORY_H_
 
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
-
-#include <gmock/gmock.h>
-
-namespace msess = mir::frontend;
 
 namespace mir
 {
@@ -35,28 +31,28 @@ namespace test
 namespace doubles
 {
 
-class StubIpcFactory : public msess::ProtobufIpcFactory
+class StubIpcFactory : public frontend::ProtobufIpcFactory
 {
 public:
-    StubIpcFactory(mir::protobuf::DisplayServer& server) :
-        server(&server, EmptyDeleter()),
-        cache(std::make_shared<msess::ResourceCache>())
+    StubIpcFactory(protobuf::DisplayServer& server) :
+        server(fake_shared(server)),
+        cache(std::make_shared<frontend::ResourceCache>())
     {
     }
 
-    std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    std::shared_ptr<protobuf::DisplayServer> make_ipc_server()
     {
         return server;
     }
 
 private:
-    virtual std::shared_ptr<msess::ResourceCache> resource_cache()
+    virtual std::shared_ptr<frontend::ResourceCache> resource_cache()
     {
         return cache;
     }
 
-    std::shared_ptr<mir::protobuf::DisplayServer> server;
-    std::shared_ptr<msess::ResourceCache> const cache;
+    std::shared_ptr<protobuf::DisplayServer> server;
+    std::shared_ptr<frontend::ResourceCache> const cache;
 };
 
 }

@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -71,13 +71,10 @@ TEST(Compositor, render)
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
-    std::shared_ptr<mg::Renderer> renderer(
-        &mock_renderer,
-        mir::EmptyDeleter());
     MockRenderView render_view;
     mtd::MockDisplay display;
 
-    mc::Compositor comp(&render_view, renderer);
+    mc::Compositor comp(&render_view, mt::fake_shared(mock_renderer));
 
     EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
@@ -99,17 +96,14 @@ TEST(Compositor, skips_invisible_renderables)
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
-    std::shared_ptr<mg::Renderer> renderer(
-        &mock_renderer,
-        mir::EmptyDeleter());
     NiceMock<mtd::MockDisplay> display;
 
     EXPECT_CALL(display, view_area())
             .Times(1)
             .WillRepeatedly(Return(geom::Rectangle()));
-    
+
     NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
-    
+
     EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
     EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
     EXPECT_CALL(mr3, hidden()).WillOnce(Return(false));
@@ -122,10 +116,10 @@ TEST(Compositor, skips_invisible_renderables)
     EXPECT_CALL(mock_renderer, render(_,Ref(mr1))).Times(1);
     EXPECT_CALL(mock_renderer, render(_,Ref(mr2))).Times(0);
     EXPECT_CALL(mock_renderer, render(_,Ref(mr3))).Times(1);
-    
+
     FakeRenderView render_view(renderables);
 
-    mc::Compositor comp(&render_view, renderer);
+    mc::Compositor comp(&render_view, mt::fake_shared(mock_renderer));
 
     comp.render(&display);
 }
