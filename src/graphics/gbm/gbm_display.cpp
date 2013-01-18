@@ -231,6 +231,10 @@ bool mgg::GBMDisplay::post_update()
     return true;
 }
 
+void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/)
+{
+}
+
 mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
 {
     auto bo = gbm_surface_lock_front_buffer(gbm.surface);

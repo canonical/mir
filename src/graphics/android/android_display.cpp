@@ -113,6 +113,10 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
+void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& /*f*/)
+{
+}
+
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
     return std::make_shared<NullDisplayConfiguration>();

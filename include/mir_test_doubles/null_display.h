@@ -35,6 +35,7 @@ class NullDisplay : public graphics::Display
     geometry::Rectangle view_area() const { return geometry::Rectangle(); }
     void clear() { std::this_thread::yield(); }
     bool post_update() { return true; }
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) {}
     std::shared_ptr<graphics::DisplayConfiguration> configuration()
     {
         return std::shared_ptr<graphics::DisplayConfiguration>();

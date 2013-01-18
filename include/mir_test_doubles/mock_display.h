@@ -35,6 +35,7 @@ public:
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
     MOCK_METHOD0(clear, void ());
     MOCK_METHOD0(post_update, bool ());
+    MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
 };
 
