@@ -68,6 +68,8 @@ void mc::Compositor::render(graphics::Display* display)
         FilterForVisibleRenderablesInRegion selector(buffer.view_area());
 
         buffer.make_current();
+        buffer.clear();
+
         render_view->for_each_if(selector, applicator);
     });
 

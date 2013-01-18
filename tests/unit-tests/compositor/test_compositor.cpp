@@ -95,6 +95,9 @@ TEST(Compositor, render)
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
 
+    EXPECT_CALL(display_buffer, clear())
+        .Times(1);
+
     EXPECT_CALL(render_view, for_each_if(_,_))
                 .Times(1);
 

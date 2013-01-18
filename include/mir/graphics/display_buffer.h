@@ -33,6 +33,7 @@ public:
 
     virtual geometry::Rectangle view_area() const = 0;
     virtual void make_current() = 0;
+    virtual void clear() = 0;
 
 protected:
     DisplayBuffer() = default;
