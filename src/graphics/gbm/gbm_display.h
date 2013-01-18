@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_listener.h"
 #include "mir/graphics/platform.h"
 #include "gbm_display_helpers.h"
@@ -45,7 +46,7 @@ class BufferObject;
 
 class GBMDisplayReporter;
 
-class GBMDisplay : public Display
+class GBMDisplay : public Display, public DisplayBuffer
 {
 public:
     GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<DisplayListener>& reporter);
@@ -58,6 +59,8 @@ public:
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
+
+    void make_current();
 
 private:
     BufferObject* get_front_buffer_object();

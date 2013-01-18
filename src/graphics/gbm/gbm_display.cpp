@@ -142,10 +142,13 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
 
     listener->report_successful_setup_of_native_resources();
 
-    if (eglMakeCurrent(egl.display, egl.surface,
-                       egl.surface, egl.context) == EGL_FALSE)
+    try
     {
-        throw std::runtime_error("Failed to make EGL surface current");
+        make_current();
+    }
+    catch(...)
+    {
+        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
     }
 
     try
@@ -231,8 +234,9 @@ bool mgg::GBMDisplay::post_update()
     return true;
 }
 
-void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/)
+void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
 {
+    f(*this);
 }
 
 mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
@@ -328,4 +332,13 @@ bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 {
     return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
+}
+
+void mgg::GBMDisplay::make_current()
+{
+    if (eglMakeCurrent(egl.display, egl.surface,
+                       egl.surface, egl.context) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
+    }
 }
