@@ -22,7 +22,7 @@
 #include "src/input/android/android_input_constants.h"
 #include "mir/thread/all.h"
 
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
@@ -37,6 +37,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mir::input::synthesis;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace mir
@@ -56,8 +57,7 @@ class FakeEventHubSetup : public testing::Test
     void SetUp()
     {
         event_hub = new mia::FakeEventHub();
-        dispatcher_policy = new mia::EventFilterDispatcherPolicy(
-            std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter()));
+        dispatcher_policy = new mia::EventFilterDispatcherPolicy(mt::fake_shared(event_filter));
         reader_policy = new mia::RudimentaryInputReaderPolicy();
         dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
         reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
