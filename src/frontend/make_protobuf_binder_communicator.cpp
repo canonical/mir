@@ -30,5 +30,5 @@ mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return std::make_shared<mf::ProtobufBinderCommunicator>(
-        socket_file, make_ipc_factory(session_manager, display, allocator));
+        socket_file, make_ipc_factory(session_store, display, allocator));
 }
