@@ -25,6 +25,8 @@
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/null_display_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -63,6 +65,10 @@ struct FakeRenderView : mc::RenderView
     std::vector<mg::Renderable*> renderables;
 };
 
+ACTION_P(InvokeArgWithParam, param)
+{
+    arg0(param);
+}
 
 }
 
@@ -73,14 +79,21 @@ TEST(Compositor, render)
     mtd::MockSurfaceRenderer mock_renderer;
     MockRenderView render_view;
     mtd::MockDisplay display;
+    mtd::MockDisplayBuffer display_buffer;
 
     mc::Compositor comp(&render_view, mt::fake_shared(mock_renderer));
 
     EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
-    EXPECT_CALL(display, view_area())
-            .Times(1)
-            .WillRepeatedly(Return(geom::Rectangle()));
+    EXPECT_CALL(display, for_each_display_buffer(_))
+        .WillOnce(InvokeArgWithParam(ByRef(display_buffer)));
+
+    EXPECT_CALL(display_buffer, view_area())
+        .Times(1)
+        .WillOnce(Return(geom::Rectangle()));
+
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(1);
 
     EXPECT_CALL(render_view, for_each_if(_,_))
                 .Times(1);
@@ -97,10 +110,10 @@ TEST(Compositor, skips_invisible_renderables)
 
     mtd::MockSurfaceRenderer mock_renderer;
     NiceMock<mtd::MockDisplay> display;
+    mtd::NullDisplayBuffer display_buffer;
 
-    EXPECT_CALL(display, view_area())
-            .Times(1)
-            .WillRepeatedly(Return(geom::Rectangle()));
+    EXPECT_CALL(display, for_each_display_buffer(_))
+        .WillOnce(InvokeArgWithParam(ByRef(display_buffer)));
 
     NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
 
