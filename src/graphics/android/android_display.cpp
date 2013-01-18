@@ -80,9 +80,11 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     {
         make_current();
     }
-    catch (...)
+    catch (std::runtime_error const&)
     {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("wrapper"))
+            << boost::errinfo_nested_exception(boost::current_exception()));
     }
 }
 
