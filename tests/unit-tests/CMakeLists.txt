@@ -27,7 +27,7 @@ add_subdirectory(sessions/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
-if (NOT MIR_CUTDOWN_FOR_EMULATOR)
+if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
 endif()
 add_subdirectory(surfaces/)

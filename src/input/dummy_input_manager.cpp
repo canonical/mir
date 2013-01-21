@@ -16,11 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "android_input_manager.h"
+#include "mir/input/input_manager.h"
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace mia = mi::android;
 
 namespace
 {

@@ -100,11 +100,11 @@ set (MIR_TRANSPORT
   "IPC transport to build (options are 'socket' or 'binder')"
 )
 
-set (MIR_CUTDOWN_FOR_EMULATOR
+set (MIR_DISABLE_INPUT
   false
   CACHE
   BOOL
-  "Disable parts of system that don't run on Emulator"
+  "Don't build the input subsystem"
 )
 
 find_package(EGL REQUIRED)
