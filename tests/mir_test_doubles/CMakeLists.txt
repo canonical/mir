@@ -24,8 +24,13 @@ set(
 
   test_protobuf_client.cpp
   event_factory.cpp
+)
+
+if (NOT MIR_DISABLE_INPUT)
+list(APPEND TEST_UTILS_SRCS
   fake_event_hub.cpp
 )
+endif()
 
 if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND TEST_UTILS_SRCS
