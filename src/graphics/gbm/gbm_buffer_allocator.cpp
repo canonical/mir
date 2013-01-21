@@ -60,10 +60,10 @@ struct EGLExtensions
                   eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
     {
         if (!eglCreateImageKHR || !eglDestroyImageKHR)
-            throw std::runtime_error("EGL implementation doesn't support EGLImage");
+            BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
 
         if (!glEGLImageTargetTexture2DOES)
-            throw std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage");
+            BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
     }
 
     PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
@@ -120,7 +120,7 @@ private:
                                                           reinterpret_cast<void*>(bo_raw),
                                                           image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
-                throw std::runtime_error("Failed to create EGLImage from GBM bo");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGLImage from GBM bo"));
         }
     }
 

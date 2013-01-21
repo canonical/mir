@@ -17,7 +17,11 @@
  */
 
 #include "android_framebuffer_window.h"
+
+#include <boost/exception/all.hpp>
+
 #include <stdexcept>
+
 namespace mga = mir::graphics::android;
 
 namespace
@@ -73,7 +77,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     delete config_slots;
 
     if (!found)
-        throw std::runtime_error("could not select EGL config");
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config"));
 
     return egl_config;
 }

@@ -26,6 +26,8 @@
 
 #include <ui/FramebufferNativeWindow.h>
 
+#include <boost/exception/all.hpp>
+
 #include <stdexcept>
 
 namespace mg=mir::graphics;
@@ -43,7 +45,7 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
     auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface());
     if (!android_window.get())
-        throw std::runtime_error("could not open FB window");
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);

@@ -19,6 +19,7 @@
 #include "android_registrar_gralloc.h"
 #include "../client_buffer.h"
 
+#include <boost/exception/all.hpp>
 #include <stdexcept>
 
 namespace mcl=mir::client;
@@ -54,7 +55,7 @@ mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<con
 void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
 {
     if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
-        throw std::runtime_error("error registering graphics buffer for client use\n");
+        BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
 }
 
 void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
@@ -72,7 +73,7 @@ std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_
     int left = rect.top_left.y.as_uint32_t();
     if ( gralloc_module->lock(gralloc_module.get(), handle.get(),
                               usage, top, left, width, height, (void**) &vaddr) )
-        throw std::runtime_error("error securing buffer for client cpu use");
+        BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
     MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<char>(vaddr, del);

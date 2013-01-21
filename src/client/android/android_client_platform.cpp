@@ -25,6 +25,8 @@
 
 #include <EGL/egl.h>
 
+#include <boost/exception/all.hpp>
+
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 
@@ -52,7 +54,7 @@ std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (error < 0)
     {
-        throw std::runtime_error("Could not open hardware module");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
     }
 
     gralloc_module_t* gr_dev = (gralloc_module_t*) hw_module;

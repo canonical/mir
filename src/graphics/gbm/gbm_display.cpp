@@ -145,7 +145,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     if (eglMakeCurrent(egl.display, egl.surface,
                        egl.surface, egl.context) == EGL_FALSE)
     {
-        throw std::runtime_error("Failed to make EGL surface current");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }
 
     try
@@ -161,7 +161,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     listener->report_successful_egl_make_current_on_construction();
 
     if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
-        throw std::runtime_error("Failed to perform initial surface buffer swap");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
@@ -170,7 +170,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
                               last_flipped_bufobj->get_drm_fb_id(), 0, 0,
                               &kms.connector->connector_id, 1, &kms.mode);
     if (ret)
-        throw std::runtime_error("Failed to set DRM crtc");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();

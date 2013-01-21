@@ -36,7 +36,7 @@ void mggh::DRMHelper::setup()
     fd = open_drm_device();
 
     if (fd < 0)
-        throw std::runtime_error("Failed to open DRM device\n");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
 }
 
 int mggh::DRMHelper::get_authenticated_fd()
