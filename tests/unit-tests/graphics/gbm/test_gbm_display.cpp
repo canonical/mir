@@ -285,7 +285,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW({
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception) << "Expected that c'tor of GBMDisplay throws";
+    }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
 }
 
 TEST_F(GBMDisplayTest, create_display_gbm_failure)
@@ -495,7 +495,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception);
+    }, std::runtime_error);
 }
 
 TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
@@ -511,5 +511,5 @@ TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception);
+    }, std::runtime_error);
 }

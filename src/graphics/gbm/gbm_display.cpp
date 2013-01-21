@@ -113,32 +113,9 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     gbm(platform->gbm)
 {
     /* Set up all native resources */
-    try
-    {
-        kms.setup(drm);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
-
-    try
-    {
-        gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
-
-    try
-    {
-        egl.setup(gbm);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
+    kms.setup(drm);
+    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
+    egl.setup(gbm);
 
     listener->report_successful_setup_of_native_resources();
 
@@ -148,14 +125,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }
 
-    try
-    {
-        ensure_egl_image_extensions();
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
+    ensure_egl_image_extensions();
 
     clear();
     listener->report_successful_egl_make_current_on_construction();
