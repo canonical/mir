@@ -33,13 +33,11 @@ class NullDisplay : public graphics::Display
 {
  public:
     geometry::Rectangle view_area() const { return geometry::Rectangle(); }
-    bool post_update()
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&)
     {
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
         std::this_thread::yield();
-        return true;
     }
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) {}
     std::shared_ptr<graphics::DisplayConfiguration> configuration()
     {
         return std::shared_ptr<graphics::DisplayConfiguration>();

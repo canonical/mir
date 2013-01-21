@@ -34,6 +34,7 @@ public:
     geometry::Rectangle view_area() const { return geometry::Rectangle(); }
     void make_current() {}
     void clear() {}
+    bool post_update() { return true; }
 };
 
 }

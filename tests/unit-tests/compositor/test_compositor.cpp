@@ -98,11 +98,11 @@ TEST(Compositor, render)
     EXPECT_CALL(display_buffer, clear())
         .Times(1);
 
+    EXPECT_CALL(display_buffer, post_update())
+            .Times(1);
+
     EXPECT_CALL(render_view, for_each_if(_,_))
                 .Times(1);
-
-    EXPECT_CALL(display, post_update())
-            .Times(1);
 
     comp.render(&display);
 }

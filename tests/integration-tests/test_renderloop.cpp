@@ -25,7 +25,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/mock_display_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,21 +35,35 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+
+ACTION_P(InvokeArgWithParam, param)
+{
+    arg0(param);
+}
+
+}
+
 TEST_F(BespokeDisplayServerTestFixture, notify_sync_and_see_paint)
 {
     struct Server : TestingServerConfiguration
     {
         void exec(mir::DisplayServer* display_server)
         {
-            mtd::MockDisplay display;
-            mtd::NullDisplayBuffer display_buffer;
-
             using namespace testing;
 
-            EXPECT_CALL(display, for_each_display_buffer(_)).Times(1);
+            mtd::MockDisplay display;
+            NiceMock<mtd::MockDisplayBuffer> display_buffer;
 
-            EXPECT_CALL(display, post_update()).Times(1);
+            ON_CALL(display_buffer, view_area())
+                .WillByDefault(Return(geom::Rectangle()));
 
+            EXPECT_CALL(display, for_each_display_buffer(_))
+                .WillOnce(InvokeArgWithParam(ByRef(display_buffer)));
+
+            EXPECT_CALL(display_buffer, post_update())
+                .WillOnce(Return(true));
 
             display_server->render(&display);
         }
