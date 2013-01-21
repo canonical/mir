@@ -18,7 +18,7 @@
 
 #include "gbm_platform.h"
 
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "gbm_display_reporter.h"

@@ -17,7 +17,7 @@
  */
 
 #include "kms_display_configuration.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;

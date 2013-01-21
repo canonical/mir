@@ -21,7 +21,7 @@
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 #include <xf86drm.h>
 

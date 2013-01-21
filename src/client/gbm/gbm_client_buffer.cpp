@@ -19,7 +19,7 @@
 #include "mir_client/mir_client_library.h"
 #include "gbm_client_buffer.h"
 #include "drm_fd_handler.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 #include <stdexcept>
 

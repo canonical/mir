@@ -33,7 +33,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<sessions::SessionStore> const& session_store,

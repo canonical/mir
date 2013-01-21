@@ -17,7 +17,7 @@
  */
 
 #include "gbm_display_helpers.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 
 #include <cstring>

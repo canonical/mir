@@ -20,7 +20,7 @@
 #include "gbm_platform.h"
 #include "kms_display_configuration.h"
 
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>

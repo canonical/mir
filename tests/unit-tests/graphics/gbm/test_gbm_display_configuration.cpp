@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "src/graphics/gbm/gbm_platform.h"

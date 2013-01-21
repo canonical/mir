@@ -27,7 +27,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/exception.h"
+#include <boost/exception/all.hpp>
 
 #include "mir_test_doubles/null_display.h"
 
@@ -181,7 +181,8 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_status_code_on_error)
     int const error_number{667};
 
     EXPECT_CALL(*mock_platform, drm_auth_magic(drm_magic))
-        .WillOnce(Throw(mir::Exception() << boost::errinfo_errno(error_number)));
+        .WillOnce(Throw(::boost::enable_error_info(std::exception())
+            << boost::errinfo_errno(error_number)));
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
