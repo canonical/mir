@@ -23,7 +23,7 @@
 
 #include <csignal>
 #include <iostream>
-#include <stdexcept>
+#include <boost/exception/all.hpp>
 
 namespace
 {
@@ -81,9 +81,8 @@ try
     }
     catch (po::error const& error)
     {
-        std::cerr << "ERROR: " << error.what() << std::endl;
         std::cerr << desc << "\n";
-        return 1;
+        throw;
     }
 
     if (options.is_set("help"))
@@ -97,6 +96,6 @@ try
 }
 catch (std::exception const& error)
 {
-    std::cerr << "ERROR: " << error.what() << std::endl;
+    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
     return 1;
 }
