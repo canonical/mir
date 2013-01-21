@@ -20,6 +20,8 @@
 #include "android_client_buffer_depository.h"
 #include "android_client_buffer.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
@@ -43,7 +45,7 @@ std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_b
 {
     auto find_it = buffer_depository.find(id);
     if (find_it == buffer_depository.end())
-        throw std::runtime_error("server told client to use buffer before");
+        BOOST_THROW_EXCEPTION(std::runtime_error("server told client to use buffer before"));
 
     return buffer_depository[id];
 }

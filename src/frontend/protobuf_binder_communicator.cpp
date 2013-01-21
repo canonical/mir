@@ -53,7 +53,7 @@ mf::ProtobufBinderCommunicator::ProtobufBinderCommunicator(
 
     if (not_registered_or_dead && sm->addService(service_name, session) != android::OK)
     {
-        throw std::runtime_error("Failed to add a new Binder service");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to add a new Binder service"));
     }
 }
 
