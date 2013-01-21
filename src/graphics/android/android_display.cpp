@@ -76,16 +76,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (egl_context == EGL_NO_CONTEXT)
         throw std::runtime_error("could not create egl context\n");
 
-    try
-    {
-        make_current();
-    }
-    catch (std::runtime_error const&)
-    {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("wrapper"))
-            << boost::errinfo_nested_exception(boost::current_exception()));
-    }
+    make_current();
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
