@@ -17,8 +17,9 @@
  */
 
 #include "gbm_display_helpers.h"
-#include <boost/exception/all.hpp>
 
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <cstring>
 #include <sstream>

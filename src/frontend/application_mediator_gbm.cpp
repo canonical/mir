@@ -21,7 +21,10 @@
 #include "mir/sessions/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
-#include <boost/exception/all.hpp>
+
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 

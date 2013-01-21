@@ -18,7 +18,7 @@
 
 #include "android_framebuffer_window.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 

@@ -23,7 +23,7 @@
 #include "buffer_texture_binder.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

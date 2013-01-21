@@ -21,9 +21,10 @@
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <csignal>
 #include <iostream>
-#include <boost/exception/all.hpp>
 
 namespace
 {

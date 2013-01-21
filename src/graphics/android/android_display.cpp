@@ -21,7 +21,7 @@
 #include "android_display.h"
 #include "mir/geometry/rectangle.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 

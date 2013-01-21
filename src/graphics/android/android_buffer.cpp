@@ -23,7 +23,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;

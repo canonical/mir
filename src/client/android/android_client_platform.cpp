@@ -25,7 +25,7 @@
 
 #include <EGL/egl.h>
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;

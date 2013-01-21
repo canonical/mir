@@ -26,7 +26,7 @@
 
 #include <ui/FramebufferNativeWindow.h>
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 

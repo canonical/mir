@@ -23,8 +23,10 @@
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include <boost/exception/all.hpp>
 #include "mir/thread/all.h"
+
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"

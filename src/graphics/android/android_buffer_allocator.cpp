@@ -23,7 +23,7 @@
 #include "android_alloc_adaptor.h"
 #include "android_buffer.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 

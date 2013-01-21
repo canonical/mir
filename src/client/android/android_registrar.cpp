@@ -19,7 +19,7 @@
 #include "android_registrar_gralloc.h"
 #include "../client_buffer.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mcl=mir::client;

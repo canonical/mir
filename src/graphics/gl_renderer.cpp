@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg=mir::graphics;

@@ -20,7 +20,7 @@
 #include "android_client_buffer_depository.h"
 #include "android_client_buffer.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;

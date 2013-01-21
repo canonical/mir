@@ -15,7 +15,7 @@
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 #include "src/graphics/gbm/gbm_platform.h"
 #include "src/graphics/gbm/gbm_display.h"
 #include "src/graphics/gbm/gbm_display_reporter.h"
