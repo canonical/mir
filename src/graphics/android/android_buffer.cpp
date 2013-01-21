@@ -23,6 +23,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <boost/throw_exception.hpp>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -36,12 +38,12 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
     BufferUsage usage = mga::BufferUsage::use_hardware;
 
     if (!alloc_device)
-        throw std::runtime_error("No allocation device for graphics buffer");
+        BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));
 
     native_window_buffer_handle = alloc_device->alloc_buffer(size, pf, usage);
 
     if (!native_window_buffer_handle.get())
-        throw std::runtime_error("Graphics buffer allocation failed");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Graphics buffer allocation failed"));
 
 }
 
@@ -74,7 +76,7 @@ void mga::AndroidBuffer::bind_to_texture()
 {
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp == EGL_NO_DISPLAY) {
-        throw std::runtime_error("cannot bind buffer to texture without EGL context\n");
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot bind buffer to texture without EGL context\n"));
     }
     static const EGLint image_attrs[] =
     {
@@ -90,7 +92,7 @@ void mga::AndroidBuffer::bind_to_texture()
                                   buf, image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
-            throw std::runtime_error("error binding buffer to texture\n");
+            BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
         }
         egl_image_map[disp] = image;
     }
