@@ -61,10 +61,9 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    RenderingOperator applicator(*renderer);
-
     display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
     {
+        RenderingOperator applicator(*renderer);
         FilterForVisibleRenderablesInRegion selector(buffer.view_area());
 
         buffer.make_current();
