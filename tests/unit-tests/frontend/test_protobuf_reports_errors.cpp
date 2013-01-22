@@ -121,8 +121,8 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
 
     client->wait_for_connect_done();
 
-    EXPECT_TRUE(result.has_error());
-    EXPECT_EQ(stub_services->test_exception_text, result.error());
+    ASSERT_TRUE(result.has_error());
+    EXPECT_NE(std::string::npos, result.error().find(stub_services->test_exception_text));
 }
 
 TEST_F(ProtobufErrorTestFixture, create_surface_exception)
@@ -137,6 +137,7 @@ TEST_F(ProtobufErrorTestFixture, create_surface_exception)
 
     client->wait_for_create_surface();
 
-    EXPECT_TRUE(client->surface.has_error());
-    EXPECT_EQ(stub_services->test_exception_text, client->surface.error());
+    ASSERT_TRUE(client->surface.has_error());
+    EXPECT_NE(std::string::npos, client->surface.error().find(stub_services->test_exception_text));
+
 }

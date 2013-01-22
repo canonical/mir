@@ -19,7 +19,7 @@
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/sessions/session.h"
-#include "mir/exception.h"
+#include <boost/throw_exception.hpp>
 
 void mir::frontend::ApplicationMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,

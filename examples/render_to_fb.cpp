@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 
 #include "mir/draw/graphics.h"
 
@@ -38,11 +39,17 @@ int main(int, char**)
 
     for(;;)
     {
-        gl_animation.render_gl();
-        display->post_update();
+        display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+        {
+            buffer.make_current();
+            buffer.clear();
+
+            gl_animation.render_gl();
+
+            buffer.post_update();
+        });
 
         usleep(167);//60fps
-
         gl_animation.step();
     }
 

@@ -13,32 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
+#include "mir/input/input_manager.h"
 
-#include "mir/graphics/display.h"
-#include <gmock/gmock.h>
+namespace mg = mir::graphics;
+namespace mi = mir::input;
 
-namespace mir
+namespace
 {
-namespace test
+class DummyInputManager : public mi::InputManager
 {
-namespace doubles
-{
-
-struct MockDisplay : public graphics::Display
-{
-public:
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
-    MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
-    MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
-};
-
-}
-}
+    void stop() {};
+    void start() {};
+}; 
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_H_ */
+std::shared_ptr<mi::InputManager> mi::create_input_manager(
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
+    std::shared_ptr<mg::ViewableArea> const& )
+{
+    return std::make_shared<DummyInputManager>();
+}

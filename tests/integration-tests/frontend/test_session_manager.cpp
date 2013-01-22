@@ -31,12 +31,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 namespace mc = mir::compositor;
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -58,10 +59,11 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-                                       container,
-                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
+    msess::SessionManager session_manager(
+            mt::fake_shared(surface_factory),
+            container,
+            mt::fake_shared(sequence),
+            mt::fake_shared(focus_changer));
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
@@ -90,10 +92,11 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     MockFocusSetter focus_changer;
     std::shared_ptr<msess::Session> new_session;
 
-    msess::SessionManager session_manager(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
-                                       model,
-                                       std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
-                                       std::shared_ptr<msess::FocusSetter>(&focus_changer, mir::EmptyDeleter()));
+    msess::SessionManager session_manager(
+        mt::fake_shared(surface_factory),
+        model,
+        mt::fake_shared(sequence),
+        mt::fake_shared(focus_changer));
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 

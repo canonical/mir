@@ -120,6 +120,5 @@ void mir::DisplayServer::stop()
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    display->clear();
     p->compositor->render(display);
 }

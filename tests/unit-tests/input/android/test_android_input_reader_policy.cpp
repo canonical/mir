@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_viewable_area.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 
 #include "src/input/android/android_input_reader_policy.h"
 #include "mir/geometry/rectangle.h"
@@ -29,6 +29,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 static geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
@@ -45,7 +46,7 @@ public:
     void SetUp()
     {
         reader_policy = std::make_shared<mia::InputReaderPolicy>(
-            std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
+            mt::fake_shared(viewable_area),
             std::shared_ptr<mi::CursorListener>());
 
         ON_CALL(viewable_area, view_area()).WillByDefault(Return(default_view_area));

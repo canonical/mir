@@ -14,7 +14,6 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-if (NOT MIR_CUTDOWN_FOR_EMULATOR)
 list(
   APPEND INPUT_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_manager.cpp
@@ -24,12 +23,6 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/rudimentary_input_reader_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/event_filter_dispatcher_policy.cpp
 )
-else()
-list(
-  APPEND INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/dummy_input_manager.cpp
-)
-endif()
 
 set(
   INPUT_SOURCES
