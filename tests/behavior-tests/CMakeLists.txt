@@ -30,15 +30,23 @@ set(BEHAVIOR_TESTING_LINK_LIBRARIES
   mir-test-doubles
   3rd_party
   ${Boost_LIBRARIES}
-  ${CUKE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
 )
 
 set(SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES session_manager_steps.cpp session_management_context.cpp)
 add_executable(session-management-cucumber-steps ${SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES})
+add_executable(test_session_management_context session_management_context.cpp test_session_management_context.cpp)
 
 target_link_libraries(
   session-management-cucumber-steps
   
+  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
+  ${CUKE_LIBRARIES}
+
+)
+
+target_link_libraries(
+  test_session_management_context
+
   ${BEHAVIOR_TESTING_LINK_LIBRARIES}
 )
