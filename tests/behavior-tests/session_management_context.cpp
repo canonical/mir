@@ -140,14 +140,16 @@ public:
 }
 } // namespace mir
 
-mtc::SessionManagementContext::SessionManagementContext()
+
+
+mtc::SessionManagementContext::SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration)
 {
-    auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
     auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
     view_area = std::make_shared<mtc::SizedDisplay>();
     
     session_store = server_configuration->make_session_store(underlying_factory, view_area);
 }
+
 
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)

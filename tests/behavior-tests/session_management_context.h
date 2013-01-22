@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 #define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
+#include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
 // TODO: This is for SurfaceId only? Seems incorrect
 #include "mir/sessions/session.h"
@@ -30,6 +31,7 @@
 
 namespace mir
 {
+class ServerConfiguration;
 
 namespace sessions
 {
@@ -45,7 +47,8 @@ class SizedDisplay;
 class SessionManagementContext
 {
 public:
-    SessionManagementContext();
+    SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration = std::make_shared<DefaultServerConfiguration>(""));
+
     virtual ~SessionManagementContext() {}
     
     bool open_window_consuming(std::string const& window_name);
