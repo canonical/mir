@@ -112,24 +112,25 @@ public:
         : area(view_area)
     {
     }
-    
+
     geom::Rectangle view_area() const
     {
         return area;
     }
 
-    void clear()
-    {
-    }
-
-    bool post_update()
-    {
-        return true;
-    }
-    
     void set_view_area(geom::Rectangle const& new_view_area)
     {
         area = new_view_area;
+    }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+    {
+        (void)f;
+    }
+    
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        return std::shared_ptr<mg::DisplayConfiguration>();
     }
     
     geom::Rectangle area;

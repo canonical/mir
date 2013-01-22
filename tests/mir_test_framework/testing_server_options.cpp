@@ -68,13 +68,9 @@ public:
     {
         return default_view_area;
     }
-    void clear()
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
     {
-        std::this_thread::yield();
-    }
-    bool post_update()
-    {
-        return true;
+        (void)f;
     }
     std::shared_ptr<mg::DisplayConfiguration> configuration()
     {
