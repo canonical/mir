@@ -77,8 +77,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context\n"));
 
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+    make_current();
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
@@ -115,7 +114,18 @@ bool mga::AndroidDisplay::post_update()
     return true;
 }
 
+void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+{
+    f(*this);
+}
+
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
     return std::make_shared<NullDisplayConfiguration>();
+}
+
+void mga::AndroidDisplay::make_current()
+{
+    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
 }

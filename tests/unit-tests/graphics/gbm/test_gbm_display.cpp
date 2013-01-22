@@ -513,3 +513,20 @@ TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
     }, std::runtime_error);
 }
+
+TEST_F(GBMDisplayTest, for_each_display_buffer_calls_callback)
+{
+    using namespace ::testing;
+
+    auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+
+    int callback_count{0};
+
+    display->for_each_display_buffer([&](mg::DisplayBuffer&)
+    {
+        callback_count++;
+    });
+
+    EXPECT_NE(0, callback_count);
+}
