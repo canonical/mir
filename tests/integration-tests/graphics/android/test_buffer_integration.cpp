@@ -131,7 +131,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
     swapper->client_acquire(returned_buffer, id);
-    EXPECT_NE((int)returned_buffer.lock().get(), NULL);
+    EXPECT_NE(nullptr, returned_buffer.lock());
 }
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)

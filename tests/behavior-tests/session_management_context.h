@@ -33,7 +33,7 @@ namespace mir
 
 namespace sessions
 {
-class SessionManager;
+class SessionStore;
 }
 
 namespace test
@@ -61,8 +61,9 @@ protected:
 
 private:
     std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;
-    std::shared_ptr<sessions::SessionManager> session_manager;
-    std::shared_ptr<SizedDisplay> view_area;
+
+    std::shared_ptr<sessions::SessionStore> session_store;
+    std::shared_ptr<DummyViewableArea> view_area;
 };
 
 }

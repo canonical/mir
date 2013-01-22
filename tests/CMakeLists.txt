@@ -36,6 +36,10 @@ if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)
 
+if (MIR_PLATFORM STREQUAL "android")
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+endif()
+
 add_subdirectory(acceptance-tests/)
 add_subdirectory(unit-tests/)
 add_subdirectory(integration-tests/)

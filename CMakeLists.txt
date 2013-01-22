@@ -112,20 +112,42 @@ find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
 if (MIR_PLATFORM STREQUAL "android")
-  include (cmake/AndroidFlags.cmake)
-  get_android_flags()
-  add_definitions( ${ANDROID_DEFINITIONS} )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
+  #todo: bionic support is to be deprecated a short while after landing
+  #      hybris support. remove this and MIR_USES_BIONIC variable
+  if (MIR_USES_BIONIC)
+    message(STATUS "android build is using BIONIC")
 
+    include (cmake/AndroidFlags.cmake)
+    get_android_flags()
+    add_definitions( ${ANDROID_DEFINITIONS} )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
+
+    #bionic does not support the c++11 functionality we require for the <thread> and <chrono> library
+    #we work around this by using boost in the code
+    add_definitions( -DMIR_USING_BOOST_THREADS) 
+    add_definitions( -DMIR_USING_BOOST_CHRONO) 
+    set(gtest_disable_pthreads ON)
+
+  else()
+    message(STATUS "android build is using vanilla STDC++")
+
+    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
+    list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
+
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,${MIR_NDK_PATH}/lib/arm-linux-gnueabihf")
+
+    add_definitions( -DANDROID )
+  endif()
+ 
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
-  set(gtest_disable_pthreads ON)
-
 elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)

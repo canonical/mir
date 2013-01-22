@@ -76,6 +76,11 @@ public:
     {
         return true;
     }
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        auto null_configuration = std::shared_ptr<mg::DisplayConfiguration>();
+        return null_configuration;
+    }
 };
 
 class StubGraphicPlatform : public mg::Platform

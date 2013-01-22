@@ -65,6 +65,7 @@ list(APPEND CLIENT_SOURCES
 endif()
 
 if( MIR_PLATFORM STREQUAL "android")
+include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 
@@ -79,12 +80,22 @@ set(
 #todo: android should be shared as well, and we should combine with
 # gbm's add_library below. Android currently has problems with multiple
 # linkages of static protobuf
+if( MIR_USES_BIONIC)
 add_library(
   mirclient STATIC
 
   ${CLIENT_SOURCES}
   ${MIR_3RD_PARTY_SOURCES}
 )
+else()
+add_library(
+  mirclient SHARED
+
+  ${CLIENT_SOURCES}
+  ${MIR_3RD_PARTY_SOURCES}
+)
+
+endif()
 
 endif()
 
@@ -134,6 +145,7 @@ set(
   CLIENT_PUBLIC_HEADERS
 
   ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
+  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_lightdm.h
   ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_drm.h
 )
 

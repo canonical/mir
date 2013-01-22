@@ -23,7 +23,12 @@
 
 namespace mir
 {
-enum class IntWrapperTypeTag { SessionsSurfaceId };
+enum class IntWrapperTypeTag
+{
+    SessionsSurfaceId,
+    GraphicsConfCardId,
+    GraphicsConfOutputId
+};
 
 template<IntWrapperTypeTag Tag, typename ValueType_ = int>
 class IntWrapper

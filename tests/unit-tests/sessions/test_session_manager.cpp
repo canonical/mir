@@ -144,3 +144,52 @@ TEST(SessionManager, new_applications_receive_focus)
     auto session = session_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
+
+TEST(SessionManager, apps_selected_by_id_receive_focus)
+{
+    using namespace ::testing;
+    mtd::MockSurfaceFactory surface_factory;
+    NiceMock<MockSessionContainer> container;
+    MockFocusSequence sequence;
+    NiceMock<MockFocusSetter> mechanism;
+
+    msess::SessionManager session_manager(
+        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
+        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("IntelliJ IDEA");
+
+    session_manager.tag_session_with_lightdm_id(session1, 1);
+
+    EXPECT_CALL(mechanism, set_focus_to(session1));
+    session_manager.focus_session_with_lightdm_id(1);
+}
+
+TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
+{
+    using namespace ::testing;
+    mtd::MockSurfaceFactory surface_factory;
+    NiceMock<MockSessionContainer> container;
+    MockFocusSequence sequence;
+    NiceMock<MockFocusSetter> mechanism;
+
+    msess::SessionManager session_manager(
+        std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()),
+        std::shared_ptr<msess::SessionContainer>(&container, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSequence>(&sequence, mir::EmptyDeleter()),
+        std::shared_ptr<msess::FocusSetter>(&mechanism, mir::EmptyDeleter()));
+
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("IntelliJ IDEA");
+
+    session_manager.tag_session_with_lightdm_id(session1, 1);
+    session_manager.focus_session_with_lightdm_id(1);
+
+    EXPECT_CALL(sequence, predecessor_of(session1)).WillOnce(Return(session2));
+    EXPECT_CALL(mechanism, set_focus_to(session2));
+
+    session_manager.close_session(session1);
+}

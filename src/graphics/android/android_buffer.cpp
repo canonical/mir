@@ -19,6 +19,7 @@
 
 #include "android_buffer.h"
 
+#include <system/window.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 

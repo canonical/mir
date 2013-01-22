@@ -33,13 +33,14 @@ class OrganisingSurfaceFactory : public SurfaceFactory
 {
 public:
     OrganisingSurfaceFactory(std::shared_ptr<SurfaceFactory> const& underlying_factory,
-                                      std::shared_ptr<PlacementStrategy> const& placement_strategy);
+                             std::shared_ptr<PlacementStrategy> const& placement_strategy);
     virtual ~OrganisingSurfaceFactory();
     
     std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params);
+
 protected:
-    OrganisingSurfaceFactory(const OrganisingSurfaceFactory&) = delete;
-    OrganisingSurfaceFactory& operator=(const OrganisingSurfaceFactory&) = delete;
+    OrganisingSurfaceFactory(OrganisingSurfaceFactory const&) = delete;
+    OrganisingSurfaceFactory& operator=(OrganisingSurfaceFactory const&) = delete;
 
 private:
     std::shared_ptr<SurfaceFactory> const underlying_factory;

@@ -10,12 +10,13 @@ Build-Depends: cmake,
                g++-4.6,
                libboost1.48-all-dev | libboost-all-dev,
                protobuf-compiler,
-               libdrm-dev,
+               libdrm-dev [!armhf],
                libegl1-mesa-dev,
                libgles2-mesa-dev,
-               libgbm-dev,
+               libgbm-dev [!armhf],
                libprotobuf-dev,
                pkg-config,
+               libhybris-dev [armhf]
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~rocket-scientists but need to upload packaging changes,
@@ -36,7 +37,9 @@ Description: Display server for Ubuntu - protocol implementation
 Package: libmirprotobuf-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends},
+Depends: libmirprotobuf0 (= ${binary:Version}),
+         libprotobuf-dev,
+         ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - protocol definition
  Mir is a display server running on linux systems, with a focus on efficiency, 
@@ -58,8 +61,8 @@ Description: Display server for Ubuntu - client library
 Package: libmirclient-dev
 Section: libdevel
 Architecture: any
-Depends: libmirprotobuf0 (= ${binary:Version}),
-         libmirclient0 (= ${binary:Version}),
+Depends: libmirclient0 (= ${binary:Version}),
+         libmirprotobuf-dev (= ${source:Version}),
          mir (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
