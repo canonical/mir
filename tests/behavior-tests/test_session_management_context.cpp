@@ -18,6 +18,7 @@
 
 #include "session_management_context.h"
 #include "mir/server_configuration.h"
+#include "mir/sessions/session_store.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -36,7 +37,7 @@ namespace mtc = mt::cucumber;
 namespace
 {
 
-class MockServerConfiguration : public mir::ServerConfiguration
+struct MockServerConfiguration : public mir::ServerConfiguration
 {
     MOCK_METHOD0(make_options, std::shared_ptr<mo::Option>());
     MOCK_METHOD0(make_graphics_platform, std::shared_ptr<mg::Platform>());
@@ -50,12 +51,28 @@ class MockServerConfiguration : public mir::ServerConfiguration
                                                                           std::shared_ptr<mg::ViewableArea> const&));
     MOCK_METHOD2(make_input_manager, std::shared_ptr<mi::InputManager>(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const&, std::shared_ptr<mg::ViewableArea> const&));
 };
+
+struct MockSessionStore : public msess::SessionStore
+{
+    MOCK_METHOD1(open_session, std::shared_ptr<msess::Session>(std::string const&));
+    MOCK_METHOD1(close_session, void(std::shared_ptr<msess::Session> const&));
+
+    MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<msess::Session> const&, int));
+    MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
+
+    MOCK_METHOD0(shutdown, void());
+};
     
 } // namespace
 
 TEST(SessionManagementContext, constructs_session_store_from_server_configuration)
 {
+    using namespace ::testing;
     MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+    
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1).WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    
     mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
 }
 

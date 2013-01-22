@@ -39,10 +39,9 @@ add_executable(test_session_management_context session_management_context.cpp te
 
 target_link_libraries(
   session-management-cucumber-steps
-  
-  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
-  ${CUKE_LIBRARIES}
 
+  ${CUKE_LIBRARIES}
+  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
 )
 
 target_link_libraries(
