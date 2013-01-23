@@ -23,6 +23,8 @@
 #include "android_alloc_adaptor.h"
 #include "android_buffer.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <stdexcept>
 
 namespace mg  = mir::graphics;
@@ -48,12 +50,12 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
 
     err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
     if (err < 0)
-        throw std::runtime_error("Could not open hardware module");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
 
     struct alloc_device_t* alloc_dev;
     err = hw_module->methods->open(hw_module, GRALLOC_HARDWARE_GPU0, (struct hw_device_t**) &alloc_dev);
     if (err < 0)
-        throw std::runtime_error("Could not open hardware module");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
 
     /* note for future use: at this point, the hardware module should be filled with vendor information
        that we can determine different courses of action based upon */

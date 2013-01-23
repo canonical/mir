@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/render_view.h"
-#include "mir/sessions/session_manager.h"
+#include "mir/sessions/session_store.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -57,8 +57,8 @@ struct mir::DisplayServer::Private
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.make_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          application_session_factory{config.make_session_manager(surface_controller)},
-          communicator{config.make_communicator(application_session_factory, display, buffer_allocator)},
+          session_store{config.make_session_store(surface_controller)},
+          communicator{config.make_communicator(session_store, display, buffer_allocator)},
           input_manager{config.make_input_manager(empty_filter_list, display)},
           exit(false)
     {
@@ -73,7 +73,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<ms::SurfaceController> surface_controller;
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<sessions::SessionManager> application_session_factory;
+    std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<frontend::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
@@ -88,7 +88,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
 
 mir::DisplayServer::~DisplayServer()
 {
-    p->application_session_factory->shutdown();
+    p->session_store->shutdown();
 }
 
 void mir::DisplayServer::start()
@@ -120,6 +120,5 @@ void mir::DisplayServer::stop()
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    display->clear();
     p->compositor->render(display);
 }

@@ -239,7 +239,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> make_ipc_factory(
-            std::shared_ptr<mir::sessions::SessionManager> const&,
+            std::shared_ptr<mir::sessions::SessionStore> const&,
             std::shared_ptr<mg::Display> const&,
             std::shared_ptr<mc::GraphicBufferAllocator> const&)
 
@@ -260,7 +260,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_FALSE(mir_connection_is_valid(connection));
-            EXPECT_EQ(ErrorServer::test_exception_text, mir_connection_get_error_message(connection));
+            EXPECT_TRUE(std::strstr(mir_connection_get_error_message(connection), ErrorServer::test_exception_text.c_str()));
 
             MirSurfaceParameters const request_params =
             {
@@ -276,7 +276,7 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
 
             ASSERT_TRUE(ssync->surface != NULL);
             EXPECT_FALSE(mir_surface_is_valid(ssync->surface));
-            EXPECT_EQ(ErrorServer::test_exception_text, mir_surface_get_error_message(ssync->surface));
+            EXPECT_TRUE(std::strstr(mir_surface_get_error_message(ssync->surface), ErrorServer::test_exception_text.c_str()));
 
             EXPECT_NO_THROW({
                 MirSurfaceParameters response_params;

@@ -26,9 +26,11 @@
 #include <gtest/gtest.h>
 
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/fake_shared.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 
 namespace
 {
@@ -51,12 +53,12 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    auto allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
+    MockBufferAllocationStrategy allocation_strategy;
 
-    EXPECT_CALL(*allocation_strategy, create_swapper(_,buffer_properties))
+    EXPECT_CALL(allocation_strategy, create_swapper(_,buffer_properties))
         .Times(AtLeast(1));
 
-    mc::BufferBundleManager buffer_bundle_manager{allocation_strategy};
+    mc::BufferBundleManager buffer_bundle_manager(mt::fake_shared(allocation_strategy));
 
     auto bundle = buffer_bundle_manager.create_buffer_bundle(buffer_properties);
 

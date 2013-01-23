@@ -20,7 +20,7 @@
 
 #include "mir/surfaces/surface_stack_model.h"
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 

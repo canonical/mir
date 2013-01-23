@@ -17,9 +17,10 @@
  */
 
 #include "gbm_display.h"
-
-#include "mir/exception.h"
 #include "gbm_platform.h"
+#include "kms_display_configuration.h"
+
+#include <boost/throw_exception.hpp>
 #include "mir/geometry/rectangle.h"
 
 #include <stdexcept>
@@ -112,55 +113,22 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
     gbm(platform->gbm)
 {
     /* Set up all native resources */
-    try
-    {
-        kms.setup(drm);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
-
-    try
-    {
-        gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
-
-    try
-    {
-        egl.setup(gbm);
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
+    kms.setup(drm);
+    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
+    egl.setup(gbm);
 
     listener->report_successful_setup_of_native_resources();
 
-    if (eglMakeCurrent(egl.display, egl.surface,
-                       egl.surface, egl.context) == EGL_FALSE)
-    {
-        throw std::runtime_error("Failed to make EGL surface current");
-    }
+    make_current();
 
-    try
-    {
-        ensure_egl_image_extensions();
-    }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(mir::Exception() << boost::errinfo_nested_exception(boost::current_exception()));
-    }
-
-    clear();
     listener->report_successful_egl_make_current_on_construction();
 
+    ensure_egl_image_extensions();
+
+    clear();
+
     if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
-        throw std::runtime_error("Failed to perform initial surface buffer swap");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
@@ -169,7 +137,7 @@ mgg::GBMDisplay::GBMDisplay(const std::shared_ptr<GBMPlatform>& platform,
                               last_flipped_bufobj->get_drm_fb_id(), 0, 0,
                               &kms.connector->connector_id, 1, &kms.mode);
     if (ret)
-        throw std::runtime_error("Failed to set DRM crtc");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
@@ -228,6 +196,11 @@ bool mgg::GBMDisplay::post_update()
     last_flipped_bufobj = bufobj;
 
     return true;
+}
+
+void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
+{
+    f(*this);
 }
 
 mgg::BufferObject* mgg::GBMDisplay::get_front_buffer_object()
@@ -318,4 +291,18 @@ bool mgg::GBMDisplay::schedule_and_wait_for_page_flip(BufferObject* bufobj)
     }
 
     return true;
+}
+
+std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
+{
+    return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
+}
+
+void mgg::GBMDisplay::make_current()
+{
+    if (eglMakeCurrent(egl.display, egl.surface,
+                       egl.surface, egl.context) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
+    }
 }

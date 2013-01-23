@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,15 +16,20 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "android_input_manager.h"
+#ifndef MIR_TEST_FAKE_SHARED_H_
+#define MIR_TEST_FAKE_SHARED_H_
 
-namespace mg = mir::graphics;
-namespace mi = mir::input;
-namespace mia = mi::android;
+#include "mir_test/empty_deleter.h"
 
-std::shared_ptr<mi::InputManager> mi::create_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
-    std::shared_ptr<mg::ViewableArea> const& )
+#include <memory>
+
+namespace mir
 {
-    return std::shared_ptr<mia::InputManager>();
+namespace test
+{
+template <typename Type>
+std::shared_ptr<Type> fake_shared(Type& t) { return {&t, EmptyDeleter()}; }
 }
+}
+
+#endif /* MIR_TEST_FAKE_SHARED_H_ */

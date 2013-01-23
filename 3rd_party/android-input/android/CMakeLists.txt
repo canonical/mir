@@ -64,7 +64,8 @@ add_library(
   system/extras/ext4_utils/sha1.c
   )
 
-if(MIR_PLATFORM STREQUAL "android")
+#we don't have binder or skia available on hybris/linux platforms
+if(MIR_USE_BIONIC)
   target_link_libraries(
     android-input
     binder

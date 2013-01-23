@@ -19,8 +19,9 @@
 #include "protobuf_message_processor.h"
 #include "mir/frontend/resource_cache.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <sstream>
-#include <iostream>
 
 namespace mfd = mir::frontend::detail;
 
@@ -116,7 +117,7 @@ void mfd::ProtobufMessageProcessor::invoke(
     }
     catch (std::exception const& x)
     {
-        result_message.set_error(x.what());
+        result_message.set_error(boost::diagnostic_information(x));
         send_response(invocation.id(), &result_message);
     }
 }
@@ -168,6 +169,10 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     else if ("drm_auth_magic" == invocation.method_name())
     {
         invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+    }
+    else if ("select_focus_by_lightdm_id" == invocation.method_name())
+    {
+        invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
     }
     else if ("disconnect" == invocation.method_name())
     {

@@ -4,16 +4,12 @@
 STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 STRING(REGEX REPLACE "-W[^ ]*" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-# FIXME: This conditional is awkward...if platform is GBM use the ubuntu-x86 header?!?!
-
-if(MIR_PLATFORM STREQUAL "gbm")
+if(MIR_USES_BIONIC)
+  set(ANDROID_INPUT_COMPILE_FLAGS
+    "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
+else()
   set(ANDROID_INPUT_COMPILE_FLAGS
     "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-x86/AndroidConfig.h")
-endif()
-
-if(MIR_PLATFORM STREQUAL "android")
-  set(ANDROID_INPUT_COMPILE_FLAGS
-  "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-android/AndroidConfig.h")
 endif()
 
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS
@@ -21,7 +17,11 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
     PARENT_SCOPE)
 
 add_subdirectory(android)
-add_subdirectory(tools)
+
+#we don't have these tools dependencies hybrisized to build the tool
+if(MIR_USE_BIONIC)
+  add_subdirectory(tools)
+endif()
 
 # Make those include directories available to mir source code
 list(

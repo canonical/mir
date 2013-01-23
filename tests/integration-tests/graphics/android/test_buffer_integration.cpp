@@ -95,7 +95,10 @@ TEST_F(AndroidBufferIntegration, post_does_not_throw)
 
     EXPECT_NO_THROW(
     {
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
     });
 }
 
@@ -131,7 +134,7 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
     swapper->client_acquire(returned_buffer, id);
-    EXPECT_NE((int)returned_buffer.get(), NULL);
+    EXPECT_NE(nullptr, returned_buffer);
 }
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
@@ -158,7 +161,10 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     auto texture_res = bundle->lock_back_buffer();
     gl_animation.render_gl();
-    display->post_update();
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
     texture_res.reset();
 }
 
@@ -191,7 +197,10 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         auto texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
         texture_res.reset();
         sleep(1);
 
@@ -204,7 +213,10 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
         texture_res.reset();
         sleep(1);
     }

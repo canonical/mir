@@ -21,9 +21,14 @@
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/exception.h"
 
 #include <xf86drm.h>
+
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <limits>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;

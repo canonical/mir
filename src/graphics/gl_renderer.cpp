@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg=mir::graphics;
@@ -92,7 +93,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
 
-    throw std::runtime_error(object_info_err);
+    BOOST_THROW_EXCEPTION(std::runtime_error(object_info_err));
 }
 
 }

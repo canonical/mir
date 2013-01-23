@@ -29,14 +29,14 @@ protobuf_generate_cpp(
   ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
-if(MIR_PLATFORM STREQUAL "android")
+if( (MIR_PLATFORM STREQUAL "android") AND (MIR_USES_BIONIC)) 
   add_library(
     mirprotobuf STATIC
     
     google_protobuf_guard.cpp
     ${GENERATED_PROTOBUF_SRCS}
     ${GENERATED_PROTOBUF_HDRS})
-elseif(MIR_PLATFORM STREQUAL "gbm")
+else()
   add_library(
     mirprotobuf SHARED
     

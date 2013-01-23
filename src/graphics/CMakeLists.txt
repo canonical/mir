@@ -19,6 +19,7 @@
 include_directories(${GLESv2_INCLUDE_DIRS})
 
 if (MIR_PLATFORM STREQUAL "android")
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
   add_subdirectory(android/)
 endif()
 
@@ -30,6 +31,7 @@ add_library(
   mirgraphics STATIC
 
   gl_renderer.cpp
+  display_configuration.cpp
 )
 
 target_link_libraries(

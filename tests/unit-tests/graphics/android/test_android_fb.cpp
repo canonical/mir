@@ -424,15 +424,20 @@ TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
     EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
     .Times(Exactly(1));
 
-    display->post_update();
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
 }
 
 TEST_F(AndroidTestFramebufferInit, display_post_successful)
 {
     std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
-    bool success = display->post_update();
-    EXPECT_TRUE(success);
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        EXPECT_TRUE(buffer.post_update());
+    });
 }
 
 TEST_F(AndroidTestFramebufferInit, display_post_failure)
@@ -444,8 +449,10 @@ TEST_F(AndroidTestFramebufferInit, display_post_failure)
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
-    bool success = display->post_update();
-    EXPECT_FALSE(success);
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        EXPECT_FALSE(buffer.post_update());
+    });
 }
 
 TEST_F(AndroidTestFramebufferInit, framebuffer_correct_view_area)
