@@ -74,7 +74,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
             break;
         }
     }
-    delete config_slots;
+    delete[] config_slots;
 
     if (!found)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config"));
