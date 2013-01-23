@@ -132,57 +132,30 @@ mggh::DRMHelper::~DRMHelper()
 
 void mggh::KMSHelper::setup(const DRMHelper& drm)
 {
-    int i;
-
-    resources = drmModeGetResources(drm.fd);
-    if (!resources)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Couldn't get DRM resources\n"));
+    DRMModeResources resources{drm.fd};
 
     /* Find the first connected connector */
-    for (i = 0; i < resources->count_connectors; i++)
+    resources.for_each_connector([&](DRMModeConnectorUPtr con)
     {
-        connector = drmModeGetConnector(drm.fd, resources->connectors[i]);
-        if (connector == NULL)
-            continue;
-
-        if (connector->connection == DRM_MODE_CONNECTED &&
-            connector->count_modes > 0)
+        if (!connector &&
+            con->connection == DRM_MODE_CONNECTED &&
+            con->count_modes > 0)
         {
-            break;
+            connector = std::move(con);
         }
+    });
 
-        drmModeFreeConnector(connector);
-        connector = NULL;
-    }
+    if (!connector)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No active DRM connector found\n"));
 
-    if (connector == NULL)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("No active DRM connector found\n"));
-
-    /* Find the encoder connected to the selected connector */
-    for (i = 0; i < resources->count_encoders; i++)
-    {
-        encoder = drmModeGetEncoder(drm.fd, resources->encoders[i]);
-
-        if (encoder == NULL)
-            continue;
-
-        if (encoder->encoder_id == connector->encoder_id)
-            break;
-
-        drmModeFreeEncoder(encoder);
-        encoder = NULL;
-    }
-
+    encoder = std::move(resources.encoder(connector->encoder_id));
     if (encoder == NULL)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("No connected DRM encoder found\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("No connected DRM encoder found\n"));
 
     mode = connector->modes[0];
 
     drm_fd = drm.fd;
-    saved_crtc = drmModeGetCrtc(drm.fd, encoder->crtc_id);
+    saved_crtc = resources.crtc(encoder->crtc_id);
 }
 
 mggh::KMSHelper::~KMSHelper()
@@ -192,15 +165,7 @@ mggh::KMSHelper::~KMSHelper()
         drmModeSetCrtc(drm_fd, saved_crtc->crtc_id, saved_crtc->buffer_id,
                        saved_crtc->x, saved_crtc->y,
                        &connector->connector_id, 1, &saved_crtc->mode);
-        drmModeFreeCrtc(saved_crtc);
     }
-
-    if (encoder)
-        drmModeFreeEncoder(encoder);
-    if (connector)
-        drmModeFreeConnector(connector);
-    if (resources)
-        drmModeFreeResources(resources);
 }
 
 /*************

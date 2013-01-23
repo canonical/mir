@@ -32,6 +32,8 @@ namespace graphics
 namespace gbm
 {
 
+class DRMModeResources;
+
 class KMSDisplayConfiguration : public DisplayConfiguration
 {
 public:
@@ -41,7 +43,7 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f);
 
 private:
-    void add_output(drmModeRes const& resources, drmModeConnector const& connector);
+    void add_output(DRMModeResources const& resources, drmModeConnector const& connector);
 
     int const drm_fd;
     std::vector<DisplayConfigurationOutput> outputs;

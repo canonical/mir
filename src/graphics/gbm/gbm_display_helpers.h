@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 
+#include "drm_mode_resources.h"
+
 #include <cstddef>
 
 #include <gbm.h>
@@ -56,8 +58,8 @@ private:
 class KMSHelper {
 public:
     KMSHelper()
-        : resources{0}, connector{0}, encoder{0}, mode(),
-          drm_fd{-1}, saved_crtc{0}
+        : connector(), encoder(), mode(),
+          drm_fd{-1}, saved_crtc()
     {
     }
 
@@ -68,14 +70,13 @@ public:
 
     void setup(const DRMHelper& drm);
 
-    drmModeRes *resources;
-    drmModeConnector *connector;
-    drmModeEncoder *encoder;
+    DRMModeConnectorUPtr connector;
+    DRMModeEncoderUPtr encoder;
     drmModeModeInfo mode;
 
 private:
     int drm_fd;
-    drmModeCrtc *saved_crtc;
+    DRMModeCrtcUPtr saved_crtc;
 };
 
 class GBMHelper
