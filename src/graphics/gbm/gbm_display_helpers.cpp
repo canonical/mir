@@ -148,7 +148,7 @@ void mggh::KMSHelper::setup(const DRMHelper& drm)
     if (!connector)
         BOOST_THROW_EXCEPTION(std::runtime_error("No active DRM connector found\n"));
 
-    encoder = std::move(resources.encoder(connector->encoder_id));
+    encoder = resources.encoder(connector->encoder_id);
     if (encoder == NULL)
         BOOST_THROW_EXCEPTION(std::runtime_error("No connected DRM encoder found\n"));
 
