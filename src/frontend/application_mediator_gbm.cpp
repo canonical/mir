@@ -26,6 +26,8 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 namespace mg = mir::graphics;
 
 void mir::frontend::ApplicationMediator::drm_auth_magic(

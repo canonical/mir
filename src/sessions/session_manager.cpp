@@ -17,7 +17,7 @@
  */
 
 #include "mir/sessions/session_manager.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/sessions/focus_sequence.h"
@@ -51,7 +51,7 @@ msess::SessionManager::~SessionManager()
 
 std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msess::Session>(surface_factory, name);
+    auto new_session = std::make_shared<msess::ApplicationSession>(surface_factory, name);
 
     app_container->insert_session(new_session);
 

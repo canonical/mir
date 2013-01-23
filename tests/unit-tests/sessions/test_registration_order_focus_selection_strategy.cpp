@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/sessions/surface_creation_parameters.h"
@@ -41,9 +41,9 @@ TEST(RegistrationOrderFocusSequence, focus_order)
     std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(model);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
+    std::shared_ptr<msess::ApplicationSession> app1(new msess::ApplicationSession(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::ApplicationSession> app2(new msess::ApplicationSession(factory, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::ApplicationSession> app3(new msess::ApplicationSession(factory, std::string("Visual Studio 9")));
 
     model->insert_session(app1);
     model->insert_session(app2);
@@ -61,9 +61,9 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
+    std::shared_ptr<msess::ApplicationSession> app1(new msess::ApplicationSession(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::ApplicationSession> app2(new msess::ApplicationSession(factory, std::string("Visual Studio 8")));
+    std::shared_ptr<msess::ApplicationSession> app3(new msess::ApplicationSession(factory, std::string("Visual Studio 9")));
 
     container->insert_session(app1);
     container->insert_session(app2);
@@ -81,9 +81,9 @@ TEST(RegistrationOrderFocusSequence, no_focus)
     std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
+    std::shared_ptr<msess::ApplicationSession> app1(new msess::ApplicationSession(factory, std::string("Visual Studio 7")));
 
     container->insert_session(app1);
 
-    EXPECT_EQ(app1->name(), focus_sequence.successor_of(std::shared_ptr<msess::Session>()).lock()->name());
+    EXPECT_EQ(app1->name(), focus_sequence.successor_of(std::shared_ptr<msess::ApplicationSession>()).lock()->name());
 }

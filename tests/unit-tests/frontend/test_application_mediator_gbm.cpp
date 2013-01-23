@@ -20,7 +20,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
@@ -52,7 +52,7 @@ namespace
  * without having to create doubles for classes so deep in its dependency
  * hierarchy.
  *
- * In particular, it would be nice if msess::Session was stubable/mockable.
+ * In particular, it would be nice if msess::ApplicationSession was stubable/mockable.
  */
 
 class StubSurfaceFactory : public msess::SurfaceFactory
@@ -74,7 +74,7 @@ public:
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::Session>(factory, "stub");
+        return std::make_shared<msess::ApplicationSession>(factory, "stub");
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
