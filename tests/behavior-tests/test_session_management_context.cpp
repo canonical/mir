@@ -19,6 +19,7 @@
 #include "session_management_context.h"
 #include "mir/server_configuration.h"
 #include "mir/sessions/session_store.h"
+#include "mir/sessions/session.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -62,7 +63,20 @@ struct MockSessionStore : public msess::SessionStore
 
     MOCK_METHOD0(shutdown, void());
 };
+
+/*struct MockSession : public msess::Session
+{
+    MOCK_METHOD1(create_surface, msess::SurfaceId(msess::SurfaceCreationParameters const&));
+    MOCK_METHOD1(destroy_surface, void(msess::SurfaceId));
+    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<msess::Surface>(msess::SurfaceId));
     
+    MOCK_METHOD0(name, std::string());
+    MOCK_METHOD0(shutdown, void());
+    
+    MOCK_METHOD0(hide, void());
+    MOCK_METHOD0(show, void());
+};*/
+
 } // namespace
 
 TEST(SessionManagementContext, constructs_session_store_from_server_configuration)
@@ -71,7 +85,25 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     MockServerConfiguration server_configuration;
     MockSessionStore session_store;
     
-    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1).WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    
+    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+}
+
+TEST(SessionManagementContext, open_window_consuming_creates_surface)
+{
+    using namespace ::testing;
+    MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+//    MockSession session;
+    std::string const testing_window_name = "John";
+    
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    
+//    EXPECT_CALL(session_store, open_session(testing_window_name)).Times(1)
+//        .WillOnce(Return(mt::fake_shared<msess::Session>(session)));
     
     mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
 }

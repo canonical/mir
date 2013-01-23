@@ -43,18 +43,18 @@ public:
     explicit Session(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
     virtual ~Session();
 
-    SurfaceId create_surface(const SurfaceCreationParameters& params);
-    void destroy_surface(SurfaceId surface);
-    std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
+    virtual SurfaceId create_surface(SurfaceCreationParameters const& params);
+    virtual void destroy_surface(SurfaceId surface);
+    virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
 
-    std::string name();
-    void shutdown();
+    virtual std::string name();
+    virtual void shutdown();
 
     virtual void hide();
     virtual void show();
 protected:
-    Session(const Session&) = delete;
-    Session& operator=(const Session&) = delete;
+    Session(Session const&) = delete;
+    Session& operator=(Session const&) = delete;
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
