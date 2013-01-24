@@ -35,7 +35,7 @@ pushd ${BUILD_DIR} > /dev/null
       -DMIR_ENABLE_DEATH_TESTS=NO \
       -DMIR_INPUT_ENABLE_EVEMU=NO \
       -DMIR_PLATFORM=android \
-      -DMIR_CUTDOWN_FOR_EMULATOR=true \
+      -DMIR_DISABLE_INPUT=true \
       .. 
 
     cmake --build .
