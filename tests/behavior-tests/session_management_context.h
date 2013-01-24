@@ -21,8 +21,7 @@
 
 #include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
-// TODO: This is for SurfaceId only? Seems incorrect
-#include "mir/sessions/session.h"
+#include "mir/sessions/surface_id.h"
 
 #include <string>
 #include <map>
@@ -36,6 +35,7 @@ class ServerConfiguration;
 namespace sessions
 {
 class SessionStore;
+class Session;
 }
 
 namespace test
