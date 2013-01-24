@@ -47,7 +47,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(make_options, std::shared_ptr<mo::Option>());
     MOCK_METHOD0(make_graphics_platform, std::shared_ptr<mg::Platform>());
     MOCK_METHOD0(make_buffer_initializer, std::shared_ptr<mg::BufferInitializer>());
-    MOCK_METHOD1(make_buffer_allocation_strategy, 
+    MOCK_METHOD1(make_buffer_allocation_strategy,
         std::shared_ptr<mc::BufferAllocationStrategy>(std::shared_ptr<mc::GraphicBufferAllocator> const&));
     MOCK_METHOD1(make_renderer, std::shared_ptr<mg::Renderer>(std::shared_ptr<mg::Display> const&));
     MOCK_METHOD3(make_communicator, std::shared_ptr<mf::Communicator>(
@@ -103,12 +103,12 @@ MATCHER_P(NamedWindowWithNoGeometry, name, "")
 {
     if (arg.name != name)
         return false;
-    
+
     if (arg.size.width.as_uint32_t() != 0)
         return false;
     if (arg.size.height.as_uint32_t() != 0)
         return false;
-    
+
     return true;
 }
 
@@ -145,7 +145,7 @@ struct SessionManagementContextSetup : public testing::Test
 
 msess::SurfaceId const SessionManagementContextSetup::testing_surface_id{1};
 std::string const SessionManagementContextSetup::testing_window_name{"John"};
-geom::Size const SessionManagementContextSetup::testing_window_size{geom::Width{100}, 
+geom::Size const SessionManagementContextSetup::testing_window_size{geom::Width{100},
                                                                     geom::Height{100}};
 
 } // namespace
@@ -158,7 +158,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     
     EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
-    
+
     mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
 }
 
@@ -173,7 +173,7 @@ TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with
     // To request consuming mode it is sufficient to omit geometry in the creation request.
     EXPECT_CALL(session, create_surface(NamedWindowWithNoGeometry(testing_window_name))).Times(1)
         .WillOnce(Return(testing_surface_id));
-    
+
     EXPECT_TRUE(ctx->open_window_consuming(testing_window_name));
 }
 
@@ -187,7 +187,7 @@ TEST_F(SessionManagementContextSetup, open_window_with_size_creates_surface_with
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(testing_window_name, testing_window_size))).Times(1)
         .WillOnce(Return(testing_surface_id));
-    
+
     EXPECT_TRUE(ctx->open_window_with_size(testing_window_name, testing_window_size));
 }
 
@@ -202,7 +202,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(testing_window_name, testing_window_size))).Times(1)
         .WillOnce(Return(testing_surface_id));
-    
+
     EXPECT_TRUE(ctx->open_window_with_size(testing_window_name, testing_window_size));
     
     EXPECT_CALL(session, get_surface(testing_surface_id)).Times(1)
@@ -245,10 +245,10 @@ TEST(SessionManagementContext, set_view_area_updates_viewable_area)
     static const geom::Rectangle updated_region = geom::Rectangle{geom::Point(),
                                                                   geom::Size{geom::Width{100},
                                                                              geom::Height{100}}};
-    
+
     EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
         .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
-    
+
     mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
     ctx.set_view_area(updated_region);
     
