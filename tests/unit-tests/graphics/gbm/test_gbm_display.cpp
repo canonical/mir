@@ -338,7 +338,11 @@ TEST_F(GBMDisplayTest, post_update)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-        EXPECT_TRUE(display->post_update());
+
+        display->for_each_display_buffer([](mg::DisplayBuffer& db)
+        {
+            EXPECT_TRUE(db.post_update());
+        });
     });
 }
 
@@ -372,7 +376,11 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-        EXPECT_FALSE(display->post_update());
+
+        display->for_each_display_buffer([](mg::DisplayBuffer& db)
+        {
+            EXPECT_FALSE(db.post_update());
+        });
     });
 }
 
