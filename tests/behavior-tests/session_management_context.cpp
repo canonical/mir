@@ -150,7 +150,6 @@ mtc::SessionManagementContext::SessionManagementContext(std::shared_ptr<ServerCo
     session_store = server_configuration->make_session_store(underlying_factory, view_area);
 }
 
-
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
