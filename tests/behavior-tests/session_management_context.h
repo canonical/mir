@@ -47,7 +47,8 @@ class SizedDisplay;
 class SessionManagementContext
 {
 public:
-    SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration = std::make_shared<DefaultServerConfiguration>(""));
+    SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration
+        = std::make_shared<DefaultServerConfiguration>(""));
 
     virtual ~SessionManagementContext() {}
     
