@@ -67,6 +67,19 @@ struct MockSessionStore : public msess::SessionStore
     MOCK_METHOD0(shutdown, void());
 };
 
+struct MockSurface : public msess::Surface
+{
+    MOCK_METHOD0(hide, void());
+    MOCK_METHOD0(show, void());
+    MOCK_METHOD0(destroy, void());
+    MOCK_METHOD0(shutdown, void());
+    MOCK_METHOD0(advance_client_buffer, void());
+
+    MOCK_CONST_METHOD0(size, mir::geometry::Size ());
+    MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
+    MOCK_CONST_METHOD0(client_buffer_resource, std::shared_ptr<mc::GraphicBufferClientResource> ());
+};
+
 struct MockSession : public msess::Session
 {
     MOCK_METHOD1(create_surface, msess::SurfaceId(msess::SurfaceCreationParameters const&));
@@ -78,32 +91,6 @@ struct MockSession : public msess::Session
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-};
-
-struct DummySurface : public msess::Surface
-{
-    explicit DummySurface() {}
-    virtual ~DummySurface() {}
-    
-    virtual void hide() {}
-    virtual void show() {}
-    virtual void destroy() {}
-    virtual void shutdown() {}
-    
-    virtual geom::Size size() const
-    {
-        return geom::Size();
-    }
-    virtual geom::PixelFormat pixel_format() const
-    {
-        return geom::PixelFormat();
-    }
-
-    virtual void advance_client_buffer() {}
-    virtual std::shared_ptr<mc::GraphicBufferClientResource> client_buffer_resource() const
-    {
-        return std::shared_ptr<mc::GraphicBufferClientResource>();
-    }
 };
 
 MATCHER_P(NamedParametersWithNoGeometry, name, "")
@@ -190,5 +177,37 @@ TEST(SessionManagementContext, open_window_with_size_creates_surface_with_size)
     mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
     
     EXPECT_TRUE(mc.open_window_with_size(testing_window_name, testing_window_size));
+}
+
+TEST(SessionManagementContext, get_window_size_queries_surface)
+{
+    using namespace ::testing;
+    MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+    MockSession session;
+    MockSurface surface;
+
+    msess::SurfaceId const testing_surface_id{1};
+    std::string const testing_window_name = "John";
+    geom::Size const testing_window_size = geom::Size{geom::Width{100}, geom::Height{100}};
+    
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    
+    EXPECT_CALL(session_store, open_session(testing_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::Session>(session)));
+
+    EXPECT_CALL(session, create_surface(NamedParametersWithGeometry(testing_window_name, testing_window_size))).Times(1)
+        .WillOnce(Return(testing_surface_id));
+    
+    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    
+    EXPECT_TRUE(mc.open_window_with_size(testing_window_name, testing_window_size));
+    
+    EXPECT_CALL(session, get_surface(testing_surface_id)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::Surface>(surface)));
+    EXPECT_CALL(surface, size()).Times(1).WillOnce(Return(testing_window_size));
+    
+    EXPECT_EQ(testing_window_size, mc.get_window_size(testing_window_name));
 }
 
