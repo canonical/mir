@@ -146,7 +146,7 @@ mtc::SessionManagementContext::SessionManagementContext(std::shared_ptr<ServerCo
 {
     auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
     view_area = std::make_shared<mtc::SizedDisplay>();
-    
+
     session_store = server_configuration->make_session_store(underlying_factory, view_area);
 }
 
@@ -180,7 +180,7 @@ geom::Size mtc::SessionManagementContext::get_window_size(std::string const& win
     auto window = open_windows[window_name];
     auto session = std::get<0>(window);
     auto surface_id = std::get<1>(window);
-    
+
     return session->get_surface(surface_id)->size();
 }
 

@@ -34,19 +34,17 @@ GIVEN("^the display-size is " STEP_SIZE_PARAMETER_REGEX "$")
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
     ctx->set_view_area(geom::Rectangle{geom::Point(),
-                       geom::Size{geom::Width{width}, 
+                       geom::Size{geom::Width{width},
                                   geom::Height{height}}});
-
 }
 
 // TODO: Maybe session names should be quoted to allow for spaces
-WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened in consuming mode$") 
+WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened in consuming mode$")
 {
     REGEX_PARAM(std::string, window_name);
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
     EXPECT_TRUE(ctx->open_window_consuming(window_name));
-    
 }
 
 WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened with size " STEP_SIZE_PARAMETER_REGEX "$")
@@ -58,7 +56,6 @@ WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened with size " STEP_SIZE
     
     EXPECT_TRUE(ctx->open_window_with_size(window_name, geom::Size{geom::Width{request_width},
                                                                    geom::Height{request_height}}));
-    
 }
 
 THEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " will have size " STEP_SIZE_PARAMETER_REGEX "$")
