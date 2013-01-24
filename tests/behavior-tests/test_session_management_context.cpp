@@ -22,6 +22,7 @@
 #include "mir/sessions/session.h"
 #include "mir/sessions/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
+#include "mir/graphics/viewable_area.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -126,7 +127,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
     
-    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
 }
 
 TEST(SessionManagementContext, open_window_consuming_creates_surface_with_no_geometry)
@@ -149,9 +150,9 @@ TEST(SessionManagementContext, open_window_consuming_creates_surface_with_no_geo
     EXPECT_CALL(session, create_surface(NamedParametersWithNoGeometry(testing_window_name))).Times(1)
         .WillOnce(Return(testing_surface_id));
     
-    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
     
-    EXPECT_TRUE(mc.open_window_consuming(testing_window_name));
+    EXPECT_TRUE(ctx.open_window_consuming(testing_window_name));
 }
 
 TEST(SessionManagementContext, open_window_with_size_creates_surface_with_size)
@@ -174,9 +175,9 @@ TEST(SessionManagementContext, open_window_with_size_creates_surface_with_size)
     EXPECT_CALL(session, create_surface(NamedParametersWithGeometry(testing_window_name, testing_window_size))).Times(1)
         .WillOnce(Return(testing_surface_id));
     
-    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
     
-    EXPECT_TRUE(mc.open_window_with_size(testing_window_name, testing_window_size));
+    EXPECT_TRUE(ctx.open_window_with_size(testing_window_name, testing_window_size));
 }
 
 TEST(SessionManagementContext, get_window_size_queries_surface)
@@ -200,14 +201,56 @@ TEST(SessionManagementContext, get_window_size_queries_surface)
     EXPECT_CALL(session, create_surface(NamedParametersWithGeometry(testing_window_name, testing_window_size))).Times(1)
         .WillOnce(Return(testing_surface_id));
     
-    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
     
-    EXPECT_TRUE(mc.open_window_with_size(testing_window_name, testing_window_size));
+    EXPECT_TRUE(ctx.open_window_with_size(testing_window_name, testing_window_size));
     
     EXPECT_CALL(session, get_surface(testing_surface_id)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::Surface>(surface)));
     EXPECT_CALL(surface, size()).Times(1).WillOnce(Return(testing_window_size));
     
-    EXPECT_EQ(testing_window_size, mc.get_window_size(testing_window_name));
+    EXPECT_EQ(testing_window_size, ctx.get_window_size(testing_window_name));
 }
 
+TEST(SessionManagementContext, default_view_area_is_1600_by_1400)
+{
+    using namespace ::testing;
+
+    static const geom::Width default_view_width = geom::Width{1600};
+    static const geom::Height default_view_height = geom::Height{1400};
+    
+    static const geom::Size default_view_size = geom::Size{default_view_width,
+                                                       default_view_height};
+
+    MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+    std::shared_ptr<mg::ViewableArea> viewable_area;
+
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
+
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    
+    EXPECT_EQ(default_view_size, viewable_area->view_area().size);
+}
+
+
+TEST(SessionManagementContext, set_view_area_updates_viewable_area)
+{
+    using namespace ::testing;
+    MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+    std::shared_ptr<mg::ViewableArea> viewable_area;
+    
+    static const geom::Rectangle updated_region = geom::Rectangle{geom::Point(),
+                                                                  geom::Size{geom::Width{100},
+                                                                             geom::Height{100}}};
+    
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
+    
+    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    ctx.set_view_area(updated_region);
+    
+    EXPECT_EQ(updated_region, viewable_area->view_area());
+}
