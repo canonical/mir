@@ -145,8 +145,8 @@ struct SessionManagementContextSetup : public testing::Test
 
 msess::SurfaceId const SessionManagementContextSetup::testing_surface_id{1};
 std::string const SessionManagementContextSetup::testing_window_name{"John"};
-geom::Size const SessionManagementContextSetup::testing_window_size{geom::Size{geom::Width{100}, 
-                                                                               geom::Height{100}}};
+geom::Size const SessionManagementContextSetup::testing_window_size{geom::Width{100}, 
+                                                                    geom::Height{100}};
 
 } // namespace
 
