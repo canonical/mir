@@ -39,59 +39,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-/* Helper functions */
-
-drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
-                            uint32_t clock, uint16_t htotal, uint16_t vtotal)
-{
-    drmModeModeInfo mode = drmModeModeInfo();
-
-    mode.hdisplay = hdisplay;
-    mode.vdisplay = vdisplay;
-    mode.clock = clock;
-    mode.htotal = htotal;
-    mode.vtotal = vtotal;
-
-    return mode;
-}
-
-drmModeCrtc create_crtc(uint32_t id, drmModeModeInfo mode)
-{
-    drmModeCrtc crtc = drmModeCrtc();
-
-    crtc.crtc_id = id;
-    crtc.mode = mode;
-
-    return crtc;
-}
-
-drmModeEncoder create_encoder(uint32_t encoder_id, uint32_t crtc_id)
-{
-    drmModeEncoder encoder = drmModeEncoder();
-
-    encoder.encoder_id = encoder_id;
-    encoder.crtc_id = crtc_id;
-
-    return encoder;
-}
-
-drmModeConnector create_connector(uint32_t connector_id, drmModeConnection connection,
-                                  uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
-                                  geom::Size const& physical_size)
-{
-    drmModeConnector connector = drmModeConnector();
-
-    connector.connector_id = connector_id;
-    connector.connection = connection;
-    connector.encoder_id = encoder_id;
-    connector.modes = modes.data();
-    connector.count_modes = modes.size();
-    connector.mmWidth = physical_size.width.as_uint32_t();
-    connector.mmHeight = physical_size.height.as_uint32_t();
-
-    return connector;
-}
-
 mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode)
 {
     geom::Size const size{geom::Width{mode.hdisplay}, geom::Height{mode.vdisplay}};
@@ -106,66 +53,6 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
 
     return mg::DisplayConfigurationMode{size, vrefresh_hz};
 }
-
-struct FakeDRMResources
-{
-    void prepare()
-    {
-        resources.count_crtcs = crtcs.size();
-        for (auto const& crtc: crtcs)
-            crtc_ids.push_back(crtc.crtc_id);
-        resources.crtcs = crtc_ids.data();
-
-        resources.count_encoders = encoders.size();
-        for (auto const& encoder: encoders)
-            encoder_ids.push_back(encoder.encoder_id);
-        resources.encoders = encoder_ids.data();
-
-        resources.count_connectors = connectors.size();
-        for (auto const& connector: connectors)
-            connector_ids.push_back(connector.connector_id);
-        resources.connectors = connector_ids.data();
-    }
-
-    drmModeCrtc* find_crtc(uint32_t id)
-    {
-        for (auto& crtc : crtcs)
-        {
-            if (crtc.crtc_id == id)
-                return &crtc;
-        }
-        return nullptr;
-    }
-
-    drmModeEncoder* find_encoder(uint32_t id)
-    {
-        for (auto& encoder : encoders)
-        {
-            if (encoder.encoder_id == id)
-                return &encoder;
-        }
-        return nullptr;
-    }
-
-    drmModeConnector* find_connector(uint32_t id)
-    {
-        for (auto& connector : connectors)
-        {
-            if (connector.connector_id == id)
-                return &connector;
-        }
-        return nullptr;
-    }
-
-    drmModeRes resources;
-    std::vector<drmModeCrtc> crtcs;
-    std::vector<drmModeEncoder> encoders;
-    std::vector<drmModeConnector> connectors;
-
-    std::vector<uint32_t> crtc_ids;
-    std::vector<uint32_t> encoder_ids;
-    std::vector<uint32_t> connector_ids;
-};
 
 class GBMDisplayConfigurationTest : public ::testing::Test
 {
@@ -195,33 +82,14 @@ public:
     void setup_sample_modes()
     {
         /* Add DRM modes */
-        modes0.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(mgg::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
+        modes0.push_back(mgg::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
+        modes0.push_back(mgg::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
+        modes0.push_back(mgg::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
 
         /* Add the DisplayConfiguration modes corresponding to the DRM modes */
         for (auto const& mode : modes0)
             conf_modes0.push_back(conf_mode_from_drm_mode(mode));
-    }
-
-    void setup_drm_call_defaults()
-    {
-        using namespace testing;
-
-        resources.prepare();
-
-        ON_CALL(mock_drm, drmModeGetResources(_))
-        .WillByDefault(Return(&resources.resources));
-
-        ON_CALL(mock_drm, drmModeGetCrtc(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_crtc)));
-
-        ON_CALL(mock_drm, drmModeGetEncoder(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_encoder)));
-
-        ON_CALL(mock_drm, drmModeGetConnector(_, _))
-        .WillByDefault(WithArgs<1>(Invoke(&resources, &FakeDRMResources::find_connector)));
     }
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
@@ -229,8 +97,6 @@ public:
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::shared_ptr<mg::DisplayListener> const null_listener;
-
-    FakeDRMResources resources;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
@@ -255,22 +121,23 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector1_physical_size_mm{};
     geom::Size const connector2_physical_size_mm{};
 
-    resources.crtcs.push_back(create_crtc(crtc0_id, modes0[1]));
+    mgg::FakeDRMResources& resources(mock_drm.fake_drm);
 
-    resources.encoders.push_back(create_encoder(encoder0_id, crtc0_id));
-    resources.encoders.push_back(create_encoder(encoder1_id, invalid_id));
+    resources.reset();
 
-    resources.connectors.push_back(create_connector(connector0_id, DRM_MODE_CONNECTED,
-                                                    encoder0_id, modes0,
-                                                    connector0_physical_size_mm));
-    resources.connectors.push_back(create_connector(connector1_id, DRM_MODE_DISCONNECTED,
-                                                    invalid_id, modes_empty,
-                                                    connector1_physical_size_mm));
-    resources.connectors.push_back(create_connector(connector2_id, DRM_MODE_DISCONNECTED,
-                                                    encoder1_id, modes_empty,
-                                                    connector2_physical_size_mm));
+    resources.add_crtc(crtc0_id, modes0[1]);
 
-    setup_drm_call_defaults();
+    resources.add_encoder(encoder0_id, crtc0_id);
+    resources.add_encoder(encoder1_id, invalid_id);
+
+    resources.add_connector(connector0_id, DRM_MODE_CONNECTED, encoder0_id,
+                            modes0, connector0_physical_size_mm);
+    resources.add_connector(connector1_id, DRM_MODE_DISCONNECTED, invalid_id,
+                            modes_empty, connector1_physical_size_mm);
+    resources.add_connector(connector2_id, DRM_MODE_DISCONNECTED, encoder1_id,
+                            modes_empty, connector2_physical_size_mm);
+
+    resources.prepare();
 
     /* Expected results */
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
