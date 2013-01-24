@@ -52,14 +52,14 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
     /* First time for master DRM fd, second for authenticated fd */
     EXPECT_CALL(mock_drm, drmOpen(_,_))
         .Times(2)
-        .WillOnce(Return(mock_drm.fake_drm.fd))
+        .WillOnce(Return(mock_drm.fake_drm.fd()))
         .WillOnce(Return(auth_fd));
 
     /* Expect proper authorization */
     EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd,_));
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),_));
 
-    EXPECT_CALL(mock_drm, drmClose(mock_drm.fake_drm.fd));
+    EXPECT_CALL(mock_drm, drmClose(mock_drm.fake_drm.fd()));
 
     /* Expect authenticated fd to be closed when package is destroyed */
     EXPECT_CALL(mock_drm, drmClose(auth_fd));
@@ -98,7 +98,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
 
     drm_magic_t const magic{0x10111213};
 
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd,magic))
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
 
     auto platform = mg::create_platform();
@@ -112,7 +112,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 
     drm_magic_t const magic{0x10111213};
 
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd,magic))
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(-1));
 
     auto platform = mg::create_platform();
