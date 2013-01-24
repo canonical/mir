@@ -141,6 +141,21 @@ struct SessionManagementContextSetup : public testing::Test
     static geom::Size const test_window_size;
 };
 
+struct SessionManagementContextViewAreaSetup : public SessionManagementContextSetup
+{
+    void SetUp()
+    {
+        using namespace ::testing;
+
+        EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+            .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
+        ctx = std::make_shared<mtc::SessionManagementContext>(
+            mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    }
+
+    std::shared_ptr<mg::ViewableArea> viewable_area;
+};
+
 msess::SurfaceId const SessionManagementContextSetup::test_surface_id{1};
 std::string const SessionManagementContextSetup::test_window_name{"John"};
 geom::Size const SessionManagementContextSetup::test_window_size{geom::Width{100},
@@ -213,42 +228,25 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     EXPECT_EQ(test_window_size, ctx->get_window_size(test_window_name));
 }
 
-TEST(SessionManagementContext, default_view_area_is_1600_by_1400)
+TEST_F(SessionManagementContextViewAreaSetup, default_view_area_is_1600_by_1400)
 {
     using namespace ::testing;
+
     static const geom::Size default_view_size = geom::Size{geom::Width{1600},
                                                            geom::Height{1400}};
 
-    MockServerConfiguration server_configuration;
-    MockSessionStore session_store;
-    std::shared_ptr<mg::ViewableArea> viewable_area;
-
-    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
-        .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
-
-    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
-    
     EXPECT_EQ(default_view_size, viewable_area->view_area().size);
 }
 
 
-TEST(SessionManagementContext, set_view_area_updates_viewable_area)
+TEST_F(SessionManagementContextViewAreaSetup, set_view_area_updates_viewable_area)
 {
     using namespace ::testing;
 
-    MockServerConfiguration server_configuration;
-    MockSessionStore session_store;
-    std::shared_ptr<mg::ViewableArea> viewable_area;
-    
-    static const geom::Rectangle updated_region = geom::Rectangle{geom::Point(),
+    static const geom::Rectangle new_view_area = geom::Rectangle{geom::Point(),
                                                                   geom::Size{geom::Width{100},
                                                                              geom::Height{100}}};
 
-    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
-        .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
-
-    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
-    ctx.set_view_area(updated_region);
-    
-    EXPECT_EQ(updated_region, viewable_area->view_area());
+    ctx->set_view_area(new_view_area);
+    EXPECT_EQ(new_view_area, viewable_area->view_area());
 }
