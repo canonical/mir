@@ -35,17 +35,18 @@ class ApplicationSession : public Session
 {
 public:
     explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
-    virtual ~ApplicationSession();
+    ~ApplicationSession();
 
-    virtual SurfaceId create_surface(SurfaceCreationParameters const& params);
-    virtual void destroy_surface(SurfaceId surface);
-    virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
+    SurfaceId create_surface(SurfaceCreationParameters const& params);
+    void destroy_surface(SurfaceId surface);
+    std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
 
-    virtual std::string name();
-    virtual void shutdown();
+    std::string name();
+    void shutdown();
 
-    virtual void hide();
-    virtual void show();
+    void hide();
+    void show();
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -64,6 +65,6 @@ private:
 };
 
 }
-}
+} // namespace mir
 
 #endif // MIR_SESSIONS_APPLICATION_SESSION_H_
