@@ -20,6 +20,8 @@
 #include "mir/server_configuration.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/session.h"
+#include "mir/sessions/surface.h"
+#include "mir/sessions/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -32,6 +34,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace msess = mir::sessions;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
 
@@ -64,7 +67,7 @@ struct MockSessionStore : public msess::SessionStore
     MOCK_METHOD0(shutdown, void());
 };
 
-/*struct MockSession : public msess::Session
+struct MockSession : public msess::Session
 {
     MOCK_METHOD1(create_surface, msess::SurfaceId(msess::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(msess::SurfaceId));
@@ -75,7 +78,55 @@ struct MockSessionStore : public msess::SessionStore
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-};*/
+};
+
+struct DummySurface : public msess::Surface
+{
+    explicit DummySurface() {}
+    virtual ~DummySurface() {}
+    
+    virtual void hide() {}
+    virtual void show() {}
+    virtual void destroy() {}
+    virtual void shutdown() {}
+    
+    virtual geom::Size size() const
+    {
+        return geom::Size();
+    }
+    virtual geom::PixelFormat pixel_format() const
+    {
+        return geom::PixelFormat();
+    }
+
+    virtual void advance_client_buffer() {}
+    virtual std::shared_ptr<mc::GraphicBufferClientResource> client_buffer_resource() const
+    {
+        return std::shared_ptr<mc::GraphicBufferClientResource>();
+    }
+};
+
+MATCHER_P(NamedParametersWithNoGeometry, name, "")
+{
+    if (arg.name != name)
+        return false;
+    
+    if (arg.size.width.as_uint32_t() != 0)
+        return false;
+    if (arg.size.height.as_uint32_t() != 0)
+        return false;
+    
+    return true;
+}
+
+MATCHER_P2(NamedParametersWithGeometry, name, geometry, "")
+{
+    if (arg.name != name)
+        return false;
+    if (arg.size != geometry)
+        return false;
+    return true;
+}
 
 } // namespace
 
@@ -91,20 +142,53 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
 }
 
-TEST(SessionManagementContext, open_window_consuming_creates_surface)
+TEST(SessionManagementContext, open_window_consuming_creates_surface_with_no_geometry)
 {
     using namespace ::testing;
     MockServerConfiguration server_configuration;
     MockSessionStore session_store;
-//    MockSession session;
+    MockSession session;
+
+    msess::SurfaceId const testing_surface_id{1};
     std::string const testing_window_name = "John";
     
     EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
     
-//    EXPECT_CALL(session_store, open_session(testing_window_name)).Times(1)
-//        .WillOnce(Return(mt::fake_shared<msess::Session>(session)));
+    EXPECT_CALL(session_store, open_session(testing_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::Session>(session)));
+
+    // To request consuming mode it is sufficient to omit geometry in the creation request.
+    EXPECT_CALL(session, create_surface(NamedParametersWithNoGeometry(testing_window_name))).Times(1)
+        .WillOnce(Return(testing_surface_id));
     
     mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    
+    EXPECT_TRUE(mc.open_window_consuming(testing_window_name));
+}
+
+TEST(SessionManagementContext, open_window_with_size_creates_surface_with_size)
+{
+    using namespace ::testing;
+    MockServerConfiguration server_configuration;
+    MockSessionStore session_store;
+    MockSession session;
+
+    msess::SurfaceId const testing_surface_id{1};
+    std::string const testing_window_name = "John";
+    geom::Size const testing_window_size = geom::Size{geom::Width{100}, geom::Height{100}};
+    
+    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
+    
+    EXPECT_CALL(session_store, open_session(testing_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<msess::Session>(session)));
+
+    EXPECT_CALL(session, create_surface(NamedParametersWithGeometry(testing_window_name, testing_window_size))).Times(1)
+        .WillOnce(Return(testing_surface_id));
+    
+    mtc::SessionManagementContext mc(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    
+    EXPECT_TRUE(mc.open_window_with_size(testing_window_name, testing_window_size));
 }
 
