@@ -17,42 +17,16 @@
  */
 
 #include "kms_display_configuration.h"
-#include <boost/throw_exception.hpp>
+#include "drm_mode_resources.h"
 
 #include <cmath>
 #include <limits>
-#include <stdexcept>
 
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
 namespace
 {
-
-struct CrtcDeleter
-{
-    void operator()(drmModeCrtc* p) { if (p) drmModeFreeCrtc(p); }
-};
-
-struct EncoderDeleter
-{
-    void operator()(drmModeEncoder* p) { if (p) drmModeFreeEncoder(p); }
-};
-
-struct ResourcesDeleter
-{
-    void operator()(drmModeRes* p) { if (p) drmModeFreeResources(p); }
-};
-
-struct ConnectorDeleter
-{
-    void operator()(drmModeConnector* p) { if (p) drmModeFreeConnector(p); }
-};
-
-typedef std::unique_ptr<drmModeCrtc,CrtcDeleter> CrtcUPtr;
-typedef std::unique_ptr<drmModeEncoder,EncoderDeleter> EncoderUPtr;
-typedef std::unique_ptr<drmModeRes,ResourcesDeleter> ResourcesUPtr;
-typedef std::unique_ptr<drmModeConnector,ConnectorDeleter> ConnectorUPtr;
 
 bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
 {
@@ -66,40 +40,6 @@ bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& in
             info1.vsync_start == info2.vsync_start &&
             info1.vsync_end == info2.vsync_end &&
             info1.vtotal == info2.vtotal);
-}
-
-EncoderUPtr find_encoder(int drm_fd, drmModeRes const& resources, uint32_t encoder_id)
-{
-    for (int i = 0; i < resources.count_encoders; i++)
-    {
-        auto encoder_raw = drmModeGetEncoder(drm_fd, resources.encoders[i]);
-        EncoderUPtr encoder{encoder_raw, EncoderDeleter()};
-
-        if (!encoder)
-            continue;
-
-        if (encoder->encoder_id == encoder_id)
-            return std::move(encoder);
-    }
-
-    return EncoderUPtr();
-}
-
-CrtcUPtr find_crtc(int drm_fd, drmModeRes const& resources, uint32_t crtc_id)
-{
-    for (int i = 0; i < resources.count_crtcs; i++)
-    {
-        auto crtc_raw = drmModeGetCrtc(drm_fd, resources.crtcs[i]);
-        CrtcUPtr crtc{crtc_raw, CrtcDeleter()};
-
-        if (!crtc)
-            continue;
-
-        if (crtc->crtc_id == crtc_id)
-            return std::move(crtc);
-    }
-
-    return CrtcUPtr();
 }
 
 double calculate_vrefresh_hz(drmModeModeInfo const& mode)
@@ -119,22 +59,12 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 mgg::KMSDisplayConfiguration::KMSDisplayConfiguration(int drm_fd)
     : drm_fd{drm_fd}
 {
-    auto resources_raw = drmModeGetResources(drm_fd);
-    ResourcesUPtr resources{resources_raw, ResourcesDeleter()};
+    DRMModeResources resources{drm_fd};
 
-    if (!resources)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't get DRM resources\n"));
-
-    for (int i = 0; i < resources->count_connectors; i++)
+    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
     {
-        auto connector_raw = drmModeGetConnector(drm_fd, resources->connectors[i]);
-        ConnectorUPtr connector{connector_raw, ConnectorDeleter()};
-
-        if (!connector)
-            continue;
-
-        add_output(*resources, *connector);
-    }
+        add_output(resources, *connector);
+    });
 }
 
 void mgg::KMSDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f)
@@ -149,7 +79,7 @@ void mgg::KMSDisplayConfiguration::for_each_output(std::function<void(DisplayCon
         f(output);
 }
 
-void mgg::KMSDisplayConfiguration::add_output(drmModeRes const& resources,
+void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,
                                               drmModeConnector const& connector)
 {
     DisplayConfigurationOutputId id(outputs.size());
@@ -162,10 +92,10 @@ void mgg::KMSDisplayConfiguration::add_output(drmModeRes const& resources,
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
     /* Get information about the current mode */
-    auto encoder = find_encoder(drm_fd, resources, connector.encoder_id);
+    auto encoder = resources.encoder(connector.encoder_id);
     if (encoder)
     {
-        auto crtc = find_crtc(drm_fd, resources, encoder->crtc_id);
+        auto crtc = resources.crtc(encoder->crtc_id);
         if (crtc)
             current_mode_info = crtc->mode;
     }
