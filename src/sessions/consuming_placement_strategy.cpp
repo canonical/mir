@@ -31,12 +31,10 @@ msess::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg
 {
 }
 
-void msess::ConsumingPlacementStrategy::place(
-    msess::SurfaceCreationParameters const& request_parameters,
-    msess::SurfaceCreationParameters &placed_parameters)
+msess::SurfaceCreationParameters msess::ConsumingPlacementStrategy::place(msess::SurfaceCreationParameters const& request_parameters)
 {
     // We would like to try to fill placement requests
-    placed_parameters = request_parameters;
+    auto placed_parameters = request_parameters;
 
     auto input_width = request_parameters.size.width.as_uint32_t();
     auto input_height = request_parameters.size.height.as_uint32_t();
@@ -49,15 +47,17 @@ void msess::ConsumingPlacementStrategy::place(
     // but this does not seem like the right place to correct for that.
     if (input_width != 0 || input_height != 0)
     {
-        
         // However, we should clip the request to the display size
         // (consuming-mode.feature: l21)
         placed_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
         placed_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
-        return;
     }
-    
     // Otherwise we consume the entire viewable area
     // (consuming-mode.feature: l5)
-    placed_parameters.size = view_area.size;
+    else
+    {
+        placed_parameters.size = view_area.size;
+    }
+    
+    return placed_parameters;
 }

@@ -37,9 +37,8 @@ class ConsumingPlacementStrategy : public PlacementStrategy
 public:
     explicit ConsumingPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
     virtual ~ConsumingPlacementStrategy() {}
-    
-    void place(SurfaceCreationParameters const& request_parameters,
-               SurfaceCreationParameters &placed_parameters);
+
+    virtual SurfaceCreationParameters place(SurfaceCreationParameters const& request_parameters);    
 
 protected:
     ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;

@@ -34,7 +34,7 @@ namespace
 
 struct MockPlacementStrategy : public msess::PlacementStrategy
 {
-    MOCK_METHOD2(place, void(msess::SurfaceCreationParameters const&, msess::SurfaceCreationParameters&));
+    MOCK_METHOD1(place, msess::SurfaceCreationParameters(msess::SurfaceCreationParameters const&));
 };
 
 struct OrganisingSurfaceFactorySetup : public testing::Test
@@ -53,21 +53,6 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     std::shared_ptr<MockPlacementStrategy> placement_strategy;
 };
 
-struct SurfaceParameterUpdatingAction
-{
-    SurfaceParameterUpdatingAction(msess::SurfaceCreationParameters const& parameters)
-        : parameters(parameters)
-    {
-    }
-    void update_parameters(msess::SurfaceCreationParameters const& /* unusued_input_parameters */,
-                           msess::SurfaceCreationParameters &output_parameters)
-    {
-        output_parameters = parameters;
-    }
-    
-    msess::SurfaceCreationParameters parameters;
-};
-
 } // namespace 
 
 TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placement_strategy)
@@ -79,7 +64,8 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     EXPECT_CALL(*underlying_surface_factory, create_surface(_)).Times(1);
     
     auto params = msess::a_surface();
-    EXPECT_CALL(*placement_strategy, place(Ref(params), _)).Times(1);
+    EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
+        .WillOnce(Return(msess::a_surface()));
     
     factory.create_surface(params);
 }
@@ -91,13 +77,11 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
     msess::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
     
     auto params = msess::a_surface();
-
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
-    SurfaceParameterUpdatingAction param_updater(placed_params);
     
-    EXPECT_CALL(*placement_strategy, place(Ref(params), _)).Times(1)
-        .WillOnce(Invoke(&param_updater, &SurfaceParameterUpdatingAction::update_parameters));
+    EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
+        .WillOnce(Return(placed_params));
     EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params));
     
     factory.create_surface(params);
