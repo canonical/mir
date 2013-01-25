@@ -17,10 +17,12 @@
 #ifndef ANDROID_STRING16_H
 #define ANDROID_STRING16_H
 
-#include <utils/Errors.h>
-#include <utils/SharedBuffer.h>
-#include <utils/Unicode.h>
-#include <utils/TypeHelpers.h>
+#include <androidfw/Platform.h>
+
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(SharedBuffer.h)
+#include ANDROIDFW_UTILS(Unicode.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 // ---------------------------------------------------------------------------
 
