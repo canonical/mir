@@ -158,7 +158,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                            std::shared_ptr<mg::ViewableArea> const& /* viewable_area */)
         {
             using namespace ::testing;
-            
+
             auto display = std::make_shared<mtd::MockDisplay>();
             ON_CALL(*display, view_area()).WillByDefault(Return(default_view_area));
 

@@ -33,7 +33,7 @@ namespace
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
                                                                             geom::Height(1600)}};
-    
+
 struct ConsumingPlacementStrategySetup : public testing::Test
 {
     void SetUp()

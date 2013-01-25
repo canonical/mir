@@ -53,7 +53,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     std::shared_ptr<MockPlacementStrategy> placement_strategy;
 };
 
-} // namespace 
+} // namespace
 
 TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placement_strategy)
 {
@@ -66,7 +66,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     auto params = msess::a_surface();
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(msess::a_surface()));
-    
+
     factory.create_surface(params);
 }
 
@@ -86,6 +86,4 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
     
     factory.create_surface(params);
 }
-
-
 
