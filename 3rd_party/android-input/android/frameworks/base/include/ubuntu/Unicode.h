@@ -17,21 +17,9 @@
  */
 
 
-#ifndef MIR_ANDROID_PLATFORM_H_
-#define MIR_ANDROID_PLATFORM_H_
+#ifndef MIR_ANDROID_UBUNTU_UNICODE_H_
+#define MIR_ANDROID_UBUNTU_UNICODE_H_
 
-#ifdef ANDROID
-// use the android headers
-#ifndef ANDROIDFW_UTILS
-#define ANDROIDFW_UTILS(name) <utils/name>
-#endif
-#else
-// use the ubuntu headers
-#ifndef ANDROIDFW_UTILS
-#define ANDROIDFW_UTILS(name) <ubuntu/name>
-#endif
-#endif
+#include <utils/Unicode.h>
 
-
-
-#endif /* MIR_ANDROID_PLATFORM_H_ */
+#endif /* MIR_ANDROID_UBUNTU_UNICODE_H_ */
