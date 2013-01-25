@@ -45,7 +45,16 @@ void mfd::SocketSession::send(const std::ostringstream& buffer2)
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
     // function has completed (if it would be executed asynchronously.
-    ba::write(socket, ba::buffer(whole_message));
+    try
+    {
+        ba::write(socket, ba::buffer(whole_message));
+    }
+    catch(const boost::system::system_error& e)
+    {
+        //note, if write threw an exception, the client has terminated 
+        //the connection improperly.
+        //TODO: clean up the resources of clients that exit in an abnormal manner
+    }
 }
 
 void mfd::SocketSession::send_fds(std::vector<int32_t> const& fd)
