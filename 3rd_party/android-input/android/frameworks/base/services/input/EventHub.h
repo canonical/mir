@@ -24,15 +24,15 @@
 #include <androidfw/KeyLayoutMap.h>
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/VirtualKeyMap.h>
-#include <utils/String8.h>
-#include <utils/threads.h>
-#include <utils/Log.h>
-#include <utils/threads.h>
-#include <utils/List.h>
-#include <utils/Errors.h>
-#include <utils/PropertyMap.h>
-#include <utils/Vector.h>
-#include <utils/KeyedVector.h>
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Log.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(List.h)
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(PropertyMap.h)
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(KeyedVector.h)
 
 #include <linux/input.h>
 #include <sys/epoll.h>

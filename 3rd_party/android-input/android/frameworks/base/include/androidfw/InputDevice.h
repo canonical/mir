@@ -17,6 +17,8 @@
 #ifndef _ANDROIDFW_INPUT_DEVICE_H
 #define _ANDROIDFW_INPUT_DEVICE_H
 
+#include "Platform.h"
+
 #include <androidfw/Input.h>
 #include <androidfw/KeyCharacterMap.h>
 

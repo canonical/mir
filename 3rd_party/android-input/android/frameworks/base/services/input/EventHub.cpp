@@ -23,10 +23,10 @@
 #include <hardware_legacy/power.h>
 
 #include <cutils/properties.h>
-#include <utils/Log.h>
-#include <utils/Timers.h>
-#include <utils/threads.h>
-#include <utils/Errors.h>
+#include ANDROIDFW_UTILS(Log.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Errors.h)
 
 #include <stdlib.h>
 #include <stdio.h>

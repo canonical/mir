@@ -17,11 +17,13 @@
 #ifndef _ANDROIDFW_KEYBOARD_H
 #define _ANDROIDFW_KEYBOARD_H
 
+#include "Platform.h"
+
 #include <androidfw/Input.h>
 #include <androidfw/InputDevice.h>
-#include <utils/Errors.h>
-#include <utils/String8.h>
-#include <utils/PropertyMap.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(PropertyMap.h)
 
 namespace android {
 
