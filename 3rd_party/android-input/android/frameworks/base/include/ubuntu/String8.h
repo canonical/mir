@@ -20,6 +20,47 @@
 #ifndef MIR_ANDROID_UBUNTU_STRING8_H_
 #define MIR_ANDROID_UBUNTU_STRING8_H_
 
-#include <utils/String8.h>
+#include <string>
+#include <cstdarg>
+
+namespace android
+{
+typedef ::std::string String8;
+inline bool isEmpty(String8 const& s) { return s.empty(); }
+inline char const* c_str(String8 const& s) { return s.c_str(); }
+inline String8& appendFormat(String8& ss, const char* fmt, ...)
+{
+    ::va_list args;
+    ::va_start(args, fmt);
+
+    int n = ::vsnprintf(NULL, 0, fmt, args);
+    if (n != 0) {
+        char* s = (char*) malloc((n+1) * sizeof(char));
+
+        if (s) {
+            if (::vsnprintf(s, n+1, fmt, args))
+            {
+                ss += s;
+            }
+            free(s);
+        }
+    }
+    ::va_end(args);
+    return ss;
+}
+inline void setTo(String8& s, char const* value) { s = value; }
+inline char* lockBuffer(String8& s, int) { return const_cast<char*>(s.data()); }
+inline String8 formatString8(const char* fmt, ...)
+{
+    ::va_list args;
+    ::va_start(args, fmt);
+    String8 s;
+    appendFormat(s, fmt, args);
+    ::va_end(args);
+    return s;
+}
+inline void setTo(String8& s, String8 const& value) { s = value; }
+inline String8 const& emptyString8() { static String8 empty; return empty; }
+}
 
 #endif /* MIR_ANDROID_UBUNTU_STRING8_H_ */

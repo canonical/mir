@@ -51,7 +51,7 @@ status_t VirtualKeyMap::load(const String8& filename, VirtualKeyMap** outMap) {
     Tokenizer* tokenizer;
     status_t status = Tokenizer::open(filename, &tokenizer);
     if (status) {
-        ALOGE("Error %d opening virtual key map file %s.", status, filename.string());
+        ALOGE("Error %d opening virtual key map file %s.", status, c_str(filename));
     } else {
         VirtualKeyMap* map = new VirtualKeyMap();
         if (!map) {
@@ -66,7 +66,7 @@ status_t VirtualKeyMap::load(const String8& filename, VirtualKeyMap** outMap) {
 #if DEBUG_PARSER_PERFORMANCE
             nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
             ALOGD("Parsed key character map file '%s' %d lines in %0.3fms.",
-                    tokenizer->getFilename().string(), tokenizer->getLineNumber(),
+                c_str(tokenizer->getFilename()), tokenizer->getLineNumber(),
                     elapsedTime / 1000000.0);
 #endif
             if (status) {
@@ -93,8 +93,8 @@ VirtualKeyMap::Parser::~Parser() {
 status_t VirtualKeyMap::Parser::parse() {
     while (!mTokenizer->isEof()) {
 #if DEBUG_PARSER
-        ALOGD("Parsing %s: '%s'.", mTokenizer->getLocation().string(),
-                mTokenizer->peekRemainderOfLine().string());
+        ALOGD("Parsing %s: '%s'.", c_str(mTokenizer->getLocation()),
+                c_str(mTokenizer->peekRemainderOfLine()));
 #endif
 
         mTokenizer->skipDelimiters(WHITESPACE);
@@ -105,7 +105,7 @@ status_t VirtualKeyMap::Parser::parse() {
                 String8 token = mTokenizer->nextToken(WHITESPACE_OR_FIELD_DELIMITER);
                 if (token != "0x01") {
                     ALOGE("%s: Unknown virtual key type, expected 0x01.",
-                          mTokenizer->getLocation().string());
+                          c_str(mTokenizer->getLocation()));
                     return BAD_VALUE;
                 }
 
@@ -117,7 +117,7 @@ status_t VirtualKeyMap::Parser::parse() {
                         && parseNextIntField(&defn.height);
                 if (!success) {
                     ALOGE("%s: Expected 5 colon-delimited integers in virtual key definition.",
-                          mTokenizer->getLocation().string());
+                          c_str(mTokenizer->getLocation()));
                     return BAD_VALUE;
                 }
 
@@ -131,8 +131,8 @@ status_t VirtualKeyMap::Parser::parse() {
 
             if (!mTokenizer->isEol()) {
                 ALOGE("%s: Expected end of line, got '%s'.",
-                        mTokenizer->getLocation().string(),
-                        mTokenizer->peekRemainderOfLine().string());
+                        c_str(mTokenizer->getLocation()),
+                        c_str(mTokenizer->peekRemainderOfLine()));
                 return BAD_VALUE;
             }
         }
@@ -160,9 +160,9 @@ bool VirtualKeyMap::Parser::parseNextIntField(int32_t* outValue) {
 
     String8 token = mTokenizer->nextToken(WHITESPACE_OR_FIELD_DELIMITER);
     char* end;
-    *outValue = strtol(token.string(), &end, 0);
-    if (token.isEmpty() || *end != '\0') {
-        ALOGE("Expected an integer, got '%s'.", token.string());
+    *outValue = strtol(c_str(token), &end, 0);
+    if (isEmpty(token) || *end != '\0') {
+        ALOGE("Expected an integer, got '%s'.", c_str(token));
         return false;
     }
     return true;

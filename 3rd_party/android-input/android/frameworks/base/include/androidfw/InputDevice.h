@@ -76,7 +76,7 @@ public:
     inline const InputDeviceIdentifier& getIdentifier() const { return mIdentifier; }
     inline const String8& getAlias() const { return mAlias; }
     inline const String8& getDisplayName() const {
-        return mAlias.isEmpty() ? mIdentifier.name : mAlias;
+        return isEmpty(mAlias) ? mIdentifier.name : mAlias;
     }
     inline bool isExternal() const { return mIsExternal; }
     inline uint32_t getSources() const { return mSources; }

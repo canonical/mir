@@ -55,7 +55,7 @@ status_t KeyMap::load(const InputDeviceIdentifier& deviceIdenfifier,
             if (status == NAME_NOT_FOUND) {
                 ALOGE("Configuration for keyboard device '%s' requested keyboard layout '%s' but "
                         "it was not found.",
-                        deviceIdenfifier.name.string(), keyLayoutName.string());
+                        c_str(deviceIdenfifier.name), c_str(keyLayoutName));
             }
         }
 
@@ -66,7 +66,7 @@ status_t KeyMap::load(const InputDeviceIdentifier& deviceIdenfifier,
             if (status == NAME_NOT_FOUND) {
                 ALOGE("Configuration for keyboard device '%s' requested keyboard character "
                         "map '%s' but it was not found.",
-                        deviceIdenfifier.name.string(), keyLayoutName.string());
+                        c_str(deviceIdenfifier.name), c_str(keyLayoutName));
             }
         }
 
@@ -76,7 +76,7 @@ status_t KeyMap::load(const InputDeviceIdentifier& deviceIdenfifier,
     }
 
     // Try searching by device identifier.
-    if (probeKeyMap(deviceIdenfifier, String8::empty())) {
+    if (probeKeyMap(deviceIdenfifier, emptyString8())) {
         return OK;
     }
 
@@ -94,7 +94,7 @@ status_t KeyMap::load(const InputDeviceIdentifier& deviceIdenfifier,
 
     // Give up!
     ALOGE("Could not determine key map for device '%s' and no default key maps were found!",
-            deviceIdenfifier.name.string());
+        c_str(deviceIdenfifier.name));
     return NAME_NOT_FOUND;
 }
 
@@ -114,8 +114,8 @@ status_t KeyMap::loadGenericMaps()
 {
     status_t status = 0;
 
-    keyLayoutFile.setTo("Generic.kl");
-    keyCharacterMapFile.setTo("Generic.kcm");
+    setTo(keyLayoutFile, "Generic.kl");
+    setTo(keyCharacterMapFile, "Generic.kcm");
     
     status = KeyCharacterMap::loadContents(
         String8("Generic.kcm"), 
@@ -138,7 +138,7 @@ status_t KeyMap::loadKeyLayout(const InputDeviceIdentifier& deviceIdentifier,
         const String8& name) {
     String8 path(getPath(deviceIdentifier, name,
             INPUT_DEVICE_CONFIGURATION_FILE_TYPE_KEY_LAYOUT));
-    if (path.isEmpty()) {
+    if (isEmpty(path)) {
         return NAME_NOT_FOUND;
     }
 
@@ -147,7 +147,7 @@ status_t KeyMap::loadKeyLayout(const InputDeviceIdentifier& deviceIdentifier,
         return status;
     }
 
-    keyLayoutFile.setTo(path);
+    setTo(keyLayoutFile, path);
     return OK;
 }
 
@@ -155,7 +155,7 @@ status_t KeyMap::loadKeyCharacterMap(const InputDeviceIdentifier& deviceIdentifi
         const String8& name) {
     String8 path(getPath(deviceIdentifier, name,
             INPUT_DEVICE_CONFIGURATION_FILE_TYPE_KEY_CHARACTER_MAP));
-    if (path.isEmpty()) {
+    if (isEmpty(path)) {
         return NAME_NOT_FOUND;
     }
 
@@ -165,13 +165,13 @@ status_t KeyMap::loadKeyCharacterMap(const InputDeviceIdentifier& deviceIdentifi
         return status;
     }
 
-    keyCharacterMapFile.setTo(path);
+    setTo(keyCharacterMapFile, path);
     return OK;
 }
 
 String8 KeyMap::getPath(const InputDeviceIdentifier& deviceIdentifier,
         const String8& name, InputDeviceConfigurationFileType type) {
-    return name.isEmpty()
+    return isEmpty(name)
             ? getInputDeviceConfigurationFilePathByDeviceIdentifier(deviceIdentifier, type)
             : getInputDeviceConfigurationFilePathByName(name, type);
 }
@@ -195,7 +195,7 @@ bool isEligibleBuiltInKeyboard(const InputDeviceIdentifier& deviceIdentifier,
         }
     }
 
-    return strstr(deviceIdentifier.name.string(), "-keypad");
+    return strstr(c_str(deviceIdentifier.name), "-keypad");
 }
 
 static int lookupValueByLabel(const char* literal, const KeycodeLabel *list) {

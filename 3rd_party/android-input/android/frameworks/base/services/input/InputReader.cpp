@@ -377,10 +377,10 @@ void InputReader::addDeviceLocked(nsecs_t when, int32_t deviceId) {
 
     if (device->isIgnored()) {
         ALOGI("Device added: id=%d, name='%s' (ignored non-input device)", deviceId,
-                identifier.name.string());
+                c_str(identifier.name));
     } else {
         ALOGI("Device added: id=%d, name='%s', sources=0x%08x", deviceId,
-                identifier.name.string(), device->getSources());
+            c_str(identifier.name), device->getSources());
     }
 
     mDevices.add(deviceId, device);
@@ -401,10 +401,10 @@ void InputReader::removeDeviceLocked(nsecs_t when, int32_t deviceId) {
 
     if (device->isIgnored()) {
         ALOGI("Device removed: id=%d, name='%s' (ignored non-input device)",
-                device->getId(), device->getName().string());
+                device->getId(), c_str(device->getName()));
     } else {
         ALOGI("Device removed: id=%d, name='%s', sources=0x%08x",
-                device->getId(), device->getName().string(), device->getSources());
+                device->getId(), c_str(device->getName()), device->getSources());
     }
 
     device->reset(when);
@@ -547,7 +547,7 @@ bool InputReader::shouldDropVirtualKeyLocked(nsecs_t now,
     if (now < mDisableVirtualKeysTimeout) {
         ALOGI("Dropping virtual key from device %s because virtual keys are "
                 "temporarily disabled for the next %0.3fms.  keyCode=%d, scanCode=%d",
-                device->getName().string(),
+                c_str(device->getName()),
                 (mDisableVirtualKeysTimeout - now) * 0.000001,
                 keyCode, scanCode);
         return true;
@@ -727,50 +727,50 @@ void InputReader::dump(String8& dump) {
         if (i != 0) {
             dump.append(", ");
         }
-        dump.append(mConfig.excludedDeviceNames.itemAt(i).string());
+        dump.append(c_str(mConfig.excludedDeviceNames.itemAt(i)));
     }
     dump.append("]\n");
-    dump.appendFormat(INDENT2 "VirtualKeyQuietTime: %0.1fms\n",
+    appendFormat(dump, INDENT2 "VirtualKeyQuietTime: %0.1fms\n",
             mConfig.virtualKeyQuietTime * 0.000001f);
 
-    dump.appendFormat(INDENT2 "PointerVelocityControlParameters: "
+    appendFormat(dump, INDENT2 "PointerVelocityControlParameters: "
             "scale=%0.3f, lowThreshold=%0.3f, highThreshold=%0.3f, acceleration=%0.3f\n",
             mConfig.pointerVelocityControlParameters.scale,
             mConfig.pointerVelocityControlParameters.lowThreshold,
             mConfig.pointerVelocityControlParameters.highThreshold,
             mConfig.pointerVelocityControlParameters.acceleration);
 
-    dump.appendFormat(INDENT2 "WheelVelocityControlParameters: "
+    appendFormat(dump, INDENT2 "WheelVelocityControlParameters: "
             "scale=%0.3f, lowThreshold=%0.3f, highThreshold=%0.3f, acceleration=%0.3f\n",
             mConfig.wheelVelocityControlParameters.scale,
             mConfig.wheelVelocityControlParameters.lowThreshold,
             mConfig.wheelVelocityControlParameters.highThreshold,
             mConfig.wheelVelocityControlParameters.acceleration);
 
-    dump.appendFormat(INDENT2 "PointerGesture:\n");
-    dump.appendFormat(INDENT3 "Enabled: %s\n",
+    appendFormat(dump, INDENT2 "PointerGesture:\n");
+    appendFormat(dump, INDENT3 "Enabled: %s\n",
             toString(mConfig.pointerGesturesEnabled));
-    dump.appendFormat(INDENT3 "QuietInterval: %0.1fms\n",
+    appendFormat(dump, INDENT3 "QuietInterval: %0.1fms\n",
             mConfig.pointerGestureQuietInterval * 0.000001f);
-    dump.appendFormat(INDENT3 "DragMinSwitchSpeed: %0.1fpx/s\n",
+    appendFormat(dump, INDENT3 "DragMinSwitchSpeed: %0.1fpx/s\n",
             mConfig.pointerGestureDragMinSwitchSpeed);
-    dump.appendFormat(INDENT3 "TapInterval: %0.1fms\n",
+    appendFormat(dump, INDENT3 "TapInterval: %0.1fms\n",
             mConfig.pointerGestureTapInterval * 0.000001f);
-    dump.appendFormat(INDENT3 "TapDragInterval: %0.1fms\n",
+    appendFormat(dump, INDENT3 "TapDragInterval: %0.1fms\n",
             mConfig.pointerGestureTapDragInterval * 0.000001f);
-    dump.appendFormat(INDENT3 "TapSlop: %0.1fpx\n",
+    appendFormat(dump, INDENT3 "TapSlop: %0.1fpx\n",
             mConfig.pointerGestureTapSlop);
-    dump.appendFormat(INDENT3 "MultitouchSettleInterval: %0.1fms\n",
+    appendFormat(dump, INDENT3 "MultitouchSettleInterval: %0.1fms\n",
             mConfig.pointerGestureMultitouchSettleInterval * 0.000001f);
-    dump.appendFormat(INDENT3 "MultitouchMinDistance: %0.1fpx\n",
+    appendFormat(dump, INDENT3 "MultitouchMinDistance: %0.1fpx\n",
             mConfig.pointerGestureMultitouchMinDistance);
-    dump.appendFormat(INDENT3 "SwipeTransitionAngleCosine: %0.1f\n",
+    appendFormat(dump, INDENT3 "SwipeTransitionAngleCosine: %0.1f\n",
             mConfig.pointerGestureSwipeTransitionAngleCosine);
-    dump.appendFormat(INDENT3 "SwipeMaxWidthRatio: %0.1f\n",
+    appendFormat(dump, INDENT3 "SwipeMaxWidthRatio: %0.1f\n",
             mConfig.pointerGestureSwipeMaxWidthRatio);
-    dump.appendFormat(INDENT3 "MovementSpeedRatio: %0.1f\n",
+    appendFormat(dump, INDENT3 "MovementSpeedRatio: %0.1f\n",
             mConfig.pointerGestureMovementSpeedRatio);
-    dump.appendFormat(INDENT3 "ZoomSpeedRatio: %0.1f\n",
+    appendFormat(dump, INDENT3 "ZoomSpeedRatio: %0.1f\n",
             mConfig.pointerGestureZoomSpeedRatio);
 }
 
@@ -877,12 +877,12 @@ void InputDevice::dump(String8& dump) {
     InputDeviceInfo deviceInfo;
     getDeviceInfo(& deviceInfo);
 
-    dump.appendFormat(INDENT "Device %d: %s\n", deviceInfo.getId(),
-            deviceInfo.getDisplayName().string());
-    dump.appendFormat(INDENT2 "Generation: %d\n", mGeneration);
-    dump.appendFormat(INDENT2 "IsExternal: %s\n", toString(mIsExternal));
-    dump.appendFormat(INDENT2 "Sources: 0x%08x\n", deviceInfo.getSources());
-    dump.appendFormat(INDENT2 "KeyboardType: %d\n", deviceInfo.getKeyboardType());
+    appendFormat(dump, INDENT "Device %d: %s\n", deviceInfo.getId(),
+        c_str(deviceInfo.getDisplayName()));
+    appendFormat(dump, INDENT2 "Generation: %d\n", mGeneration);
+    appendFormat(dump, INDENT2 "IsExternal: %s\n", toString(mIsExternal));
+    appendFormat(dump, INDENT2 "Sources: 0x%08x\n", deviceInfo.getSources());
+    appendFormat(dump, INDENT2 "KeyboardType: %d\n", deviceInfo.getKeyboardType());
 
     const Vector<InputDeviceInfo::MotionRange>& ranges = deviceInfo.getMotionRanges();
     if (!ranges.isEmpty()) {
@@ -897,7 +897,7 @@ void InputDevice::dump(String8& dump) {
             } else {
                 snprintf(name, sizeof(name), "%d", range.axis);
             }
-            dump.appendFormat(INDENT3 "%s: source=0x%08x, "
+            appendFormat(dump, INDENT3 "%s: source=0x%08x, "
                     "min=%0.3f, max=%0.3f, flat=%0.3f, fuzz=%0.3f\n",
                     name, range.source, range.min, range.max, range.flat, range.fuzz);
         }
@@ -988,7 +988,7 @@ void InputDevice::process(const RawEvent* rawEvents, size_t count) {
 #endif
             }
         } else if (rawEvent->type == EV_SYN && rawEvent->code == SYN_DROPPED) {
-            ALOGI("Detected input event buffer overrun for device %s.", getName().string());
+            ALOGI("Detected input event buffer overrun for device %s.", c_str(getName()));
             mDropUntilNextSync = true;
             reset(rawEvent->when);
         } else {
@@ -1805,10 +1805,10 @@ void InputMapper::bumpGeneration() {
 void InputMapper::dumpRawAbsoluteAxisInfo(String8& dump,
         const RawAbsoluteAxisInfo& axis, const char* name) {
     if (axis.valid) {
-        dump.appendFormat(INDENT4 "%s: min=%d, max=%d, flat=%d, fuzz=%d, resolution=%d\n",
+        appendFormat(dump, INDENT4 "%s: min=%d, max=%d, flat=%d, fuzz=%d, resolution=%d\n",
                 name, axis.minValue, axis.maxValue, axis.flat, axis.fuzz, axis.resolution);
     } else {
-        dump.appendFormat(INDENT4 "%s: unknown range\n", name);
+        appendFormat(dump, INDENT4 "%s: unknown range\n", name);
     }
 }
 
@@ -1878,7 +1878,7 @@ void VibratorInputMapper::vibrate(const nsecs_t* pattern, size_t patternSize, ss
         patternStr.appendFormat("%lld", pattern[i]);
     }
     ALOGD("vibrate: deviceId=%d, pattern=[%s], repeat=%ld, token=%d",
-            getDeviceId(), patternStr.string(), repeat, token);
+            getDeviceId(), c_str(patternStr), repeat, token);
 #endif
 
     mVibrating = true;
@@ -1954,7 +1954,7 @@ void VibratorInputMapper::stopVibrating() {
 
 void VibratorInputMapper::dump(String8& dump) {
     dump.append(INDENT2 "Vibrator Input Mapper:\n");
-    dump.appendFormat(INDENT3 "Vibrating: %s\n", toString(mVibrating));
+    appendFormat(dump, INDENT3 "Vibrating: %s\n", toString(mVibrating));
 }
 
 
@@ -1983,11 +1983,11 @@ void KeyboardInputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 void KeyboardInputMapper::dump(String8& dump) {
     dump.append(INDENT2 "Keyboard Input Mapper:\n");
     dumpParameters(dump);
-    dump.appendFormat(INDENT3 "KeyboardType: %d\n", mKeyboardType);
-    dump.appendFormat(INDENT3 "Orientation: %d\n", mOrientation);
-    dump.appendFormat(INDENT3 "KeyDowns: %d keys currently down\n", mKeyDowns.size());
-    dump.appendFormat(INDENT3 "MetaState: 0x%0x\n", mMetaState);
-    dump.appendFormat(INDENT3 "DownTime: %lld\n", mDownTime);
+    appendFormat(dump, INDENT3 "KeyboardType: %d\n", mKeyboardType);
+    appendFormat(dump, INDENT3 "Orientation: %d\n", mOrientation);
+    appendFormat(dump, INDENT3 "KeyDowns: %d keys currently down\n", mKeyDowns.size());
+    appendFormat(dump, INDENT3 "MetaState: 0x%0x\n", mMetaState);
+    appendFormat(dump, INDENT3 "DownTime: %lld\n", mDownTime);
 }
 
 
@@ -2025,9 +2025,9 @@ void KeyboardInputMapper::configureParameters() {
 
 void KeyboardInputMapper::dumpParameters(String8& dump) {
     dump.append(INDENT3 "Parameters:\n");
-    dump.appendFormat(INDENT4 "AssociatedDisplayId: %d\n",
+    appendFormat(dump, INDENT4 "AssociatedDisplayId: %d\n",
             mParameters.associatedDisplayId);
-    dump.appendFormat(INDENT4 "OrientationAware: %s\n",
+    appendFormat(dump, INDENT4 "OrientationAware: %s\n",
             toString(mParameters.orientationAware));
 }
 
@@ -2121,7 +2121,7 @@ void KeyboardInputMapper::processKey(nsecs_t when, bool down, int32_t keyCode,
             // key was not actually down
             ALOGI("Dropping key up from device %s because the key was not down.  "
                     "keyCode=%d, scanCode=%d",
-                    getDeviceName().string(), keyCode, scanCode);
+                    c_str(getDeviceName()), keyCode, scanCode);
             return;
         }
     }
@@ -2261,20 +2261,20 @@ void CursorInputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 void CursorInputMapper::dump(String8& dump) {
     dump.append(INDENT2 "Cursor Input Mapper:\n");
     dumpParameters(dump);
-    dump.appendFormat(INDENT3 "XScale: %0.3f\n", mXScale);
-    dump.appendFormat(INDENT3 "YScale: %0.3f\n", mYScale);
-    dump.appendFormat(INDENT3 "XPrecision: %0.3f\n", mXPrecision);
-    dump.appendFormat(INDENT3 "YPrecision: %0.3f\n", mYPrecision);
-    dump.appendFormat(INDENT3 "HaveVWheel: %s\n",
+    appendFormat(dump, INDENT3 "XScale: %0.3f\n", mXScale);
+    appendFormat(dump, INDENT3 "YScale: %0.3f\n", mYScale);
+    appendFormat(dump, INDENT3 "XPrecision: %0.3f\n", mXPrecision);
+    appendFormat(dump, INDENT3 "YPrecision: %0.3f\n", mYPrecision);
+    appendFormat(dump, INDENT3 "HaveVWheel: %s\n",
             toString(mCursorScrollAccumulator.haveRelativeVWheel()));
-    dump.appendFormat(INDENT3 "HaveHWheel: %s\n",
+    appendFormat(dump, INDENT3 "HaveHWheel: %s\n",
             toString(mCursorScrollAccumulator.haveRelativeHWheel()));
-    dump.appendFormat(INDENT3 "VWheelScale: %0.3f\n", mVWheelScale);
-    dump.appendFormat(INDENT3 "HWheelScale: %0.3f\n", mHWheelScale);
-    dump.appendFormat(INDENT3 "Orientation: %d\n", mOrientation);
-    dump.appendFormat(INDENT3 "ButtonState: 0x%08x\n", mButtonState);
-    dump.appendFormat(INDENT3 "Down: %s\n", toString(isPointerDown(mButtonState)));
-    dump.appendFormat(INDENT3 "DownTime: %lld\n", mDownTime);
+    appendFormat(dump, INDENT3 "VWheelScale: %0.3f\n", mVWheelScale);
+    appendFormat(dump, INDENT3 "HWheelScale: %0.3f\n", mHWheelScale);
+    appendFormat(dump, INDENT3 "Orientation: %d\n", mOrientation);
+    appendFormat(dump, INDENT3 "ButtonState: 0x%08x\n", mButtonState);
+    appendFormat(dump, INDENT3 "Down: %s\n", toString(isPointerDown(mButtonState)));
+    appendFormat(dump, INDENT3 "DownTime: %lld\n", mDownTime);
 }
 
 void CursorInputMapper::configure(nsecs_t when,
@@ -2336,7 +2336,7 @@ void CursorInputMapper::configureParameters() {
         if (cursorModeString == "navigation") {
             mParameters.mode = Parameters::MODE_NAVIGATION;
         } else if (cursorModeString != "pointer" && cursorModeString != "default") {
-            ALOGW("Invalid value for cursor.mode: '%s'", cursorModeString.string());
+            ALOGW("Invalid value for cursor.mode: '%s'", c_str(cursorModeString));
         }
     }
 
@@ -2352,7 +2352,7 @@ void CursorInputMapper::configureParameters() {
 
 void CursorInputMapper::dumpParameters(String8& dump) {
     dump.append(INDENT3 "Parameters:\n");
-    dump.appendFormat(INDENT4 "AssociatedDisplayId: %d\n",
+    appendFormat(dump, INDENT4 "AssociatedDisplayId: %d\n",
             mParameters.associatedDisplayId);
 
     switch (mParameters.mode) {
@@ -2366,7 +2366,7 @@ void CursorInputMapper::dumpParameters(String8& dump) {
         ALOG_ASSERT(false);
     }
 
-    dump.appendFormat(INDENT4 "OrientationAware: %s\n",
+    appendFormat(dump, INDENT4 "OrientationAware: %s\n",
             toString(mParameters.orientationAware));
 }
 
@@ -2612,30 +2612,30 @@ void TouchInputMapper::dump(String8& dump) {
     dumpCalibration(dump);
     dumpSurface(dump);
 
-    dump.appendFormat(INDENT3 "Translation and Scaling Factors:\n");
-    dump.appendFormat(INDENT4 "XScale: %0.3f\n", mXScale);
-    dump.appendFormat(INDENT4 "YScale: %0.3f\n", mYScale);
-    dump.appendFormat(INDENT4 "XPrecision: %0.3f\n", mXPrecision);
-    dump.appendFormat(INDENT4 "YPrecision: %0.3f\n", mYPrecision);
-    dump.appendFormat(INDENT4 "GeometricScale: %0.3f\n", mGeometricScale);
-    dump.appendFormat(INDENT4 "PressureScale: %0.3f\n", mPressureScale);
-    dump.appendFormat(INDENT4 "SizeScale: %0.3f\n", mSizeScale);
-    dump.appendFormat(INDENT4 "OrientationCenter: %0.3f\n", mOrientationCenter);
-    dump.appendFormat(INDENT4 "OrientationScale: %0.3f\n", mOrientationScale);
-    dump.appendFormat(INDENT4 "DistanceScale: %0.3f\n", mDistanceScale);
-    dump.appendFormat(INDENT4 "HaveTilt: %s\n", toString(mHaveTilt));
-    dump.appendFormat(INDENT4 "TiltXCenter: %0.3f\n", mTiltXCenter);
-    dump.appendFormat(INDENT4 "TiltXScale: %0.3f\n", mTiltXScale);
-    dump.appendFormat(INDENT4 "TiltYCenter: %0.3f\n", mTiltYCenter);
-    dump.appendFormat(INDENT4 "TiltYScale: %0.3f\n", mTiltYScale);
+    appendFormat(dump, INDENT3 "Translation and Scaling Factors:\n");
+    appendFormat(dump, INDENT4 "XScale: %0.3f\n", mXScale);
+    appendFormat(dump, INDENT4 "YScale: %0.3f\n", mYScale);
+    appendFormat(dump, INDENT4 "XPrecision: %0.3f\n", mXPrecision);
+    appendFormat(dump, INDENT4 "YPrecision: %0.3f\n", mYPrecision);
+    appendFormat(dump, INDENT4 "GeometricScale: %0.3f\n", mGeometricScale);
+    appendFormat(dump, INDENT4 "PressureScale: %0.3f\n", mPressureScale);
+    appendFormat(dump, INDENT4 "SizeScale: %0.3f\n", mSizeScale);
+    appendFormat(dump, INDENT4 "OrientationCenter: %0.3f\n", mOrientationCenter);
+    appendFormat(dump, INDENT4 "OrientationScale: %0.3f\n", mOrientationScale);
+    appendFormat(dump, INDENT4 "DistanceScale: %0.3f\n", mDistanceScale);
+    appendFormat(dump, INDENT4 "HaveTilt: %s\n", toString(mHaveTilt));
+    appendFormat(dump, INDENT4 "TiltXCenter: %0.3f\n", mTiltXCenter);
+    appendFormat(dump, INDENT4 "TiltXScale: %0.3f\n", mTiltXScale);
+    appendFormat(dump, INDENT4 "TiltYCenter: %0.3f\n", mTiltYCenter);
+    appendFormat(dump, INDENT4 "TiltYScale: %0.3f\n", mTiltYScale);
 
-    dump.appendFormat(INDENT3 "Last Button State: 0x%08x\n", mLastButtonState);
+    appendFormat(dump, INDENT3 "Last Button State: 0x%08x\n", mLastButtonState);
 
-    dump.appendFormat(INDENT3 "Last Raw Touch: pointerCount=%d\n",
+    appendFormat(dump, INDENT3 "Last Raw Touch: pointerCount=%d\n",
             mLastRawPointerData.pointerCount);
     for (uint32_t i = 0; i < mLastRawPointerData.pointerCount; i++) {
         const RawPointerData::Pointer& pointer = mLastRawPointerData.pointers[i];
-        dump.appendFormat(INDENT4 "[%d]: id=%d, x=%d, y=%d, pressure=%d, "
+        appendFormat(dump, INDENT4 "[%d]: id=%d, x=%d, y=%d, pressure=%d, "
                 "touchMajor=%d, touchMinor=%d, toolMajor=%d, toolMinor=%d, "
                 "orientation=%d, tiltX=%d, tiltY=%d, distance=%d, "
                 "toolType=%d, isHovering=%s\n", i,
@@ -2646,12 +2646,12 @@ void TouchInputMapper::dump(String8& dump) {
                 pointer.toolType, toString(pointer.isHovering));
     }
 
-    dump.appendFormat(INDENT3 "Last Cooked Touch: pointerCount=%d\n",
+    appendFormat(dump, INDENT3 "Last Cooked Touch: pointerCount=%d\n",
             mLastCookedPointerData.pointerCount);
     for (uint32_t i = 0; i < mLastCookedPointerData.pointerCount; i++) {
         const PointerProperties& pointerProperties = mLastCookedPointerData.pointerProperties[i];
         const PointerCoords& pointerCoords = mLastCookedPointerData.pointerCoords[i];
-        dump.appendFormat(INDENT4 "[%d]: id=%d, x=%0.3f, y=%0.3f, pressure=%0.3f, "
+        appendFormat(dump, INDENT4 "[%d]: id=%d, x=%0.3f, y=%0.3f, pressure=%0.3f, "
                 "touchMajor=%0.3f, touchMinor=%0.3f, toolMajor=%0.3f, toolMinor=%0.3f, "
                 "orientation=%0.3f, tilt=%0.3f, distance=%0.3f, "
                 "toolType=%d, isHovering=%s\n", i,
@@ -2671,16 +2671,16 @@ void TouchInputMapper::dump(String8& dump) {
     }
 
     if (mDeviceMode == DEVICE_MODE_POINTER) {
-        dump.appendFormat(INDENT3 "Pointer Gesture Detector:\n");
-        dump.appendFormat(INDENT4 "XMovementScale: %0.3f\n",
+        appendFormat(dump, INDENT3 "Pointer Gesture Detector:\n");
+        appendFormat(dump, INDENT4 "XMovementScale: %0.3f\n",
                 mPointerXMovementScale);
-        dump.appendFormat(INDENT4 "YMovementScale: %0.3f\n",
+        appendFormat(dump, INDENT4 "YMovementScale: %0.3f\n",
                 mPointerYMovementScale);
-        dump.appendFormat(INDENT4 "XZoomScale: %0.3f\n",
+        appendFormat(dump, INDENT4 "XZoomScale: %0.3f\n",
                 mPointerXZoomScale);
-        dump.appendFormat(INDENT4 "YZoomScale: %0.3f\n",
+        appendFormat(dump, INDENT4 "YZoomScale: %0.3f\n",
                 mPointerYZoomScale);
-        dump.appendFormat(INDENT4 "MaxSwipeWidth: %f\n",
+        appendFormat(dump, INDENT4 "MaxSwipeWidth: %f\n",
                 mPointerGestureMaxSwipeWidth);
     }
 }
@@ -2745,7 +2745,7 @@ void TouchInputMapper::configureParameters() {
         } else if (gestureModeString == "spots") {
             mParameters.gestureMode = Parameters::GESTURE_MODE_SPOTS;
         } else if (gestureModeString != "default") {
-            ALOGW("Invalid value for touch.gestureMode: '%s'", gestureModeString.string());
+            ALOGW("Invalid value for touch.gestureMode: '%s'", c_str(gestureModeString));
         }
     }
 
@@ -2775,7 +2775,7 @@ void TouchInputMapper::configureParameters() {
         } else if (deviceTypeString == "pointer") {
             mParameters.deviceType = Parameters::DEVICE_TYPE_POINTER;
         } else if (deviceTypeString != "default") {
-            ALOGW("Invalid value for touch.deviceType: '%s'", deviceTypeString.string());
+            ALOGW("Invalid value for touch.deviceType: '%s'", c_str(deviceTypeString));
         }
     }
 
@@ -2823,9 +2823,9 @@ void TouchInputMapper::dumpParameters(String8& dump) {
         ALOG_ASSERT(false);
     }
 
-    dump.appendFormat(INDENT4 "AssociatedDisplay: id=%d, isExternal=%s\n",
+    appendFormat(dump, INDENT4 "AssociatedDisplay: id=%d, isExternal=%s\n",
             mParameters.associatedDisplayId, toString(mParameters.associatedDisplayIsExternal));
-    dump.appendFormat(INDENT4 "OrientationAware: %s\n",
+    appendFormat(dump, INDENT4 "OrientationAware: %s\n",
             toString(mParameters.orientationAware));
 }
 
@@ -2876,7 +2876,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     // Ensure we have valid X and Y axes.
     if (!mRawPointerAxes.x.valid || !mRawPointerAxes.y.valid) {
         ALOGW(INDENT "Touch device '%s' did not report support for X or Y axis!  "
-                "The device will be inoperable.", getDeviceName().string());
+                "The device will be inoperable.", c_str(getDeviceName()));
         mDeviceMode = DEVICE_MODE_DISABLED;
         return;
     }
@@ -2890,7 +2890,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
             ALOGI(INDENT "Touch device '%s' could not query the properties of its associated "
                     "display %d.  The device will be inoperable until the display size "
                     "becomes available.",
-                    getDeviceName().string(), mParameters.associatedDisplayId);
+                    c_str(getDeviceName()), mParameters.associatedDisplayId);
             mDeviceMode = DEVICE_MODE_DISABLED;
             return;
         }
@@ -2934,7 +2934,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     bool sizeChanged = mSurfaceWidth != width || mSurfaceHeight != height;
     if (sizeChanged || deviceModeChanged) {
         ALOGI("Device reconfigured: id=%d, name='%s', surface size is now %dx%d, mode is %d",
-                getDeviceId(), getDeviceName().string(), width, height, mDeviceMode);
+                getDeviceId(), c_str(getDeviceName()), width, height, mDeviceMode);
 
         mSurfaceWidth = width;
         mSurfaceHeight = height;
@@ -3198,9 +3198,9 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
 }
 
 void TouchInputMapper::dumpSurface(String8& dump) {
-    dump.appendFormat(INDENT3 "SurfaceWidth: %dpx\n", mSurfaceWidth);
-    dump.appendFormat(INDENT3 "SurfaceHeight: %dpx\n", mSurfaceHeight);
-    dump.appendFormat(INDENT3 "SurfaceOrientation: %d\n", mSurfaceOrientation);
+    appendFormat(dump, INDENT3 "SurfaceWidth: %dpx\n", mSurfaceWidth);
+    appendFormat(dump, INDENT3 "SurfaceHeight: %dpx\n", mSurfaceHeight);
+    appendFormat(dump, INDENT3 "SurfaceOrientation: %d\n", mSurfaceOrientation);
 }
 
 void TouchInputMapper::configureVirtualKeys() {
@@ -3261,7 +3261,7 @@ void TouchInputMapper::dumpVirtualKeys(String8& dump) {
 
         for (size_t i = 0; i < mVirtualKeys.size(); i++) {
             const VirtualKey& virtualKey = mVirtualKeys.itemAt(i);
-            dump.appendFormat(INDENT4 "%d: scanCode=%d, keyCode=%d, "
+            appendFormat(dump, INDENT4 "%d: scanCode=%d, keyCode=%d, "
                     "hitLeft=%d, hitRight=%d, hitTop=%d, hitBottom=%d\n",
                     i, virtualKey.scanCode, virtualKey.keyCode,
                     virtualKey.hitLeft, virtualKey.hitRight,
@@ -3288,7 +3288,7 @@ void TouchInputMapper::parseCalibration() {
             out.sizeCalibration = Calibration::SIZE_CALIBRATION_AREA;
         } else if (sizeCalibrationString != "default") {
             ALOGW("Invalid value for touch.size.calibration: '%s'",
-                    sizeCalibrationString.string());
+                c_str(sizeCalibrationString));
         }
     }
 
@@ -3311,7 +3311,7 @@ void TouchInputMapper::parseCalibration() {
             out.pressureCalibration = Calibration::PRESSURE_CALIBRATION_AMPLITUDE;
         } else if (pressureCalibrationString != "default") {
             ALOGW("Invalid value for touch.pressure.calibration: '%s'",
-                    pressureCalibrationString.string());
+                c_str(pressureCalibrationString));
         }
     }
 
@@ -3330,7 +3330,7 @@ void TouchInputMapper::parseCalibration() {
             out.orientationCalibration = Calibration::ORIENTATION_CALIBRATION_VECTOR;
         } else if (orientationCalibrationString != "default") {
             ALOGW("Invalid value for touch.orientation.calibration: '%s'",
-                    orientationCalibrationString.string());
+                c_str(orientationCalibrationString));
         }
     }
 
@@ -3344,7 +3344,7 @@ void TouchInputMapper::parseCalibration() {
             out.distanceCalibration = Calibration::DISTANCE_CALIBRATION_SCALED;
         } else if (distanceCalibrationString != "default") {
             ALOGW("Invalid value for touch.distance.calibration: '%s'",
-                    distanceCalibrationString.string());
+                c_str(distanceCalibrationString));
         }
     }
 
@@ -3412,17 +3412,17 @@ void TouchInputMapper::dumpCalibration(String8& dump) {
     }
 
     if (mCalibration.haveSizeScale) {
-        dump.appendFormat(INDENT4 "touch.size.scale: %0.3f\n",
+        appendFormat(dump, INDENT4 "touch.size.scale: %0.3f\n",
                 mCalibration.sizeScale);
     }
 
     if (mCalibration.haveSizeBias) {
-        dump.appendFormat(INDENT4 "touch.size.bias: %0.3f\n",
+        appendFormat(dump, INDENT4 "touch.size.bias: %0.3f\n",
                 mCalibration.sizeBias);
     }
 
     if (mCalibration.haveSizeIsSummed) {
-        dump.appendFormat(INDENT4 "touch.size.isSummed: %s\n",
+        appendFormat(dump, INDENT4 "touch.size.isSummed: %s\n",
                 toString(mCalibration.sizeIsSummed));
     }
 
@@ -3442,7 +3442,7 @@ void TouchInputMapper::dumpCalibration(String8& dump) {
     }
 
     if (mCalibration.havePressureScale) {
-        dump.appendFormat(INDENT4 "touch.pressure.scale: %0.3f\n",
+        appendFormat(dump, INDENT4 "touch.pressure.scale: %0.3f\n",
                 mCalibration.pressureScale);
     }
 
@@ -3474,7 +3474,7 @@ void TouchInputMapper::dumpCalibration(String8& dump) {
     }
 
     if (mCalibration.haveDistanceScale) {
-        dump.appendFormat(INDENT4 "touch.distance.scale: %0.3f\n",
+        appendFormat(dump, INDENT4 "touch.distance.scale: %0.3f\n",
                 mCalibration.distanceScale);
     }
 }
@@ -5822,7 +5822,7 @@ void MultiTouchInputMapper::syncTouch(nsecs_t when, bool* outHavePointerIds) {
 #if DEBUG_POINTERS
             ALOGD("MultiTouch device %s emitted more than maximum of %d pointers; "
                     "ignoring the rest.",
-                    getDeviceName().string(), MAX_POINTERS);
+                    c_str(getDeviceName()), MAX_POINTERS);
 #endif
             break; // too many fingers!
         }
@@ -5913,7 +5913,7 @@ void MultiTouchInputMapper::configureRawPointerAxes() {
         if (slotCount > MAX_SLOTS) {
             ALOGW("MultiTouch Device %s reported %d slots but the framework "
                     "only supports a maximum of %d slots at this time.",
-                    getDeviceName().string(), slotCount, MAX_SLOTS);
+                    c_str(getDeviceName()), slotCount, MAX_SLOTS);
             slotCount = MAX_SLOTS;
         }
         mMultiTouchMotionAccumulator.configure(getDevice(),
@@ -5966,28 +5966,28 @@ void JoystickInputMapper::dump(String8& dump) {
         const Axis& axis = mAxes.valueAt(i);
         const char* label = getAxisLabel(axis.axisInfo.axis);
         if (label) {
-            dump.appendFormat(INDENT4 "%s", label);
+            appendFormat(dump, INDENT4 "%s", label);
         } else {
-            dump.appendFormat(INDENT4 "%d", axis.axisInfo.axis);
+            appendFormat(dump, INDENT4 "%d", axis.axisInfo.axis);
         }
         if (axis.axisInfo.mode == AxisInfo::MODE_SPLIT) {
             label = getAxisLabel(axis.axisInfo.highAxis);
             if (label) {
-                dump.appendFormat(" / %s (split at %d)", label, axis.axisInfo.splitValue);
+                appendFormat(dump, " / %s (split at %d)", label, axis.axisInfo.splitValue);
             } else {
-                dump.appendFormat(" / %d (split at %d)", axis.axisInfo.highAxis,
+                appendFormat(dump, " / %d (split at %d)", axis.axisInfo.highAxis,
                         axis.axisInfo.splitValue);
             }
         } else if (axis.axisInfo.mode == AxisInfo::MODE_INVERT) {
             dump.append(" (invert)");
         }
 
-        dump.appendFormat(": min=%0.5f, max=%0.5f, flat=%0.5f, fuzz=%0.5f\n",
+        appendFormat(dump, ": min=%0.5f, max=%0.5f, flat=%0.5f, fuzz=%0.5f\n",
                 axis.min, axis.max, axis.flat, axis.fuzz);
-        dump.appendFormat(INDENT4 "  scale=%0.5f, offset=%0.5f, "
+        appendFormat(dump, INDENT4 "  scale=%0.5f, offset=%0.5f, "
                 "highScale=%0.5f, highOffset=%0.5f\n",
                 axis.scale, axis.offset, axis.highScale, axis.highOffset);
-        dump.appendFormat(INDENT4 "  rawAxis=%d, rawMin=%d, rawMax=%d, "
+        appendFormat(dump, INDENT4 "  rawAxis=%d, rawMin=%d, rawMax=%d, "
                 "rawFlat=%d, rawFuzz=%d, rawResolution=%d\n",
                 mAxes.keyAt(i), axis.rawAxisInfo.minValue, axis.rawAxisInfo.maxValue,
                 axis.rawAxisInfo.flat, axis.rawAxisInfo.fuzz, axis.rawAxisInfo.resolution);
@@ -6055,7 +6055,7 @@ void JoystickInputMapper::configure(nsecs_t when,
         // Prefer to keep explicitly mapped axes.
         if (mAxes.size() > PointerCoords::MAX_AXES) {
             ALOGI("Joystick '%s' has %d axes but the framework only supports a maximum of %d.",
-                    getDeviceName().string(), mAxes.size(), PointerCoords::MAX_AXES);
+                c_str(getDeviceName()), mAxes.size(), PointerCoords::MAX_AXES);
             pruneAxes(true);
             pruneAxes(false);
         }
@@ -6077,7 +6077,7 @@ void JoystickInputMapper::configure(nsecs_t when,
                 } else {
                     ALOGI("Ignoring joystick '%s' axis %d because all of the generic axis ids "
                             "have already been assigned to other axes.",
-                            getDeviceName().string(), mAxes.keyAt(i));
+                            c_str(getDeviceName()), mAxes.keyAt(i));
                     mAxes.removeItemsAt(i--);
                     numAxes -= 1;
                 }
@@ -6106,7 +6106,7 @@ void JoystickInputMapper::pruneAxes(bool ignoreExplicitlyMappedAxes) {
             continue;
         }
         ALOGI("Discarding joystick '%s' axis %d because there are too many axes.",
-                getDeviceName().string(), mAxes.keyAt(i));
+            c_str(getDeviceName()), mAxes.keyAt(i));
         mAxes.removeItemsAt(i);
     }
 }

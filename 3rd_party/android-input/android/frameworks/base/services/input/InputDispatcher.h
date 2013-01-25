@@ -813,7 +813,7 @@ private:
         explicit Connection(const sp<InputChannel>& inputChannel,
                 const sp<InputWindowHandle>& inputWindowHandle, bool monitor);
 
-        inline const char* getInputChannelName() const { return inputChannel->getName().string(); }
+        inline const char* getInputChannelName() const { return c_str(inputChannel->getName()); }
 
         const char* getWindowName() const;
         const char* getStatusLabel() const;

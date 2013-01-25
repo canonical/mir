@@ -61,11 +61,11 @@ public:
     // </mir changes>
 
     inline bool haveKeyLayout() const {
-        return !keyLayoutFile.isEmpty();
+        return !isEmpty(keyLayoutFile);
     }
 
     inline bool haveKeyCharacterMap() const {
-        return !keyCharacterMapFile.isEmpty();
+        return !isEmpty(keyCharacterMapFile);
     }
 
     inline bool isComplete() const {
