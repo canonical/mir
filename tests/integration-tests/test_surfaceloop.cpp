@@ -62,7 +62,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_,_))
+        ON_CALL(*this, create_swapper(_, _))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
@@ -78,7 +78,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
         auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
         std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(list)); 
+            new mc::BufferSwapperMulti(list));
     }
 };
 
@@ -252,7 +252,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_,buffer_properties)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_, buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }
@@ -329,7 +329,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             using testing::AtLeast;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator,alloc_buffer(buffer_properties)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties)).Times(AtLeast(2));
             return buffer_allocator;
         }
 

@@ -35,9 +35,7 @@ msess::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 
 std::shared_ptr<msess::Surface> msess::OrganisingSurfaceFactory::create_surface(const msess::SurfaceCreationParameters& params)
 {
-    msess::SurfaceCreationParameters placed_params;
-
-    placement_strategy->place(params, placed_params);
+    auto placed_params = placement_strategy->place(params);
 
     return underlying_factory->create_surface(placed_params);
 }
