@@ -24,12 +24,12 @@
 #include <androidfw/Input.h>
 #include <androidfw/VelocityControl.h>
 #include <androidfw/VelocityTracker.h>
-#include <utils/KeyedVector.h>
-#include <utils/threads.h>
-#include <utils/Timers.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
-#include <utils/BitSet.h>
+#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(BitSet.h)
 
 #include <limits.h>
 #include <stddef.h>

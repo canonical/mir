@@ -107,9 +107,22 @@ set (MIR_DISABLE_INPUT
   "Don't build the input subsystem"
 )
 
+set (MIR_INPUT_USE_ANDROID_TYPES
+  false
+  CACHE
+  BOOL
+  "Use android types in input stack instead of std library"
+)
+
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
+
+if (NOT MIR_INPUT_USE_ANDROID_TYPES)
+add_definitions(
+  -DANDROID_USE_STD
+)
+endif()
 
 if (MIR_PLATFORM STREQUAL "android")
   #todo: bionic support is to be deprecated a short while after landing

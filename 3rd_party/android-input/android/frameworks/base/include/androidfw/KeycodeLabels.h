@@ -17,6 +17,8 @@
 #ifndef _ANDROIDFW_KEYCODE_LABELS_H
 #define _ANDROIDFW_KEYCODE_LABELS_H
 
+#include "Platform.h"
+
 #include <android/keycodes.h>
 
 struct KeycodeLabel {

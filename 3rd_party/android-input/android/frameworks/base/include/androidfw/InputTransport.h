@@ -17,6 +17,8 @@
 #ifndef _ANDROIDFW_INPUT_TRANSPORT_H
 #define _ANDROIDFW_INPUT_TRANSPORT_H
 
+#include "Platform.h"
+
 /**
  * Native input transport.
  *
@@ -28,12 +30,12 @@
  */
 
 #include <androidfw/Input.h>
-#include <utils/Errors.h>
-#include <utils/Timers.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
-#include <utils/Vector.h>
-#include <utils/BitSet.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(BitSet.h)
 
 namespace android {
 
