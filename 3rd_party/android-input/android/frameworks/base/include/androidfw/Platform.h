@@ -21,13 +21,17 @@
 #define MIR_ANDROID_PLATFORM_H_
 
 #ifndef ANDROIDFW_UTILS
-#ifdef ANDROID_USE_STD
-// use the standard library
-#define ANDROIDFW_UTILS(name) <std/name>
-#else
-// use the android headers
-#define ANDROIDFW_UTILS(name) <utils/name>
-#endif
+    #if !defined(ANDROID_USE_STD)
+        // use the android headers
+        #define ANDROIDFW_UTILS(name) <utils/name>
+    #elif !defined(HAVE_ANDROID_OS)
+        // use the standard library
+        #define ANDROIDFW_UTILS(name) <std/name>
+    #else
+        // TODO If we HAVE_ANDROID_OS then the input stack will pull in binder
+        // TODO which isn't compatible with the std based utils replacements.
+        #error Currently unable to support ANDROID_USE_STD with HAVE_ANDROID_OS
+    #endif
 #endif
 
 #endif /* MIR_ANDROID_PLATFORM_H_ */
