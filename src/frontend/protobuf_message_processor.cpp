@@ -177,13 +177,13 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     else if ("disconnect" == invocation.method_name())
     {
         invoke(&protobuf::DisplayServer::disconnect, invocation);
-        // Careful about what you do after this - it deletes this
         return false;
     }
     else
     {
         /*log->error()*/
         std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
+        return false;
     }
 
     return true;
