@@ -383,7 +383,7 @@ inline String8::operator const char*() const
     return mString;
 }
 
-// Compatability funtions
+// Compatibility functions
 inline bool isEmpty(String8 const& s) { return s.isEmpty(); }
 inline char const* c_str(String8 const& s) { return s.string(); }
 inline String8& appendFormat(String8& ss, const char* fmt, ...)

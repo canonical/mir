@@ -127,7 +127,7 @@ inline void Condition::broadcast() {
 
 #endif // HAVE_PTHREADS
 
-
+// Compatibility functions
 inline void broadcast(Condition& c) { c.broadcast(); }
 
 template <typename Lock>
