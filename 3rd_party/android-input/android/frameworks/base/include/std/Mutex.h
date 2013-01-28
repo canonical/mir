@@ -20,6 +20,13 @@
 #ifndef MIR_ANDROID_UBUNTU_MUTEX_H_
 #define MIR_ANDROID_UBUNTU_MUTEX_H_
 
-#include <utils/Mutex.h>
+#include <mutex>
+
+namespace android
+{
+typedef std::mutex Mutex;
+
+typedef std::unique_lock<std::mutex> AutoMutex;
+}
 
 #endif /* MIR_ANDROID_UBUNTU_MUTEX_H_ */

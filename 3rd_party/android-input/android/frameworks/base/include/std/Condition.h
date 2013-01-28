@@ -20,6 +20,22 @@
 #ifndef MIR_ANDROID_UBUNTU_CONDITION_H_
 #define MIR_ANDROID_UBUNTU_CONDITION_H_
 
-#include <utils/Condition.h>
+#include ANDROIDFW_UTILS(Timers.h)
+
+#include <condition_variable>
+#include <chrono>
+
+namespace android
+{
+typedef std::condition_variable_any Condition;
+
+inline void broadcast(Condition& c) { c.notify_all(); }
+
+template <typename Lock>
+inline void waitRelative(Condition& c, Lock& l, nsecs_t reltime)
+{
+    c.wait_for(l, std::chrono::nanoseconds(reltime));
+}
+}
 
 #endif /* MIR_ANDROID_UBUNTU_CONDITION_H_ */

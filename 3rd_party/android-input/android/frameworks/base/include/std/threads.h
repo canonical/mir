@@ -20,6 +20,13 @@
 #ifndef MIR_ANDROID_UBUNTU_THREADS_H_
 #define MIR_ANDROID_UBUNTU_THREADS_H_
 
-#include <utils/threads.h>
+//#include <utils/threads.h>
+
+#include ANDROIDFW_UTILS(AndroidThreads.h)
+#include ANDROIDFW_UTILS(Condition.h)
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(RWLock.h)
+#include ANDROIDFW_UTILS(Thread.h)
 
 #endif /* MIR_ANDROID_UBUNTU_THREADS_H_ */

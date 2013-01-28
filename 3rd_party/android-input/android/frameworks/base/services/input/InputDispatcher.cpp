@@ -197,7 +197,7 @@ void InputDispatcher::dispatchOnce() {
     nsecs_t nextWakeupTime = LONG_LONG_MAX;
     { // acquire lock
         AutoMutex _l(mLock);
-        mDispatcherIsAliveCondition.broadcast();
+        broadcast(mDispatcherIsAliveCondition);
 
         dispatchOnceInnerLocked(&nextWakeupTime);
 
@@ -2556,7 +2556,7 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
                     break;
                 }
 
-                mInjectionResultAvailableCondition.waitRelative(mLock, remainingTimeout);
+                waitRelative(mInjectionResultAvailableCondition, mLock, remainingTimeout);
             }
 
             if (injectionResult == INPUT_EVENT_INJECTION_SUCCEEDED
@@ -2576,7 +2576,7 @@ int32_t InputDispatcher::injectInputEvent(const InputEvent* event,
                         break;
                     }
 
-                    mInjectionSyncFinishedCondition.waitRelative(mLock, remainingTimeout);
+                    waitRelative(mInjectionSyncFinishedCondition, mLock, remainingTimeout);
                 }
             }
         }
@@ -2627,7 +2627,7 @@ void InputDispatcher::setInjectionResultLocked(EventEntry* entry, int32_t inject
         }
 
         injectionState->injectionResult = injectionResult;
-        mInjectionResultAvailableCondition.broadcast();
+        broadcast(mInjectionResultAvailableCondition);
     }
 }
 
@@ -2644,7 +2644,7 @@ void InputDispatcher::decrementPendingForegroundDispatchesLocked(EventEntry* ent
         injectionState->pendingForegroundDispatches -= 1;
 
         if (injectionState->pendingForegroundDispatches == 0) {
-            mInjectionSyncFinishedCondition.broadcast();
+            broadcast(mInjectionSyncFinishedCondition);
         }
     }
 }

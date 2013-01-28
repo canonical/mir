@@ -285,7 +285,7 @@ void InputReader::loopOnce() {
 
     { // acquire lock
         AutoMutex _l(mLock);
-        mReaderIsAliveCondition.broadcast();
+        broadcast(mReaderIsAliveCondition);
 
         if (count) {
             processEventsLocked(mEventBuffer, count);

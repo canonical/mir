@@ -127,6 +127,15 @@ inline void Condition::broadcast() {
 
 #endif // HAVE_PTHREADS
 
+
+inline void broadcast(Condition& c) { c.broadcast(); }
+
+template <typename Lock>
+inline void waitRelative(Condition& c, Lock& l, nsecs_t reltime)
+{
+    c.waitRelative(l, reltime);
+}
+
 // ---------------------------------------------------------------------------
 } // namespace android
 // ---------------------------------------------------------------------------
