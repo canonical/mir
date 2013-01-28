@@ -43,9 +43,6 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
 static void incRef(android_native_base_t*)
 {
 }
-static void decRef(android_native_base_t*)
-{
-}
 void mcla::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer.height = static_cast<int32_t>(rect.size.height.as_uint32_t());
@@ -55,12 +52,11 @@ void mcla::AndroidClientBuffer::pack_native_window_buffer()
 
     native_window_buffer.handle = native_handle.get();
     native_window_buffer.common.incRef = &incRef;
-    native_window_buffer.common.decRef = &decRef;
+    native_window_buffer.common.decRef = &incRef;
 }
 
 mcla::AndroidClientBuffer::~AndroidClientBuffer()
 {
-    printf("UNREGISTER buffer\n");
     buffer_registrar->unregister_buffer(native_handle.get());
 }
 

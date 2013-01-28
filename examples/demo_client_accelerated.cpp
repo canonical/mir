@@ -142,8 +142,7 @@ int main(int argc, char* argv[])
     mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
 
-    int i=0;
-    for(i=0;i <100;i++)
+    for(;;)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(disp, egl_surface);

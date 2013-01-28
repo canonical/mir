@@ -49,7 +49,6 @@ mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& al
 
 mga::AndroidBuffer::~AndroidBuffer()
 {
-    printf("DESTROY_BUFFER\n");
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
     {

@@ -87,7 +87,6 @@ mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& 
 
 mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
-    printf("BUNDLE DESTROY!\n");
 }
 
 std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::lock_back_buffer()
