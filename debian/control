@@ -71,6 +71,16 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
+Package: libmirclient-demos
+Architecture: any
+Depends: ${misc:Depends}, 
+        libmirclient-dev(= ${binary:Version}),
+Description: Display server for Ubuntu - example client programs 
+ Mir is a display server running on linux systems, with a focus on efficiency, 
+ robust operation and a well-defined driver model.
+ .
+ Contains demo applications with source for using the Mir display server as a client
+
 Package: mir
 Architecture: any
 Depends: ${misc:Depends},

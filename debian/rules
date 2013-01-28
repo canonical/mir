@@ -31,5 +31,8 @@ else
       -DMIR_DISABLE_INPUT=YES
 endif
 
+override_dh_installexamples:
+	dh_installexamples -p libmirclient-demos 
+
 override_dh_makeshlibs:
 	dh_makeshlibs -V

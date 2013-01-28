@@ -25,7 +25,7 @@
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mir/draw/graphics.h"
+#include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 

@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
     mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
 
-    for(;;)
+    int i=0;
+    for(i=0;i <100;i++)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(disp, egl_surface);

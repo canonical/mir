@@ -147,6 +147,7 @@ int mcla::MirNativeWindow::query(int key, int* value ) const
             *value = 0; /* transform hint is a bitmask. 0 means no transform */
             break;
         default:
+                printf("UNHANDLED! query\n");
             ret = -1;
             break;
     }
@@ -165,6 +166,8 @@ int mcla::MirNativeWindow::perform(int key, va_list arg_list )
             driver_pixel_format = va_arg(args, int);
             break;
         default:
+            
+                printf("UNHANDLED! perform query %i\n", key);
             break;
     }
 

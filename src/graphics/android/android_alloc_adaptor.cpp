@@ -38,7 +38,8 @@ struct AndroidBufferHandleDefaultDeleter
     void operator()(mga::AndroidBufferHandleDefault* t)
     {
         ANativeWindowBuffer *anw_buffer = (ANativeWindowBuffer*) t->get_egl_client_buffer();
-        alloc_device->free(alloc_device.get(), anw_buffer->handle);
+        int rc = alloc_device->free(alloc_device.get(), anw_buffer->handle);
+        printf("freeing buffer via gralloc returned %i \n", rc);
         delete t;
     }
 private:

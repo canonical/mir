@@ -20,7 +20,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <unistd.h>
 
