@@ -53,6 +53,7 @@ void run_mir(std::string const& socket_file)
 {
     signal(SIGINT, mir::signal_terminate);
     signal(SIGTERM, mir::signal_terminate);
+    signal(SIGPIPE, SIG_IGN);
 
     mir::DefaultServerConfiguration config(socket_file);
     mir::DisplayServer server(config);
