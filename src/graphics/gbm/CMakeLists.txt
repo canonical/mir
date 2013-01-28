@@ -38,6 +38,7 @@ add_library(
   kms_display_configuration.cpp
   drm_mode_resources.cpp
   gbm_display_buffer.cpp
+  kms_output.cpp
 )
 
 target_link_libraries(

@@ -120,6 +120,8 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector0_physical_size_mm{geom::Width{480}, geom::Height{270}};
     geom::Size const connector1_physical_size_mm{};
     geom::Size const connector2_physical_size_mm{};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
 
     mgg::FakeDRMResources& resources(mock_drm.fake_drm);
 
@@ -127,15 +129,18 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
 
     resources.add_crtc(crtc0_id, modes0[1]);
 
-    resources.add_encoder(encoder0_id, crtc0_id);
-    resources.add_encoder(encoder1_id, invalid_id);
+    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+    resources.add_encoder(encoder1_id, invalid_id, possible_crtcs_mask_empty);
 
     resources.add_connector(connector0_id, DRM_MODE_CONNECTED, encoder0_id,
-                            modes0, connector0_physical_size_mm);
+                            modes0, possible_encoder_ids_empty,
+                            connector0_physical_size_mm);
     resources.add_connector(connector1_id, DRM_MODE_DISCONNECTED, invalid_id,
-                            modes_empty, connector1_physical_size_mm);
+                            modes_empty, possible_encoder_ids_empty,
+                            connector1_physical_size_mm);
     resources.add_connector(connector2_id, DRM_MODE_DISCONNECTED, encoder1_id,
-                            modes_empty, connector2_physical_size_mm);
+                            modes_empty, possible_encoder_ids_empty,
+                            connector2_physical_size_mm);
 
     resources.prepare();
 

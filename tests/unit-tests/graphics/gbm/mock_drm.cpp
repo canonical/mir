@@ -47,20 +47,24 @@ mgg::FakeDRMResources::FakeDRMResources()
     uint32_t const encoder1_id{21};
     uint32_t const connector0_id{30};
     uint32_t const connector1_id{31};
+    uint32_t const all_crtcs_mask{0x3};
 
     modes.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
     modes.push_back(create_mode(832, 624, 57284, 1152, 667));
+    connector_encoder_ids.push_back(encoder0_id);
+    connector_encoder_ids.push_back(encoder1_id);
 
     add_crtc(crtc0_id, drmModeModeInfo());
     add_crtc(crtc1_id, modes[1]);
 
-    add_encoder(encoder0_id, invalid_id);
-    add_encoder(encoder1_id, crtc1_id);
+    add_encoder(encoder0_id, invalid_id, all_crtcs_mask);
+    add_encoder(encoder1_id, crtc1_id, all_crtcs_mask);
 
     add_connector(connector0_id, DRM_MODE_DISCONNECTED, invalid_id,
-                  modes_empty, geom::Size());
+                  modes_empty, connector_encoder_ids, geom::Size());
     add_connector(connector1_id, DRM_MODE_CONNECTED, encoder1_id,
-                  modes, geom::Size{geom::Width{121}, geom::Height{144}});
+                  modes, connector_encoder_ids,
+                  geom::Size{geom::Width{121}, geom::Height{144}});
 
     prepare();
 }
@@ -125,12 +129,14 @@ void mgg::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
     crtcs.push_back(crtc);
 }
 
-void mgg::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id)
+void mgg::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
+                                        uint32_t possible_crtcs_mask)
 {
     drmModeEncoder encoder = drmModeEncoder();
 
     encoder.encoder_id = encoder_id;
     encoder.crtc_id = crtc_id;
+    encoder.possible_crtcs = possible_crtcs_mask;
 
     encoders.push_back(encoder);
 }
@@ -139,6 +145,7 @@ void mgg::FakeDRMResources::add_connector(uint32_t connector_id,
                                           drmModeConnection connection,
                                           uint32_t encoder_id,
                                           std::vector<drmModeModeInfo>& modes,
+                                          std::vector<uint32_t>& possible_encoder_ids,
                                           geom::Size const& physical_size)
 {
     drmModeConnector connector = drmModeConnector();
@@ -148,6 +155,8 @@ void mgg::FakeDRMResources::add_connector(uint32_t connector_id,
     connector.encoder_id = encoder_id;
     connector.modes = modes.data();
     connector.count_modes = modes.size();
+    connector.encoders = possible_encoder_ids.data();
+    connector.count_encoders = possible_encoder_ids.size();
     connector.mmWidth = physical_size.width.as_uint32_t();
     connector.mmHeight = physical_size.height.as_uint32_t();
 
