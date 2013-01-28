@@ -10,7 +10,13 @@ include_directories(
 add_definitions(
   -DANDROID_SMP=1
   )
-  
+
+if (NOT MIR_INPUT_USE_ANDROID_TYPES)
+add_definitions(
+  -DANDROID_USE_STD
+)
+endif()
+
 set(
   UTIL_SOURCES
 
@@ -30,7 +36,7 @@ set(
   frameworks/native/libs/utils/VectorImpl.cpp
 )
 
-if (MIR_PLATFORM STREQUAL "android")
+if (MIR_INPUT_USE_ANDROID_TYPES)
 list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/String16.cpp
   frameworks/native/libs/utils/String8.cpp
