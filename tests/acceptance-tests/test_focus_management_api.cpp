@@ -22,6 +22,7 @@
 #include "mir/sessions/session_store.h"
 #include "mir/thread/all.h"
 
+#include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
@@ -29,11 +30,18 @@
 
 #include <fcntl.h>
 
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
+    geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
+                                                              geom::Size{geom::Width(1600),
+                                                                         geom::Height(1600)}};
 }
 
 namespace mir
@@ -146,10 +154,16 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<sessions::SessionStore>
-        make_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory)
+        make_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
+                           std::shared_ptr<mg::ViewableArea> const& /* viewable_area */)
         {
+            using namespace ::testing;
+
+            auto display = std::make_shared<mtd::MockDisplay>();
+            ON_CALL(*display, view_area()).WillByDefault(Return(default_view_area));
+
             auto const& mock_session_store = std::make_shared<MockSessionStore>(
-                DefaultServerConfiguration::make_session_store(surface_factory));
+                DefaultServerConfiguration::make_session_store(surface_factory, display));
 
             {
                 using namespace testing;

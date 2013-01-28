@@ -22,36 +22,53 @@
 #include <cucumber-cpp/defs.hpp>
 
 namespace mtc = mir::test::cucumber;
+namespace geom = mir::geometry;
 
-GIVEN("^The display-size is (.+)x(.+)$")
+#define STEP_APPLICATION_NAME_PARAMETER_REGEX "\"(.+)\""
+#define STEP_SIZE_PARAMETER_REGEX "(.+)x(.+)$"
+
+GIVEN("^the display-size is " STEP_SIZE_PARAMETER_REGEX "$")
 {
     REGEX_PARAM(int, width);
     REGEX_PARAM(int, height);
     USING_CONTEXT(mtc::SessionManagementContext, ctx);
-
-    (void)width;
-    (void)height;
     
-    // TODO: Implement
+    ctx->set_view_area(geom::Rectangle{geom::Point(),
+                       geom::Size{geom::Width{width},
+                                  geom::Height{height}}});
 }
 
 // TODO: Maybe session names should be quoted to allow for spaces
-WHEN("^(.+) is opened in consuming mode$") 
+WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened in consuming mode$")
 {
-    REGEX_PARAM(std::string, session_name);
+    REGEX_PARAM(std::string, window_name);
+    USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
-    // TODO: Implement
+    EXPECT_TRUE(ctx->open_window_consuming(window_name));
 }
 
-THEN("^(.+) will have size (.+)x(.+)$")
+WHEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " is opened with size " STEP_SIZE_PARAMETER_REGEX "$")
 {
-    REGEX_PARAM(std::string, session_name);
+    REGEX_PARAM(std::string, window_name);
+    REGEX_PARAM(int, request_width);
+    REGEX_PARAM(int, request_height);
+    USING_CONTEXT(mtc::SessionManagementContext, ctx);
+    
+    EXPECT_TRUE(ctx->open_window_with_size(window_name, geom::Size{geom::Width{request_width},
+                                                                   geom::Height{request_height}}));
+}
+
+THEN("^" STEP_APPLICATION_NAME_PARAMETER_REGEX " will have size " STEP_SIZE_PARAMETER_REGEX "$")
+{
+    REGEX_PARAM(std::string, window_name);
     REGEX_PARAM(int, expected_width);
     REGEX_PARAM(int, expected_height);
+    USING_CONTEXT(mtc::SessionManagementContext, ctx);
     
-    (void)expected_width;
-    (void)expected_height;
-    // TODO: Implement
-    EXPECT_EQ(true, false);
+    auto expected_size = geom::Size{geom::Width{expected_width},
+                                    geom::Height{expected_height}};
+
+    auto actual_size = ctx->get_window_size(window_name);
+    EXPECT_EQ(expected_size, actual_size);
 }
 
