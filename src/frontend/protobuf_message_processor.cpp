@@ -194,5 +194,6 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         //note, if write threw an exception, the transaction with the client has failed 
         return false;
     }
+
     return true;
 }
