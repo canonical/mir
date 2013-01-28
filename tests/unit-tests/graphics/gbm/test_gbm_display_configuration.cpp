@@ -143,7 +143,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
         {
-            mg::DisplayConfigurationOutputId{0},
+            mg::DisplayConfigurationOutputId{connector0_id},
             mg::DisplayConfigurationCardId{0},
             conf_modes0,
             connector0_physical_size_mm,
@@ -151,7 +151,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             1
         },
         {
-            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationOutputId{connector1_id},
             mg::DisplayConfigurationCardId{0},
             std::vector<mg::DisplayConfigurationMode>(),
             connector1_physical_size_mm,
@@ -159,7 +159,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             std::numeric_limits<size_t>::max()
         },
         {
-            mg::DisplayConfigurationOutputId{2},
+            mg::DisplayConfigurationOutputId{connector2_id},
             mg::DisplayConfigurationCardId{0},
             std::vector<mg::DisplayConfigurationMode>(),
             connector2_physical_size_mm,

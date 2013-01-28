@@ -82,7 +82,7 @@ void mgg::KMSDisplayConfiguration::for_each_output(std::function<void(DisplayCon
 void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,
                                               drmModeConnector const& connector)
 {
-    DisplayConfigurationOutputId id(outputs.size());
+    DisplayConfigurationOutputId id{connector.connector_id};
     DisplayConfigurationCardId card_id{0};
     geom::Size physical_size{geom::Width{connector.mmWidth},
                              geom::Height{connector.mmHeight}};
