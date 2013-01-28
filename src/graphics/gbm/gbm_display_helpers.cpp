@@ -128,48 +128,6 @@ mggh::DRMHelper::~DRMHelper()
 }
 
 /*************
- * KMSHelper *
- *************/
-
-void mggh::KMSHelper::setup(const DRMHelper& drm)
-{
-    DRMModeResources resources{drm.fd};
-
-    /* Find the first connected connector */
-    resources.for_each_connector([&](DRMModeConnectorUPtr con)
-    {
-        if (!connector &&
-            con->connection == DRM_MODE_CONNECTED &&
-            con->count_modes > 0)
-        {
-            connector = std::move(con);
-        }
-    });
-
-    if (!connector)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No active DRM connector found\n"));
-
-    encoder = resources.encoder(connector->encoder_id);
-    if (encoder == NULL)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No connected DRM encoder found\n"));
-
-    mode = connector->modes[0];
-
-    drm_fd = drm.fd;
-    saved_crtc = resources.crtc(encoder->crtc_id);
-}
-
-mggh::KMSHelper::~KMSHelper()
-{
-    if (saved_crtc)
-    {
-        drmModeSetCrtc(drm_fd, saved_crtc->crtc_id, saved_crtc->buffer_id,
-                       saved_crtc->x, saved_crtc->y,
-                       &connector->connector_id, 1, &saved_crtc->mode);
-    }
-}
-
-/*************
  * GBMHelper *
  *************/
 

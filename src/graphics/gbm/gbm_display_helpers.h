@@ -59,30 +59,6 @@ private:
     int open_drm_device();
 };
 
-class KMSHelper {
-public:
-    KMSHelper()
-        : connector(), encoder(), mode(),
-          drm_fd{-1}, saved_crtc()
-    {
-    }
-
-    ~KMSHelper();
-
-    KMSHelper(const KMSHelper&) = delete;
-    KMSHelper& operator=(const KMSHelper&) = delete;
-
-    void setup(const DRMHelper& drm);
-
-    DRMModeConnectorUPtr connector;
-    DRMModeEncoderUPtr encoder;
-    drmModeModeInfo mode;
-
-private:
-    int drm_fd;
-    DRMModeCrtcUPtr saved_crtc;
-};
-
 class GBMHelper
 {
 public:

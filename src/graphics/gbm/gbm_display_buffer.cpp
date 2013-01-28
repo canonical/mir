@@ -18,6 +18,7 @@
 
 #include "gbm_display_buffer.h"
 #include "gbm_platform.h"
+#include "kms_output.h"
 #include "mir/graphics/display_listener.h"
 
 #include <boost/throw_exception.hpp>
@@ -74,8 +75,8 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
                        void* data)
 {
-    auto page_flip_pending = static_cast<bool*>(data);
-    *page_flip_pending = false;
+    auto page_flip_pending = static_cast<int*>(data);
+    --(*page_flip_pending);
 }
 
 void ensure_egl_image_extensions()
@@ -101,15 +102,18 @@ void ensure_egl_image_extensions()
 }
 
 mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                                        std::shared_ptr<DisplayListener> const& listener)
+                                        std::shared_ptr<DisplayListener> const& listener,
+                                        std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+                                        GBMSurfaceUPtr surface_gbm_param,
+                                        geom::Size const& size)
     : last_flipped_bufobj{nullptr},
       platform(platform),
       listener(listener),
-      drm(platform->drm)
+      drm(platform->drm),
+      outputs(outputs),
+      surface_gbm{std::move(surface_gbm_param)},
+      size(size)
 {
-    /* Set up all native resources */
-    kms.setup(drm);
-    surface_gbm = platform->gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
     egl.setup(platform->gbm, surface_gbm.get());
 
     listener->report_successful_setup_of_native_resources();
@@ -128,11 +132,14 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
     listener->report_successful_egl_buffer_swap_on_construction();
 
     last_flipped_bufobj = get_front_buffer_object();
-    auto ret = drmModeSetCrtc(drm.fd, kms.encoder->crtc_id,
-                              last_flipped_bufobj->get_drm_fb_id(), 0, 0,
-                              &kms.connector->connector_id, 1, &kms.mode);
-    if (ret)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
+    if (!last_flipped_bufobj)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
+
+    for (auto& output : outputs)
+    {
+        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
+    }
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
@@ -150,8 +157,7 @@ mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
 
 geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
 {
-    return {{geom::X(0), geom::Y(0)},
-            {geom::Width(kms.mode.hdisplay), geom::Height(kms.mode.vdisplay)}};
+    return {{geom::X(0), geom::Y(0)}, size};
 }
 
 void mgg::GBMDisplayBuffer::clear()
@@ -216,7 +222,7 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
     auto stride = gbm_bo_get_stride(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, kms.mode.hdisplay, kms.mode.vdisplay,
+    auto ret = drmModeAddFB(drm.fd, size.width.as_uint32_t(), size.height.as_uint32_t(),
                             24, 32, stride, handle, &fb_id);
     if (ret)
     {
@@ -242,34 +248,37 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
         0,  /* .vblank_handler */
         page_flip_handler  /* .page_flip_handler */
     };
-    bool page_flip_pending{true};
+    int page_flips_pending{0};
 
     /*
      * Schedule the current front buffer object for display. Note that
-     * drmModePageFlip is asynchronous and synchronized with vertical refresh,
-     * so we tell DRM to emit a a page flip event with &page_flip_pending as
+     * the page flip is asynchronous and synchronized with vertical refresh,
+     * so we tell DRM to emit a page flip event with &page_flips_pending as
      * its user data when done.
      */
-    auto ret = drmModePageFlip(drm.fd, kms.encoder->crtc_id,
-                               bufobj->get_drm_fb_id(), DRM_MODE_PAGE_FLIP_EVENT,
-                               &page_flip_pending);
-    if (ret)
+    for (auto& output : outputs)
+    {
+        if (output->schedule_page_flip(bufobj->get_drm_fb_id(), &page_flips_pending))
+            ++page_flips_pending;
+    }
+
+    if (page_flips_pending == 0)
         return false;
 
     /*
-     * Wait $page_flip_max_wait_usec for the page flip event. If we get the
+     * Wait $page_flip_max_wait_usec for the page flip events. If we get a
      * page flip event, page_flip_handler(), called through drmHandleEvent(),
-     * will reset the page_flip_pending flag. If we don't get the page flip
-     * event within that time, or we can't read from the DRM fd, act as if the
-     * page flip has occured anyway.
+     * will decrease the page_flips_pending count. If we don't get the expected
+     * page flip events within that time, or we can't read from the DRM fd, act
+     * as if the page flips have occured anyway.
      *
-     * The rationale is that if we don't get a page flip event "soon" after
-     * scheduling a page flip, something is severely broken at the driver
-     * level. In that case, acting as if the page flip has occured will not
+     * The rationale is that if we don't get the page flip events "soon" after
+     * scheduling the page flips, something is severely broken at the driver
+     * level. In that case, acting as if the page flips have occured will not
      * cause any worse harm anyway (perhaps some tearing), and will allow us to
      * continue processing instead of just hanging.
      */
-    while (page_flip_pending)
+    while (page_flips_pending > 0)
     {
         struct timeval tv{0, page_flip_max_wait_usec};
         fd_set fds;
@@ -282,7 +291,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
         if (ret > 0)
             drmHandleEvent(drm.fd, &evctx);
         else
-            page_flip_pending = false;
+            page_flips_pending = 0;
     }
 
     return true;

@@ -22,6 +22,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "gbm_display_helpers.h"
 
+#include <vector>
 #include <memory>
 
 namespace mir
@@ -36,12 +37,16 @@ namespace gbm
 
 class GBMPlatform;
 class BufferObject;
+class KMSOutput;
 
 class GBMDisplayBuffer : public DisplayBuffer
 {
 public:
     GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                     std::shared_ptr<DisplayListener> const& listener);
+                     std::shared_ptr<DisplayListener> const& listener,
+                     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+                     GBMSurfaceUPtr surface_gbm,
+                     geometry::Size const& size);
     ~GBMDisplayBuffer();
 
     geometry::Rectangle view_area() const;
@@ -56,12 +61,12 @@ private:
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayListener> const listener;
-    /* DRM and GBM helpers from GBMPlatform */
+    /* DRM helper from GBMPlatform */
     helpers::DRMHelper& drm;
+    std::vector<std::shared_ptr<KMSOutput>> outputs;
     GBMSurfaceUPtr surface_gbm;
-    /* Order is important for construction/destruction */
-    helpers::KMSHelper  kms;
-    helpers::EGLHelper  egl;
+    helpers::EGLHelper egl;
+    geometry::Size size;
 };
 
 }
