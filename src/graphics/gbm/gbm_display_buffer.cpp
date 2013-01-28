@@ -105,13 +105,12 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
     : last_flipped_bufobj{nullptr},
       platform(platform),
       listener(listener),
-      drm(platform->drm),
-      gbm(platform->gbm)
+      drm(platform->drm)
 {
     /* Set up all native resources */
     kms.setup(drm);
-    gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
-    egl.setup(gbm);
+    surface_gbm = platform->gbm.create_scanout_surface(kms.mode.hdisplay, kms.mode.vdisplay);
+    egl.setup(platform->gbm, surface_gbm.get());
 
     listener->report_successful_setup_of_native_resources();
 
@@ -200,7 +199,7 @@ bool mgg::GBMDisplayBuffer::post_update()
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
 {
-    auto bo = gbm_surface_lock_front_buffer(gbm.surface);
+    auto bo = gbm_surface_lock_front_buffer(surface_gbm.get());
     if (!bo)
         return nullptr;
 
@@ -221,12 +220,12 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
                             24, 32, stride, handle, &fb_id);
     if (ret)
     {
-        gbm_surface_release_buffer(gbm.surface, bo);
+        gbm_surface_release_buffer(surface_gbm.get(), bo);
         return nullptr;
     }
 
     /* Create a BufferObject and associate it with the gbm_bo */
-    bufobj = new BufferObject{gbm.surface, bo, fb_id};
+    bufobj = new BufferObject{surface_gbm.get(), bo, fb_id};
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 
     return bufobj;

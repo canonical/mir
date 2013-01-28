@@ -26,7 +26,8 @@
 #include <stdexcept>
 #include <xf86drm.h>
 
-namespace mggh=mir::graphics::gbm::helpers;
+namespace mgg = mir::graphics::gbm;
+namespace mggh = mir::graphics::gbm::helpers;
 
 /*************
  * DRMHelper *
@@ -180,20 +181,23 @@ void mggh::GBMHelper::setup(const DRMHelper& drm)
             std::runtime_error("Failed to create GBM device"));
 }
 
-void mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
+mgg::GBMSurfaceUPtr mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
 {
-    surface = gbm_surface_create(device, width, height,
-                                 GBM_BO_FORMAT_XRGB8888,
-                                 GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+    auto surface_raw = gbm_surface_create(device, width, height,
+                                          GBM_BO_FORMAT_XRGB8888,
+                                          GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+
+    auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
+    GBMSurfaceUPtr surface{surface_raw, gbm_surface_deleter};
+
     if (!surface)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create GBM scanout surface"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM scanout surface"));
+
+    return surface;
 }
 
 mggh::GBMHelper::~GBMHelper()
 {
-    if (surface)
-        gbm_surface_destroy(surface);
     if (device)
         gbm_device_destroy(device);
 }
@@ -202,7 +206,7 @@ mggh::GBMHelper::~GBMHelper()
  * EGLHelper *
  *************/
 
-void mggh::EGLHelper::setup(const GBMHelper& gbm)
+void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm)
 {
     static const EGLint context_attr [] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -250,7 +254,7 @@ void mggh::EGLHelper::setup(const GBMHelper& gbm)
             std::runtime_error("Failed to choose ARGB EGL config"));
     }
 
-    surface = eglCreateWindowSurface(display, config, gbm.surface, NULL);
+    surface = eglCreateWindowSurface(display, config, surface_gbm, NULL);
     if(surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Failed to create EGL window surface"));

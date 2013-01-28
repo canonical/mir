@@ -58,7 +58,7 @@ private:
     std::shared_ptr<DisplayListener> const listener;
     /* DRM and GBM helpers from GBMPlatform */
     helpers::DRMHelper& drm;
-    helpers::GBMHelper& gbm;
+    GBMSurfaceUPtr surface_gbm;
     /* Order is important for construction/destruction */
     helpers::KMSHelper  kms;
     helpers::EGLHelper  egl;
