@@ -50,11 +50,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_library( mirdraw STATIC
-
-  graphics_utils.cpp
-)
-
 add_executable(
   mir_demo_client_accelerated
 
@@ -105,19 +100,11 @@ target_link_libraries(
 )
 
 if (MIR_TRANSPORT STREQUAL "binder")
-  target_link_libraries(mir_demo_client binder)
-  target_link_libraries(mir_demo_client_accelerated binder)
-  target_link_libraries(mir_demo_client_unaccelerated binder)
+target_link_libraries(mir_demo_client binder)
+target_link_libraries(mir_demo_client_accelerated binder)
+target_link_libraries(mir_demo_client_unaccelerated binder)
 endif()
 
 install(
   TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
-
-install(
-  TARGETS mir_demo_client_accelerated
-  RUNTIME DESTINATION bin)
-
-install(
-  TARGETS mir_demo_client_unaccelerated
   RUNTIME DESTINATION bin)

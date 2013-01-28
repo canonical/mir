@@ -1,7 +1,7 @@
 examples/demo_client.c
 examples/demo_client_accelerated.cpp
 examples/demo_client_unaccelerated.c
-examples/graphics.h
-examples/graphics_utils.cpp
-examples/mir_image.h
 examples/README
+include/mir/draw/graphics.h
+include/mir/draw/mir_image.h
+src/draw/graphics_utils.cpp
