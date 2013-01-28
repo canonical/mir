@@ -11,12 +11,6 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
-if (NOT MIR_INPUT_USE_ANDROID_TYPES)
-add_definitions(
-  -DANDROID_USE_STD
-)
-endif()
-
 set(
   UTIL_SOURCES
 
