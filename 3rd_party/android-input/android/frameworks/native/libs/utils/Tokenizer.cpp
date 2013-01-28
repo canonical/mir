@@ -16,6 +16,7 @@
 
 #define LOG_TAG "Tokenizer"
 
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -55,15 +56,15 @@ status_t Tokenizer::open(const String8& filename, Tokenizer** outTokenizer) {
     *outTokenizer = NULL;
 
     int result = NO_ERROR;
-    int fd = ::open(filename.string(), O_RDONLY);
+    int fd = ::open(c_str(filename), O_RDONLY);
     if (fd < 0) {
         result = -errno;
-        ALOGE("Error opening file '%s', %s.", filename.string(), strerror(errno));
+        ALOGE("Error opening file '%s', %s.", c_str(filename), strerror(errno));
     } else {
         struct stat stat;
         if (fstat(fd, &stat)) {
             result = -errno;
-            ALOGE("Error getting size of file '%s', %s.", filename.string(), strerror(errno));
+            ALOGE("Error getting size of file '%s', %s.", c_str(filename), strerror(errno));
         } else {
             size_t length = size_t(stat.st_size);
 
@@ -85,7 +86,7 @@ status_t Tokenizer::open(const String8& filename, Tokenizer** outTokenizer) {
                 ssize_t nrd = read(fd, buffer, length);
                 if (nrd < 0) {
                     result = -errno;
-                    ALOGE("Error reading file '%s', %s.", filename.string(), strerror(errno));
+                    ALOGE("Error reading file '%s', %s.", c_str(filename), strerror(errno));
                     delete[] buffer;
                     buffer = NULL;
                 } else {
@@ -111,7 +112,7 @@ status_t Tokenizer::fromContents(const String8& filename,
 
 String8 Tokenizer::getLocation() const {
     String8 result;
-    result.appendFormat("%s:%d", mFilename.string(), mLineNumber);
+    appendFormat(result, "%s:%d", c_str(mFilename), mLineNumber);
     return result;
 }
 

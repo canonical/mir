@@ -20,7 +20,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
-
+#include <boost/system/system_error.hpp>
 #include <sstream>
 
 namespace mfd = mir::frontend::detail;
@@ -143,47 +143,56 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
 {
     mir::protobuf::wire::Invocation invocation;
 
-    invocation.ParseFromIstream(&msg);
-    // TODO comparing strings in an if-else chain isn't efficient.
-    // It is probably possible to generate a Trie at compile time.
-    if ("connect" == invocation.method_name())
+    try
     {
-        invoke(&protobuf::DisplayServer::connect, invocation);
+        invocation.ParseFromIstream(&msg);
+        // TODO comparing strings in an if-else chain isn't efficient.
+        // It is probably possible to generate a Trie at compile time.
+        if ("connect" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::connect, invocation);
+        }
+        else if ("create_surface" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::create_surface, invocation);
+        }
+        else if ("next_buffer" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::next_buffer, invocation);
+        }
+        else if ("release_surface" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::release_surface, invocation);
+        }
+        else if ("test_file_descriptors" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
+        }
+        else if ("drm_auth_magic" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+        }
+        else if ("select_focus_by_lightdm_id" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
+        }
+        else if ("disconnect" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::disconnect, invocation);
+            return false;
+        }
+        else
+        {
+            /*log->error()*/
+            std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
+            return false;
+        }
+
     }
-    else if ("create_surface" == invocation.method_name())
+    catch(const boost::system::system_error& e)
     {
-        invoke(&protobuf::DisplayServer::create_surface, invocation);
-    }
-    else if ("next_buffer" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::next_buffer, invocation);
-    }
-    else if ("release_surface" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::release_surface, invocation);
-    }
-    else if ("test_file_descriptors" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
-    }
-    else if ("drm_auth_magic" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
-    }
-    else if ("select_focus_by_lightdm_id" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
-    }
-    else if ("disconnect" == invocation.method_name())
-    {
-        invoke(&protobuf::DisplayServer::disconnect, invocation);
-        // Careful about what you do after this - it deletes this
+        //note, if write threw an exception, the transaction with the client has failed 
         return false;
-    }
-    else
-    {
-        /*log->error()*/
-        std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
     }
 
     return true;

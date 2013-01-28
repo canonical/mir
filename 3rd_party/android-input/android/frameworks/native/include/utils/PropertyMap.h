@@ -17,10 +17,12 @@
 #ifndef _UTILS_PROPERTY_MAP_H
 #define _UTILS_PROPERTY_MAP_H
 
-#include <utils/KeyedVector.h>
-#include <utils/String8.h>
-#include <utils/Errors.h>
-#include <utils/Tokenizer.h>
+#include <androidfw/Input.h>
+
+#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Tokenizer.h)
 
 namespace android {
 

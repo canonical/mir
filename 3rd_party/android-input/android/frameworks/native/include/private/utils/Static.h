@@ -17,8 +17,10 @@
 // All static variables go here, to control initialization and
 // destruction order in the library.
 
-#include <utils/threads.h>
-#include <utils/KeyedVector.h>
+#include <androidfw/Platform.h>
+
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(KeyedVector.h)
 
 namespace android {
 // For TextStream.cpp

@@ -19,14 +19,14 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/InputTransport.h>
-#include <utils/KeyedVector.h>
-#include <utils/Vector.h>
-#include <utils/threads.h>
-#include <utils/Timers.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
-#include <utils/Looper.h>
-#include <utils/BitSet.h>
+#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Looper.h)
+#include ANDROIDFW_UTILS(BitSet.h)
 #include <cutils/atomic.h>
 
 #include <stddef.h>
@@ -813,7 +813,7 @@ private:
         explicit Connection(const sp<InputChannel>& inputChannel,
                 const sp<InputWindowHandle>& inputWindowHandle, bool monitor);
 
-        inline const char* getInputChannelName() const { return inputChannel->getName().string(); }
+        inline const char* getInputChannelName() const { return c_str(inputChannel->getName()); }
 
         const char* getWindowName() const;
         const char* getStatusLabel() const;
