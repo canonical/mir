@@ -83,7 +83,7 @@ void client_request_loop(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& s
     for(;;)
     {
         swapper.client_acquire(buffer_ref, out_buffer_id);
-        EXPECT_NE(buffer_ref, nullptr);
+        EXPECT_NE(nullptr, buffer_ref);
         if (synchronizer.child_enter_wait()) return;
 
         swapper.client_release(out_buffer_id);
@@ -100,7 +100,7 @@ void compositor_grab_loop(mc::BufferID& out_buffer_id, mt::SynchronizerSpawned& 
     for(;;)
     {
         swapper.compositor_acquire(buffer_ref, out_buffer_id);
-        EXPECT_NE(buffer_ref, nullptr);
+        EXPECT_NE(nullptr, buffer_ref);
         if (synchronizer.child_enter_wait()) return;
 
         swapper.compositor_release(out_buffer_id);
