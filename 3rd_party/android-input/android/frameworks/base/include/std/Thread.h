@@ -50,6 +50,8 @@ public:
     {
         (void)name; (void)priority; (void)stack;
 
+        if (auto result = readyToRun()) return result;
+
         thread = std::thread([this]() -> void { while (!exitPending() && threadLoop()); });
 
 #ifdef HAVE_PTHREADS
@@ -71,8 +73,8 @@ public:
     // function can be called from a different thread.
     virtual void        requestExit() { exit_pending.store(true); }
 
-//    // Good place to do one-time initializations
-//    virtual status_t    readyToRun()  { throw std::logic_error("not implemented"); }
+    // Good place to do one-time initializations
+    virtual status_t    readyToRun()  { return OK; }
 
     // Call requestExit() and wait until this object's thread exits.
     // BE VERY CAREFUL of deadlocks. In particular, it would be silly to call
