@@ -108,3 +108,9 @@ endif()
 install(
   TARGETS mir_demo_client
   RUNTIME DESTINATION bin)
+install(
+  TARGETS mir_demo_client_unaccelerated
+  RUNTIME DESTINATION bin)
+install(
+  TARGETS mir_demo_client_accelerated
+  RUNTIME DESTINATION bin)
