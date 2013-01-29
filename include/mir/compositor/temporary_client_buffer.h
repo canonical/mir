@@ -16,14 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_TEMPORARY_BUFFER_H_
-#define MIR_COMPOSITOR_TEMPORARY_BUFFER_H_
+#ifndef MIR_COMPOSITOR_TEMPORARY_CLIENT_BUFFER_H_
+#define MIR_COMPOSITOR_TEMPORARY_CLIENT_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_swapper.h"
-
-#include <functional>
 
 namespace mir
 {
@@ -53,4 +51,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_TEMPORARY_BUFFER_H_ */
+#endif /* MIR_COMPOSITOR_TEMPORARY_CLIENT_BUFFER_H_ */

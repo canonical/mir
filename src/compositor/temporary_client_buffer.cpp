@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/temporary_buffer.h"
+#include "mir/compositor/temporary_client_buffer.h"
 
 #include <boost/exception/all.hpp>
 

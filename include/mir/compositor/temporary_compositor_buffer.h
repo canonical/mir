@@ -23,8 +23,6 @@
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_swapper.h"
 
-#include <functional>
-
 namespace mir
 {
 namespace compositor
