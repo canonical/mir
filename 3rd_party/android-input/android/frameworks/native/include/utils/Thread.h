@@ -26,10 +26,8 @@
 #endif
 
 #include ANDROIDFW_UTILS(Condition.h)
-#include ANDROIDFW_UTILS(Errors.h)
 #include ANDROIDFW_UTILS(Mutex.h)
 #include ANDROIDFW_UTILS(RefBase.h)
-#include ANDROIDFW_UTILS(Timers.h)
 #include ANDROIDFW_UTILS(ThreadDefs.h)
 
 // ---------------------------------------------------------------------------
