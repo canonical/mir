@@ -25,7 +25,6 @@ set(
   frameworks/native/libs/utils/TextOutput.cpp
   frameworks/native/libs/utils/Timers.cpp
   frameworks/native/libs/utils/Tokenizer.cpp
-  frameworks/native/libs/utils/Unicode.cpp
   frameworks/native/libs/utils/VectorImpl.cpp
 )
 
@@ -34,6 +33,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/String16.cpp
   frameworks/native/libs/utils/String8.cpp
   frameworks/native/libs/utils/Threads.cpp
+  frameworks/native/libs/utils/Unicode.cpp
 )
 endif()
 
