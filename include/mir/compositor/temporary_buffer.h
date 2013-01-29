@@ -32,6 +32,7 @@ class TemporaryBuffer : public Buffer
 {
 public:
     explicit TemporaryBuffer(const std::shared_ptr<Buffer>& buffer, const std::function<void()> release_function);
+    ~TemporaryBuffer();
 
     geometry::Size size() const;
     geometry::Stride stride() const;
@@ -43,6 +44,7 @@ public:
 
 private:
     std::shared_ptr<Buffer> buffer;
+    const std::function<void()> release_function;
 }; 
 
 }
