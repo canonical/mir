@@ -14,7 +14,6 @@ add_definitions(
 set(
   UTIL_SOURCES
 
-  frameworks/native/libs/utils/BufferedTextOutput.cpp
   frameworks/native/libs/utils/Debug.cpp
   frameworks/native/libs/utils/FileMap.cpp
   frameworks/native/libs/utils/Looper.cpp
@@ -34,6 +33,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/String8.cpp
   frameworks/native/libs/utils/Threads.cpp
   frameworks/native/libs/utils/Unicode.cpp
+  frameworks/native/libs/utils/BufferedTextOutput.cpp
 )
 endif()
 
