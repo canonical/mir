@@ -21,10 +21,12 @@
 
 #include "mir/surfaces/surface_controller.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 #include <memory>
 #include <cassert>
 #include <algorithm>
-#include <stdio.h>
 
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
@@ -66,7 +68,16 @@ msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters&
 std::shared_ptr<msess::Surface> msess::Session::get_surface(msess::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    return surfaces.find(id)->second;
+    
+    auto p = surfaces.find(id);
+    if (p != surfaces.end())
+    {
+        return p->second;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
+    }
 }
 
 void msess::Session::destroy_surface(msess::SurfaceId id)
@@ -78,6 +89,10 @@ void msess::Session::destroy_surface(msess::SurfaceId id)
     {
         p->second->destroy();
         surfaces.erase(p);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
     }
 }
 
