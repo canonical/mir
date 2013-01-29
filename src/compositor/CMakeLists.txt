@@ -21,6 +21,7 @@ set(
   compositor.cpp
   buffer_basic.cpp
   temporary_buffer.cpp
+  temporary_compositor_buffer.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_multi.cpp

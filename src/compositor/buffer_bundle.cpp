@@ -18,6 +18,7 @@
  */
 
 #include "mir/compositor/temporary_buffer.h"
+#include "mir/compositor/temporary_compositor_buffer.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_ipc_package.h"
@@ -50,36 +51,12 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 
 std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
-    mc::BufferID id;
-    std::shared_ptr<mc::Buffer> region;
-    swapper->compositor_acquire(region, id);
-
-    auto release_function = [] (std::weak_ptr<mc::BufferSwapper> s, mc::BufferID release_id)
-    {
-        if (auto swap = s.lock())
-            swap->compositor_release(release_id);
-    };
-    auto func2 = std::bind(release_function, swapper, id); 
-    auto compositor_resource = std::make_shared<mc::TemporaryBuffer>(region, func2);
-
-    return compositor_resource;
+    return std::make_shared<mc::TemporaryCompositorBuffer>(swapper);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
 {
-    BufferID id;
-    std::shared_ptr<Buffer> buffer;
-    swapper->client_acquire(buffer, id);
-
-    auto release_function = [] (std::weak_ptr<mc::BufferSwapper> s, mc::BufferID release_id)
-    {
-        if (auto swap = s.lock())
-            swap->client_release(release_id);
-    };
-    auto func2 = std::bind(release_function, swapper, id); 
-    auto client_resource = std::make_shared<mc::TemporaryBuffer>(buffer, func2);
-
-    return client_resource;
+    return std::make_shared<mc::TemporaryClientBuffer>(swapper);
 }
 
 geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()

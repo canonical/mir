@@ -20,6 +20,8 @@
 #define MIR_COMPOSITOR_TEMPORARY_BUFFER_H_
 
 #include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_swapper.h"
 
 #include <functional>
 
@@ -28,11 +30,11 @@ namespace mir
 namespace compositor
 {
 
-class TemporaryBuffer : public Buffer
+class TemporaryClientBuffer : public Buffer
 {
 public:
-    explicit TemporaryBuffer(const std::shared_ptr<Buffer>& buffer, const std::function<void()> release_function);
-    ~TemporaryBuffer();
+    explicit TemporaryClientBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
+    ~TemporaryClientBuffer();
 
     geometry::Size size() const;
     geometry::Stride stride() const;
@@ -44,7 +46,8 @@ public:
 
 private:
     std::shared_ptr<Buffer> buffer;
-    const std::function<void()> release_function;
+    BufferID buffer_id;
+    std::weak_ptr<BufferSwapper> allocating_swapper;
 }; 
 
 }
