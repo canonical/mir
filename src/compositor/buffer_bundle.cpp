@@ -28,47 +28,6 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace
-{
-struct CompositorReleaseDeleter
-{
-    CompositorReleaseDeleter(std::shared_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
-        swapper(sw),
-        id(id)
-    {
-    }
-
-    void operator()(mc::GraphicRegion* compositor_resource)
-    {
-        if (auto res = swapper.lock())
-            res->compositor_release(id);
-        delete compositor_resource;
-    }
-
-    std::weak_ptr<mc::BufferSwapper> swapper;
-    mc::BufferID id;
-};
-
-struct ClientReleaseDeleter
-{
-    ClientReleaseDeleter(std::shared_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
-        swapper(sw),
-        id(id)
-    {
-    }
-
-    void operator()(mc::Buffer* client_resource)
-    {
-        if (auto res = swapper.lock())
-            res->client_release(id);
-        delete client_resource;
-    }
-
-    std::weak_ptr<mc::BufferSwapper> swapper;
-    mc::BufferID id;
-};
-}
-
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
     BufferProperties const& buffer_properties)
@@ -95,10 +54,13 @@ std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
     std::shared_ptr<mc::Buffer> region;
     swapper->compositor_acquire(region, id);
 
-    std::function<void()> func;
-    auto resource = new mc::TemporaryBuffer(region, func);
-    CompositorReleaseDeleter del(swapper, id);
-    auto compositor_resource = std::shared_ptr<mc::Buffer>(resource, del);
+    auto release_function = [] (std::weak_ptr<mc::BufferSwapper> s, mc::BufferID release_id)
+    {
+        if (auto swap = s.lock())
+            swap->compositor_release(release_id);
+    };
+    auto func2 = std::bind(release_function, swapper, id); 
+    auto compositor_resource = std::make_shared<mc::TemporaryBuffer>(region, func2);
 
     return compositor_resource;
 }
@@ -109,10 +71,13 @@ std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
     std::shared_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
-    std::function<void()> func;
-    auto resource = new mc::TemporaryBuffer(buffer, func);
-    ClientReleaseDeleter del(swapper, id);
-    auto client_resource = std::shared_ptr<mc::Buffer>(resource, del);
+    auto release_function = [] (std::weak_ptr<mc::BufferSwapper> s, mc::BufferID release_id)
+    {
+        if (auto swap = s.lock())
+            swap->client_release(release_id);
+    };
+    auto func2 = std::bind(release_function, swapper, id); 
+    auto client_resource = std::make_shared<mc::TemporaryBuffer>(buffer, func2);
 
     return client_resource;
 }
