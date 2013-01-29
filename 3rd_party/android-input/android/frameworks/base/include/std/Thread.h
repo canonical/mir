@@ -39,7 +39,8 @@ class Thread : virtual public RefBase
 public:
     // Create a Thread object, but doesn't create or start the associated
     // thread. See the run() method.
-                        Thread(bool canCallJava = true) : exit_pending(false), thread() { (void)canCallJava; }
+                        Thread(bool canCallJava = true) :
+                            exit_pending(false), thread(), status(NO_ERROR) { (void)canCallJava; }
     virtual             ~Thread() { }
 
     // Start the thread in threadLoop() which needs to be implemented.
@@ -50,9 +51,13 @@ public:
     {
         (void)name; (void)priority; (void)stack;
 
-        if (auto result = readyToRun()) return result;
+        status.store(NO_ERROR);
 
-        thread = std::thread([this]() -> void { while (!exitPending() && threadLoop()); });
+        thread = std::thread([this]() -> void
+            {
+                if (auto result = readyToRun()) status.store(result);
+                else while (!exitPending() && threadLoop());
+            });
 
 #ifdef HAVE_PTHREADS
         if (priority != PRIORITY_DEFAULT)
@@ -84,7 +89,7 @@ public:
 
     // Wait until this object's thread exits. Returns immediately if not yet running.
     // Do not call from this object's thread; will return WOULD_BLOCK in that case.
-            status_t    join() { if (thread.joinable()) thread.join(); return OK; }
+            status_t    join() { if (thread.joinable()) thread.join(); return status.load(); }
 
 protected:
     // exitPending() returns true if requestExit() has been called.
@@ -101,6 +106,7 @@ private:
 private:
     std::atomic<bool> exit_pending;
     std::thread thread;
+    std::atomic<status_t> status;
     Thread(const Thread&) = delete;
     Thread& operator=(const Thread&) = delete;
 };
