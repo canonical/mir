@@ -20,9 +20,11 @@
 #ifndef __LIBS_FILE_MAP_H
 #define __LIBS_FILE_MAP_H
 
+#include <androidfw/Platform.h>
+
 #include <sys/types.h>
 
-#include <utils/Compat.h>
+#include ANDROIDFW_UTILS(Compat.h)
 
 #ifdef HAVE_WIN32_FILEMAP
 #include <windows.h>

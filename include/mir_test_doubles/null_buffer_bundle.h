@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_
 
 #include <mir/compositor/buffer_bundle.h>
-#include <mir_test_doubles/mock_buffer.h>
+#include <mir_test_doubles/stub_buffer.h>
 
 namespace mir
 {
@@ -34,14 +34,11 @@ class NullBufferBundle : public compositor::BufferBundle
 public:
     NullBufferBundle()
     {
-        geometry::Size sz;
-        geometry::Stride st;
-        geometry::PixelFormat pf;
-        mock_buffer = std::make_shared<mir::test::doubles::MockBuffer>(sz, st, pf);
+        stub_buffer = std::make_shared<StubBuffer>();
     }
     std::shared_ptr<compositor::Buffer> secure_client_buffer()
     {
-        return mock_buffer;
+        return stub_buffer;
     }
 
     std::shared_ptr<compositor::GraphicRegion> lock_back_buffer()
@@ -63,7 +60,7 @@ public:
     {
     }
 
-    std::shared_ptr<compositor::Buffer> mock_buffer;
+    std::shared_ptr<compositor::Buffer> stub_buffer;
 };
 
 }

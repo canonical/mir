@@ -36,6 +36,7 @@ public:
         auto swapper_buffer = std::make_shared<mtd::StubBuffer>();
         mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(swapper_buffer);
 
+        stub_id = mc::BufferID(4);
         buffer_size = geom::Size{geom::Width{1024}, geom::Height{768}};
         buffer_stride = geom::Stride{1024};
         buffer_pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
@@ -46,16 +47,19 @@ public:
     geom::Size buffer_size;
     geom::Stride buffer_stride;
     geom::PixelFormat buffer_pixel_format;
+    mc::BufferID stub_id;
 };
 
 TEST_F(TemporaryBufferTest, buffer_has_ownership)
 {
     {
-        mc::TemporaryBuffer proxy_buffer(mock_swapper, buffer);
+        std::function<void()> release_function = std::bind(&mc::BufferSwapper::compositor_release, mock_swapper, id );
+        mc::TemporaryBuffer proxy_buffer( buffer, release_function);
         EXPECT_EQ(buffer.use_count(), 2);
     }
     EXPECT_EQ(buffer.use_count(), 1);
 } 
+
 
 TEST_F(TemporaryBufferTest, test_size)
 {

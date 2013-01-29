@@ -24,8 +24,8 @@
 # include <pthread.h>
 #endif
 
-#include <utils/Errors.h>
-#include <utils/ThreadDefs.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(ThreadDefs.h)
 
 // ---------------------------------------------------------------------------
 namespace android {

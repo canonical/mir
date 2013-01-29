@@ -60,21 +60,21 @@ String8 getInputDeviceConfigurationFilePathByDeviceIdentifier(
         if (deviceIdentifier.version != 0) {
             // Try vendor product version.
             String8 versionPath(getInputDeviceConfigurationFilePathByName(
-                    String8::format("Vendor_%04x_Product_%04x_Version_%04x",
+                    formatString8("Vendor_%04x_Product_%04x_Version_%04x",
                             deviceIdentifier.vendor, deviceIdentifier.product,
                             deviceIdentifier.version),
                     type));
-            if (!versionPath.isEmpty()) {
+            if (!isEmpty(versionPath)) {
                 return versionPath;
             }
         }
 
         // Try vendor product.
         String8 productPath(getInputDeviceConfigurationFilePathByName(
-                String8::format("Vendor_%04x_Product_%04x",
+                formatString8("Vendor_%04x_Product_%04x",
                         deviceIdentifier.vendor, deviceIdentifier.product),
                 type));
-        if (!productPath.isEmpty()) {
+        if (!isEmpty(productPath)) {
             return productPath;
         }
     }
@@ -91,7 +91,7 @@ String8 getInputDeviceConfigurationFilePathByName(
     {
         const char *root_env = getenv("ANDROID_ROOT");
         if (root_env == NULL) root_env = "";
-        path.setTo(root_env);
+        setTo(path, root_env);
     }
     // </mir modifications>
     path.append("/usr/");
@@ -99,7 +99,7 @@ String8 getInputDeviceConfigurationFilePathByName(
 #if DEBUG_PROBE
     ALOGD("Probing for system provided input device configuration file: path='%s'", path.string());
 #endif
-    if (!access(path.string(), R_OK)) {
+    if (!access(c_str(path), R_OK)) {
 #if DEBUG_PROBE
         ALOGD("Found");
 #endif
@@ -112,7 +112,7 @@ String8 getInputDeviceConfigurationFilePathByName(
     {
         const char *data_env = getenv("ANDROID_DATA");
         if (data_env == NULL) data_env = "";
-        path.setTo(data_env);
+        setTo(path, data_env);
     }
 
     // </mir modifications>
@@ -121,7 +121,7 @@ String8 getInputDeviceConfigurationFilePathByName(
 #if DEBUG_PROBE
     ALOGD("Probing for system user input device configuration file: path='%s'", path.string());
 #endif
-    if (!access(path.string(), R_OK)) {
+    if (!access(c_str(path), R_OK)) {
 #if DEBUG_PROBE
         ALOGD("Found");
 #endif

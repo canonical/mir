@@ -21,6 +21,8 @@
 
 #include "mir/compositor/buffer.h"
 
+#include <functional>
+
 namespace mir
 {
 namespace compositor

@@ -23,10 +23,10 @@
 #include <hardware_legacy/power.h>
 
 #include <cutils/properties.h>
-#include <utils/Log.h>
-#include <utils/Timers.h>
-#include <utils/threads.h>
-#include <utils/Errors.h>
+#include ANDROIDFW_UTILS(Log.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Errors.h)
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -88,13 +88,13 @@ static inline const char* toString(bool value) {
 static String8 sha1(const String8& in) {
     SHA1_CTX ctx;
     SHA1Init(&ctx);
-    SHA1Update(&ctx, reinterpret_cast<const u_char*>(in.string()), in.size());
+    SHA1Update(&ctx, reinterpret_cast<const u_char*>(c_str(in)), in.size());
     u_char digest[SHA1_DIGEST_LENGTH];
     SHA1Final(digest, &ctx);
 
     String8 out;
     for (size_t i = 0; i < SHA1_DIGEST_LENGTH; i++) {
-        out.appendFormat("%02x", digest[i]);
+        appendFormat(out, "%02x", digest[i]);
     }
     return out;
 }
@@ -105,8 +105,8 @@ static void setDescriptor(InputDeviceIdentifier& identifier) {
     // change between reboots, reconnections, firmware updates or new releases of Android.
     // Ideally, we also want the descriptor to be short and relatively opaque.
     String8 rawDescriptor;
-    rawDescriptor.appendFormat(":%04x:%04x:", identifier.vendor, identifier.product);
-    if (!identifier.uniqueId.isEmpty()) {
+    appendFormat(rawDescriptor, ":%04x:%04x:", identifier.vendor, identifier.product);
+    if (!isEmpty(identifier.uniqueId)) {
         rawDescriptor.append("uniqueId:");
         rawDescriptor.append(identifier.uniqueId);
     } if (identifier.vendor == 0 && identifier.product == 0) {
@@ -114,17 +114,17 @@ static void setDescriptor(InputDeviceIdentifier& identifier) {
         // built-in so we need to rely on other information to uniquely identify
         // the input device.  Usually we try to avoid relying on the device name or
         // location but for built-in input device, they are unlikely to ever change.
-        if (!identifier.name.isEmpty()) {
+        if (!isEmpty(identifier.name)) {
             rawDescriptor.append("name:");
             rawDescriptor.append(identifier.name);
-        } else if (!identifier.location.isEmpty()) {
+        } else if (!isEmpty(identifier.location)) {
             rawDescriptor.append("location:");
             rawDescriptor.append(identifier.location);
         }
     }
     identifier.descriptor = sha1(rawDescriptor);
-    ALOGV("Created descriptor: raw=%s, cooked=%s", rawDescriptor.string(),
-            identifier.descriptor.string());
+    ALOGV("Created descriptor: raw=%s, cooked=%s", c_str(rawDescriptor),
+        c_str(identifier.descriptor));
 }
 
 // --- Global Functions ---
@@ -296,7 +296,7 @@ status_t EventHub::getAbsoluteAxisInfo(int32_t deviceId, int axis,
             struct input_absinfo info;
             if(ioctl(device->fd, EVIOCGABS(axis), &info)) {
                 ALOGW("Error reading absolute controller %d for device %s fd %d, errno=%d",
-                     axis, device->identifier.name.string(), device->fd, errno);
+                     axis, c_str(device->identifier.name), device->fd, errno);
                 return -errno;
             }
 
@@ -405,7 +405,7 @@ status_t EventHub::getAbsoluteAxisValue(int32_t deviceId, int32_t axis, int32_t*
             struct input_absinfo info;
             if(ioctl(device->fd, EVIOCGABS(axis), &info)) {
                 ALOGW("Error reading absolute controller %d for device %s fd %d, errno=%d",
-                     axis, device->identifier.name.string(), device->fd, errno);
+                     axis, c_str(device->identifier.name), device->fd, errno);
                 return -errno;
             }
 
@@ -582,7 +582,7 @@ void EventHub::vibrate(int32_t deviceId, nsecs_t duration) {
         effect.replay.delay = 0;
         if (ioctl(device->fd, EVIOCSFF, &effect)) {
             ALOGW("Could not upload force feedback effect to device %s due to error %d.",
-                    device->identifier.name.string(), errno);
+                c_str(device->identifier.name), errno);
             return;
         }
         device->ffEffectId = effect.id;
@@ -595,7 +595,7 @@ void EventHub::vibrate(int32_t deviceId, nsecs_t duration) {
         ev.value = 1;
         if (write(device->fd, &ev, sizeof(ev)) != sizeof(ev)) {
             ALOGW("Could not start force feedback effect on device %s due to error %d.",
-                    device->identifier.name.string(), errno);
+                c_str(device->identifier.name), errno);
             return;
         }
         device->ffEffectPlaying = true;
@@ -617,7 +617,7 @@ void EventHub::cancelVibrate(int32_t deviceId) {
             ev.value = 0;
             if (write(device->fd, &ev, sizeof(ev)) != sizeof(ev)) {
                 ALOGW("Could not stop force feedback effect on device %s due to error %d.",
-                        device->identifier.name.string(), errno);
+                    c_str(device->identifier.name), errno);
                 return;
             }
         }
@@ -674,7 +674,7 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
         while (mClosingDevices) {
             Device* device = mClosingDevices;
             ALOGV("Reporting device closed: id=%d, name=%s\n",
-                 device->id, device->path.string());
+                 device->id, c_str(device->path));
             mClosingDevices = device->next;
             event->when = now;
             event->deviceId = device->id == mBuiltInKeyboardId ? BUILT_IN_KEYBOARD_ID : device->id;
@@ -696,7 +696,7 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
         while (mOpeningDevices != NULL) {
             Device* device = mOpeningDevices;
             ALOGV("Reporting device opened: id=%d, name=%s\n",
-                 device->id, device->path.string());
+                 device->id, c_str(device->path));
             mOpeningDevices = device->next;
             event->when = now;
             event->deviceId = device->id == mBuiltInKeyboardId ? 0 : device->id;
@@ -778,7 +778,7 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                     for (size_t i = 0; i < count; i++) {
                         const struct input_event& iev = readBuffer[i];
                         ALOGV("%s got: t0=%d, t1=%d, type=%d, code=%d, value=%d",
-                                device->path.string(),
+                            c_str(device->path),
                                 (int) iev.time.tv_sec, (int) iev.time.tv_usec,
                                 iev.type, iev.code, iev.value);
 
@@ -816,12 +816,12 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                 }
             } else if (eventItem.events & EPOLLHUP) {
                 ALOGI("Removing device %s due to epoll hang-up event.",
-                        device->identifier.name.string());
+                    c_str(device->identifier.name));
                 deviceChanged = true;
                 closeDeviceLocked(device);
             } else {
                 ALOGW("Received unexpected epoll event 0x%08x for device %s.",
-                        eventItem.events, device->identifier.name.string());
+                        eventItem.events, c_str(device->identifier.name));
             }
         }
 
@@ -958,14 +958,14 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         //fprintf(stderr, "could not get device name for %s, %s\n", devicePath, strerror(errno));
     } else {
         buffer[sizeof(buffer) - 1] = '\0';
-        identifier.name.setTo(buffer);
+        setTo(identifier.name, buffer);
     }
 
     // Check to see if the device is on our excluded list
     for (size_t i = 0; i < mExcludedDevices.size(); i++) {
         const String8& item = mExcludedDevices.itemAt(i);
         if (identifier.name == item) {
-            ALOGI("ignoring event id %s driver %s\n", devicePath, item.string());
+            ALOGI("ignoring event id %s driver %s\n", devicePath, c_str(item));
             close(fd);
             return -1;
         }
@@ -996,7 +996,7 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         //fprintf(stderr, "could not get location for %s, %s\n", devicePath, strerror(errno));
     } else {
         buffer[sizeof(buffer) - 1] = '\0';
-        identifier.location.setTo(buffer);
+        setTo(identifier.location, buffer);
     }
 
     // Get device unique id.
@@ -1004,7 +1004,7 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         //fprintf(stderr, "could not get idstring for %s, %s\n", devicePath, strerror(errno));
     } else {
         buffer[sizeof(buffer) - 1] = '\0';
-        identifier.uniqueId.setTo(buffer);
+        setTo(identifier.uniqueId, buffer);
     }
 
     // Fill in the descriptor.
@@ -1027,10 +1027,10 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
          "  product     %04x\n"
          "  version     %04x\n",
         identifier.bus, identifier.vendor, identifier.product, identifier.version);
-    ALOGV("  name:       \"%s\"\n", identifier.name.string());
-    ALOGV("  location:   \"%s\"\n", identifier.location.string());
-    ALOGV("  unique id:  \"%s\"\n", identifier.uniqueId.string());
-    ALOGV("  descriptor: \"%s\"\n", identifier.descriptor.string());
+    ALOGV("  name:       \"%s\"\n", c_str(identifier.name));
+    ALOGV("  location:   \"%s\"\n", c_str(identifier.location));
+    ALOGV("  unique id:  \"%s\"\n", c_str(identifier.uniqueId));
+    ALOGV("  descriptor: \"%s\"\n", c_str(identifier.descriptor));
     ALOGV("  driver:     v%d.%d.%d\n",
         driverVersion >> 16, (driverVersion >> 8) & 0xff, driverVersion & 0xff);
 
@@ -1164,7 +1164,7 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
     // If the device isn't recognized as something we handle, don't monitor it.
     if (device->classes == 0) {
         ALOGV("Dropping device: id=%d, path='%s', name='%s'",
-                deviceId, devicePath, device->identifier.name.string());
+                deviceId, devicePath, c_str(device->identifier.name));
         delete device;
         return -1;
     }
@@ -1210,11 +1210,11 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
     ALOGI("New device: id=%d, fd=%d, path='%s', name='%s', classes=0x%x, "
             "configuration='%s', keyLayout='%s', keyCharacterMap='%s', builtinKeyboard=%s, "
             "usingSuspendBlockIoctl=%s, usingClockIoctl=%s",
-         deviceId, fd, devicePath, device->identifier.name.string(),
+         deviceId, fd, devicePath, c_str(device->identifier.name),
          device->classes,
-         device->configurationFile.string(),
-         device->keyMap.keyLayoutFile.string(),
-         device->keyMap.keyCharacterMapFile.string(),
+         c_str(device->configurationFile),
+         c_str(device->keyMap.keyLayoutFile),
+         c_str(device->keyMap.keyCharacterMapFile),
          toString(mBuiltInKeyboardId == deviceId),
          toString(usingSuspendBlockIoctl), toString(usingClockIoctl));
 
@@ -1246,16 +1246,16 @@ void EventHub::addDeviceLocked(Device* device) {
 void EventHub::loadConfigurationLocked(Device* device) {
     device->configurationFile = getInputDeviceConfigurationFilePathByDeviceIdentifier(
             device->identifier, INPUT_DEVICE_CONFIGURATION_FILE_TYPE_CONFIGURATION);
-    if (device->configurationFile.isEmpty()) {
+    if (isEmpty(device->configurationFile)) {
         ALOGD("No input device configuration file found for device '%s'.",
-                device->identifier.name.string());
+            c_str(device->identifier.name));
     } else {
         status_t status = PropertyMap::load(device->configurationFile,
                 &device->configuration);
         if (status) {
             ALOGE("Error loading input device configuration file for device '%s'.  "
                     "Using default configuration.",
-                    device->identifier.name.string());
+                    c_str(device->identifier.name));
         }
     }
 }
@@ -1265,7 +1265,7 @@ status_t EventHub::loadVirtualKeyMapLocked(Device* device) {
     String8 path;
     path.append("/sys/board_properties/virtualkeys.");
     path.append(device->identifier.name);
-    if (access(path.string(), R_OK)) {
+    if (access(c_str(path), R_OK)) {
         return NAME_NOT_FOUND;
     }
     return VirtualKeyMap::load(path, &device->virtualKeyMap);
@@ -1327,12 +1327,12 @@ void EventHub::closeAllDevicesLocked() {
 
 void EventHub::closeDeviceLocked(Device* device) {
     ALOGI("Removed device: path=%s name=%s id=%d fd=%d classes=0x%x\n",
-         device->path.string(), device->identifier.name.string(), device->id,
+        c_str(device->path), c_str(device->identifier.name), device->id,
          device->fd, device->classes);
 
     if (device->id == mBuiltInKeyboardId) {
         ALOGW("built-in keyboard device %s (id=%d) is closing! the apps will not like this",
-                device->path.string(), mBuiltInKeyboardId);
+            c_str(device->path), mBuiltInKeyboardId);
         mBuiltInKeyboardId = NO_BUILT_IN_KEYBOARD;
     }
 
@@ -1360,7 +1360,7 @@ void EventHub::closeDeviceLocked(Device* device) {
         // Unlink the device from the opening devices list then delete it.
         // We don't need to tell the client that the device was closed because
         // it does not even know it was opened in the first place.
-        ALOGI("Device %s was immediately closed after opening.", device->path.string());
+        ALOGI("Device %s was immediately closed after opening.", c_str(device->path));
         if (pred) {
             pred->next = device->next;
         } else {
@@ -1454,35 +1454,35 @@ void EventHub::dump(String8& dump) {
     { // acquire lock
         AutoMutex _l(mLock);
 
-        dump.appendFormat(INDENT "BuiltInKeyboardId: %d\n", mBuiltInKeyboardId);
+        appendFormat(dump, INDENT "BuiltInKeyboardId: %d\n", mBuiltInKeyboardId);
 
         dump.append(INDENT "Devices:\n");
 
         for (size_t i = 0; i < mDevices.size(); i++) {
             const Device* device = mDevices.valueAt(i);
             if (mBuiltInKeyboardId == device->id) {
-                dump.appendFormat(INDENT2 "%d: %s (aka device 0 - built-in keyboard)\n",
-                        device->id, device->identifier.name.string());
+                appendFormat(dump, INDENT2 "%d: %s (aka device 0 - built-in keyboard)\n",
+                        device->id, c_str(device->identifier.name));
             } else {
-                dump.appendFormat(INDENT2 "%d: %s\n", device->id,
-                        device->identifier.name.string());
+                appendFormat(dump, INDENT2 "%d: %s\n", device->id,
+                    c_str(device->identifier.name));
             }
-            dump.appendFormat(INDENT3 "Classes: 0x%08x\n", device->classes);
-            dump.appendFormat(INDENT3 "Path: %s\n", device->path.string());
-            dump.appendFormat(INDENT3 "Descriptor: %s\n", device->identifier.descriptor.string());
-            dump.appendFormat(INDENT3 "Location: %s\n", device->identifier.location.string());
-            dump.appendFormat(INDENT3 "UniqueId: %s\n", device->identifier.uniqueId.string());
-            dump.appendFormat(INDENT3 "Identifier: bus=0x%04x, vendor=0x%04x, "
+            appendFormat(dump, INDENT3 "Classes: 0x%08x\n", device->classes);
+            appendFormat(dump, INDENT3 "Path: %s\n", c_str(device->path));
+            appendFormat(dump, INDENT3 "Descriptor: %s\n", c_str(device->identifier.descriptor));
+            appendFormat(dump, INDENT3 "Location: %s\n", c_str(device->identifier.location));
+            appendFormat(dump, INDENT3 "UniqueId: %s\n", c_str(device->identifier.uniqueId));
+            appendFormat(dump, INDENT3 "Identifier: bus=0x%04x, vendor=0x%04x, "
                     "product=0x%04x, version=0x%04x\n",
                     device->identifier.bus, device->identifier.vendor,
                     device->identifier.product, device->identifier.version);
-            dump.appendFormat(INDENT3 "KeyLayoutFile: %s\n",
-                    device->keyMap.keyLayoutFile.string());
-            dump.appendFormat(INDENT3 "KeyCharacterMapFile: %s\n",
-                    device->keyMap.keyCharacterMapFile.string());
-            dump.appendFormat(INDENT3 "ConfigurationFile: %s\n",
-                    device->configurationFile.string());
-            dump.appendFormat(INDENT3 "HaveKeyboardLayoutOverlay: %s\n",
+            appendFormat(dump, INDENT3 "KeyLayoutFile: %s\n",
+                c_str(device->keyMap.keyLayoutFile));
+            appendFormat(dump, INDENT3 "KeyCharacterMapFile: %s\n",
+                c_str(device->keyMap.keyCharacterMapFile));
+            appendFormat(dump, INDENT3 "ConfigurationFile: %s\n",
+                c_str(device->configurationFile));
+            appendFormat(dump, INDENT3 "HaveKeyboardLayoutOverlay: %s\n",
                     toString(device->overlayKeyMap != NULL));
         }
     } // release lock

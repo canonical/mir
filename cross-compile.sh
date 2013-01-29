@@ -20,6 +20,7 @@ if [ ! -e ${BUILD_DIR} ]; then
           -DMIR_ENABLE_DEATH_TESTS=NO \
           -DMIR_INPUT_ENABLE_EVEMU=NO \
           -DMIR_PLATFORM=android \
+          -DMIR_INPUT_USE_ANDROID_TYPES=true\
           .. )
 fi
 

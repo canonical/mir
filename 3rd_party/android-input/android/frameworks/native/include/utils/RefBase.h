@@ -17,6 +17,8 @@
 #ifndef ANDROID_REF_BASE_H
 #define ANDROID_REF_BASE_H
 
+#include <androidfw/Platform.h>
+
 #include <cutils/atomic.h>
 
 #include <stdint.h>
@@ -24,8 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <utils/StrongPointer.h>
-#include <utils/TypeHelpers.h>
+#include ANDROIDFW_UTILS(StrongPointer.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 // ---------------------------------------------------------------------------
 namespace android {

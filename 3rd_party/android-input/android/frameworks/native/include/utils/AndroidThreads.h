@@ -24,7 +24,7 @@
 # include <pthread.h>
 #endif
 
-#include <utils/ThreadDefs.h>
+#include ANDROIDFW_UTILS(ThreadDefs.h)
 
 // ---------------------------------------------------------------------------
 // C API
