@@ -92,11 +92,11 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer_resource() const
+std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer() const
 {
     if (auto const& s = surface.lock())
     {
-        return s->client_buffer_resource();
+        return s->client_buffer();
     }
     else
     {

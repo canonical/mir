@@ -51,7 +51,7 @@ public:
 
         ON_CALL(*this, size()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::size));
         ON_CALL(*this, pixel_format()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::pixel_format));
-        ON_CALL(*this, client_buffer_resource()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer_resource));
+        ON_CALL(*this, client_buffer()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer));
     }
 
     MOCK_METHOD0(hide, void());
@@ -62,7 +62,7 @@ public:
 
     MOCK_CONST_METHOD0(size, mir::geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer_resource, std::shared_ptr<mc::Buffer> ());
+    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
 
 private:
     ms::BasicProxySurface impl;

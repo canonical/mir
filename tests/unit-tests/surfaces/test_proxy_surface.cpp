@@ -122,20 +122,20 @@ struct BasicSurfaceProxy : testing::Test
 };
 }
 
-TEST_F(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
+TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
     EXPECT_NO_THROW({
-        proxy_surface.client_buffer_resource();
+        proxy_surface.client_buffer();
     });
 
     surface.reset();
 
     EXPECT_THROW({
-        proxy_surface.client_buffer_resource();
+        proxy_surface.client_buffer();
     }, std::runtime_error);
 }
 

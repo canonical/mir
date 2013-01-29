@@ -65,14 +65,14 @@ public:
     geometry::PixelFormat pixel_format() const;
 
     void advance_client_buffer();
-    std::shared_ptr<compositor::Buffer> client_buffer_resource() const;
+    std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
 
 private:
     std::string surface_name;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
 
-    std::shared_ptr<compositor::Buffer> graphics_resource;
+    std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;

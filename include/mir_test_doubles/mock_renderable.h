@@ -35,11 +35,11 @@ class MockRenderable :  public graphics::Renderable
 public:
     MockRenderable()
      : region(std::make_shared<MockGraphicRegion>()),
-       comp_resource(std::make_shared<StubBuffer>())
+       buffer(std::make_shared<StubBuffer>())
     {
         using namespace testing;
         ON_CALL(*this, graphic_region())
-            .WillByDefault(Return(comp_resource));
+            .WillByDefault(Return(buffer));
     }
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
@@ -49,7 +49,7 @@ public:
     MOCK_CONST_METHOD0(hidden, bool());
 
     std::shared_ptr<compositor::GraphicRegion> const region;
-    std::shared_ptr<compositor::Buffer> const comp_resource;
+    std::shared_ptr<compositor::Buffer> const buffer;
 };
 
 }

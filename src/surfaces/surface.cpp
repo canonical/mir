@@ -117,14 +117,14 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 void ms::Surface::advance_client_buffer()
 {
-    /* we must hold a reference (graphics_resource) to the resource on behalf
+    /* we must hold a reference (client_buffer_resource) to the resource on behalf
        of the client until it is returned to us */
     /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
-    graphics_resource.reset();  // Release old client buffer
-    graphics_resource = buffer_bundle->secure_client_buffer();
+    client_buffer_resource.reset();  // Release old client buffer
+    client_buffer_resource = buffer_bundle->secure_client_buffer();
 }
 
-std::shared_ptr<mc::Buffer> ms::Surface::client_buffer_resource() const
+std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 {
-    return graphics_resource;
+    return client_buffer_resource;
 }

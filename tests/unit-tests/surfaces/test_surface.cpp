@@ -215,7 +215,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
         .WillOnce(Return(mock_buffer));
     surf.advance_client_buffer();
 
-    auto ret_ipc = surf.client_buffer_resource();
+    auto ret_ipc = surf.client_buffer();
     EXPECT_EQ(mock_buffer, ret_ipc); 
 }
 
