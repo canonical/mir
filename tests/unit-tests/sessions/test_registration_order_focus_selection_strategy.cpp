@@ -37,18 +37,18 @@ namespace mtd = mir::test::doubles;
 TEST(RegistrationOrderFocusSequence, focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
-    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
-    msess::RegistrationOrderFocusSequence focus_sequence(model);
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
+    auto container = std::make_shared<msess::SessionContainer>();
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
+    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
+    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
+    auto app3 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 9"));
 
-    model->insert_session(app1);
-    model->insert_session(app2);
-    model->insert_session(app3);
+    container->insert_session(app1);
+    container->insert_session(app2);
+    container->insert_session(app3);
 
+    msess::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app2->name(), focus_sequence.successor_of(app1).lock()->name());
     EXPECT_EQ(app3->name(), focus_sequence.successor_of(app2).lock()->name());
     EXPECT_EQ(app1->name(), focus_sequence.successor_of(app3).lock()->name());
@@ -57,18 +57,17 @@ TEST(RegistrationOrderFocusSequence, focus_order)
 TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
-    std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
+    auto container = std::make_shared<msess::SessionContainer>();
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
-    std::shared_ptr<msess::Session> app3(new msess::Session(factory, std::string("Visual Studio 9")));
-
+    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
+    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
+    auto app3 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 9"));
     container->insert_session(app1);
     container->insert_session(app2);
     container->insert_session(app3);
 
+    msess::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app2->name(), focus_sequence.predecessor_of(app3).lock()->name());
     EXPECT_EQ(app1->name(), focus_sequence.predecessor_of(app2).lock()->name());
     EXPECT_EQ(app3->name(), focus_sequence.predecessor_of(app1).lock()->name());
@@ -77,13 +76,30 @@ TEST(RegistrationOrderFocusSequence, reverse_focus_order)
 TEST(RegistrationOrderFocusSequence, no_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
-    std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer);
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
+    auto container = std::make_shared<msess::SessionContainer>();
 
+    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
     container->insert_session(app1);
 
+    msess::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app1->name(), focus_sequence.successor_of(std::shared_ptr<msess::Session>()).lock()->name());
+}
+
+TEST(RegistrationOrderFocusSequence, invalid_session_throw_behavior)
+{
+    using namespace ::testing;
+
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
+    auto container = std::make_shared<msess::SessionContainer>();
+    auto invalid_session = std::make_shared<msess::Session>(factory, std::string("Visual Studio -1"));
+    
+    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    EXPECT_THROW({
+            focus_sequence.successor_of(invalid_session);
+    }, std::runtime_error);
+    EXPECT_THROW({
+            focus_sequence.predecessor_of(invalid_session);
+    }, std::runtime_error);
 }
