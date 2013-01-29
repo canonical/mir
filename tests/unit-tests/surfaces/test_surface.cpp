@@ -280,7 +280,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
         .WillOnce(Return(buffer_resource));
 
     std::shared_ptr<mc::GraphicRegion> comp_resource;
-    comp_resource = surf.texture();
+    comp_resource = surf.graphic_region();
 
     EXPECT_EQ(buffer_resource, comp_resource);
 }

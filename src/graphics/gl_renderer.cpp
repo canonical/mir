@@ -222,7 +222,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     std::shared_ptr<mc::GraphicRegion> region_resource;
     try
     {
-        region_resource = renderable.texture();
+        region_resource = renderable.graphic_region();
     } catch (std::exception&)
     {
         /* if this throws here, that means that the client has died

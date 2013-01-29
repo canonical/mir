@@ -313,7 +313,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     InSequence seq;
 
-    EXPECT_CALL(rd, texture())
+    EXPECT_CALL(rd, graphic_region())
         .Times(1)
         .WillOnce(Return(gr_ptr));
 
@@ -365,7 +365,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_
         save_count++;
     };
 
-    EXPECT_CALL(rd, texture())
+    EXPECT_CALL(rd, graphic_region())
         .Times(1)
         .WillOnce(testing::Throw(std::runtime_error("error")));
 

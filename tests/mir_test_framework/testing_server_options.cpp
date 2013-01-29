@@ -104,7 +104,7 @@ public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
     {
         // Need to acquire the texture to cycle buffers
-        r.texture();
+        r.graphic_region();
     }
 };
 

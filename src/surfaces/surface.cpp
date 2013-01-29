@@ -82,7 +82,7 @@ mir::geometry::Size ms::Surface::size() const
     return buffer_bundle->bundle_size();
 }
 
-std::shared_ptr<mc::GraphicRegion> ms::Surface::texture() const
+std::shared_ptr<mc::GraphicRegion> ms::Surface::graphic_region() const
 {
     return buffer_bundle->lock_back_buffer();
 }

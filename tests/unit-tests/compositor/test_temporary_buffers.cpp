@@ -34,15 +34,12 @@ public:
     void SetUp()
     {
         using namespace testing;
-        auto swapper_buffer = std::make_shared<mtd::StubBuffer>();
-        mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(swapper_buffer);
 
-
-        stub_id = mc::BufferID(4);
         buffer_size = geom::Size{geom::Width{1024}, geom::Height{768}};
         buffer_stride = geom::Stride{1024};
         buffer_pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
         buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(buffer_size, buffer_stride, buffer_pixel_format);
+        mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(buffer);
 
         ON_CALL(*mock_swapper, client_acquire(_,_))
             .WillByDefault(SetArgReferee<0>(buffer));
@@ -55,7 +52,6 @@ public:
     geom::Size buffer_size;
     geom::Stride buffer_stride;
     geom::PixelFormat buffer_pixel_format;
-    mc::BufferID stub_id;
 };
 
 TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
@@ -138,7 +134,6 @@ TEST_F(TemporaryBuffersTest, client_test_id)
 
     proxy_buffer.id();
 }
-
 
 /* compositor tests */
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)

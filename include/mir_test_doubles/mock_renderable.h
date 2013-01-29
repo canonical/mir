@@ -38,12 +38,12 @@ public:
        comp_resource(std::make_shared<StubBuffer>())
     {
         using namespace testing;
-        ON_CALL(*this, texture())
+        ON_CALL(*this, graphic_region())
             .WillByDefault(Return(comp_resource));
     }
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(texture, std::shared_ptr<compositor::GraphicRegion>());
+    MOCK_CONST_METHOD0(graphic_region, std::shared_ptr<compositor::GraphicRegion>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(hidden, bool());
