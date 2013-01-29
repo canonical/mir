@@ -22,6 +22,8 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 
+#include "mir/geometry/rectangle.h"
+
 namespace mgg = mir::graphics::gbm;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
