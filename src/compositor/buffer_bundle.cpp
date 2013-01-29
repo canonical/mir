@@ -95,7 +95,8 @@ std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
     std::shared_ptr<mc::Buffer> region;
     swapper->compositor_acquire(region, id);
 
-    auto resource = new mc::TemporaryBuffer(region);
+    std::function<void()> func;
+    auto resource = new mc::TemporaryBuffer(region, func);
     CompositorReleaseDeleter del(swapper, id);
     auto compositor_resource = std::shared_ptr<mc::Buffer>(resource, del);
 
@@ -108,7 +109,8 @@ std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
     std::shared_ptr<Buffer> buffer;
     swapper->client_acquire(buffer, id);
 
-    auto resource = new mc::TemporaryBuffer(buffer);
+    std::function<void()> func;
+    auto resource = new mc::TemporaryBuffer(buffer, func);
     ClientReleaseDeleter del(swapper, id);
     auto client_resource = std::shared_ptr<mc::Buffer>(resource, del);
 

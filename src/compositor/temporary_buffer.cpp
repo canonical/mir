@@ -24,7 +24,8 @@
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mc::TemporaryBuffer::TemporaryBuffer(const std::shared_ptr<mc::Buffer>& buffer)
+mc::TemporaryBuffer::TemporaryBuffer(const std::shared_ptr<mc::Buffer>& buffer,
+                                     const std::function<void()> /*release_function */)
  : buffer(buffer)
 {
 }

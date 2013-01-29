@@ -31,7 +31,7 @@ namespace compositor
 class TemporaryBuffer : public Buffer
 {
 public:
-    explicit TemporaryBuffer(const std::shared_ptr<Buffer>& buffer);
+    explicit TemporaryBuffer(const std::shared_ptr<Buffer>& buffer, const std::function<void()> release_function);
 
     geometry::Size size() const;
     geometry::Stride stride() const;
