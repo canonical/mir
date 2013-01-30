@@ -40,6 +40,9 @@ public:
     std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
 
 private:
+    KMSOutputContainer(KMSOutputContainer const&) = delete;
+    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
+
     int const drm_fd;
     std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
 };
