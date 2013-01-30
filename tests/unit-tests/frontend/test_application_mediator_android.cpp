@@ -71,7 +71,7 @@ public:
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::Session>(factory, "stub");
+        return std::make_shared<msess::ApplicationSession>(factory, "stub");
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}

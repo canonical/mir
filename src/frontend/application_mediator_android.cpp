@@ -21,6 +21,8 @@
 #include "mir/sessions/session.h"
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 void mir::frontend::ApplicationMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* /*request*/,
