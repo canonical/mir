@@ -21,7 +21,6 @@
 #define MIR_ANDROID_UBUNTU_VECTOR_H_
 
 #include <vector>
-#include <algorithm>
 
 namespace android
 {
@@ -170,10 +169,10 @@ public:
 
     //! remove several items
     inline  ssize_t         removeItemsAt(size_t index, size_t count = 1)
-    { auto i = impl.begin(); advance(i, index); impl.erase(i, i+count); return index; }
+    { auto i = impl.begin() + index; impl.erase(i, i+count); return index; }
     //! remove one item
     inline  ssize_t         removeAt(size_t index)
-    { auto i = impl.begin(); advance(i, index); impl.erase(i); return index; }
+    { auto i = impl.begin() + index; impl.erase(i); return index; }
 
 //    /*!
 //     * sort (stable) the array
