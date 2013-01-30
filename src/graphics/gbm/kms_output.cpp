@@ -29,9 +29,9 @@ namespace geom = mir::geometry;
 namespace
 {
 
-bool encoder_is_available(mgg::DRMModeResources const& resources, uint32_t encoder_id)
+bool encoder_is_used(mgg::DRMModeResources const& resources, uint32_t encoder_id)
 {
-    bool encoder_avail{true};
+    bool encoder_used{false};
 
     resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
     {
@@ -42,17 +42,17 @@ bool encoder_is_available(mgg::DRMModeResources const& resources, uint32_t encod
             {
                 auto crtc = resources.crtc(encoder->crtc_id);
                 if (crtc)
-                    encoder_avail = false;
+                    encoder_used = true;
             }
         }
     });
 
-    return encoder_avail;
+    return encoder_used;
 }
 
-bool crtc_is_available(mgg::DRMModeResources const& resources, uint32_t crtc_id)
+bool crtc_is_used(mgg::DRMModeResources const& resources, uint32_t crtc_id)
 {
-    bool crtc_avail{true};
+    bool crtc_used{false};
 
     resources.for_each_connector([&](mgg::DRMModeConnectorUPtr connector)
     {
@@ -60,11 +60,11 @@ bool crtc_is_available(mgg::DRMModeResources const& resources, uint32_t crtc_id)
         if (encoder)
         {
             if (encoder->crtc_id == crtc_id)
-                crtc_avail = false;
+                crtc_used = true;
         }
     });
 
-    return crtc_avail;
+    return crtc_used;
 }
 
 std::vector<mgg::DRMModeEncoderUPtr>
@@ -75,7 +75,7 @@ connector_available_encoders(mgg::DRMModeResources const& resources,
 
     for (int i = 0; i < connector->count_encoders; i++)
     {
-        if (encoder_is_available(resources, connector->encoders[i]))
+        if (!encoder_is_used(resources, connector->encoders[i]))
             encoders.push_back(resources.encoder(connector->encoders[i]));
     }
 
@@ -185,7 +185,7 @@ bool mgg::KMSOutput::ensure_crtc()
 
         resources.for_each_crtc([&](DRMModeCrtcUPtr crtc)
         {
-            if (!current_crtc && crtc_is_available(resources, crtc->crtc_id))
+            if (!current_crtc && !crtc_is_used(resources, crtc->crtc_id))
             {
                 for (auto& enc : available_encoders)
                 {
