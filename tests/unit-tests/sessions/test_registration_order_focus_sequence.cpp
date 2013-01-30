@@ -69,9 +69,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, focus_order)
     container->insert_session(app3);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2, focus_sequence.successor_of(app1).lock());
-    EXPECT_EQ(app3, focus_sequence.successor_of(app2).lock());
-    EXPECT_EQ(app1, focus_sequence.successor_of(app3).lock());
+    EXPECT_EQ(app2, focus_sequence.successor_of(app1));
+    EXPECT_EQ(app3, focus_sequence.successor_of(app2));
+    EXPECT_EQ(app1, focus_sequence.successor_of(app3));
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
@@ -86,9 +86,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
     container->insert_session(app3);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2, focus_sequence.predecessor_of(app3).lock());
-    EXPECT_EQ(app1, focus_sequence.predecessor_of(app2).lock());
-    EXPECT_EQ(app3, focus_sequence.predecessor_of(app1).lock());
+    EXPECT_EQ(app2, focus_sequence.predecessor_of(app3));
+    EXPECT_EQ(app1, focus_sequence.predecessor_of(app2));
+    EXPECT_EQ(app3, focus_sequence.predecessor_of(app1));
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, identity)
@@ -99,8 +99,8 @@ TEST_F(RegistrationOrderFocusSequenceSetup, identity)
     container->insert_session(app1);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app1, focus_sequence.predecessor_of(app1).lock());
-    EXPECT_EQ(app1, focus_sequence.successor_of(app1).lock());
+    EXPECT_EQ(app1, focus_sequence.predecessor_of(app1));
+    EXPECT_EQ(app1, focus_sequence.successor_of(app1));
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
@@ -109,11 +109,15 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 
     auto app1 = std::make_shared<msess::Session>(factory, testing_app_name1);
     auto app2 = std::make_shared<msess::Session>(factory, testing_app_name2);
-    container->insert_session(app1);
-    container->insert_session(app2);
+    auto null_session = std::shared_ptr<msess::Session>();
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2, focus_sequence.default_focus().lock());
+    
+    EXPECT_EQ(null_session, focus_sequence.default_focus());
+    container->insert_session(app1);
+    EXPECT_EQ(app1, focus_sequence.default_focus());
+    container->insert_session(app2);
+    EXPECT_EQ(app2, focus_sequence.default_focus());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)

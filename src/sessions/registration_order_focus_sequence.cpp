@@ -36,7 +36,7 @@ msess::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::share
 
 }
 
-std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msess::Session> const& focused_app) const
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
     std::shared_ptr<msess::Session> result, first;
     bool found{false};
@@ -72,7 +72,7 @@ std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_o
     }
 }
 
-std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msess::Session> const& focused_app) const
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
     std::shared_ptr<msess::Session> result, last;
     bool found{false};
@@ -105,7 +105,7 @@ std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor
     }
 }
 
-std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::default_focus() const
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::default_focus() const
 {
     std::shared_ptr<msess::Session> result;
 

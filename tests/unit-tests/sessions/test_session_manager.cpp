@@ -54,9 +54,9 @@ struct MockSessionContainer : public msess::SessionContainer
 
 struct MockFocusSequence: public msess::FocusSequence
 {
-    MOCK_CONST_METHOD1(successor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
-    MOCK_CONST_METHOD1(predecessor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
-    MOCK_CONST_METHOD0(default_focus, std::weak_ptr<msess::Session>());
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msess::Session>());
 };
 
 struct MockFocusSetter: public msess::FocusSetter

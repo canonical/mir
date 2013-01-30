@@ -75,7 +75,7 @@ void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const&
     std::unique_lock<std::mutex> lock(mutex);
 
     app_container->remove_session(session);
-    set_focus_to(focus_sequence->default_focus().lock());
+    set_focus_to(focus_sequence->default_focus());
 
     typedef Tags::value_type Pair;
 
@@ -91,11 +91,11 @@ void msess::SessionManager::focus_next()
     auto focus = focus_application.lock();
     if (!focus)
     {
-        focus = focus_sequence->default_focus().lock();
+        focus = focus_sequence->default_focus();
     }
     else
     {
-        focus = focus_sequence->successor_of(focus).lock();
+        focus = focus_sequence->successor_of(focus);
     }
     set_focus_to(focus);
 }
