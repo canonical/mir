@@ -69,9 +69,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, focus_order)
     container->insert_session(app3);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2->name(), focus_sequence.successor_of(app1).lock()->name());
-    EXPECT_EQ(app3->name(), focus_sequence.successor_of(app2).lock()->name());
-    EXPECT_EQ(app1->name(), focus_sequence.successor_of(app3).lock()->name());
+    EXPECT_EQ(app2, focus_sequence.successor_of(app1).lock());
+    EXPECT_EQ(app3, focus_sequence.successor_of(app2).lock());
+    EXPECT_EQ(app1, focus_sequence.successor_of(app3).lock());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
@@ -86,9 +86,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
     container->insert_session(app3);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2->name(), focus_sequence.predecessor_of(app3).lock()->name());
-    EXPECT_EQ(app1->name(), focus_sequence.predecessor_of(app2).lock()->name());
-    EXPECT_EQ(app3->name(), focus_sequence.predecessor_of(app1).lock()->name());
+    EXPECT_EQ(app2, focus_sequence.predecessor_of(app3).lock());
+    EXPECT_EQ(app1, focus_sequence.predecessor_of(app2).lock());
+    EXPECT_EQ(app3, focus_sequence.predecessor_of(app1).lock());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, identity)
@@ -99,8 +99,8 @@ TEST_F(RegistrationOrderFocusSequenceSetup, identity)
     container->insert_session(app1);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app1->name(), focus_sequence.predecessor_of(app1).lock()->name());
-    EXPECT_EQ(app1->name(), focus_sequence.successor_of(app1).lock()->name());
+    EXPECT_EQ(app1, focus_sequence.predecessor_of(app1).lock());
+    EXPECT_EQ(app1, focus_sequence.successor_of(app1).lock());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
@@ -113,7 +113,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
     container->insert_session(app2);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app2->name(), focus_sequence.default_focus().lock()->name());
+    EXPECT_EQ(app2, focus_sequence.default_focus().lock());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
@@ -126,10 +126,10 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
     msess::RegistrationOrderFocusSequence focus_sequence(container);
 
     EXPECT_THROW({
-            focus_sequence.successor_of(invalid_session);
+            focus_sequence.successor_of(null_session);
     }, std::runtime_error);
     EXPECT_THROW({
-            focus_sequence.predecessor_of(invalid_session);
+            focus_sequence.predecessor_of(null_session);
     }, std::runtime_error);
     EXPECT_THROW({
             focus_sequence.successor_of(invalid_session);
