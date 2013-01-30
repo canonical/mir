@@ -29,10 +29,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -58,15 +59,9 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    mtd::MockBuffer mock_buffer{size, stride, pixel_format};
-    std::shared_ptr<mtd::MockBuffer> default_buffer(
-        &mock_buffer,
-        mir::EmptyDeleter());
     MockBufferAllocationStrategy allocation_strategy;
 
-    mc::BufferBundleManager buffer_bundle_manager(
-            std::shared_ptr<mc::BufferAllocationStrategy>(&allocation_strategy, mir::EmptyDeleter()));
-
+    mc::BufferBundleManager buffer_bundle_manager(mt::fake_shared(allocation_strategy));
 
     EXPECT_CALL(allocation_strategy, create_swapper(_,buffer_properties))
         .Times(AtLeast(1));

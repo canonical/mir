@@ -17,16 +17,18 @@
 #ifndef _ANDROIDFW_INPUT_H
 #define _ANDROIDFW_INPUT_H
 
+#include "Platform.h"
+
 /**
  * Native input event structures.
  */
 
 #include <android/input.h>
-#include <utils/Vector.h>
-#include <utils/KeyedVector.h>
-#include <utils/Timers.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
 
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;

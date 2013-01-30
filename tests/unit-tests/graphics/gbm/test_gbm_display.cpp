@@ -15,7 +15,7 @@
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#include "mir/exception.h"
+#include <boost/throw_exception.hpp>
 #include "src/graphics/gbm/gbm_platform.h"
 #include "src/graphics/gbm/gbm_display.h"
 #include "src/graphics/gbm/gbm_display_reporter.h"
@@ -106,17 +106,46 @@ public:
             .Times(Exactly(1))
             .WillOnce(Return(fake.bo_handle2));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd,
+        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
                                            _, _, _, _, _,
                                            fake.bo_handle1.u32, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd,
+        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
                                            _, _, _, _, _,
                                            fake.bo_handle2.u32, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id2), Return(0)));
+    }
+
+    uint32_t get_connected_connector_id()
+    {
+        auto drm_res = mock_drm.fake_drm.resources_ptr();
+
+        for (int i = 0; i < drm_res->count_connectors; i++)
+        {
+            auto connector = mock_drm.fake_drm.find_connector(drm_res->connectors[i]);
+            if (connector->connection == DRM_MODE_CONNECTED)
+                return connector->connector_id;
+        }
+
+        return 0;
+    }
+
+    uint32_t get_connected_crtc_id()
+    {
+        auto connector_id = get_connected_connector_id();
+        auto connector = mock_drm.fake_drm.find_connector(connector_id);
+
+        if (connector)
+        {
+            auto encoder = mock_drm.fake_drm.find_encoder(connector->encoder_id);
+            if (encoder)
+                return encoder->crtc_id;
+        }
+
+        return 0;
     }
 
     struct FakeData {
@@ -153,6 +182,9 @@ TEST_F(GBMDisplayTest, create_display)
 {
     using namespace testing;
 
+    auto const connector_id = get_connected_connector_id();
+    auto const crtc_id = get_connected_crtc_id();
+
     /* To display a gbm surface, the GBMDisplay should... */
 
     /* Create a gbm surface to use as the frame buffer */
@@ -181,24 +213,24 @@ TEST_F(GBMDisplayTest, create_display)
         .WillOnce(Return(fake.bo_handle1));
 
     /* Create a a DRM FB with the DRM buffer attached */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd,
+    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
                                        _, _, _, _, _,
                                        fake.bo_handle1.u32, _))
         .Times(Exactly(1))
         .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
     /* Display the DRM FB (first expectation is for cleanup) */
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd,
-                                         mock_drm.fake_drm.encoders[1].crtc_id, Ne(fake.fb_id1),
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                         crtc_id, Ne(fake.fb_id1),
                                          _, _,
-                                         &mock_drm.fake_drm.connectors[1].connector_id,
+                                         Pointee(connector_id),
                                          _, _))
         .Times(AtLeast(0));
 
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd,
-                                         mock_drm.fake_drm.encoders[1].crtc_id, fake.fb_id1,
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                         crtc_id, fake.fb_id1,
                                          _, _,
-                                         &mock_drm.fake_drm.connectors[1].connector_id,
+                                         Pointee(connector_id),
                                          _, _))
         .Times(Exactly(1))
         .WillOnce(Return(0));
@@ -215,10 +247,12 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
 {
     using namespace testing;
 
+    auto const connector_id = get_connected_connector_id();
+    auto const crtc_id = get_connected_crtc_id();
+
     {
         InSequence s;
-        EXPECT_CALL(mock_drm, drmModeGetCrtc(mock_drm.fake_drm.fd,
-                                             mock_drm.fake_drm.encoders[1].crtc_id))
+        EXPECT_CALL(mock_drm, drmModeGetCrtc(mock_drm.fake_drm.fd(), crtc_id))
             .Times(Exactly(1))
             .WillOnce(Return(&fake.crtc));
 
@@ -227,17 +261,17 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
          * Ne(fake.crtc.buffer_id), because using the latter causes valgrind
          * to report inexplicable uninitialized value errors.
          */
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd,
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
                                              _, _, /* Ne(fake.crtc.buffer_id), */
                                              _, _,
-                                             &mock_drm.fake_drm.connectors[1].connector_id,
+                                             Pointee(connector_id),
                                              _, _))
             .Times(AtLeast(0));
 
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd,
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
                                              fake.crtc.crtc_id, fake.crtc.buffer_id,
                                              _, _,
-                                             &mock_drm.fake_drm.connectors[1].connector_id,
+                                             Pointee(connector_id),
                                              _, _))
             .Times(Exactly(1));
     }
@@ -285,7 +319,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW({
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception) << "Expected that c'tor of GBMDisplay throws";
+    }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
 }
 
 TEST_F(GBMDisplayTest, create_display_gbm_failure)
@@ -311,14 +345,16 @@ TEST_F(GBMDisplayTest, post_update)
 {
     using namespace testing;
 
+    auto const crtc_id = get_connected_crtc_id();
+
     setup_post_update_expectations();
 
     {
         InSequence s;
 
         /* Flip the new FB */
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd,
-                                              mock_drm.fake_drm.encoders[1].crtc_id,
+        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+                                              crtc_id,
                                               fake.fb_id2,
                                               _, _))
             .Times(Exactly(1))
@@ -338,7 +374,11 @@ TEST_F(GBMDisplayTest, post_update)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-        EXPECT_TRUE(display->post_update());
+
+        display->for_each_display_buffer([](mg::DisplayBuffer& db)
+        {
+            EXPECT_TRUE(db.post_update());
+        });
     });
 }
 
@@ -346,14 +386,16 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
 {
     using namespace testing;
 
+    auto const crtc_id = get_connected_crtc_id();
+
     setup_post_update_expectations();
 
     {
         InSequence s;
 
         /* New FB flip failure */
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd,
-                                              mock_drm.fake_drm.encoders[1].crtc_id,
+        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+                                              crtc_id,
                                               fake.fb_id2,
                                               _, _))
             .Times(Exactly(1))
@@ -372,7 +414,11 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-        EXPECT_FALSE(display->post_update());
+
+        display->for_each_display_buffer([](mg::DisplayBuffer& db)
+        {
+            EXPECT_FALSE(db.post_update());
+        });
     });
 }
 
@@ -495,7 +541,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception);
+    }, std::runtime_error);
 }
 
 TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
@@ -511,5 +557,22 @@ TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
         auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
-    }, mir::Exception);
+    }, std::runtime_error);
+}
+
+TEST_F(GBMDisplayTest, for_each_display_buffer_calls_callback)
+{
+    using namespace ::testing;
+
+    auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+
+    int callback_count{0};
+
+    display->for_each_display_buffer([&](mg::DisplayBuffer&)
+    {
+        callback_count++;
+    });
+
+    EXPECT_NE(0, callback_count);
 }

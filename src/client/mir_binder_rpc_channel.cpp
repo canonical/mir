@@ -40,7 +40,7 @@ mcl::MirBinderRpcChannel::MirBinderRpcChannel(
 {
     if (!mir_proxy.get() || android::OK != mir_proxy->pingBinder())
     {
-        throw std::runtime_error("Can't find MIR server");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can't find MIR server"));
     }
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);

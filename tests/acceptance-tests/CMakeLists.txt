@@ -24,6 +24,7 @@ set(
   test_client_library.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
+  test_focus_management_api.cpp
 )
 
 # TODO Disabled in binder version as this test uses detect_server() and that

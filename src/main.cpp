@@ -21,9 +21,10 @@
 #include "mir/server_configuration.h"
 #include "mir/thread/all.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <csignal>
 #include <iostream>
-#include <stdexcept>
 
 namespace
 {
@@ -52,6 +53,7 @@ void run_mir(std::string const& socket_file)
 {
     signal(SIGINT, mir::signal_terminate);
     signal(SIGTERM, mir::signal_terminate);
+    signal(SIGPIPE, SIG_IGN);
 
     mir::DefaultServerConfiguration config(socket_file);
     mir::DisplayServer server(config);
@@ -81,9 +83,8 @@ try
     }
     catch (po::error const& error)
     {
-        std::cerr << "ERROR: " << error.what() << std::endl;
         std::cerr << desc << "\n";
-        return 1;
+        throw;
     }
 
     if (options.is_set("help"))
@@ -97,6 +98,6 @@ try
 }
 catch (std::exception const& error)
 {
-    std::cerr << "ERROR: " << error.what() << std::endl;
+    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
     return 1;
 }

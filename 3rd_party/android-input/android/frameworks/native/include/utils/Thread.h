@@ -25,12 +25,10 @@
 # include <pthread.h>
 #endif
 
-#include <utils/Condition.h>
-#include <utils/Errors.h>
-#include <utils/Mutex.h>
-#include <utils/RefBase.h>
-#include <utils/Timers.h>
-#include <utils/ThreadDefs.h>
+#include ANDROIDFW_UTILS(Condition.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(ThreadDefs.h)
 
 // ---------------------------------------------------------------------------
 namespace android {

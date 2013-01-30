@@ -18,12 +18,14 @@
  */
 
 #include "mock_drm.h"
+#include "mir/geometry/size.h"
 #include <gtest/gtest.h>
 
 #include <stdexcept>
 #include <unistd.h>
 
 namespace mgg=mir::graphics::gbm;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -31,39 +33,36 @@ mgg::MockDRM* global_mock = NULL;
 }
 
 mgg::FakeDRMResources::FakeDRMResources()
-    : fd(-1), resources(), crtcs(), encoders(), connectors(), mode_info(),
-      crtc_ids{10, 11}, encoder_ids{20,21}, connector_ids{30, 31},
-      pipe_fds{-1, -1}
+    : pipe_fds{-1, -1}
 {
     /* Use the read end of a pipe as the fake DRM fd */
     if (pipe(pipe_fds) < 0 || pipe_fds[0] < 0)
         throw std::runtime_error("Failed to create fake DRM fd");
 
-    fd = pipe_fds[0];
+    /* Add some default resources */
+    uint32_t const invalid_id{0};
+    uint32_t const crtc0_id{10};
+    uint32_t const crtc1_id{11};
+    uint32_t const encoder0_id{20};
+    uint32_t const encoder1_id{21};
+    uint32_t const connector0_id{30};
+    uint32_t const connector1_id{31};
 
-    resources.count_crtcs = 2;
-    resources.crtcs = crtc_ids;
-    resources.count_connectors = 2;
-    resources.connectors = connector_ids;
-    resources.count_encoders = 2;
-    resources.encoders = encoder_ids;
+    modes.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
+    modes.push_back(create_mode(832, 624, 57284, 1152, 667));
 
-    crtcs[0].crtc_id = 10;
-    crtcs[1].crtc_id = 11;
+    add_crtc(crtc0_id, drmModeModeInfo());
+    add_crtc(crtc1_id, modes[1]);
 
-    encoders[0].encoder_id = 20;
-    encoders[1].encoder_id = 21;
-    encoders[1].crtc_id = 11;
+    add_encoder(encoder0_id, invalid_id);
+    add_encoder(encoder1_id, crtc1_id);
 
-    connectors[0].connector_id = 30;
-    connectors[0].connection = DRM_MODE_DISCONNECTED;
-    connectors[0].subpixel = DRM_MODE_SUBPIXEL_UNKNOWN;
-    connectors[1].connector_id = 31;
-    connectors[1].encoder_id = 21;
-    connectors[1].connection = DRM_MODE_CONNECTED;
-    connectors[1].subpixel = DRM_MODE_SUBPIXEL_UNKNOWN;
-    connectors[1].count_modes = 1;
-    connectors[1].modes = &mode_info;
+    add_connector(connector0_id, DRM_MODE_DISCONNECTED, invalid_id,
+                  modes_empty, geom::Size());
+    add_connector(connector1_id, DRM_MODE_CONNECTED, encoder1_id,
+                  modes, geom::Size{geom::Width{121}, geom::Height{144}});
+
+    prepare();
 }
 
 mgg::FakeDRMResources::~FakeDRMResources()
@@ -75,6 +74,132 @@ mgg::FakeDRMResources::~FakeDRMResources()
         close(pipe_fds[1]);
 }
 
+int mgg::FakeDRMResources::fd() const
+{
+    return pipe_fds[0];
+}
+
+drmModeRes* mgg::FakeDRMResources::resources_ptr()
+{
+    return &resources;
+}
+
+void mgg::FakeDRMResources::prepare()
+{
+    resources.count_crtcs = crtcs.size();
+    for (auto const& crtc: crtcs)
+        crtc_ids.push_back(crtc.crtc_id);
+    resources.crtcs = crtc_ids.data();
+
+    resources.count_encoders = encoders.size();
+    for (auto const& encoder: encoders)
+        encoder_ids.push_back(encoder.encoder_id);
+    resources.encoders = encoder_ids.data();
+
+    resources.count_connectors = connectors.size();
+    for (auto const& connector: connectors)
+        connector_ids.push_back(connector.connector_id);
+    resources.connectors = connector_ids.data();
+}
+
+void mgg::FakeDRMResources::reset()
+{
+    resources = drmModeRes();
+
+    crtcs.clear();
+    encoders.clear();
+    connectors.clear();
+
+    crtc_ids.clear();
+    encoder_ids.clear();
+    connector_ids.clear();
+}
+
+void mgg::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
+{
+    drmModeCrtc crtc = drmModeCrtc();
+
+    crtc.crtc_id = id;
+    crtc.mode = mode;
+
+    crtcs.push_back(crtc);
+}
+
+void mgg::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id)
+{
+    drmModeEncoder encoder = drmModeEncoder();
+
+    encoder.encoder_id = encoder_id;
+    encoder.crtc_id = crtc_id;
+
+    encoders.push_back(encoder);
+}
+
+void mgg::FakeDRMResources::add_connector(uint32_t connector_id,
+                                          drmModeConnection connection,
+                                          uint32_t encoder_id,
+                                          std::vector<drmModeModeInfo>& modes,
+                                          geom::Size const& physical_size)
+{
+    drmModeConnector connector = drmModeConnector();
+
+    connector.connector_id = connector_id;
+    connector.connection = connection;
+    connector.encoder_id = encoder_id;
+    connector.modes = modes.data();
+    connector.count_modes = modes.size();
+    connector.mmWidth = physical_size.width.as_uint32_t();
+    connector.mmHeight = physical_size.height.as_uint32_t();
+
+    connectors.push_back(connector);
+}
+
+drmModeCrtc* mgg::FakeDRMResources::find_crtc(uint32_t id)
+{
+    for (auto& crtc : crtcs)
+    {
+        if (crtc.crtc_id == id)
+            return &crtc;
+    }
+    return nullptr;
+}
+
+drmModeEncoder* mgg::FakeDRMResources::find_encoder(uint32_t id)
+{
+    for (auto& encoder : encoders)
+    {
+        if (encoder.encoder_id == id)
+            return &encoder;
+    }
+    return nullptr;
+}
+
+drmModeConnector* mgg::FakeDRMResources::find_connector(uint32_t id)
+{
+    for (auto& connector : connectors)
+    {
+        if (connector.connector_id == id)
+            return &connector;
+    }
+    return nullptr;
+}
+
+
+drmModeModeInfo mgg::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t vdisplay,
+                                                   uint32_t clock, uint16_t htotal,
+                                                   uint16_t vtotal)
+{
+    drmModeModeInfo mode = drmModeModeInfo();
+
+    mode.hdisplay = hdisplay;
+    mode.vdisplay = vdisplay;
+    mode.clock = clock;
+    mode.htotal = htotal;
+    mode.vtotal = vtotal;
+
+    return mode;
+}
+
 mgg::MockDRM::MockDRM()
 {
     using namespace testing;
@@ -83,25 +208,19 @@ mgg::MockDRM::MockDRM()
     global_mock = this;
 
     ON_CALL(*this, drmOpen(_,_))
-    .WillByDefault(Return(fake_drm.fd));
+    .WillByDefault(Return(fake_drm.fd()));
 
-    ON_CALL(*this, drmModeGetResources(fake_drm.fd))
-    .WillByDefault(Return(&fake_drm.resources));
+    ON_CALL(*this, drmModeGetResources(_))
+    .WillByDefault(Return(fake_drm.resources_ptr()));
 
-    ON_CALL(*this, drmModeGetCrtc(fake_drm.fd, 10))
-    .WillByDefault(Return(&fake_drm.crtcs[0]));
-    ON_CALL(*this, drmModeGetCrtc(fake_drm.fd, 11))
-    .WillByDefault(Return(&fake_drm.crtcs[1]));
+    ON_CALL(*this, drmModeGetCrtc(_, _))
+    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_crtc)));
 
-    ON_CALL(*this, drmModeGetEncoder(fake_drm.fd, 20))
-    .WillByDefault(Return(&fake_drm.encoders[0]));
-    ON_CALL(*this, drmModeGetEncoder(fake_drm.fd, 21))
-    .WillByDefault(Return(&fake_drm.encoders[1]));
+    ON_CALL(*this, drmModeGetEncoder(_, _))
+    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_encoder)));
 
-    ON_CALL(*this, drmModeGetConnector(fake_drm.fd, 30))
-    .WillByDefault(Return(&fake_drm.connectors[0]));
-    ON_CALL(*this, drmModeGetConnector(fake_drm.fd, 31))
-    .WillByDefault(Return(&fake_drm.connectors[1]));
+    ON_CALL(*this, drmModeGetConnector(_, _))
+    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
 }
 
 mgg::MockDRM::~MockDRM()

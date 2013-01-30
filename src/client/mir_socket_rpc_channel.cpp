@@ -246,7 +246,7 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     boost::asio::read(socket, message, boost::asio::transfer_exactly(body_size), error);
     if (error)
     {
-        throw std::runtime_error(error.message());
+        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
     std::istream in(&message);

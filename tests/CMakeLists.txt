@@ -47,6 +47,10 @@ add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 add_subdirectory(draw/)
 
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(behavior-tests/)
+endif()
+
 if(MIR_ENABLE_DEATH_TESTS)
   add_subdirectory(death-tests/)
 else()

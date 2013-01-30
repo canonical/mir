@@ -18,8 +18,8 @@
 #define _UI_INPUT_LISTENER_H
 
 #include <androidfw/Input.h>
-#include <utils/RefBase.h>
-#include <utils/Vector.h>
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(Vector.h)
 
 namespace android {
 

@@ -18,7 +18,7 @@
 
 #include "mir/sessions/session.h"
 #include "mir/sessions/surface_creation_parameters.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 #include "src/surfaces/proxy_surface.h"
@@ -79,7 +79,7 @@ TEST(Session, create_and_destroy_surface)
     EXPECT_CALL(surface_factory, create_surface(_));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msess::Session session(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()), "Foo");
+    msess::Session session(mt::fake_shared(surface_factory), "Foo");
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -96,7 +96,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
-    msess::Session app_session(std::shared_ptr<msess::SurfaceFactory>(&surface_factory, mir::EmptyDeleter()), "Foo");
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
 
     EXPECT_CALL(surface_factory, create_surface(_));
 
@@ -114,4 +114,30 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     app_session.show();
 
     app_session.destroy_surface(surf);
+}
+
+TEST(Session, get_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.get_surface(invalid_surface_id);
+    }, std::runtime_error);
+}
+
+TEST(Session, destroy_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.destroy_surface(invalid_surface_id);
+    }, std::runtime_error);
 }

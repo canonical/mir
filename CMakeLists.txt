@@ -100,24 +100,36 @@ set (MIR_TRANSPORT
   "IPC transport to build (options are 'socket' or 'binder')"
 )
 
-set (MIR_CUTDOWN_FOR_EMULATOR
+set (MIR_DISABLE_INPUT
   false
   CACHE
   BOOL
-  "Disable parts of system that don't run on Emulator"
+  "Don't build the input subsystem"
+)
+
+set (MIR_INPUT_USE_ANDROID_TYPES
+  false
+  CACHE
+  BOOL
+  "Use android types in input stack instead of std library"
 )
 
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
+if (NOT MIR_INPUT_USE_ANDROID_TYPES)
+add_definitions(
+  -DANDROID_USE_STD
+)
+endif()
+
 if (MIR_PLATFORM STREQUAL "android")
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
   list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
-
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,${MIR_NDK_PATH}/lib/arm-linux-gnueabihf")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
   add_definitions( -DANDROID )
  

@@ -22,29 +22,23 @@
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test/empty_deleter.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 
-namespace mc = mir::compositor;
 namespace msess = mir::sessions;
-namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory());
+    auto const factory = std::make_shared<mtd::MockSurfaceFactory>();
     msess::SessionContainer container;
 
-    std::shared_ptr<msess::Session> app1(new msess::Session(factory, std::string("Visual Studio 7")));
-    std::shared_ptr<msess::Session> app2(new msess::Session(factory, std::string("Visual Studio 8")));
-
-    container.insert_session(app1);
-    container.insert_session(app2);
+    container.insert_session(std::make_shared<msess::Session>(factory, "Visual Studio 7"));
+    container.insert_session(std::make_shared<msess::Session>(factory, "Visual Studio 8"));
 
     struct local
     {
