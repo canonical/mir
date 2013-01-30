@@ -73,11 +73,9 @@ inline void msess::SessionManager::set_focus_to(std::shared_ptr<Session> const& 
 void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const& session)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    if (session == focus_application.lock())
-    {
-        set_focus_to(focus_sequence->predecessor_of(session).lock());
-    }
+
     app_container->remove_session(session);
+    set_focus_to(focus_sequence->default_focus().lock());
 
     typedef Tags::value_type Pair;
 
@@ -90,13 +88,16 @@ void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const&
 void msess::SessionManager::focus_next()
 {
     std::unique_lock<std::mutex> lock(mutex);
-    auto focused = focus_application.lock();
-    if (focused == NULL)
+    auto focus = focus_application.lock();
+    if (!focus)
     {
-        return;
+        focus = focus_sequence->default_focus().lock();
     }
-    auto next_focus = focus_sequence->successor_of(focused).lock();
-    set_focus_to(next_focus);
+    else
+    {
+        focus = focus_sequence->successor_of(focus).lock();
+    }
+    set_focus_to(focus);
 }
 
 void msess::SessionManager::shutdown()

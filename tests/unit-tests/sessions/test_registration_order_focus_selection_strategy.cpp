@@ -83,15 +83,17 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
     EXPECT_EQ(app3->name(), focus_sequence.predecessor_of(app1).lock()->name());
 }
 
-TEST_F(RegistrationOrderFocusSequenceSetup, no_focus)
+TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 {
     using namespace ::testing;
 
     auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
+    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
     container->insert_session(app1);
+    container->insert_session(app2);
 
     msess::RegistrationOrderFocusSequence focus_sequence(container);
-    EXPECT_EQ(app1->name(), focus_sequence.successor_of(std::shared_ptr<msess::Session>()).lock()->name());
+    EXPECT_EQ(app2->name(), focus_sequence.default_focus().lock()->name());
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
@@ -99,8 +101,16 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
     using namespace ::testing;
 
     auto invalid_session = std::make_shared<msess::Session>(factory, std::string("Visual Studio -1"));
+    auto null_session = std::shared_ptr<msess::Session>();
     
     msess::RegistrationOrderFocusSequence focus_sequence(container);
+
+    EXPECT_THROW({
+            focus_sequence.successor_of(invalid_session);
+    }, std::runtime_error);
+    EXPECT_THROW({
+            focus_sequence.predecessor_of(invalid_session);
+    }, std::runtime_error);
     EXPECT_THROW({
             focus_sequence.successor_of(invalid_session);
     }, std::runtime_error);
