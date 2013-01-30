@@ -31,7 +31,8 @@ namespace geom = mir::geometry;
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                             std::shared_ptr<DisplayListener> const& listener)
     : platform(platform),
-      listener(listener)
+      listener(listener),
+      output_container{platform->drm.fd}
 {
     configure(configuration());
 }
@@ -61,19 +62,8 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
     conf->for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
         uint32_t const connector_id = conf_output.id.as_value();
-        std::shared_ptr<KMSOutput> output;
 
-        auto output_iter = outputs.find(connector_id);
-        if (output_iter == outputs.end())
-        {
-            output = std::make_shared<KMSOutput>(platform->drm.fd, connector_id);
-            outputs[connector_id] = output;
-        }
-        else
-        {
-            output = output_iter->second;
-            output->reset();
-        }
+        auto output = output_container.get_kms_output_for(connector_id);
 
         if (conf_output.connected)
             enabled_outputs.push_back(output);

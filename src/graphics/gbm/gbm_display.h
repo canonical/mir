@@ -21,9 +21,9 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "kms_output_container.h"
 
 #include <vector>
-#include <unordered_map>
 
 namespace mir
 {
@@ -59,7 +59,7 @@ private:
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayListener> const listener;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
-    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
+    KMSOutputContainer output_container;
 };
 
 }
