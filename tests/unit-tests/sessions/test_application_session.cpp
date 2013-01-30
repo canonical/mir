@@ -121,7 +121,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
     msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
 
     EXPECT_THROW({
@@ -134,7 +134,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
     msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
 
     EXPECT_THROW({
