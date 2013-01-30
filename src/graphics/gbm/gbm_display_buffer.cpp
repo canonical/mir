@@ -270,11 +270,11 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
      * page flip event, page_flip_handler(), called through drmHandleEvent(),
      * will decrease the page_flips_pending count. If we don't get the expected
      * page flip events within that time, or we can't read from the DRM fd, act
-     * as if the page flips have occured anyway.
+     * as if the page flips have occurred anyway.
      *
      * The rationale is that if we don't get the page flip events "soon" after
      * scheduling the page flips, something is severely broken at the driver
-     * level. In that case, acting as if the page flips have occured will not
+     * level. In that case, acting as if the page flips have occurred will not
      * cause any worse harm anyway (perhaps some tearing), and will allow us to
      * continue processing instead of just hanging.
      */
