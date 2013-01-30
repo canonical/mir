@@ -191,7 +191,6 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     }
     catch (std::exception const& error)
     {
-        //note, if write threw an exception, the transaction with the client has failed 
         std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
         return false;
     }
