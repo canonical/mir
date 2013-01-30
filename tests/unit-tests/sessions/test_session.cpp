@@ -116,3 +116,29 @@ TEST(Session, session_visbility_propagates_to_surfaces)
 
     app_session.destroy_surface(surf);
 }
+
+TEST(Session, get_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.get_surface(invalid_surface_id);
+    }, std::runtime_error);
+}
+
+TEST(Session, destroy_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.destroy_surface(invalid_surface_id);
+    }, std::runtime_error);
+}
