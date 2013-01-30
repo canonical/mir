@@ -45,16 +45,24 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
     }
     std::shared_ptr<mtd::MockSurfaceFactory> factory;
     std::shared_ptr<msess::SessionContainer> container;
+    
+    static std::string const testing_app_name1;
+    static std::string const testing_app_name2;
+    static std::string const testing_app_name3;
 };
+
+std::string const RegistrationOrderFocusSequenceSetup::testing_app_name1{"Visual Studio 7"};
+std::string const RegistrationOrderFocusSequenceSetup::testing_app_name2{"Visual Studio 8"};
+std::string const RegistrationOrderFocusSequenceSetup::testing_app_name3{"Visual Studio 9"};
 }
 
 TEST_F(RegistrationOrderFocusSequenceSetup, focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
-    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
-    auto app3 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 9"));
+    auto app1 = std::make_shared<msess::Session>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msess::Session>(factory, testing_app_name2);
+    auto app3 = std::make_shared<msess::Session>(factory, testing_app_name3);
 
     container->insert_session(app1);
     container->insert_session(app2);
@@ -70,9 +78,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
-    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
-    auto app3 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 9"));
+    auto app1 = std::make_shared<msess::Session>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msess::Session>(factory, testing_app_name2);
+    auto app3 = std::make_shared<msess::Session>(factory, testing_app_name3);
     container->insert_session(app1);
     container->insert_session(app2);
     container->insert_session(app3);
@@ -87,8 +95,8 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 7"));
-    auto app2 = std::make_shared<msess::Session>(factory, std::string("Visual Studio 8"));
+    auto app1 = std::make_shared<msess::Session>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msess::Session>(factory, testing_app_name2);
     container->insert_session(app1);
     container->insert_session(app2);
 
@@ -100,7 +108,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
 {
     using namespace ::testing;
 
-    auto invalid_session = std::make_shared<msess::Session>(factory, std::string("Visual Studio -1"));
+    auto invalid_session = std::make_shared<msess::Session>(factory, testing_app_name1);
     auto null_session = std::shared_ptr<msess::Session>();
     
     msess::RegistrationOrderFocusSequence focus_sequence(container);
