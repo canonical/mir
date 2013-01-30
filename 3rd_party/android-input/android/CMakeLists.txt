@@ -11,6 +11,33 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
+set(
+  UTIL_SOURCES
+
+  frameworks/native/libs/utils/Debug.cpp
+  frameworks/native/libs/utils/FileMap.cpp
+  frameworks/native/libs/utils/Looper.cpp
+  frameworks/native/libs/utils/PropertyMap.cpp
+  frameworks/native/libs/utils/RefBase.cpp
+  frameworks/native/libs/utils/SharedBuffer.cpp
+  frameworks/native/libs/utils/Static.cpp
+  frameworks/native/libs/utils/TextOutput.cpp
+  frameworks/native/libs/utils/Timers.cpp
+  frameworks/native/libs/utils/Tokenizer.cpp
+  frameworks/native/libs/utils/VectorImpl.cpp
+)
+
+if (MIR_INPUT_USE_ANDROID_TYPES)
+list(APPEND UTIL_SOURCES
+  frameworks/native/libs/utils/String16.cpp
+  frameworks/native/libs/utils/String8.cpp
+  frameworks/native/libs/utils/Threads.cpp
+  frameworks/native/libs/utils/Unicode.cpp
+  frameworks/native/libs/utils/BufferedTextOutput.cpp
+)
+endif()
+
+
 add_library(
   android-input
   # The stuff that we want
@@ -35,22 +62,7 @@ add_library(
   frameworks/base/libs/androidfw/VelocityControl.cpp
   frameworks/base/libs/androidfw/VelocityTracker.cpp
   frameworks/base/libs/androidfw/VirtualKeyMap.cpp
-  frameworks/native/libs/utils/BufferedTextOutput.cpp
-  frameworks/native/libs/utils/Debug.cpp
-  frameworks/native/libs/utils/FileMap.cpp
-  frameworks/native/libs/utils/Looper.cpp
-  frameworks/native/libs/utils/PropertyMap.cpp
-  frameworks/native/libs/utils/String16.cpp
-  frameworks/native/libs/utils/String8.cpp
-  frameworks/native/libs/utils/RefBase.cpp
-  frameworks/native/libs/utils/SharedBuffer.cpp
-  frameworks/native/libs/utils/Static.cpp
-  frameworks/native/libs/utils/TextOutput.cpp
-  frameworks/native/libs/utils/Threads.cpp
-  frameworks/native/libs/utils/Timers.cpp
-  frameworks/native/libs/utils/Tokenizer.cpp
-  frameworks/native/libs/utils/Unicode.cpp
-  frameworks/native/libs/utils/VectorImpl.cpp
+  ${UTIL_SOURCES}
   hardware/libhardware_legacy/power/power.c
   system/core/libcutils/atomic.c
   system/core/libcutils/properties.c

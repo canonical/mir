@@ -24,8 +24,8 @@
 #include <limits.h>
 
 #include <androidfw/VelocityControl.h>
-#include <utils/BitSet.h>
-#include <utils/Timers.h>
+#include ANDROIDFW_UTILS(BitSet.h)
+#include ANDROIDFW_UTILS(Timers.h)
 
 namespace android {
 

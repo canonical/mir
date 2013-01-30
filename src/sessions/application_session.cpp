@@ -21,10 +21,12 @@
 
 #include "mir/surfaces/surface_controller.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 #include <memory>
 #include <cassert>
 #include <algorithm>
-#include <stdio.h>
 
 namespace msess = mir::sessions;
 namespace ms = mir::surfaces;
@@ -63,22 +65,30 @@ msess::SurfaceId msess::ApplicationSession::create_surface(const SurfaceCreation
     return id;
 }
 
+msess::ApplicationSession::Surfaces::const_iterator msess::ApplicationSession::checked_find(SurfaceId id) const
+{
+    auto p = surfaces.find(id);
+    if (p == surfaces.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
+    }
+    return p;
+}
+
 std::shared_ptr<msess::Surface> msess::ApplicationSession::get_surface(msess::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    return surfaces.find(id)->second;
+
+    return checked_find(id)->second;
 }
 
 void msess::ApplicationSession::destroy_surface(msess::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    auto p = surfaces.find(id);
+    auto p = checked_find(id);
 
-    if (p != surfaces.end())
-    {
-        p->second->destroy();
-        surfaces.erase(p);
-    }
+    p->second->destroy();
+    surfaces.erase(p);
 }
 
 std::string msess::ApplicationSession::name()

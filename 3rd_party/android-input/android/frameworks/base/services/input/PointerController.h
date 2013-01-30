@@ -18,10 +18,10 @@
 #define _UI_POINTER_CONTROLLER_H
 
 #include <androidfw/Input.h>
-#include <utils/BitSet.h>
-#include <utils/Mutex.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
+#include ANDROIDFW_UTILS(BitSet.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
 
 namespace android {
 

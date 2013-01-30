@@ -25,9 +25,9 @@
 # include <pthread.h>
 #endif
 
-#include <utils/Errors.h>
-#include <utils/Mutex.h>
-#include <utils/Timers.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(Timers.h)
 
 // ---------------------------------------------------------------------------
 namespace android {
@@ -126,6 +126,15 @@ inline void Condition::broadcast() {
 }
 
 #endif // HAVE_PTHREADS
+
+// Compatibility functions
+inline void broadcast(Condition& c) { c.broadcast(); }
+
+template <typename Lock>
+inline void waitRelative(Condition& c, Lock& l, nsecs_t reltime)
+{
+    c.waitRelative(l, reltime);
+}
 
 // ---------------------------------------------------------------------------
 } // namespace android

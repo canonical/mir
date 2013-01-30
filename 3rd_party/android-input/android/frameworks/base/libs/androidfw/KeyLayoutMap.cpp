@@ -20,10 +20,10 @@
 #include <android/keycodes.h>
 #include <androidfw/Keyboard.h>
 #include <androidfw/KeyLayoutMap.h>
-#include <utils/Log.h>
-#include <utils/Errors.h>
-#include <utils/Tokenizer.h>
-#include <utils/Timers.h>
+#include ANDROIDFW_UTILS(Log.h)
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Tokenizer.h)
+#include ANDROIDFW_UTILS(Timers.h)
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0
@@ -80,7 +80,7 @@ status_t KeyLayoutMap::load(const String8& filename, sp<KeyLayoutMap>* outMap) {
     Tokenizer* tokenizer;
     status_t status = Tokenizer::open(filename, &tokenizer);
     if (status) {
-        ALOGE("Error %d opening key layout map file %s.", status, filename.string());
+        ALOGE("Error %d opening key layout map file %s.", status, c_str(filename));
     } else {
 	status = load(tokenizer, outMap);
         delete tokenizer;
@@ -93,7 +93,7 @@ status_t KeyLayoutMap::load(const String8& filename, const char* contents, sp<Ke
     Tokenizer* tokenizer;
     status_t status = Tokenizer::fromContents(filename, contents, &tokenizer);
     if (status) {
-        ALOGE("Error %d opening key layout map file %s.", status, filename.string());
+        ALOGE("Error %d opening key layout map file %s.", status, c_str(filename));
     } else {
 	status = load(tokenizer, outMap);
         delete tokenizer;
@@ -183,7 +183,7 @@ KeyLayoutMap::Parser::~Parser() {
 status_t KeyLayoutMap::Parser::parse() {
     while (!mTokenizer->isEof()) {
 #if DEBUG_PARSER
-        ALOGD("Parsing %s: '%s'.", mTokenizer->getLocation().string(),
+        ALOGD("Parsing %s: '%s'.", c_str(mTokenizer->getLocation()),
                 mTokenizer->peekRemainderOfLine().string());
 #endif
 
@@ -200,16 +200,16 @@ status_t KeyLayoutMap::Parser::parse() {
                 status_t status = parseAxis();
                 if (status) return status;
             } else {
-                ALOGE("%s: Expected keyword, got '%s'.", mTokenizer->getLocation().string(),
-                        keywordToken.string());
+                ALOGE("%s: Expected keyword, got '%s'.", c_str(mTokenizer->getLocation()),
+                        c_str(keywordToken));
                 return BAD_VALUE;
             }
 
             mTokenizer->skipDelimiters(WHITESPACE);
             if (!mTokenizer->isEol() && mTokenizer->peekChar() != '#') {
                 ALOGE("%s: Expected end of line or trailing comment, got '%s'.",
-                        mTokenizer->getLocation().string(),
-                        mTokenizer->peekRemainderOfLine().string());
+                        c_str(mTokenizer->getLocation()),
+                        c_str(mTokenizer->peekRemainderOfLine()));
                 return BAD_VALUE;
             }
         }
@@ -229,26 +229,26 @@ status_t KeyLayoutMap::Parser::parseKey() {
     }
 
     char* end;
-    int32_t code = int32_t(strtol(codeToken.string(), &end, 0));
+    int32_t code = int32_t(strtol(c_str(codeToken), &end, 0));
     if (*end) {
-        ALOGE("%s: Expected key %s number, got '%s'.", mTokenizer->getLocation().string(),
-                mapUsage ? "usage" : "scan code", codeToken.string());
+        ALOGE("%s: Expected key %s number, got '%s'.", c_str(mTokenizer->getLocation()),
+                mapUsage ? "usage" : "scan code", c_str(codeToken));
         return BAD_VALUE;
     }
     KeyedVector<int32_t, Key>& map =
             mapUsage ? mMap->mKeysByUsageCode : mMap->mKeysByScanCode;
     if (map.indexOfKey(code) >= 0) {
-        ALOGE("%s: Duplicate entry for key %s '%s'.", mTokenizer->getLocation().string(),
-                mapUsage ? "usage" : "scan code", codeToken.string());
+        ALOGE("%s: Duplicate entry for key %s '%s'.", c_str(mTokenizer->getLocation()),
+                mapUsage ? "usage" : "scan code", c_str(codeToken));
         return BAD_VALUE;
     }
 
     mTokenizer->skipDelimiters(WHITESPACE);
     String8 keyCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.string());
+    int32_t keyCode = getKeyCodeByLabel(c_str(keyCodeToken));
     if (!keyCode) {
-        ALOGE("%s: Expected key code label, got '%s'.", mTokenizer->getLocation().string(),
-                keyCodeToken.string());
+        ALOGE("%s: Expected key code label, got '%s'.", c_str(mTokenizer->getLocation()),
+                c_str(keyCodeToken));
         return BAD_VALUE;
     }
 
@@ -258,15 +258,15 @@ status_t KeyLayoutMap::Parser::parseKey() {
         if (mTokenizer->isEol() || mTokenizer->peekChar() == '#') break;
 
         String8 flagToken = mTokenizer->nextToken(WHITESPACE);
-        uint32_t flag = getKeyFlagByLabel(flagToken.string());
+        uint32_t flag = getKeyFlagByLabel(c_str(flagToken));
         if (!flag) {
-            ALOGE("%s: Expected key flag label, got '%s'.", mTokenizer->getLocation().string(),
-                    flagToken.string());
+            ALOGE("%s: Expected key flag label, got '%s'.", c_str(mTokenizer->getLocation()),
+                    c_str(flagToken));
             return BAD_VALUE;
         }
         if (flags & flag) {
-            ALOGE("%s: Duplicate key flag '%s'.", mTokenizer->getLocation().string(),
-                    flagToken.string());
+            ALOGE("%s: Duplicate key flag '%s'.", c_str(mTokenizer->getLocation()),
+                    c_str(flagToken));
             return BAD_VALUE;
         }
         flags |= flag;
@@ -286,15 +286,15 @@ status_t KeyLayoutMap::Parser::parseKey() {
 status_t KeyLayoutMap::Parser::parseAxis() {
     String8 scanCodeToken = mTokenizer->nextToken(WHITESPACE);
     char* end;
-    int32_t scanCode = int32_t(strtol(scanCodeToken.string(), &end, 0));
+    int32_t scanCode = int32_t(strtol(c_str(scanCodeToken), &end, 0));
     if (*end) {
-        ALOGE("%s: Expected axis scan code number, got '%s'.", mTokenizer->getLocation().string(),
-                scanCodeToken.string());
+        ALOGE("%s: Expected axis scan code number, got '%s'.", c_str(mTokenizer->getLocation()),
+                c_str(scanCodeToken));
         return BAD_VALUE;
     }
     if (mMap->mAxes.indexOfKey(scanCode) >= 0) {
-        ALOGE("%s: Duplicate entry for axis scan code '%s'.", mTokenizer->getLocation().string(),
-                scanCodeToken.string());
+        ALOGE("%s: Duplicate entry for axis scan code '%s'.", c_str(mTokenizer->getLocation()),
+                c_str(scanCodeToken));
         return BAD_VALUE;
     }
 
@@ -307,10 +307,10 @@ status_t KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         String8 axisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = getAxisByLabel(axisToken.string());
+        axisInfo.axis = getAxisByLabel(c_str(axisToken));
         if (axisInfo.axis < 0) {
             ALOGE("%s: Expected inverted axis label, got '%s'.",
-                    mTokenizer->getLocation().string(), axisToken.string());
+                    c_str(mTokenizer->getLocation()), c_str(axisToken));
             return BAD_VALUE;
         }
     } else if (token == "split") {
@@ -318,35 +318,35 @@ status_t KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         String8 splitToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.splitValue = int32_t(strtol(splitToken.string(), &end, 0));
+        axisInfo.splitValue = int32_t(strtol(c_str(splitToken), &end, 0));
         if (*end) {
             ALOGE("%s: Expected split value, got '%s'.",
-                    mTokenizer->getLocation().string(), splitToken.string());
+                    c_str(mTokenizer->getLocation()), c_str(splitToken));
             return BAD_VALUE;
         }
 
         mTokenizer->skipDelimiters(WHITESPACE);
         String8 lowAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = getAxisByLabel(lowAxisToken.string());
+        axisInfo.axis = getAxisByLabel(c_str(lowAxisToken));
         if (axisInfo.axis < 0) {
             ALOGE("%s: Expected low axis label, got '%s'.",
-                    mTokenizer->getLocation().string(), lowAxisToken.string());
+                    c_str(mTokenizer->getLocation()), c_str(lowAxisToken));
             return BAD_VALUE;
         }
 
         mTokenizer->skipDelimiters(WHITESPACE);
         String8 highAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.highAxis = getAxisByLabel(highAxisToken.string());
+        axisInfo.highAxis = getAxisByLabel(c_str(highAxisToken));
         if (axisInfo.highAxis < 0) {
             ALOGE("%s: Expected high axis label, got '%s'.",
-                    mTokenizer->getLocation().string(), highAxisToken.string());
+                    c_str(mTokenizer->getLocation()), c_str(highAxisToken));
             return BAD_VALUE;
         }
     } else {
-        axisInfo.axis = getAxisByLabel(token.string());
+        axisInfo.axis = getAxisByLabel(c_str(token));
         if (axisInfo.axis < 0) {
             ALOGE("%s: Expected axis label, 'split' or 'invert', got '%s'.",
-                    mTokenizer->getLocation().string(), token.string());
+                    c_str(mTokenizer->getLocation()), c_str(token));
             return BAD_VALUE;
         }
     }
@@ -360,15 +360,15 @@ status_t KeyLayoutMap::Parser::parseAxis() {
         if (keywordToken == "flat") {
             mTokenizer->skipDelimiters(WHITESPACE);
             String8 flatToken = mTokenizer->nextToken(WHITESPACE);
-            axisInfo.flatOverride = int32_t(strtol(flatToken.string(), &end, 0));
+            axisInfo.flatOverride = int32_t(strtol(c_str(flatToken), &end, 0));
             if (*end) {
                 ALOGE("%s: Expected flat value, got '%s'.",
-                        mTokenizer->getLocation().string(), flatToken.string());
+                        c_str(mTokenizer->getLocation()), c_str(flatToken));
                 return BAD_VALUE;
             }
         } else {
             ALOGE("%s: Expected keyword 'flat', got '%s'.",
-                    mTokenizer->getLocation().string(), keywordToken.string());
+                    c_str(mTokenizer->getLocation()), c_str(keywordToken));
             return BAD_VALUE;
         }
     }
