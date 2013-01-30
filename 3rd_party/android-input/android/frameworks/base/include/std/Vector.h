@@ -201,8 +201,8 @@ public:
      inline const_iterator end() const   { return impl.end(); }
      inline void reserve(size_t n) { impl.reserve(n); }
      inline bool empty() const{ return impl.empty(); }
-     inline void push_back(const ValueType& item)  { impl.push_back(); }
-     inline void push_front(const ValueType& item) { impl.push_front(); }
+     inline void push_back(const ValueType& item)  { impl.push_back(item); }
+     inline void push_front(const ValueType& item) { impl.push_front(item); }
      inline iterator erase(iterator pos) { return impl.erase(pos); }
 
 private:
