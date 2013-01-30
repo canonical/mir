@@ -20,7 +20,6 @@
 
 #include "mir_client/mir_client_library.h"
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/geometry/size.h"
 
 #include <hardware/gralloc.h>
@@ -28,6 +27,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+    class BufferIPCPackage;
+}
 namespace test
 {
 namespace draw

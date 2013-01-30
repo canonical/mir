@@ -21,12 +21,13 @@
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir/compositor/buffer_swapper.h"
 
 namespace mir
 {
 namespace compositor
 {
+
+class BufferSwapper;
 
 class TemporaryBuffer : public Buffer
 {
@@ -49,6 +50,7 @@ class TemporaryClientBuffer : public TemporaryBuffer
 public:
     explicit TemporaryClientBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
     ~TemporaryClientBuffer();
+
 private:
     BufferID buffer_id;
     std::weak_ptr<BufferSwapper> allocating_swapper;
@@ -59,6 +61,7 @@ class TemporaryCompositorBuffer : public TemporaryBuffer
 public:
     explicit TemporaryCompositorBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
     ~TemporaryCompositorBuffer();
+
 private:
     BufferID buffer_id;
     std::weak_ptr<BufferSwapper> allocating_swapper;

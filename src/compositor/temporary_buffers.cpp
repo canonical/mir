@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/buffer_swapper.h"
 #include "temporary_buffers.h"
 
 namespace mc=mir::compositor;
