@@ -65,35 +65,30 @@ msess::SurfaceId msess::Session::create_surface(const SurfaceCreationParameters&
     return id;
 }
 
-std::shared_ptr<msess::Surface> msess::Session::get_surface(msess::SurfaceId id) const
+msess::Session::Surfaces::const_iterator msess::Session::checked_find(SurfaceId id) const
 {
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    
     auto p = surfaces.find(id);
-    if (p != surfaces.end())
-    {
-        return p->second;
-    }
-    else
+    if (p == surfaces.end())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
     }
+    return p;
+}
+
+std::shared_ptr<msess::Surface> msess::Session::get_surface(msess::SurfaceId id) const
+{
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+
+    return checked_find(id)->second;
 }
 
 void msess::Session::destroy_surface(msess::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    auto p = surfaces.find(id);
+    auto p = checked_find(id);
 
-    if (p != surfaces.end())
-    {
-        p->second->destroy();
-        surfaces.erase(p);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
-    }
+    p->second->destroy();
+    surfaces.erase(p);
 }
 
 std::string msess::Session::name()
