@@ -91,6 +91,18 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
     EXPECT_EQ(app3->name(), focus_sequence.predecessor_of(app1).lock()->name());
 }
 
+TEST_F(RegistrationOrderFocusSequenceSetup, identity)
+{
+    using namespace ::testing;
+
+    auto app1 = std::make_shared<msess::Session>(factory, testing_app_name1);
+    container->insert_session(app1);
+
+    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    EXPECT_EQ(app1->name(), focus_sequence.predecessor_of(app1).lock()->name());
+    EXPECT_EQ(app1->name(), focus_sequence.successor_of(app1).lock()->name());
+}
+
 TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 {
     using namespace ::testing;
