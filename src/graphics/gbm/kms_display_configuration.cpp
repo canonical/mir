@@ -22,6 +22,9 @@
 #include <cmath>
 #include <limits>
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
@@ -77,6 +80,17 @@ void mgg::KMSDisplayConfiguration::for_each_output(std::function<void(DisplayCon
 {
     for (auto const& output : outputs)
         f(output);
+}
+
+uint32_t mgg::KMSDisplayConfiguration::get_kms_connector_id(DisplayConfigurationOutputId id) const
+{
+    for (auto const& output : outputs)
+    {
+        if (output.id == id)
+            return id.as_value();
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find DisplayConfigurationOutput with provided id"));
 }
 
 void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,

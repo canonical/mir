@@ -61,7 +61,8 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
     /* Create or reset the KMS outputs */
     conf->for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
-        uint32_t const connector_id = conf_output.id.as_value();
+        auto const& kms_conf = std::static_pointer_cast<KMSDisplayConfiguration>(conf);
+        uint32_t const connector_id = kms_conf->get_kms_connector_id(conf_output.id);
 
         auto output = output_container.get_kms_output_for(connector_id);
 
