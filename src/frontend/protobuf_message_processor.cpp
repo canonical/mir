@@ -20,7 +20,7 @@
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/system/system_error.hpp>
+
 #include <sstream>
 
 namespace mfd = mir::frontend::detail;
@@ -189,9 +189,10 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         }
 
     }
-    catch(const boost::system::system_error& e)
+    catch (std::exception const& error)
     {
         //note, if write threw an exception, the transaction with the client has failed 
+        std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
         return false;
     }
 
