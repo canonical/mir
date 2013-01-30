@@ -30,6 +30,7 @@
 #include ANDROIDFW_UTILS(BitSet.h)
 #include ANDROIDFW_UTILS(String8.h)
 #include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(Log.h)
 
 #include <cutils/properties.h>
 
