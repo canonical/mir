@@ -17,11 +17,11 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/temporary_client_buffer.h"
-#include "mir/compositor/temporary_compositor_buffer.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
+
+#include "temporary_buffers.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;

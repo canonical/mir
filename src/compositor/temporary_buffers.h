@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_TEMPORARY_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_TEMPORARY_COMPOSITOR_BUFFER_H_
+#ifndef MIR_COMPOSITOR_TEMPORARY_BUFFERS_H_
+#define MIR_COMPOSITOR_TEMPORARY_BUFFERS_H_
 
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
@@ -28,12 +28,9 @@ namespace mir
 namespace compositor
 {
 
-class TemporaryCompositorBuffer : public Buffer
+class TemporaryBuffer : public Buffer
 {
 public:
-    explicit TemporaryCompositorBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
-    ~TemporaryCompositorBuffer();
-
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
@@ -42,13 +39,32 @@ public:
     std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
     BufferID id() const;
 
-private:
+protected:
+    TemporaryBuffer() = default;
     std::shared_ptr<Buffer> buffer;
+};
+
+class TemporaryClientBuffer : public TemporaryBuffer
+{
+public:
+    explicit TemporaryClientBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
+    ~TemporaryClientBuffer();
+private:
     BufferID buffer_id;
     std::weak_ptr<BufferSwapper> allocating_swapper;
 }; 
 
+class TemporaryCompositorBuffer : public TemporaryBuffer
+{
+public:
+    explicit TemporaryCompositorBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
+    ~TemporaryCompositorBuffer();
+private:
+    BufferID buffer_id;
+    std::weak_ptr<BufferSwapper> allocating_swapper;
+};
+ 
 }
 }
 
-#endif /* MIR_COMPOSITOR_TEMPORARY_COMPOSITOR_BUFFER_H_ */
+#endif /* MIR_COMPOSITOR_TEMPORARY_BUFFERS_H_ */

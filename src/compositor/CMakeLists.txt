@@ -20,8 +20,7 @@ set(
 
   compositor.cpp
   buffer_basic.cpp
-  temporary_client_buffer.cpp
-  temporary_compositor_buffer.cpp
+  temporary_buffers.cpp
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_multi.cpp

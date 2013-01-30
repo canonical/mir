@@ -16,9 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/temporary_client_buffer.h"
-
-#include <boost/exception/all.hpp>
+#include "temporary_buffers.h"
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
@@ -35,32 +33,44 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
         swapper->client_release(buffer_id);
 }
 
-geom::Size mc::TemporaryClientBuffer::size() const
+mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper)
+{
+    buffer_swapper->compositor_acquire(buffer, buffer_id);
+    allocating_swapper = buffer_swapper; 
+}
+
+mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
+{
+    if (auto swapper = allocating_swapper.lock())
+        swapper->compositor_release(buffer_id);
+}
+
+geom::Size mc::TemporaryBuffer::size() const
 {
     return buffer->size();
 }
 
-geom::Stride mc::TemporaryClientBuffer::stride() const
+geom::Stride mc::TemporaryBuffer::stride() const
 {
     return buffer->stride();
 }
 
-geom::PixelFormat mc::TemporaryClientBuffer::pixel_format() const
+geom::PixelFormat mc::TemporaryBuffer::pixel_format() const
 {
     return buffer->pixel_format();
 }
 
-mc::BufferID mc::TemporaryClientBuffer::id() const
+mc::BufferID mc::TemporaryBuffer::id() const
 {
     return buffer->id();
 }
 
-void mc::TemporaryClientBuffer::bind_to_texture()
+void mc::TemporaryBuffer::bind_to_texture()
 {
     buffer->bind_to_texture();
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryClientBuffer::get_ipc_package() const
+std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() const
 {   
     return buffer->get_ipc_package();
 }
