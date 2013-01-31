@@ -223,7 +223,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     try
     {
         region_resource = renderable.graphic_region();
-    } catch (std::exception&)
+    } catch (...)
     {
         /* if this throws here, that means that the client has died
            and there is no valid buffer to render. return before changing

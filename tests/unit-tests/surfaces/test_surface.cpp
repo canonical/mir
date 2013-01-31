@@ -19,7 +19,6 @@
 #include "mir/surfaces/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>
@@ -206,17 +205,16 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     using namespace testing;
 
     auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
-    auto size = geom::Size{geom::Width{1024}, geom::Height{768}};
-    auto mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, geom::Stride{4}, geom::PixelFormat::abgr_8888);
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
 
     ms::Surface surf(surface_name, mock_buffer_bundle );
     EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
         .Times(1)
-        .WillOnce(Return(mock_buffer));
+        .WillOnce(Return(stub_buffer));
     surf.advance_client_buffer();
 
     auto ret_ipc = surf.client_buffer();
-    EXPECT_EQ(mock_buffer, ret_ipc); 
+    EXPECT_EQ(stub_buffer, ret_ipc); 
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)

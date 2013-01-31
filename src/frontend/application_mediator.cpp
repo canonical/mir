@@ -65,11 +65,11 @@ void mir::frontend::ApplicationMediator::connect(
     auto platform = response->mutable_platform();
     auto display_info = response->mutable_display_info();
 
-    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        platform->add_data(*p);
+    for (auto& data : ipc_package->ipc_data)
+        platform->add_data(data);
 
-    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        platform->add_fd(*p);
+    for (auto& ipc_fds : ipc_package->ipc_fds)
+        platform->add_fd(ipc_fds);
 
     auto view_area = graphics_display->view_area();
     display_info->set_width(view_area.size.width.as_uint32_t());
@@ -123,11 +123,12 @@ void mir::frontend::ApplicationMediator::create_surface(
         auto buffer = response->mutable_buffer();
 
         buffer->set_buffer_id(id.as_uint32_t());
-        for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-            buffer->add_data(*p);
 
-        for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-            buffer->add_fd(*p);
+        for (auto& data : ipc_package->ipc_data)
+            buffer->add_data(data);
+
+        for (auto& ipc_fds : ipc_package->ipc_fds)
+            buffer->add_fd(ipc_fds);
 
         buffer->set_stride(ipc_package->stride);
 
@@ -158,11 +159,11 @@ void mir::frontend::ApplicationMediator::next_buffer(
     auto ipc_package = buffer_resource->get_ipc_package();
 
     response->set_buffer_id(id.as_uint32_t());
-    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        response->add_data(*p);
+    for (auto& data : ipc_package->ipc_data)
+        response->add_data(data);
 
-    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        response->add_fd(*p);
+    for (auto& ipc_fds : ipc_package->ipc_fds)
+        response->add_fd(ipc_fds);
 
     response->set_stride(ipc_package->stride);
 

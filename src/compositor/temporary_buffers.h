@@ -48,7 +48,7 @@ protected:
 class TemporaryClientBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryClientBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
+    explicit TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper);
     ~TemporaryClientBuffer();
 
 private:
@@ -59,7 +59,7 @@ private:
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryCompositorBuffer(const std::shared_ptr<BufferSwapper>& buffer_swapper);
+    explicit TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper);
     ~TemporaryCompositorBuffer();
 
 private:
