@@ -25,79 +25,86 @@
 namespace android
 {
 template <typename ValueType>
-class SortedVector;
-
-template <typename ValueType>
-class Vector
+class Vector : std::vector<ValueType> // NB private inheritance of implementation
 {
     typedef std::vector<ValueType> Impl;
 public:
-    typedef typename Impl::value_type value_type;
+
+    using typename Impl::value_type;
+    using typename Impl::iterator;
+    using typename Impl::const_iterator;
+
+    using Impl::clear;
+    using Impl::size;
+    using Impl::capacity;
+    using Impl::begin;
+    using Impl::end;
+    using Impl::reserve;
+    using Impl::empty;
+    using Impl::push_back;
+    using Impl::erase;
+    using Impl::insert;
+    using Impl::at;
+    using Impl::operator[];
+
+    /*
+    * the following inlines add some level of compatibility with android utils.
+    * Stuff that is commented out isn't used in the input stack
+    */
 
     /*!
     * Constructors and destructors
     */
-    Vector() {}
-    Vector(const Vector<ValueType>& rhs) : impl(rhs.impl) {}
-// explicit Vector(const SortedVector<ValueType>& rhs);
+    Vector() = default;
+    Vector(const Vector<ValueType>& rhs) = default;
+//  explicit Vector(const SortedVector<ValueType>& rhs);
     virtual ~Vector() {}
 
     /*! copy operator */
 //  const Vector<ValueType>& operator = (const Vector<ValueType>& rhs) const;
-    Vector<ValueType>& operator = (const Vector<ValueType>& rhs) { impl = rhs.impl; }
+    Vector<ValueType>& operator=(const Vector<ValueType>& rhs) = default;
 
 //  const Vector<ValueType>& operator = (const SortedVector<ValueType>& rhs) const;
 //  Vector<ValueType>& operator = (const SortedVector<ValueType>& rhs);
 
-    /*
-    * empty the vector
-    */
-
-    inline void clear() { impl.clear(); }
 
     /*!
     * vector stats
     */
 
-    //! returns number of items in the vector
-    inline size_t size() const { return impl.size(); }
     //! returns wether or not the vector is empty
-    inline bool isEmpty() const { return impl.empty(); }
-    //! returns how many items can be stored without reallocating the backing store
-    inline size_t capacity() const { return impl.capacity(); }
+    inline bool isEmpty() const { return empty(); }
     //! setst the capacity. capacity can never be reduced less than size()
-    inline ssize_t setCapacity(size_t size) { impl.reserve(size); return size; }
+    inline ssize_t setCapacity(size_t size) { reserve(size); return size; }
 
     /*!
     * C-style array access
     */
 
     //! read-only C-style access
-    inline const ValueType* array() const { return impl.data(); }
+    inline const ValueType* array() const { return Impl::data(); }
     //! read-write C-style access
-    ValueType* editArray() { return impl.data(); }
+    ValueType* editArray() { return Impl::data(); }
 
     /*!
     * accessors
     */
 
-    //! read-only access to an item at a given index
-    inline const ValueType& operator [] (size_t index) const { return impl[index]; }
     //! alternate name for operator []
-    inline const ValueType& itemAt(size_t index) const { return impl.at(index); }
+    inline const ValueType& itemAt(size_t index) const { return at(index); }
     //! stack-usage of the vector. returns the top of the stack (last element)
-    const ValueType& top() const { return impl.back(); }
+    const ValueType& top() const { return Impl::back(); }
 //  //! same as operator [], but allows to access the vector backward (from the end) with a negative index
-//  const ValueType& mirrorItemAt(ssize_t index) const { return impl.at((index >= 0) ? index : impl.size()-index); }
+//  const ValueType& mirrorItemAt(ssize_t index) const { return at((index >= 0) ? index : size()-index); }
 
     /*!
     * modifing the array
     */
 
     //! copy-on write support, grants write access to an item
-    ValueType& editItemAt(size_t index) { return impl[index]; }
+    ValueType& editItemAt(size_t index) { return Impl::operator[](index); }
     //! grants right acces to the top of the stack (last element)
-    ValueType& editTop() { return impl.back(); }
+    ValueType& editTop() { return Impl::back(); }
 
     /*!
     * append/insert another vector
@@ -109,8 +116,8 @@ public:
     //! append another vector at the end of this one
     ssize_t appendVector(const Vector<ValueType>& vector)
     {
-        auto result = impl.size();
-        impl.insert(impl.end(), vector.begin(), vector.end());
+        auto result = size();
+        insert(end(), vector.begin(), vector.end());
         return result;
     }
 
@@ -121,8 +128,8 @@ public:
     //! append an array at the end of this vector
     ssize_t appendArray(const ValueType* array, size_t length)
     {
-        auto result = impl.size();
-        impl.insert(impl.end(), array, array + length);
+        auto result = size();
+        insert(end(), array, array + length);
         return result;
     }
 
@@ -134,18 +141,18 @@ public:
     inline ssize_t insertAt(size_t index, size_t numItems = 1) { return insertAt(ValueType(), index, numItems); }
     //! insert one or several items initialized from a prototype item
     ssize_t insertAt(const ValueType& prototype_item, size_t index, size_t numItems = 1)
-    { impl.insert(impl.begin()+index, numItems, prototype_item); return index; }
+    { insert(begin()+index, numItems, prototype_item); return index; }
     //! pop the top of the stack (removes the last element). No-op if the stack's empty
-    inline void pop() { if (!impl.empty()) impl.erase(--impl.end()); }
+    inline void pop() { if (!empty()) erase(--end()); }
     //! pushes an item initialized with its default constructor
-    inline void push() { impl.push_back(ValueType()); }
+    inline void push() { push_back(ValueType()); }
     //! pushes an item on the top of the stack
-    void push(const ValueType& item) { impl.push_back(item); }
+    void push(const ValueType& item) { push_back(item); }
     //! same as push() but returns the index the item was added at (or an error)
-    inline ssize_t add() { auto result = impl.size(); push(); return result; }
+    inline ssize_t add() { auto result = size(); push(); return result; }
 
     //! same as push() but returns the index the item was added at (or an error)
-    ssize_t add(const ValueType& item) { auto result = impl.size(); push(item); return result; }
+    ssize_t add(const ValueType& item) { auto result = size(); push(item); return result; }
 //  //! replace an item with a new one initialized with its default constructor
 //  inline ssize_t replaceAt(size_t index);
 //  //! replace an item with a new one
@@ -157,10 +164,10 @@ public:
 
 //! remove several items
     inline ssize_t removeItemsAt(size_t index, size_t count = 1)
-    { auto i = impl.begin() + index; impl.erase(i, i+count); return index; }
+    { auto i = begin() + index; erase(i, i+count); return index; }
 //! remove one item
     inline ssize_t removeAt(size_t index)
-    { auto i = impl.begin() + index; impl.erase(i); return index; }
+    { auto i = begin() + index; erase(i); return index; }
 
 //  /*!
 //  * sort (stable) the array
@@ -174,27 +181,6 @@ public:
 //
 //  // for debugging only
 //  inline size_t getItemSize() const { return itemSize(); }
-
-
-    /*
-    * these inlines add some level of compatibility with STL. eventually
-    * we should probably turn things around.
-    */
-    typedef typename Impl::iterator iterator;
-    typedef typename Impl::const_iterator const_iterator;
-
-    inline iterator begin() { return impl.begin(); }
-    inline iterator end() { return impl.end(); }
-    inline const_iterator begin() const { return impl.begin(); }
-    inline const_iterator end() const { return impl.end(); }
-    inline void reserve(size_t n) { impl.reserve(n); }
-    inline bool empty() const { return impl.empty(); }
-    inline void push_back(const ValueType& item) { impl.push_back(item); }
-    inline void push_front(const ValueType& item) { impl.push_front(item); }
-    inline iterator erase(iterator pos) { return impl.erase(pos); }
-
-private:
-    Impl impl;
 };
 }
 
