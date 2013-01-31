@@ -95,7 +95,7 @@ public:
     //! stack-usage of the vector. returns the top of the stack (last element)
     const ValueType& top() const { return Impl::back(); }
 //  //! same as operator [], but allows to access the vector backward (from the end) with a negative index
-//  const ValueType& mirrorItemAt(ssize_t index) const { return at((index >= 0) ? index : size()-index); }
+//  const ValueType& mirrorItemAt(ssize_t index) const { return at((index >= 0) ? index : size()+index); }
 
     /*!
     * modifing the array
