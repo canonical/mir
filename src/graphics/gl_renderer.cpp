@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 namespace mg=mir::graphics;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 namespace
