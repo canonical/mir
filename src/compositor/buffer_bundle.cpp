@@ -17,57 +17,14 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include <cassert>
+#include "temporary_buffers.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-
-namespace
-{
-struct CompositorReleaseDeleter
-{
-    CompositorReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
-        swapper(sw),
-        id(id)
-    {
-    }
-
-    void operator()(mc::GraphicBufferCompositorResource* compositor_resource)
-    {
-        if (auto res = swapper.lock())
-            res->compositor_release(id);
-        delete compositor_resource;
-    }
-
-    std::weak_ptr<mc::BufferSwapper> swapper;
-    mc::BufferID id;
-};
-
-struct ClientReleaseDeleter
-{
-    ClientReleaseDeleter(std::weak_ptr<mc::BufferSwapper> sw, mc::BufferID id) :
-        swapper(sw),
-        id(id)
-    {
-    }
-
-    void operator()(mc::GraphicBufferClientResource* client_resource)
-    {
-        if (auto res = swapper.lock())
-            res->client_release(id);
-        delete client_resource;
-    }
-
-    std::weak_ptr<mc::BufferSwapper> swapper;
-    mc::BufferID id;
-};
-}
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
@@ -89,29 +46,14 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mc::GraphicBufferCompositorResource> mc::BufferBundleSurfaces::lock_back_buffer()
+std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
-    mc::BufferID id;
-    std::weak_ptr<mc::Buffer> region;
-    swapper->compositor_acquire(region, id);
-
-    auto resource = new mc::GraphicBufferCompositorResource(region);
-    CompositorReleaseDeleter del(swapper, id);
-    auto compositor_resource = std::shared_ptr<mc::GraphicBufferCompositorResource>(resource, del);
-
-    return compositor_resource;
+    return std::make_shared<mc::TemporaryCompositorBuffer>(swapper);
 }
 
-std::shared_ptr<mc::GraphicBufferClientResource> mc::BufferBundleSurfaces::secure_client_buffer()
+std::shared_ptr<mc::Buffer> mc::BufferBundleSurfaces::secure_client_buffer()
 {
-    BufferID id;
-    std::weak_ptr<Buffer> buffer;
-    swapper->client_acquire(buffer, id);
-
-    auto resource = new mc::GraphicBufferClientResource(buffer);
-    ClientReleaseDeleter del(swapper, id);
-    auto client_resource = std::shared_ptr<mc::GraphicBufferClientResource>(resource, del); 
-    return client_resource;
+    return std::make_shared<mc::TemporaryClientBuffer>(swapper);
 }
 
 geom::PixelFormat mc::BufferBundleSurfaces::get_bundle_pixel_format()

@@ -128,13 +128,13 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     using namespace testing;
 
     mc::BufferProperties actual;
-    std::weak_ptr<mc::Buffer> returned_buffer;
+    std::shared_ptr<mc::Buffer> returned_buffer;
     mc::BufferID id{34};
 
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
     swapper->client_acquire(returned_buffer, id);
-    EXPECT_NE(nullptr, returned_buffer.lock());
+    EXPECT_NE(nullptr, returned_buffer);
 }
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
@@ -154,7 +154,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     gl_animation.init_gl();
 
     auto client_buffer = bundle->secure_client_buffer();
-    auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+    auto ipc_package = client_buffer->get_ipc_package();
     auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
     red_pattern.draw(region);
     client_buffer.reset();
@@ -190,7 +190,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        auto ipc_package = client_buffer->get_ipc_package();
         auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         red_pattern.draw(region);
         client_buffer.reset();
@@ -206,7 +206,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        ipc_package = client_buffer->get_ipc_package();
         region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         green_pattern.draw(region);
         client_buffer.reset();

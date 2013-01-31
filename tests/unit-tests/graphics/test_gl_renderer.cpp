@@ -292,7 +292,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     mtd::MockRenderable rd;
     mtd::MockGraphicRegion gr;
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
-    auto resource = std::make_shared<mc::GraphicBufferCompositorResource>(gr_ptr);
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -314,10 +313,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     InSequence seq;
 
-    EXPECT_CALL(rd, texture())
-        .Times(1)
-        .WillOnce(Return(resource));
-
     EXPECT_CALL(rd, top_left()).WillOnce(Return(tl));
     EXPECT_CALL(rd, size()).WillOnce(Return(s));
     EXPECT_CALL(gl_mock, glUseProgram(stub_program));
@@ -337,6 +332,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(gl_mock, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
+    EXPECT_CALL(rd, graphic_region())
+        .Times(1)
+        .WillOnce(Return(gr_ptr));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(gl_mock, glEnableVertexAttribArray(position_attr_location));
@@ -349,33 +347,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     renderer->render(saving_lambda, rd);
 
-    EXPECT_EQ(2, save_count);
-    auto result1 = std::find(saved_resources.begin(), saved_resources.end(), resource);
-    auto result2 = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
-    EXPECT_NE(saved_resources.end(), result1);
-    EXPECT_NE(saved_resources.end(), result2);
-}
-
-TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable_with_deleted_resource)
-{
-    using namespace std::placeholders;
-
-    mtd::MockRenderable rd;
-    std::shared_ptr<mc::GraphicRegion> empty_region;
-    auto empty_resource = std::make_shared<mc::GraphicBufferCompositorResource>(empty_region);
-    
-    int save_count = 0;
-    auto saving_lambda = [&] (std::shared_ptr<void> const&)
-    {
-        save_count++;
-    };
-
-    InSequence seq;
-
-    EXPECT_CALL(rd, texture())
-        .Times(1)
-        .WillOnce(Return(empty_resource));
-
-    renderer->render(saving_lambda, rd);
-    EXPECT_EQ(0, save_count);
+    EXPECT_EQ(1, save_count);
+    auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    EXPECT_NE(saved_resources.end(), result);
 }

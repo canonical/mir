@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -29,27 +29,22 @@ struct BufferSwapperConstruction : testing::Test
 {
     BufferSwapperConstruction()
     {
-        geom::Size size {geom::Width{1024}, geom::Height{768}};
-        geom::Height h {768};
-        geom::Stride s {1024};
-        geom::PixelFormat pf {geom::PixelFormat::abgr_8888};
-
-        buffer_a = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_b = std::make_shared<mtd::MockBuffer>(size, s, pf);
-        buffer_c = std::make_shared<mtd::MockBuffer>(size, s, pf);
+        buffer_a = std::make_shared<mtd::StubBuffer>();
+        buffer_b = std::make_shared<mtd::StubBuffer>();
+        buffer_c = std::make_shared<mtd::StubBuffer>();
 
         id1 = buffer_a->id();
         id2 = buffer_b->id();
         id3 = buffer_c->id();
     }
 
-    bool check_ref(std::weak_ptr<mc::Buffer> buffer, mc::BufferID id)
+    bool check_ref(std::shared_ptr<mc::Buffer> buffer, mc::BufferID id)
     {
-        if ((id == id1) && (buffer.lock().get() == buffer_a.get()))
+        if ((id == id1) && (buffer.get() == buffer_a.get()))
             return true;
-        if ((id == id2) && (buffer.lock().get() == buffer_b.get()))
+        if ((id == id2) && (buffer.get() == buffer_b.get()))
             return true;
-        if ((id == id3) && (buffer.lock().get() == buffer_c.get()))
+        if ((id == id3) && (buffer.get() == buffer_c.get()))
             return true;
 
         return false;
@@ -110,7 +105,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_double)
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
     mc::BufferID test_id_1, test_id_2;
-    std::weak_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2; 
+    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2; 
     swapper.compositor_acquire(buffer_ref_1, test_id_1);
     swapper.client_acquire(buffer_ref_2, test_id_2);
     /* swapper is now 'empty' */
@@ -130,7 +125,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_triple)
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
     mc::BufferID test_id_1, test_id_2, test_id_3;
-    std::weak_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3; 
+    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3; 
     swapper.compositor_acquire(buffer_ref_1, test_id_1);
     swapper.client_acquire(buffer_ref_2, test_id_2);
     swapper.client_release(test_id_2);
