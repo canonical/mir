@@ -54,8 +54,9 @@ struct MockSessionContainer : public msess::SessionContainer
 
 struct MockFocusSequence: public msess::FocusSequence
 {
-    MOCK_CONST_METHOD1(successor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
-    MOCK_CONST_METHOD1(predecessor_of, std::weak_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<msess::Session>(std::shared_ptr<msess::Session> const&));
+    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msess::Session>());
 };
 
 struct MockFocusSetter: public msess::FocusSetter
@@ -84,7 +85,7 @@ TEST(SessionManager, open_and_close_session)
     EXPECT_CALL(focus_setter, set_focus_to(_));
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msess::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<msess::Session>())));
+    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session_manager.close_session(session);
@@ -119,7 +120,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
     EXPECT_CALL(mechanism, set_focus_to(_)).Times(1);
     EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<msess::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, predecessor_of(_)).WillOnce(Return((std::shared_ptr<msess::Session>())));
+    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session->create_surface(msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -192,7 +193,7 @@ TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
     session_manager.tag_session_with_lightdm_id(session1, 1);
     session_manager.focus_session_with_lightdm_id(1);
 
-    EXPECT_CALL(sequence, predecessor_of(session1)).WillOnce(Return(session2));
+    EXPECT_CALL(sequence, default_focus()).WillOnce(Return(session2));
     EXPECT_CALL(mechanism, set_focus_to(session2));
 
     session_manager.close_session(session1);
