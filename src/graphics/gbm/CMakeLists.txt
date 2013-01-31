@@ -45,7 +45,7 @@ target_link_libraries(
   mircompositor
 
   ${DRM_LIBRARIES}
-  ${GBM_LIBRARIES}
+  -L${GBM_LIBRARY_DIRS} ${GBM_LIBRARIES}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )

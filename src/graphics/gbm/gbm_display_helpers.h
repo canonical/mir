@@ -23,7 +23,11 @@
 
 #include <cstddef>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-pedantic"  // Ignore bad syntax in gbm.h
 #include <gbm.h>
+#pragma GCC diagnostic pop
+
 #include <EGL/egl.h>
 #include <xf86drmMode.h>
 
