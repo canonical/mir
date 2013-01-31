@@ -342,6 +342,18 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
     EXPECT_EQ(correct_usage, native_handle->usage);
 }
 
+TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_stride)
+{
+    using namespace testing;
+    std::shared_ptr<char> empty_char = std::make_shared<char>();
+
+    buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
+
+    auto native_handle = buffer->get_native_handle();
+    ASSERT_NE(nullptr, native_handle);
+    EXPECT_EQ(static_cast<int32_t>(stride.as_uint32_t()), native_handle->stride);
+}
+
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
 {
     using namespace testing;
