@@ -26,6 +26,7 @@ add_subdirectory(frontend/)
 add_subdirectory(sessions/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
+add_subdirectory(android_input/)
 #TODO stubbed out to run tests on emulator 
 if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
