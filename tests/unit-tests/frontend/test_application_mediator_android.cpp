@@ -20,7 +20,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
