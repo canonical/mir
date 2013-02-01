@@ -37,27 +37,20 @@ set(
   server_configuration.cpp
 )
 
-add_library(
-  mir STATIC
-
+add_library(mirserver SHARED
   ${SRCS}
 )
-
-add_dependencies(mir mirprotobuf)
 
 add_executable(
   mirds
 
   main.cpp
-  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
 
-target_link_libraries(
-  mirds
-
-  mir
+target_link_libraries(mirserver
+  -Wl,-whole-archive  # libmirserver needs to contain these archives WHOLE...
   miroptions
   mircompositor
   mirfrontend
@@ -66,15 +59,25 @@ target_link_libraries(
   mirsurfaces
   mirplatformgraphics
   mirprotobuf
+  -Wl,-no-whole-archive
 
   3rd_party
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT}
+)
+
+set_target_properties(mirserver PROPERTIES
+  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+  SOVERSION ${MIR_VERSION_MAJOR}
+  #
+  # Tell CMake that targets using mirserver should NOT re-import the static
+  # libraries that mirserver depends on (contains).
+  LINK_INTERFACE_LIBRARIES ""
+)
+
+target_link_libraries(mirds
+  mirserver
+  ${Boost_LIBRARIES}
 )
 
 install(

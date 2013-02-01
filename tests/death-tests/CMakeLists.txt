@@ -25,15 +25,8 @@ add_executable(
 target_link_libraries(
   death-tests
 
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
+  mirserver
   mirclient
-  mirplatformgraphics
-  mirprotobuf
   mir-test-framework
 
   3rd_party

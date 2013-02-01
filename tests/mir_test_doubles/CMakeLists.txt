@@ -49,15 +49,7 @@ add_library(
 target_link_libraries(
   mir-test-doubles
 
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
+  mirserver
 
   3rd_party
 
