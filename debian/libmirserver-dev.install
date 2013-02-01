@@ -1,3 +1,2 @@
-usr/include/mir
-usr/lib/pkgconfig
+usr/lib/pkgconfig/mirserver.pc
 usr/lib/libmirserver.so
