@@ -33,6 +33,7 @@ class SortedVector : std::vector<ValueType>
     typedef std::vector<ValueType> Impl;
     using Impl::begin;
     using Impl::end;
+    using Impl::insert;
     using Impl::erase;
     using Impl::operator[];
 public:
