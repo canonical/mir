@@ -156,7 +156,7 @@ TEST_F(AndroidInputSortedVector, remove_unknown_items_is_noop)
     EXPECT_EQ(3u, test_vector.size());
 }
 
-TEST_F(AndroidInputSortedVector, items_at_removed_index_are_not_found)
+TEST_F(AndroidInputSortedVector, item_at_removed_index_are_not_found)
 {
     test_vector.add(30);
     test_vector.add(10);
@@ -169,3 +169,39 @@ TEST_F(AndroidInputSortedVector, items_at_removed_index_are_not_found)
     EXPECT_EQ(1, old_index);
     EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(10));
 }
+
+TEST_F(AndroidInputSortedVector, count_items_at_removed_index_are_not_found)
+{
+    test_vector.add(30);
+    test_vector.add(10);
+    test_vector.add(20);
+    test_vector.add(00);
+    ASSERT_EQ(10, test_vector.itemAt(1));
+
+    auto const old_index = test_vector.removeItemsAt(1, 2);
+
+    EXPECT_EQ(1, old_index);
+    EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(10));
+    EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(20));
+    EXPECT_NE(android::NAME_NOT_FOUND, test_vector.indexOf(00));
+    EXPECT_NE(android::NAME_NOT_FOUND, test_vector.indexOf(30));
+}
+
+#if defined(ANDROID_USE_STD) 
+// Android utils use ALOG_ASSERT - which tends to bomb the program
+TEST_F(AndroidInputSortedVector, remove_beyond_end_fails)
+{
+    test_vector.add(30);
+    test_vector.add(10);
+    test_vector.add(20);
+    test_vector.add(00);
+
+    EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(4, 1));
+    EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(3, 2));
+    EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(2, 3));
+    EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(1, 4));
+    EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(0, 5));
+
+    EXPECT_EQ(3u, test_vector.size());
+}
+#endif
