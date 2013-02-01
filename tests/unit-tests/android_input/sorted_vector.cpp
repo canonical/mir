@@ -146,6 +146,16 @@ TEST_F(AndroidInputSortedVector, removed_items_are_not_found)
     EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(1));
 }
 
+TEST_F(AndroidInputSortedVector, remove_unknown_items_is_noop)
+{
+    test_vector.add(3);
+    test_vector.add(2);
+    test_vector.add(0);
+
+    EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.remove(1));
+    EXPECT_EQ(3u, test_vector.size());
+}
+
 TEST_F(AndroidInputSortedVector, items_at_removed_index_are_not_found)
 {
     test_vector.add(30);
