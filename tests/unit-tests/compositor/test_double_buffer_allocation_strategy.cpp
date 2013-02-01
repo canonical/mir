@@ -34,31 +34,85 @@ namespace
 static geom::Size const buf_size{geom::Width{100}, geom::Height{121}};
 static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::xbgr_8888};
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    MockGraphicBufferAllocator()
     {
+        using namespace testing;
         mc::BufferProperties properties(buf_size, buf_pixel_format, mc::BufferUsage::hardware);
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
+        ON_CALL(*this, alloc_buffer(_))
+            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>(properties)));
     }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return std::vector<geom::PixelFormat>();
-    }
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 
 struct DoubleBufferAllocationStrategyTest : testing::Test
 {
     DoubleBufferAllocationStrategyTest()
-        : stub_allocator{std::make_shared<StubGraphicBufferAllocator>()}
+        : stub_allocator{std::make_shared<MockGraphicBufferAllocator>()}
     {
     }
 
-    std::shared_ptr<mc::GraphicBufferAllocator> const stub_allocator;
+    std::shared_ptr<MockGraphicBufferAllocator> const stub_allocator;
 };
 
+}
+
+/* default number of buffers is 2 */
+TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_uses_default_number_of_buffers)
+{
+    using namespace testing;
+
+    geom::Size const size{geom::Width{10},geom::Height{20}};
+    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
+    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+
+    mc::DoubleBufferAllocationStrategy strategy{stub_allocator};
+    mc::BufferProperties const properties{size, pf, usage};
+    mc::BufferProperties actual_properties;
+
+    int default_num_of_buffers = 2;
+    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+        .Times(default_num_of_buffers);  
+    auto swapper = strategy.create_swapper(actual_properties, properties);
+}
+
+TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_two_make_double_buffer)
+{
+    using namespace testing;
+
+    geom::Size const size{geom::Width{10},geom::Height{20}};
+    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
+    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+
+    mc::BufferProperties const properties{size, pf, usage};
+    mc::BufferProperties actual_properties;
+
+    int num_of_buffers = 2;
+    mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
+    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+        .Times(default_num_of_buffers);  
+    auto swapper = strategy.create_swapper(actual_properties, properties);
+}
+
+TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_three_makes_tripe_buffer)
+{
+    using namespace testing;
+
+    geom::Size const size{geom::Width{10},geom::Height{20}};
+    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
+    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+
+    mc::BufferProperties const properties{size, pf, usage};
+    mc::BufferProperties actual_properties;
+
+    int num_of_buffers = 3;
+    mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
+    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+        .Times(default_num_of_buffers);  
+    auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
 TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_returns_actual_properties_from_buffer)
