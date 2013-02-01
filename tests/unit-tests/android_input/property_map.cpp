@@ -96,3 +96,27 @@ TEST_F(AndroidInputPropertyMap, test_map_has_a_float)
     EXPECT_EQ(0.5, result);
 }
 
+TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_string)
+{
+    String8 result;
+    EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
+TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_bool)
+{
+    bool result{};
+    EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
+TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_int32_t)
+{
+    int32_t result;
+    EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
+TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_float)
+{
+    float result;
+    EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
