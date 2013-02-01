@@ -116,6 +116,12 @@ public:
     ssize_t add(const ValueType& item)
     {
         auto insert_pos = lower_bound(begin(), end(), item);
+
+        if (insert_pos != end() && *insert_pos == item)
+        {
+            *insert_pos =item;
+            return distance(begin(), insert_pos);
+        }
         auto inserted_at = insert(insert_pos, item);
         return distance(begin(), inserted_at);
     }
