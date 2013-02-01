@@ -108,6 +108,13 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
+}
+
+namespace mir
+{
+namespace
+{
+
 class StubDisplay : public mg::Display
 {
 public:
@@ -118,6 +125,7 @@ public:
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
     {
         (void)f;
+        std::this_thread::yield();
     }
     std::shared_ptr<mg::DisplayConfiguration> configuration()
     {
@@ -126,12 +134,6 @@ public:
     }
 };
 
-}
-
-namespace mir
-{
-namespace
-{
 struct SurfaceSync
 {
     SurfaceSync() :
@@ -212,6 +214,7 @@ const int ClientConfigCommon::max_surface_count;
 
 using mir::SurfaceSync;
 using mir::ClientConfigCommon;
+using mir::StubDisplay;
 
 namespace
 {
