@@ -51,17 +51,15 @@ std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties)
 {
-    auto buf1 = gr_allocator->alloc_buffer(requested_buffer_properties);
-    auto buf2 = gr_allocator->alloc_buffer(requested_buffer_properties);
+    std::vector<std::shared_ptr<mc::Buffer>> buffers;
 
-    actual_buffer_properties = BufferProperties{buf1->size(), buf1->pixel_format(), requested_buffer_properties.usage};
-
-    if (default_number_of_buffers == 2)
+    for(auto i=0; i< default_number_of_buffers; i++)
     {
-        return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti({buf1, buf2}));
-    } else 
-    {
-        auto buf3 = gr_allocator->alloc_buffer(requested_buffer_properties);
-        return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti({buf1, buf2, buf3}));
+        buffers.push_back(
+            gr_allocator->alloc_buffer(requested_buffer_properties));
     }
+
+    actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
+
+    return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti(buffers));
 }
