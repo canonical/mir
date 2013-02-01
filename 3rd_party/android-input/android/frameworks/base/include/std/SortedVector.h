@@ -115,15 +115,12 @@ public:
     //! add an item in the right place (and replace the one that is there)
     ssize_t add(const ValueType& item)
     {
-        auto insert_pos = lower_bound(begin(), end(), item);
+        auto pos = lower_bound(begin(), end(), item);
+	if (pos == end()) pos = insert(pos, item);
+	else if (!(*pos == item)) pos = insert(pos, item);
+        else *pos = item;
 
-        if (insert_pos != end() && *insert_pos == item)
-        {
-            *insert_pos =item;
-            return distance(begin(), insert_pos);
-        }
-        auto inserted_at = insert(insert_pos, item);
-        return distance(begin(), inserted_at);
+        return distance(begin(), pos);
     }
 
     //! editItemAt() MUST NOT change the order of this item
