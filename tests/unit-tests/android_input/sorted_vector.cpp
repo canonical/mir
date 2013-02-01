@@ -62,6 +62,41 @@ TEST_F(AndroidInputSortedVector, items_found_at_expected_indexes)
     EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(4));
 }
 
+TEST_F(AndroidInputSortedVector, duplicate_adds_create_single_entry)
+{
+    test_vector.add(3);
+    test_vector.add(1);
+    test_vector.add(2);
+    test_vector.add(0);
+
+    test_vector.add(3);
+    test_vector.add(1);
+    test_vector.add(2);
+    test_vector.add(0);
+
+    EXPECT_EQ(0, test_vector.indexOf(0));
+    EXPECT_EQ(1, test_vector.indexOf(1));
+    EXPECT_EQ(2, test_vector.indexOf(2));
+    EXPECT_EQ(3, test_vector.indexOf(3));
+
+    EXPECT_EQ(4u, test_vector.size());
+
+    EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(4));
+}
+
+TEST_F(AndroidInputSortedVector, adds_returns_correct_index)
+{
+    EXPECT_EQ(0, test_vector.add(3));
+    EXPECT_EQ(0, test_vector.add(1));
+    EXPECT_EQ(1, test_vector.add(2));
+    EXPECT_EQ(0, test_vector.add(0));
+
+    EXPECT_EQ(3, test_vector.add(3));
+    EXPECT_EQ(1, test_vector.add(1));
+    EXPECT_EQ(2, test_vector.add(2));
+    EXPECT_EQ(0, test_vector.add(0));
+}
+
 TEST_F(AndroidInputSortedVector, missing_items_are_not_found)
 {
     test_vector.add(3);
@@ -109,6 +144,16 @@ TEST_F(AndroidInputSortedVector, removed_items_are_not_found)
 
     EXPECT_EQ(1, old_index);
     EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.indexOf(1));
+}
+
+TEST_F(AndroidInputSortedVector, remove_unknown_items_is_noop)
+{
+    test_vector.add(3);
+    test_vector.add(2);
+    test_vector.add(0);
+
+    EXPECT_EQ(android::NAME_NOT_FOUND, test_vector.remove(1));
+    EXPECT_EQ(3u, test_vector.size());
 }
 
 TEST_F(AndroidInputSortedVector, items_at_removed_index_are_not_found)

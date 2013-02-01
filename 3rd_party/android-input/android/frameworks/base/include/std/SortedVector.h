@@ -33,6 +33,7 @@ class SortedVector : std::vector<ValueType>
     typedef std::vector<ValueType> Impl;
     using Impl::begin;
     using Impl::end;
+    using Impl::insert;
     using Impl::erase;
     using Impl::operator[];
 public:
@@ -114,9 +115,11 @@ public:
     //! add an item in the right place (and replace the one that is there)
     ssize_t add(const ValueType& item)
     {
-        auto insert_pos = lower_bound(begin(), end(), item);
-        auto inserted_at = insert(insert_pos, item);
-        return distance(begin(), inserted_at);
+        auto pos = lower_bound(begin(), end(), item);
+        if (pos == end() || !(*pos == item)) pos = insert(pos, item);
+        else *pos = item;
+
+        return distance(begin(), pos);
     }
 
     //! editItemAt() MUST NOT change the order of this item
@@ -130,8 +133,12 @@ public:
     ssize_t remove(const ValueType& item)
     {
         auto remove_pos = lower_bound(begin(), end(), item);
-        auto removed_at = erase(remove_pos);
-        return distance(begin(), removed_at);
+        if (*remove_pos == item)
+        {
+            auto removed_at = erase(remove_pos);
+            return distance(begin(), removed_at);
+        }
+        return NAME_NOT_FOUND;
     }
 
 
