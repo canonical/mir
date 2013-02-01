@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
-#define MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_SWAPPER_FACTORY_H_
+#define MIR_COMPOSITOR_SWAPPER_FACTORY_H_
 
 #include "mir/compositor/buffer_allocation_strategy.h"
 
@@ -29,12 +29,13 @@ namespace compositor
 class GraphicBufferAllocator;
 class BufferProperties;
 
-class DoubleBufferAllocationStrategy : public BufferAllocationStrategy
+class SwapperFactory : public BufferAllocationStrategy
 {
 public:
-    explicit DoubleBufferAllocationStrategy(
+
+    explicit SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
-    explicit DoubleBufferAllocationStrategy(
+    explicit SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int default_number_of_buffers);
 
     std::unique_ptr<BufferSwapper> create_swapper(
@@ -48,4 +49,4 @@ private:
 }
 }
 
-#endif // MIR_COMPOSITOR_DOUBLE_BUFFER_ALLOCATION_STRATEGY_H_
+#endif // MIR_COMPOSITOR_SWAPPER_FACTORY_H_

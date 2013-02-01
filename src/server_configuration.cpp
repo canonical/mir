@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
@@ -154,11 +154,11 @@ mir::DefaultServerConfiguration::make_buffer_allocation_strategy(
     auto server_options = make_options();
     if (server_options->is_set("use_triple_buffering"))
     {
-        return std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator, 3);
+        return std::make_shared<mc::SwapperFactory>(buffer_allocator, 3);
     }
     else
     {
-        return std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator, 2);
+        return std::make_shared<mc::SwapperFactory>(buffer_allocator, 2);
     }
 }
 

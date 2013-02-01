@@ -18,7 +18,7 @@
 
 #include "mir/chrono/chrono.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/rectangle.h"
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
     const geom::Size display_size = display->view_area().size;
     auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
+    auto strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
     mc::BufferBundleManager manager{strategy};
     ms::SurfaceStack surface_stack{&manager};
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);

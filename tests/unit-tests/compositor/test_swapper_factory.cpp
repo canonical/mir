@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -48,9 +48,9 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 
-struct DoubleBufferAllocationStrategyTest : testing::Test
+struct SwapperFactoryTest : testing::Test
 {
-    DoubleBufferAllocationStrategyTest()
+    SwapperFactoryTest()
         : stub_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()}
     {
     }
@@ -61,7 +61,7 @@ struct DoubleBufferAllocationStrategyTest : testing::Test
 }
 
 /* default number of buffers is 2 */
-TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_uses_default_number_of_buffers)
+TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
 {
     using namespace testing;
 
@@ -69,7 +69,7 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_uses_default_number_of
     geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
 
-    mc::DoubleBufferAllocationStrategy strategy{stub_allocator};
+    mc::SwapperFactory strategy{stub_allocator};
     mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 
@@ -79,7 +79,7 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_uses_default_number_of
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
-TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_two_make_double_buffer)
+TEST_F(SwapperFactoryTest, create_swapper_with_two_make_double_buffer)
 {
     using namespace testing;
 
@@ -91,13 +91,13 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_two_make_double_b
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 2;
-    mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
+    mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
         .Times(num_of_buffers);  
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
-TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_three_makes_tripe_buffer)
+TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_tripe_buffer)
 {
     using namespace testing;
 
@@ -109,19 +109,19 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_three_makes_tripe
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 3;
-    mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
+    mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
         .Times(num_of_buffers);  
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
-TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_returns_actual_properties_from_buffer)
+TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
 {
     geom::Size const size{geom::Width{10},geom::Height{20}};
     geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
 
-    mc::DoubleBufferAllocationStrategy strategy{stub_allocator};
+    mc::SwapperFactory strategy{stub_allocator};
     mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 

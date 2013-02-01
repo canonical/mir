@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderer.h"

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper_multi.h"
@@ -31,7 +31,7 @@
 namespace mc = mir::compositor;
 
 /* todo: once we move to gcc 4.7 it would be slightly better to have a delegated constructor */
-mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
+mc::SwapperFactory::SwapperFactory(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
     gr_allocator(gr_alloc),
     default_number_of_buffers(2)
@@ -39,7 +39,7 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
     assert(gr_alloc);
 }
 
-mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
+mc::SwapperFactory::SwapperFactory(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int default_number_of_buffers) :
     gr_allocator(gr_alloc),
     default_number_of_buffers(default_number_of_buffers)
@@ -47,10 +47,10 @@ mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
     assert(gr_alloc);
 }
 
-std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
+std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties)
-{ 
+{
     auto buf1 = gr_allocator->alloc_buffer(requested_buffer_properties);
     auto buf2 = gr_allocator->alloc_buffer(requested_buffer_properties);
 
