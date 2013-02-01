@@ -83,44 +83,17 @@ public:
 
     bool tryGetProperty(const String8& key, bool& outValue) const
     {
-        if (!options.count(key)) return false;
-        try
-        {
-            outValue = boost::lexical_cast<bool>(options[key].as<String8>());
-            return true;
-        }
-        catch (...)
-        {
-            return false;
-        }
+        return tryGetPropertyImpl(key, outValue);
     }
 
     bool tryGetProperty(const String8& key, int32_t& outValue) const
     {
-        if (!options.count(key)) return false;
-        try
-        {
-            outValue = boost::lexical_cast<int32_t>(options[key].as<String8>());
-            return true;
-        }
-        catch (...)
-        {
-            return false;
-        }
+        return tryGetPropertyImpl(key, outValue);
     }
 
     bool tryGetProperty(const String8& key, float& outValue) const
     {
-        if (!options.count(key)) return false;
-        try
-        {
-            outValue = boost::lexical_cast<float>(options[key].as<String8>());
-            return true;
-        }
-        catch (...)
-        {
-            return false;
-        }
+        return tryGetPropertyImpl(key, outValue);
     }
 
 //    /* Adds all values from the specified property map. */
@@ -136,17 +109,15 @@ public:
 
         try
         {
-            std::ifstream file(filename);
             po::options_description description;
+
+            std::ifstream file(filename);
             auto parsed_options = po::parse_config_file(file, description, true);
 
-            int pos = 0;
+            // register the options we found so they'll be stored
             for (auto& option : parsed_options.options)
             {
-                description.add_options()
-                    (option.string_key.data(), "");
-
-                option.position_key = pos++;
+                description.add_options()(option.string_key.data(), "");
                 option.unregistered = false;
             }
 
@@ -163,6 +134,21 @@ public:
 
 
 private:
+    template<typename Type>
+    bool tryGetPropertyImpl(const String8& key, Type& outValue) const
+    {
+        if (!options.count(key)) return false;
+        try
+        {
+            outValue = boost::lexical_cast<Type>(options[key].as<String8>());
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
     boost::program_options::variables_map options;
 };
 }
