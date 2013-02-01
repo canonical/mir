@@ -44,7 +44,8 @@ struct AndroidInputPropertyMap : public ::testing::Test
             "test_bool_false=0\n"
             "#test_bool_true=true\n"
             "# a comment\n"
-            "test_int_32=123\n");
+            "test_int_32=123\n"
+            "test_float=0.5\n");
     }
 
     void SetUp()
@@ -87,3 +88,11 @@ TEST_F(AndroidInputPropertyMap, test_map_has_bools_true_and_false)
     EXPECT_TRUE(test_map->tryGetProperty(String8("test_bool_false"), result));
     EXPECT_FALSE(result);
 }
+
+TEST_F(AndroidInputPropertyMap, test_map_has_a_float)
+{
+    float result;
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test_float"), result));
+    EXPECT_EQ(0.5, result);
+}
+
