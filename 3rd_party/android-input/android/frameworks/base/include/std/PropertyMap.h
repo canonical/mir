@@ -20,10 +20,15 @@
 #ifndef MIR_ANDROID_UBUNTU_PROPERTYMAP_H_
 #define MIR_ANDROID_UBUNTU_PROPERTYMAP_H_
 
-#include ANDROIDFW_UTILS(KeyedVector.h)
 #include ANDROIDFW_UTILS(String8.h)
 #include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Tokenizer.h)
+
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <fstream>
 
 namespace android {
 
@@ -55,7 +60,7 @@ public:
 //    ~PropertyMap();
 
     /* Clears the property map. */
-    void clear();
+    void clear() { options = boost::program_options::variables_map(); }
 
 //    /* Adds a property.
 //     * Replaces the property with the same key if it is already present.
@@ -69,10 +74,54 @@ public:
      * Returns true and sets outValue if the key was found and its value was parsed successfully.
      * Otherwise returns false and does not modify outValue.  (Also logs a warning.)
      */
-    bool tryGetProperty(const String8& key, String8& outValue) const;
-    bool tryGetProperty(const String8& key, bool& outValue) const;
-    bool tryGetProperty(const String8& key, int32_t& outValue) const;
-    bool tryGetProperty(const String8& key, float& outValue) const;
+    bool tryGetProperty(const String8& key, String8& outValue) const
+    {
+        if (!options.count(key)) return false;
+        outValue = options[key].as<String8>();
+        return true;
+    }
+
+    bool tryGetProperty(const String8& key, bool& outValue) const
+    {
+        if (!options.count(key)) return false;
+        try
+        {
+            outValue = boost::lexical_cast<bool>(options[key].as<String8>());
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    bool tryGetProperty(const String8& key, int32_t& outValue) const
+    {
+        if (!options.count(key)) return false;
+        try
+        {
+            outValue = boost::lexical_cast<int32_t>(options[key].as<String8>());
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    bool tryGetProperty(const String8& key, float& outValue) const
+    {
+        if (!options.count(key)) return false;
+        try
+        {
+            outValue = boost::lexical_cast<float>(options[key].as<String8>());
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
 
 //    /* Adds all values from the specified property map. */
 //    void addAll(const PropertyMap* map);
@@ -81,27 +130,40 @@ public:
 //    inline const KeyedVector<String8, String8>& getProperties() const { return mProperties; }
 
     /* Loads a property map from a file. */
-    static status_t load(const String8& filename, PropertyMap** outMap);
+    static status_t load(const String8& filename, PropertyMap** outMap)
+    {
+        namespace po = boost::program_options;
 
-//private:
-//    class Parser {
-//        PropertyMap* mMap;
-//        Tokenizer* mTokenizer;
-//
-//    public:
-//        Parser(PropertyMap* map, Tokenizer* tokenizer);
-//        ~Parser();
-//        status_t parse();
-//
-//    private:
-//        status_t parseType();
-//        status_t parseKey();
-//        status_t parseKeyProperty();
-//        status_t parseModifier(const String8& token, int32_t* outMetaState);
-//        status_t parseCharacterLiteral(char16_t* outCharacter);
-//    };
-//
-//    KeyedVector<String8, String8> mProperties;
+        try
+        {
+            std::ifstream file(filename);
+            po::options_description description;
+            auto parsed_options = po::parse_config_file(file, description, true);
+
+            int pos = 0;
+            for (auto& option : parsed_options.options)
+            {
+                description.add_options()
+                    (option.string_key.data(), "");
+
+                option.position_key = pos++;
+                option.unregistered = false;
+            }
+
+            *outMap = new PropertyMap();
+            po::store(parsed_options, (*outMap)->options);
+
+            return NO_ERROR;
+        }
+        catch (std::exception const& error)
+        {
+            return BAD_VALUE;
+        }
+    }
+
+
+private:
+    boost::program_options::variables_map options;
 };
 }
 
