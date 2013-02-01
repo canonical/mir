@@ -24,9 +24,9 @@ namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                         std::shared_ptr<MirBufferPackage> && package, geom::Size size,
-                         geom::PixelFormat pf)
+mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
+                                               std::shared_ptr<MirBufferPackage> const& package,
+                                               geom::Size size, geom::PixelFormat pf)
  : creation_package(package),
    buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, size}),

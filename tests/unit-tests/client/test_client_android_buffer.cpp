@@ -49,11 +49,9 @@ protected:
 
         package = std::make_shared<MirBufferPackage>();
         package->stride = stride.as_uint32_t();
-        package_raw = package.get();
     }
 
     std::shared_ptr<MirBufferPackage> package;
-    MirBufferPackage* package_raw;
     geom::Size size;
     geom::Height height;
     geom::Width width;
@@ -62,12 +60,6 @@ protected:
     std::shared_ptr<mcla::AndroidClientBuffer> buffer;
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_android_registrar;
 };
-
-TEST_F(ClientAndroidBufferTest, client_buffer_assumes_ownership)
-{
-    buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
-    EXPECT_EQ(nullptr, package);
-}
 
 TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
 {
@@ -81,9 +73,9 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_fd_correctly)
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     ASSERT_NE(nullptr, handle);
-    ASSERT_EQ(package_raw->fd_items, handle->numFds);
-    for(auto i = 0; i < package_raw->fd_items; i++)
-        EXPECT_EQ(package_raw->fd[i], handle->data[i]);
+    ASSERT_EQ(package->fd_items, handle->numFds);
+    for(auto i = 0; i < package->fd_items; i++)
+        EXPECT_EQ(package->fd[i], handle->data[i]);
 }
 
 TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
@@ -98,9 +90,9 @@ TEST_F(ClientAndroidBufferTest, client_buffer_converts_package_data_correctly)
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
     ASSERT_NE(nullptr, handle);
-    ASSERT_EQ(package_raw->data_items, handle->numInts);
-    for(auto i = 0; i < package_raw->data_items; i++)
-        EXPECT_EQ(package_raw->data[i], handle->data[i + package_raw->fd_items]);
+    ASSERT_EQ(package->data_items, handle->numInts);
+    for(auto i = 0; i < package->data_items; i++)
+        EXPECT_EQ(package->data[i], handle->data[i + package->fd_items]);
 }
 
 TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
@@ -352,12 +344,12 @@ TEST_F(ClientAndroidBufferTest, buffer_returns_creation_package)
 
     auto package_return = buffer->get_buffer_package();
 
-    EXPECT_EQ(package_raw->data_items, package_return->data_items);
-    EXPECT_EQ(package_raw->fd_items, package_return->fd_items);
-    EXPECT_EQ(package_raw->stride, package_return->stride);
+    EXPECT_EQ(package->data_items, package_return->data_items);
+    EXPECT_EQ(package->fd_items, package_return->fd_items);
+    EXPECT_EQ(package->stride, package_return->stride);
     for(auto i=0; i<mir_buffer_package_max; i++)
-        EXPECT_EQ(package_raw->data[i], package_return->data[i]);
+        EXPECT_EQ(package->data[i], package_return->data[i]);
     for(auto i=0; i<mir_buffer_package_max; i++)
-        EXPECT_EQ(package_raw->fd[i], package_return->fd[i]);
+        EXPECT_EQ(package->fd[i], package_return->fd[i]);
 }
 
