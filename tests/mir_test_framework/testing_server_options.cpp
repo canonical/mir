@@ -71,6 +71,7 @@ public:
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
     {
         (void)f;
+        std::this_thread::yield();
     }
     std::shared_ptr<mg::DisplayConfiguration> configuration()
     {
