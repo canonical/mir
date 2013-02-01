@@ -16,6 +16,7 @@
 
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/sorted_vector.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/property_map.cpp
 )
 
 set(
