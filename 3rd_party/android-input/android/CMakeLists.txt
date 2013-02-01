@@ -17,7 +17,6 @@ set(
   frameworks/native/libs/utils/Debug.cpp
   frameworks/native/libs/utils/FileMap.cpp
   frameworks/native/libs/utils/Looper.cpp
-  frameworks/native/libs/utils/PropertyMap.cpp
   frameworks/native/libs/utils/RefBase.cpp
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
@@ -34,6 +33,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/BufferedTextOutput.cpp
   frameworks/native/libs/utils/VectorImpl.cpp
   frameworks/native/libs/utils/SharedBuffer.cpp
+  frameworks/native/libs/utils/PropertyMap.cpp
 )
 endif()
 
