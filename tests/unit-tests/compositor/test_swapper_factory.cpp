@@ -51,13 +51,21 @@ public:
 struct SwapperFactoryTest : testing::Test
 {
     SwapperFactoryTest()
-        : stub_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()}
+        : stub_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
+          size{geom::Width{10},geom::Height{20}},
+          pf{geom::PixelFormat::abgr_8888},
+          usage{mc::BufferUsage::hardware},
+          properties{size, pf, usage}
+
     {
     }
 
     std::shared_ptr<MockGraphicBufferAllocator> const stub_allocator;
+    geom::Size const size;
+    geom::PixelFormat const pf;
+    mc::BufferUsage const usage;
+    mc::BufferProperties const properties;
 };
-
 }
 
 /* default number of buffers is 2 */
@@ -65,12 +73,7 @@ TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
 {
     using namespace testing;
 
-    geom::Size const size{geom::Width{10},geom::Height{20}};
-    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
-
     mc::SwapperFactory strategy{stub_allocator};
-    mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 
     int default_num_of_buffers = 2;
@@ -79,15 +82,10 @@ TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_with_two_make_double_buffer)
+TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
 {
     using namespace testing;
 
-    geom::Size const size{geom::Width{10},geom::Height{20}};
-    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
-
-    mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 2;
@@ -97,15 +95,10 @@ TEST_F(SwapperFactoryTest, create_swapper_with_two_make_double_buffer)
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_tripe_buffer)
+TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
 {
     using namespace testing;
 
-    geom::Size const size{geom::Width{10},geom::Height{20}};
-    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
-
-    mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 3;
@@ -117,12 +110,7 @@ TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_tripe_buffer)
 
 TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
 {
-    geom::Size const size{geom::Width{10},geom::Height{20}};
-    geom::PixelFormat const pf{geom::PixelFormat::abgr_8888};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
-
     mc::SwapperFactory strategy{stub_allocator};
-    mc::BufferProperties const properties{size, pf, usage};
     mc::BufferProperties actual_properties;
 
     auto swapper = strategy.create_swapper(actual_properties, properties);
