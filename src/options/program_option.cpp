@@ -64,6 +64,7 @@ void mo::ProgramOption::parse_file(
     else
         config_roots += "/etc/xdg";
 
+    std::cerr << "CONFIG ROOT" << config_roots << std::endl;
     std::istringstream config_stream(config_roots);
 
     /* Read options from config files */
