@@ -36,7 +36,7 @@ void mtd::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) con
     {
         for(j=0; j<region->height; j++)
         {
-            pixel[j*region->width + i] = color_value;
+            pixel[j*region->stride + i] = color_value;
         }
     }
 }
@@ -52,7 +52,7 @@ bool mtd::DrawPatternSolid::check(const std::shared_ptr<MirGraphicsRegion>& regi
     {
         for(j=0; j<region->height; j++)
         {
-            if (pixel[j*region->width + i] != color_value)
+            if (pixel[j*region->stride + i] != color_value)
             {
                 return false;
             }

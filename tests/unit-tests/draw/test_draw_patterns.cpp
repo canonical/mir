@@ -27,28 +27,65 @@ namespace mtd=mir::test::draw;
 class DrawPatternsTest : public ::testing::Test
 {
 protected:
+    DrawPatternsTest()
+     : stride_color(0x77777777)
+    {}
+
     virtual void SetUp()
     {
         test_region = std::make_shared<MirGraphicsRegion>();
-        int bytes_pp = 4;
-        test_region->width  = 50;
-        test_region->height = 100;
-        test_region->stride = bytes_pp*100;
         test_region->pixel_format = mir_pixel_format_abgr_8888;
+        int bytes_pp = 4;
+        test_region->width  = 100;
+        /* misaligned stride to tease out stride problems */
+        test_region->stride = 102;
+        test_region->height = 50;
         test_region->vaddr = (char*) malloc(sizeof(char) * bytes_pp * test_region->height * test_region->stride);
 
         uint32_t colors[2][2] = {{0x12345678, 0x23456789},
                                  {0x34567890, 0x45678901}};
         memcpy(pattern_colors, colors, sizeof(uint32_t)*4);
 
+        write_stride_region();
     }
     virtual void TearDown()
     {
+        EXPECT_TRUE(check_stride_region_unaltered());
         free(test_region->vaddr);
     }
 
     std::shared_ptr<MirGraphicsRegion> test_region;
     uint32_t pattern_colors [2][2];
+
+private:
+    /* check that no pattern writes or checks the stride region */
+    void write_stride_region()
+    {
+        uint32_t* region = (uint32_t*) test_region->vaddr;
+        for(auto i = test_region->width; i < test_region->stride; i++)
+        {
+            for(auto j=0; j<test_region->height; j++)
+            {
+                region[ (j*test_region->stride) + (test_region->width + i) ] = stride_color;
+            }
+        }
+    }
+    
+    bool check_stride_region_unaltered()
+    {
+        bool unaltered = true;
+        uint32_t* region = (uint32_t*) test_region->vaddr;
+        for(auto i = test_region->width; i < test_region->stride; i++)
+        {
+            for(auto j=0; j < test_region->height; j++)
+            {
+                unaltered = (region[ ((j*test_region->stride) + (test_region->width + i)) ] == stride_color);
+            }
+        }
+        return unaltered;
+    }
+
+    const uint32_t stride_color;
 };
 
 TEST_F(DrawPatternsTest, solid_color_unaccelerated)
