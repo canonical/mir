@@ -113,7 +113,6 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_opti
         po::options_description desc("Environment options");
         desc.add_options()
             ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-            ("use_triple_buffering", po::value<bool>(), "forces clients to use triple buffering")
             ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
             ("tests_use_real_input", po::value<bool>(), "use real input in tests");
 
@@ -151,15 +150,7 @@ std::shared_ptr<mc::BufferAllocationStrategy>
 mir::DefaultServerConfiguration::make_buffer_allocation_strategy(
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
 {
-    auto server_options = make_options();
-    if (server_options->is_set("use_triple_buffering"))
-    {
-        return std::make_shared<mc::SwapperFactory>(buffer_allocator, 3);
-    }
-    else
-    {
-        return std::make_shared<mc::SwapperFactory>(buffer_allocator, 2);
-    }
+    return std::make_shared<mc::SwapperFactory>(buffer_allocator);
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
