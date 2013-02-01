@@ -51,7 +51,7 @@ public:
 struct DoubleBufferAllocationStrategyTest : testing::Test
 {
     DoubleBufferAllocationStrategyTest()
-        : stub_allocator{std::make_shared<MockGraphicBufferAllocator>()}
+        : stub_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()}
     {
     }
 
@@ -93,7 +93,7 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_two_make_double_b
     int num_of_buffers = 2;
     mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
-        .Times(default_num_of_buffers);  
+        .Times(num_of_buffers);  
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
@@ -111,7 +111,7 @@ TEST_F(DoubleBufferAllocationStrategyTest, create_swapper_with_three_makes_tripe
     int num_of_buffers = 3;
     mc::DoubleBufferAllocationStrategy strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
-        .Times(default_num_of_buffers);  
+        .Times(num_of_buffers);  
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
