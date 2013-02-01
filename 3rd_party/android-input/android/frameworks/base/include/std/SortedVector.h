@@ -133,8 +133,12 @@ public:
     ssize_t remove(const ValueType& item)
     {
         auto remove_pos = lower_bound(begin(), end(), item);
-        auto removed_at = erase(remove_pos);
-        return distance(begin(), removed_at);
+        if (*remove_pos == item)
+        {
+            auto removed_at = erase(remove_pos);
+            return distance(begin(), removed_at);
+        }
+        return NAME_NOT_FOUND;
     }
 
 
