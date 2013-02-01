@@ -42,6 +42,8 @@ public:
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f);
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f);
 
+    uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
+
 private:
     void add_output(DRMModeResources const& resources, drmModeConnector const& connector);
 

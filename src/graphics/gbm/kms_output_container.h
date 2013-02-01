@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,34 +16,39 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_REGION_H_
-#define MIR_COMPOSITOR_GRAPHIC_REGION_H_
+#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
+#include <cstdint>
 #include <memory>
+#include <unordered_map>
 
 namespace mir
 {
-namespace compositor
+namespace graphics
+{
+namespace gbm
 {
 
-class GraphicRegion
+class KMSOutput;
+
+class KMSOutputContainer
 {
 public:
-    virtual ~GraphicRegion() {}
-    virtual geometry::Size size() const = 0;
-    virtual geometry::Stride stride() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
-    virtual void bind_to_texture() = 0;
+    KMSOutputContainer(int drm_fd);
 
-protected:
-    GraphicRegion() = default;
-    GraphicRegion(GraphicRegion const&) = delete;
-    GraphicRegion& operator=(GraphicRegion const&) = delete;
+    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
+
+private:
+    KMSOutputContainer(KMSOutputContainer const&) = delete;
+    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
+
+    int const drm_fd;
+    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
 };
 
 }
 }
+}
 
-#endif /* MIR_COMPOSITOR_GRAPHIC_REGION_H_ */
+#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */

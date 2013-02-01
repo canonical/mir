@@ -20,9 +20,12 @@
 #include "mir/sessions/session.h"
 #include "mir/sessions/session_container.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <memory>
 #include <cassert>
 #include <algorithm>
+#include <stdexcept>
 
 
 namespace msess = mir::sessions;
@@ -33,17 +36,18 @@ msess::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::share
 
 }
 
-std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msess::Session> const& focused_app) const
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
-    std::shared_ptr<msess::Session> first;
-    std::shared_ptr<msess::Session> result;
+    std::shared_ptr<msess::Session> result, first;
     bool found{false};
 
     session_container->for_each(
         [&](std::shared_ptr<msess::Session> const& session)
          {
-             if (!first) first = session;
-
+             if (!first)
+             {
+                 first = session;
+             }
              if (found)
              {
                  if (!result) result = session;
@@ -54,21 +58,29 @@ std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor_o
              }
          });
 
-    if (result) return result;
-    return first;
+    if (result)
+    {
+        return result;
+    }
+    else if (found)
+    {
+        return first;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid session"));
+    }
 }
 
-std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msess::Session> const& focused_app) const
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msess::Session> const& focused_app) const
 {
-    std::shared_ptr<msess::Session> last;
-    std::shared_ptr<msess::Session> result;
+    std::shared_ptr<msess::Session> result, last;
     bool found{false};
 
     session_container->for_each(
         [&](std::shared_ptr<msess::Session> const& session)
         {
             last = session;
-
             if (focused_app == session)
             {
                 found = true;
@@ -79,6 +91,29 @@ std::weak_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecessor
             }
         });
 
-    if (result) return result;
-    return last;
+    if (result)
+    {
+        return result;
+    }
+    if (found)
+    {
+        return last;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid session"));
+    }
+}
+
+std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::default_focus() const
+{
+    std::shared_ptr<msess::Session> result;
+
+    session_container->for_each(
+        [&](std::shared_ptr<msess::Session> const& session)
+        {
+            result = session;
+        });
+
+    return result;
 }

@@ -17,6 +17,7 @@
  */
 
 #include "mir/sessions/session.h"
+#include "mir/compositor/buffer.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -50,7 +51,7 @@ public:
 
         ON_CALL(*this, size()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::size));
         ON_CALL(*this, pixel_format()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::pixel_format));
-        ON_CALL(*this, client_buffer_resource()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer_resource));
+        ON_CALL(*this, client_buffer()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer));
     }
 
     MOCK_METHOD0(hide, void());
@@ -61,7 +62,7 @@ public:
 
     MOCK_CONST_METHOD0(size, mir::geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer_resource, std::shared_ptr<mc::GraphicBufferClientResource> ());
+    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
 
 private:
     ms::BasicProxySurface impl;
@@ -114,4 +115,30 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     app_session.show();
 
     app_session.destroy_surface(surf);
+}
+
+TEST(Session, get_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.get_surface(invalid_surface_id);
+    }, std::runtime_error);
+}
+
+TEST(Session, destroy_invalid_surface_throw_behavior)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
+
+    EXPECT_THROW({
+            app_session.destroy_surface(invalid_surface_id);
+    }, std::runtime_error);
 }

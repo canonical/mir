@@ -16,7 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-
 #ifndef MIR_INPUT_EVENT_H_
 #define MIR_INPUT_EVENT_H_
 
@@ -65,7 +64,7 @@ extern "C" {
                 int32_t repeat_count;
                 nsecs_t down_time;
                 nsecs_t event_time;
-                bool is_system_key;
+                int is_system_key;
             } key;
             struct MotionEvent
             {

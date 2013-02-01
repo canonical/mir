@@ -18,7 +18,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_selection_strategy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_sequence.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_single_visibility_focus_mechanism.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_consuming_placement_strategy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_organising_surface_factory.cpp

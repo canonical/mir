@@ -249,31 +249,32 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
 
     auto const connector_id = get_connected_connector_id();
     auto const crtc_id = get_connected_crtc_id();
+    uint32_t const fb_id{66};
+
+    /* Create DRM FBs */
+    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
+                                       _, _, _, _, _, _, _))
+        .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
+
 
     {
         InSequence s;
-        EXPECT_CALL(mock_drm, drmModeGetCrtc(mock_drm.fake_drm.fd(), crtc_id))
-            .Times(Exactly(1))
-            .WillOnce(Return(&fake.crtc));
 
-        /*
-         * Workaround: We use _ for the bufferId, instead of the more strict
-         * Ne(fake.crtc.buffer_id), because using the latter causes valgrind
-         * to report inexplicable uninitialized value errors.
-         */
+        /* crtc is set */
         EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
-                                             _, _, /* Ne(fake.crtc.buffer_id), */
+                                             crtc_id, fb_id,
                                              _, _,
                                              Pointee(connector_id),
                                              _, _))
-            .Times(AtLeast(0));
+            .Times(AtLeast(1));
 
+        /* crtc is reset */
         EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
-                                             fake.crtc.crtc_id, fake.crtc.buffer_id,
+                                             crtc_id, Ne(fb_id),
                                              _, _,
                                              Pointee(connector_id),
                                              _, _))
-            .Times(Exactly(1));
+            .Times(1);
     }
 
     EXPECT_NO_THROW(
