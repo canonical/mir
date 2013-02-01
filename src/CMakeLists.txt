@@ -30,6 +30,10 @@ add_subdirectory(client/)
 add_subdirectory(frontend/)
 add_subdirectory(sessions/)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
+)
 
 set(
   SRCS
@@ -80,9 +84,15 @@ target_link_libraries(mirds
   ${Boost_LIBRARIES}
 )
 
-install(
-  TARGETS mirds
-  RUNTIME DESTINATION bin)
+install(TARGETS mirds mirserver
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  # PUBLIC_HEADER... TODO
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
+  DESTINATION lib/pkgconfig
+)
 
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
