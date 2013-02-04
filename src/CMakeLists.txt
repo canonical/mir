@@ -88,9 +88,8 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
 else()
   target_link_libraries(mirserver
-    LINK_PRIVATE
-      ${MIRSERVER_ARCHIVES}
     LINK_PUBLIC
+      ${MIRSERVER_ARCHIVES}
       ${MIRSERVER_LINKS}
   )
 endif()
