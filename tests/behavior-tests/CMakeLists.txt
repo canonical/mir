@@ -22,30 +22,39 @@ set(BEHAVIOR_TESTING_LINK_LIBRARIES
   mircompositor
   mirfrontend
   mirgraphics
+  mirplatformgraphics
   mirinput
   mirsurfaces
-  mirplatformgraphics
   mirprotobuf
+  mirlogging
   
   mir-test-doubles
   3rd_party
   ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
 )
 
-set(SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES session_manager_steps.cpp session_management_context.cpp)
+set(MIR_TEST_CUCUMBER_LIB_SRCS
+  session_management_context.cpp)
+
+add_library(
+  mir-test-cucumber STATIC
+  ${MIR_TEST_CUCUMBER_LIB_SRCS})
+
+set(SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES session_manager_steps.cpp)
 add_executable(session-management-cucumber-steps ${SESSION_MANAGER_BEHAVIOR_TESTING_SOURCES})
-add_executable(test_session_management_context session_management_context.cpp test_session_management_context.cpp)
+
+include_directories(${PROJECT_SOURCE_DIR}/include/mir_test_cucumber)
+
+target_link_libraries(
+  mir-test-cucumber
+  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
+)
 
 target_link_libraries(
   session-management-cucumber-steps
+  mir-test-cucumber
 
+  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
   ${CUKE_LIBRARIES}
-  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
-)
-
-target_link_libraries(
-  test_session_management_context
-
-  ${BEHAVIOR_TESTING_LINK_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
 )

@@ -15,6 +15,7 @@
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
 include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/include/mir_test_cucumber)
 
 set(
   INTEGRATION_TESTS_SRCS
@@ -48,6 +49,8 @@ if(MIR_PLATFORM STREQUAL "gbm")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
+add_subdirectory(cucumber)
+
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
@@ -57,6 +60,7 @@ target_link_libraries(
 
   mir-test-framework
   mir-test-doubles
+  mir-test-cucumber
 
   mir
   mirclient
