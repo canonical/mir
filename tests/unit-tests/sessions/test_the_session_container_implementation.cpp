@@ -67,5 +67,5 @@ TEST(SessionContainer, invalid_session_throw_behavior)
                                                     "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);
-    }, std::runtime_error);
+    }, std::logic_error);
 }

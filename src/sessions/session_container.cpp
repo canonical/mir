@@ -57,7 +57,7 @@ void msess::SessionContainer::remove_session(std::shared_ptr<msess::Session> con
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid Session"));
     }
 }
 
