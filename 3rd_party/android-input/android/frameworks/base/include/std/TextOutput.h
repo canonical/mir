@@ -20,6 +20,10 @@
 #ifndef MIR_ANDROID_UBUNTU_TEXTOUTPUT_H_
 #define MIR_ANDROID_UBUNTU_TEXTOUTPUT_H_
 
-#include <utils/TextOutput.h>
+// ---------------------------------------------------------------------------
+namespace android
+{
+inline TextOutput& operator<<(class TextOutput&, const void*) {}
+}
 
 #endif /* MIR_ANDROID_UBUNTU_TEXTOUTPUT_H_ */
