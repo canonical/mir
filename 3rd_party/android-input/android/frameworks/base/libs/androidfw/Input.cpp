@@ -21,6 +21,7 @@
 #include <limits.h>
 
 #include <androidfw/Input.h>
+#include ANDROIDFW_UTILS(Log.h)
 
 #ifdef HAVE_ANDROID_OS
 #include <binder/Parcel.h>

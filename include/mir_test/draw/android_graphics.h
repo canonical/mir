@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+    class BufferIPCPackage;
+}
 namespace test
 {
 namespace draw

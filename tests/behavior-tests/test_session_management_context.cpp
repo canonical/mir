@@ -96,7 +96,7 @@ struct MockSurface : public msess::Surface
 
     MOCK_CONST_METHOD0(size, mir::geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer_resource, std::shared_ptr<mc::GraphicBufferClientResource> ());
+    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
 };
 
 MATCHER_P(NamedWindowWithNoGeometry, name, "")

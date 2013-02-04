@@ -19,12 +19,10 @@ set(
   frameworks/native/libs/utils/Looper.cpp
   frameworks/native/libs/utils/PropertyMap.cpp
   frameworks/native/libs/utils/RefBase.cpp
-  frameworks/native/libs/utils/SharedBuffer.cpp
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
   frameworks/native/libs/utils/Timers.cpp
   frameworks/native/libs/utils/Tokenizer.cpp
-  frameworks/native/libs/utils/VectorImpl.cpp
 )
 
 if (MIR_INPUT_USE_ANDROID_TYPES)
@@ -34,6 +32,8 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/Threads.cpp
   frameworks/native/libs/utils/Unicode.cpp
   frameworks/native/libs/utils/BufferedTextOutput.cpp
+  frameworks/native/libs/utils/VectorImpl.cpp
+  frameworks/native/libs/utils/SharedBuffer.cpp
 )
 endif()
 

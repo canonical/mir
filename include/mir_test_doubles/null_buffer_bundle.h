@@ -34,18 +34,16 @@ class NullBufferBundle : public compositor::BufferBundle
 public:
     NullBufferBundle()
     {
-        using namespace testing;
         stub_buffer = std::make_shared<StubBuffer>();
-        empty_client_resource = std::make_shared<compositor::GraphicBufferClientResource>(stub_buffer);
     }
-    std::shared_ptr<compositor::GraphicBufferClientResource> secure_client_buffer()
+    std::shared_ptr<compositor::Buffer> secure_client_buffer()
     {
-        return empty_client_resource;
+        return stub_buffer;
     }
 
-    std::shared_ptr<compositor::GraphicBufferCompositorResource> lock_back_buffer()
+    std::shared_ptr<compositor::GraphicRegion> lock_back_buffer()
     {
-        return std::shared_ptr<compositor::GraphicBufferCompositorResource>();
+        return std::shared_ptr<compositor::GraphicRegion>();
     }
 
     geometry::PixelFormat get_bundle_pixel_format()
@@ -62,7 +60,6 @@ public:
     {
     }
 
-    std::shared_ptr<compositor::GraphicBufferClientResource> empty_client_resource;
     std::shared_ptr<compositor::Buffer> stub_buffer;
 };
 

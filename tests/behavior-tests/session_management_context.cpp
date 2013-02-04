@@ -71,9 +71,9 @@ struct DummySurface : public msess::Surface
     }
 
     virtual void advance_client_buffer() {}
-    virtual std::shared_ptr<mc::GraphicBufferClientResource> client_buffer_resource() const
+    virtual std::shared_ptr<mc::Buffer> client_buffer() const
     {
-        return std::shared_ptr<mc::GraphicBufferClientResource>();
+        return std::shared_ptr<mc::Buffer>();
     }
 };
 

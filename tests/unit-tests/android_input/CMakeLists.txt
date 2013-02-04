@@ -12,38 +12,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: 	Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-
-add_executable(
-  death-tests
-  test_swapper_factory.cpp
-  test_process_death.cpp
-  test_application_manager_death.cpp
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/sorted_vector.cpp
 )
 
-target_link_libraries(
-  death-tests
-
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirinput
-  mirsurfaces
-  mirclient
-  mirplatformgraphics
-  mirprotobuf
-  mir-test-framework
-
-  3rd_party
-
-  ${PROTOBUF_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-)
-
-mir_discover_tests(death-tests)
+set(
+  UNIT_TEST_SOURCES
+  ${UNIT_TEST_SOURCES}
+  PARENT_SCOPE)

@@ -20,7 +20,7 @@
 #include <androidfw/Platform.h>
 
 #include ANDROIDFW_UTILS(threads.h)
-#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(Vector.h)
 
 namespace android {
 // For TextStream.cpp

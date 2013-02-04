@@ -243,6 +243,9 @@ struct key_value_pair_t {
     inline const VALUE& getValue() const {
         return value;
     }
+    friend bool operator == (const key_value_pair_t& lhs, const key_value_pair_t& rhs) {
+        return !compare_type(lhs.key, rhs.key);
+    }
 };
 
 template <typename K, typename V>

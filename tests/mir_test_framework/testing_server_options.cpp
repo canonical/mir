@@ -71,6 +71,7 @@ public:
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
     {
         (void)f;
+        std::this_thread::yield();
     }
     std::shared_ptr<mg::DisplayConfiguration> configuration()
     {
@@ -104,7 +105,7 @@ public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
     {
         // Need to acquire the texture to cycle buffers
-        r.texture();
+        r.graphic_region();
     }
 };
 
