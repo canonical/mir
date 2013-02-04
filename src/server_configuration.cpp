@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
@@ -150,7 +150,7 @@ std::shared_ptr<mc::BufferAllocationStrategy>
 mir::DefaultServerConfiguration::make_buffer_allocation_strategy(
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
 {
-    return std::make_shared<mc::DoubleBufferAllocationStrategy>(buffer_allocator);
+    return std::make_shared<mc::SwapperFactory>(buffer_allocator);
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
