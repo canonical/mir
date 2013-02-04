@@ -144,7 +144,7 @@ public:
 
     //! remove several items
     ssize_t removeItemsAt(size_t index, size_t count = 1)
-    { auto i = begin() + index; erase(i, i+count); return index; }
+    { if (index+count > size()) return BAD_VALUE; auto i = begin() + index; erase(i, i+count); return index; }
 //    //! remove one item
 //    inline  ssize_t         removeAt(size_t index)  { return removeItemsAt(index); }
 };
