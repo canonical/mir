@@ -14,7 +14,6 @@ add_definitions(
 set(
   UTIL_SOURCES
 
-  frameworks/native/libs/utils/Debug.cpp
   frameworks/native/libs/utils/FileMap.cpp
   frameworks/native/libs/utils/Looper.cpp
   frameworks/native/libs/utils/RefBase.cpp
@@ -34,6 +33,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/PropertyMap.cpp
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
+  frameworks/native/libs/utils/Debug.cpp
 )
 endif()
 
