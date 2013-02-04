@@ -41,7 +41,12 @@ set(
   server_configuration.cpp
 )
 
-add_library(mirserver SHARED
+set(MIRSERVER_LINKAGE SHARED)
+if(${MIR_PLATFORM} STREQUAL android AND (${MIR_USES_BIONIC}))
+  set(MIRSERVER_LINKAGE STATIC)
+endif()
+
+add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
 )
 
@@ -53,8 +58,7 @@ add_executable(
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
 
-target_link_libraries(mirserver
-  -Wl,-whole-archive  # libmirserver needs to contain these archives WHOLE...
+list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
   mirfrontend
@@ -62,21 +66,38 @@ target_link_libraries(mirserver
   mirinput
   mirsurfaces
   mirplatformgraphics
+)
+
+list(APPEND MIRSERVER_LINKS
   mirprotobuf
-  -Wl,-no-whole-archive
-
   3rd_party
-
   ${Boost_LIBRARIES}
 )
+
+if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
+  target_link_libraries(mirserver
+    LINK_PRIVATE
+      -Wl,-whole-archive
+      ${MIRSERVER_ARCHIVES}
+      -Wl,-no-whole-archive
+    LINK_PUBLIC
+      ${MIRSERVER_LINKS}
+  )
+  install(TARGETS mirserver
+    LIBRARY DESTINATION lib
+  )
+else()
+  target_link_libraries(mirserver
+    LINK_PRIVATE
+      ${MIRSERVER_ARCHIVES}
+    LINK_PUBLIC
+      ${MIRSERVER_LINKS}
+  )
+endif()
 
 set_target_properties(mirserver PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
   SOVERSION ${MIR_VERSION_MAJOR}
-  #
-  # Tell CMake that targets using mirserver should NOT re-import the static
-  # libraries that mirserver depends on (contains).
-  LINK_INTERFACE_LIBRARIES ""
 )
 
 target_link_libraries(mirds
@@ -84,10 +105,8 @@ target_link_libraries(mirds
   ${Boost_LIBRARIES}
 )
 
-install(TARGETS mirds mirserver
-  LIBRARY DESTINATION lib
+install(TARGETS mirds
   RUNTIME DESTINATION bin
-  # PUBLIC_HEADER... TODO
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
