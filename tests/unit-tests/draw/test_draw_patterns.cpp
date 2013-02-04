@@ -62,27 +62,29 @@ private:
     void write_stride_region()
     {
         uint32_t* region = (uint32_t*) test_region->vaddr;
-        for(auto i = test_region->width; i < test_region->stride; i++)
+        for(auto i=0; i < test_region->height; i++)
         {
-            for(auto j=0; j<test_region->height; j++)
+            for(auto j=test_region->width; j<test_region->stride; j++)
             {
-                region[ (j*test_region->stride) + (test_region->width + i) ] = stride_color;
+                region[ (i*test_region->stride) + j ] = stride_color;
             }
         }
     }
     
     bool check_stride_region_unaltered()
     {
-        bool unaltered = true;
         uint32_t* region = (uint32_t*) test_region->vaddr;
-        for(auto i = test_region->width; i < test_region->stride; i++)
+        for(auto i=0; i < test_region->height; i++)
         {
-            for(auto j=0; j < test_region->height; j++)
+            for(auto j=test_region->width; j<test_region->stride; j++)
             {
-                unaltered = (region[ ((j*test_region->stride) + (test_region->width + i)) ] == stride_color);
+                if(region[ ((i*test_region->stride) + j) ] != stride_color)
+                {
+                    return false;
+                }
             }
         }
-        return unaltered;
+        return true;
     }
 
     const uint32_t stride_color;

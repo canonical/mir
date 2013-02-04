@@ -32,11 +32,11 @@ void mtd::DrawPatternSolid::draw(std::shared_ptr<MirGraphicsRegion>& region) con
 
     uint32_t *pixel = (uint32_t*) region->vaddr;
     int i,j;
-    for(i=0; i< region->width; i++)
+    for(i=0; i<region->height; i++)
     {
-        for(j=0; j<region->height; j++)
+        for(j=0; j< region->width; j++)
         {
-            pixel[j*region->stride + i] = color_value;
+            pixel[i*region->stride + j] = color_value;
         }
     }
 }
