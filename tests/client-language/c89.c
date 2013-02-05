@@ -21,6 +21,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/mir_client_library_lightdm.h"
 
 int main(int argc, char *argv[])
 {
