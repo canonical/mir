@@ -23,6 +23,9 @@
 
 #include <unordered_map>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 namespace mir
 {
@@ -45,10 +48,17 @@ public:
     bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id);
     void wait_for_page_flip(uint32_t crtc_id);
 
+    std::thread::id debug_get_wait_loop_master();
+
 private:
+    bool page_flip_is_done(uint32_t crtc_id);
+
     int const drm_fd;
     long const page_flip_max_wait_usec;
     std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
+    std::mutex pf_mutex;
+    std::condition_variable pf_cv;
+    std::thread::id loop_master_tid;
 };
 
 }
