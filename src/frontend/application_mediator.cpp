@@ -33,7 +33,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/exception.h"
+#include <boost/throw_exception.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<sessions::SessionStore> const& session_store,
@@ -65,11 +65,11 @@ void mir::frontend::ApplicationMediator::connect(
     auto platform = response->mutable_platform();
     auto display_info = response->mutable_display_info();
 
-    for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-        platform->add_data(*p);
+    for (auto& data : ipc_package->ipc_data)
+        platform->add_data(data);
 
-    for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-        platform->add_fd(*p);
+    for (auto& ipc_fds : ipc_package->ipc_fds)
+        platform->add_fd(ipc_fds);
 
     auto view_area = graphics_display->view_area();
     display_info->set_width(view_area.size.width.as_uint32_t());
@@ -80,6 +80,10 @@ void mir::frontend::ApplicationMediator::connect(
         display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
 
     resource_cache->save_resource(response, ipc_package);
+
+    if (request->has_lightdm_id())
+        session_store->tag_session_with_lightdm_id(application_session, request->lightdm_id());
+
     done->Run();
 }
 
@@ -112,28 +116,23 @@ void mir::frontend::ApplicationMediator::create_surface(
 
 
         surface->advance_client_buffer();
-        auto const& client_resource = surface->client_buffer_resource();
-        auto const& id = client_resource->id;
-        if (auto buffer_resource = client_resource->buffer.lock())
-        {
-            auto ipc_package = buffer_resource->get_ipc_package();
-            auto buffer = response->mutable_buffer();
+        auto const& buffer_resource = surface->client_buffer();
 
-            buffer->set_buffer_id(id.as_uint32_t());
-            for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-                buffer->add_data(*p);
+        auto const& id = buffer_resource->id();
+        auto ipc_package = buffer_resource->get_ipc_package();
+        auto buffer = response->mutable_buffer();
 
-            for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-                buffer->add_fd(*p);
+        buffer->set_buffer_id(id.as_uint32_t());
 
-            buffer->set_stride(ipc_package->stride);
+        for (auto& data : ipc_package->ipc_data)
+            buffer->add_data(data);
 
-            resource_cache->save_resource(response, ipc_package);
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
-        }
+        for (auto& ipc_fds : ipc_package->ipc_fds)
+            buffer->add_fd(ipc_fds);
+
+        buffer->set_stride(ipc_package->stride);
+
+        resource_cache->save_resource(response, ipc_package);
     }
 
     done->Run();
@@ -155,30 +154,36 @@ void mir::frontend::ApplicationMediator::next_buffer(
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
-    auto const& client_resource = surface->client_buffer_resource();
-    auto const& id = client_resource->id;
-    if (auto buffer_resource = client_resource->buffer.lock())
-    {
-        auto ipc_package = buffer_resource->get_ipc_package();
+    auto const& buffer_resource = surface->client_buffer();
+    auto const& id = buffer_resource->id();
+    auto ipc_package = buffer_resource->get_ipc_package();
 
-        response->set_buffer_id(id.as_uint32_t());
-        for (auto p = ipc_package->ipc_data.begin(); p != ipc_package->ipc_data.end(); ++p)
-            response->add_data(*p);
+    response->set_buffer_id(id.as_uint32_t());
+    for (auto& data : ipc_package->ipc_data)
+        response->add_data(data);
 
-        for (auto p = ipc_package->ipc_fds.begin(); p != ipc_package->ipc_fds.end(); ++p)
-            response->add_fd(*p);
+    for (auto& ipc_fds : ipc_package->ipc_fds)
+        response->add_fd(ipc_fds);
 
-        response->set_stride(ipc_package->stride);
+    response->set_stride(ipc_package->stride);
 
-        resource_cache->save_resource(response, ipc_package);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Server buffer resource unavailable"));
-    }
+    resource_cache->save_resource(response, ipc_package);
     done->Run();
 }
 
+void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
+    google::protobuf::RpcController*,// controller,
+    mir::protobuf::LightdmId const* request,
+    mir::protobuf::Void*,// response,
+    google::protobuf::Closure* done)
+{
+    if (application_session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+
+    session_store->focus_session_with_lightdm_id(request->value());
+
+    done->Run();
+}
 
 void mir::frontend::ApplicationMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,

@@ -18,7 +18,7 @@
 #define UTILS_BITSET_H
 
 #include <stdint.h>
-#include <utils/TypeHelpers.h>
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 /*
  * Contains some bit manipulation helpers.

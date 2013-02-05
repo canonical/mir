@@ -23,7 +23,9 @@
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/exception.h"
+
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
@@ -156,7 +158,8 @@ TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_cl
             {
                 platform = std::make_shared<MockAuthenticatingPlatform>();
                 EXPECT_CALL(*platform, drm_auth_magic(magic))
-                    .WillOnce(Throw(mir::Exception() << boost::errinfo_errno(auth_magic_error)));
+                    .WillOnce(Throw(::boost::enable_error_info(std::exception())
+                        << boost::errinfo_errno(auth_magic_error)));
             }
 
             return platform;

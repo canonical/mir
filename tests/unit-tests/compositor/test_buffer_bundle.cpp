@@ -41,15 +41,11 @@ protected:
         pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        second_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        third_mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
         mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
             new NiceMock<mtd::MockSwapper>(mock_buffer));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
-    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> second_mock_buffer;
-    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> third_mock_buffer;
     std::unique_ptr<testing::NiceMock<mtd::MockSwapper>> mock_swapper;
     geom::Size size;
     geom::Stride stride;
@@ -81,9 +77,8 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicBufferCompositorResource> texture = buffer_bundle.lock_back_buffer();
-    auto buffer = texture->region.lock();
-    buffer->bind_to_texture();
+    std::shared_ptr<mc::GraphicRegion> region = buffer_bundle.lock_back_buffer();
+    region->bind_to_texture();
 }
 
 TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
@@ -109,7 +104,7 @@ TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
     .WillOnce(Return(dummy_ipc_package));
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicBufferClientResource> buffer_resource = buffer_bundle.secure_client_buffer();
-    auto buffer_package = buffer_resource->buffer.lock()->get_ipc_package();
+    std::shared_ptr<mc::Buffer> buffer_resource = buffer_bundle.secure_client_buffer();
+    auto buffer_package = buffer_resource->get_ipc_package();
     EXPECT_EQ(buffer_package, dummy_ipc_package);
 }

@@ -20,7 +20,7 @@
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
 
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_viewable_area.h"
@@ -35,6 +35,7 @@ namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using mtd::MockEventFilter;
@@ -62,8 +63,8 @@ public:
         input_manager.reset(
             new mia::InputManager(
                 event_hub,
-                {std::shared_ptr<mi::EventFilter>(&event_filter, mir::EmptyDeleter())},
-                std::shared_ptr<mg::ViewableArea>(&viewable_area, mir::EmptyDeleter()),
+                {mt::fake_shared(event_filter)},
+                mt::fake_shared(viewable_area),
                 null_cursor_listener));
 
         input_manager->start();

@@ -17,6 +17,8 @@
 #ifndef _LIBS_UTILS_THREADS_H
 #define _LIBS_UTILS_THREADS_H
 
+#include <androidfw/Platform.h>
+
 /*
  * Please, DO NOT USE!
  *
@@ -25,14 +27,14 @@
  *
  */
 
-#include <utils/AndroidThreads.h>
+#include ANDROIDFW_UTILS(AndroidThreads.h)
 
 #ifdef __cplusplus
-#include <utils/Condition.h>
-#include <utils/Errors.h>
-#include <utils/Mutex.h>
-#include <utils/RWLock.h>
-#include <utils/Thread.h>
+#include ANDROIDFW_UTILS(Condition.h)
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(RWLock.h)
+#include ANDROIDFW_UTILS(Thread.h)
 #endif
 
 #endif // _LIBS_UTILS_THREADS_H

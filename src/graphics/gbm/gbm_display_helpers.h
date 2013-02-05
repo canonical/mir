@@ -19,7 +19,10 @@
 #ifndef MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_HELPERS_H_
 
+#include "drm_mode_resources.h"
+
 #include <cstddef>
+#include <memory>
 
 #include <gbm.h>
 #include <EGL/egl.h>
@@ -31,6 +34,9 @@ namespace graphics
 {
 namespace gbm
 {
+
+typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfaceUPtr;
+
 namespace helpers
 {
 
@@ -53,45 +59,19 @@ private:
     int open_drm_device();
 };
 
-class KMSHelper {
-public:
-    KMSHelper()
-        : resources{0}, connector{0}, encoder{0}, mode(),
-          drm_fd{-1}, saved_crtc{0}
-    {
-    }
-
-    ~KMSHelper();
-
-    KMSHelper(const KMSHelper&) = delete;
-    KMSHelper& operator=(const KMSHelper&) = delete;
-
-    void setup(const DRMHelper& drm);
-
-    drmModeRes *resources;
-    drmModeConnector *connector;
-    drmModeEncoder *encoder;
-    drmModeModeInfo mode;
-
-private:
-    int drm_fd;
-    drmModeCrtc *saved_crtc;
-};
-
 class GBMHelper
 {
 public:
-    GBMHelper() : device{0}, surface{0} {}
+    GBMHelper() : device{0} {}
     ~GBMHelper();
 
     GBMHelper(const GBMHelper&) = delete;
     GBMHelper& operator=(const GBMHelper&) = delete;
 
     void setup(const DRMHelper& drm);
-    void create_scanout_surface(uint32_t width, uint32_t height);
+    GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height);
 
     gbm_device* device;
-    gbm_surface* surface;
 };
 
 class EGLHelper
@@ -106,7 +86,7 @@ public:
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
 
-    void setup(const GBMHelper& gbm_info);
+    void setup(GBMHelper const& gbm_info, gbm_surface* surface_gbm);
 
     EGLDisplay display;
     EGLConfig config;

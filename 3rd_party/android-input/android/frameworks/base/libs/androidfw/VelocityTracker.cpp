@@ -27,9 +27,10 @@
 #include <limits.h>
 
 #include <androidfw/VelocityTracker.h>
-#include <utils/BitSet.h>
-#include <utils/String8.h>
-#include <utils/Timers.h>
+#include ANDROIDFW_UTILS(BitSet.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(Log.h)
 
 #include <cutils/properties.h>
 

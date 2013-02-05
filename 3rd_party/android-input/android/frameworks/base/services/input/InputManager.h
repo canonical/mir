@@ -27,11 +27,11 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/InputTransport.h>
-#include <utils/Errors.h>
-#include <utils/Vector.h>
-#include <utils/Timers.h>
-#include <utils/RefBase.h>
-#include <utils/String8.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(RefBase.h)
+#include ANDROIDFW_UTILS(String8.h)
 
 namespace android {
 

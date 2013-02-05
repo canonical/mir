@@ -30,29 +30,14 @@ namespace mir
 {
 namespace compositor
 {
-class BufferSwapper;
-class BufferIPCPackage;
 class Buffer;
 class GraphicRegion;
-class GraphicBufferCompositorResource;
-
-struct GraphicBufferClientResource
-{
-    GraphicBufferClientResource(std::weak_ptr<Buffer> const& buffer, BufferID id) :
-        id(id),
-        buffer(buffer)
-    {
-    }
-
-    BufferID const id;
-    std::weak_ptr<Buffer> const buffer;
-};
 
 class BufferBundle
 {
 public:
-    virtual std::shared_ptr<GraphicBufferClientResource> secure_client_buffer() = 0;
-    virtual std::shared_ptr<GraphicBufferCompositorResource> lock_back_buffer() = 0;
+    virtual std::shared_ptr<Buffer> secure_client_buffer() = 0;
+    virtual std::shared_ptr<GraphicRegion> lock_back_buffer() = 0;
     virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
     virtual geometry::Size bundle_size() = 0;
     virtual void shutdown() = 0;

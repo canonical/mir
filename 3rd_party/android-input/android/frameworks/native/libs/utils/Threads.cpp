@@ -692,7 +692,9 @@ void Condition::broadcast()
 Thread::Thread(bool canCallJava)
     :   mCanCallJava(canCallJava),
         mThread(thread_id_t(-1)),
+#ifndef ANDROID_USE_STD
         mLock("Thread::mLock"),
+#endif
         mStatus(NO_ERROR),
         mExitPending(false), mRunning(false)
 #ifdef HAVE_ANDROID_OS
@@ -712,7 +714,7 @@ status_t Thread::readyToRun()
 
 status_t Thread::run(const char* name, int32_t priority, size_t stack)
 {
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
 
     if (mRunning) {
         // thread already started
@@ -798,7 +800,7 @@ int Thread::_threadLoop(void* user)
 
         // establish a scope for mLock
         {
-        Mutex::Autolock _l(self->mLock);
+        AutoMutex _l(self->mLock);
         if (result == false || self->mExitPending) {
             self->mExitPending = true;
             self->mRunning = false;
@@ -807,7 +809,7 @@ int Thread::_threadLoop(void* user)
             self->mThread = thread_id_t(-1);
             // note that interested observers blocked in requestExitAndWait are
             // awoken by broadcast, but blocked on mLock until break exits scope
-            self->mThreadExitedCondition.broadcast();
+            broadcast(self->mThreadExitedCondition);
             break;
         }
         }
@@ -824,13 +826,13 @@ int Thread::_threadLoop(void* user)
 
 void Thread::requestExit()
 {
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
     mExitPending = true;
 }
 
 status_t Thread::requestExitAndWait()
 {
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
     if (mThread == getThreadId()) {
         ALOGW(
         "Thread (this=%p): don't call waitForExit() from this "
@@ -854,7 +856,7 @@ status_t Thread::requestExitAndWait()
 
 status_t Thread::join()
 {
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
     if (mThread == getThreadId()) {
         ALOGW(
         "Thread (this=%p): don't call join() from this "
@@ -875,7 +877,7 @@ status_t Thread::join()
 pid_t Thread::getTid() const
 {
     // mTid is not defined until the child initializes it, and the caller may need it earlier
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
     pid_t tid;
     if (mRunning) {
         pthread_t pthread = android_thread_id_t_to_pthread(mThread);
@@ -890,7 +892,7 @@ pid_t Thread::getTid() const
 
 bool Thread::exitPending() const
 {
-    Mutex::Autolock _l(mLock);
+    AutoMutex _l(mLock);
     return mExitPending;
 }
 

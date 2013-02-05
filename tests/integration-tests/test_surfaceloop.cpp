@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_ipc_package.h"
@@ -32,7 +32,6 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/null_display.h"
 
 #include <thread>
 #include <atomic>
@@ -55,12 +54,16 @@ geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
 
+geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
+                                                          geom::Size{geom::Width(1600),
+                                                                     geom::Height(1600)}};
+
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MockBufferAllocationStrategy()
     {
         using testing::_;
-        ON_CALL(*this, create_swapper(_,_))
+        ON_CALL(*this, create_swapper(_, _))
             .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
     }
 
@@ -76,7 +79,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
         auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
         std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(list)); 
+            new mc::BufferSwapperMulti(list));
     }
 };
 
@@ -105,12 +108,33 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
 };
+
 }
 
 namespace mir
 {
 namespace
 {
+
+class StubDisplay : public mg::Display
+{
+public:
+    geom::Rectangle view_area() const
+    {
+        return default_view_area;
+    }
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+    {
+        (void)f;
+        std::this_thread::yield();
+    }
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        auto null_configuration = std::shared_ptr<mg::DisplayConfiguration>();
+        return null_configuration;
+    }
+};
+
 struct SurfaceSync
 {
     SurfaceSync() :
@@ -191,6 +215,7 @@ const int ClientConfigCommon::max_surface_count;
 
 using mir::SurfaceSync;
 using mir::ClientConfigCommon;
+using mir::StubDisplay;
 
 namespace
 {
@@ -231,7 +256,7 @@ TEST_F(BespokeDisplayServerTestFixture,
             if (!buffer_allocation_strategy)
                 buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_,buffer_properties)).Times(1);
+            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_, buffer_properties)).Times(1);
 
             return buffer_allocation_strategy;
         }
@@ -308,13 +333,13 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             using testing::AtLeast;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator,alloc_buffer(buffer_properties)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties)).Times(AtLeast(2));
             return buffer_allocator;
         }
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<mtd::NullDisplay>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
@@ -443,7 +468,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display()
         {
-            return std::make_shared<mtd::NullDisplay>();
+            return std::make_shared<StubDisplay>();
         }
 
         std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()

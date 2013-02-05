@@ -21,6 +21,7 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 
@@ -60,10 +61,16 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 void mc::Compositor::render(graphics::Display* display)
 {
-    FilterForVisibleRenderablesInRegion selector(display->view_area());
-    RenderingOperator applicator(*renderer);
+    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+    {
+        RenderingOperator applicator(*renderer);
+        FilterForVisibleRenderablesInRegion selector(buffer.view_area());
 
-    render_view->for_each_if(selector, applicator);
+        buffer.make_current();
+        buffer.clear();
 
-    display->post_update();
+        render_view->for_each_if(selector, applicator);
+
+        buffer.post_update();
+    });
 }

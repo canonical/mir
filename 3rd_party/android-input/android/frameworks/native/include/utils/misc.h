@@ -20,8 +20,10 @@
 #ifndef _LIBS_UTILS_MISC_H
 #define _LIBS_UTILS_MISC_H
 
+#include <androidfw/Platform.h>
+
 #include <sys/time.h>
-#include <utils/Endian.h>
+#include ANDROIDFW_UTILS(Endian.h)
 
 namespace android {
 

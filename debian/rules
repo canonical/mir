@@ -24,10 +24,15 @@ ifeq ($(DEB_HOST_ARCH),armhf)
       -DMIR_ENABLE_DEATH_TESTS=NO \
       -DMIR_INPUT_ENABLE_EVEMU=NO \
       -DMIR_PLATFORM=android \
-      -DMIR_CUTDOWN_FOR_EMULATOR=true
+      -DMIR_DISABLE_INPUT=true
 else
-	dh_auto_configure -- -DMIR_DISABLE_EPOLL_REACTOR=YES
+	dh_auto_configure -- \
+      -DMIR_DISABLE_EPOLL_REACTOR=YES \
+      -DMIR_DISABLE_INPUT=YES
 endif
+
+override_dh_installexamples:
+	dh_installexamples -p libmirclient-demos 
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V

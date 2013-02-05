@@ -181,7 +181,7 @@ struct BufferTextureInstantiatorThread
         {
             buffer->bind_to_texture();
         }
-        catch(std::runtime_error)
+        catch(std::runtime_error const&)
         {
             exception_thrown = true;
         }

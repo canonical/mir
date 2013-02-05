@@ -19,12 +19,12 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir/exception.h"
+#include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
-    in_use_by_client(0)
+template<class T>
+void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
@@ -38,7 +38,19 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr
     }
 }
 
-void mc::BufferSwapperMulti::client_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
+ : in_use_by_client(0)
+{
+    initialize_queues(buffer_list);
+}
+
+mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
+    in_use_by_client(0)
+{
+    initialize_queues(buffer_list);
+}
+
+void mc::BufferSwapperMulti::client_acquire(std::shared_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -73,7 +85,7 @@ void mc::BufferSwapperMulti::client_release(BufferID queued_buffer)
      */
 }
 
-void mc::BufferSwapperMulti::compositor_acquire(std::weak_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
+void mc::BufferSwapperMulti::compositor_acquire(std::shared_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 

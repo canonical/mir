@@ -17,9 +17,11 @@
 #ifndef _ANDROIDFW_VELOCITY_TRACKER_H
 #define _ANDROIDFW_VELOCITY_TRACKER_H
 
+#include "Platform.h"
+
 #include <androidfw/Input.h>
-#include <utils/Timers.h>
-#include <utils/BitSet.h>
+#include ANDROIDFW_UTILS(Timers.h)
+#include ANDROIDFW_UTILS(BitSet.h)
 
 namespace android {
 

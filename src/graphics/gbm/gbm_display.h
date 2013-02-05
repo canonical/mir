@@ -20,11 +20,10 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_listener.h"
-#include "mir/graphics/platform.h"
-#include "gbm_display_helpers.h"
+#include "mir/graphics/display_buffer.h"
+#include "kms_output_container.h"
 
-#include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -32,48 +31,39 @@ namespace geometry
 {
 class Rectangle;
 }
-namespace logging
-{
-class Logger;
-}
-
 namespace graphics
 {
+
+class DisplayListener;
+
 namespace gbm
 {
 
 class GBMPlatform;
-class BufferObject;
-
-class GBMDisplayReporter;
+class KMSOutput;
 
 class GBMDisplay : public Display
 {
 public:
-    GBMDisplay(const std::shared_ptr<GBMPlatform>& platform, const std::shared_ptr<DisplayListener>& reporter);
-
-    ~GBMDisplay();
+    GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+               std::shared_ptr<DisplayListener> const& listener);
 
     geometry::Rectangle view_area() const;
-    void clear();
-    bool post_update();
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+
+    std::shared_ptr<DisplayConfiguration> configuration();
 
 private:
-    BufferObject* get_front_buffer_object();
-    bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
+    void configure(std::shared_ptr<DisplayConfiguration> const& conf);
 
-    BufferObject* last_flipped_bufobj;
-    std::shared_ptr<GBMPlatform> platform;
-    std::shared_ptr<DisplayListener> listener;
-    /* DRM and GBM helpers from GBMPlatform */
-    helpers::DRMHelper& drm;
-    helpers::GBMHelper& gbm;
-    /* Order is important for construction/destruction */
-    helpers::KMSHelper  kms;
-    helpers::EGLHelper  egl;
+    std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<DisplayListener> const listener;
+    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
+    KMSOutputContainer output_container;
 };
 
 }
 }
 }
+
 #endif /* MIR_GRAPHICS_GBM_GBM_DISPLAY_H_ */

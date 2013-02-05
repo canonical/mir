@@ -21,18 +21,24 @@
 
 #include "mir/graphics/viewable_area.h"
 
+#include <memory>
+#include <functional>
+
 namespace mir
 {
-
 namespace graphics
 {
+
+class DisplayBuffer;
+class DisplayConfiguration;
 
 class Display : public ViewableArea
 {
 public:
     virtual geometry::Rectangle view_area() const = 0;
-    virtual void clear() = 0;
-    virtual bool post_update() = 0;
+    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+
+    virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
 
 protected:
     Display() = default;

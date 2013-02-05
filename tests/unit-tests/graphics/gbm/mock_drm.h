@@ -26,6 +26,10 @@
 
 namespace mir
 {
+namespace geometry
+{
+struct Size;
+}
 namespace graphics
 {
 namespace gbm
@@ -37,18 +41,41 @@ public:
     FakeDRMResources();
     ~FakeDRMResources();
 
-    int fd;
-    drmModeRes resources;
-    drmModeCrtc crtcs[2];
-    drmModeEncoder encoders[2];
-    drmModeConnector connectors[2];
-    drmModeModeInfo mode_info;
-    uint32_t crtc_ids[2];
-    uint32_t encoder_ids[2];
-    uint32_t connector_ids[2];
+    int fd() const;
+    drmModeRes* resources_ptr();
+
+    void add_crtc(uint32_t id, drmModeModeInfo mode);
+    void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask);
+    void add_connector(uint32_t connector_id, drmModeConnection connection,
+                       uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
+                       std::vector<uint32_t>& possible_encoder_ids,
+                       geometry::Size const& physical_size);
+
+    void prepare();
+    void reset();
+
+    drmModeCrtc* find_crtc(uint32_t id);
+    drmModeEncoder* find_encoder(uint32_t id);
+    drmModeConnector* find_connector(uint32_t id);
+
+    static drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
+                                       uint32_t clock, uint16_t htotal, uint16_t vtotal);
 
 private:
     int pipe_fds[2];
+
+    drmModeRes resources;
+    std::vector<drmModeCrtc> crtcs;
+    std::vector<drmModeEncoder> encoders;
+    std::vector<drmModeConnector> connectors;
+
+    std::vector<uint32_t> crtc_ids;
+    std::vector<uint32_t> encoder_ids;
+    std::vector<uint32_t> connector_ids;
+
+    std::vector<drmModeModeInfo> modes;
+    std::vector<drmModeModeInfo> modes_empty;
+    std::vector<uint32_t> connector_encoder_ids;
 };
 
 class MockDRM

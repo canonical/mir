@@ -99,7 +99,18 @@ target_link_libraries(
     ${Boost_LIBRARIES}
 )
 
+if (MIR_TRANSPORT STREQUAL "binder")
+target_link_libraries(mir_demo_client binder)
+target_link_libraries(mir_demo_client_accelerated binder)
+target_link_libraries(mir_demo_client_unaccelerated binder)
+endif()
 
 install(
   TARGETS mir_demo_client
+  RUNTIME DESTINATION bin)
+install(
+  TARGETS mir_demo_client_unaccelerated
+  RUNTIME DESTINATION bin)
+install(
+  TARGETS mir_demo_client_accelerated
   RUNTIME DESTINATION bin)

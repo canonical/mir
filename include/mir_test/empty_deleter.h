@@ -19,18 +19,13 @@
 #ifndef MIR_TEST_EMPTY_DELETER_H_
 #define MIR_TEST_EMPTY_DELETER_H_
 
-#include <gmock/gmock.h>
-
-
 namespace mir
 {
-
 struct EmptyDeleter
 {
     void operator()(void* )
     {
     }
 };
-
 }
 #endif /* MIR_TEST_EMPTY_DELETER_H_ */

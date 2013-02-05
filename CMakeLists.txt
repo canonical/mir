@@ -68,7 +68,7 @@ enable_testing()
 include_directories(include/)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
@@ -100,48 +100,38 @@ set (MIR_TRANSPORT
   "IPC transport to build (options are 'socket' or 'binder')"
 )
 
-set (MIR_CUTDOWN_FOR_EMULATOR
+set (MIR_DISABLE_INPUT
   false
   CACHE
   BOOL
-  "Disable parts of system that don't run on Emulator"
+  "Don't build the input subsystem"
+)
+
+set (MIR_INPUT_USE_ANDROID_TYPES
+  false
+  CACHE
+  BOOL
+  "Use android types in input stack instead of std library"
 )
 
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
+if (NOT MIR_INPUT_USE_ANDROID_TYPES)
+add_definitions(
+  -DANDROID_USE_STD
+)
+endif()
+
 if (MIR_PLATFORM STREQUAL "android")
-  #todo: bionic support is to be deprecated a short while after landing
-  #      hybris support. remove this and MIR_USES_BIONIC variable
-  if (MIR_USES_BIONIC)
-    message(STATUS "android build is using BIONIC")
+  include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
+  list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
-    include (cmake/AndroidFlags.cmake)
-    get_android_flags()
-    add_definitions( ${ANDROID_DEFINITIONS} )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ANDROID_CXX_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS}")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ANDROID_LINKER_FLAGS} ${ANDROID_SO_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
-    #bionic does not support the c++11 functionality we require for the <thread> and <chrono> library
-    #we work around this by using boost in the code
-    add_definitions( -DMIR_USING_BOOST_THREADS) 
-    add_definitions( -DMIR_USING_BOOST_CHRONO) 
-    set(gtest_disable_pthreads ON)
-
-  else()
-    message(STATUS "android build is using vanilla STDC++")
-
-    include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
-    list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
-
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-rpath-link,${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf")
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -Wl,-rpath-link,${MIR_NDK_PATH}/lib/arm-linux-gnueabihf")
-
-    add_definitions( -DANDROID )
-  endif()
+  add_definitions( -DANDROID )
  
   find_package( LibHardware REQUIRED )
   find_package( AndroidUI REQUIRED )
@@ -196,6 +186,11 @@ set(GTEST_FOUND TRUE)
 include_directories (
   ${GTEST_INCLUDE_DIR}
 )
+# We need to build cucumber after gtest
+# We disable building on android for now until hybrisization is complete
+if(NOT MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(3rd_party/cucumber-cpp)
+endif()
 
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)

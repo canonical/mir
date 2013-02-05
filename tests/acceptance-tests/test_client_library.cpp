@@ -308,6 +308,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 {
+    static const int default_display_width = 1600, default_display_height = 1600;
+
     struct ClientConfig : ClientConfigCommon
     {
         void exec()
@@ -320,8 +322,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             display_info.height = -1;
 
             mir_connection_get_display_info(connection, &display_info);
-            EXPECT_GE(0, display_info.width);
-            EXPECT_GE(0, display_info.height);
+            EXPECT_GE(default_display_width, display_info.width);
+            EXPECT_GE(default_display_height, display_info.height);
 
             mir_connection_release(connection);
         }

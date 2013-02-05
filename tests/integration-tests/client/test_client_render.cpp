@@ -30,7 +30,7 @@
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test/empty_deleter.h"
+#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
 
@@ -449,7 +449,7 @@ struct TestClientIPCRender : public testing::Test
         if (err < 0)
             throw std::runtime_error("Could not open hardware module");
         gralloc_open(hw_module, &alloc_device_raw);
-        alloc_device = std::shared_ptr<struct alloc_device_t> ( alloc_device_raw, mir::EmptyDeleter());
+        alloc_device = mt::fake_shared(*alloc_device_raw);
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>(hw_module, alloc_device.get());
 

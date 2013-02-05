@@ -21,7 +21,10 @@
 #include "mir/sessions/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
-#include "mir/exception.h"
+
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 
@@ -44,7 +47,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
         authenticator->drm_auth_magic(magic);
         response->set_status_code(0);
     }
-    catch (mir::Exception e)
+    catch (std::exception const& e)
     {
         auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
 

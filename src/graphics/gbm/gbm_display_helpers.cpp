@@ -17,15 +17,17 @@
  */
 
 #include "gbm_display_helpers.h"
-#include "mir/exception.h"
 
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
 
-namespace mggh=mir::graphics::gbm::helpers;
+namespace mgg = mir::graphics::gbm;
+namespace mggh = mir::graphics::gbm::helpers;
 
 /*************
  * DRMHelper *
@@ -36,7 +38,7 @@ void mggh::DRMHelper::setup()
     fd = open_drm_device();
 
     if (fd < 0)
-        throw std::runtime_error("Failed to open DRM device\n");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
 }
 
 int mggh::DRMHelper::get_authenticated_fd()
@@ -126,83 +128,6 @@ mggh::DRMHelper::~DRMHelper()
 }
 
 /*************
- * KMSHelper *
- *************/
-
-void mggh::KMSHelper::setup(const DRMHelper& drm)
-{
-    int i;
-
-    resources = drmModeGetResources(drm.fd);
-    if (!resources)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Couldn't get DRM resources\n"));
-
-    /* Find the first connected connector */
-    for (i = 0; i < resources->count_connectors; i++)
-    {
-        connector = drmModeGetConnector(drm.fd, resources->connectors[i]);
-        if (connector == NULL)
-            continue;
-
-        if (connector->connection == DRM_MODE_CONNECTED &&
-            connector->count_modes > 0)
-        {
-            break;
-        }
-
-        drmModeFreeConnector(connector);
-        connector = NULL;
-    }
-
-    if (connector == NULL)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("No active DRM connector found\n"));
-
-    /* Find the encoder connected to the selected connector */
-    for (i = 0; i < resources->count_encoders; i++)
-    {
-        encoder = drmModeGetEncoder(drm.fd, resources->encoders[i]);
-
-        if (encoder == NULL)
-            continue;
-
-        if (encoder->encoder_id == connector->encoder_id)
-            break;
-
-        drmModeFreeEncoder(encoder);
-        encoder = NULL;
-    }
-
-    if (encoder == NULL)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("No connected DRM encoder found\n"));
-
-    mode = connector->modes[0];
-
-    drm_fd = drm.fd;
-    saved_crtc = drmModeGetCrtc(drm.fd, encoder->crtc_id);
-}
-
-mggh::KMSHelper::~KMSHelper()
-{
-    if (saved_crtc)
-    {
-        drmModeSetCrtc(drm_fd, saved_crtc->crtc_id, saved_crtc->buffer_id,
-                       saved_crtc->x, saved_crtc->y,
-                       &connector->connector_id, 1, &saved_crtc->mode);
-        drmModeFreeCrtc(saved_crtc);
-    }
-
-    if (encoder)
-        drmModeFreeEncoder(encoder);
-    if (connector)
-        drmModeFreeConnector(connector);
-    if (resources)
-        drmModeFreeResources(resources);
-}
-
-/*************
  * GBMHelper *
  *************/
 
@@ -214,20 +139,23 @@ void mggh::GBMHelper::setup(const DRMHelper& drm)
             std::runtime_error("Failed to create GBM device"));
 }
 
-void mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
+mgg::GBMSurfaceUPtr mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
 {
-    surface = gbm_surface_create(device, width, height,
-                                 GBM_BO_FORMAT_XRGB8888,
-                                 GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+    auto surface_raw = gbm_surface_create(device, width, height,
+                                          GBM_BO_FORMAT_XRGB8888,
+                                          GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+
+    auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
+    GBMSurfaceUPtr surface{surface_raw, gbm_surface_deleter};
+
     if (!surface)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create GBM scanout surface"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM scanout surface"));
+
+    return surface;
 }
 
 mggh::GBMHelper::~GBMHelper()
 {
-    if (surface)
-        gbm_surface_destroy(surface);
     if (device)
         gbm_device_destroy(device);
 }
@@ -236,7 +164,7 @@ mggh::GBMHelper::~GBMHelper()
  * EGLHelper *
  *************/
 
-void mggh::EGLHelper::setup(const GBMHelper& gbm)
+void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm)
 {
     static const EGLint context_attr [] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -284,7 +212,7 @@ void mggh::EGLHelper::setup(const GBMHelper& gbm)
             std::runtime_error("Failed to choose ARGB EGL config"));
     }
 
-    surface = eglCreateWindowSurface(display, config, gbm.surface, NULL);
+    surface = eglCreateWindowSurface(display, config, surface_gbm, NULL);
     if(surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Failed to create EGL window surface"));

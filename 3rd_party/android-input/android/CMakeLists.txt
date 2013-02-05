@@ -11,6 +11,45 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
+set(
+  UTIL_SOURCES
+
+  frameworks/native/libs/utils/FileMap.cpp    # used by Tokenizer.cpp
+  frameworks/native/libs/utils/Looper.cpp     # used by InputDispatcher.cpp
+  frameworks/native/libs/utils/RefBase.cpp    # used a lot
+  frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
+  frameworks/native/libs/utils/Tokenizer.cpp  # used by KeyLayoutMap.cpp, KeyCharacterMap.cpp, VirtualKeyMap.cpp
+
+  hardware/libhardware_legacy/power/power.c   # used by EventHub.cpp
+  system/core/libcutils/atomic.c              # used by RefBase.cpp, InputDispatcher.cpp
+  system/core/libcutils/properties.c          # used by InputTransport.cpp, VelocityTracker.cpp
+  system/core/liblog/logd_write.c             # used by EventHub.cpp
+  system/extras/ext4_utils/sha1.c             # used by EventHub.cpp
+)
+
+if (MIR_INPUT_USE_ANDROID_TYPES)
+list(APPEND UTIL_SOURCES
+  frameworks/native/libs/utils/String16.cpp
+  frameworks/native/libs/utils/String8.cpp
+  frameworks/native/libs/utils/Threads.cpp
+  frameworks/native/libs/utils/Unicode.cpp
+  frameworks/native/libs/utils/BufferedTextOutput.cpp
+  frameworks/native/libs/utils/VectorImpl.cpp
+  frameworks/native/libs/utils/SharedBuffer.cpp
+  frameworks/native/libs/utils/PropertyMap.cpp
+  frameworks/native/libs/utils/Static.cpp
+  frameworks/native/libs/utils/TextOutput.cpp
+  frameworks/native/libs/utils/Debug.cpp
+  system/core/libcutils/threads.c
+  system/core/libcutils/sched_policy.c
+  system/core/libcutils/sockets.c
+  system/core/liblog/event_tag_map.c
+  system/core/liblog/fake_log_device.c
+  system/core/liblog/logprint.c
+)
+endif()
+
+
 add_library(
   android-input
   # The stuff that we want
@@ -35,33 +74,7 @@ add_library(
   frameworks/base/libs/androidfw/VelocityControl.cpp
   frameworks/base/libs/androidfw/VelocityTracker.cpp
   frameworks/base/libs/androidfw/VirtualKeyMap.cpp
-  frameworks/native/libs/utils/BufferedTextOutput.cpp
-  frameworks/native/libs/utils/Debug.cpp
-  frameworks/native/libs/utils/FileMap.cpp
-  frameworks/native/libs/utils/Looper.cpp
-  frameworks/native/libs/utils/PropertyMap.cpp
-  frameworks/native/libs/utils/String16.cpp
-  frameworks/native/libs/utils/String8.cpp
-  frameworks/native/libs/utils/RefBase.cpp
-  frameworks/native/libs/utils/SharedBuffer.cpp
-  frameworks/native/libs/utils/Static.cpp
-  frameworks/native/libs/utils/TextOutput.cpp
-  frameworks/native/libs/utils/Threads.cpp
-  frameworks/native/libs/utils/Timers.cpp
-  frameworks/native/libs/utils/Tokenizer.cpp
-  frameworks/native/libs/utils/Unicode.cpp
-  frameworks/native/libs/utils/VectorImpl.cpp
-  hardware/libhardware_legacy/power/power.c
-  system/core/libcutils/atomic.c
-  system/core/libcutils/properties.c
-  system/core/libcutils/sched_policy.c
-  system/core/libcutils/sockets.c
-  system/core/libcutils/threads.c
-  system/core/liblog/event_tag_map.c
-  system/core/liblog/fake_log_device.c
-  system/core/liblog/logd_write.c
-  system/core/liblog/logprint.c
-  system/extras/ext4_utils/sha1.c
+  ${UTIL_SOURCES}
   )
 
 #we don't have binder or skia available on hybris/linux platforms

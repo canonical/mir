@@ -20,7 +20,7 @@
 #include "src/graphics/android/android_buffer_allocator.h"
 #include "src/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
@@ -62,7 +62,7 @@ protected:
 
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
-        strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+        strategy = std::make_shared<mc::SwapperFactory>(allocator);
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
         pf  = geom::PixelFormat::abgr_8888;
@@ -71,7 +71,7 @@ protected:
 
     md::glAnimationBasic gl_animation;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
-    std::shared_ptr<mc::DoubleBufferAllocationStrategy> strategy;
+    std::shared_ptr<mc::SwapperFactory> strategy;
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
@@ -95,7 +95,10 @@ TEST_F(AndroidBufferIntegration, post_does_not_throw)
 
     EXPECT_NO_THROW(
     {
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
     });
 }
 
@@ -105,7 +108,7 @@ TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 
     EXPECT_NO_THROW({
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+    auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     });
 
 }
@@ -125,13 +128,13 @@ TEST_F(AndroidBufferIntegration, swapper_returns_non_null)
     using namespace testing;
 
     mc::BufferProperties actual;
-    std::weak_ptr<mc::Buffer> returned_buffer;
+    std::shared_ptr<mc::Buffer> returned_buffer;
     mc::BufferID id{34};
 
     std::unique_ptr<mc::BufferSwapper> swapper = strategy->create_swapper(actual, buffer_properties);
 
     swapper->client_acquire(returned_buffer, id);
-    EXPECT_NE(nullptr, returned_buffer.lock());
+    EXPECT_NE(nullptr, returned_buffer);
 }
 
 TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
@@ -140,7 +143,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
 
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+    auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::abgr_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
@@ -151,14 +154,17 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     gl_animation.init_gl();
 
     auto client_buffer = bundle->secure_client_buffer();
-    auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+    auto ipc_package = client_buffer->get_ipc_package();
     auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
     red_pattern.draw(region);
     client_buffer.reset();
 
     auto texture_res = bundle->lock_back_buffer();
     gl_animation.render_gl();
-    display->post_update();
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
     texture_res.reset();
 }
 
@@ -170,7 +176,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
-    auto strategy = std::make_shared<mc::DoubleBufferAllocationStrategy>(allocator);
+    auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::abgr_8888);
     mc::BufferProperties buffer_properties{size, pf, mc::BufferUsage::software};
@@ -184,27 +190,33 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     {
         /* buffer 0 */
         auto client_buffer = bundle->secure_client_buffer();
-        auto ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        auto ipc_package = client_buffer->get_ipc_package();
         auto region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         red_pattern.draw(region);
         client_buffer.reset();
 
         auto texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
         texture_res.reset();
         sleep(1);
 
         /* buffer 1 */
         client_buffer = bundle->secure_client_buffer();
-        ipc_package = client_buffer->buffer.lock()->get_ipc_package();
+        ipc_package = client_buffer->get_ipc_package();
         region = sw_renderer.get_graphic_region_from_package(ipc_package, size);
         green_pattern.draw(region);
         client_buffer.reset();
 
         texture_res = bundle->lock_back_buffer();
         gl_animation.render_gl();
-        display->post_update();
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+            buffer.post_update();
+        });
         texture_res.reset();
         sleep(1);
     }

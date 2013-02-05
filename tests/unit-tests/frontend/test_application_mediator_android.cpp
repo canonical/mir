@@ -75,6 +75,8 @@ public:
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const& /*session*/, int /*id*/) {}
+    void focus_session_with_lightdm_id(int /*id*/) {}
 
     void shutdown() {}
 

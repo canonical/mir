@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "android_framebuffer_window.h"
 
 #include <EGL/egl.h>
@@ -36,7 +37,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidDisplay : public Display
+class AndroidDisplay : public Display, public DisplayBuffer
 {
 public:
     explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
@@ -45,6 +46,11 @@ public:
     geometry::Rectangle view_area() const;
     void clear();
     bool post_update();
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+
+    std::shared_ptr<DisplayConfiguration> configuration();
+
+    void make_current();
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
     EGLDisplay egl_display;

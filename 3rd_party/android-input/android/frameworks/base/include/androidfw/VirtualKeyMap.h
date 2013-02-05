@@ -17,14 +17,16 @@
 #ifndef _ANDROIDFW_VIRTUAL_KEY_MAP_H
 #define _ANDROIDFW_VIRTUAL_KEY_MAP_H
 
+#include "Platform.h"
+
 #include <stdint.h>
 
 #include <androidfw/Input.h>
-#include <utils/Errors.h>
-#include <utils/KeyedVector.h>
-#include <utils/Tokenizer.h>
-#include <utils/String8.h>
-#include <utils/Unicode.h>
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(KeyedVector.h)
+#include ANDROIDFW_UTILS(Tokenizer.h)
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Unicode.h)
 
 namespace android {
 
