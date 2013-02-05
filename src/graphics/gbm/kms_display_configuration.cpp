@@ -96,7 +96,7 @@ uint32_t mgg::KMSDisplayConfiguration::get_kms_connector_id(DisplayConfiguration
 void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,
                                               drmModeConnector const& connector)
 {
-    DisplayConfigurationOutputId id{(int)connector.connector_id};
+    DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
     DisplayConfigurationCardId card_id{0};
     geom::Size physical_size{geom::Width{connector.mmWidth},
                              geom::Height{connector.mmHeight}};
