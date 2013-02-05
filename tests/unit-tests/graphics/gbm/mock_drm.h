@@ -45,9 +45,10 @@ public:
     drmModeRes* resources_ptr();
 
     void add_crtc(uint32_t id, drmModeModeInfo mode);
-    void add_encoder(uint32_t encoder_id, uint32_t crtc_id);
+    void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask);
     void add_connector(uint32_t connector_id, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
+                       std::vector<uint32_t>& possible_encoder_ids,
                        geometry::Size const& physical_size);
 
     void prepare();
@@ -74,6 +75,7 @@ private:
 
     std::vector<drmModeModeInfo> modes;
     std::vector<drmModeModeInfo> modes_empty;
+    std::vector<uint32_t> connector_encoder_ids;
 };
 
 class MockDRM

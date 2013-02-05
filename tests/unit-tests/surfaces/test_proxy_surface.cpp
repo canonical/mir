@@ -23,6 +23,7 @@
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -116,25 +117,25 @@ struct BasicSurfaceProxy : testing::Test
 
         ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mc::GraphicBufferClientResource>()));
+        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
     }
 };
 }
 
-TEST_F(BasicSurfaceProxy, client_buffer_resource_throw_behavior)
+TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
     ms::BasicProxySurface proxy_surface(surface);
 
     EXPECT_NO_THROW({
-        proxy_surface.client_buffer_resource();
+        proxy_surface.client_buffer();
     });
 
     surface.reset();
 
     EXPECT_THROW({
-        proxy_surface.client_buffer_resource();
+        proxy_surface.client_buffer();
     }, std::runtime_error);
 }
 

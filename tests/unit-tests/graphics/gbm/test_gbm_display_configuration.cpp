@@ -20,6 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "src/graphics/gbm/gbm_platform.h"
+#include "src/graphics/gbm/kms_display_configuration.h"
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
@@ -30,6 +31,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -120,6 +123,8 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector0_physical_size_mm{geom::Width{480}, geom::Height{270}};
     geom::Size const connector1_physical_size_mm{};
     geom::Size const connector2_physical_size_mm{};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
 
     mgg::FakeDRMResources& resources(mock_drm.fake_drm);
 
@@ -127,15 +132,18 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
 
     resources.add_crtc(crtc0_id, modes0[1]);
 
-    resources.add_encoder(encoder0_id, crtc0_id);
-    resources.add_encoder(encoder1_id, invalid_id);
+    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+    resources.add_encoder(encoder1_id, invalid_id, possible_crtcs_mask_empty);
 
     resources.add_connector(connector0_id, DRM_MODE_CONNECTED, encoder0_id,
-                            modes0, connector0_physical_size_mm);
+                            modes0, possible_encoder_ids_empty,
+                            connector0_physical_size_mm);
     resources.add_connector(connector1_id, DRM_MODE_DISCONNECTED, invalid_id,
-                            modes_empty, connector1_physical_size_mm);
+                            modes_empty, possible_encoder_ids_empty,
+                            connector1_physical_size_mm);
     resources.add_connector(connector2_id, DRM_MODE_DISCONNECTED, encoder1_id,
-                            modes_empty, connector2_physical_size_mm);
+                            modes_empty, possible_encoder_ids_empty,
+                            connector2_physical_size_mm);
 
     resources.prepare();
 
@@ -143,7 +151,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
         {
-            mg::DisplayConfigurationOutputId{0},
+            mg::DisplayConfigurationOutputId{connector0_id},
             mg::DisplayConfigurationCardId{0},
             conf_modes0,
             connector0_physical_size_mm,
@@ -151,7 +159,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             1
         },
         {
-            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationOutputId{connector1_id},
             mg::DisplayConfigurationCardId{0},
             std::vector<mg::DisplayConfigurationMode>(),
             connector1_physical_size_mm,
@@ -159,7 +167,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             std::numeric_limits<size_t>::max()
         },
         {
-            mg::DisplayConfigurationOutputId{2},
+            mg::DisplayConfigurationOutputId{connector2_id},
             mg::DisplayConfigurationCardId{0},
             std::vector<mg::DisplayConfigurationMode>(),
             connector2_physical_size_mm,
@@ -184,4 +192,78 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     });
 
     EXPECT_EQ(expected_outputs.size(), output_count);
+}
+
+TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
+{
+    uint32_t const invalid_id{0};
+    std::vector<uint32_t> const connector_ids{30, 31};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+
+    /* Set up DRM resources */
+    mgg::FakeDRMResources& resources(mock_drm.fake_drm);
+
+    resources.reset();
+
+    for (auto id : connector_ids)
+    {
+        resources.add_connector(id, DRM_MODE_DISCONNECTED, invalid_id,
+                                modes_empty, possible_encoder_ids_empty,
+                                geom::Size());
+    }
+
+    resources.prepare();
+
+    /* Test body */
+    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto display = platform->create_display();
+
+    auto conf = display->configuration();
+    auto const& kms_conf = std::static_pointer_cast<mgg::KMSDisplayConfiguration>(conf);
+
+    size_t output_count{0};
+
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        ASSERT_LT(output_count, connector_ids.size());
+
+        EXPECT_EQ(connector_ids[output_count],
+                  kms_conf->get_kms_connector_id(output.id));
+        ++output_count;
+    });
+}
+
+TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
+{
+    uint32_t const invalid_id{0};
+    std::vector<uint32_t> const connector_ids{30, 31};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+
+    /* Set up DRM resources */
+    mgg::FakeDRMResources& resources(mock_drm.fake_drm);
+
+    resources.reset();
+
+    for (auto id : connector_ids)
+    {
+        resources.add_connector(id, DRM_MODE_DISCONNECTED, invalid_id,
+                                modes_empty, possible_encoder_ids_empty,
+                                geom::Size());
+    }
+
+    resources.prepare();
+
+    /* Test body */
+    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto display = platform->create_display();
+
+    auto conf = display->configuration();
+    auto const& kms_conf = std::static_pointer_cast<mgg::KMSDisplayConfiguration>(conf);
+
+    EXPECT_THROW({
+        kms_conf->get_kms_connector_id(mg::DisplayConfigurationOutputId{29});
+    }, std::runtime_error);
+    EXPECT_THROW({
+        kms_conf->get_kms_connector_id(mg::DisplayConfigurationOutputId{32});
+    }, std::runtime_error);
 }

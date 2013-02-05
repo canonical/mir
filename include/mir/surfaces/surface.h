@@ -31,8 +31,7 @@ namespace mir
 namespace compositor
 {
 class BufferBundle;
-class GraphicBufferClientResource;
-class GraphicBufferCompositorResource;
+class Buffer;
 class GraphicRegion;
 struct BufferIPCPackage;
 class BufferID;
@@ -57,7 +56,7 @@ public:
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<compositor::GraphicBufferCompositorResource> texture() const;
+    std::shared_ptr<compositor::GraphicRegion> graphic_region() const;
     glm::mat4 transformation() const;
     float alpha() const;
     bool hidden() const;
@@ -66,13 +65,14 @@ public:
     geometry::PixelFormat pixel_format() const;
 
     void advance_client_buffer();
-    std::shared_ptr<compositor::GraphicBufferClientResource> client_buffer_resource() const;
+    std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
 
 private:
     std::string surface_name;
     std::shared_ptr<compositor::BufferBundle> buffer_bundle;
-    std::shared_ptr<compositor::GraphicBufferClientResource> graphics_resource;
+
+    std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;

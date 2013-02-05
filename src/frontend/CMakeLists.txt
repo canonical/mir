@@ -63,6 +63,9 @@ add_library(
   ${FRONTEND_SOURCES}
 )
 
+# Fix build race condition - ensure the protobuf header is built before us.
+add_dependencies(mirfrontend mirprotobuf)
+
 target_link_libraries(
   mirfrontend
 
