@@ -44,6 +44,7 @@ struct AndroidInputPropertyMap : public ::testing::Test
             "test.bool.false=0\n"
             "#test.bool.true=true\n"
             "# a comment\n"
+            "#test.int.ignored=1\n"
             "test.int_32=123\n"
             "test.float=0.5\n");
     }
@@ -118,5 +119,11 @@ TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_float)
 {
     float result;
     EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
+TEST_F(AndroidInputPropertyMap, test_map_ignores_comment)
+{
+    int32_t result;
+    EXPECT_FALSE(test_map->tryGetProperty(String8("test.int.ignored"), result));
 }
 
