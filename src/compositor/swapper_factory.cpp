@@ -34,15 +34,15 @@ namespace mc = mir::compositor;
 mc::SwapperFactory::SwapperFactory(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
     gr_allocator(gr_alloc),
-    default_number_of_buffers(2)
+    number_of_buffers(2)
 {
     assert(gr_alloc);
 }
 
 mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int default_number_of_buffers) :
+    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers) :
     gr_allocator(gr_alloc),
-    default_number_of_buffers(default_number_of_buffers)
+    number_of_buffers(number_of_buffers)
 {
     assert(gr_alloc);
 }
@@ -53,7 +53,7 @@ std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
 {
     std::vector<std::shared_ptr<mc::Buffer>> buffers;
 
-    for(auto i=0; i< default_number_of_buffers; i++)
+    for(auto i=0; i< number_of_buffers; i++)
     {
         buffers.push_back(
             gr_allocator->alloc_buffer(requested_buffer_properties));
