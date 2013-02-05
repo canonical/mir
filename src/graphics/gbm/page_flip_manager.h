@@ -16,12 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_
+#define MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_
 
 #include <cstdint>
-#include <memory>
-#include <unordered_map>
 
 namespace mir
 {
@@ -30,27 +28,22 @@ namespace graphics
 namespace gbm
 {
 
-class KMSOutput;
-class PageFlipManager;
-
-class KMSOutputContainer
+class PageFlipManager
 {
 public:
-    KMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipManager> const& page_flip_manager);
+    virtual ~PageFlipManager() {}
 
-    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
+    virtual bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
+    virtual void wait_for_page_flip(uint32_t crtc_id) = 0;
 
-private:
-    KMSOutputContainer(KMSOutputContainer const&) = delete;
-    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
-
-    int const drm_fd;
-    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
-    std::shared_ptr<PageFlipManager> const page_flip_manager;
+protected:
+    PageFlipManager() = default;
+    PageFlipManager(PageFlipManager const&) = delete;
+    PageFlipManager& operator=(PageFlipManager const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_ */

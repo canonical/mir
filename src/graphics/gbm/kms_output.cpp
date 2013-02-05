@@ -17,6 +17,7 @@
  */
 
 #include "kms_output.h"
+#include "page_flip_manager.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -89,9 +90,11 @@ bool encoder_supports_crtc_index(drmModeEncoder const* encoder, uint32_t crtc_in
 
 }
 
-mgg::KMSOutput::KMSOutput(int drm_fd, uint32_t connector_id)
-    : drm_fd{drm_fd}, connector_id{connector_id}, connector(),
-      mode_index{0}, current_crtc(), saved_crtc(), using_saved_crtc{true}
+mgg::KMSOutput::KMSOutput(int drm_fd, uint32_t connector_id,
+                          std::shared_ptr<PageFlipManager> const& pf_manager)
+    : drm_fd{drm_fd}, connector_id{connector_id}, page_flip_manager{pf_manager},
+      connector(), mode_index{0}, current_crtc(), saved_crtc(),
+      using_saved_crtc{true}
 {
     reset();
 
@@ -149,14 +152,20 @@ bool mgg::KMSOutput::set_crtc(uint32_t fb_id)
     return true;
 }
 
-bool mgg::KMSOutput::schedule_page_flip(uint32_t fb_id, void* user_data)
+bool mgg::KMSOutput::schedule_page_flip(uint32_t fb_id)
 {
     if (!current_crtc)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
 
-    auto ret = drmModePageFlip(drm_fd, current_crtc->crtc_id, fb_id,
-                               DRM_MODE_PAGE_FLIP_EVENT, user_data);
-    return (ret == 0);
+    return page_flip_manager->schedule_page_flip(current_crtc->crtc_id, fb_id);
+}
+
+void mgg::KMSOutput::wait_for_page_flip()
+{
+    if (!current_crtc)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
+
+    page_flip_manager->wait_for_page_flip(current_crtc->crtc_id);
 }
 
 bool mgg::KMSOutput::ensure_crtc()

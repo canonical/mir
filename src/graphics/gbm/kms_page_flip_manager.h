@@ -16,12 +16,13 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_
+#define MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_
 
-#include <cstdint>
-#include <memory>
+#include "page_flip_manager.h"
+
 #include <unordered_map>
+#include <chrono>
 
 namespace mir
 {
@@ -30,27 +31,28 @@ namespace graphics
 namespace gbm
 {
 
-class KMSOutput;
-class PageFlipManager;
+struct PageFlipEventData
+{
+    std::unordered_map<uint32_t,PageFlipEventData>* pending;
+    uint32_t crtc_id;
+};
 
-class KMSOutputContainer
+class KMSPageFlipManager : public PageFlipManager
 {
 public:
-    KMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipManager> const& page_flip_manager);
+    KMSPageFlipManager(int drm_fd, std::chrono::microseconds max_wait);
 
-    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
+    bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id);
+    void wait_for_page_flip(uint32_t crtc_id);
 
 private:
-    KMSOutputContainer(KMSOutputContainer const&) = delete;
-    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
-
     int const drm_fd;
-    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
-    std::shared_ptr<PageFlipManager> const page_flip_manager;
+    long const page_flip_max_wait_usec;
+    std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_ */

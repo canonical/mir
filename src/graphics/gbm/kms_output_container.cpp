@@ -21,8 +21,10 @@
 
 namespace mgg = mir::graphics::gbm;
 
-mgg::KMSOutputContainer::KMSOutputContainer(int drm_fd)
-    : drm_fd{drm_fd}
+mgg::KMSOutputContainer::KMSOutputContainer(
+    int drm_fd, std::shared_ptr<PageFlipManager> const& page_flip_manager)
+    : drm_fd{drm_fd},
+      page_flip_manager{page_flip_manager}
 {
 }
 
@@ -33,7 +35,7 @@ std::shared_ptr<mgg::KMSOutput> mgg::KMSOutputContainer::get_kms_output_for(uint
     auto output_iter = outputs.find(connector_id);
     if (output_iter == outputs.end())
     {
-        output = std::make_shared<KMSOutput>(drm_fd, connector_id);
+        output = std::make_shared<KMSOutput>(drm_fd, connector_id, page_flip_manager);
         outputs[connector_id] = output;
     }
     else
