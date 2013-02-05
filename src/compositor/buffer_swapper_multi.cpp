@@ -23,8 +23,8 @@
 
 namespace mc = mir::compositor;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
-    in_use_by_client(0)
+template<class T>
+void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
@@ -36,6 +36,18 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr
         buffers[buffer->id()] = buffer;
         client_queue.push_back(buffer->id());
     }
+}
+
+mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
+ : in_use_by_client(0)
+{
+    initialize_queues(buffer_list);
+}
+
+mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
+    in_use_by_client(0)
+{
+    initialize_queues(buffer_list);
 }
 
 void mc::BufferSwapperMulti::client_acquire(std::shared_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)

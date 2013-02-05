@@ -24,7 +24,7 @@ set(
   buffer_bundle_manager.cpp
   buffer_bundle.cpp
   buffer_swapper_multi.cpp
-  double_buffer_allocation_strategy.cpp
+  swapper_factory.cpp
   rendering_operator.cpp
 )
 

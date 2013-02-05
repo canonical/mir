@@ -19,9 +19,12 @@
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <memory>
 #include <cassert>
 #include <algorithm>
+#include <stdexcept>
 
 
 namespace msess = mir::sessions;
@@ -48,7 +51,14 @@ void msess::SessionContainer::remove_session(std::shared_ptr<msess::Session> con
     std::unique_lock<std::mutex> lk(guard);
 
     auto it = std::find(apps.begin(), apps.end(), session);
-    apps.erase(it);
+    if (it != apps.end())
+    {
+        apps.erase(it);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid Session"));
+    }
 }
 
 void msess::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
