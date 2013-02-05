@@ -106,13 +106,13 @@ TEST_F(BufferSwapperConstruction, error_construction)
     /* don't support single buffering with the mc::BufferSwapper interface model */
     EXPECT_THROW({
         mc::BufferSwapperMulti({buffer_a});
-    }, std::runtime_error);
+    }, std::logic_error);
 
     /* BufferSwapperMulti algorithm is generic enough to do >=4 buffers. However, we have only tested
        for 2 or 3 buffers, so we will throw on 4 or greater until 4 or greater buffers is tested*/
     EXPECT_THROW({
         mc::BufferSwapperMulti({buffer_a, buffer_b, buffer_c, buffer_b});
-    }, std::runtime_error);
+    }, std::logic_error);
 }
 
 TEST_F(BufferSwapperConstruction, references_match_ids_double)
