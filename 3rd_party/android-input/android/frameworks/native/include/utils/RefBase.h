@@ -191,7 +191,7 @@ private:
             const ReferenceConverterBase& caster) { }
 
 private:
-    mutable volatile int32_t mCount;
+    mutable android_atomic_int32_t mCount;
 };
 
 // ---------------------------------------------------------------------------

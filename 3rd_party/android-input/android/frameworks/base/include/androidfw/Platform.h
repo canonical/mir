@@ -20,32 +20,26 @@
 #ifndef MIR_ANDROID_PLATFORM_H_
 #define MIR_ANDROID_PLATFORM_H_
 
-#ifndef ANDROIDFW_UTILS
-    #if !defined(ANDROID_USE_STD)
-        // use the android headers
+#if !defined(ANDROID_USE_STD)
+    // use the android headers
+    #ifndef ANDROIDFW_UTILS
         #define ANDROIDFW_UTILS(name) <utils/name>
-    #elif !defined(HAVE_ANDROID_OS)
-        // use the standard library
-        #define ANDROIDFW_UTILS(name) <std/name>
-    #else
-        // TODO If we HAVE_ANDROID_OS then the input stack will pull in binder
-        // TODO which isn't compatible with the std based utils replacements.
-        #error Currently unable to support ANDROID_USE_STD with HAVE_ANDROID_OS
     #endif
-#endif
-
-#ifndef ANDROIDFW_CUTILS
-    #if !defined(ANDROID_USE_STD)
-        // use the android headers
+    #ifndef ANDROIDFW_CUTILS
         #define ANDROIDFW_CUTILS(name) <cutils/name>
-    #elif !defined(HAVE_ANDROID_OS)
-        // use the standard library
-        #define ANDROIDFW_CUTILS(name) <std/name>
-    #else
-        // TODO If we HAVE_ANDROID_OS then the input stack will pull in binder
-        // TODO which isn't compatible with the std based utils replacements.
-        #error Currently unable to support ANDROID_USE_STD with HAVE_ANDROID_OS
     #endif
+#elif !defined(HAVE_ANDROID_OS)
+    // use the standard library
+    #ifndef ANDROIDFW_UTILS
+        #define ANDROIDFW_UTILS(name) <std/name>
+    #endif
+    #ifndef ANDROIDFW_CUTILS
+        #define ANDROIDFW_CUTILS(name) <std/name>
+    #endif
+#else
+    // TODO If we HAVE_ANDROID_OS then the input stack will pull in binder
+    // TODO which isn't compatible with the std based utils replacements.
+    #error Currently unable to support ANDROID_USE_STD with HAVE_ANDROID_OS
 #endif
 
 #endif /* MIR_ANDROID_PLATFORM_H_ */

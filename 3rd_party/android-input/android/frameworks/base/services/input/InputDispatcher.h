@@ -555,7 +555,7 @@ private:
         }
 
     private:
-        static volatile int32_t sNextSeqAtomic;
+        static android_atomic_int32_t sNextSeqAtomic;
 
         static uint32_t nextSeq();
     };

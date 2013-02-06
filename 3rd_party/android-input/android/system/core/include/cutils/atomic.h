@@ -58,6 +58,8 @@ extern "C" {
  * If they are not, atomicity is not guaranteed.
  */
 
+typedef volatile int32_t android_atomic_int32_t;
+
 /*
  * Basic arithmetic and bitwise operations.  These all provide a
  * barrier with "release" ordering, and return the previous value.
