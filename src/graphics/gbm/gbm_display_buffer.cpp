@@ -244,9 +244,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
 
     /*
      * Schedule the current front buffer object for display. Note that
-     * the page flip is asynchronous and synchronized with vertical refresh,
-     * so we tell DRM to emit a page flip event with &page_flips_pending as
-     * its user data when done.
+     * the page flip is asynchronous and synchronized with vertical refresh.
      */
     for (auto& output : outputs)
     {
