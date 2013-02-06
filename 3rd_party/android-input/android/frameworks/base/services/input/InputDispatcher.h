@@ -27,7 +27,7 @@
 #include ANDROIDFW_UTILS(String8.h)
 #include ANDROIDFW_UTILS(Looper.h)
 #include ANDROIDFW_UTILS(BitSet.h)
-#include <cutils/atomic.h>
+#include ANDROIDFW_CUTILS(atomic.h)
 
 #include <stddef.h>
 #include <unistd.h>
