@@ -39,7 +39,7 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
                                             std::chrono::microseconds max_wait)
     : drm_fd{drm_fd},
-      page_flip_max_wait_usec{max_wait.count()},
+      page_flip_max_wait_usec{static_cast<long>(max_wait.count())},
       pending_page_flips(),
       loop_master_tid()
 {
