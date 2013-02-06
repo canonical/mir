@@ -158,6 +158,7 @@ std::thread::id mgg::KMSPageFlipManager::debug_get_wait_loop_master()
     return loop_master_tid;
 }
 
+/* This method should be called with the 'pf_mutex' locked */
 bool mgg::KMSPageFlipManager::page_flip_is_done(uint32_t crtc_id)
 {
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
