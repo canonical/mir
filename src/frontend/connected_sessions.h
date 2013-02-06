@@ -19,8 +19,8 @@
 #ifndef MIR_FRONTEND_CONNECTED_SESSIONS_H_
 #define MIR_FRONTEND_CONNECTED_SESSIONS_H_
 
-#include "mir/thread/all.h"
 #include <memory>
+#include <mutex>
 #include <map>
 
 namespace mir

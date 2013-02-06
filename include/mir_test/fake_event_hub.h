@@ -21,7 +21,8 @@
 
 #include "mir_test/event_factory.h"
 
-#include "mir/thread/all.h"
+#include <atomic>
+#include <mutex>
 
 // from android-input
 #include <EventHub.h>

@@ -21,10 +21,10 @@
 
 #include "surface_stack_model.h"
 #include "mir/compositor/render_view.h"
-#include "mir/thread/all.h"
 
 #include <memory>
 #include <vector>
+#include <mutex>
 
 namespace mir
 {

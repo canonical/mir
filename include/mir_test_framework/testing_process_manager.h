@@ -21,7 +21,6 @@
 
 #include "mir/server_configuration.h"
 
-#include "mir/chrono/chrono.h"
 #include "mir_test_framework/process.h"
 
 #include "mir_test_framework/testing_server_configuration.h"

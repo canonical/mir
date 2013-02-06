@@ -18,7 +18,8 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir/thread/all.h"
+#include <condition_variable>
+#include <mutex>
 
 #include <gtest/gtest.h>
 

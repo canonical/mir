@@ -18,9 +18,7 @@
 
 #include "mir_client/mir_client_library_lightdm.h"
 
-#include "mir/chrono/chrono.h"
 #include "mir/sessions/session_store.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -28,6 +26,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <chrono>
+#include <thread>
 #include <fcntl.h>
 
 namespace mg = mir::graphics;

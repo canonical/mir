@@ -19,10 +19,11 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "multithread_harness.h"
 
-#include "mir/chrono/chrono.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir/thread/all.h"
+
+#include <thread>
+#include <chrono>
 
 namespace mc = mir::compositor;
 namespace mt = mir::testing;
