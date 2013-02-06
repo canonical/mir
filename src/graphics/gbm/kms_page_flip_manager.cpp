@@ -18,6 +18,9 @@
 
 #include "kms_page_flip_manager.h"
 
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -49,6 +52,9 @@ bool mgg::KMSPageFlipManager::schedule_page_flip(uint32_t crtc_id, uint32_t fb_i
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
+    if (pending_page_flips.find(crtc_id) != pending_page_flips.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("Page flip for crtc_id is already scheduled"));
+
     pending_page_flips[crtc_id] = PageFlipEventData{&pending_page_flips, crtc_id};
 
     auto ret = drmModePageFlip(drm_fd, crtc_id, fb_id,
@@ -71,8 +77,6 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
     };
     static std::thread::id const invalid_tid{std::thread::id()};
 
-    bool done{false};
-
     {
         std::unique_lock<std::mutex> lock{pf_mutex};
 
@@ -83,18 +87,17 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
         while (loop_master_tid != invalid_tid && !page_flip_is_done(crtc_id))
             pf_cv.wait(lock);
 
-        done = page_flip_is_done(crtc_id);
+        /* If the page flip we are waiting for has arrived we are done. */
+        if (page_flip_is_done(crtc_id))
+            return;
 
-        if (!done)
-            loop_master_tid = std::this_thread::get_id();
+        /* ...otherwise we take control of the loop */
+        loop_master_tid = std::this_thread::get_id();
     }
 
-    /*
-     * At this point we are either done (i.e. our page flip event has
-     * arrived), or it hasn't and we are the new loop master.
-     */
+    /* Only loop masters reach this point */
+    bool done{false};
 
-    /* Only loop masters enter the event loop */
     while (!done)
     {
         struct timeval tv{0, page_flip_max_wait_usec};
