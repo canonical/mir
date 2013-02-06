@@ -3737,7 +3737,7 @@ void InputDispatcher::MotionEntry::appendDescription(String8& msg) const {
 
 // --- InputDispatcher::DispatchEntry ---
 
-volatile int32_t InputDispatcher::DispatchEntry::sNextSeqAtomic;
+android_atomic_int32_t InputDispatcher::DispatchEntry::sNextSeqAtomic;
 
 InputDispatcher::DispatchEntry::DispatchEntry(EventEntry* eventEntry,
         int32_t targetFlags, float xOffset, float yOffset, float scaleFactor) :
