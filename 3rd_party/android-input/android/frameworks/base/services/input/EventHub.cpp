@@ -20,7 +20,12 @@
 
 #include "EventHub.h"
 
+#if !defined(ANDROID_USE_STD)
 #include <hardware_legacy/power.h>
+#else
+#define acquire_wake_lock(lock, id) {}
+#define release_wake_lock(id) {}
+#endif
 
 #include <cutils/properties.h>
 #include ANDROIDFW_UTILS(Log.h)
