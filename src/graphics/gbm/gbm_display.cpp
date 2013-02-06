@@ -42,7 +42,8 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
       listener(listener),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipManager>(platform->drm.fd,
-                                                            page_flip_max_wait)}
+                                                            page_flip_max_wait,
+                                                            listener)}
 {
     configure(configuration());
 }

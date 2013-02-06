@@ -63,3 +63,8 @@ void mgg::GBMDisplayReporter::report_successful_display_construction()
 {
     logger->log<ml::Logger::informational>("Successfully finished construction.", component());
 }
+
+void mgg::GBMDisplayReporter::report_page_flip_timeout()
+{
+    logger->log<ml::Logger::error>("Timeout while waiting for page-flip", component());
+}

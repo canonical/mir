@@ -31,6 +31,9 @@ namespace mir
 {
 namespace graphics
 {
+
+class DisplayListener;
+
 namespace gbm
 {
 
@@ -43,7 +46,8 @@ struct PageFlipEventData
 class KMSPageFlipManager : public PageFlipManager
 {
 public:
-    KMSPageFlipManager(int drm_fd, std::chrono::microseconds max_wait);
+    KMSPageFlipManager(int drm_fd, std::chrono::microseconds max_wait,
+                       std::shared_ptr<DisplayListener> const& listener);
 
     bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id);
     void wait_for_page_flip(uint32_t crtc_id);
@@ -55,6 +59,7 @@ private:
 
     int const drm_fd;
     long const page_flip_max_wait_usec;
+    std::shared_ptr<DisplayListener> const listener;
     std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
     std::mutex pf_mutex;
     std::condition_variable pf_cv;

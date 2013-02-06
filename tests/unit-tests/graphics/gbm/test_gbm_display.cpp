@@ -24,6 +24,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/null_display_listener.h"
+#include "mir_test_doubles/mock_display_listener.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -45,20 +46,11 @@ struct MockLogger : public ml::Logger
                  void(ml::Logger::Severity, const std::string&, const std::string&));
 };
 
-struct MockGBMDisplayListener : public mg::DisplayListener
-{
-    MOCK_METHOD0(report_successful_setup_of_native_resources, void());
-    MOCK_METHOD0(report_successful_egl_make_current_on_construction, void());
-    MOCK_METHOD0(report_successful_egl_buffer_swap_on_construction, void());
-    MOCK_METHOD0(report_successful_drm_mode_set_crtc_on_construction, void());
-    MOCK_METHOD0(report_successful_display_construction, void());
-};
-
 class GBMDisplayTest : public ::testing::Test
 {
 public:
     GBMDisplayTest() :
-        mock_reporter(new ::testing::NiceMock<MockGBMDisplayListener>())
+        mock_reporter(new ::testing::NiceMock<mtd::MockDisplayListener>())
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -173,7 +165,7 @@ public:
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<testing::NiceMock<MockGBMDisplayListener> > mock_reporter;
+    std::shared_ptr<testing::NiceMock<mtd::MockDisplayListener>> mock_reporter;
 };
 
 }

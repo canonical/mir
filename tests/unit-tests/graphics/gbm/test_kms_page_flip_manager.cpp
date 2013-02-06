@@ -19,6 +19,9 @@
 #include "src/graphics/gbm/kms_page_flip_manager.h"
 
 #include "mock_drm.h"
+#include "include/mir_test_doubles/mock_display_listener.h"
+#include "include/mir_test_doubles/null_display_listener.h"
+#include "include/mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,7 +30,10 @@
 #include <thread>
 #include <unordered_set>
 
+namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
+namespace mt  = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -36,12 +42,15 @@ class KMSPageFlipManagerTest : public ::testing::Test
 {
 public:
     KMSPageFlipManagerTest()
-        : pf_manager{mock_drm.fake_drm.fd(), std::chrono::milliseconds{50}},
-          blocking_pf_manager{mock_drm.fake_drm.fd(), std::chrono::hours{1}}
+        : pf_manager{mock_drm.fake_drm.fd(), std::chrono::milliseconds{50},
+                     mt::fake_shared<mg::DisplayListener>(mock_listener)},
+          blocking_pf_manager{mock_drm.fake_drm.fd(), std::chrono::hours{1},
+                              std::make_shared<mtd::NullDisplayListener>()}
     {
     }
 
     testing::NiceMock<mgg::MockDRM> mock_drm;
+    mtd::MockDisplayListener mock_listener;
     mgg::KMSPageFlipManager pf_manager;
     mgg::KMSPageFlipManager blocking_pf_manager;
 };
@@ -109,6 +118,9 @@ TEST_F(KMSPageFlipManagerTest, wait_for_page_flip_doesnt_block_forever_if_no_drm
 
     EXPECT_CALL(mock_drm, drmHandleEvent(_, _))
         .Times(0);
+
+    EXPECT_CALL(mock_listener, report_page_flip_timeout())
+        .Times(1);
 
     pf_manager.schedule_page_flip(crtc_id, fb_id);
 

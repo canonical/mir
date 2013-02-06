@@ -17,6 +17,7 @@
  */
 
 #include "kms_page_flip_manager.h"
+#include "mir/graphics/display_listener.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -40,9 +41,11 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 }
 
 mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
-                                            std::chrono::microseconds max_wait)
+                                            std::chrono::microseconds max_wait,
+                                            std::shared_ptr<DisplayListener> const& listener)
     : drm_fd{drm_fd},
       page_flip_max_wait_usec{static_cast<long>(max_wait.count())},
+      listener(listener),
       pending_page_flips(),
       loop_master_tid()
 {
@@ -124,9 +127,14 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
             std::unique_lock<std::mutex> lock{pf_mutex};
 
             if (ret > 0)
+            {
                 drmHandleEvent(drm_fd, &evctx);
+            }
             else
+            {
                 pending_page_flips.erase(crtc_id);
+                listener->report_page_flip_timeout();
+            }
 
             done = page_flip_is_done(crtc_id);
             /* Give up loop control if we are done */
