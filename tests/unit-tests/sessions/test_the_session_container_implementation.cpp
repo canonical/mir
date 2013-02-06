@@ -34,7 +34,7 @@ namespace mtd = mir::test::doubles;
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    auto const factory = std::make_shared<mtd::MockSurfaceFactory>();
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msess::SessionContainer container;
 
     container.insert_session(std::make_shared<msess::Session>(factory, "Visual Studio 7"));
@@ -55,4 +55,17 @@ TEST(SessionContainer, for_each)
     EXPECT_CALL(functor, check_name("Visual Studio 8"));
 
     container.for_each(std::ref(functor));
+}
+
+TEST(SessionContainer, invalid_session_throw_behavior)
+{
+    using namespace ::testing;
+    auto factory = std::make_shared<mtd::MockSurfaceFactory>();
+    msess::SessionContainer container;
+
+    auto session = std::make_shared<msess::Session>(factory,
+                                                    "Visual Studio 7");
+    EXPECT_THROW({
+        container.remove_session(session);
+    }, std::logic_error);
 }

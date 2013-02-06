@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/double_buffer_allocation_strategy.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper_multi.h"
@@ -24,27 +24,42 @@
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 
+#include <initializer_list>
+#include <vector>
 #include <cassert>
 
 namespace mc = mir::compositor;
 
-
-mc::DoubleBufferAllocationStrategy::DoubleBufferAllocationStrategy(
+/* todo: once we move to gcc 4.7 it would be slightly better to have a delegated constructor */
+mc::SwapperFactory::SwapperFactory(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
-    gr_allocator(gr_alloc)
+    gr_allocator(gr_alloc),
+    number_of_buffers(2)
 {
     assert(gr_alloc);
 }
 
-std::unique_ptr<mc::BufferSwapper> mc::DoubleBufferAllocationStrategy::create_swapper(
+mc::SwapperFactory::SwapperFactory(
+    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers) :
+    gr_allocator(gr_alloc),
+    number_of_buffers(number_of_buffers)
+{
+    assert(gr_alloc);
+}
+
+std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties)
 {
-    auto buf1 = gr_allocator->alloc_buffer(requested_buffer_properties);
-    auto buf2 = gr_allocator->alloc_buffer(requested_buffer_properties);
+    std::vector<std::shared_ptr<mc::Buffer>> buffers;
 
-    actual_buffer_properties = BufferProperties{buf2->size(), buf2->pixel_format(),
-                                                requested_buffer_properties.usage};
+    for(auto i=0; i< number_of_buffers; i++)
+    {
+        buffers.push_back(
+            gr_allocator->alloc_buffer(requested_buffer_properties));
+    }
 
-    return std::unique_ptr<BufferSwapper>(new BufferSwapperMulti({buf1, buf2}));
+    actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
+
+    return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti(buffers));
 }

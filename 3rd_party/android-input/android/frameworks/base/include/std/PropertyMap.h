@@ -72,7 +72,7 @@ public:
 
     /* Gets the value of a property and parses it.
      * Returns true and sets outValue if the key was found and its value was parsed successfully.
-     * Otherwise returns false and does not modify outValue.  (Also logs a warning.)
+     * Otherwise returns false and does not modify outValue.
      */
     bool tryGetProperty(const String8& key, String8& outValue) const
     {

@@ -38,14 +38,15 @@ struct AndroidInputPropertyMap : public ::testing::Test
     static void SetUpTestCase()
     {
         ASSERT_TRUE(std::ofstream(test_file) <<
-            "test_string=a_string\n"
-            "#test_bool_true=true\n"
-            "test_bool_true=1\n"
-            "test_bool_false=0\n"
-            "#test_bool_true=true\n"
+            "test.string=a_string\n"
+            "#test.bool.true=true\n"
+            "test.bool.true=1\n"
+            "test.bool.false=0\n"
+            "#test.bool.true=true\n"
             "# a comment\n"
-            "test_int_32=123\n"
-            "test_float=0.5\n");
+            "#test.int.ignored=1\n"
+            "test.int_32=123\n"
+            "test.float=0.5\n");
     }
 
     void SetUp()
@@ -68,31 +69,31 @@ TEST_F(AndroidInputPropertyMap, test_map_created)
 TEST_F(AndroidInputPropertyMap, test_map_has_a_string)
 {
     String8 result;
-    EXPECT_TRUE(test_map->tryGetProperty(String8("test_string"), result));
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test.string"), result));
     EXPECT_EQ(String8("a_string"), result);
 }
 
 TEST_F(AndroidInputPropertyMap, test_map_has_an_int32_t)
 {
     int32_t result;
-    EXPECT_TRUE(test_map->tryGetProperty(String8("test_int_32"), result));
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test.int_32"), result));
     EXPECT_EQ(123, result);
 }
 
 TEST_F(AndroidInputPropertyMap, test_map_has_bools_true_and_false)
 {
     bool result{};
-    EXPECT_TRUE(test_map->tryGetProperty(String8("test_bool_true"), result));
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test.bool.true"), result));
     EXPECT_TRUE(result);
 
-    EXPECT_TRUE(test_map->tryGetProperty(String8("test_bool_false"), result));
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test.bool.false"), result));
     EXPECT_FALSE(result);
 }
 
 TEST_F(AndroidInputPropertyMap, test_map_has_a_float)
 {
     float result;
-    EXPECT_TRUE(test_map->tryGetProperty(String8("test_float"), result));
+    EXPECT_TRUE(test_map->tryGetProperty(String8("test.float"), result));
     EXPECT_EQ(0.5, result);
 }
 
@@ -118,5 +119,11 @@ TEST_F(AndroidInputPropertyMap, test_map_fails_to_get_unknown_float)
 {
     float result;
     EXPECT_FALSE(test_map->tryGetProperty(String8("unknown"), result));
+}
+
+TEST_F(AndroidInputPropertyMap, test_map_ignores_comment)
+{
+    int32_t result;
+    EXPECT_FALSE(test_map->tryGetProperty(String8("test.int.ignored"), result));
 }
 

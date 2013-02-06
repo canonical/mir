@@ -58,7 +58,22 @@ struct BufferSwapperConstruction : testing::Test
     std::shared_ptr<mc::Buffer> buffer_c;
 };
 
-TEST_F(BufferSwapperConstruction, basic_double_construction)
+TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
+{
+    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+
+    auto use_count_before_a  = buffer_a.use_count();
+    auto use_count_before_b  = buffer_b.use_count();
+    mc::BufferSwapperMulti swapper(buffers);
+
+    EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
+    EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
+
+    /* just to keep ref */
+    swapper.shutdown(); 
+}
+
+TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
 {
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
@@ -71,7 +86,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction)
     swapper.shutdown(); 
 }
 
-TEST_F(BufferSwapperConstruction, basic_triple_construction)
+TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
 {
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
@@ -91,13 +106,13 @@ TEST_F(BufferSwapperConstruction, error_construction)
     /* don't support single buffering with the mc::BufferSwapper interface model */
     EXPECT_THROW({
         mc::BufferSwapperMulti({buffer_a});
-    }, std::runtime_error);
+    }, std::logic_error);
 
     /* BufferSwapperMulti algorithm is generic enough to do >=4 buffers. However, we have only tested
        for 2 or 3 buffers, so we will throw on 4 or greater until 4 or greater buffers is tested*/
     EXPECT_THROW({
         mc::BufferSwapperMulti({buffer_a, buffer_b, buffer_c, buffer_b});
-    }, std::runtime_error);
+    }, std::logic_error);
 }
 
 TEST_F(BufferSwapperConstruction, references_match_ids_double)

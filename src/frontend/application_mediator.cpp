@@ -94,7 +94,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     listener->application_create_surface_called(application_session->name());
 
@@ -147,7 +147,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     using sessions::SurfaceId;
 
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     listener->application_next_buffer_called(application_session->name());
 
@@ -178,7 +178,7 @@ void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     session_store->focus_session_with_lightdm_id(request->value());
 
@@ -192,7 +192,7 @@ void mir::frontend::ApplicationMediator::release_surface(
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     listener->application_release_surface_called(application_session->name());
 
@@ -210,7 +210,7 @@ void mir::frontend::ApplicationMediator::disconnect(
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     listener->application_disconnect_called(application_session->name());
 
