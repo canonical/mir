@@ -42,9 +42,6 @@ set(
 )
 
 set(MIRSERVER_LINKAGE SHARED)
-if(${MIR_PLATFORM} STREQUAL android AND (${MIR_USES_BIONIC}))
-  set(MIRSERVER_LINKAGE STATIC)
-endif()
 
 add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
