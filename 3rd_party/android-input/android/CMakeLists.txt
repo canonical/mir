@@ -19,7 +19,6 @@ set(
   frameworks/native/libs/utils/RefBase.cpp    # used a lot
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
 
-  hardware/libhardware_legacy/power/power.c   # used by EventHub.cpp
   system/core/libcutils/properties.c          # used by InputTransport.cpp, VelocityTracker.cpp
   system/core/liblog/logd_write.c             # used by EventHub.cpp
   system/extras/ext4_utils/sha1.c             # used by EventHub.cpp
@@ -38,6 +37,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
   frameworks/native/libs/utils/Debug.cpp
+  hardware/libhardware_legacy/power/power.c
   system/core/libcutils/threads.c
   system/core/libcutils/sched_policy.c
   system/core/libcutils/sockets.c
