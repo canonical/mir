@@ -1,4 +1,7 @@
 /*
+ * Stub client to be compiled with -std=c89, just to check we have correct
+ * language compatibility in the client header(s).
+ *
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -13,13 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *
  */
 
+#include "mir_client/mir_client_library.h"
+#include "mir_client/mir_client_library_drm.h"
+#include "mir_client/mir_client_library_lightdm.h"
 
-#ifndef MIR_ANDROID_UBUNTU_RWLOCK_H_
-#define MIR_ANDROID_UBUNTU_RWLOCK_H_
-
-#include <utils/RWLock.h>
-
-#endif /* MIR_ANDROID_UBUNTU_RWLOCK_H_ */
+int main(int argc, char *argv[])
+{
+    return 0;
+}

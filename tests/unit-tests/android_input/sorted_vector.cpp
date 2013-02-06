@@ -202,6 +202,6 @@ TEST_F(AndroidInputSortedVector, remove_beyond_end_fails)
     EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(1, 4));
     EXPECT_EQ(android::BAD_VALUE, test_vector.removeItemsAt(0, 5));
 
-    EXPECT_EQ(3u, test_vector.size());
+    EXPECT_EQ(4u, test_vector.size());
 }
 #endif
