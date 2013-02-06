@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <stdexcept>
 #include <atomic>
 #include <thread>
 #include <unordered_set>
@@ -78,6 +79,24 @@ TEST_F(KMSPageFlipManagerTest, schedule_page_flip_calls_drm_page_flip)
         .Times(1);
 
     pf_manager.schedule_page_flip(crtc_id, fb_id);
+}
+
+TEST_F(KMSPageFlipManagerTest, double_schedule_page_flip_throws)
+{
+    using namespace testing;
+
+    uint32_t const crtc_id{10};
+    uint32_t const fb_id{101};
+
+    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+                                          crtc_id, fb_id, _, _))
+        .Times(1);
+
+    pf_manager.schedule_page_flip(crtc_id, fb_id);
+
+    EXPECT_THROW({
+        pf_manager.schedule_page_flip(crtc_id, fb_id);
+    }, std::logic_error);
 }
 
 TEST_F(KMSPageFlipManagerTest, wait_for_page_flip_handles_drm_event)
