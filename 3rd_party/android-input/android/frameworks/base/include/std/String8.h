@@ -50,13 +50,11 @@ inline String8& appendFormat(String8& ss, const char* fmt, ...)
 }
 inline void setTo(String8& s, char const* value) { s = value; }
 inline char* lockBuffer(String8& s, int) { return const_cast<char*>(s.data()); }
-inline String8 formatString8(const char* fmt, ...)
+template <typename ... Args>
+inline String8 formatString8(const char* fmt, Args... args)
 {
-    ::va_list args;
-    ::va_start(args, fmt);
     String8 s;
-    appendFormat(s, fmt, args);
-    ::va_end(args);
+    appendFormat(s, fmt, args...);
     return s;
 }
 inline void setTo(String8& s, String8 const& value) { s = value; }
