@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
 #define MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
 
-#include "mir/chrono/chrono.h"
+#include <chrono>
 #include <string>
 
 namespace mir_test_framework

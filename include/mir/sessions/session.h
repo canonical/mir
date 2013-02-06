@@ -20,8 +20,9 @@
 #define MIR_SESSIONS_SESSION_H_
 
 #include "mir/int_wrapper.h"
-#include "mir/thread/all.h"
 
+#include <mutex>
+#include <atomic>
 #include <memory>
 #include <string>
 #include <map>

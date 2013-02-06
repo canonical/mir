@@ -17,19 +17,15 @@
  */
 
 #include "mir_test_framework/testing_process_manager.h"
-
 #include "mir/display_server.h"
 #include "mir_test_framework/signal_dispatcher.h"
-
-#include "mir/chrono/chrono.h"
-#include "mir/thread/all.h"
-
 #include "mir_test_framework/detect_server.h"
 
 #include <boost/asio.hpp>
-
 #include <gmock/gmock.h>
-
+#include <chrono>
+#include <thread>
+#include <future>
 #include <stdexcept>
 
 namespace mc = mir::compositor;

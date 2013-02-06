@@ -26,7 +26,6 @@
 #include "mir_logger.h"
 #include "make_rpc_channel.h"
 
-
 #include "mir_protobuf.pb.h"
 
 #include <set>
@@ -37,19 +36,7 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-#ifdef MIR_USING_BOOST_THREADS
-    using ::mir::std::condition_variable;
-    using ::boost::unique_lock;
-    using ::boost::lock_guard;
-    using ::boost::thread;
-    using ::boost::mutex;
-    using ::mir::std::this_thread::yield;
-#else
-    using namespace std;
-    using std::this_thread::yield;
-#endif
-
-mutex MirConnection::connection_guard;
+std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection *> MirConnection::valid_connections;
 
 namespace

@@ -19,9 +19,9 @@
 #ifndef FRONTEND_SESSION_CONTAINER_H_
 #define FRONTEND_SESSION_CONTAINER_H_
 
-#include "mir/thread/all.h"
 #include <vector>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {

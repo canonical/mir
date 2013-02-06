@@ -18,9 +18,9 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir/chrono/chrono.h"
 #include "mir_test_framework/detect_server.h"
 
+#include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

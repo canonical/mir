@@ -20,16 +20,17 @@
 #include "mir_client/mir_client_library.h"
 #include "src/client/mir_logger.h"
 
-#include "mir/chrono/chrono.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/thread/all.h"
 #include "mir/frontend/communicator.h"
 
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
