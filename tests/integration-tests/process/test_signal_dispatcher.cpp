@@ -21,6 +21,8 @@
 
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
