@@ -20,7 +20,6 @@ set(
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
 
   system/core/libcutils/properties.c          # used by InputTransport.cpp, VelocityTracker.cpp
-  system/core/liblog/logd_write.c             # used by EventHub.cpp
 )
 
 if (MIR_INPUT_USE_ANDROID_TYPES)
@@ -44,6 +43,7 @@ list(APPEND UTIL_SOURCES
   system/core/liblog/event_tag_map.c
   system/core/liblog/fake_log_device.c
   system/core/liblog/logprint.c
+  system/core/liblog/logd_write.c
   system/extras/ext4_utils/sha1.c
 )
 endif()
