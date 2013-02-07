@@ -311,7 +311,8 @@ status_t String8::appendFormat(const char* fmt, ...)
 
 status_t String8::appendFormatV(const char* fmt, va_list args)
 {
-    va_list args1=args; // Take a copy to avoid corruption by 1st call to vsnprintf
+    va_list args1;
+    va_copy(args1, args);
     int result = NO_ERROR;
     int n = vsnprintf(NULL, 0, fmt, args);
     if (n != 0) {
