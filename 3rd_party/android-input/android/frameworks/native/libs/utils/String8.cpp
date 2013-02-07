@@ -324,6 +324,7 @@ status_t String8::appendFormatV(const char* fmt, va_list args)
             result = NO_MEMORY;
         }
     }
+    va_end(args1);
     return result;
 }
 
