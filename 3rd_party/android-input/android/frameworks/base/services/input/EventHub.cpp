@@ -45,7 +45,11 @@
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/VirtualKeyMap.h>
 
+#if !defined(ANDROID_USE_STD)
 #include <sha1.h>
+#else
+#include <boost/uuid/sha1.hpp>
+#endif
 #include <string.h>
 #include <stdint.h>
 #include <dirent.h>
@@ -90,12 +94,33 @@ static inline const char* toString(bool value) {
     return value ? "true" : "false";
 }
 
-static String8 sha1(const String8& in) {
+namespace detail
+{
+String8 sha1(const String8& in) {
+#if !defined(ANDROID_USE_STD)
     SHA1_CTX ctx;
     SHA1Init(&ctx);
     SHA1Update(&ctx, reinterpret_cast<const u_char*>(c_str(in)), in.size());
     u_char digest[SHA1_DIGEST_LENGTH];
     SHA1Final(digest, &ctx);
+#else
+    unsigned int boost_digest[5];
+
+    boost::uuids::detail::sha1 hasher;
+    hasher.process_bytes(in.data(), in.size());
+    hasher.get_digest(boost_digest);
+
+    static const size_t SHA1_DIGEST_LENGTH = 20;
+    unsigned char digest[SHA1_DIGEST_LENGTH];
+
+    for(int i = 0; i != 5; ++i)
+    {
+        digest[i * 4]     = (boost_digest[i] >> 3*8) & 0xff;
+        digest[i * 4 + 1] = (boost_digest[i] >> 2*8) & 0xff;
+        digest[i * 4 + 2] = (boost_digest[i] >> 1*8) & 0xff;
+        digest[i * 4 + 3] = (boost_digest[i] >> 0*8) & 0xff;
+    }
+#endif
 
     String8 out;
     for (size_t i = 0; i < SHA1_DIGEST_LENGTH; i++) {
@@ -103,6 +128,9 @@ static String8 sha1(const String8& in) {
     }
     return out;
 }
+}
+
+using detail::sha1;
 
 static void setDescriptor(InputDeviceIdentifier& identifier) {
     // Compute a device descriptor that uniquely identifies the device.

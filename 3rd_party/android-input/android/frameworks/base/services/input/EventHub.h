@@ -413,6 +413,10 @@ private:
     bool mPendingINotify;
 };
 
+// Made available to test
+namespace detail { String8 sha1(const String8& in); }
+
+
 } // namespace android
 
 #endif // _RUNTIME_EVENT_HUB_H
