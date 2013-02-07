@@ -104,10 +104,10 @@ String8 sha1(const String8& in) {
     u_char digest[SHA1_DIGEST_LENGTH];
     SHA1Final(digest, &ctx);
 #else
-    unsigned int boost_digest[5];
-
     boost::uuids::detail::sha1 hasher;
     hasher.process_bytes(in.data(), in.size());
+
+    unsigned int boost_digest[5];
     hasher.get_digest(boost_digest);
 
     static const size_t SHA1_DIGEST_LENGTH = 20;
@@ -115,10 +115,10 @@ String8 sha1(const String8& in) {
 
     for(int i = 0; i != 5; ++i)
     {
-        digest[i * 4]     = (boost_digest[i] >> 3*8) & 0xff;
-        digest[i * 4 + 1] = (boost_digest[i] >> 2*8) & 0xff;
-        digest[i * 4 + 2] = (boost_digest[i] >> 1*8) & 0xff;
-        digest[i * 4 + 3] = (boost_digest[i] >> 0*8) & 0xff;
+        digest[i*4 + 0] = (boost_digest[i] >> 3*8) & 0xff;
+        digest[i*4 + 1] = (boost_digest[i] >> 2*8) & 0xff;
+        digest[i*4 + 2] = (boost_digest[i] >> 1*8) & 0xff;
+        digest[i*4 + 3] = (boost_digest[i] >> 0*8) & 0xff;
     }
 #endif
 
