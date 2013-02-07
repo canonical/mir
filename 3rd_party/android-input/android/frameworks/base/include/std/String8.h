@@ -35,12 +35,12 @@ inline String8& appendFormat(String8& ss, const char* fmt, ...)
 
     int n = ::vsnprintf(NULL, 0, fmt, args);
     if (n != 0) {
-        char* s = (char*) malloc((n+1) * sizeof(char));
+        char* s = (char*) malloc(n+1);
 
         if (s) {
             if (::vsnprintf(s, n+1, fmt, args))
             {
-                ss += s;
+                ss.append(s, s+n);
             }
             free(s);
         }
