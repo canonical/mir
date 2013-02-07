@@ -35,12 +35,14 @@ inline String8& appendFormat(String8& ss, const char* fmt, ...)
 
     int n = ::vsnprintf(NULL, 0, fmt, args);
     if (n != 0) {
-        char* s = (char*) malloc((n+1) * sizeof(char));
+        char* s = (char*) malloc(n+1);
 
         if (s) {
+            ::va_end(args);
+            ::va_start(args, fmt);
             if (::vsnprintf(s, n+1, fmt, args))
             {
-                ss += s;
+                ss.append(s, s+n);
             }
             free(s);
         }
@@ -50,14 +52,12 @@ inline String8& appendFormat(String8& ss, const char* fmt, ...)
 }
 inline void setTo(String8& s, char const* value) { s = value; }
 inline char* lockBuffer(String8& s, int) { return const_cast<char*>(s.data()); }
-inline String8 formatString8(const char* fmt, ...)
+template <typename ... Args>
+inline String8 formatString8(const char* fmt, Args... args)
 {
-    ::va_list args;
-    ::va_start(args, fmt);
-    String8 s;
-    appendFormat(s, fmt, args);
-    ::va_end(args);
-    return s;
+    String8 ss;
+    appendFormat(ss, fmt, args...);
+    return ss;
 }
 inline void setTo(String8& s, String8 const& value) { s = value; }
 inline String8 const& emptyString8() { static String8 empty; return empty; }
