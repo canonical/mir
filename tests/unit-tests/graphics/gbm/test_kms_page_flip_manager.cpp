@@ -248,6 +248,8 @@ TEST_F(KMSPageFlipManagerTest, threads_switch_loop_master)
 {
     using namespace testing;
 
+    size_t const loop_master_index{0};
+    size_t const other_index{1};
     std::vector<uint32_t> const crtc_ids{10, 11};
     std::vector<void*> user_data{nullptr, nullptr};
     std::vector<std::unique_ptr<PageFlipper>> page_flippers;
@@ -256,13 +258,17 @@ TEST_F(KMSPageFlipManagerTest, threads_switch_loop_master)
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(), _, _, _, _))
         .Times(2)
-        .WillOnce(DoAll(SaveArg<4>(&user_data[0]), Return(0)))
-        .WillOnce(DoAll(SaveArg<4>(&user_data[1]), Return(0)));
+        .WillOnce(DoAll(SaveArg<4>(&user_data[loop_master_index]), Return(0)))
+        .WillOnce(DoAll(SaveArg<4>(&user_data[other_index]), Return(0)));
 
+    /*
+     * The first event releases the original loop master, hence we expect that
+     * then the other thread will become the loop master.
+     */
     EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
         .Times(2)
-        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
-        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)));
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[loop_master_index]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[other_index]), Return(0)));
 
     /* Start the page-flipping threads */
     for (auto crtc_id : crtc_ids)
@@ -275,22 +281,16 @@ TEST_F(KMSPageFlipManagerTest, threads_switch_loop_master)
         while (page_flippers.back()->page_flip_count() == 0)
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
         page_flippers.back()->stop();
+
+        /* Wait until the (first) thread has become the loop master */
+        while (tid == std::thread::id())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+            tid = blocking_pf_manager.debug_get_wait_loop_master();
+        }
     }
 
-    /* Wait until one of the threads has become the loop master */
-    while (tid == std::thread::id())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        tid = blocking_pf_manager.debug_get_wait_loop_master();
-    }
-
-    EXPECT_TRUE(tid == page_flipper_threads[0].get_id() ||
-                tid == page_flipper_threads[1].get_id());
-
-    size_t loop_master_index{0};
-    size_t other_index{1};
-    if (tid == page_flipper_threads[1].get_id())
-        std::swap(loop_master_index, other_index);
+    EXPECT_EQ(page_flipper_threads[loop_master_index].get_id(), tid);
 
     /* Fake a DRM event */
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
@@ -314,6 +314,8 @@ TEST_F(KMSPageFlipManagerTest, threads_loop_master_notifies_non_master)
 {
     using namespace testing;
 
+    size_t const loop_master_index{0};
+    size_t const other_index{1};
     std::vector<uint32_t> const crtc_ids{10, 11};
     std::vector<void*> user_data{nullptr, nullptr};
     std::vector<std::unique_ptr<PageFlipper>> page_flippers;
@@ -322,13 +324,17 @@ TEST_F(KMSPageFlipManagerTest, threads_loop_master_notifies_non_master)
 
     EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(), _, _, _, _))
         .Times(2)
-        .WillOnce(DoAll(SaveArg<4>(&user_data[0]), Return(0)))
-        .WillOnce(DoAll(SaveArg<4>(&user_data[1]), Return(0)));
+        .WillOnce(DoAll(SaveArg<4>(&user_data[loop_master_index]), Return(0)))
+        .WillOnce(DoAll(SaveArg<4>(&user_data[other_index]), Return(0)));
 
+    /*
+     * The first event releases the non-master thread, hence we expect that
+     * original loop master will not change.
+     */
     EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
         .Times(2)
-        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
-        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)));
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[other_index]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[loop_master_index]), Return(0)));
 
     /* Start the page-flipping threads */
     for (auto crtc_id : crtc_ids)
@@ -341,22 +347,16 @@ TEST_F(KMSPageFlipManagerTest, threads_loop_master_notifies_non_master)
         while (page_flippers.back()->page_flip_count() == 0)
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
         page_flippers.back()->stop();
+
+        /* Wait until the (first) thread has become the loop master */
+        while (tid == std::thread::id())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+            tid = blocking_pf_manager.debug_get_wait_loop_master();
+        }
     }
 
-    /* Wait until one of the threads has become the loop master */
-    while (tid == std::thread::id())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        tid = blocking_pf_manager.debug_get_wait_loop_master();
-    }
-
-    EXPECT_TRUE(tid == page_flipper_threads[0].get_id() ||
-                tid == page_flipper_threads[1].get_id());
-
-    size_t loop_master_index{0};
-    size_t other_index{1};
-    if (tid == page_flipper_threads[1].get_id())
-        std::swap(loop_master_index, other_index);
+    EXPECT_EQ(page_flipper_threads[loop_master_index].get_id(), tid);
 
     /* Fake a DRM event */
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
