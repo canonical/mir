@@ -382,17 +382,23 @@ class PageFlipCounter
 public:
     void add_flip(uint32_t crtc_id, void* user_data)
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         data.push_back({CountType::flip, crtc_id});
         pending_flips.insert(user_data);
     }
 
     void add_handle_event(int crtc_id)
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         data.push_back({CountType::handle_event, crtc_id});
     }
 
     int count_flips()
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         return std::count_if(begin(data), end(data), [](CountElement& e) -> bool
         {
             return e.type == CountType::flip;
@@ -401,6 +407,8 @@ public:
 
     int count_handle_events()
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         return std::count_if(begin(data), end(data), [](CountElement& e) -> bool
         {
             return e.type == CountType::handle_event;
@@ -409,6 +417,8 @@ public:
 
     bool no_consecutive_flips_for_same_crtc_id()
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         std::unordered_set<uint32_t> pending_crtc_ids;
 
         for (auto& e : data)
@@ -433,6 +443,8 @@ public:
 
     void* get_pending_flip_data()
     {
+        std::lock_guard<std::mutex> lock{data_mutex};
+
         auto iter = pending_flips.begin();
         if (iter == pending_flips.end())
         {
@@ -456,6 +468,7 @@ private:
 
     std::vector<CountElement> data;
     std::unordered_set<void*> pending_flips;
+    std::mutex data_mutex;
 };
 
 ACTION_P(InvokePageFlipHandlerWithPendingData, counter)
