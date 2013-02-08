@@ -102,7 +102,7 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
         0,  /* .vblank_handler */
         page_flip_handler  /* .page_flip_handler */
     };
-    static std::thread::id const invalid_tid{std::thread::id()};
+    static std::thread::id const invalid_tid;
 
     {
         std::unique_lock<std::mutex> lock{pf_mutex};
