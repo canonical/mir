@@ -71,7 +71,7 @@ mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
       tv_page_flip_max_wait(chrono_to_timeval(max_wait)),
       listener(listener),
       pending_page_flips(),
-      loop_master_tid()
+      worker_tid()
 {
 }
 
@@ -108,21 +108,21 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
         std::unique_lock<std::mutex> lock{pf_mutex};
 
         /*
-         * While another thread is the loop master (it is controlling the
-         * event loop) and our event has not arrived, wait.
+         * While another thread is the worker (it is controlling the
+         * page flip event loop) and our event has not arrived, wait.
          */
-        while (loop_master_tid != invalid_tid && !page_flip_is_done(crtc_id))
+        while (worker_tid != invalid_tid && !page_flip_is_done(crtc_id))
             pf_cv.wait(lock);
 
         /* If the page flip we are waiting for has arrived we are done. */
         if (page_flip_is_done(crtc_id))
             return;
 
-        /* ...otherwise we take control of the loop */
-        loop_master_tid = std::this_thread::get_id();
+        /* ...otherwise we become the worker */
+        worker_tid = std::this_thread::get_id();
     }
 
-    /* Only loop masters reach this point */
+    /* Only the worker thread reaches this point */
     bool done{false};
 
     while (!done)
@@ -163,23 +163,23 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
             done = page_flip_is_done(crtc_id);
             /* Give up loop control if we are done */
             if (done)
-                loop_master_tid = invalid_tid;
+                worker_tid = invalid_tid;
         }
 
         /*
-         * Wake up other (non-loop-master) threads, so they can check whether
-         * their page-flip events have arrived, or whether they can become loop
-         * masters (see pf_cv.wait(lock) above).
+         * Wake up other (non-worker) threads, so they can check whether
+         * their page-flip events have arrived, or whether they can become
+         * the worker (see pf_cv.wait(lock) above).
          */
         pf_cv.notify_all();
     }
 }
 
-std::thread::id mgg::KMSPageFlipManager::debug_get_wait_loop_master()
+std::thread::id mgg::KMSPageFlipManager::debug_get_worker_tid()
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
-    return loop_master_tid;
+    return worker_tid;
 }
 
 /* This method should be called with the 'pf_mutex' locked */
