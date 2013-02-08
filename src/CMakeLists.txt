@@ -79,6 +79,11 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
       -Wl,-no-whole-archive
     LINK_PUBLIC
       ${MIRSERVER_LINKS}
+
+      # Workaround: These should not be required. They should be implied by
+      #             mirplatformgraphics.
+      ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+      ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   )
   install(TARGETS mirserver
     LIBRARY DESTINATION lib
