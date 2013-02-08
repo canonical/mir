@@ -161,6 +161,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
             auto display = std::make_shared<mtd::MockDisplay>();
             ON_CALL(*display, view_area()).WillByDefault(Return(default_view_area));
+            EXPECT_CALL(*display, view_area()).WillRepeatedly(Return(default_view_area));
 
             auto const& mock_session_store = std::make_shared<MockSessionStore>(
                 DefaultServerConfiguration::make_session_store(surface_factory, display));
