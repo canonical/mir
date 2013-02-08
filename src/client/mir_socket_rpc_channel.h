@@ -21,7 +21,6 @@
 #define MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-#include "mir/thread/all.h"
 #include "mir_logger.h"
 
 #include <boost/asio.hpp>
@@ -29,6 +28,7 @@
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
+#include <thread>
 #include <iosfwd>
 
 namespace mir

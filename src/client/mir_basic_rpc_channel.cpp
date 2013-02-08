@@ -21,6 +21,7 @@
 
 #include "mir_protobuf_wire.pb.h"
 
+#include <thread>
 #include <boost/bind.hpp>
 #include <sstream>
 

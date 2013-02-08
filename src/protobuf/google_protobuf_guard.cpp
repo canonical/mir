@@ -16,11 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <mir/protobuf/google_protobuf_guard.h>
-#include <mir/thread/all.h>
+#include "mir/protobuf/google_protobuf_guard.h"
 
 #include <google/protobuf/descriptor.h>
-
+#include <mutex>
 
 namespace mir
 {

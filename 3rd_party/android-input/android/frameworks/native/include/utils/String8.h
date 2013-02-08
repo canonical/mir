@@ -386,25 +386,20 @@ inline String8::operator const char*() const
 // Compatibility functions
 inline bool isEmpty(String8 const& s) { return s.isEmpty(); }
 inline char const* c_str(String8 const& s) { return s.string(); }
-inline String8& appendFormat(String8& ss, const char* fmt, ...)
+
+template <typename ... Args>
+inline String8& appendFormat(String8& ss, const char* fmt, Args... args)
 {
-    ::va_list args;
-    ::va_start(args, fmt);
-
-    ss.appendFormat(fmt, args);
-
-    ::va_end(args);
+    ss.appendFormat(fmt, args...);
     return ss;
 }
 inline void setTo(String8& s, char const* value) { s.setTo(value); }
 inline char* lockBuffer(String8& s, int n) { return s.lockBuffer(n); }
-inline String8 formatString8(const char* fmt, ...)
+template <typename ... Args>
+inline String8 formatString8(const char* fmt, Args... args)
 {
-    ::va_list args;
-    ::va_start(args, fmt);
     String8 s;
-    appendFormat(s, fmt, args);
-    ::va_end(args);
+    appendFormat(s, fmt, args...);
     return s;
 }
 inline String8 emptyString8() { return String8::empty(); }

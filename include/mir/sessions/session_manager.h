@@ -20,7 +20,8 @@
 #define MIR_SESSIONS_APPLICATION_MANAGER_H_
 
 #include "mir/sessions/session_store.h"
-#include "mir/thread/all.h"
+
+#include <mutex>
 #include <memory>
 #include <vector>
 

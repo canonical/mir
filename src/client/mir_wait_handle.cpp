@@ -31,7 +31,7 @@ MirWaitHandle::~MirWaitHandle()
 
 void MirWaitHandle::result_received()
 {
-    unique_lock<mutex> lock(guard);
+    std::unique_lock<std::mutex> lock(guard);
     result_has_occurred = true;
 
     wait_condition.notify_all();
@@ -39,7 +39,7 @@ void MirWaitHandle::result_received()
 
 void MirWaitHandle::wait_for_result()
 {
-    unique_lock<mutex> lock(guard);
+    std::unique_lock<std::mutex> lock(guard);
     while ( (!result_has_occurred) )
         wait_condition.wait(lock);
     result_has_occurred = false;

@@ -23,7 +23,8 @@
 
 #include "mir/input/cursor_listener.h"
 
-#include "mir/thread/all.h"
+#include <memory>
+#include <mutex>
 
 namespace mir
 {

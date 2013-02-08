@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_basic.h"
-#include "mir/thread/all.h"
+#include <atomic>
 
 namespace mir
 {

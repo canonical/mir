@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,17 +16,34 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "androidfw/Platform.h"
 
-#ifndef MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
-#define MIR_TEST_FRAMEWORK_DETECT_SERVER_H_
+#include ANDROIDFW_UTILS(String8.h)
 
-#include <chrono>
-#include <string>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-namespace mir_test_framework
+using namespace android;
+
+TEST(AndroidString8, appendFormat)
 {
-bool detect_server(std::string const& name, std::chrono::milliseconds const& timeout);
+    String8 string;
+
+    EXPECT_STREQ("", c_str(string));
+
+    appendFormat(string, "%s", "Hello");
+
+    EXPECT_STREQ("Hello", c_str(string));
+
+    u_char digits = 0x12;
+
+    appendFormat(string, "%02x", digits);
+    EXPECT_STREQ("Hello12", c_str(string));
 }
 
+TEST(AndroidString8, formatString8)
+{
+    auto string = formatString8("Hello %s #%02x", "world", 0x42);
 
-#endif /* MIR_TEST_FRAMEWORK_DETECT_SERVER_H_ */
+    EXPECT_STREQ("Hello world #42", c_str(string));
+}

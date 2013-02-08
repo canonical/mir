@@ -23,12 +23,11 @@
 #include "src/client/mir_logger.h"
 #include "src/client/mir_connection.h"
 
-#include "mir/thread/all.h"
-
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
+#include <mutex>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"

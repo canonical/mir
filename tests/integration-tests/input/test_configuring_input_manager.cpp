@@ -20,8 +20,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "mir/thread/all.h"
-
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_input_manager.h"
 

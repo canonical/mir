@@ -19,8 +19,9 @@
 #ifndef MIR_TEST_WAIT_CONDITION_H_
 #define MIR_TEST_WAIT_CONDITION_H_
 
-#include "mir/chrono/chrono.h"
-#include "mir/thread/all.h"
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
 
 namespace mir
 {

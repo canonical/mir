@@ -22,10 +22,10 @@
 #include "connected_sessions.h"
 
 #include "mir/frontend/communicator.h"
-#include "mir/thread/all.h"
 
 #include <boost/asio.hpp>
 
+#include <thread>
 #include <string>
 #include <vector>
 

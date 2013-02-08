@@ -22,8 +22,8 @@
 
 #include "buffer_swapper.h"
 
-#include "mir/thread/all.h"
-
+#include <mutex>
+#include <condition_variable>
 #include <vector>
 #include <memory>
 #include <deque>

@@ -11,17 +11,14 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
+# This is stuff for which we want non-android versions
 set(
   UTIL_SOURCES
 
-  frameworks/native/libs/utils/FileMap.cpp    # used by Tokenizer.cpp
   frameworks/native/libs/utils/Looper.cpp     # used by InputDispatcher.cpp
   frameworks/native/libs/utils/RefBase.cpp    # used a lot
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
-  frameworks/native/libs/utils/Tokenizer.cpp  # used by KeyLayoutMap.cpp, KeyCharacterMap.cpp, VirtualKeyMap.cpp
 
-  hardware/libhardware_legacy/power/power.c   # used by EventHub.cpp
-  system/core/libcutils/atomic.c              # used by RefBase.cpp, InputDispatcher.cpp
   system/core/libcutils/properties.c          # used by InputTransport.cpp, VelocityTracker.cpp
   system/core/liblog/logd_write.c             # used by EventHub.cpp
   system/extras/ext4_utils/sha1.c             # used by EventHub.cpp
@@ -40,9 +37,11 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
   frameworks/native/libs/utils/Debug.cpp
+  hardware/libhardware_legacy/power/power.c
   system/core/libcutils/threads.c
   system/core/libcutils/sched_policy.c
   system/core/libcutils/sockets.c
+  system/core/libcutils/atomic.c
   system/core/liblog/event_tag_map.c
   system/core/liblog/fake_log_device.c
   system/core/liblog/logprint.c
@@ -59,21 +58,23 @@ add_library(
   frameworks/base/services/input/InputListener.cpp
   frameworks/base/services/input/InputManager.cpp
   frameworks/base/services/input/InputReader.cpp
-  frameworks/base/libs/androidfw/InputTransport.cpp
+  frameworks/base/services/input/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp
   frameworks/base/services/input/PointerController.cpp
   # Keyboard/keymap handling
-  frameworks/base/libs/androidfw/GenericKeyMap.cpp
+  frameworks/base/services/input/GenericKeyMap.cpp
   # The stuff that is used internally by the implementation above.
   # We're not directly interested in those:
-  frameworks/base/libs/androidfw/Input.cpp
-  frameworks/base/libs/androidfw/InputDevice.cpp
-  frameworks/base/libs/androidfw/Keyboard.cpp
-  frameworks/base/libs/androidfw/KeyCharacterMap.cpp
-  frameworks/base/libs/androidfw/KeyLayoutMap.cpp
-  frameworks/base/libs/androidfw/VelocityControl.cpp
-  frameworks/base/libs/androidfw/VelocityTracker.cpp
-  frameworks/base/libs/androidfw/VirtualKeyMap.cpp
+  frameworks/base/services/input/Input.cpp
+  frameworks/base/services/input/InputDevice.cpp
+  frameworks/base/services/input/Keyboard.cpp
+  frameworks/base/services/input/KeyCharacterMap.cpp
+  frameworks/base/services/input/KeyLayoutMap.cpp
+  frameworks/base/services/input/VelocityControl.cpp
+  frameworks/base/services/input/VelocityTracker.cpp
+  frameworks/base/services/input/VirtualKeyMap.cpp
+  frameworks/native/libs/utils/Tokenizer.cpp
+  frameworks/native/libs/utils/FileMap.cpp
   ${UTIL_SOURCES}
   )
 

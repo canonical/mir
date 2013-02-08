@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/thread/all.h"
+#include <thread>
 
 namespace mir
 {
