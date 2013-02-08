@@ -31,6 +31,8 @@
 #include <thread>
 #include <unordered_set>
 
+#include <sys/time.h>
+
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mt  = mir::test;
@@ -65,6 +67,36 @@ ACTION_P(InvokePageFlipHandler, param)
     ASSERT_EQ(1, read(arg0, &dummy, 1));
 }
 
+}
+
+TEST_F(KMSPageFlipManagerTest, overflow_in_wait_time_throws)
+{
+    using namespace testing;
+    std::chrono::microseconds chrono_us;
+
+    auto max_tv_sec = std::numeric_limits<decltype(timeval::tv_sec)>::max();
+    auto max_chrono_usec = std::numeric_limits<decltype(chrono_us.count())>::max();
+    auto max_chrono_usec_as_sec = max_chrono_usec / 1000000;
+
+    /*
+     * The problem only occurs when the maximum number of chrono microseconds
+     * when expressed as seconds cannot fit into timeval::tv_sec.
+     *
+     * This, for example, may happen on a 32-bit system, where tv_sec is long
+     * (32 bits) but chrono types are by default uint64_t.
+     */
+    if (max_chrono_usec_as_sec > max_tv_sec)
+    {
+        EXPECT_THROW({
+            mgg::KMSPageFlipManager(0, std::chrono::microseconds(max_chrono_usec),
+                                    std::make_shared<mtd::NullDisplayListener>());
+        }, std::runtime_error);
+    }
+    else
+    {
+        mgg::KMSPageFlipManager(0, std::chrono::microseconds(max_chrono_usec),
+                                std::make_shared<mtd::NullDisplayListener>());
+    }
 }
 
 TEST_F(KMSPageFlipManagerTest, schedule_page_flip_calls_drm_page_flip)

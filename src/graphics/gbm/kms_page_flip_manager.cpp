@@ -19,6 +19,7 @@
 #include "kms_page_flip_manager.h"
 #include "mir/graphics/display_listener.h"
 
+#include <limits>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -29,6 +30,29 @@ namespace mgg = mir::graphics::gbm;
 
 namespace
 {
+
+struct timeval chrono_to_timeval(std::chrono::microseconds us)
+{
+    namespace sc = std::chrono;
+
+    auto s = sc::duration_cast<sc::seconds>(us);
+    auto us_left = sc::duration_cast<sc::microseconds>(us - s);
+
+    if (s.count() > std::numeric_limits<decltype(timeval::tv_sec)>::max() ||
+        s.count() < 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to convert microseconds to timeval, overflow in tv_sec"));
+    }
+
+    if (us_left.count() > std::numeric_limits<decltype(timeval::tv_usec)>::max() ||
+        us_left.count() < 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to convert microseconds to timeval, overflow in tv_usec"));
+    }
+
+    return {static_cast<decltype(timeval::tv_sec)>(s.count()),
+            static_cast<decltype(timeval::tv_usec)>(us_left.count())};
+}
 
 void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
@@ -44,7 +68,7 @@ mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
                                             std::chrono::microseconds max_wait,
                                             std::shared_ptr<DisplayListener> const& listener)
     : drm_fd{drm_fd},
-      page_flip_max_wait_usec{static_cast<long>(max_wait.count())},
+      tv_page_flip_max_wait(chrono_to_timeval(max_wait)),
       listener(listener),
       pending_page_flips(),
       loop_master_tid()
@@ -103,7 +127,7 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
 
     while (!done)
     {
-        struct timeval tv{0, page_flip_max_wait_usec};
+        struct timeval tv = tv_page_flip_max_wait;
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(drm_fd, &fds);

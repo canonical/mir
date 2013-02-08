@@ -27,6 +27,8 @@
 #include <condition_variable>
 #include <thread>
 
+#include <sys/time.h>
+
 namespace mir
 {
 namespace graphics
@@ -58,7 +60,7 @@ private:
     bool page_flip_is_done(uint32_t crtc_id);
 
     int const drm_fd;
-    long const page_flip_max_wait_usec;
+    struct timeval const tv_page_flip_max_wait;
     std::shared_ptr<DisplayListener> const listener;
     std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
     std::mutex pf_mutex;
