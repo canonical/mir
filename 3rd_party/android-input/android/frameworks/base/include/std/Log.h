@@ -20,8 +20,6 @@
 #ifndef MIR_ANDROID_UBUNTU_LOG_H_
 #define MIR_ANDROID_UBUNTU_LOG_H_
 
-//#include <utils/Log.h>
-
 /*
  * Android log priority values, in ascending priority order.
  */
@@ -33,8 +31,6 @@ typedef enum android_LogPriority {
     ANDROID_LOG_INFO,
     ANDROID_LOG_WARN,
     ANDROID_LOG_ERROR,
-    ANDROID_LOG_FATAL,
-    ANDROID_LOG_SILENT,     /* only for SetMinPriority(); must be last */
 } android_LogPriority;
 
 /*
@@ -62,38 +58,10 @@ typedef enum android_LogPriority {
 // ---------------------------------------------------------------------
 
 /*
- * Normally we strip ALOGV (VERBOSE messages) from release builds.
- * You can modify this (for example with "#define LOG_NDEBUG 0"
- * at the top of your source file) to change that behavior.
- */
-#ifndef LOG_NDEBUG
-#ifdef NDEBUG
-#define LOG_NDEBUG 1
-#else
-#define LOG_NDEBUG 0
-#endif
-#endif
-
-/*
- * This is the local tag used for the following simplified
- * logging macros.  You can change this preprocessor definition
- * before using the other macros to change the tag.
- */
-#ifndef LOG_TAG
-#define LOG_TAG NULL
-#endif
-
-// ---------------------------------------------------------------------
-
-/*
  * Simplified macro to send a verbose log message using the current LOG_TAG.
  */
 #ifndef ALOGV
-#if LOG_NDEBUG
-#define ALOGV(...)   ((void)0)
-#else
 #define ALOGV(...) ((void)ALOG(LOG_VERBOSE, LOG_TAG, __VA_ARGS__))
-#endif
 #endif
 
 /*
@@ -137,7 +105,6 @@ extern "C" void __android_log_assert(const char *cond, const char *tag, const ch
  */
 #ifndef ALOG_ASSERT
 #define ALOG_ASSERT(cond, ...) LOG_FATAL_IF(!(cond), ## __VA_ARGS__)
-//#define ALOG_ASSERT(cond) LOG_FATAL_IF(!(cond), "Assertion failed: " #cond)
 #endif
 
 // ---------------------------------------------------------------------
@@ -164,17 +131,6 @@ extern "C" void __android_log_assert(const char *cond, const char *tag, const ch
  * Versions of LOG_ALWAYS_FATAL_IF and LOG_ALWAYS_FATAL that
  * are stripped out of release builds.
  */
-#if LOG_NDEBUG
-
-#ifndef LOG_FATAL_IF
-#define LOG_FATAL_IF(cond, ...) ((void)0)
-#endif
-#ifndef LOG_FATAL
-#define LOG_FATAL(...) ((void)0)
-#endif
-
-#else
-
 #ifndef LOG_FATAL_IF
 #define LOG_FATAL_IF(cond, ...) LOG_ALWAYS_FATAL_IF(cond, ## __VA_ARGS__)
 #endif
@@ -195,8 +151,6 @@ extern "C" void __android_log_assert(const char *cond, const char *tag, const ch
 #define android_printAssert(cond, tag, fmt...) \
     __android_log_assert(cond, tag, \
         __android_second(0, ## fmt, NULL) __android_rest(fmt))
-
-#endif
 
 #define CONDITION(cond)     (__builtin_expect((cond)!=0, 0))
 
