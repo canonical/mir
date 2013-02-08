@@ -139,29 +139,23 @@ String8 sha1(const String8& in) {
     SHA1Update(&ctx, reinterpret_cast<const u_char*>(c_str(in)), in.size());
     u_char digest[SHA1_DIGEST_LENGTH];
     SHA1Final(digest, &ctx);
-#else
-    boost::uuids::detail::sha1 hasher;
-    hasher.process_bytes(in.data(), in.size());
-
-    unsigned int boost_digest[5];
-    hasher.get_digest(boost_digest);
-
-    static const size_t SHA1_DIGEST_LENGTH = 20;
-    unsigned char digest[SHA1_DIGEST_LENGTH];
-
-    for(int i = 0; i != 5; ++i)
-    {
-        digest[i*4 + 0] = (boost_digest[i] >> 3*8) & 0xff;
-        digest[i*4 + 1] = (boost_digest[i] >> 2*8) & 0xff;
-        digest[i*4 + 2] = (boost_digest[i] >> 1*8) & 0xff;
-        digest[i*4 + 3] = (boost_digest[i] >> 0*8) & 0xff;
-    }
-#endif
-
     String8 out;
     for (size_t i = 0; i < SHA1_DIGEST_LENGTH; i++) {
         appendFormat(out, "%02x", digest[i]);
     }
+#else
+    boost::uuids::detail::sha1 hasher;
+    hasher.process_bytes(in.data(), in.size());
+
+    unsigned int digest[5];
+    hasher.get_digest(digest);
+
+    String8 out;
+    for(int i : digest) {
+        appendFormat(out, "%08x", i);
+    }
+#endif
+
     return out;
 }
 }
