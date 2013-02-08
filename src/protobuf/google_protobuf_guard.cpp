@@ -19,7 +19,7 @@
 #include "mir/protobuf/google_protobuf_guard.h"
 
 #include <google/protobuf/descriptor.h>
-#include <thread>
+#include <mutex>
 
 namespace mir
 {
