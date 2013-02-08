@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "kms_page_flip_manager.h"
+#include "kms_page_flipper.h"
 #include "mir/graphics/display_listener.h"
 
 #include <limits>
@@ -64,9 +64,9 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
-                                            std::chrono::microseconds max_wait,
-                                            std::shared_ptr<DisplayListener> const& listener)
+mgg::KMSPageFlipper::KMSPageFlipper(int drm_fd,
+                                    std::chrono::microseconds max_wait,
+                                    std::shared_ptr<DisplayListener> const& listener)
     : drm_fd{drm_fd},
       tv_page_flip_max_wait(chrono_to_timeval(max_wait)),
       listener(listener),
@@ -75,7 +75,7 @@ mgg::KMSPageFlipManager::KMSPageFlipManager(int drm_fd,
 {
 }
 
-bool mgg::KMSPageFlipManager::schedule_page_flip(uint32_t crtc_id, uint32_t fb_id)
+bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
@@ -94,7 +94,7 @@ bool mgg::KMSPageFlipManager::schedule_page_flip(uint32_t crtc_id, uint32_t fb_i
     return (ret == 0);
 }
 
-void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
+void mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     static drmEventContext evctx =
     {
@@ -175,7 +175,7 @@ void mgg::KMSPageFlipManager::wait_for_page_flip(uint32_t crtc_id)
     }
 }
 
-std::thread::id mgg::KMSPageFlipManager::debug_get_worker_tid()
+std::thread::id mgg::KMSPageFlipper::debug_get_worker_tid()
 {
     std::unique_lock<std::mutex> lock{pf_mutex};
 
@@ -183,7 +183,7 @@ std::thread::id mgg::KMSPageFlipManager::debug_get_worker_tid()
 }
 
 /* This method should be called with the 'pf_mutex' locked */
-bool mgg::KMSPageFlipManager::page_flip_is_done(uint32_t crtc_id)
+bool mgg::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
 {
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }

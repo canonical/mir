@@ -21,7 +21,7 @@
 #include "gbm_display_buffer.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
-#include "kms_page_flip_manager.h"
+#include "kms_page_flipper.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -41,9 +41,9 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
     : platform(platform),
       listener(listener),
       output_container{platform->drm.fd,
-                       std::make_shared<KMSPageFlipManager>(platform->drm.fd,
-                                                            page_flip_max_wait,
-                                                            listener)}
+                       std::make_shared<KMSPageFlipper>(platform->drm.fd,
+                                                        page_flip_max_wait,
+                                                        listener)}
 {
     configure(configuration());
 }

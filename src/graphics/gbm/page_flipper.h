@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_
-#define MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_
+#ifndef MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
+#define MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
 
 #include <cstdint>
 
@@ -28,22 +28,22 @@ namespace graphics
 namespace gbm
 {
 
-class PageFlipManager
+class PageFlipper
 {
 public:
-    virtual ~PageFlipManager() {}
+    virtual ~PageFlipper() {}
 
-    virtual bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
-    virtual void wait_for_page_flip(uint32_t crtc_id) = 0;
+    virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
+    virtual void wait_for_flip(uint32_t crtc_id) = 0;
 
 protected:
-    PageFlipManager() = default;
-    PageFlipManager(PageFlipManager const&) = delete;
-    PageFlipManager& operator=(PageFlipManager const&) = delete;
+    PageFlipper() = default;
+    PageFlipper(PageFlipper const&) = delete;
+    PageFlipper& operator=(PageFlipper const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_PAGE_FLIP_MANAGER_H_ */
+#endif /* MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_ */

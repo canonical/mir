@@ -40,7 +40,7 @@ add_library(
   gbm_display_buffer.cpp
   kms_output.cpp
   kms_output_container.cpp
-  kms_page_flip_manager.cpp
+  kms_page_flipper.cpp
 )
 
 target_link_libraries(

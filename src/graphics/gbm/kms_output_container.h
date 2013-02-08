@@ -31,12 +31,12 @@ namespace gbm
 {
 
 class KMSOutput;
-class PageFlipManager;
+class PageFlipper;
 
 class KMSOutputContainer
 {
 public:
-    KMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipManager> const& page_flip_manager);
+    KMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
 
     std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
 
@@ -46,7 +46,7 @@ private:
 
     int const drm_fd;
     std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
-    std::shared_ptr<PageFlipManager> const page_flip_manager;
+    std::shared_ptr<PageFlipper> const page_flipper;
 };
 
 }

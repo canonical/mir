@@ -31,13 +31,13 @@ namespace graphics
 namespace gbm
 {
 
-class PageFlipManager;
+class PageFlipper;
 
 class KMSOutput
 {
 public:
     KMSOutput(int drm_fd, uint32_t connector_id,
-              std::shared_ptr<PageFlipManager> const& pf_manager);
+              std::shared_ptr<PageFlipper> const& page_flipper);
     ~KMSOutput();
 
     void reset();
@@ -56,7 +56,7 @@ private:
 
     int const drm_fd;
     uint32_t const connector_id;
-    std::shared_ptr<PageFlipManager> const page_flip_manager;
+    std::shared_ptr<PageFlipper> const page_flipper;
 
     DRMModeConnectorUPtr connector;
     size_t mode_index;

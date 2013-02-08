@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_
-#define MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_
+#ifndef MIR_GRAPHICS_GBM_KMS_PAGE_FLIPPER_H_
+#define MIR_GRAPHICS_GBM_KMS_PAGE_FLIPPER_H_
 
-#include "page_flip_manager.h"
+#include "page_flipper.h"
 
 #include <unordered_map>
 #include <chrono>
@@ -45,14 +45,14 @@ struct PageFlipEventData
     uint32_t crtc_id;
 };
 
-class KMSPageFlipManager : public PageFlipManager
+class KMSPageFlipper : public PageFlipper
 {
 public:
-    KMSPageFlipManager(int drm_fd, std::chrono::microseconds max_wait,
-                       std::shared_ptr<DisplayListener> const& listener);
+    KMSPageFlipper(int drm_fd, std::chrono::microseconds max_wait,
+                   std::shared_ptr<DisplayListener> const& listener);
 
-    bool schedule_page_flip(uint32_t crtc_id, uint32_t fb_id);
-    void wait_for_page_flip(uint32_t crtc_id);
+    bool schedule_flip(uint32_t crtc_id, uint32_t fb_id);
+    void wait_for_flip(uint32_t crtc_id);
 
     std::thread::id debug_get_worker_tid();
 
@@ -72,4 +72,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_PAGE_FLIP_MANAGER_H_ */
+#endif /* MIR_GRAPHICS_GBM_KMS_PAGE_FLIPPER_H_ */
