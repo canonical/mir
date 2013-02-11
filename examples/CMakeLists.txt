@@ -79,10 +79,9 @@ add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
 target_link_libraries(
     render_to_fb
 
-    mirplatformgraphics
+    mirserver
     mirlogging
     mirdraw
-    mircompositor
     ${Boost_LIBRARIES}
 )
 
@@ -91,11 +90,8 @@ add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(
     render_surfaces
 
-    mircompositor
-    mirsurfaces
+    mirserver
     mirsessions
-    mirgraphics
-    mirplatformgraphics
     ${Boost_LIBRARIES}
 )
 
