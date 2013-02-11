@@ -30,7 +30,6 @@
 #include ANDROIDFW_UTILS(KeyedVector.h)
 #include ANDROIDFW_UTILS(Tokenizer.h)
 #include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Unicode.h)
 #include ANDROIDFW_UTILS(RefBase.h)
 
 namespace android {
