@@ -14,7 +14,7 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
 add_subdirectory(android)
 
 #we don't have these tools dependencies hybrisized to build the tool
-if("${MIR_PLATFROM}" STREQUAL "gbm")
+if(MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory(tools)
 endif()
 
