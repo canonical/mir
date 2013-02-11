@@ -86,6 +86,7 @@ extern "C" int __android_log_print(int /*prio*/, const char *tag, const char *fm
     va_list ap;
     va_start(ap, fmt);
     int result = vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
     va_end(ap);
 
     return result;
@@ -98,6 +99,7 @@ extern "C" void __android_log_assert(const char *cond, const char *tag,
         va_list ap;
         va_start(ap, fmt);
         vfprintf(stderr, fmt, ap);
+        fprintf(stderr, "\n");
         va_end(ap);
     } else {
         /* Msg not provided, log condition.  N.B. Do not use cond directly as
@@ -105,9 +107,9 @@ extern "C" void __android_log_assert(const char *cond, const char *tag,
          * "%d" in "blocks%devs == 0").
          */
         if (cond)
-            fprintf(stderr, "Assertion failed: %s", cond);
+            fprintf(stderr, "Assertion failed: %s\n", cond);
         else
-            fprintf(stderr, "Unspecified assertion failed");
+            fprintf(stderr, "Unspecified assertion failed\n");
     }
 
     __builtin_trap(); /* trap so we have a chance to debug the situation */
