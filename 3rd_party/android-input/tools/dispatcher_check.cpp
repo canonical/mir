@@ -1,6 +1,8 @@
+#include "androidfw/Platform.h"
+
 #include <InputManager.h>
 #include <pthread.h>
-#include <utils/Thread.h>
+#include ANDROIDFW_UTILS(Thread.h)
 #include <iostream>
 
 using namespace android;
