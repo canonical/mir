@@ -20,6 +20,13 @@
 #ifndef MIR_ANDROID_UBUNTU_THREADDEFS_H_
 #define MIR_ANDROID_UBUNTU_THREADDEFS_H_
 
-#include <utils/ThreadDefs.h>
+namespace android
+{
+enum
+{
+    PRIORITY_DEFAULT            = 0,
+    PRIORITY_URGENT_DISPLAY     = -8
+};
+}
 
 #endif /* MIR_ANDROID_UBUNTU_THREADDEFS_H_ */
