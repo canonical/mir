@@ -18,8 +18,6 @@ set(
   frameworks/native/libs/utils/Looper.cpp     # used by InputDispatcher.cpp
   frameworks/native/libs/utils/RefBase.cpp    # used a lot
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
-
-  system/core/libcutils/properties.c          # used by InputTransport.cpp, VelocityTracker.cpp
 )
 
 if (MIR_INPUT_USE_ANDROID_TYPES)
@@ -45,6 +43,7 @@ list(APPEND UTIL_SOURCES
   system/core/liblog/logprint.c
   system/core/liblog/logd_write.c
   system/extras/ext4_utils/sha1.c
+  system/core/libcutils/properties.c
 )
 endif()
 
