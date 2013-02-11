@@ -81,8 +81,9 @@
 
 #if defined(ANDROID_USE_STD)
 // TODO replace logging with mir reporting subsystem
-extern "C" int __android_log_print(int /*prio*/, const char *tag, const char *fmt, ...)
+extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
 {
+    if (prio < ANDROID_LOG_INFO) return 0;
     va_list ap;
     va_start(ap, fmt);
     int result = vfprintf(stderr, fmt, ap);
