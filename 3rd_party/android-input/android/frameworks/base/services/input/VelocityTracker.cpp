@@ -32,7 +32,7 @@
 #include ANDROIDFW_UTILS(Timers.h)
 #include ANDROIDFW_UTILS(Log.h)
 
-#include <cutils/properties.h>
+#include ANDROIDFW_CUTILS(properties.h)
 
 namespace android {
 
