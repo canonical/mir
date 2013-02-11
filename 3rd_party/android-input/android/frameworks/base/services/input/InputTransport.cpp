@@ -19,12 +19,11 @@
 // Log debug messages about touch event resampling
 #define DEBUG_RESAMPLING 0
 
-
+#include <androidfw/InputTransport.h>
 #include <cutils/log.h>
-#include <cutils/properties.h>
+#include ANDROIDFW_CUTILS(properties.h)
 #include <errno.h>
 #include <fcntl.h>
-#include <androidfw/InputTransport.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
