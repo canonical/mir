@@ -95,3 +95,11 @@ if(MIR_PLATFORM STREQUAL "android")
     android-input
     )
 endif()
+
+
+if (NOT MIR_INPUT_USE_ANDROID_TYPES)
+  target_link_libraries(cooked-event-printer    ${Boost_LIBRARIES})
+  target_link_libraries(raw-event-printer       ${Boost_LIBRARIES})
+  target_link_libraries(dispatcher-check        ${Boost_LIBRARIES})
+endif()
+
