@@ -710,10 +710,6 @@ EventHub::Device* EventHub::getDeviceByPathLocked(const char* devicePath) const 
 size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSize) {
     ALOG_ASSERT(bufferSize >= 1);
 
-    // TODO(tvoss, racarr): This is extremely hacky, but it allows us to shutdown
-    // all the input stack specific threads and get rid of the test flakiness.
-    return 0;
-
     AutoMutex _l(mLock);
 
     struct input_event readBuffer[bufferSize];
