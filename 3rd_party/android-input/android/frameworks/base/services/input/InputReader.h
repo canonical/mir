@@ -25,7 +25,8 @@
 #include <androidfw/VelocityControl.h>
 #include <androidfw/VelocityTracker.h>
 #include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(threads.h)
+#include ANDROIDFW_UTILS(Thread.h)
+#include ANDROIDFW_UTILS(Condition.h)
 #include ANDROIDFW_UTILS(Timers.h)
 #include ANDROIDFW_UTILS(RefBase.h)
 #include ANDROIDFW_UTILS(String8.h)

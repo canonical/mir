@@ -30,7 +30,6 @@
 #include <cutils/properties.h>
 #include ANDROIDFW_UTILS(Log.h)
 #include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(threads.h)
 #include ANDROIDFW_UTILS(Errors.h)
 
 #include <stdlib.h>

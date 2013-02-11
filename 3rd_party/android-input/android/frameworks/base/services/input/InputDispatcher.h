@@ -21,7 +21,6 @@
 #include <androidfw/InputTransport.h>
 #include ANDROIDFW_UTILS(KeyedVector.h)
 #include ANDROIDFW_UTILS(Vector.h)
-#include ANDROIDFW_UTILS(threads.h)
 #include ANDROIDFW_UTILS(Timers.h)
 #include ANDROIDFW_UTILS(RefBase.h)
 #include ANDROIDFW_UTILS(String8.h)
