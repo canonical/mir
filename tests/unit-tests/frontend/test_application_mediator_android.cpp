@@ -157,5 +157,5 @@ TEST_F(ApplicationMediatorAndroidTest, drm_auth_magic_throws)
 
     EXPECT_THROW({
         mediator.drm_auth_magic(nullptr, &magic, nullptr, null_callback.get());
-    }, std::runtime_error);
+    }, std::logic_error);
 }
