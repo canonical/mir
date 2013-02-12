@@ -21,6 +21,8 @@
 
 #include "mir/sessions/surface_id.h"
 
+#include <mutex>
+#include <atomic>
 #include <memory>
 #include <string>
 

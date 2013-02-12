@@ -18,6 +18,8 @@
 
 #include "mir_test/test_protobuf_client.h"
 
+#include <thread>
+
 namespace mtd = mir::test::doubles;
 
 mir::test::TestProtobufClient::TestProtobufClient(

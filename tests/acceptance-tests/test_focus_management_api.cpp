@@ -18,9 +18,7 @@
 
 #include "mir_client/mir_client_library_lightdm.h"
 
-#include "mir/chrono/chrono.h"
 #include "mir/sessions/session_store.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -28,6 +26,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <chrono>
+#include <thread>
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
@@ -161,6 +161,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
             auto display = std::make_shared<mtd::MockDisplay>();
             ON_CALL(*display, view_area()).WillByDefault(Return(default_view_area));
+            EXPECT_CALL(*display, view_area()).WillRepeatedly(Return(default_view_area));
 
             auto const& mock_session_store = std::make_shared<MockSessionStore>(
                 DefaultServerConfiguration::make_session_store(surface_factory, display));

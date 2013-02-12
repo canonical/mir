@@ -36,7 +36,7 @@ void DrawPatternCheckered<Rows,Cols>::draw(std::shared_ptr<MirGraphicsRegion>& r
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            pixel[j*region->width + i] = color_pattern[key_row][key_col];
+            pixel[j*region->stride + i] = color_pattern[key_row][key_col];
         }
     }
 }
@@ -54,7 +54,7 @@ bool DrawPatternCheckered<Rows, Cols>::check(const std::shared_ptr<MirGraphicsRe
         {
             int key_row = i % Rows;
             int key_col = j % Cols;
-            if (pixel[j*region->width + i] != color_pattern[key_row][key_col])
+            if (pixel[j*region->stride + i] != color_pattern[key_row][key_col])
             {
                 return false;
             }

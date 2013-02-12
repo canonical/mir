@@ -311,17 +311,20 @@ status_t String8::appendFormat(const char* fmt, ...)
 
 status_t String8::appendFormatV(const char* fmt, va_list args)
 {
+    va_list args1;
+    va_copy(args1, args);
     int result = NO_ERROR;
     int n = vsnprintf(NULL, 0, fmt, args);
     if (n != 0) {
         size_t oldLength = length();
         char* buf = lockBuffer(oldLength + n);
         if (buf) {
-            vsnprintf(buf + oldLength, n + 1, fmt, args);
+            vsnprintf(buf + oldLength, n + 1, fmt, args1);
         } else {
             result = NO_MEMORY;
         }
     }
+    va_end(args1);
     return result;
 }
 

@@ -20,7 +20,6 @@
 #define MIR_SESSIONS_APPLICATION_SESSION_H_
 
 #include "mir/sessions/session.h"
-#include "mir/thread/all.h"
 
 #include <map>
 

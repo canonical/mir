@@ -47,15 +47,7 @@ add_library(
 target_link_libraries(
   mir-test-framework
 
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
+  mirserver
   mirclient
 
   3rd_party

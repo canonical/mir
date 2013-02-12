@@ -25,7 +25,6 @@
 #include "mir/frontend/resource_cache.h"
 #include "src/graphics/android/android_buffer.h"
 #include "src/graphics/android/android_alloc_adaptor.h"
-#include "mir/thread/all.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
@@ -35,6 +34,7 @@
 
 #include <gmock/gmock.h>
 
+#include <thread>
 #include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
 
@@ -324,6 +324,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(package_id);
+        response->mutable_buffer()->set_stride(package->stride);
 
         unsigned int i;
         response->mutable_buffer()->set_fds_on_side_channel(1);
@@ -363,6 +364,7 @@ struct StubServerGenerator : public mt::StubServerTool
             response->add_fd(package->ipc_fds[i]);
         for(i=0; i<package->ipc_data.size(); i++)
             response->add_data(package->ipc_data[i]);
+        response->set_stride(package->stride);
 
         done->Run();
     }

@@ -20,7 +20,12 @@
 
 #include "EventHub.h"
 
+#if !defined(ANDROID_USE_STD)
 #include <hardware_legacy/power.h>
+#else
+#define acquire_wake_lock(lock, id) {}
+#define release_wake_lock(id) {}
+#endif
 
 #include <cutils/properties.h>
 #include ANDROIDFW_UTILS(Log.h)
@@ -40,7 +45,11 @@
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/VirtualKeyMap.h>
 
+#if !defined(ANDROID_USE_STD)
 #include <sha1.h>
+#else
+#include <boost/uuid/sha1.hpp>
+#endif
 #include <string.h>
 #include <stdint.h>
 #include <dirent.h>
@@ -85,19 +94,37 @@ static inline const char* toString(bool value) {
     return value ? "true" : "false";
 }
 
-static String8 sha1(const String8& in) {
+namespace detail
+{
+String8 sha1(const String8& in) {
+#if !defined(ANDROID_USE_STD)
     SHA1_CTX ctx;
     SHA1Init(&ctx);
     SHA1Update(&ctx, reinterpret_cast<const u_char*>(c_str(in)), in.size());
     u_char digest[SHA1_DIGEST_LENGTH];
     SHA1Final(digest, &ctx);
-
     String8 out;
     for (size_t i = 0; i < SHA1_DIGEST_LENGTH; i++) {
         appendFormat(out, "%02x", digest[i]);
     }
+#else
+    boost::uuids::detail::sha1 hasher;
+    hasher.process_bytes(in.data(), in.size());
+
+    unsigned int digest[5];
+    hasher.get_digest(digest);
+
+    String8 out;
+    for(int i : digest) {
+        appendFormat(out, "%08x", i);
+    }
+#endif
+
     return out;
 }
+}
+
+using detail::sha1;
 
 static void setDescriptor(InputDeviceIdentifier& identifier) {
     // Compute a device descriptor that uniquely identifies the device.

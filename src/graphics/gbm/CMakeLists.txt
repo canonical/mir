@@ -45,6 +45,7 @@ add_library(
 target_link_libraries(
   mirplatformgraphics
   mircompositor
+  mirlogging
 
   ${DRM_LIBRARIES}
   ${GBM_LIBRARIES}

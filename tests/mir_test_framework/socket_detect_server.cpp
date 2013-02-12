@@ -18,8 +18,8 @@
 
 #include "mir_test_framework/detect_server.h"
 
-#include "mir/chrono/chrono.h"
-#include "mir/thread/all.h"
+#include <chrono>
+#include <thread>
 
 #include <sys/socket.h>
 #include <sys/stat.h>

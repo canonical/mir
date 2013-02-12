@@ -19,7 +19,7 @@
 
 #include <androidfw/Platform.h>
 
-#include <cutils/atomic.h>
+#include ANDROIDFW_CUTILS(atomic.h)
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -191,7 +191,7 @@ private:
             const ReferenceConverterBase& caster) { }
 
 private:
-    mutable volatile int32_t mCount;
+    mutable android_atomic_int32_t mCount;
 };
 
 // ---------------------------------------------------------------------------

@@ -16,10 +16,34 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "androidfw/Platform.h"
 
-#ifndef MIR_ANDROID_UBUNTU_RWLOCK_H_
-#define MIR_ANDROID_UBUNTU_RWLOCK_H_
+#include ANDROIDFW_UTILS(String8.h)
 
-#include <utils/RWLock.h>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-#endif /* MIR_ANDROID_UBUNTU_RWLOCK_H_ */
+using namespace android;
+
+TEST(AndroidString8, appendFormat)
+{
+    String8 string;
+
+    EXPECT_STREQ("", c_str(string));
+
+    appendFormat(string, "%s", "Hello");
+
+    EXPECT_STREQ("Hello", c_str(string));
+
+    u_char digits = 0x12;
+
+    appendFormat(string, "%02x", digits);
+    EXPECT_STREQ("Hello12", c_str(string));
+}
+
+TEST(AndroidString8, formatString8)
+{
+    auto string = formatString8("Hello %s #%02x", "world", 0x42);
+
+    EXPECT_STREQ("Hello world #42", c_str(string));
+}

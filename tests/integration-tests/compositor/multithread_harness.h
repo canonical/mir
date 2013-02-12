@@ -18,8 +18,8 @@
 #ifndef MIR_TEST_MULTITHREAD_HARNESS_H_
 #define MIR_TEST_MULTITHREAD_HARNESS_H_
 
-#include "mir/thread/all.h"
-#include <chrono>
+#include <condition_variable>
+#include <mutex>
 #include <gtest/gtest.h>
 
 namespace mir

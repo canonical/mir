@@ -68,7 +68,7 @@ std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::successor
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 
@@ -101,7 +101,7 @@ std::shared_ptr<msess::Session> msess::RegistrationOrderFocusSequence::predecess
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 

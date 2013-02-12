@@ -36,7 +36,7 @@ public:
     explicit SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
     explicit SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int default_number_of_buffers);
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers);
 
     std::unique_ptr<BufferSwapper> create_swapper(
         BufferProperties& actual_buffer_properties,
@@ -44,7 +44,7 @@ public:
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
-    const int default_number_of_buffers;
+    int const number_of_buffers;
 };
 }
 }

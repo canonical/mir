@@ -17,16 +17,7 @@
 include_directories(${CUKE_INCLUDE_DIRS})
 
 set(BEHAVIOR_TESTING_LINK_LIBRARIES 
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirplatformgraphics
-  mirinput
-  mirsurfaces
-  mirprotobuf
-  mirlogging
+  mirserver
   
   mir-test-doubles
   3rd_party

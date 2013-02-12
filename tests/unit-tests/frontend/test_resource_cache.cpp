@@ -18,6 +18,8 @@
 
 #include "mir/frontend/resource_cache.h"
 
+#include <thread>
+#include <atomic>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

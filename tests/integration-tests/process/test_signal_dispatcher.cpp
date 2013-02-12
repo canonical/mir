@@ -19,9 +19,10 @@
 #include "mir_test_framework/process.h"
 #include "mir_test_framework/signal_dispatcher.h"
 
-#include "mir/chrono/chrono.h"
-#include "mir/thread/all.h"
-
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;

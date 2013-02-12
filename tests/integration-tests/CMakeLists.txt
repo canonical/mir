@@ -62,18 +62,10 @@ target_link_libraries(
   mir-test-doubles
   mir-test-cucumber
 
-  mir
+  mirserver
   mirclient
   mirdraw
   mirtestdraw
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
 
   3rd_party
 

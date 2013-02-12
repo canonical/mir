@@ -24,9 +24,9 @@ namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> registrar,
-                         std::shared_ptr<MirBufferPackage> && package, geom::Size size,
-                         geom::PixelFormat pf)
+mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
+                                               std::shared_ptr<MirBufferPackage> const& package,
+                                               geom::Size size, geom::PixelFormat pf)
  : creation_package(package),
    buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, size}),
@@ -47,7 +47,7 @@ void mcla::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer.height = static_cast<int32_t>(rect.size.height.as_uint32_t());
     native_window_buffer.width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
-    native_window_buffer.stride = static_cast<int32_t>(rect.size.width.as_uint32_t());
+    native_window_buffer.stride = creation_package->stride;
     native_window_buffer.usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
 
     native_window_buffer.handle = native_handle.get();

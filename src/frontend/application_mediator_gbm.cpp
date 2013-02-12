@@ -37,7 +37,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid application session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     listener->application_drm_auth_magic_called(application_session->name());
 

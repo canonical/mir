@@ -16,13 +16,13 @@
 
 #define LOG_TAG "RefBase"
 
+#include <androidfw/Platform.h>
+
 #include <utils/RefBase.h>
 
-#include <utils/Atomic.h>
 #include <utils/CallStack.h>
 #include <utils/Log.h>
-#include <utils/threads.h>
-#include <utils/TextOutput.h>
+#include ANDROIDFW_UTILS(TextOutput.h)
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,10 +52,10 @@ namespace android {
 class RefBase::weakref_impl : public RefBase::weakref_type
 {
 public:
-    volatile int32_t    mStrong;
-    volatile int32_t    mWeak;
+    android_atomic_int32_t    mStrong;
+    android_atomic_int32_t    mWeak;
     RefBase* const      mBase;
-    volatile int32_t    mFlags;
+    android_atomic_int32_t    mFlags;
 
 #if !DEBUG_REFS
 

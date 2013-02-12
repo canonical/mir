@@ -22,9 +22,10 @@
 
 #include "mir_protobuf.pb.h"
 #include "src/client/make_rpc_channel.h"
-#include "mir/thread/all.h"
 
 #include "mir_test_doubles/mock_logger.h"
+
+#include <atomic>
 
 namespace mir
 {

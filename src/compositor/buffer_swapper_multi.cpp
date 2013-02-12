@@ -28,7 +28,7 @@ void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 {
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
+        BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
 
     for (auto& buffer : buffer_list)
