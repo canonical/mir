@@ -15,7 +15,6 @@ add_definitions(
 set(
   UTIL_SOURCES
 
-  frameworks/native/libs/utils/Looper.cpp     # used by InputDispatcher.cpp
   frameworks/native/libs/utils/RefBase.cpp    # used a lot
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
 )
@@ -33,6 +32,7 @@ list(APPEND UTIL_SOURCES
   frameworks/native/libs/utils/Static.cpp
   frameworks/native/libs/utils/TextOutput.cpp
   frameworks/native/libs/utils/Debug.cpp
+  frameworks/native/libs/utils/Looper.cpp
   hardware/libhardware_legacy/power/power.c
   system/core/libcutils/threads.c
   system/core/libcutils/sched_policy.c
