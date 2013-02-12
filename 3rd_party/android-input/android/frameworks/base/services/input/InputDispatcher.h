@@ -29,6 +29,7 @@
 #include ANDROIDFW_CUTILS(atomic.h)
 #include ANDROIDFW_UTILS(Condition.h)
 #include ANDROIDFW_UTILS(Thread.h)
+#include ANDROIDFW_UTILS(Mutex.h)
 
 #include <stddef.h>
 #include <unistd.h>
