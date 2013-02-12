@@ -17,6 +17,9 @@
  */
 
 #include "src/graphics/gbm/kms_output.h"
+#include "src/graphics/gbm/page_flipper.h"
+
+#include "mir_test/fake_shared.h"
 
 #include "mock_drm.h"
 
@@ -28,9 +31,24 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 
 namespace
 {
+
+class NullPageFlipper : public mgg::PageFlipper
+{
+public:
+    bool schedule_flip(uint32_t,uint32_t) { return true; }
+    void wait_for_flip(uint32_t) { }
+};
+
+class MockPageFlipper : public mgg::PageFlipper
+{
+public:
+    MOCK_METHOD2(schedule_flip, bool(uint32_t,uint32_t));
+    MOCK_METHOD1(wait_for_flip, void(uint32_t));
+};
 
 class KMSOutputTest : public ::testing::Test
 {
@@ -79,6 +97,8 @@ public:
     }
 
     testing::NiceMock<mgg::MockDRM> mock_drm;
+    MockPageFlipper mock_page_flipper;
+    NullPageFlipper null_page_flipper;
 
     std::vector<drmModeModeInfo> modes_empty;
     uint32_t const invalid_id;
@@ -100,7 +120,8 @@ TEST_F(KMSOutputTest, construction_queries_connector)
     EXPECT_CALL(mock_drm, drmModeGetConnector(_,connector_ids[0]))
         .Times(1);
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0]};
+    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                          mt::fake_shared(null_page_flipper)};
 }
 
 TEST_F(KMSOutputTest, operations_use_existing_crtc)
@@ -118,7 +139,11 @@ TEST_F(KMSOutputTest, operations_use_existing_crtc)
                                              Pointee(connector_ids[0]), _, _))
             .Times(1);
 
-        EXPECT_CALL(mock_drm, drmModePageFlip(_, crtc_ids[0], fb_id, _, _))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[0], fb_id))
+            .Times(1)
+            .WillOnce(Return(true));
+
+        EXPECT_CALL(mock_page_flipper, wait_for_flip(crtc_ids[0]))
             .Times(1);
 
         EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], Ne(fb_id), _, _,
@@ -126,10 +151,12 @@ TEST_F(KMSOutputTest, operations_use_existing_crtc)
             .Times(1);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0]};
+    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                          mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
-    EXPECT_TRUE(output.schedule_page_flip(fb_id, nullptr));
+    EXPECT_TRUE(output.schedule_page_flip(fb_id));
+    output.wait_for_page_flip();
 }
 
 TEST_F(KMSOutputTest, operations_use_possible_crtc)
@@ -147,7 +174,11 @@ TEST_F(KMSOutputTest, operations_use_possible_crtc)
                                              Pointee(connector_ids[0]), _, _))
             .Times(1);
 
-        EXPECT_CALL(mock_drm, drmModePageFlip(_, crtc_ids[1], fb_id, _, _))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(crtc_ids[1], fb_id))
+            .Times(1)
+            .WillOnce(Return(true));
+
+        EXPECT_CALL(mock_page_flipper, wait_for_flip(crtc_ids[1]))
             .Times(1);
 
         EXPECT_CALL(mock_drm, drmModeSetCrtc(_, 0, 0, _, _,
@@ -155,10 +186,12 @@ TEST_F(KMSOutputTest, operations_use_possible_crtc)
             .Times(1);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0]};
+    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                          mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
-    EXPECT_TRUE(output.schedule_page_flip(fb_id, nullptr));
+    EXPECT_TRUE(output.schedule_page_flip(fb_id));
+    output.wait_for_page_flip();
 }
 
 TEST_F(KMSOutputTest, set_crtc_failure_is_handled_gracefully)
@@ -176,17 +209,24 @@ TEST_F(KMSOutputTest, set_crtc_failure_is_handled_gracefully)
             .Times(1)
             .WillOnce(Return(1));
 
-        EXPECT_CALL(mock_drm, drmModePageFlip(_, _, _, _, _))
+        EXPECT_CALL(mock_page_flipper, schedule_flip(_, _))
+            .Times(0);
+
+        EXPECT_CALL(mock_page_flipper, wait_for_flip(_))
             .Times(0);
 
         EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, _, _, _, _, _, _))
             .Times(0);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0]};
+    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                          mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
     EXPECT_THROW({
-        output.schedule_page_flip(fb_id, nullptr);
+        output.schedule_page_flip(fb_id);
+    }, std::runtime_error);
+    EXPECT_THROW({
+        output.wait_for_page_flip();
     }, std::runtime_error);
 }

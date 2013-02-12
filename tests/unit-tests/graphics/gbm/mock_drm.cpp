@@ -83,6 +83,11 @@ int mgg::FakeDRMResources::fd() const
     return pipe_fds[0];
 }
 
+int mgg::FakeDRMResources::write_fd() const
+{
+    return pipe_fds[1];
+}
+
 drmModeRes* mgg::FakeDRMResources::resources_ptr()
 {
     return &resources;

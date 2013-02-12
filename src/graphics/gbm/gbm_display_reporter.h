@@ -57,6 +57,7 @@ class GBMDisplayReporter : public DisplayListener
     virtual void report_successful_egl_buffer_swap_on_construction();
     virtual void report_successful_drm_mode_set_crtc_on_construction();
     virtual void report_successful_display_construction();
+    virtual void report_page_flip_timeout();
 
   protected:
     GBMDisplayReporter(const GBMDisplayReporter&) = delete;

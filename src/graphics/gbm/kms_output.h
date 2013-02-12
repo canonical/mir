@@ -22,6 +22,8 @@
 #include "mir/geometry/size.h"
 #include "drm_mode_resources.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -29,17 +31,21 @@ namespace graphics
 namespace gbm
 {
 
+class PageFlipper;
+
 class KMSOutput
 {
 public:
-    KMSOutput(int drm_fd, uint32_t connector_id);
+    KMSOutput(int drm_fd, uint32_t connector_id,
+              std::shared_ptr<PageFlipper> const& page_flipper);
     ~KMSOutput();
 
     void reset();
 
     geometry::Size size() const;
     bool set_crtc(uint32_t fb_id);
-    bool schedule_page_flip(uint32_t fb_id, void* user_data);
+    bool schedule_page_flip(uint32_t fb_id);
+    void wait_for_page_flip();
 
 private:
     KMSOutput(const KMSOutput&) = delete;
@@ -50,6 +56,8 @@ private:
 
     int const drm_fd;
     uint32_t const connector_id;
+    std::shared_ptr<PageFlipper> const page_flipper;
+
     DRMModeConnectorUPtr connector;
     size_t mode_index;
     DRMModeCrtcUPtr current_crtc;

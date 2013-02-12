@@ -34,6 +34,7 @@ public:
     virtual void report_successful_egl_buffer_swap_on_construction() = 0;
     virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_successful_display_construction() = 0;
+    virtual void report_page_flip_timeout() = 0;
 
 protected:
     DisplayListener() = default;

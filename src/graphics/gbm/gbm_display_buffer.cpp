@@ -240,58 +240,24 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
 
 bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj)
 {
-    /* Maximum time to wait for the page flip event in microseconds */
-    static const long page_flip_max_wait_usec{100000};
-    static drmEventContext evctx =
-    {
-        DRM_EVENT_CONTEXT_VERSION,  /* .version */
-        0,  /* .vblank_handler */
-        page_flip_handler  /* .page_flip_handler */
-    };
     int page_flips_pending{0};
 
     /*
      * Schedule the current front buffer object for display. Note that
-     * the page flip is asynchronous and synchronized with vertical refresh,
-     * so we tell DRM to emit a page flip event with &page_flips_pending as
-     * its user data when done.
+     * the page flip is asynchronous and synchronized with vertical refresh.
      */
     for (auto& output : outputs)
     {
-        if (output->schedule_page_flip(bufobj->get_drm_fb_id(), &page_flips_pending))
+        if (output->schedule_page_flip(bufobj->get_drm_fb_id()))
             ++page_flips_pending;
     }
 
     if (page_flips_pending == 0)
         return false;
 
-    /*
-     * Wait $page_flip_max_wait_usec for the page flip events. If we get a
-     * page flip event, page_flip_handler(), called through drmHandleEvent(),
-     * will decrease the page_flips_pending count. If we don't get the expected
-     * page flip events within that time, or we can't read from the DRM fd, act
-     * as if the page flips have occurred anyway.
-     *
-     * The rationale is that if we don't get the page flip events "soon" after
-     * scheduling the page flips, something is severely broken at the driver
-     * level. In that case, acting as if the page flips have occurred will not
-     * cause any worse harm anyway (perhaps some tearing), and will allow us to
-     * continue processing instead of just hanging.
-     */
-    while (page_flips_pending > 0)
+    for (auto& output : outputs)
     {
-        struct timeval tv{0, page_flip_max_wait_usec};
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(drm.fd, &fds);
-
-        /* Wait for an event from the DRM device */
-        auto ret = select(drm.fd + 1, &fds, NULL, NULL, &tv);
-
-        if (ret > 0)
-            drmHandleEvent(drm.fd, &evctx);
-        else
-            page_flips_pending = 0;
+        output->wait_for_page_flip();
     }
 
     return true;
