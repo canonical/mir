@@ -59,7 +59,7 @@ public:
     MOCK_METHOD2(glGenTextures, void (GLsizei, GLuint *));
     MOCK_METHOD2(glGenBuffers, void (GLsizei, GLuint *));
     MOCK_METHOD4(glBufferData, void (GLenum, GLsizeiptr, const GLvoid *, GLenum));
-    MOCK_METHOD4(glShaderSource, void (GLuint, GLsizei, const GLchar **, const GLint *));
+    MOCK_METHOD4(glShaderSource, void (GLuint, GLsizei, const GLchar * const *, const GLint *));
     MOCK_METHOD1(glCompileShader, void (GLuint));
     MOCK_METHOD3(glGetShaderiv, void (GLuint, GLenum, GLint *));
     MOCK_METHOD4(glGetShaderInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
