@@ -26,8 +26,6 @@
 #include <androidfw/VirtualKeyMap.h>
 #include ANDROIDFW_UTILS(String8.h)
 #include ANDROIDFW_UTILS(threads.h)
-#include ANDROIDFW_UTILS(Log.h)
-#include ANDROIDFW_UTILS(threads.h)
 #include ANDROIDFW_UTILS(List.h)
 #include ANDROIDFW_UTILS(Errors.h)
 #include ANDROIDFW_UTILS(PropertyMap.h)
