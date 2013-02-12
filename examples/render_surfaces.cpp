@@ -79,14 +79,14 @@ struct StopWatch
     double elapsed_seconds_since_start()
     {
         auto elapsed = now - start;
-        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        float elapsed_sec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0f;
         return elapsed_sec;
     }
 
     double elapsed_seconds_since_last_restart()
     {
         auto elapsed = now - last;
-        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        float elapsed_sec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0f;
         return elapsed_sec;
     }
 
