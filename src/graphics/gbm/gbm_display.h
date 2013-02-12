@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "kms_output_container.h"
+#include "gbm_display_helpers.h"
 
 #include <vector>
 
@@ -58,6 +59,7 @@ private:
 
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayListener> const listener;
+    helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     KMSOutputContainer output_container;
 };

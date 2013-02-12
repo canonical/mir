@@ -105,7 +105,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
                                         std::shared_ptr<DisplayListener> const& listener,
                                         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                                         GBMSurfaceUPtr surface_gbm_param,
-                                        geom::Size const& size)
+                                        geom::Size const& size,
+                                        EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
       listener(listener),
@@ -114,7 +115,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       surface_gbm{std::move(surface_gbm_param)},
       size(size)
 {
-    egl.setup(platform->gbm, surface_gbm.get());
+    egl.setup(platform->gbm, surface_gbm.get(), shared_context);
 
     listener->report_successful_setup_of_native_resources();
 
@@ -126,7 +127,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 
     clear();
 
-    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+    if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
     listener->report_successful_egl_buffer_swap_on_construction();
@@ -140,6 +141,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
         if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
+
+    egl.release_current();
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
@@ -171,7 +174,7 @@ bool mgg::GBMDisplayBuffer::post_update()
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
-    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+    if (!egl.swap_buffers())
         return false;
 
     auto bufobj = get_front_buffer_object();
@@ -265,8 +268,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
 
 void mgg::GBMDisplayBuffer::make_current()
 {
-    if (eglMakeCurrent(egl.display, egl.surface,
-                       egl.surface, egl.context) == EGL_FALSE)
+    if (!egl.make_current())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }

@@ -46,7 +46,8 @@ public:
                      std::shared_ptr<DisplayListener> const& listener,
                      std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                      GBMSurfaceUPtr surface_gbm,
-                     geometry::Size const& size);
+                     geometry::Size const& size,
+                     EGLContext shared_context);
     ~GBMDisplayBuffer();
 
     geometry::Rectangle view_area() const;
