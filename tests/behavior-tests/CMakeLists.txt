@@ -22,15 +22,7 @@ add_executable(session-management-cucumber-steps ${SESSION_MANAGER_BEHAVIOR_TEST
 target_link_libraries(
   session-management-cucumber-steps
   
-  mir
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
+  mirserver
   
   mir-test-doubles
   3rd_party

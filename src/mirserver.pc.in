@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: mirserver
+Description: Mir server library
+Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
+Requires.private: protobuf >= 2.4.1
+Libs: -L@LIBDIR@ -lmirserver
+Cflags: -I@INCLUDEDIR@

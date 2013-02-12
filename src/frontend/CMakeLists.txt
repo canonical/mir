@@ -72,4 +72,5 @@ target_link_libraries(
   mirsessions
   mirlogging
   3rd_party
+  ${Boost_LIBRARIES}
 )

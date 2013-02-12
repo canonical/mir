@@ -42,6 +42,7 @@ public:
     ~FakeDRMResources();
 
     int fd() const;
+    int write_fd() const;
     drmModeRes* resources_ptr();
 
     void add_crtc(uint32_t id, drmModeModeInfo mode);

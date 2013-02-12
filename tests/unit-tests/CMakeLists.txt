@@ -40,17 +40,10 @@ target_link_libraries(
   unit-tests
 
   mirclient
-  mircompositor
+  mirserver
   mirdraw
   mirtestdraw
-  mirfrontend
-  mirplatformgraphics
-  mirgraphics
-  mirinput
   mirlogging
-  miroptions
-  mirprotobuf
-  mirsurfaces
 
   mir-test-doubles
 

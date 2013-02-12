@@ -92,17 +92,22 @@ public:
         {
             uint32_t const crtc_id{crtc_base_id + i};
             uint32_t const encoder_id{encoder_base_id + i};
-            uint32_t const connector_id{connector_base_id + i};
+            uint32_t const all_crtcs_mask{0xff};
 
             crtc_ids.push_back(crtc_id);
             resources.add_crtc(crtc_id, drmModeModeInfo());
 
             encoder_ids.push_back(encoder_id);
-            resources.add_encoder(encoder_id, crtc_id);
+            resources.add_encoder(encoder_id, crtc_id, all_crtcs_mask);
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            uint32_t const connector_id{connector_base_id + i};
 
             connector_ids.push_back(connector_id);
-            resources.add_connector(connector_id, DRM_MODE_CONNECTED, encoder_id,
-                                    modes0, connector_physical_size_mm);
+            resources.add_connector(connector_id, DRM_MODE_CONNECTED, encoder_ids[i],
+                                    modes0, encoder_ids, connector_physical_size_mm);
         }
 
         resources.prepare();
@@ -168,12 +173,27 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     auto display = platform->create_display();
 }
 
+namespace
+{
+
+ACTION_P(InvokePageFlipHandler, param)
+{
+    int const dont_care{0};
+    char dummy;
+
+    arg1->page_flip_handler(dont_care, dont_care, dont_care, dont_care, *param);
+    ASSERT_EQ(1, read(arg0, &dummy, 1));
+}
+
+}
+
 TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
 {
     using namespace testing;
 
     int const num_outputs{3};
     uint32_t const fb_id{66};
+    std::vector<void*> user_data(num_outputs, nullptr);
 
     setup_outputs(num_outputs);
 
@@ -189,8 +209,18 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
                                               crtc_ids[i], fb_id,
                                               _, _))
             .Times(1)
-            .WillOnce(Return(0));
+            .WillOnce(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
+
+        /* Emit fake DRM page-flip events */
+        EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
     }
+
+    /* Handle the events properly */
+    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+        .Times(num_outputs)
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
 
     auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
     auto display = platform->create_display();

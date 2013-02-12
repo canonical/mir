@@ -46,16 +46,8 @@ add_executable(
 target_link_libraries(
   acceptance-tests
 
-  mir
+  mirserver
   mirclient
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsurfaces
-  mirplatformgraphics
-  mirprotobuf
 
   mir-test-framework
   mir-test-doubles
