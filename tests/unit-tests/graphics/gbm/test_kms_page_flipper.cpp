@@ -420,7 +420,7 @@ public:
         pending_flips.insert(user_data);
     }
 
-    void add_handle_event(int crtc_id)
+    void add_handle_event(uint32_t crtc_id)
     {
         std::lock_guard<std::mutex> lock{data_mutex};
 
@@ -522,7 +522,7 @@ ACTION_P(InvokePageFlipHandlerWithPendingData, counter)
 
 ACTION_P2(AddPageFlipEvent, counter, write_drm_fd)
 {
-    int const crtc_id{arg0};
+    uint32_t const crtc_id{arg0};
     void* const user_data{arg1};
 
     /* Record this call */
