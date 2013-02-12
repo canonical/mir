@@ -126,7 +126,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 
     clear();
 
-    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+    if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
     listener->report_successful_egl_buffer_swap_on_construction();
@@ -171,7 +171,7 @@ bool mgg::GBMDisplayBuffer::post_update()
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
-    if (eglSwapBuffers(egl.display, egl.surface) == EGL_FALSE)
+    if (!egl.swap_buffers())
         return false;
 
     auto bufobj = get_front_buffer_object();
@@ -265,8 +265,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
 
 void mgg::GBMDisplayBuffer::make_current()
 {
-    if (eglMakeCurrent(egl.display, egl.surface,
-                       egl.surface, egl.context) == EGL_FALSE)
+    if (!egl.make_current())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }

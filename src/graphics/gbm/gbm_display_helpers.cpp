@@ -223,6 +223,18 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm)
             std::runtime_error("Failed to create EGL context"));
 }
 
+bool mggh::EGLHelper::make_current()
+{
+    auto ret = eglMakeCurrent(display, surface, surface, context);
+    return (ret == EGL_TRUE);
+}
+
+bool mggh::EGLHelper::swap_buffers()
+{
+    auto ret = eglSwapBuffers(display, surface);
+    return (ret == EGL_TRUE);
+}
+
 mggh::EGLHelper::~EGLHelper()
 {
     if (display != EGL_NO_DISPLAY) {

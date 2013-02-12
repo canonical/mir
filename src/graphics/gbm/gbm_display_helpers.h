@@ -88,6 +88,10 @@ public:
 
     void setup(GBMHelper const& gbm_info, gbm_surface* surface_gbm);
 
+    bool swap_buffers();
+    bool make_current();
+
+private:
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
