@@ -105,7 +105,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
                                         std::shared_ptr<DisplayListener> const& listener,
                                         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                                         GBMSurfaceUPtr surface_gbm_param,
-                                        geom::Size const& size)
+                                        geom::Size const& size,
+                                        EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
       listener(listener),
@@ -114,7 +115,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       surface_gbm{std::move(surface_gbm_param)},
       size(size)
 {
-    egl.setup(platform->gbm, surface_gbm.get());
+    egl.setup(platform->gbm, surface_gbm.get(), shared_context);
 
     listener->report_successful_setup_of_native_resources();
 
@@ -140,6 +141,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
         if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
+
+    egl.release_current();
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();

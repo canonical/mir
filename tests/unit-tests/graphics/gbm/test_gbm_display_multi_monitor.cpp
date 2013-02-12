@@ -173,6 +173,39 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     auto display = platform->create_display();
 }
 
+TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
+{
+    using namespace testing;
+
+    int const num_outputs{3};
+    EGLContext const shared_context{reinterpret_cast<EGLContext>(0x77)};
+
+    setup_outputs(num_outputs);
+
+    /* Will create only one shared context */
+    EXPECT_CALL(mock_egl, eglCreateContext(_, _, EGL_NO_CONTEXT, _))
+        .WillOnce(Return(shared_context));
+
+    /* Will use the shared context when creating other contexts */
+    EXPECT_CALL(mock_egl, eglCreateContext(_, _, shared_context, _))
+        .Times(AtLeast(1));
+
+    {
+        InSequence s;
+
+        /* Contexts are made current to initialize DisplayBuffers */
+        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(shared_context)))
+            .Times(AtLeast(1));
+
+        /* The shared context is made current finally */
+        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,shared_context))
+            .Times(1);
+    }
+
+    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto display = platform->create_display();
+}
+
 namespace
 {
 
