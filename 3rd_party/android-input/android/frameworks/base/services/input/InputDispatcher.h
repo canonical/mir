@@ -27,6 +27,8 @@
 #include ANDROIDFW_UTILS(Looper.h)
 #include ANDROIDFW_UTILS(BitSet.h)
 #include ANDROIDFW_CUTILS(atomic.h)
+#include ANDROIDFW_UTILS(Condition.h)
+#include ANDROIDFW_UTILS(Thread.h)
 
 #include <stddef.h>
 #include <unistd.h>

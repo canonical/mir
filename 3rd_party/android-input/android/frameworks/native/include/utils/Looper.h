@@ -20,8 +20,6 @@
 #include <androidfw/Input.h>
 
 #include ANDROIDFW_UTILS(Mutex.h)
-#include ANDROIDFW_UTILS(Condition.h)
-#include ANDROIDFW_UTILS(Thread.h)
 #include ANDROIDFW_UTILS(RefBase.h)
 #include ANDROIDFW_UTILS(KeyedVector.h)
 #include ANDROIDFW_UTILS(Timers.h)
