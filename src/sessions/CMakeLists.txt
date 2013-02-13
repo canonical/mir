@@ -18,7 +18,7 @@
 set(
   SESSIONS_SOURCES
 
-  session.cpp
+  application_session.cpp
   session_container.cpp
   session_manager.cpp
   registration_order_focus_sequence.cpp

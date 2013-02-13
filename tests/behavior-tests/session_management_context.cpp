@@ -140,9 +140,10 @@ public:
 }
 } // namespace mir
 
-mtc::SessionManagementContext::SessionManagementContext()
+
+
+mtc::SessionManagementContext::SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration)
 {
-    auto server_configuration = std::make_shared<mir::DefaultServerConfiguration>("" /* socket */);
     auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
     view_area = std::make_shared<mtc::SizedDisplay>();
 

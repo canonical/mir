@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/compositor/buffer.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir_test/fake_shared.h"
@@ -69,7 +69,7 @@ private:
 };
 }
 
-TEST(Session, create_and_destroy_surface)
+TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
@@ -80,7 +80,7 @@ TEST(Session, create_and_destroy_surface)
     EXPECT_CALL(surface_factory, create_surface(_));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msess::Session session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession session(mt::fake_shared(surface_factory), "Foo");
 
     msess::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -89,7 +89,7 @@ TEST(Session, create_and_destroy_surface)
 }
 
 
-TEST(Session, session_visbility_propagates_to_surfaces)
+TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
@@ -97,7 +97,7 @@ TEST(Session, session_visbility_propagates_to_surfaces)
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
-    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
 
     EXPECT_CALL(surface_factory, create_surface(_));
 
@@ -122,7 +122,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
     msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
 
     EXPECT_THROW({
@@ -135,7 +135,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msess::Session app_session(mt::fake_shared(surface_factory), "Foo");
+    msess::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
     msess::SurfaceId invalid_surface_id = msess::SurfaceId{1};
 
     EXPECT_THROW({

@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/registration_order_focus_sequence.h"
 #include "mir/sessions/single_visibility_focus_mechanism.h"
@@ -40,10 +40,10 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockApplicationSession : public msess::Session
+struct MockApplicationSession : public msess::ApplicationSession
 {
   MockApplicationSession(std::shared_ptr<msess::SurfaceFactory> factory,
-                         std::string name) : Session(factory, name)
+                         std::string name) : ApplicationSession(factory, name)
   {
   }
   MOCK_METHOD0(hide,void());
