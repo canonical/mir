@@ -27,8 +27,11 @@
 //#include ANDROIDFW_UTILS(KeyedVector.h)
 //#include ANDROIDFW_UTILS(Timers.h)
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * For callback-based event loops, this is the prototype of the function
  * that is called when a file descriptor event occurs.
@@ -40,6 +43,51 @@
  * to have this file descriptor and callback unregistered from the looper.
  */
 typedef int (*ALooper_callbackFunc)(int fd, int events, void* data);
+
+/**
+ * Flags for file descriptor events that a looper can monitor.
+ *
+ * These flag bits can be combined to monitor multiple events at once.
+ */
+enum {
+    /**
+     * The file descriptor is available for read operations.
+     */
+
+    ALOOPER_EVENT_INPUT = 1 << 0,
+
+    /**
+     * The file descriptor is available for write operations.
+     */
+    ALOOPER_EVENT_OUTPUT = 1 << 1,
+
+    /**
+     * The file descriptor has encountered an error condition.
+     *
+     * The looper always sends notifications about errors; it is not necessary
+     * to specify this event flag in the requested event set.
+     */
+    ALOOPER_EVENT_ERROR = 1 << 2,
+
+    /**
+     * The file descriptor was hung up.
+     * For example, indicates that the remote end of a pipe or socket was closed.
+     *
+     * The looper always sends notifications about hangups; it is not necessary
+     * to specify this event flag in the requested event set.
+     */
+    ALOOPER_EVENT_HANGUP = 1 << 3,
+
+    /**
+     * The file descriptor is invalid.
+     * For example, the file descriptor was closed prematurely.
+     *
+     * The looper always sends notifications about invalid file descriptors; it is not necessary
+     * to specify this event flag in the requested event set.
+     */
+    ALOOPER_EVENT_INVALID = 1 << 4
+};
+}
 
 ///*
 // * Declare a concrete type for the NDK's looper forward declaration.

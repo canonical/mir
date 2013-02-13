@@ -45,6 +45,8 @@
 #include <androidfw/Keyboard.h>
 #include <androidfw/VirtualKeyMap.h>
 
+#include <android/keycodes.h>
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
