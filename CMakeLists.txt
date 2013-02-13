@@ -188,11 +188,7 @@ include_directories (
   ${GTEST_INCLUDE_DIR}
 )
 # We need to build cucumber after gtest
-# We disable building on android for now until hybrisization is complete
-if(NOT MIR_PLATFORM STREQUAL "android")
-  add_subdirectory(3rd_party/cucumber-cpp)
-endif()
-
+add_subdirectory(3rd_party/cucumber-cpp)
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)
