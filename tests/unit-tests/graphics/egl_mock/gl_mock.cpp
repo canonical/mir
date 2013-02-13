@@ -154,7 +154,15 @@ GLuint glCreateShader(GLenum type)
     return global_gl_mock->glCreateShader(type);
 }
 
+/* This is the version of glShaderSource in Mesa < 9.0.1 */
 void glShaderSource(GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_gl_mock->glShaderSource (shader, count, string, length);
+}
+
+/* This is the version of glShaderSource in Mesa >= 9.0.1 */
+void glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, const GLint *length)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_gl_mock->glShaderSource (shader, count, string, length);
