@@ -11,17 +11,21 @@ set -e
 BUILD_DIR=build-android-arm
 
 #note:ndk-rewrite is just temporary until the real is pushed
-export MIR_NDK_PATH=`pwd`/ndk-rewrite
+if [ "$MIR_NDK_PATH" = "" ]; then
+    export MIR_NDK_PATH=`pwd`/ndk-rewrite
+fi
 
-if [[ -d ndk-rewrite ]]; then
-    pushd ndk-rewrite
+echo "Using MIR_NDK_PATH: $MIR_NDK_PATH"
+
+if [[ -d ${MIR_NDK_PATH} ]]; then
+    pushd ${MIR_NDK_PATH}
     bzr pull
     popd
 else
-    bzr branch lp:~kdub/mir/ndk-rewrite 
+    bzr branch lp:~kdub/mir/ndk-rewrite ${MIR_NDK_PATH}
 fi
 
-pushd ndk-rewrite > /dev/null
+pushd ${MIR_NDK_PATH} > /dev/null
     ./generate-armhf-deps.sh 
 popd > /dev/null
 
