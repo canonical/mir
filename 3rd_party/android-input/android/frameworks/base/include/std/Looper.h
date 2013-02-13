@@ -29,6 +29,18 @@
 
 //#include <sys/epoll.h>
 
+#include <boost/asio.hpp>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/bind.hpp>
+#include <boost/exception/all.hpp>
+
+#include <stdexcept>
+#include <chrono>
+#include <map>
+#include <mutex>
+#include <atomic>
+#include <thread>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,6 +98,33 @@ enum {
      * to specify this event flag in the requested event set.
      */
     ALOOPER_EVENT_INVALID = 1 << 4
+};
+
+enum {
+    /**
+     * Result from ALooper_pollOnce() and ALooper_pollAll():
+     * The poll was awoken using wake() before the timeout expired
+     * and no callbacks were executed and no other file descriptors were ready.
+     */
+    ALOOPER_POLL_WAKE = -1,
+
+    /**
+     * Result from ALooper_pollOnce() and ALooper_pollAll():
+     * One or more callbacks were executed.
+     */
+    ALOOPER_POLL_CALLBACK = -2,
+
+    /**
+     * Result from ALooper_pollOnce() and ALooper_pollAll():
+     * The timeout expired.
+     */
+    ALOOPER_POLL_TIMEOUT = -3,
+
+    /**
+     * Result from ALooper_pollOnce() and ALooper_pollAll():
+     * An error occurred.
+     */
+    ALOOPER_POLL_ERROR = -4
 };
 }
 
@@ -192,7 +231,7 @@ class Looper :
 //    public ALooper,
     public RefBase {
 protected:
-    virtual ~Looper() {}
+    virtual ~Looper() { std::lock_guard<std::mutex> lock(mutex); io_service.stop(); files.clear(); }
 
 public:
     /**
@@ -202,7 +241,8 @@ public:
      * registered without associated callbacks.  This assumes that the caller of
      * pollOnce() is prepared to handle callback-less events itself.
      */
-    Looper(bool allowNonCallbacks) { (void)allowNonCallbacks; }
+    Looper(bool allowNonCallbacks) : woken(false)
+    { if (allowNonCallbacks) BOOST_THROW_EXCEPTION(std::logic_error("Callback-less events not allowed")); }
 
 //    /**
 //     * Returns whether this looper instance allows the registration of file descriptors
@@ -238,8 +278,24 @@ public:
 //     */
 //    int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
 
-    inline int pollOnce(int timeoutMillis) {
-        (void)timeoutMillis; return 0; //pollOnce(timeoutMillis, NULL, NULL, NULL);
+    inline int pollOnce(int timeoutMillis) try {
+        bool callbacks{false};
+
+        using std::chrono::system_clock;
+
+        auto const end_time = system_clock::now() + std::chrono::milliseconds(timeoutMillis);
+
+        do
+        {
+            callbacks |= io_service.poll();
+            if (woken.load()) return ALOOPER_POLL_WAKE;
+            std::this_thread::yield();
+        }
+        while (system_clock::now() < end_time);
+        return callbacks ? ALOOPER_POLL_CALLBACK : ALOOPER_POLL_TIMEOUT;
+    }
+    catch (...) {
+        return ALOOPER_POLL_ERROR;
     }
 
 //    /**
@@ -258,7 +314,7 @@ public:
      * This method can be called on any thread.
      * This method returns immediately.
      */
-    void wake() {}
+    void wake() { woken.store(true);  io_service.stop(); }
 
     /**
      * Adds a new file descriptor to be polled by the looper.
@@ -292,7 +348,16 @@ public:
      * See removeFd() for details.
      */
     int addFd(int fd, int ident, int events, ALooper_callbackFunc callback, void* data)
-    { (void)fd, (void)ident, (void)events, (void)callback, (void)data;  return 0; }
+    {   (void)ident;
+        std::lock_guard<std::mutex> lock(mutex);
+        files.emplace_back(io_service, fd);
+
+        if (events & ALOOPER_EVENT_INPUT)
+            boost::asio::async_read(files.back(), boost::asio::null_buffers(),
+                boost::bind(callback, fd, events, data));
+
+        return 1;
+    }
 //    int addFd(int fd, int ident, int events, const sp<LooperCallback>& callback, void* data);
 
     /**
@@ -315,7 +380,15 @@ public:
      * This method can be called on any thread.
      * This method may block briefly if it needs to wake the poll.
      */
-    int removeFd(int fd) { (void)fd; return 0; }
+    int removeFd(int fd) {
+        std::lock_guard<std::mutex> lock(mutex);
+        auto erase_me = std::find_if(files.begin(), files.end(),
+            [=] (boost::asio::posix::stream_descriptor& ff){ return fd == ff.native(); });
+
+        if (erase_me == files.end()) return 0;
+        files.erase(erase_me);
+        return 1;
+    }
 
 //    /**
 //     * Enqueues a message to be processed by the specified handler.
@@ -387,6 +460,10 @@ public:
 //    static sp<Looper> getForThread();
 
 private:
+    std::atomic<bool> woken;
+    boost::asio::io_service io_service;
+    std::mutex mutable mutex;
+    std::vector<boost::asio::posix::stream_descriptor> files;
 };
 
 } // namespace android
