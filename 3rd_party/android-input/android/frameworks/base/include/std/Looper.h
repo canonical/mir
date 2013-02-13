@@ -27,12 +27,13 @@
 #include <boost/bind.hpp>
 #include <boost/exception/all.hpp>
 
-#include <stdexcept>
-#include <chrono>
-#include <map>
-#include <mutex>
+#include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <mutex>
+#include <stdexcept>
 #include <thread>
+#include <vector>
 
 // This includes some cut & paste from android/looper.h (the enums) and
 // util/Looper.h (the android::Looper interface).
