@@ -23,7 +23,7 @@
 #include <string>
 #include <cstdarg>
 
-namespace android
+namespace mir_input
 {
 typedef ::std::string String8;
 inline bool isEmpty(String8 const& s) { return s.empty(); }
@@ -61,6 +61,19 @@ inline String8 formatString8(const char* fmt, Args... args)
 }
 inline void setTo(String8& s, String8 const& value) { s = value; }
 inline String8 const& emptyString8() { static String8 empty; return empty; }
+}
+
+namespace android
+{
+using ::mir_input::String8;
+using ::mir_input::isEmpty;
+using ::mir_input::c_str;
+using ::mir_input::appendFormat;
+using ::mir_input::setTo;
+using ::mir_input::lockBuffer;
+using ::mir_input::formatString8;
+using ::mir_input::setTo;
+using ::mir_input::emptyString8;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_STRING8_H_ */

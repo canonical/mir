@@ -32,7 +32,7 @@
 #include <pthread.h>
 #endif
 
-namespace android
+namespace mir_input
 {
 class Thread : virtual public RefBase
 {
@@ -111,5 +111,8 @@ private:
     Thread& operator=(const Thread&) = delete;
 };
 }
-
+namespace android
+{
+using ::mir_input::Thread;
+}
 #endif /* MIR_ANDROID_UBUNTU_THREAD_H_ */
