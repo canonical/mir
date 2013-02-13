@@ -20,14 +20,7 @@
 #ifndef MIR_ANDROID_UBUNTU_LOOPER_H_
 #define MIR_ANDROID_UBUNTU_LOOPER_H_
 
-//#include <androidfw/Input.h>
-
-//#include ANDROIDFW_UTILS(Mutex.h)
 #include ANDROIDFW_UTILS(RefBase.h)
-//#include ANDROIDFW_UTILS(KeyedVector.h)
-//#include ANDROIDFW_UTILS(Timers.h)
-
-//#include <sys/epoll.h>
 
 #include <boost/asio.hpp>
 #include <boost/asio/posix/stream_descriptor.hpp>
@@ -40,6 +33,9 @@
 #include <mutex>
 #include <atomic>
 #include <thread>
+
+// This includes some cut & paste from android/looper.h (the enums) and
+// util/Looper.h (the android::Looper interface).
 
 #ifdef __cplusplus
 extern "C" {
@@ -128,108 +124,15 @@ enum {
 };
 }
 
-///*
-// * Declare a concrete type for the NDK's looper forward declaration.
-// */
-//struct ALooper {
-//};
-
 namespace android {
-
-///**
-// * A message that can be posted to a Looper.
-// */
-//struct Message {
-//    Message() : what(0) { }
-//    Message(int what) : what(what) { }
-//
-//    /* The message type. (interpretation is left up to the handler) */
-//    int what;
-//};
-
-
-///**
-// * Interface for a Looper message handler.
-// *
-// * The Looper holds a strong reference to the message handler whenever it has
-// * a message to deliver to it.  Make sure to call Looper::removeMessages
-// * to remove any pending messages destined for the handler so that the handler
-// * can be destroyed.
-// */
-//class MessageHandler : public virtual RefBase {
-//protected:
-//    virtual ~MessageHandler() { }
-//
-//public:
-//    /**
-//     * Handles a message.
-//     */
-//    virtual void handleMessage(const Message& message) = 0;
-//};
-
-
-///**
-// * A simple proxy that holds a weak reference to a message handler.
-// */
-//class WeakMessageHandler : public MessageHandler {
-//protected:
-//    virtual ~WeakMessageHandler();
-//
-//public:
-//    WeakMessageHandler(const wp<MessageHandler>& handler);
-//    virtual void handleMessage(const Message& message);
-//
-//private:
-//    wp<MessageHandler> mHandler;
-//};
-
-
-///**
-// * A looper callback.
-// */
-//class LooperCallback : public virtual RefBase {
-//protected:
-//    virtual ~LooperCallback() { }
-//
-//public:
-//    /**
-//     * Handles a poll event for the given file descriptor.
-//     * It is given the file descriptor it is associated with,
-//     * a bitmask of the poll events that were triggered (typically ALOOPER_EVENT_INPUT),
-//     * and the data pointer that was originally supplied.
-//     *
-//     * Implementations should return 1 to continue receiving callbacks, or 0
-//     * to have this file descriptor and callback unregistered from the looper.
-//     */
-//    virtual int handleEvent(int fd, int events, void* data) = 0;
-//};
-
-
-///**
-// * Wraps a ALooper_callbackFunc function pointer.
-// */
-//class SimpleLooperCallback : public LooperCallback {
-//protected:
-//    virtual ~SimpleLooperCallback();
-//
-//public:
-//    SimpleLooperCallback(ALooper_callbackFunc callback);
-//    virtual int handleEvent(int fd, int events, void* data);
-//
-//private:
-//    ALooper_callbackFunc mCallback;
-//};
-
 
 /**
  * A polling loop that supports monitoring file descriptor events, optionally
- * using callbacks.  The implementation uses epoll() internally.
+ * using callbacks.
  *
  * A looper can be associated with a thread although there is no requirement that it must be.
  */
-class Looper :
-//    public ALooper,
-    public RefBase {
+class Looper : public RefBase {
 protected:
     virtual ~Looper() { std::lock_guard<std::mutex> lock(mutex); io_service.stop(); files.clear(); }
 
@@ -244,39 +147,32 @@ public:
     Looper(bool allowNonCallbacks) : woken(false)
     { if (allowNonCallbacks) BOOST_THROW_EXCEPTION(std::logic_error("Callback-less events not allowed")); }
 
-//    /**
-//     * Returns whether this looper instance allows the registration of file descriptors
-//     * using identifiers instead of callbacks.
-//     */
-//    bool getAllowNonCallbacks() const;
-
-//    /**
-//     * Waits for events to be available, with optional timeout in milliseconds.
-//     * Invokes callbacks for all file descriptors on which an event occurred.
-//     *
-//     * If the timeout is zero, returns immediately without blocking.
-//     * If the timeout is negative, waits indefinitely until an event appears.
-//     *
-//     * Returns ALOOPER_POLL_WAKE if the poll was awoken using wake() before
-//     * the timeout expired and no callbacks were invoked and no other file
-//     * descriptors were ready.
-//     *
-//     * Returns ALOOPER_POLL_CALLBACK if one or more callbacks were invoked.
-//     *
-//     * Returns ALOOPER_POLL_TIMEOUT if there was no data before the given
-//     * timeout expired.
-//     *
-//     * Returns ALOOPER_POLL_ERROR if an error occurred.
-//     *
-//     * Returns a value >= 0 containing an identifier if its file descriptor has data
-//     * and it has no callback function (requiring the caller here to handle it).
-//     * In this (and only this) case outFd, outEvents and outData will contain the poll
-//     * events and data associated with the fd, otherwise they will be set to NULL.
-//     *
-//     * This method does not return until it has finished invoking the appropriate callbacks
-//     * for all file descriptors that were signalled.
-//     */
-//    int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
+    /**
+     * Waits for events to be available, with optional timeout in milliseconds.
+     * Invokes callbacks for all file descriptors on which an event occurred.
+     *
+     * If the timeout is zero, returns immediately without blocking.
+     * If the timeout is negative, waits indefinitely until an event appears.
+     *
+     * Returns ALOOPER_POLL_WAKE if the poll was awoken using wake() before
+     * the timeout expired and no callbacks were invoked and no other file
+     * descriptors were ready.
+     *
+     * Returns ALOOPER_POLL_CALLBACK if one or more callbacks were invoked.
+     *
+     * Returns ALOOPER_POLL_TIMEOUT if there was no data before the given
+     * timeout expired.
+     *
+     * Returns ALOOPER_POLL_ERROR if an error occurred.
+     *
+     * Returns a value >= 0 containing an identifier if its file descriptor has data
+     * and it has no callback function (requiring the caller here to handle it).
+     * In this (and only this) case outFd, outEvents and outData will contain the poll
+     * events and data associated with the fd, otherwise they will be set to NULL.
+     *
+     * This method does not return until it has finished invoking the appropriate callbacks
+     * for all file descriptors that were signalled.
+     */
 
     inline int pollOnce(int timeoutMillis) try {
         bool callbacks{false};
@@ -291,22 +187,12 @@ public:
             if (woken.load()) return ALOOPER_POLL_WAKE;
             std::this_thread::yield();
         }
-        while (system_clock::now() < end_time);
+        while (system_clock::now() < end_time || timeoutMillis < 0);
         return callbacks ? ALOOPER_POLL_CALLBACK : ALOOPER_POLL_TIMEOUT;
     }
     catch (...) {
         return ALOOPER_POLL_ERROR;
     }
-
-//    /**
-//     * Like pollOnce(), but performs all pending callbacks until all
-//     * data has been consumed or a file descriptor is available with no callback.
-//     * This function will never return ALOOPER_POLL_CALLBACK.
-//     */
-//    int pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outData);
-//    inline int pollAll(int timeoutMillis) {
-//        return pollAll(timeoutMillis, NULL, NULL, NULL);
-//    }
 
     /**
      * Wakes the poll asynchronously.
@@ -358,7 +244,6 @@ public:
 
         return 1;
     }
-//    int addFd(int fd, int ident, int events, const sp<LooperCallback>& callback, void* data);
 
     /**
      * Removes a previously added file descriptor from the looper.
@@ -389,75 +274,6 @@ public:
         files.erase(erase_me);
         return 1;
     }
-
-//    /**
-//     * Enqueues a message to be processed by the specified handler.
-//     *
-//     * The handler must not be null.
-//     * This method can be called on any thread.
-//     */
-//    void sendMessage(const sp<MessageHandler>& handler, const Message& message);
-
-//    /**
-//     * Enqueues a message to be processed by the specified handler after all pending messages
-//     * after the specified delay.
-//     *
-//     * The time delay is specified in uptime nanoseconds.
-//     * The handler must not be null.
-//     * This method can be called on any thread.
-//     */
-//    void sendMessageDelayed(nsecs_t uptimeDelay, const sp<MessageHandler>& handler,
-//            const Message& message);
-
-//    /**
-//     * Enqueues a message to be processed by the specified handler after all pending messages
-//     * at the specified time.
-//     *
-//     * The time is specified in uptime nanoseconds.
-//     * The handler must not be null.
-//     * This method can be called on any thread.
-//     */
-//    void sendMessageAtTime(nsecs_t uptime, const sp<MessageHandler>& handler,
-//            const Message& message);
-
-//    /**
-//     * Removes all messages for the specified handler from the queue.
-//     *
-//     * The handler must not be null.
-//     * This method can be called on any thread.
-//     */
-//    void removeMessages(const sp<MessageHandler>& handler);
-
-//    /**
-//     * Removes all messages of a particular type for the specified handler from the queue.
-//     *
-//     * The handler must not be null.
-//     * This method can be called on any thread.
-//     */
-//    void removeMessages(const sp<MessageHandler>& handler, int what);
-
-//    /**
-//     * Prepares a looper associated with the calling thread, and returns it.
-//     * If the thread already has a looper, it is returned.  Otherwise, a new
-//     * one is created, associated with the thread, and returned.
-//     *
-//     * The opts may be ALOOPER_PREPARE_ALLOW_NON_CALLBACKS or 0.
-//     */
-//    static sp<Looper> prepare(int opts);
-
-//    /**
-//     * Sets the given looper to be associated with the calling thread.
-//     * If another looper is already associated with the thread, it is replaced.
-//     *
-//     * If "looper" is NULL, removes the currently associated looper.
-//     */
-//    static void setForThread(const sp<Looper>& looper);
-
-//    /**
-//     * Returns the looper associated with the calling thread, or NULL if
-//     * there is not one.
-//     */
-//    static sp<Looper> getForThread();
 
 private:
     std::atomic<bool> woken;
