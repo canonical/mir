@@ -48,8 +48,8 @@ target_link_libraries(
   mircompositor
   mirlogging
 
-  ${DRM_LIBRARIES}
-  ${GBM_LIBRARIES}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
