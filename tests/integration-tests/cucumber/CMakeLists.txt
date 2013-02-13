@@ -12,19 +12,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
+# Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_session.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_registration_order_focus_sequence.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_single_visibility_focus_mechanism.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_consuming_placement_strategy.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_organising_surface_factory.cpp
+list(
+  APPEND INTEGRATION_TESTS_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_management_context.cpp
 )
 
 set(
-  UNIT_TEST_SOURCES
-  ${UNIT_TEST_SOURCES}
+  INTEGRATION_TESTS_SRCS
+  ${INTEGRATION_TESTS_SRCS}
   PARENT_SCOPE)

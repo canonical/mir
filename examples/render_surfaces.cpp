@@ -79,14 +79,14 @@ struct StopWatch
     double elapsed_seconds_since_start()
     {
         auto elapsed = now - start;
-        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        float elapsed_sec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0f;
         return elapsed_sec;
     }
 
     double elapsed_seconds_since_last_restart()
     {
         auto elapsed = now - last;
-        float elapsed_sec = elapsed.count() / (1000.f * 1000.f);
+        float elapsed_sec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count() / 1000000.0f;
         return elapsed_sec;
     }
 
@@ -256,7 +256,6 @@ int main(int argc, char **argv)
     glViewport(0, 0, display_size.width.as_uint32_t(), display_size.height.as_uint32_t());
 
     /* Draw! */
-    glClearColor(0.0, 1.0, 0.0, 1.0);
     uint32_t frames = 0;
 
     mir::StopWatch stop_watch;
@@ -272,7 +271,7 @@ int main(int argc, char **argv)
         for (unsigned int i = 0; i < num_moveables; ++i)
             m[i].step();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.0, 1.0, 0.0, 1.0);
         compositor.render(display.get());
 
         frames++;

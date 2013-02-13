@@ -45,7 +45,11 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                                                         page_flip_max_wait,
                                                         listener)}
 {
+    shared_egl.setup(platform->gbm);
+
     configure(configuration());
+
+    shared_egl.make_current();
 }
 
 geom::Rectangle mgg::GBMDisplay::view_area() const
@@ -98,6 +102,7 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
 
     /* Create a single DisplayBuffer that displays the surface on all the outputs */
     std::unique_ptr<DisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
-                                                           std::move(surface), max_size}};
+                                                           std::move(surface), max_size,
+                                                           shared_egl.context()}};
     display_buffers.push_back(std::move(db));
 }

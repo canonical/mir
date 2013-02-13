@@ -24,7 +24,11 @@
 #include <cstddef>
 #include <memory>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-pedantic"  // Ignore bad syntax in gbm.h
 #include <gbm.h>
+#pragma GCC diagnostic pop
+
 #include <EGL/egl.h>
 #include <xf86drmMode.h>
 
@@ -78,20 +82,33 @@ class EGLHelper
 {
 public:
     EGLHelper()
-        : display(EGL_NO_DISPLAY), config(0),
-          context(EGL_NO_CONTEXT), surface(EGL_NO_SURFACE) {}
+        : egl_display{EGL_NO_DISPLAY}, egl_config{0},
+          egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
+          should_terminate_egl{false} {}
 
     ~EGLHelper();
 
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
 
-    void setup(GBMHelper const& gbm_info, gbm_surface* surface_gbm);
+    void setup(GBMHelper const& gbm);
+    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
+               EGLContext shared_context);
 
-    EGLDisplay display;
-    EGLConfig config;
-    EGLContext context;
-    EGLSurface surface;
+    bool swap_buffers();
+    bool make_current();
+    bool release_current();
+
+    EGLContext context() { return egl_context; }
+
+private:
+    void setup_internal(GBMHelper const& gbm, bool initialize);
+
+    EGLDisplay egl_display;
+    EGLConfig egl_config;
+    EGLContext egl_context;
+    EGLSurface egl_surface;
+    bool should_terminate_egl;
 };
 
 }

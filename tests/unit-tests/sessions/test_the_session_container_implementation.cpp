@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/buffer_bundle.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
@@ -37,8 +37,8 @@ TEST(SessionContainer, for_each)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msess::SessionContainer container;
 
-    container.insert_session(std::make_shared<msess::Session>(factory, "Visual Studio 7"));
-    container.insert_session(std::make_shared<msess::Session>(factory, "Visual Studio 8"));
+    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 7"));
+    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 8"));
 
     struct local
     {
@@ -63,8 +63,8 @@ TEST(SessionContainer, invalid_session_throw_behavior)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msess::SessionContainer container;
 
-    auto session = std::make_shared<msess::Session>(factory,
-                                                    "Visual Studio 7");
+    auto session = std::make_shared<msess::ApplicationSession>(factory,
+                                                               "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);
     }, std::logic_error);

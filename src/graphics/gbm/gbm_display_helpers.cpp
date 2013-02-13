@@ -164,13 +164,75 @@ mggh::GBMHelper::~GBMHelper()
  * EGLHelper *
  *************/
 
-void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm)
+void mggh::EGLHelper::setup(GBMHelper const& gbm)
 {
-    static const EGLint context_attr [] = {
+    static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
 
+    setup_internal(gbm, true);
+
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
+    if (egl_context == EGL_NO_CONTEXT)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+}
+
+void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
+                            EGLContext shared_context)
+{
+    static const EGLint context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    setup_internal(gbm, false);
+
+    egl_surface = eglCreateWindowSurface(egl_display, egl_config, surface_gbm, nullptr);
+    if(egl_surface == EGL_NO_SURFACE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL window surface"));
+
+    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
+    if (egl_context == EGL_NO_CONTEXT)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+}
+
+mggh::EGLHelper::~EGLHelper()
+{
+    if (egl_display != EGL_NO_DISPLAY) {
+        if (egl_context != EGL_NO_CONTEXT)
+        {
+            if (eglGetCurrentContext() == egl_context)
+                eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            eglDestroyContext(egl_display, egl_context);
+        }
+        if (egl_surface != EGL_NO_SURFACE)
+            eglDestroySurface(egl_display, egl_surface);
+        if (should_terminate_egl)
+            eglTerminate(egl_display);
+    }
+}
+
+bool mggh::EGLHelper::swap_buffers()
+{
+    auto ret = eglSwapBuffers(egl_display, egl_surface);
+    return (ret == EGL_TRUE);
+}
+
+bool mggh::EGLHelper::make_current()
+{
+    auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    return (ret == EGL_TRUE);
+}
+
+bool mggh::EGLHelper::release_current()
+{
+    auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    return (ret == EGL_TRUE);
+}
+
+void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
+{
     static const EGLint config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
@@ -185,52 +247,34 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm)
     static const EGLint required_egl_version_major = 1;
     static const EGLint required_egl_version_minor = 4;
 
-    EGLint major, minor;
-    EGLint num_configs;
+    EGLint num_egl_configs;
 
-    display = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm.device));
-    if (display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to get EGL display"));
+    egl_display = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm.device));
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get EGL display"));
 
-    if (eglInitialize(display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to initialize EGL display"));
-
-    if ((major != required_egl_version_major) || (minor != required_egl_version_minor))
+    if (initialize)
     {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
-        // TODO: Insert egl version major and minor into exception
+        EGLint major, minor;
+
+        if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
+
+        if ((major != required_egl_version_major) || (minor != required_egl_version_minor))
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
+            // TODO: Insert egl version major and minor into exception
+        }
+
+        should_terminate_egl = true;
     }
+
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    if (!eglChooseConfig(display, config_attr, &config, 1, &num_configs) ||
-        num_configs != 1)
+    if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
+        num_egl_configs != 1)
     {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to choose ARGB EGL config"));
-    }
-
-    surface = eglCreateWindowSurface(display, config, surface_gbm, NULL);
-    if(surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create EGL window surface"));
-
-    context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);
-    if (context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create EGL context"));
-}
-
-mggh::EGLHelper::~EGLHelper()
-{
-    if (display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (context != EGL_NO_CONTEXT)
-            eglDestroyContext(display, context);
-        if (surface != EGL_NO_SURFACE)
-            eglDestroySurface(display, surface);
-        eglTerminate(display);
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
     }
 }

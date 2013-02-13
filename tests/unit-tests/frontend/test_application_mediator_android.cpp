@@ -20,7 +20,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
@@ -71,7 +71,7 @@ public:
 
     std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::Session>(factory, "stub");
+        return std::make_shared<msess::ApplicationSession>(factory, "stub");
     }
 
     void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
@@ -157,5 +157,5 @@ TEST_F(ApplicationMediatorAndroidTest, drm_auth_magic_throws)
 
     EXPECT_THROW({
         mediator.drm_auth_magic(nullptr, &magic, nullptr, null_callback.get());
-    }, std::runtime_error);
+    }, std::logic_error);
 }

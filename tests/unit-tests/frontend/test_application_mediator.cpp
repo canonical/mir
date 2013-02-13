@@ -22,7 +22,7 @@
 #include "mir/frontend/application_listener.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/session.h"
+#include "mir/sessions/application_session.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
@@ -61,11 +61,11 @@ namespace
  * stubable/mockable.
  */
 
-class DestructionRecordingSession : public msess::Session
+class DestructionRecordingSession : public msess::ApplicationSession
 {
 public:
     DestructionRecordingSession(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
-        : msess::Session{surface_factory, "Stub"}
+        : msess::ApplicationSession{surface_factory, "Stub"}
     {
         destroyed = false;
     }
