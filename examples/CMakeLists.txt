@@ -16,6 +16,13 @@
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
+add_executable(mine mine.c)
+target_link_libraries(mine
+  mirclient
+  ${EGL_LIBRARIES}
+  ${GLESv2_LIBRARIES}
+)
+
 add_executable(
   mir_demo_client
 
