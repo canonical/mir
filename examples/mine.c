@@ -16,7 +16,7 @@ static EGLDisplay egldisplay;
     if (!(_cond)) \
     { \
         printf("%s\n", (_err)); \
-        return __LINE__; \
+        return EGL_FALSE; \
     }
 
 static void assign_result(void *result, void **arg)
@@ -32,12 +32,14 @@ static void shutdown(int signum)
     exit(0);
 }
 
-int main(int argc, char *argv[])
+EGLBoolean mir_egl_app_init(int width, int height,
+                            EGLDisplay *disp, EGLSurface *win)
 {
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
         EGL_NONE
     };
     MirSurfaceParameters surfaceparm =
@@ -54,9 +56,6 @@ int main(int argc, char *argv[])
     EGLSurface eglsurface;
     EGLContext eglctx;
 
-    (void)argc;
-    (void)argv;
-
     mir_wait_for(mir_connect(servername, appname,
                              (mir_connected_callback)assign_result,
                              &connection));
@@ -68,6 +67,8 @@ int main(int argc, char *argv[])
            servername, dinfo.width, dinfo.height,
            dinfo.supported_pixel_format_items);
 
+    surfaceparm.width = width > 0 ? width : dinfo.width;
+    surfaceparm.height = height > 0 ? height : dinfo.height;
     surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
 
@@ -102,16 +103,36 @@ int main(int argc, char *argv[])
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
+    *disp = egldisplay;
+    *win = eglsurface;
+
+    return EGL_TRUE;
+}
+
+int main(int argc, char *argv[])
+{
+    EGLDisplay disp;
+    EGLSurface surf;
+
+    (void)argc;
+    (void)argv;
+
+    if (!mir_egl_app_init(0, 0, &disp, &surf))
+    {
+        printf("Can't initialize EGL\n");
+        return 1;
+    }
+
     while (1)
     {
         glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         sleep(1);
-        eglSwapBuffers(egldisplay, eglsurface);
+        eglSwapBuffers(disp, surf);
         glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         sleep(1);
-        eglSwapBuffers(egldisplay, eglsurface);
+        eglSwapBuffers(disp, surf);
     }
 
     return 0;
