@@ -186,9 +186,9 @@ public:
         {
             callbacks |= io_service.poll();
             if (woken.load()) return ALOOPER_POLL_WAKE;
-            std::this_thread::yield();
+            if (timeoutMillis > 0) std::this_thread::yield();
         }
-        while (system_clock::now() < end_time || timeoutMillis < 0);
+        while (system_clock::now() < end_time);
         return callbacks ? ALOOPER_POLL_CALLBACK : ALOOPER_POLL_TIMEOUT;
     }
     catch (...) {
