@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h> /* sleep() */
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -55,6 +56,7 @@ EGLBoolean mir_egl_app_init(int width, int height,
     EGLint neglconfigs;
     EGLSurface eglsurface;
     EGLContext eglctx;
+    EGLBoolean ok;
 
     mir_wait_for(mir_connect(servername, appname,
                              (mir_connected_callback)assign_result,
@@ -81,12 +83,11 @@ EGLBoolean mir_egl_app_init(int width, int height,
                     mir_connection_get_egl_native_display(connection));
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
-    mir_surface_get_egl_native_window(surface);
-    
-    CHECK(eglInitialize(egldisplay, NULL, NULL), "Can't eglInitialize");
+    ok = eglInitialize(egldisplay, NULL, NULL);
+    CHECK(ok, "Can't eglInitialize");
 
-    CHECK(eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs),
-          "Could not eglChooseConfig");
+    ok = eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs);
+    CHECK(ok, "Could not eglChooseConfig");
     CHECK(neglconfigs > 0, "No EGL config available");
 
     eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
@@ -97,8 +98,8 @@ EGLBoolean mir_egl_app_init(int width, int height,
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, NULL);
     CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
-    CHECK(eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx),
-          "Can't eglMakeCurrent");
+    ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
+    CHECK(ok, "Can't eglMakeCurrent");
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
