@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <assert.h>
 #include <unistd.h> /* sleep() */
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -33,7 +34,7 @@ static void shutdown(int signum)
     exit(0);
 }
 
-EGLBoolean mir_egl_app_init(int width, int height,
+EGLBoolean mir_egl_app_init(int *width, int *height,
                             EGLDisplay *disp, EGLSurface *win)
 {
     EGLint attribs[] =
@@ -41,6 +42,11 @@ EGLBoolean mir_egl_app_init(int width, int height,
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_NONE
+    };
+    EGLint ctxattribs[] =
+    {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
     MirSurfaceParameters surfaceparm =
@@ -69,8 +75,8 @@ EGLBoolean mir_egl_app_init(int width, int height,
            servername, dinfo.width, dinfo.height,
            dinfo.supported_pixel_format_items);
 
-    surfaceparm.width = width > 0 ? width : dinfo.width;
-    surfaceparm.height = height > 0 ? height : dinfo.height;
+    surfaceparm.width = *width > 0 ? *width : dinfo.width;
+    surfaceparm.height = *height > 0 ? *height : dinfo.height;
     surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
 
@@ -95,7 +101,7 @@ EGLBoolean mir_egl_app_init(int width, int height,
             NULL);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
-    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, NULL);
+    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
     CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
@@ -106,34 +112,109 @@ EGLBoolean mir_egl_app_init(int width, int height,
 
     *disp = egldisplay;
     *win = eglsurface;
+    *width = surfaceparm.width;
+    *height = surfaceparm.height;
 
     return EGL_TRUE;
 }
+
+static GLuint LoadShader(const char *src, GLenum type)
+{
+    GLuint shader = glCreateShader(type);
+    if (shader)
+    {
+        GLint compiled;
+        glShaderSource(shader, 1, &src, NULL);
+        glCompileShader(shader);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        if (!compiled)
+        {
+            GLchar log[1024];
+            glGetShaderInfoLog(shader, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            printf("LoadShader compile failed: %s\n", log);
+            glDeleteShader(shader);
+            shader = 0;
+        }
+    }
+    return shader;
+}
+
+/* Colours from http://design.ubuntu.com/brand/colour-palette */
+#define MID_AUBERGINE 0.368627451f, 0.152941176f, 0.31372549f
+#define ORANGE        0.866666667f, 0.282352941f, 0.141414141f
 
 int main(int argc, char *argv[])
 {
     EGLDisplay disp;
     EGLSurface surf;
 
+    const char vshadersrc[] =
+        "attribute vec4 vPosition;    \n"
+        "void main()                  \n"
+        "{                            \n"
+        "    gl_Position = vPosition; \n"
+        "}                            \n";
+
+    const char fshadersrc[] =
+        "precision mediump float;                        \n"
+        "void main()                                     \n"
+        "{                                               \n"
+        "    gl_FragColor = vec4(0.866666667, 0.282352941, 0.141414141, 1.0);"
+        "}                                               \n";
+
+    const GLfloat vertices[] =
+    {
+        0.0f, 1.0f, 0.0f,
+       -1.0f,-0.866f, 0.0f,
+        1.0f,-0.866f, 0.0f
+    };
+    GLuint vshader, fshader, prog;
+    GLint linked;
+    int width = 0, height = 0;
+
     (void)argc;
     (void)argv;
 
-    if (!mir_egl_app_init(0, 0, &disp, &surf))
+    if (!mir_egl_app_init(&width, &height, &disp, &surf))
     {
         printf("Can't initialize EGL\n");
         return 1;
     }
 
+    vshader = LoadShader(vshadersrc, GL_VERTEX_SHADER);
+    assert(vshader);
+    fshader = LoadShader(fshadersrc, GL_FRAGMENT_SHADER);
+    assert(fshader);
+    prog = glCreateProgram();
+    assert(prog);
+    glAttachShader(prog, vshader);
+    glAttachShader(prog, fshader);
+    glBindAttribLocation(prog, 0, "vPosition");
+    glLinkProgram(prog);
+
+    glGetProgramiv(prog, GL_LINK_STATUS, &linked);
+    if (!linked)
+    {
+        GLchar log[1024];
+        glGetProgramInfoLog(prog, sizeof log - 1, NULL, log);
+        log[sizeof log - 1] = '\0';
+        printf("Link failed: %s\n", log);
+        return 2;
+    }
+
+    glClearColor(MID_AUBERGINE, 1.0);
+    glViewport(0, 0, width, height);
+    glUseProgram(prog);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices);
+    glEnableVertexAttribArray(0);
+
     while (1)
     {
-        glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        sleep(1);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         eglSwapBuffers(disp, surf);
-        glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
         sleep(1);
-        eglSwapBuffers(disp, surf);
     }
 
     return 0;
