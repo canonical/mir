@@ -1,11 +1,13 @@
+mir (0.0.2-0ubuntu1) raring; urgency=low
+
+  * New upstream release
+  * debian/control:
+    - libmirclient-demos breaks older version of mir
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Tue, 12 Feb 2013 14:22:17 +1300
+
 mir (0.0.1-0ubuntu1) quantal; urgency=low
 
-  * Adjust packaging setup
+  * Initial release
 
  -- Thomas Voß <thomas.voss@canonical.com>  Thu, 10 Jan 2013 08:53:02 +0100
-
-mir (0.0.1-0ubuntu1) UNRELEASED; urgency=low
-
-  * Initial release (LP: #nnnnnnn)
-
- -- Chase Douglas <chase.douglas@ubuntu.com>  Tue, 24 Apr 2012 09:00:24 -0700
