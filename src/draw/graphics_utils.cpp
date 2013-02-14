@@ -136,6 +136,6 @@ void md::glAnimationBasic::render_gl()
 void md::glAnimationBasic::step()
 {
     slide += 0.01f;
-    if (slide > 1.0f)
+    if (slide >= 1.0f)
         slide = 0.0f;
 }
