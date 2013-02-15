@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 
     const GLfloat vertices[] =
     {
-        0.0f, 1.0f, 0.0f,
-       -1.0f,-0.866f, 0.0f,
-        1.0f,-0.866f, 0.0f
+        0.0f, 1.0f,
+       -1.0f,-0.866f,
+        1.0f,-0.866f,
     };
     GLuint vshader, fshader, prog;
     GLint linked, col, vpos;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     col = glGetUniformLocation(prog, "col");
     glUniform4f(col, ORANGE, 1.0f);
 
-    glVertexAttribPointer(vpos, 3, GL_FLOAT, GL_FALSE, 0, vertices);
+    glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
     while (1)
