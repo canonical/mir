@@ -26,11 +26,16 @@ static void assign_result(void *result, void **arg)
     *arg = result;
 }
 
+void mir_egl_app_shutdown(void)
+{
+    eglTerminate(egldisplay);
+    mir_connection_release(connection);
+}
+
 static void shutdown(int signum)
 {
     printf("Signal %d received. Good night.\n", signum);
-    eglTerminate(egldisplay);
-    mir_connection_release(connection);
+    mir_egl_app_shutdown();
     exit(0);
 }
 
