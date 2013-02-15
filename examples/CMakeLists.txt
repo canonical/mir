@@ -24,6 +24,12 @@ target_link_libraries(eglapp
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
+add_executable(eglflash
+  eglflash.c
+)
+target_link_libraries(eglflash
+  eglapp
+)
 add_executable(egltriangle
   egltriangle.c
 )
