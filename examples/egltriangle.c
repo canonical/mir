@@ -19,7 +19,6 @@
 #include "./eglapp.h"
 #include <assert.h>
 #include <stdio.h>
-#include <unistd.h> /* sleep() */
 #include <GLES2/gl2.h>
 
 static GLuint LoadShader(const char *src, GLenum type)
@@ -54,11 +53,18 @@ int main(int argc, char *argv[])
     EGLSurface surf;
 
     const char vshadersrc[] =
-        "attribute vec4 vPosition;    \n"
-        "void main()                  \n"
-        "{                            \n"
-        "    gl_Position = vPosition; \n"
-        "}                            \n";
+        "attribute vec4 vPosition;            \n"
+        "uniform float theta;                 \n"
+        "void main()                          \n"
+        "{                                    \n"
+        "    float c = cos(theta);            \n"
+        "    float s = sin(theta);            \n"
+        "    mat2 m;                          \n"
+        "    m[0] = vec2(c, s);               \n"
+        "    m[1] = vec2(-s, c);              \n"
+        "    vec2 p = m * vec2(vPosition);    \n"
+        "    gl_Position = vec4(p, 0.0, 1.0); \n"
+        "}                                    \n";
 
     const char fshadersrc[] =
         "precision mediump float;                        \n"
@@ -75,8 +81,9 @@ int main(int argc, char *argv[])
         1.0f,-0.866f,
     };
     GLuint vshader, fshader, prog;
-    GLint linked, col, vpos;
+    GLint linked, col, vpos, theta;
     int width = 512, height = 512;
+    GLfloat angle = 0.0f;
 
     (void)argc;
     (void)argv;
@@ -114,7 +121,9 @@ int main(int argc, char *argv[])
 
     vpos = glGetAttribLocation(prog, "vPosition");
     col = glGetUniformLocation(prog, "col");
+    theta = glGetUniformLocation(prog, "theta");
     glUniform4f(col, ORANGE, 1.0f);
+    glUniform1f(theta, 3.0f);
 
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
@@ -122,9 +131,10 @@ int main(int argc, char *argv[])
     while (1)
     {
         glClear(GL_COLOR_BUFFER_BIT);
+        glUniform1f(theta, angle);
+        angle += 0.005f;
         glDrawArrays(GL_TRIANGLES, 0, 3);
         eglSwapBuffers(disp, surf);
-        sleep(1);
     }
 
     return 0;
