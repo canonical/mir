@@ -123,7 +123,6 @@ int main(int argc, char *argv[])
     col = glGetUniformLocation(prog, "col");
     theta = glGetUniformLocation(prog, "theta");
     glUniform4f(col, ORANGE, 1.0f);
-    glUniform1f(theta, 3.0f);
 
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
