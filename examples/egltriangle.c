@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
        -1.0f,-0.866f, 0.0f,
         1.0f,-0.866f, 0.0f
     };
-    GLuint vshader, fshader, prog, col;
-    GLint linked;
+    GLuint vshader, fshader, prog;
+    GLint linked, col, vpos;
     int width = 512, height = 512;
 
     (void)argc;
@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
     assert(prog);
     glAttachShader(prog, vshader);
     glAttachShader(prog, fshader);
-    glBindAttribLocation(prog, 0, "vPosition");
     glLinkProgram(prog);
 
     glGetProgramiv(prog, GL_LINK_STATUS, &linked);
@@ -113,10 +112,11 @@ int main(int argc, char *argv[])
 
     glUseProgram(prog);
 
+    vpos = glGetAttribLocation(prog, "vPosition");
     col = glGetUniformLocation(prog, "col");
     glUniform4f(col, ORANGE, 1.0f);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices);
+    glVertexAttribPointer(vpos, 3, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
     while (1)
