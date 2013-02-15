@@ -16,11 +16,19 @@
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
-add_executable(mine mine.c)
-target_link_libraries(mine
+add_library(eglapp STATIC
+  eglapp.c
+)
+target_link_libraries(eglapp
   mirclient
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
+)
+add_executable(egltriangle
+  egltriangle.c
+)
+target_link_libraries(egltriangle
+  eglapp
 )
 
 add_executable(
