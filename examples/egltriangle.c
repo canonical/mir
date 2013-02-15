@@ -62,9 +62,10 @@ int main(int argc, char *argv[])
 
     const char fshadersrc[] =
         "precision mediump float;                        \n"
+        "uniform vec4 col;                               \n"
         "void main()                                     \n"
         "{                                               \n"
-        "    gl_FragColor = vec4(0.866666667, 0.282352941, 0.141414141, 1.0);"
+        "    gl_FragColor = col;                         \n"
         "}                                               \n";
 
     const GLfloat vertices[] =
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
        -1.0f,-0.866f, 0.0f,
         1.0f,-0.866f, 0.0f
     };
-    GLuint vshader, fshader, prog;
+    GLuint vshader, fshader, prog, col;
     GLint linked;
     int width = 512, height = 512;
 
@@ -109,7 +110,12 @@ int main(int argc, char *argv[])
 
     glClearColor(MID_AUBERGINE, 1.0);
     glViewport(0, 0, width, height);
+
     glUseProgram(prog);
+
+    col = glGetUniformLocation(prog, "col");
+    glUniform4f(col, ORANGE, 1.0f);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
