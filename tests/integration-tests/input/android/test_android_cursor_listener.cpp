@@ -93,7 +93,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    static WaitCondition wait_condition;
 
     static const float x = 100.f;
     static const float y = 100.f;
