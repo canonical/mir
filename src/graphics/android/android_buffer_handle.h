@@ -41,7 +41,8 @@ namespace android
 enum class BufferUsage : uint32_t
 {
     use_hardware,
-    use_software
+    use_software,
+    use_framebuffer_gles
 };
 
 /* note: this interface will need a new concrete class implementing it when the struct for ANativeWindowBuffer changes */

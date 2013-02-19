@@ -175,14 +175,12 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
 {
     using namespace testing;
 
-    usage = mga::BufferUsage::use_framebuffer_gles;
-
     auto proper_usage = (GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB);
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _,
                                                      proper_usage, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    alloc_adaptor->alloc_buffer(size, pf, usage );
+    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
 }
 
 TEST_F(AdaptorICSTest, handle_size_is_correct)
@@ -282,7 +280,7 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer);
+    auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
 
     EXPECT_EQ((unsigned int) buffer_cast->usage, (GRALLOC_USAGE_HW_RENDER |
