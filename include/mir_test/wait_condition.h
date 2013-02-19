@@ -27,20 +27,24 @@ namespace mir
 {
 struct WaitCondition
 {
+    WaitCondition() : woken(false) {}
+
     void wait_for_at_most_seconds(int seconds)
     {
         std::unique_lock<std::mutex> ul(guard);
-        condition.wait_for(ul, std::chrono::seconds(seconds));
+        if (!woken) condition.wait_for(ul, std::chrono::seconds(seconds));
     }
 
     void wake_up_everyone()
     {
         std::unique_lock<std::mutex> ul(guard);
+        woken = true;
         condition.notify_all();
     }
 
     std::mutex guard;
     std::condition_variable condition;
+    bool woken;
 };
 }
 
