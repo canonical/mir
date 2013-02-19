@@ -20,13 +20,19 @@
 #ifndef MIR_ANDROID_UBUNTU_THREADDEFS_H_
 #define MIR_ANDROID_UBUNTU_THREADDEFS_H_
 
-namespace android
+namespace mir_input
 {
 enum
 {
     PRIORITY_DEFAULT            = 0,
     PRIORITY_URGENT_DISPLAY     = -8
 };
+}
+
+namespace android
+{
+using ::mir_input::PRIORITY_DEFAULT;
+using ::mir_input::PRIORITY_URGENT_DISPLAY;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_THREADDEFS_H_ */

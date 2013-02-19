@@ -23,6 +23,8 @@
 #include <androidfw/Input.h>
 #include ANDROIDFW_UTILS(Log.h)
 
+#include <android/keycodes.h>
+
 #ifdef HAVE_ANDROID_OS
 #include <binder/Parcel.h>
 

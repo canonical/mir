@@ -24,6 +24,8 @@
 
 #define PROPERTY_VALUE_MAX  92
 
+namespace mir_input
+{
 inline int property_get(const char *key, char *value, const char *default_value)
 {
     int len = -1;
@@ -41,6 +43,11 @@ inline int property_get(const char *key, char *value, const char *default_value)
         len = 0;
     }
 }
+}
 
+namespace android
+{
+using ::mir_input::property_get;
+}
 
 #endif /* MIR_ANDROID_UBUNTU_PROPERTIES_H_ */
