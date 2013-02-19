@@ -38,9 +38,8 @@
 // This includes some cut & paste from android/looper.h (the enums) and
 // util/Looper.h (the android::Looper interface).
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace mir_input
+{
 /**
  * For callback-based event loops, this is the prototype of the function
  * that is called when a file descriptor event occurs.
@@ -123,9 +122,6 @@ enum {
      */
     ALOOPER_POLL_ERROR = -4
 };
-}
-
-namespace android {
 
 /**
  * A polling loop that supports monitoring file descriptor events, optionally
@@ -133,7 +129,7 @@ namespace android {
  *
  * A looper can be associated with a thread although there is no requirement that it must be.
  */
-class Looper : public RefBase {
+class Looper : public ::android::RefBase {
 protected:
     virtual ~Looper() { std::lock_guard<std::mutex> lock(mutex); io_service.stop(); files.clear(); }
 
@@ -286,7 +282,20 @@ private:
     std::mutex mutable mutex;
     std::vector<boost::asio::posix::stream_descriptor> files;
 };
+}
 
+namespace android
+{
+using ::mir_input::ALooper_callbackFunc;
+using ::mir_input::ALOOPER_EVENT_INPUT;
+using ::mir_input::ALOOPER_EVENT_OUTPUT;
+using ::mir_input::ALOOPER_EVENT_ERROR;
+using ::mir_input::ALOOPER_EVENT_HANGUP;
+using ::mir_input::ALOOPER_EVENT_INVALID;
+using ::mir_input::ALOOPER_POLL_WAKE;
+using ::mir_input::ALOOPER_POLL_CALLBACK;
+using ::mir_input::ALOOPER_POLL_TIMEOUT;
+using ::mir_input::ALOOPER_POLL_ERROR;
+using ::mir_input::Looper;
 } // namespace android
-
 #endif /* MIR_ANDROID_UBUNTU_LOOPER_H_ */
