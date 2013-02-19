@@ -30,8 +30,8 @@
 
 #include <fstream>
 
-namespace android {
-
+namespace mir_input
+{
 /*
  * Provides a mechanism for passing around string-based property key / value pairs
  * and loading them from property files.
@@ -151,6 +151,11 @@ private:
 
     boost::program_options::variables_map options;
 };
+}
+
+namespace android
+{
+using ::mir_input::PropertyMap;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_PROPERTYMAP_H_ */

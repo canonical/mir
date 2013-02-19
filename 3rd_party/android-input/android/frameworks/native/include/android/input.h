@@ -42,8 +42,10 @@
 
 #include <stdint.h>
 #include <sys/types.h>
+#if !defined(ANDROID_USE_STD)
 #include <android/keycodes.h>
 #include <android/looper.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -484,6 +486,7 @@ enum {
 } __attribute__ ((deprecated));
 
 
+#if !defined(ANDROID_USE_STD)
 /*
  * Input event accessors.
  *
@@ -840,6 +843,7 @@ int32_t AInputQueue_preDispatchEvent(AInputQueue* queue, AInputEvent* event);
  * This must be called after receiving an event with AInputQueue_get_event().
  */
 void AInputQueue_finishEvent(AInputQueue* queue, AInputEvent* event, int handled);
+#endif
 
 #ifdef __cplusplus
 }

@@ -22,4 +22,9 @@
 
 #include <utils/RefBase.h>
 
+namespace mir_input
+{
+using ::android::RefBase;
+}
+
 #endif /* MIR_ANDROID_UBUNTU_REFBASE_H_ */
