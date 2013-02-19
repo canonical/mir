@@ -180,16 +180,20 @@ public:
 
         boost::system::error_code ec;
 
-        if (timeoutMillis <= 0)
+        if (timeoutMillis == 0)
         {
             callbacks |= io_service.poll(ec);
         }
-        else
+        else if (timeoutMillis > 0)
         {
             boost::asio::deadline_timer timer(
                 io_service,
                 boost::posix_time::milliseconds(timeoutMillis));
 
+            callbacks |= io_service.run_one(ec);
+        }
+        else
+        {
             callbacks |= io_service.run_one(ec);
         }
 
