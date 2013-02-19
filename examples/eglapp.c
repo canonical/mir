@@ -28,12 +28,13 @@ static const char appname[] = "Dunnoyet";
 
 static MirConnection *connection;
 static EGLDisplay egldisplay;
+static EGLSurface eglsurface;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
     { \
         printf("%s\n", (_err)); \
-        return EGL_FALSE; \
+        return 0; \
     }
 
 static void assign_result(void *result, void **arg)
@@ -54,8 +55,12 @@ static void shutdown(int signum)
     exit(0);
 }
 
-EGLBoolean mir_egl_app_init(int *width, int *height,
-                            EGLDisplay *disp, EGLSurface *win)
+void mir_egl_swap_buffers(void)
+{
+    eglSwapBuffers(egldisplay, eglsurface);
+}
+
+int mir_egl_app_init(int *width, int *height)
 {
     EGLint attribs[] =
     {
@@ -80,7 +85,6 @@ EGLBoolean mir_egl_app_init(int *width, int *height,
     MirSurface *surface;
     EGLConfig eglconfig;
     EGLint neglconfigs;
-    EGLSurface eglsurface;
     EGLContext eglctx;
     EGLBoolean ok;
 
@@ -130,11 +134,11 @@ EGLBoolean mir_egl_app_init(int *width, int *height,
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
-    *disp = egldisplay;
-    *win = eglsurface;
     *width = surfaceparm.width;
     *height = surfaceparm.height;
 
-    return EGL_TRUE;
+    eglSwapInterval(egldisplay, 1);
+
+    return 1;
 }
 

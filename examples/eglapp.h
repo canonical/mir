@@ -19,14 +19,12 @@
 #ifndef __EGLAPP_H__
 #define __EGLAPP_H__
 
-#include <EGL/egl.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-EGLBoolean mir_egl_app_init(int *width, int *height,
-                            EGLDisplay *disp, EGLSurface *win);
+int mir_egl_app_init(int *width, int *height);
+void mir_egl_swap_buffers(void);
 void mir_egl_app_shutdown(void);
 
 #ifdef __cplusplus

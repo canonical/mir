@@ -25,14 +25,12 @@
 
 int main(int argc, char *argv[])
 {
-    EGLDisplay disp;
-    EGLSurface surf;
     int width = 0, height = 0;  /* Use the full display */
 
     (void)argc;
     (void)argv;
 
-    if (!mir_egl_app_init(&width, &height, &disp, &surf))
+    if (!mir_egl_app_init(&width, &height))
     {
         printf("Can't initialize EGL\n");
         return 1;
@@ -43,17 +41,17 @@ int main(int argc, char *argv[])
     {
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(disp, surf);
+        mir_egl_swap_buffers();
         sleep(1);
 
         glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(disp, surf);
+        mir_egl_swap_buffers();
         sleep(1);
 
         glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        eglSwapBuffers(disp, surf);
+        mir_egl_swap_buffers();
         sleep(1);
     }
 

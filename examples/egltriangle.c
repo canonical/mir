@@ -49,9 +49,6 @@ static GLuint LoadShader(const char *src, GLenum type)
 
 int main(int argc, char *argv[])
 {
-    EGLDisplay disp;
-    EGLSurface surf;
-
     const char vshadersrc[] =
         "attribute vec4 vPosition;            \n"
         "uniform float theta;                 \n"
@@ -88,7 +85,7 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    if (!mir_egl_app_init(&width, &height, &disp, &surf))
+    if (!mir_egl_app_init(&width, &height))
     {
         printf("Can't initialize EGL\n");
         return 1;
@@ -133,7 +130,7 @@ int main(int argc, char *argv[])
         glUniform1f(theta, angle);
         angle += 0.005f;
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        eglSwapBuffers(disp, surf);
+        mir_egl_swap_buffers();
     }
 
     return 0;
