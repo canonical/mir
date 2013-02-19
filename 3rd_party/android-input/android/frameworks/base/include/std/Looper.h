@@ -174,6 +174,10 @@ public:
     inline int pollOnce(int timeoutMillis) {
         bool callbacks{false};
 
+        // Outwit valgrind (otherwise AndroidInputManagerAndCursorListenerSetup.* test
+        // runs very erratically and slowly).
+        std::this_thread::yield();
+
         boost::system::error_code ec;
 
         if (timeoutMillis <= 0)
