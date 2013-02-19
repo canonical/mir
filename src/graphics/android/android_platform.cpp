@@ -34,11 +34,6 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-//init (hals)
-    //init gralloc.h
-    //init fb.h
-    //init hwc.h
-
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
 {
@@ -48,15 +43,6 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    //get buffer allocator from above
-    //make_shared(gralloc,fb) a NativeWindowType from the fb
-        //query #of fb's
-        //make_shared() #of fb's from gralloc
-    //make AndroidFramebufferWindow from (NativeWindowType, hwc)
-        //sets up EGL
-    //return 
-
-
     auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface());
     if (!android_window.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
