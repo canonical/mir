@@ -175,24 +175,28 @@ public:
      * for all file descriptors that were signalled.
      */
 
-    inline int pollOnce(int timeoutMillis) try {
+    inline int pollOnce(int timeoutMillis) {
         bool callbacks{false};
 
-        using std::chrono::system_clock;
+        boost::system::error_code ec;
 
-        auto const end_time = system_clock::now() + std::chrono::milliseconds(timeoutMillis);
-
-        do
+        if (timeoutMillis <= 0)
         {
-            callbacks |= io_service.poll();
-            if (woken.load()) return ALOOPER_POLL_WAKE;
-            if (timeoutMillis > 0) std::this_thread::yield();
+            callbacks |= io_service.poll(ec);
         }
-        while (system_clock::now() < end_time);
-        return callbacks ? ALOOPER_POLL_CALLBACK : ALOOPER_POLL_TIMEOUT;
-    }
-    catch (...) {
-        return ALOOPER_POLL_ERROR;
+        else
+        {
+            boost::asio::deadline_timer timer(
+                io_service,
+                boost::posix_time::milliseconds(timeoutMillis));
+
+            callbacks |= io_service.run_one(ec);
+        }
+
+        if (ec)                return ALOOPER_POLL_ERROR;
+        else if (woken.load()) return ALOOPER_POLL_WAKE;
+        else if (callbacks)    return ALOOPER_POLL_CALLBACK;
+        else                   return ALOOPER_POLL_TIMEOUT;
     }
 
     /**
@@ -201,7 +205,7 @@ public:
      * This method can be called on any thread.
      * This method returns immediately.
      */
-    void wake() { woken.store(true);  io_service.stop(); }
+    void wake() { io_service.post([&] () {woken.store(true); }); }
 
     /**
      * Adds a new file descriptor to be polled by the looper.
