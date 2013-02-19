@@ -97,6 +97,50 @@ private:
         return cache;
     }
 };
+
+void parse_arguments(
+    std::shared_ptr<mir::options::ProgramOption> const& options,
+    int argc,
+    char const* argv[])
+{
+    namespace po = boost::program_options;
+
+    po::options_description desc("Options");
+
+    try
+    {
+        namespace po = boost::program_options;
+
+        desc.add_options()
+            ("file,f", po::value<std::string>(), "<socket filename>")
+            ("help,h", "this help text");
+
+        options->parse_arguments(desc, argc, argv);
+
+        if (options->is_set("help"))
+        {
+            BOOST_THROW_EXCEPTION(po::error("help text requested"));
+        }
+    }
+    catch (po::error const& error)
+    {
+        std::cerr << desc << "\n";
+        throw;
+    }
+}
+
+void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& options)
+{
+    namespace po = boost::program_options;
+
+    po::options_description desc("Environment options");
+    desc.add_options()
+        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+        ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
+        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+
+    options->parse_environment(desc, "MIR_SERVER_");
+}
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
@@ -104,21 +148,24 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& s
 {
 }
 
+mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
+{
+    auto options = std::make_shared<mir::options::ProgramOption>();
+
+    parse_arguments(options, argc, argv);
+    parse_environment(options);
+
+    this->options = options;
+    socket_file = options->get("file", "/tmp/mir_socket");
+}
+
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_options()
 {
     if (!options)
     {
-        namespace po = boost::program_options;
-
-        po::options_description desc("Environment options");
-        desc.add_options()
-            ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-            ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
-            ("tests_use_real_input", po::value<bool>(), "use real input in tests");
-
         auto options = std::make_shared<mir::options::ProgramOption>();
 
-        options->parse_environment(desc, "MIR_SERVER_");
+        parse_environment(options);
 
         this->options = options;
     }
