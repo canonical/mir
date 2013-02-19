@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <EGL/egl.h>
 
 static const char servername[] = "/tmp/mir_socket";
@@ -57,7 +58,24 @@ static void shutdown(int signum)
 
 void mir_egl_swap_buffers(void)
 {
+    static time_t lasttime = 0;
+    static int lastcount = 0;
+    static int count = 0;
+    time_t now = time(NULL);
+    time_t dtime;
+    int dcount;
+
+    count++;
     eglSwapBuffers(egldisplay, eglsurface);
+
+    dcount = count - lastcount;
+    dtime = now - lasttime;
+    if (dtime)
+    {
+        printf("%d FPS\n", dcount);
+        lasttime = now;
+        lastcount = count;
+    }
 }
 
 int mir_egl_app_init(int *width, int *height)
