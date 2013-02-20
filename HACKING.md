@@ -1,6 +1,14 @@
 Mir hacking guide
 =================
 
+Getting dependencies
+--------------------
+To succesfully build Mir there are a few packages required:
+
+    $ apt-get install cmake
+    $ apt-get install equivs
+    $ mk-build-deps --install --tool "apt-get -y --force-yes" --build-dep debian/control
+
 Building mir
 -----------
 
