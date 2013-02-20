@@ -189,9 +189,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
 }
 
 std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::make_buffer_initializer()
+mir::DefaultServerConfiguration::the_buffer_initializer()
 {
-    return std::make_shared<mg::NullBufferInitializer>();
+    if (!buffer_initializer)
+        buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    return buffer_initializer;
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy>

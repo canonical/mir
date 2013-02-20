@@ -50,7 +50,7 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : graphics_platform{config.the_graphics_platform()},
           display{graphics_platform->create_display()},
-          buffer_allocator{graphics_platform->create_buffer_allocator(config.make_buffer_initializer())},
+          buffer_allocator{graphics_platform->create_buffer_allocator(config.the_buffer_initializer())},
           buffer_allocation_strategy{config.make_buffer_allocation_strategy(buffer_allocator)},
           buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
