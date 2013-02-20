@@ -38,7 +38,6 @@ public:
     MOCK_METHOD0(report_successful_egl_buffer_swap_on_construction, void());
     MOCK_METHOD0(report_successful_drm_mode_set_crtc_on_construction, void());
     MOCK_METHOD0(report_successful_display_construction, void());
-    MOCK_METHOD0(report_page_flip_timeout, void());
 };
 
 }
