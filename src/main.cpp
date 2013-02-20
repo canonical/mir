@@ -16,11 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/options/program_option.h"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
 #include <thread>
+#include <boost/program_options/errors.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <csignal>
@@ -49,13 +49,13 @@ void signal_terminate (int )
 
 namespace
 {
-void run_mir(std::string const& socket_file)
+void run_mir(mir::ServerConfiguration& config)
 {
+
     signal(SIGINT, mir::signal_terminate);
     signal(SIGTERM, mir::signal_terminate);
     signal(SIGPIPE, SIG_IGN);
 
-    mir::DefaultServerConfiguration config(socket_file);
     mir::DisplayServer server(config);
 
     signal_display_server = &server;
@@ -67,34 +67,15 @@ void run_mir(std::string const& socket_file)
 int main(int argc, char const* argv[])
 try
 {
-    namespace po = boost::program_options;
+    mir::DefaultServerConfiguration config(argc, argv);
 
-    mir::options::ProgramOption options;
-
-    po::options_description desc("Options");
-
-    try
-    {
-        desc.add_options()
-            ("file,f", po::value<std::string>(), "<socket filename>")
-            ("help,h", "this help text");
-
-        options.parse_arguments(desc, argc, argv);
-    }
-    catch (po::error const& error)
-    {
-        std::cerr << desc << "\n";
-        throw;
-    }
-
-    if (options.is_set("help"))
-    {
-        std::cout << desc << "\n";
-        return 1;
-    }
-
-    run_mir(options.get("file", "/tmp/mir_socket"));
+    run_mir(config);
     return 0;
+}
+catch (boost::program_options::error const&)
+{
+    // Can't run with these options - but no need for additional output
+    return 1;
 }
 catch (std::exception const& error)
 {

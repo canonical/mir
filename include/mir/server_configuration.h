@@ -22,7 +22,6 @@
 
 #include <memory>
 #include <string>
-#include <initializer_list>
 
 namespace mir
 {
@@ -89,7 +88,10 @@ protected:
 class DefaultServerConfiguration : public ServerConfiguration
 {
 public:
-    DefaultServerConfiguration(std::string const& socket_file);
+    DefaultServerConfiguration(int argc, char const* argv[]);
+
+    // TODO deprecated
+    explicit DefaultServerConfiguration(std::string const& socket_file);
 
     virtual std::shared_ptr<options::Option> make_options();
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
