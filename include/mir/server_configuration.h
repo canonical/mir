@@ -90,9 +90,6 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
 
-    // TODO deprecated
-    explicit DefaultServerConfiguration(std::string const& socket_file);
-
     virtual std::shared_ptr<options::Option> make_options();
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
@@ -110,6 +107,10 @@ public:
     virtual std::shared_ptr<input::InputManager> make_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+
+protected:
+    // TODO deprecated
+    explicit DefaultServerConfiguration(std::string const& socket_file);
 
 private:
     std::string socket_file;

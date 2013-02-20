@@ -129,8 +129,7 @@ struct SessionManagementContextSetup : public testing::Test
 
         EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
             .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
-        ctx = std::make_shared<mtc::SessionManagementContext>(
-            mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+        ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
     MockServerConfiguration server_configuration;
     MockSessionStore session_store;
@@ -149,8 +148,7 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
 
         EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
             .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
-        ctx = std::make_shared<mtc::SessionManagementContext>(
-            mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+        ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
 
     std::shared_ptr<mg::ViewableArea> viewable_area;
@@ -172,7 +170,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
 
-    mtc::SessionManagementContext ctx(mt::fake_shared<mir::ServerConfiguration>(server_configuration));
+    mtc::SessionManagementContext ctx(server_configuration);
 }
 
 TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with_no_geometry)
