@@ -65,7 +65,7 @@ public:
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
     virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
-    virtual std::shared_ptr<frontend::Communicator> make_communicator(
+    virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
@@ -95,7 +95,7 @@ public:
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
     virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display);
-    virtual std::shared_ptr<frontend::Communicator> make_communicator(
+    virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
