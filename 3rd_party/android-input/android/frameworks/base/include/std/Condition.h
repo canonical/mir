@@ -25,7 +25,7 @@
 #include <condition_variable>
 #include <chrono>
 
-namespace android
+namespace mir_input
 {
 typedef std::condition_variable_any Condition;
 
@@ -36,6 +36,13 @@ inline void waitRelative(Condition& c, Lock& l, nsecs_t reltime)
 {
     c.wait_for(l, std::chrono::nanoseconds(reltime));
 }
+}
+
+namespace android
+{
+using ::mir_input::Condition;
+using ::mir_input::broadcast;
+using ::mir_input::waitRelative;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_CONDITION_H_ */

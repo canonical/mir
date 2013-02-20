@@ -47,6 +47,7 @@
 #if !defined(ANDROID_USE_STD)
 #include <sha1.h>
 #else
+#include <android/keycodes.h>
 #include <boost/uuid/sha1.hpp>
 #endif
 #include <string.h>
