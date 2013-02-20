@@ -118,7 +118,7 @@ private:
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     std::shared_ptr<graphics::Renderer> renderer;
-    std::shared_ptr<frontend::Communicator> communicator;
+    std::weak_ptr<frontend::Communicator> communicator;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
