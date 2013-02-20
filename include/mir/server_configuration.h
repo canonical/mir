@@ -63,7 +63,7 @@ public:
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
-    virtual std::shared_ptr<graphics::Renderer> make_renderer(
+    virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
@@ -93,7 +93,7 @@ public:
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
-    virtual std::shared_ptr<graphics::Renderer> make_renderer(
+    virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> make_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
@@ -117,6 +117,8 @@ private:
     std::shared_ptr<frontend::ApplicationListener> application_listener;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
+    std::shared_ptr<graphics::Renderer> renderer;
+    std::shared_ptr<frontend::Communicator> communicator;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(

@@ -205,10 +205,12 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy(
     return buffer_allocation_strategy;
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(
+std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    return std::make_shared<mg::GLRenderer>(display->view_area().size);
+    if (!renderer)
+        renderer = std::make_shared<mg::GLRenderer>(display->view_area().size);
+    return renderer;
 }
 
 std::shared_ptr<msess::SessionStore>

@@ -49,7 +49,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_buffer_initializer, std::shared_ptr<mg::BufferInitializer>());
     MOCK_METHOD1(the_buffer_allocation_strategy,
         std::shared_ptr<mc::BufferAllocationStrategy>(std::shared_ptr<mc::GraphicBufferAllocator> const&));
-    MOCK_METHOD1(make_renderer, std::shared_ptr<mg::Renderer>(std::shared_ptr<mg::Display> const&));
+    MOCK_METHOD1(the_renderer, std::shared_ptr<mg::Renderer>(std::shared_ptr<mg::Display> const&));
     MOCK_METHOD3(make_communicator, std::shared_ptr<mf::Communicator>(
         std::shared_ptr<msess::SessionStore> const&,
         std::shared_ptr<mg::Display> const&,

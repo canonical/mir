@@ -48,7 +48,7 @@ private:
 
     virtual void TearDown();
     static std::shared_ptr<mir::frontend::Communicator> make_communicator();
-    static std::shared_ptr<mir::graphics::Renderer> make_renderer();
+    static std::shared_ptr<mir::graphics::Renderer> the_renderer();
     static std::shared_ptr<mir::compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
 };
 
