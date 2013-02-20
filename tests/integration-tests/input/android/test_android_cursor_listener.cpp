@@ -28,6 +28,8 @@
 #include "mir_test/event_factory.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 
+#include <thread>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -93,7 +95,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    auto wait_condition = std::make_shared<WaitCondition>();
 
     static const float x = 100.f;
     static const float y = 100.f;
@@ -102,12 +104,13 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     // The stack doesn't like shutting down while events are still moving through
     EXPECT_CALL(event_filter, handles(_))
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+            .WillOnce(ReturnFalseAndWakeUp(wait_condition));
 
     event_hub->synthesize_builtin_cursor_added();
     event_hub->synthesize_device_scan_complete();
 
     event_hub->synthesize_event(mis::a_motion_event().with_movement(x, y));
 
-    wait_condition.wait_for_at_most_seconds(1);
+    wait_condition->wait_for_at_most_seconds(1);
+    Mock::VerifyAndClearExpectations(&cursor_listener);
 }
