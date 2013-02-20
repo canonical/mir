@@ -22,7 +22,7 @@
 
 #include <vector>
 
-namespace android
+namespace mir_input
 {
 template <typename ValueType>
 class Vector : std::vector<ValueType> // NB private inheritance of implementation
@@ -182,6 +182,10 @@ public:
 //  // for debugging only
 //  inline size_t getItemSize() const { return itemSize(); }
 };
+}
+namespace android
+{
+using ::mir_input::Vector;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_VECTOR_H_ */

@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <vector>
 
-namespace android {
-
+namespace mir_input
+{
 template <class ValueType>
 class SortedVector : std::vector<ValueType>
 {
@@ -148,7 +148,11 @@ public:
 //    //! remove one item
 //    inline  ssize_t         removeAt(size_t index)  { return removeItemsAt(index); }
 };
+}
 
+namespace android
+{
+using ::mir_input::SortedVector;
 } // namespace android
 
 #endif /* MIR_ANDROID_UBUNTU_SORTEDVECTOR_H_ */
