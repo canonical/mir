@@ -348,7 +348,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         }
     };
 
-    std::shared_ptr<mg::Platform> make_graphics_platform()
+    std::shared_ptr<mg::Platform> the_graphics_platform()
     {
         if (!platform)
             platform = std::make_shared<StubPlatform>();
@@ -477,7 +477,7 @@ struct BufferCounterConfig : TestingServerConfiguration
         }
     };
 
-    std::shared_ptr<mg::Platform> make_graphics_platform()
+    std::shared_ptr<mg::Platform> the_graphics_platform()
     {
         if (!platform)
             platform = std::make_shared<StubPlatform>();

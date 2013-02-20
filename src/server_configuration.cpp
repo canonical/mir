@@ -172,14 +172,16 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
     return options;
 }
 
-std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::make_graphics_platform()
+std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     if (!graphics_platform)
     {
         // TODO I doubt we need the extra level of indirection provided by
         // mg::create_platform() - we just need to move the implementation
-        // of DefaultServerConfiguration::make_graphics_platform() to the
+        // of DefaultServerConfiguration::the_graphics_platform() to the
         // graphics libraries.
+        // Alternatively, if we want to dynamically load the graphics library
+        // then this would be the place to do that.
         graphics_platform = mg::create_platform();
     }
 
@@ -237,7 +239,7 @@ mir::DefaultServerConfiguration::make_ipc_factory(
     return std::make_shared<DefaultIpcFactory>(
         session_store,
         make_application_listener(),
-        make_graphics_platform(),
+        the_graphics_platform(),
         display, allocator);
 }
 

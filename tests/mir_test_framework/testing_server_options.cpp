@@ -129,7 +129,7 @@ std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_ma
         return std::make_shared<StubInputManager>();
 }
 
-std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_platform()
+std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()
 {
     if (!graphics_platform)
     {

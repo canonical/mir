@@ -60,7 +60,7 @@ class ServerConfiguration
 {
 public:
     virtual std::shared_ptr<options::Option> the_options() const = 0;
-    virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
+    virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
@@ -91,7 +91,7 @@ public:
     DefaultServerConfiguration(int argc, char const* argv[]);
 
     virtual std::shared_ptr<options::Option> the_options() const;
-    virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
+    virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);

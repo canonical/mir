@@ -48,7 +48,7 @@ std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
-        : graphics_platform{config.make_graphics_platform()},
+        : graphics_platform{config.the_graphics_platform()},
           display{graphics_platform->create_display()},
           buffer_allocator{graphics_platform->create_buffer_allocator(config.make_buffer_initializer())},
           buffer_allocation_strategy{config.make_buffer_allocation_strategy(buffer_allocator)},

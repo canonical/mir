@@ -41,7 +41,7 @@ public:
     virtual void on_exit(DisplayServer* display_server);
 
     // TODO can we remove this function and default to real graphics in tests?
-    std::shared_ptr<graphics::Platform> make_graphics_platform();
+    std::shared_ptr<graphics::Platform> the_graphics_platform();
     std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display);
     // We override make_input_manager in the default server configuration
@@ -52,6 +52,8 @@ public:
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
     virtual std::string the_socket_file() const;
+    using DefaultServerConfiguration::the_options;
+
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
 };

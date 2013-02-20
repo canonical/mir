@@ -103,7 +103,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> make_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform()
         {
             using namespace testing;
             if (!platform)
@@ -151,7 +151,7 @@ TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_cl
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> make_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform()
         {
             using namespace testing;
             if (!platform)
