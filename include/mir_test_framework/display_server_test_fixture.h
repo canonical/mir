@@ -49,7 +49,7 @@ private:
     virtual void TearDown();
     static std::shared_ptr<mir::frontend::Communicator> make_communicator();
     static std::shared_ptr<mir::graphics::Renderer> make_renderer();
-    static std::shared_ptr<mir::compositor::BufferAllocationStrategy> make_buffer_allocation_strategy();
+    static std::shared_ptr<mir::compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
 };
 
 // The test fixture sets up and tears down a display server for use

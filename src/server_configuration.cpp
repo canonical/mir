@@ -197,10 +197,12 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy>
-mir::DefaultServerConfiguration::make_buffer_allocation_strategy(
+mir::DefaultServerConfiguration::the_buffer_allocation_strategy(
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
 {
-    return std::make_shared<mc::SwapperFactory>(buffer_allocator);
+    if (!buffer_allocation_strategy)
+        buffer_allocation_strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
+    return buffer_allocation_strategy;
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::make_renderer(

@@ -61,7 +61,7 @@ class ServerConfiguration
 public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
@@ -91,7 +91,7 @@ public:
 
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
     virtual std::shared_ptr<graphics::Renderer> make_renderer(
         std::shared_ptr<graphics::Display> const& display);
@@ -116,6 +116,7 @@ private:
     std::shared_ptr<graphics::Platform> graphics_platform;
     std::shared_ptr<frontend::ApplicationListener> application_listener;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
+    std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
