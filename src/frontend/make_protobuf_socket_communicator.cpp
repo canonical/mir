@@ -30,8 +30,8 @@ mir::DefaultServerConfiguration::make_communicator(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
-    auto const threads = make_options()->get("ipc_thread_pool", 10);
+    auto const threads = the_options()->get("ipc_thread_pool", 10);
     return std::make_shared<mf::ProtobufSocketCommunicator>(
-        socket_file, make_ipc_factory(session_manager, display, allocator), threads);
+        the_socket_file(), make_ipc_factory(session_manager, display, allocator), threads);
 }
 

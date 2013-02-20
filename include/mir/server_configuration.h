@@ -59,7 +59,7 @@ class EventFilter;
 class ServerConfiguration
 {
 public:
-    virtual std::shared_ptr<options::Option> make_options() = 0;
+    virtual std::shared_ptr<options::Option> the_options() const = 0;
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -90,7 +90,7 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
 
-    virtual std::shared_ptr<options::Option> make_options();
+    virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<graphics::Platform> make_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> make_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> make_buffer_allocation_strategy(
@@ -110,10 +110,9 @@ public:
 
 protected:
     // TODO deprecated
-    explicit DefaultServerConfiguration(std::string const& socket_file);
+    explicit DefaultServerConfiguration();
 
 private:
-    std::string socket_file;
     std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
     std::shared_ptr<frontend::ApplicationListener> application_listener;
@@ -125,6 +124,8 @@ private:
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
     virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
+
+    virtual std::string the_socket_file() const;
 };
 }
 

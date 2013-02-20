@@ -144,7 +144,6 @@ namespace
 {
     struct DummyServerConfiguration : mir::DefaultServerConfiguration
     {
-        DummyServerConfiguration() : mir::DefaultServerConfiguration("") {}
     } server_configuration;
 }
 

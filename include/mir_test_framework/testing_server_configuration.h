@@ -34,8 +34,6 @@ using namespace mir;
 class TestingServerConfiguration : public DefaultServerConfiguration
 {
 public:
-    TestingServerConfiguration();
-
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
 
@@ -53,6 +51,7 @@ public:
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
+    virtual std::string the_socket_file() const;
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
 };

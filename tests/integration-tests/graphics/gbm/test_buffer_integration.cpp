@@ -105,7 +105,7 @@ class GBMBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto options = mtf::TestingServerConfiguration().make_options();
+        auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get("tests_use_real_graphics", false))
             platform = mg::create_platform();

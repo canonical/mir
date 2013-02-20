@@ -143,8 +143,7 @@ void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& optio
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::string const& socket_file) :
-    socket_file(socket_file)
+mir::DefaultServerConfiguration::DefaultServerConfiguration()
 {
     auto options = std::make_shared<mir::options::ProgramOption>();
 
@@ -161,10 +160,14 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     parse_environment(options);
 
     this->options = options;
-    socket_file = options->get("file", "/tmp/mir_socket");
 }
 
-std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::make_options()
+std::string mir::DefaultServerConfiguration::the_socket_file() const
+{
+    return the_options()->get("file", "/tmp/mir_socket");
+}
+
+std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
     return options;
 }

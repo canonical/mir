@@ -44,7 +44,7 @@ namespace
 
 struct MockServerConfiguration : public mir::ServerConfiguration
 {
-    MOCK_METHOD0(make_options, std::shared_ptr<mo::Option>());
+    MOCK_CONST_METHOD0(the_options, std::shared_ptr<mo::Option>());
     MOCK_METHOD0(make_graphics_platform, std::shared_ptr<mg::Platform>());
     MOCK_METHOD0(make_buffer_initializer, std::shared_ptr<mg::BufferInitializer>());
     MOCK_METHOD1(make_buffer_allocation_strategy,
