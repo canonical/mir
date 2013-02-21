@@ -50,8 +50,8 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : display{config.the_display()},
           buffer_allocator{config.the_buffer_allocator()},
-          buffer_allocation_strategy{config.the_buffer_allocation_strategy()},
-          buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
+          buffer_bundle_manager{
+              std::make_shared<mc::BufferBundleManager>(config.the_buffer_allocation_strategy())},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.the_renderer()},
@@ -65,7 +65,6 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
-    std::shared_ptr<mc::BufferAllocationStrategy> buffer_allocation_strategy;
     std::shared_ptr<mc::BufferBundleManager> buffer_bundle_manager;
     std::shared_ptr<ms::SurfaceStack> surface_stack;
     std::shared_ptr<ms::SurfaceController> surface_controller;
