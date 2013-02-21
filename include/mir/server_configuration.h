@@ -72,7 +72,7 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
-    virtual std::shared_ptr<input::InputManager> make_input_manager(
+    virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
 
@@ -102,7 +102,7 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
-    virtual std::shared_ptr<input::InputManager> make_input_manager(
+    virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
@@ -136,6 +136,7 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<sessions::SessionStore> session_store;
+    CachedPtr<input::InputManager>    input_manager;
 
 private:
     std::shared_ptr<options::Option> options;

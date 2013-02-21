@@ -57,7 +57,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD2(the_session_store, std::shared_ptr<msess::SessionStore>(
         std::shared_ptr<msess::SurfaceFactory> const&,
         std::shared_ptr<mg::ViewableArea> const&));
-    MOCK_METHOD2(make_input_manager, std::shared_ptr<mi::InputManager>(
+    MOCK_METHOD2(the_input_manager, std::shared_ptr<mi::InputManager>(
         std::initializer_list<std::shared_ptr<mi::EventFilter> const> const&,
         std::shared_ptr<mg::ViewableArea> const&));
 };

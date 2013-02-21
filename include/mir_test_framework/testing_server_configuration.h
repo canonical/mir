@@ -44,10 +44,10 @@ public:
     std::shared_ptr<graphics::Platform> the_graphics_platform();
     std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display);
-    // We override make_input_manager in the default server configuration
+    // We override the_input_manager in the default server configuration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
-    virtual std::shared_ptr<input::InputManager> make_input_manager(
+    virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
