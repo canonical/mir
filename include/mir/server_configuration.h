@@ -75,6 +75,7 @@ public:
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
+    virtual std::shared_ptr<graphics::Display> the_display() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -105,6 +106,7 @@ public:
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<graphics::Display> the_display();
 
 protected:
     // TODO deprecated
@@ -140,6 +142,7 @@ protected:
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
+    CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::ApplicationListener> application_listener;

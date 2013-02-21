@@ -258,6 +258,15 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         });
 }
 
+std::shared_ptr<mg::Display>
+mir::DefaultServerConfiguration::the_display()
+{
+    return display(
+        [&]()
+        {
+            return the_graphics_platform()->create_display();
+        });
+}
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
