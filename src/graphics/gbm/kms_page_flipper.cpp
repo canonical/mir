@@ -22,6 +22,7 @@
 #include <limits>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -30,29 +31,6 @@ namespace mgg = mir::graphics::gbm;
 
 namespace
 {
-
-struct timeval chrono_to_timeval(std::chrono::microseconds us)
-{
-    namespace sc = std::chrono;
-
-    auto s = sc::duration_cast<sc::seconds>(us);
-    auto us_left = sc::duration_cast<sc::microseconds>(us - s);
-
-    if (s.count() > std::numeric_limits<decltype(timeval::tv_sec)>::max() ||
-        s.count() < 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to convert microseconds to timeval, overflow in tv_sec"));
-    }
-
-    if (us_left.count() > std::numeric_limits<decltype(timeval::tv_usec)>::max() ||
-        us_left.count() < 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to convert microseconds to timeval, overflow in tv_usec"));
-    }
-
-    return {static_cast<decltype(timeval::tv_sec)>(s.count()),
-            static_cast<decltype(timeval::tv_usec)>(us_left.count())};
-}
 
 void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
@@ -64,12 +42,8 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
 
 }
 
-mgg::KMSPageFlipper::KMSPageFlipper(int drm_fd,
-                                    std::chrono::microseconds max_wait,
-                                    std::shared_ptr<DisplayListener> const& listener)
+mgg::KMSPageFlipper::KMSPageFlipper(int drm_fd)
     : drm_fd{drm_fd},
-      tv_page_flip_max_wait(chrono_to_timeval(max_wait)),
-      listener(listener),
       pending_page_flips(),
       worker_tid()
 {
@@ -127,25 +101,16 @@ void mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 
     while (!done)
     {
-        struct timeval tv = tv_page_flip_max_wait;
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(drm_fd, &fds);
 
         /*
-         * Wait $page_flip_max_wait_usec for a page flip event. If we get a
-         * page flip event, page_flip_handler(), called through drmHandleEvent(),
-         * will update the pending_page_flips map. If we don't get the expected
-         * page flip event within that time, or we can't read from the DRM fd, act
-         * as if the page flip has occurred anyway.
-         *
-         * The rationale is that if we don't get a page flip event "soon" after
-         * scheduling the page flip, something is severely broken at the driver
-         * level. In that case, acting as if the page flip has occurred will not
-         * cause any worse harm anyway (perhaps some tearing), and will allow us to
-         * continue processing instead of just hanging.
+         * Wait for a page flip event. When we get a page flip event,
+         * page_flip_handler(), called through drmHandleEvent(), will update
+         * the pending_page_flips map.
          */
-        auto ret = select(drm_fd + 1, &fds, nullptr, nullptr, &tv);
+        auto ret = select(drm_fd + 1, &fds, nullptr, nullptr, nullptr);
 
         {
             std::unique_lock<std::mutex> lock{pf_mutex};
@@ -154,10 +119,12 @@ void mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
             {
                 drmHandleEvent(drm_fd, &evctx);
             }
-            else
+            else if (ret < 0 && errno != EINTR)
             {
-                pending_page_flips.erase(crtc_id);
-                listener->report_page_flip_timeout();
+                std::string const msg("Error while waiting for page-flip event");
+                BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error(msg)) << boost::errinfo_errno(errno));
             }
 
             done = page_flip_is_done(crtc_id);

@@ -48,8 +48,7 @@ struct PageFlipEventData
 class KMSPageFlipper : public PageFlipper
 {
 public:
-    KMSPageFlipper(int drm_fd, std::chrono::microseconds max_wait,
-                   std::shared_ptr<DisplayListener> const& listener);
+    KMSPageFlipper(int drm_fd);
 
     bool schedule_flip(uint32_t crtc_id, uint32_t fb_id);
     void wait_for_flip(uint32_t crtc_id);
@@ -60,8 +59,6 @@ private:
     bool page_flip_is_done(uint32_t crtc_id);
 
     int const drm_fd;
-    struct timeval const tv_page_flip_max_wait;
-    std::shared_ptr<DisplayListener> const listener;
     std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
     std::mutex pf_mutex;
     std::condition_variable pf_cv;
