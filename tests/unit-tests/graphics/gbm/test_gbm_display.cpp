@@ -334,11 +334,31 @@ TEST_F(GBMDisplayTest, create_display_gbm_failure)
     }, std::runtime_error) << "Expected c'tor of GBMDisplay to throw an exception";
 }
 
+namespace
+{
+
+ACTION_P(QueuePageFlipEvent, write_drm_fd)
+{
+    EXPECT_EQ(1, write(write_drm_fd, "a", 1));
+}
+
+ACTION_P(InvokePageFlipHandler, param)
+{
+    int const dont_care{0};
+    char dummy;
+
+    arg1->page_flip_handler(dont_care, dont_care, dont_care, dont_care, *param);
+    ASSERT_EQ(1, read(arg0, &dummy, 1));
+}
+
+}
+
 TEST_F(GBMDisplayTest, post_update)
 {
     using namespace testing;
 
     auto const crtc_id = get_connected_crtc_id();
+    void* user_data{nullptr};
 
     setup_post_update_expectations();
 
@@ -351,7 +371,14 @@ TEST_F(GBMDisplayTest, post_update)
                                               fake.fb_id2,
                                               _, _))
             .Times(Exactly(1))
-            .WillOnce(Return(0));
+            .WillOnce(DoAll(QueuePageFlipEvent(mock_drm.fake_drm.write_fd()),
+                            SaveArg<4>(&user_data),
+                            Return(0)));
+
+        /* Handle the flip event */
+        EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+            .Times(1)
+            .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
         /* Release the current FB */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
