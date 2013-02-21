@@ -53,10 +53,10 @@ struct mir::DisplayServer::Private
           buffer_bundle_factory{
               std::make_shared<mc::BufferBundleManager>(config.the_buffer_allocation_strategy())},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_factory.get())},
-          surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
+          surface_factory{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           renderer{config.the_renderer()},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          session_store{config.the_session_store(surface_controller, display)},
+          session_store{config.the_session_store(surface_factory, display)},
           communicator{config.the_communicator(session_store, buffer_allocator)},
           input_manager{config.the_input_manager(empty_filter_list, display)},
           exit(false)
@@ -67,7 +67,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
     std::shared_ptr<mc::BufferBundleFactory> buffer_bundle_factory;
     std::shared_ptr<ms::SurfaceStack> surface_stack;
-    std::shared_ptr<ms::SurfaceController> surface_controller;
+    std::shared_ptr<sessions::SurfaceFactory> surface_factory;
     std::shared_ptr<mg::Renderer> renderer;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;
