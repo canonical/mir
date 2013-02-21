@@ -111,6 +111,27 @@ protected:
     explicit DefaultServerConfiguration();
     virtual std::shared_ptr<options::Option> the_options() const;
 
+    template<typename Type>
+    class CachedPtr
+    {
+        std::weak_ptr<Type> cache;
+
+    public:
+        std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
+        {
+            auto result = cache.lock();
+            if (!result)
+            {
+                cache = result = make();
+            }
+
+            return result;
+
+        }
+    };
+
+    CachedPtr<frontend::Communicator> communicator;
+
 private:
     std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
@@ -118,7 +139,6 @@ private:
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     std::shared_ptr<graphics::Renderer> renderer;
-    std::weak_ptr<frontend::Communicator> communicator;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
