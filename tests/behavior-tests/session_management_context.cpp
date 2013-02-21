@@ -149,7 +149,7 @@ namespace
 
 mtc::SessionManagementContext::SessionManagementContext() :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.make_session_store(
+    session_store(server_configuration.the_session_store(
         std::make_shared<mtc::DummySurfaceFactory>(),
         view_area))
 {
@@ -157,7 +157,7 @@ mtc::SessionManagementContext::SessionManagementContext() :
 
 mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.make_session_store(
+    session_store(server_configuration.the_session_store(
         std::make_shared<mtc::DummySurfaceFactory>(),
         view_area))
 {

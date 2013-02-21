@@ -214,18 +214,22 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer(
 }
 
 std::shared_ptr<msess::SessionStore>
-mir::DefaultServerConfiguration::make_session_store(
+mir::DefaultServerConfiguration::the_session_store(
     std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
     std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
-    auto session_container = std::make_shared<msess::SessionContainer>();
-    auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
-    auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
+    return session_store(
+        [&,this]() -> std::shared_ptr<msess::SessionStore>
+        {
+            auto session_container = std::make_shared<msess::SessionContainer>();
+            auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
+            auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
 
-    auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
-    auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
+            auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
+            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
 
-    return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
+            return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
+        });
 }
 
 std::shared_ptr<mi::InputManager>

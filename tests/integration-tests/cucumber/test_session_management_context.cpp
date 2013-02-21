@@ -54,7 +54,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
         std::shared_ptr<msess::SessionStore> const&,
         std::shared_ptr<mg::Display> const&,
         std::shared_ptr<mc::GraphicBufferAllocator> const&));
-    MOCK_METHOD2(make_session_store, std::shared_ptr<msess::SessionStore>(
+    MOCK_METHOD2(the_session_store, std::shared_ptr<msess::SessionStore>(
         std::shared_ptr<msess::SurfaceFactory> const&,
         std::shared_ptr<mg::ViewableArea> const&));
     MOCK_METHOD2(make_input_manager, std::shared_ptr<mi::InputManager>(
@@ -127,7 +127,7 @@ struct SessionManagementContextSetup : public testing::Test
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        EXPECT_CALL(server_configuration, the_session_store(_, _)).Times(1)
             .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
@@ -146,7 +146,7 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+        EXPECT_CALL(server_configuration, the_session_store(_, _)).Times(1)
             .WillOnce(DoAll(SaveArg<1>(&viewable_area), Return(mt::fake_shared<msess::SessionStore>(session_store))));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
@@ -167,7 +167,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     MockServerConfiguration server_configuration;
     MockSessionStore session_store;
     
-    EXPECT_CALL(server_configuration, make_session_store(_, _)).Times(1)
+    EXPECT_CALL(server_configuration, the_session_store(_, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
 
     mtc::SessionManagementContext ctx(server_configuration);

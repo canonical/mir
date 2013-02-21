@@ -69,7 +69,7 @@ public:
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
-    virtual std::shared_ptr<sessions::SessionStore> make_session_store(
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
     virtual std::shared_ptr<input::InputManager> make_input_manager(
@@ -99,7 +99,7 @@ public:
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
-    virtual std::shared_ptr<sessions::SessionStore> make_session_store(
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
     virtual std::shared_ptr<input::InputManager> make_input_manager(
@@ -116,7 +116,11 @@ protected:
     {
         std::weak_ptr<Type> cache;
 
+        CachedPtr(CachedPtr const&) = delete;
+        CachedPtr& operator=(CachedPtr const&) = delete;
     public:
+        CachedPtr() = default;
+
         std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
         {
             auto result = cache.lock();
@@ -131,6 +135,7 @@ protected:
     };
 
     CachedPtr<frontend::Communicator> communicator;
+    CachedPtr<sessions::SessionStore> session_store;
 
 private:
     std::shared_ptr<options::Option> options;
