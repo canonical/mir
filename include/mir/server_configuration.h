@@ -65,7 +65,6 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
@@ -95,7 +94,6 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
