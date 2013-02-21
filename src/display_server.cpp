@@ -56,7 +56,7 @@ struct mir::DisplayServer::Private
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), config.the_renderer())},
           session_store{config.the_session_store(surface_factory)},
           communicator{config.the_communicator(session_store)},
-          input_manager{config.the_input_manager(empty_filter_list, display)},
+          input_manager{config.the_input_manager(empty_filter_list)},
           exit(false)
     {
     }

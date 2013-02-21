@@ -47,8 +47,7 @@ public:
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
     virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
 
     virtual std::string the_socket_file() const;
     using DefaultServerConfiguration::the_options;

@@ -236,13 +236,12 @@ mir::DefaultServerConfiguration::the_session_store(
 
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
-    std::shared_ptr<mg::ViewableArea> const& view_area)
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
     return input_manager(
-        [&]()
+        [&, this]()
         {
-            return mi::create_input_manager(event_filters, view_area);
+            return mi::create_input_manager(event_filters, the_display());
         });
 }
 

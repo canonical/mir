@@ -68,8 +68,7 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
 
@@ -95,8 +94,7 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
         std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
     virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<graphics::Display> the_display();
 
