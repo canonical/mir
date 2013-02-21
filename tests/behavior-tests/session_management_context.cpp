@@ -150,16 +150,14 @@ namespace
 mtc::SessionManagementContext::SessionManagementContext() :
     view_area(std::make_shared<mtc::SizedDisplay>()),
     session_store(server_configuration.the_session_store(
-        std::make_shared<mtc::DummySurfaceFactory>(),
-        view_area))
+        std::make_shared<mtc::DummySurfaceFactory>()))
 {
 }
 
 mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
     session_store(server_configuration.the_session_store(
-        std::make_shared<mtc::DummySurfaceFactory>(),
-        view_area))
+        std::make_shared<mtc::DummySurfaceFactory>()))
 {
 }
 
@@ -201,3 +199,7 @@ void mtc::SessionManagementContext::set_view_area(geom::Rectangle const& new_vie
     view_area->set_view_area(new_view_region);
 }
 
+std::shared_ptr<mg::ViewableArea> mtc::SessionManagementContext::get_view_area() const
+{
+    return view_area;
+}

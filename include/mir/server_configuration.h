@@ -66,8 +66,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store) = 0;
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
@@ -94,8 +93,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store);
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
