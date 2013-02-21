@@ -146,7 +146,11 @@ std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
     if (options->get("tests_use_real_graphics", false))
         return DefaultServerConfiguration::the_renderer();
     else
-        return std::make_shared<StubRenderer>();
+        return renderer(
+            [&]()
+            {
+                return std::make_shared<StubRenderer>();
+            });
 }
 
 void mtf::TestingServerConfiguration::exec(DisplayServer* )
