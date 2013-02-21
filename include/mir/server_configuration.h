@@ -61,8 +61,7 @@ class ServerConfiguration
 public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
     virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display) = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
@@ -75,6 +74,7 @@ public:
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -91,8 +91,7 @@ public:
 
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<graphics::Renderer> the_renderer(
         std::shared_ptr<graphics::Display> const& display);
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
@@ -105,6 +104,7 @@ public:
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
 
 protected:
     // TODO deprecated
@@ -139,6 +139,7 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
+    CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::ApplicationListener> application_listener;

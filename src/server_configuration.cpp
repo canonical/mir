@@ -198,13 +198,12 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy>
-mir::DefaultServerConfiguration::the_buffer_allocation_strategy(
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
+mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
 {
     return buffer_allocation_strategy(
-        [&]()
+        [this]()
         {
-             return std::make_shared<mc::SwapperFactory>(buffer_allocator);
+             return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
         });
 }
 
@@ -248,6 +247,17 @@ mir::DefaultServerConfiguration::the_input_manager(
             return mi::create_input_manager(event_filters, view_area);
         });
 }
+
+std::shared_ptr<mc::GraphicBufferAllocator>
+mir::DefaultServerConfiguration::the_buffer_allocator()
+{
+    return buffer_allocator(
+        [&]()
+        {
+            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+        });
+}
+
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
