@@ -26,15 +26,14 @@ namespace mc = mir::compositor;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::the_communicator(
-    std::shared_ptr<sessions::SessionStore> const& session_manager,
-    std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<sessions::SessionStore> const& session_manager)
 {
     return communicator(
         [&,this]() -> std::shared_ptr<mf::Communicator>
         {
             auto const threads = the_options()->get("ipc_thread_pool", 10);
             return std::make_shared<mf::ProtobufSocketCommunicator>(
-                the_socket_file(), the_ipc_factory(session_manager, the_display(), allocator), threads);
+                the_socket_file(), the_ipc_factory(session_manager, the_display(), the_buffer_allocator()), threads);
         });
 }
 
