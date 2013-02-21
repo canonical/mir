@@ -248,7 +248,7 @@ TEST_F(BespokeDisplayServerTestFixture,
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mc::BufferAllocationStrategy> make_buffer_allocation_strategy(
+        std::shared_ptr<mc::BufferAllocationStrategy> the_buffer_allocation_strategy(
                 std::shared_ptr<mc::GraphicBufferAllocator> const& /*buffer_allocator*/)
         {
             using namespace testing;
@@ -348,7 +348,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         }
     };
 
-    std::shared_ptr<mg::Platform> make_graphics_platform()
+    std::shared_ptr<mg::Platform> the_graphics_platform()
     {
         if (!platform)
             platform = std::make_shared<StubPlatform>();
@@ -477,7 +477,7 @@ struct BufferCounterConfig : TestingServerConfiguration
         }
     };
 
-    std::shared_ptr<mg::Platform> make_graphics_platform()
+    std::shared_ptr<mg::Platform> the_graphics_platform()
     {
         if (!platform)
             platform = std::make_shared<StubPlatform>();

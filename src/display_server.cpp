@@ -48,18 +48,18 @@ std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
-        : graphics_platform{config.make_graphics_platform()},
+        : graphics_platform{config.the_graphics_platform()},
           display{graphics_platform->create_display()},
-          buffer_allocator{graphics_platform->create_buffer_allocator(config.make_buffer_initializer())},
-          buffer_allocation_strategy{config.make_buffer_allocation_strategy(buffer_allocator)},
+          buffer_allocator{graphics_platform->create_buffer_allocator(config.the_buffer_initializer())},
+          buffer_allocation_strategy{config.the_buffer_allocation_strategy(buffer_allocator)},
           buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
-          renderer{config.make_renderer(display)},
+          renderer{config.the_renderer(display)},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          session_store{config.make_session_store(surface_controller, display)},
-          communicator{config.make_communicator(session_store, display, buffer_allocator)},
-          input_manager{config.make_input_manager(empty_filter_list, display)},
+          session_store{config.the_session_store(surface_controller, display)},
+          communicator{config.the_communicator(session_store, display, buffer_allocator)},
+          input_manager{config.the_input_manager(empty_filter_list, display)},
           exit(false)
     {
     }

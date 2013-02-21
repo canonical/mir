@@ -140,14 +140,27 @@ public:
 }
 } // namespace mir
 
-
-
-mtc::SessionManagementContext::SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration)
+namespace
 {
-    auto underlying_factory = std::make_shared<mtc::DummySurfaceFactory>();
-    view_area = std::make_shared<mtc::SizedDisplay>();
+    struct DummyServerConfiguration : mir::DefaultServerConfiguration
+    {
+    } server_configuration;
+}
 
-    session_store = server_configuration->make_session_store(underlying_factory, view_area);
+mtc::SessionManagementContext::SessionManagementContext() :
+    view_area(std::make_shared<mtc::SizedDisplay>()),
+    session_store(server_configuration.the_session_store(
+        std::make_shared<mtc::DummySurfaceFactory>(),
+        view_area))
+{
+}
+
+mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
+    view_area(std::make_shared<mtc::SizedDisplay>()),
+    session_store(server_configuration.the_session_store(
+        std::make_shared<mtc::DummySurfaceFactory>(),
+        view_area))
+{
 }
 
 // TODO: This will be less awkward with the ApplicationWindow class.

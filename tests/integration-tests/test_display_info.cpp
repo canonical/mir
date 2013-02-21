@@ -118,7 +118,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> make_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform()
         {
             using namespace testing;
 

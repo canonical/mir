@@ -120,16 +120,16 @@ class StubInputManager : public mi::InputManager
 }
 }
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::make_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters, std::shared_ptr<mg::ViewableArea> const& viewable_area)
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters, std::shared_ptr<mg::ViewableArea> const& viewable_area)
 {
-    auto options = make_options();
+    auto options = the_options();
     if (options->get("tests_use_real_input", false))
         return mi::create_input_manager(event_filters, viewable_area);
     else
         return std::make_shared<StubInputManager>();
 }
 
-std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_platform()
+std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()
 {
     if (!graphics_platform)
     {
@@ -139,13 +139,13 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::make_graphics_pla
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::make_renderer(
+std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    auto options = make_options();
+    auto options = the_options();
 
     if (options->get("tests_use_real_graphics", false))
-        return DefaultServerConfiguration::make_renderer(display);
+        return DefaultServerConfiguration::the_renderer(display);
     else
         return std::make_shared<StubRenderer>();
 }
@@ -158,10 +158,11 @@ void mtf::TestingServerConfiguration::on_exit(DisplayServer* )
 {
 }
 
-mtf::TestingServerConfiguration::TestingServerConfiguration() :
-    DefaultServerConfiguration(test_socket_file())
+std::string mtf::TestingServerConfiguration::the_socket_file() const
 {
+    return test_socket_file();
 }
+
 
 std::string const& mtf::test_socket_file()
 {

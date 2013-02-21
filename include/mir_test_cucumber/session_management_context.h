@@ -47,8 +47,8 @@ class SizedDisplay;
 class SessionManagementContext
 {
 public:
-    SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration
-        = std::make_shared<DefaultServerConfiguration>(""));
+    SessionManagementContext();
+    SessionManagementContext(ServerConfiguration& server_configuration);
 
     virtual ~SessionManagementContext() {}
     
@@ -66,8 +66,8 @@ protected:
 private:
     std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;
 
-    std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<SizedDisplay> view_area;
+    std::shared_ptr<sessions::SessionStore> session_store;
 };
 
 }

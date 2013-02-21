@@ -24,11 +24,17 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
 std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::make_communicator(
+mir::DefaultServerConfiguration::the_communicator(
     std::shared_ptr<sessions::SessionStore> const& session_store,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
-    return std::make_shared<mf::ProtobufBinderCommunicator>(
-        socket_file, make_ipc_factory(session_store, display, allocator));
+    return communicator(
+        []() -> std::shared_ptr<mf::Communicator>
+        {
+            auto const threads = the_options()->get("ipc_thread_pool", 10);
+            return std::make_shared<mf::ProtobufBinderCommunicator>(
+                the_socket_file(), the_ipc_factory(session_store, display, allocator));
+        });
+
 }
