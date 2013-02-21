@@ -139,13 +139,12 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer(
-        std::shared_ptr<mg::Display> const& display)
+std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 
     if (options->get("tests_use_real_graphics", false))
-        return DefaultServerConfiguration::the_renderer(display);
+        return DefaultServerConfiguration::the_renderer();
     else
         return std::make_shared<StubRenderer>();
 }

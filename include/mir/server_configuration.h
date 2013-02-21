@@ -62,8 +62,7 @@ public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
-    virtual std::shared_ptr<graphics::Renderer> the_renderer(
-        std::shared_ptr<graphics::Display> const& display) = 0;
+    virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
@@ -93,8 +92,7 @@ public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
-    virtual std::shared_ptr<graphics::Renderer> the_renderer(
-        std::shared_ptr<graphics::Display> const& display);
+    virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,

@@ -207,13 +207,12 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
         });
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer(
-        std::shared_ptr<mg::Display> const& display)
+std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
 {
     return renderer(
         [&]()
         {
-             return std::make_shared<mg::GLRenderer>(display->view_area().size);
+             return std::make_shared<mg::GLRenderer>(the_display()->view_area().size);
         });
 }
 

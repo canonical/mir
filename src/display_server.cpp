@@ -54,7 +54,7 @@ struct mir::DisplayServer::Private
           buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
           surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
-          renderer{config.the_renderer(display)},
+          renderer{config.the_renderer()},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
           session_store{config.the_session_store(surface_controller, display)},
           communicator{config.the_communicator(session_store, display, buffer_allocator)},
