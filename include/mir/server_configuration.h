@@ -138,6 +138,8 @@ protected:
     CachedPtr<sessions::SessionStore> session_store;
     CachedPtr<input::InputManager>    input_manager;
 
+    CachedPtr<frontend::ProtobufIpcFactory> ipc_factory;
+
 private:
     std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
@@ -147,7 +149,7 @@ private:
     std::shared_ptr<graphics::Renderer> renderer;
 
     // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> make_ipc_factory(
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);

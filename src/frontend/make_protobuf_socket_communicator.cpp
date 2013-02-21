@@ -35,7 +35,7 @@ mir::DefaultServerConfiguration::the_communicator(
         {
             auto const threads = the_options()->get("ipc_thread_pool", 10);
             return std::make_shared<mf::ProtobufSocketCommunicator>(
-                the_socket_file(), make_ipc_factory(session_manager, display, allocator), threads);
+                the_socket_file(), the_ipc_factory(session_manager, display, allocator), threads);
         });
 }
 
