@@ -174,43 +174,48 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
-    if (!graphics_platform)
-    {
-        // TODO I doubt we need the extra level of indirection provided by
-        // mg::create_platform() - we just need to move the implementation
-        // of DefaultServerConfiguration::the_graphics_platform() to the
-        // graphics libraries.
-        // Alternatively, if we want to dynamically load the graphics library
-        // then this would be the place to do that.
-        graphics_platform = mg::create_platform();
-    }
-
-    return graphics_platform;
+    return graphics_platform(
+        []()
+        {
+            // TODO I doubt we need the extra level of indirection provided by
+            // mg::create_platform() - we just need to move the implementation
+            // of DefaultServerConfiguration::the_graphics_platform() to the
+            // graphics libraries.
+            // Alternatively, if we want to dynamically load the graphics library
+            // then this would be the place to do that.
+             return mg::create_platform();
+        });
 }
 
 std::shared_ptr<mg::BufferInitializer>
 mir::DefaultServerConfiguration::the_buffer_initializer()
 {
-    if (!buffer_initializer)
-        buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    return buffer_initializer;
+    return buffer_initializer(
+        []()
+        {
+             return std::make_shared<mg::NullBufferInitializer>();
+        });
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy>
 mir::DefaultServerConfiguration::the_buffer_allocation_strategy(
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
 {
-    if (!buffer_allocation_strategy)
-        buffer_allocation_strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
-    return buffer_allocation_strategy;
+    return buffer_allocation_strategy(
+        [&]()
+        {
+             return std::make_shared<mc::SwapperFactory>(buffer_allocator);
+        });
 }
 
 std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer(
         std::shared_ptr<mg::Display> const& display)
 {
-    if (!renderer)
-        renderer = std::make_shared<mg::GLRenderer>(display->view_area().size);
-    return renderer;
+    return renderer(
+        [&]()
+        {
+             return std::make_shared<mg::GLRenderer>(display->view_area().size);
+        });
 }
 
 std::shared_ptr<msess::SessionStore>

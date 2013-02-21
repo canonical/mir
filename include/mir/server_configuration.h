@@ -137,16 +137,16 @@ protected:
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<sessions::SessionStore> session_store;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<graphics::Platform>     graphics_platform;
+    CachedPtr<graphics::BufferInitializer> buffer_initializer;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::ApplicationListener> application_listener;
+    CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
+    CachedPtr<graphics::Renderer> renderer;
 
 private:
     std::shared_ptr<options::Option> options;
-    std::shared_ptr<graphics::Platform> graphics_platform;
-    std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
-    std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    std::shared_ptr<graphics::Renderer> renderer;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
