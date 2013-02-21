@@ -49,21 +49,19 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          buffer_allocator{config.the_buffer_allocator()},
           buffer_bundle_factory{
               std::make_shared<mc::BufferBundleManager>(config.the_buffer_allocation_strategy())},
           surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_factory.get())},
           surface_factory{std::make_shared<ms::SurfaceController>(surface_stack.get())},
           compositor{std::make_shared<mc::Compositor>(surface_stack.get(), config.the_renderer())},
           session_store{config.the_session_store(surface_factory, display)},
-          communicator{config.the_communicator(session_store, buffer_allocator)},
+          communicator{config.the_communicator(session_store, config.the_buffer_allocator())},
           input_manager{config.the_input_manager(empty_filter_list, display)},
           exit(false)
     {
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
     std::shared_ptr<mc::BufferBundleFactory> buffer_bundle_factory;
     std::shared_ptr<ms::SurfaceStack> surface_stack;
     std::shared_ptr<sessions::SurfaceFactory> surface_factory;
