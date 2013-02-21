@@ -65,7 +65,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mc::BufferBundleFactory> buffer_bundle_factory;
     std::shared_ptr<ms::SurfaceStack> surface_stack;
     std::shared_ptr<sessions::SurfaceFactory> surface_factory;
-    std::shared_ptr<mc::Compositor> compositor;
+    std::shared_ptr<mc::Drawer> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<frontend::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
