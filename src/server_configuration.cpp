@@ -255,14 +255,18 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         {
             return std::make_shared<DefaultIpcFactory>(
                 session_store,
-                make_application_listener(),
+                the_application_listener(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
 std::shared_ptr<mf::ApplicationListener>
-mir::DefaultServerConfiguration::make_application_listener()
+mir::DefaultServerConfiguration::the_application_listener()
 {
-    return std::make_shared<mf::NullApplicationListener>();
+    return application_listener(
+        []()
+        {
+            return std::make_shared<mf::NullApplicationListener>();
+        });
 }

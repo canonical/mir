@@ -138,12 +138,12 @@ protected:
     CachedPtr<sessions::SessionStore> session_store;
     CachedPtr<input::InputManager>    input_manager;
 
-    CachedPtr<frontend::ProtobufIpcFactory> ipc_factory;
+    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
+    CachedPtr<frontend::ApplicationListener> application_listener;
 
 private:
     std::shared_ptr<options::Option> options;
     std::shared_ptr<graphics::Platform> graphics_platform;
-    std::shared_ptr<frontend::ApplicationListener> application_listener;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     std::shared_ptr<graphics::Renderer> renderer;
@@ -154,7 +154,7 @@ private:
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
-    virtual std::shared_ptr<frontend::ApplicationListener> make_application_listener();
+    virtual std::shared_ptr<frontend::ApplicationListener> the_application_listener();
 
     virtual std::string the_socket_file() const;
 };
