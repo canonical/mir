@@ -195,8 +195,8 @@ int main(int argc, char **argv)
     auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
-    mc::BufferBundleManager manager{strategy};
-    ms::SurfaceStack surface_stack{&manager};
+    auto manager = std::make_shared<mc::BufferBundleManager>(strategy);
+    ms::SurfaceStack surface_stack{manager};
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
     mc::Compositor compositor{&surface_stack,gl_renderer};
 
