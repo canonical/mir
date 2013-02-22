@@ -25,8 +25,6 @@
 #include "mir/sessions/session_store.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/surfaces/surface_controller.h"
 #include "mir/input/input_manager.h"
 
 #include <thread>
