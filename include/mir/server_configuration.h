@@ -70,20 +70,11 @@ class EventFilter;
 class ServerConfiguration
 {
 public:
-    virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
-    virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
     virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
-    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory() = 0;
-    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model() = 0;
-    virtual std::shared_ptr<compositor::RenderView> the_render_view() = 0;
-    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory() = 0;
     virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
 
 protected:
