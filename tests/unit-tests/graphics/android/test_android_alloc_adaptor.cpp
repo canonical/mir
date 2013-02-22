@@ -33,7 +33,12 @@ namespace mtd = mir::test::doubles;
 
 class AdaptorICSTest : public ::testing::Test
 {
-protected:
+public:
+    AdaptorICSTest()
+     : fb_usage_flags(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB),
+       hw_usage_flags(GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)
+    {}
+
     virtual void SetUp()
     {
         using namespace testing;
@@ -64,6 +69,8 @@ protected:
     geom::Stride stride;
     std::shared_ptr<mga::AndroidBufferHandle> buffer_data;
     mga::BufferUsage usage;
+    const unsigned int fb_usage_flags;
+    const unsigned int hw_usage_flags;
 };
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
@@ -164,11 +171,20 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _,
-                (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER), _, _));
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, hw_usage_flags, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     alloc_adaptor->alloc_buffer(size, pf, usage );
+}
+
+TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, fb_usage_flags, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+
+    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
 }
 
 TEST_F(AdaptorICSTest, handle_size_is_correct)
@@ -256,7 +272,22 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
     ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
 
-    EXPECT_EQ((unsigned int) buffer_cast->usage, (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER));
+    EXPECT_EQ((unsigned int) buffer_cast->usage, hw_usage_flags);
+}
+
+TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
+{
+    using namespace testing;
+
+    usage = mga::BufferUsage::use_framebuffer_gles;
+
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, _, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+
+    auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+
+    EXPECT_EQ((unsigned int) buffer_cast->usage, fb_usage_flags);
 }
 
 TEST_F(AdaptorICSTest, handle_has_reffable_incref)
