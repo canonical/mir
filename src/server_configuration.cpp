@@ -259,11 +259,22 @@ std::shared_ptr<mg::Display>
 mir::DefaultServerConfiguration::the_display()
 {
     return display(
-        [&]()
+        [this]()
         {
             return the_graphics_platform()->create_display();
         });
 }
+
+std::shared_ptr<mc::BufferBundleFactory>
+mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+{
+    return buffer_bundle_manager(
+        [this]()
+        {
+            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+        });
+}
+
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(

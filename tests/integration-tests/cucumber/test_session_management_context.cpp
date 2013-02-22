@@ -57,6 +57,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
         std::initializer_list<std::shared_ptr<mi::EventFilter> const> const&));
     MOCK_METHOD0(the_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator> ());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
+    MOCK_METHOD0(the_buffer_bundle_factory, std::shared_ptr<mc::BufferBundleFactory>());
 };
 
 struct MockSessionStore : public msess::SessionStore
