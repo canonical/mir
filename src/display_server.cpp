@@ -27,6 +27,7 @@
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
+#include <mutex>
 #include <thread>
 
 namespace mc = mir::compositor;
