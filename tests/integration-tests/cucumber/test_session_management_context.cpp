@@ -52,8 +52,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_renderer, std::shared_ptr<mg::Renderer>());
     MOCK_METHOD1(the_communicator, std::shared_ptr<mf::Communicator>(
         std::shared_ptr<msess::SessionStore> const&));
-    MOCK_METHOD1(the_session_store, std::shared_ptr<msess::SessionStore>(
-        std::shared_ptr<msess::SurfaceFactory> const&));
+    MOCK_METHOD0(the_session_store, std::shared_ptr<msess::SessionStore>());
     MOCK_METHOD1(the_input_manager, std::shared_ptr<mi::InputManager>(
         std::initializer_list<std::shared_ptr<mi::EventFilter> const> const&));
     MOCK_METHOD0(the_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator> ());
@@ -130,7 +129,7 @@ struct SessionManagementContextSetup : public testing::Test
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_session_store(_)).Times(1)
+        EXPECT_CALL(server_configuration, the_session_store()).Times(1)
             .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
@@ -149,7 +148,7 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_session_store(_)).Times(1)
+        EXPECT_CALL(server_configuration, the_session_store()).Times(1)
             .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
         viewable_area = ctx->get_view_area();
@@ -171,7 +170,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     MockServerConfiguration server_configuration;
     MockSessionStore session_store;
     
-    EXPECT_CALL(server_configuration, the_session_store(_)).Times(1)
+    EXPECT_CALL(server_configuration, the_session_store()).Times(1)
         .WillOnce(Return(mt::fake_shared<msess::SessionStore>(session_store)));
 
     mtc::SessionManagementContext ctx(server_configuration);

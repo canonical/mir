@@ -76,8 +76,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store) = 0;
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
@@ -107,8 +106,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
         std::shared_ptr<sessions::SessionStore> const& session_store);
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store();
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();

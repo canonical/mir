@@ -218,8 +218,7 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
 }
 
 std::shared_ptr<msess::SessionStore>
-mir::DefaultServerConfiguration::the_session_store(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+mir::DefaultServerConfiguration::the_session_store()
 {
     return session_store(
         [&,this]() -> std::shared_ptr<msess::SessionStore>
@@ -229,7 +228,7 @@ mir::DefaultServerConfiguration::the_session_store(
             auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
 
             auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
+            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
             return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
         });
