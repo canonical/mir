@@ -36,6 +36,12 @@ add_executable(egltriangle
 target_link_libraries(egltriangle
   eglapp
 )
+add_executable(eglfoo
+  eglfoo.c
+)
+target_link_libraries(eglfoo
+  eglapp
+)
 
 add_executable(
   mir_demo_client
