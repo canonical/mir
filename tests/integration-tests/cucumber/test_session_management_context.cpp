@@ -62,6 +62,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_surface_stack_model, std::shared_ptr<ms::SurfaceStackModel>());
     MOCK_METHOD0(the_render_view, std::shared_ptr<mc::RenderView>());
     MOCK_METHOD0(the_surface_factory, std::shared_ptr<msess::SurfaceFactory>());
+    MOCK_METHOD0(the_drawer, std::shared_ptr<mc::Drawer>());
 };
 
 struct MockSessionStore : public msess::SessionStore

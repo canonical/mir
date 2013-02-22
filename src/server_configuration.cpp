@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
@@ -292,6 +293,16 @@ mir::DefaultServerConfiguration::the_surface_factory()
         [this]()
         {
             return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+        });
+}
+
+std::shared_ptr<mc::Drawer>
+mir::DefaultServerConfiguration::the_drawer()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
         });
 }
 

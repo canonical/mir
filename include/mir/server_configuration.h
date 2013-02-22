@@ -32,6 +32,8 @@ class GraphicBufferAllocator;
 class BufferBundleFactory;
 class BufferBundleManager;
 class RenderView;
+class Drawer;
+class Compositor;
 }
 namespace frontend
 {
@@ -84,6 +86,7 @@ public:
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model() = 0;
     virtual std::shared_ptr<compositor::RenderView> the_render_view() = 0;
     virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory() = 0;
+    virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -114,6 +117,7 @@ public:
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
     virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<compositor::Drawer> the_drawer();
 
 protected:
     // TODO deprecated
@@ -158,6 +162,7 @@ protected:
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<surfaces::SurfaceController> surface_controller;
+    CachedPtr<compositor::Compositor> compositor;
 
 private:
     std::shared_ptr<options::Option> options;

@@ -21,7 +21,7 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/drawer.h"
 #include "mir/sessions/session_store.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
@@ -46,7 +46,7 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          compositor{std::make_shared<mc::Compositor>(config.the_render_view(), config.the_renderer())},
+          compositor{config.the_drawer()},
           session_store{config.the_session_store(config.the_surface_factory())},
           communicator{config.the_communicator(session_store)},
           input_manager{config.the_input_manager(empty_filter_list)},
