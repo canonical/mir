@@ -221,7 +221,7 @@ std::shared_ptr<msess::SessionStore>
 mir::DefaultServerConfiguration::the_session_store()
 {
     return session_store(
-        [&,this]() -> std::shared_ptr<msess::SessionStore>
+        [this]() -> std::shared_ptr<msess::SessionStore>
         {
             auto session_container = std::make_shared<msess::SessionContainer>();
             auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);

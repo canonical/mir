@@ -48,7 +48,7 @@ struct mir::DisplayServer::Private
         : display{config.the_display()},
           compositor{config.the_drawer()},
           session_store{config.the_session_store()},
-          communicator{config.the_communicator(session_store)},
+          communicator{config.the_communicator()},
           input_manager{config.the_input_manager(empty_filter_list)},
           exit(false)
     {
