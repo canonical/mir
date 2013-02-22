@@ -61,20 +61,16 @@ class ServerConfiguration
 public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator) = 0;
-    virtual std::shared_ptr<graphics::Renderer> the_renderer(
-        std::shared_ptr<graphics::Display> const& display) = 0;
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
+    virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator) = 0;
+        std::shared_ptr<sessions::SessionStore> const& session_store) = 0;
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area) = 0;
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
+    virtual std::shared_ptr<graphics::Display> the_display() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -91,20 +87,16 @@ public:
 
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy(
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator);
-    virtual std::shared_ptr<graphics::Renderer> the_renderer(
-        std::shared_ptr<graphics::Display> const& display);
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
+    virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<sessions::SessionStore> const& session_store);
     virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
     virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area);
+        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<graphics::Display> the_display();
 
 protected:
     // TODO deprecated
@@ -139,6 +131,8 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
+    CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
+    CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::ApplicationListener> application_listener;

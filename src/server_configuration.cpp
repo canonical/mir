@@ -198,30 +198,27 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
 }
 
 std::shared_ptr<mc::BufferAllocationStrategy>
-mir::DefaultServerConfiguration::the_buffer_allocation_strategy(
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator)
+mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
 {
     return buffer_allocation_strategy(
-        [&]()
+        [this]()
         {
-             return std::make_shared<mc::SwapperFactory>(buffer_allocator);
+             return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
         });
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer(
-        std::shared_ptr<mg::Display> const& display)
+std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
 {
     return renderer(
         [&]()
         {
-             return std::make_shared<mg::GLRenderer>(display->view_area().size);
+             return std::make_shared<mg::GLRenderer>(the_display()->view_area().size);
         });
 }
 
 std::shared_ptr<msess::SessionStore>
 mir::DefaultServerConfiguration::the_session_store(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
-    std::shared_ptr<mg::ViewableArea> const& viewable_area)
+    std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
 {
     return session_store(
         [&,this]() -> std::shared_ptr<msess::SessionStore>
@@ -230,7 +227,7 @@ mir::DefaultServerConfiguration::the_session_store(
             auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
             auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
 
-            auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(viewable_area);
+            auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(the_display());
             auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
 
             return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
@@ -239,13 +236,32 @@ mir::DefaultServerConfiguration::the_session_store(
 
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
-    std::shared_ptr<mg::ViewableArea> const& view_area)
+    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
     return input_manager(
+        [&, this]()
+        {
+            return mi::create_input_manager(event_filters, the_display());
+        });
+}
+
+std::shared_ptr<mc::GraphicBufferAllocator>
+mir::DefaultServerConfiguration::the_buffer_allocator()
+{
+    return buffer_allocator(
         [&]()
         {
-            return mi::create_input_manager(event_filters, view_area);
+            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+        });
+}
+
+std::shared_ptr<mg::Display>
+mir::DefaultServerConfiguration::the_display()
+{
+    return display(
+        [&]()
+        {
+            return the_graphics_platform()->create_display();
         });
 }
 

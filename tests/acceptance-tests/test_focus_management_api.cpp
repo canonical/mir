@@ -154,8 +154,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<sessions::SessionStore>
-        the_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory,
-                           std::shared_ptr<mg::ViewableArea> const& /* viewable_area */)
+        the_session_store(std::shared_ptr<sessions::SurfaceFactory> const& surface_factory)
         {
             using namespace ::testing;
 
@@ -164,7 +163,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
             EXPECT_CALL(*display, view_area()).WillRepeatedly(Return(default_view_area));
 
             auto const& mock_session_store = std::make_shared<MockSessionStore>(
-                DefaultServerConfiguration::the_session_store(surface_factory, display));
+                DefaultServerConfiguration::the_session_store(surface_factory));
 
             {
                 using namespace testing;

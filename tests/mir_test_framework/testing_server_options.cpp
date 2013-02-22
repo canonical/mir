@@ -120,11 +120,11 @@ class StubInputManager : public mi::InputManager
 }
 }
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters, std::shared_ptr<mg::ViewableArea> const& viewable_area)
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
     auto options = the_options();
     if (options->get("tests_use_real_input", false))
-        return mi::create_input_manager(event_filters, viewable_area);
+        return mi::create_input_manager(event_filters, the_display());
     else
         return std::make_shared<StubInputManager>();
 }
@@ -139,15 +139,18 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer(
-        std::shared_ptr<mg::Display> const& display)
+std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 
     if (options->get("tests_use_real_graphics", false))
-        return DefaultServerConfiguration::the_renderer(display);
+        return DefaultServerConfiguration::the_renderer();
     else
-        return std::make_shared<StubRenderer>();
+        return renderer(
+            [&]()
+            {
+                return std::make_shared<StubRenderer>();
+            });
 }
 
 void mtf::TestingServerConfiguration::exec(DisplayServer* )
