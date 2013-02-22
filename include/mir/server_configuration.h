@@ -90,21 +90,26 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
 
+    virtual std::shared_ptr<graphics::Display> the_display();
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
+
+    virtual std::shared_ptr<compositor::Drawer> the_drawer();
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<compositor::RenderView> the_render_view();
+
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
+
     virtual std::shared_ptr<sessions::SessionStore> the_session_store();
+    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
+
+    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<graphics::Display> the_display();
-    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
-    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
-    virtual std::shared_ptr<compositor::RenderView> the_render_view();
-    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
-    virtual std::shared_ptr<compositor::Drawer> the_drawer();
 
 protected:
     // TODO deprecated
