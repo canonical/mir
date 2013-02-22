@@ -37,7 +37,7 @@ class SurfaceStackModel;
 class SurfaceController : public sessions::SurfaceFactory
 {
 public:
-    explicit SurfaceController(SurfaceStackModel* surface_stack);
+    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
     virtual ~SurfaceController() {}
 
     std::shared_ptr<sessions::Surface> create_surface(const sessions::SurfaceCreationParameters& params);
@@ -47,7 +47,7 @@ protected:
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    SurfaceStackModel* const surface_stack;
+    std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 
 }

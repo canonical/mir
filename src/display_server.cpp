@@ -48,9 +48,8 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          surface_stack{std::make_shared<ms::SurfaceStack>(config.the_buffer_bundle_factory())},
-          surface_factory{std::make_shared<ms::SurfaceController>(surface_stack.get())},
-          compositor{std::make_shared<mc::Compositor>(surface_stack.get(), config.the_renderer())},
+          surface_factory{std::make_shared<ms::SurfaceController>(config.the_surface_stack_model())},
+          compositor{std::make_shared<mc::Compositor>(config.the_render_view(), config.the_renderer())},
           session_store{config.the_session_store(surface_factory)},
           communicator{config.the_communicator(session_store)},
           input_manager{config.the_input_manager(empty_filter_list)},
@@ -59,7 +58,6 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<ms::SurfaceStack> surface_stack;
     std::shared_ptr<sessions::SurfaceFactory> surface_factory;
     std::shared_ptr<mc::Drawer> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;

@@ -265,6 +265,26 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
+std::shared_ptr<ms::SurfaceStackModel>
+mir::DefaultServerConfiguration::the_surface_stack_model()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
+std::shared_ptr<mc::RenderView>
+mir::DefaultServerConfiguration::the_render_view()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
 std::shared_ptr<mc::BufferBundleFactory>
 mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 {

@@ -38,6 +38,7 @@ namespace msess = mir::sessions;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
+namespace ms = mir::surfaces;
 
 namespace
 {
@@ -58,6 +59,8 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator> ());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_buffer_bundle_factory, std::shared_ptr<mc::BufferBundleFactory>());
+    MOCK_METHOD0(the_surface_stack_model, std::shared_ptr<ms::SurfaceStackModel>());
+    MOCK_METHOD0(the_render_view, std::shared_ptr<mc::RenderView>());
 };
 
 struct MockSessionStore : public msess::SessionStore

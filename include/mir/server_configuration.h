@@ -31,6 +31,7 @@ class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferBundleFactory;
 class BufferBundleManager;
+class RenderView;
 }
 namespace frontend
 {
@@ -43,6 +44,11 @@ namespace sessions
 {
 class SessionStore;
 class SurfaceFactory;
+}
+namespace surfaces
+{
+class SurfaceStackModel;
+class SurfaceStack;
 }
 namespace graphics
 {
@@ -74,6 +80,8 @@ public:
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory() = 0;
+    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model() = 0;
+    virtual std::shared_ptr<compositor::RenderView> the_render_view() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -101,6 +109,8 @@ public:
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<graphics::Display> the_display();
     virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+    virtual std::shared_ptr<compositor::RenderView> the_render_view();
 
 protected:
     // TODO deprecated
@@ -143,6 +153,7 @@ protected:
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
+    CachedPtr<surfaces::SurfaceStack> surface_stack;
 
 private:
     std::shared_ptr<options::Option> options;
