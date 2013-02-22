@@ -47,6 +47,7 @@ class SurfaceFactory;
 }
 namespace surfaces
 {
+class SurfaceController;
 class SurfaceStackModel;
 class SurfaceStack;
 }
@@ -82,6 +83,7 @@ public:
     virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory() = 0;
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model() = 0;
     virtual std::shared_ptr<compositor::RenderView> the_render_view() = 0;
+    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -111,6 +113,7 @@ public:
     virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
+    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
 
 protected:
     // TODO deprecated
@@ -154,6 +157,7 @@ protected:
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
 
 private:
     std::shared_ptr<options::Option> options;

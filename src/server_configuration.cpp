@@ -285,6 +285,16 @@ mir::DefaultServerConfiguration::the_render_view()
         });
 }
 
+std::shared_ptr<msess::SurfaceFactory>
+mir::DefaultServerConfiguration::the_surface_factory()
+{
+    return surface_controller(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+        });
+}
+
 std::shared_ptr<mc::BufferBundleFactory>
 mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 {
