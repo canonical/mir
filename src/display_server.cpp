@@ -55,7 +55,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::Drawer> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;
-    std::shared_ptr<frontend::Communicator> communicator;
+    std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
     bool exit;
@@ -64,7 +64,7 @@ struct mir::DisplayServer::Private
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
     p()
 {
-    p.reset(new mir::DisplayServer::Private(config));
+    p.reset(new DisplayServer::Private(config));
 }
 
 mir::DisplayServer::~DisplayServer()
