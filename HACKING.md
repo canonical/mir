@@ -5,8 +5,7 @@ Getting dependencies
 --------------------
 To succesfully build Mir there are a few packages required:
 
-    $ apt-get install cmake
-    $ apt-get install equivs
+    $ apt-get install devscripts equivs cmake
     $ mk-build-deps --install --tool "apt-get -y --force-yes" --build-dep debian/control
 
 Building mir
