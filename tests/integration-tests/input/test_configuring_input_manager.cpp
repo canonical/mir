@@ -30,7 +30,7 @@ TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_man
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mi::InputManager> make_input_manager()
+        std::shared_ptr<mi::InputManager> the_input_manager()
         {
             input_manager = std::make_shared<mtd::MockInputManager>();
             EXPECT_CALL(*input_manager, start()).Times(1);

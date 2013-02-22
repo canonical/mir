@@ -47,8 +47,8 @@ class SizedDisplay;
 class SessionManagementContext
 {
 public:
-    SessionManagementContext(std::shared_ptr<ServerConfiguration> const& server_configuration
-        = std::make_shared<DefaultServerConfiguration>(""));
+    SessionManagementContext();
+    SessionManagementContext(ServerConfiguration& server_configuration);
 
     virtual ~SessionManagementContext() {}
     
@@ -58,6 +58,7 @@ public:
     geometry::Size get_window_size(std::string const& window_name);
     
     void set_view_area(geometry::Rectangle const& new_view_region);
+    std::shared_ptr<graphics::ViewableArea> get_view_area() const;
 
 protected:
     SessionManagementContext(SessionManagementContext const&) = delete;
@@ -66,8 +67,8 @@ protected:
 private:
     std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;
 
-    std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<SizedDisplay> view_area;
+    std::shared_ptr<sessions::SessionStore> session_store;
 };
 
 }

@@ -48,31 +48,24 @@ std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
-        : graphics_platform{config.make_graphics_platform()},
-          display{graphics_platform->create_display()},
-          buffer_allocator{graphics_platform->create_buffer_allocator(config.make_buffer_initializer())},
-          buffer_allocation_strategy{config.make_buffer_allocation_strategy(buffer_allocator)},
-          buffer_bundle_manager{std::make_shared<mc::BufferBundleManager>(buffer_allocation_strategy)},
-          surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_manager.get())},
-          surface_controller{std::make_shared<ms::SurfaceController>(surface_stack.get())},
-          renderer{config.make_renderer(display)},
-          compositor{std::make_shared<mc::Compositor>(surface_stack.get(), renderer)},
-          session_store{config.make_session_store(surface_controller, display)},
-          communicator{config.make_communicator(session_store, display, buffer_allocator)},
-          input_manager{config.make_input_manager(empty_filter_list, display)},
+        : display{config.the_display()},
+          buffer_bundle_factory{
+              std::make_shared<mc::BufferBundleManager>(config.the_buffer_allocation_strategy())},
+          surface_stack{std::make_shared<ms::SurfaceStack>(buffer_bundle_factory.get())},
+          surface_factory{std::make_shared<ms::SurfaceController>(surface_stack.get())},
+          compositor{std::make_shared<mc::Compositor>(surface_stack.get(), config.the_renderer())},
+          session_store{config.the_session_store(surface_factory)},
+          communicator{config.the_communicator(session_store)},
+          input_manager{config.the_input_manager(empty_filter_list)},
           exit(false)
     {
     }
 
-    std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::GraphicBufferAllocator> buffer_allocator;
-    std::shared_ptr<mc::BufferAllocationStrategy> buffer_allocation_strategy;
-    std::shared_ptr<mc::BufferBundleManager> buffer_bundle_manager;
+    std::shared_ptr<mc::BufferBundleFactory> buffer_bundle_factory;
     std::shared_ptr<ms::SurfaceStack> surface_stack;
-    std::shared_ptr<ms::SurfaceController> surface_controller;
-    std::shared_ptr<mg::Renderer> renderer;
-    std::shared_ptr<mc::Compositor> compositor;
+    std::shared_ptr<sessions::SurfaceFactory> surface_factory;
+    std::shared_ptr<mc::Drawer> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<frontend::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;

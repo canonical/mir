@@ -45,17 +45,12 @@ class KMSPageFlipperTest : public ::testing::Test
 {
 public:
     KMSPageFlipperTest()
-        : page_flipper{mock_drm.fake_drm.fd(), std::chrono::milliseconds{50},
-                       mt::fake_shared<mg::DisplayListener>(mock_listener)},
-          blocking_page_flipper{mock_drm.fake_drm.fd(), std::chrono::hours{1},
-                                std::make_shared<mtd::NullDisplayListener>()}
+        : page_flipper{mock_drm.fake_drm.fd()}
     {
     }
 
     testing::NiceMock<mgg::MockDRM> mock_drm;
-    mtd::MockDisplayListener mock_listener;
     mgg::KMSPageFlipper page_flipper;
-    mgg::KMSPageFlipper blocking_page_flipper;
 };
 
 ACTION_P(InvokePageFlipHandler, param)
@@ -67,36 +62,6 @@ ACTION_P(InvokePageFlipHandler, param)
     ASSERT_EQ(1, read(arg0, &dummy, 1));
 }
 
-}
-
-TEST_F(KMSPageFlipperTest, overflow_in_wait_time_throws)
-{
-    using namespace testing;
-    std::chrono::microseconds chrono_us;
-
-    auto max_tv_sec = std::numeric_limits<decltype(timeval::tv_sec)>::max();
-    auto max_chrono_usec = std::numeric_limits<decltype(chrono_us.count())>::max();
-    auto max_chrono_usec_as_sec = max_chrono_usec / 1000000;
-
-    /*
-     * The problem only occurs when the maximum number of chrono microseconds
-     * when expressed as seconds cannot fit into timeval::tv_sec.
-     *
-     * This, for example, may happen on a 32-bit system, where tv_sec is long
-     * (32 bits) but chrono types are by default uint64_t.
-     */
-    if (max_chrono_usec_as_sec > max_tv_sec)
-    {
-        EXPECT_THROW({
-            mgg::KMSPageFlipper(0, std::chrono::microseconds(max_chrono_usec),
-                                std::make_shared<mtd::NullDisplayListener>());
-        }, std::runtime_error);
-    }
-    else
-    {
-        mgg::KMSPageFlipper(0, std::chrono::microseconds(max_chrono_usec),
-                            std::make_shared<mtd::NullDisplayListener>());
-    }
 }
 
 TEST_F(KMSPageFlipperTest, schedule_flip_calls_drm_page_flip)
@@ -156,30 +121,6 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_handles_drm_event)
     page_flipper.wait_for_flip(crtc_id);
 }
 
-TEST_F(KMSPageFlipperTest, wait_for_flip_doesnt_block_forever_if_no_drm_event_comes)
-{
-    using namespace testing;
-
-    uint32_t const crtc_id{10};
-    uint32_t const fb_id{101};
-
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          crtc_id, fb_id, _, _))
-        .Times(1);
-
-    EXPECT_CALL(mock_drm, drmHandleEvent(_, _))
-        .Times(0);
-
-    EXPECT_CALL(mock_listener, report_page_flip_timeout())
-        .Times(1);
-
-    page_flipper.schedule_flip(crtc_id, fb_id);
-
-    /* No DRM event, should time out */
-
-    page_flipper.wait_for_flip(crtc_id);
-}
-
 TEST_F(KMSPageFlipperTest, wait_for_non_scheduled_page_flip_doesnt_block)
 {
     using namespace testing;
@@ -192,7 +133,33 @@ TEST_F(KMSPageFlipperTest, wait_for_non_scheduled_page_flip_doesnt_block)
     EXPECT_CALL(mock_drm, drmHandleEvent(_, _))
         .Times(0);
 
-    blocking_page_flipper.wait_for_flip(crtc_id);
+    page_flipper.wait_for_flip(crtc_id);
+}
+
+TEST_F(KMSPageFlipperTest, failure_in_wait_for_flip_throws)
+{
+    using namespace testing;
+
+    uint32_t const crtc_id{10};
+    uint32_t const fb_id{101};
+    void* user_data{nullptr};
+
+    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+                                          crtc_id, fb_id, _, _))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<4>(&user_data), Return(0)));
+
+    EXPECT_CALL(mock_drm, drmHandleEvent(_, _))
+        .Times(0);
+
+    page_flipper.schedule_flip(crtc_id, fb_id);
+
+    /* Cause a failure in wait_for_flip */
+    close(mock_drm.fake_drm.fd());
+
+    EXPECT_THROW({
+        page_flipper.wait_for_flip(crtc_id);
+    }, std::runtime_error);
 }
 
 TEST_F(KMSPageFlipperTest, wait_for_flips_interleaved)
@@ -305,7 +272,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
     /* Start the page-flipping threads */
     for (auto crtc_id : crtc_ids)
     {
-        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{blocking_page_flipper, crtc_id});
+        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{page_flipper, crtc_id});
         page_flipping_functors.push_back(std::move(pf));
         page_flipping_threads.push_back(std::thread{std::ref(*page_flipping_functors.back())});
 
@@ -318,7 +285,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
         while (tid == std::thread::id())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
-            tid = blocking_page_flipper.debug_get_worker_tid();
+            tid = page_flipper.debug_get_worker_tid();
         }
     }
 
@@ -333,7 +300,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
     while (tid != page_flipping_threads[other_index].get_id())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        tid = blocking_page_flipper.debug_get_worker_tid();
+        tid = page_flipper.debug_get_worker_tid();
     }
 
     /* Fake another DRM event to unblock the remaining thread */
@@ -371,7 +338,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
     /* Start the page-flipping threads */
     for (auto crtc_id : crtc_ids)
     {
-        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{blocking_page_flipper, crtc_id});
+        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{page_flipper, crtc_id});
         page_flipping_functors.push_back(std::move(pf));
         page_flipping_threads.push_back(std::thread{std::ref(*page_flipping_functors.back())});
 
@@ -384,7 +351,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
         while (tid == std::thread::id())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
-            tid = blocking_page_flipper.debug_get_worker_tid();
+            tid = page_flipper.debug_get_worker_tid();
         }
     }
 
@@ -398,7 +365,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
 
     /* Check that the worker hasn't changed */
     EXPECT_EQ(page_flipping_threads[worker_index].get_id(),
-              blocking_page_flipper.debug_get_worker_tid());
+              page_flipper.debug_get_worker_tid());
 
     /* Fake another DRM event to unblock the remaining thread */
     EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
@@ -553,7 +520,7 @@ TEST_F(KMSPageFlipperTest, threads_concurrent_page_flips_dont_deadlock)
     /* Set up threads */
     for (auto crtc_id : crtc_ids)
     {
-        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{blocking_page_flipper, crtc_id});
+        auto pf = std::unique_ptr<PageFlippingFunctor>(new PageFlippingFunctor{page_flipper, crtc_id});
         page_flipping_functors.push_back(std::move(pf));
         page_flipping_threads.push_back(std::thread{std::ref(*page_flipping_functors.back())});
     }

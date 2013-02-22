@@ -26,7 +26,7 @@ namespace android
 {
 typedef std::mutex Mutex;
 
-typedef std::unique_lock<std::mutex> AutoMutex;
+typedef std::lock_guard<std::mutex> AutoMutex;
 }
 
 #endif /* MIR_ANDROID_UBUNTU_MUTEX_H_ */

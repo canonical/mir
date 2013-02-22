@@ -22,9 +22,8 @@
 #include <atomic>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace mir_input
+{
 
 /*
  * A handful of basic atomic operations.  The appropriate <atomic>
@@ -82,6 +81,7 @@ inline int32_t android_atomic_or(int32_t value, android_atomic_int32_t* addr) { 
 //        volatile int32_t* addr);
 inline int android_atomic_release_cas(int32_t oldvalue, int32_t newvalue,
     android_atomic_int32_t* addr) { return !addr->compare_exchange_weak(oldvalue, newvalue); }
+}
 
 /*
  * Aliases for code using an older version of this header.  These are now
@@ -91,8 +91,11 @@ inline int android_atomic_release_cas(int32_t oldvalue, int32_t newvalue,
 //#define android_atomic_write android_atomic_release_store
 #define android_atomic_cmpxchg android_atomic_release_cas
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+using mir_input::android_atomic_int32_t;
+using mir_input::android_atomic_inc;
+using mir_input::android_atomic_dec;
+using mir_input::android_atomic_add;
+using mir_input::android_atomic_or;
+using mir_input::android_atomic_release_cas;
 
 #endif /* MIR_ANDROID_UBUNTU_ATOMIC_H_ */

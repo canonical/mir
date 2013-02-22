@@ -46,6 +46,7 @@
 #include "InputDispatcher.h"
 
 #include <cutils/log.h>
+#include <android/keycodes.h>
 
 #include <stddef.h>
 #include <unistd.h>

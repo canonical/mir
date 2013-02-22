@@ -29,21 +29,12 @@ namespace mgg = mir::graphics::gbm;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-namespace
-{
-
-std::chrono::milliseconds const page_flip_max_wait{100};
-
-}
-
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                             std::shared_ptr<DisplayListener> const& listener)
     : platform(platform),
       listener(listener),
       output_container{platform->drm.fd,
-                       std::make_shared<KMSPageFlipper>(platform->drm.fd,
-                                                        page_flip_max_wait,
-                                                        listener)}
+                       std::make_shared<KMSPageFlipper>(platform->drm.fd)}
 {
     shared_egl.setup(platform->gbm);
 
