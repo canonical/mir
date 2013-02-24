@@ -20,6 +20,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mesa_egl_native_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_mesa_egl_client_library.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
