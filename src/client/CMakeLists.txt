@@ -85,6 +85,7 @@ set(
   gbm/gbm_client_platform.cpp
   gbm/gbm_client_buffer_depository.cpp
   gbm/gbm_client_buffer.cpp
+  gbm/gbm_client_egl_native_display.cpp
   ${CLIENT_SOURCES}
 )
 endif()
