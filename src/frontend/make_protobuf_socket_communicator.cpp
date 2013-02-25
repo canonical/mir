@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 #include "mir/options/option.h"
 #include "protobuf_socket_communicator.h"
 

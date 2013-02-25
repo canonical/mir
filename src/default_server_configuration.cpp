@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"

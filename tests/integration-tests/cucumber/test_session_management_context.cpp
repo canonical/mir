@@ -29,7 +29,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mo = mir::options;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -38,7 +37,6 @@ namespace msess = mir::sessions;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;
-namespace ms = mir::surfaces;
 
 namespace
 {

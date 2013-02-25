@@ -33,7 +33,6 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace ms = mir::surfaces;
 namespace mi = mir::input;
 
 namespace
