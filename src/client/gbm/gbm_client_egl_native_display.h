@@ -28,12 +28,11 @@ namespace client
 {
 namespace gbm
 {
-// TODO: Refactor me
-class EGL
+namespace EGL
 {
-public:
-    static MirMesaEGLNativeDisplay *create_native_display(MirConnection *connection);
-};
+    MirMesaEGLNativeDisplay *create_native_display(MirConnection *connection);
+    void release_native_display (MirMesaEGLNativeDisplay *display);
+}
 }
 }
 } // namespace mir

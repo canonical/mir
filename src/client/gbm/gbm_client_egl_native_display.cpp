@@ -26,11 +26,14 @@ namespace mclg = mir::client::gbm;
 
 namespace
 {
-extern "C"
-{
-
 std::mutex native_display_guard;
 std::unordered_set<MirMesaEGLNativeDisplay *> valid_native_displays;
+}
+
+namespace
+{
+extern "C"
+{
 
 static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay *display,
                                          MirPlatformPackage *package)
@@ -80,12 +83,8 @@ MirMesaEGLNativeDisplay *
 mclg::EGL::create_native_display (MirConnection *connection)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
-    // TODO: Think about ownership here.
-    MirMesaEGLNativeDisplay *display;
-    
-    display = new MirMesaEGLNativeDisplay();
+    MirMesaEGLNativeDisplay *display = new MirMesaEGLNativeDisplay();
 
-    // TODO: Clean up names? This seems verbose
     display->display_get_platform = gbm_egl_display_get_platform;
     display->surface_get_current_buffer = gbm_egl_surface_get_current_buffer;
     display->surface_advance_buffer = gbm_egl_surface_advance_buffer;
@@ -96,5 +95,20 @@ mclg::EGL::create_native_display (MirConnection *connection)
     valid_native_displays.insert(display);
     
     return display;
+}
+
+#include <assert.h>
+
+void
+mclg::EGL::release_native_display (MirMesaEGLNativeDisplay *display)
+{
+    std::lock_guard<std::mutex> lg(native_display_guard);
+    
+    auto it = valid_native_displays.find(display);
+    if (it == valid_native_displays.end())
+        return;
+
+    delete *it;
+    valid_native_displays.erase(it);
 }
     

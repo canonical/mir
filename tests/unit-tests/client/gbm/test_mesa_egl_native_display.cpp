@@ -59,6 +59,15 @@ TEST_F(MesaEGLNativeDisplaySetup, valid_displays_come_from_factory)
     EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(&invalid_native_display));
 }
 
+TEST_F(MesaEGLNativeDisplaySetup, releasing_displays_invalidates_address)
+{
+    using namespace ::testing;
+    
+    EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(native_display));
+    mclg::EGL::release_native_display(native_display);
+    EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(native_display));
+}
+
 TEST_F(MesaEGLNativeDisplaySetup, display_get_platform)
 {
     using namespace ::testing;
