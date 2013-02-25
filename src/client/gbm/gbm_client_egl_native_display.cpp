@@ -19,7 +19,8 @@
 #include "gbm_client_egl_native_display.h"
 #include "mir_client/mir_client_library_mesa_egl.h"
 
-#include <set>
+#include <unordered_set>
+#include <mutex>
 
 namespace mclg = mir::client::gbm;
 
@@ -28,21 +29,19 @@ namespace
 extern "C"
 {
 
-// TODO: This is a little nasty
-std::set<MirMesaEGLNativeDisplay *> valid_native_displays;
+std::mutex native_display_guard;
+std::unordered_set<MirMesaEGLNativeDisplay *> valid_native_displays;
 
 static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay *display,
                                          MirPlatformPackage *package)
 {
-    MirConnection *mc = reinterpret_cast<MirConnection *>(display->context);
-    mir_connection_get_platform (mc, package);
+    mir_connection_get_platform (display->context, package);
 }
 
-static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay *display,
+static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay */* display */,
                                                 EGLNativeWindowType surface,
                                                 MirBufferPackage *buffer_package)
 {
-    (void) display; // TODO:  Maybe we don't need this (or in other methods)
     MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
     mir_surface_get_current_buffer(ms, buffer_package);
 }
@@ -52,25 +51,24 @@ static void buffer_advanced_callback (MirSurface * /*surface*/,
 {
 }
 
-static void gbm_egl_surface_advance_buffer (MirMesaEGLNativeDisplay *display,
+static void gbm_egl_surface_advance_buffer (MirMesaEGLNativeDisplay * /* display */,
                                             EGLNativeWindowType surface)
 {
-    (void) display; // TODO:  Maybe we don't need this (or in other methods)
     MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
     mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
 }
 
-static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay *display,
+static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay * /* display */,
                                             EGLNativeWindowType surface,
                                             MirSurfaceParameters *surface_parameters)
 {
-    (void) display; // TODO:  Maybe we don't need this (or in other methods)
     MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
     mir_surface_get_parameters(ms,  surface_parameters);
 }
 
 int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display)
 {
+    std::lock_guard<std::mutex> lg(native_display_guard);
     return (valid_native_displays.find(display) != valid_native_displays.end());
 }
 
@@ -81,6 +79,7 @@ int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display)
 MirMesaEGLNativeDisplay *
 mclg::EGL::create_native_display (MirConnection *connection)
 {
+    std::lock_guard<std::mutex> lg(native_display_guard);
     // TODO: Think about ownership here.
     MirMesaEGLNativeDisplay *display;
     
@@ -92,7 +91,7 @@ mclg::EGL::create_native_display (MirConnection *connection)
     display->surface_advance_buffer = gbm_egl_surface_advance_buffer;
     display->surface_get_parameters = gbm_egl_surface_get_parameters;
     
-    display->context = (void *)connection;
+    display->context = connection;
     
     valid_native_displays.insert(display);
     
