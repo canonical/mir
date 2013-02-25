@@ -35,7 +35,12 @@ int main(int, char**)
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;
-    gl_animation.init_gl();
+
+    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+    {
+        buffer.make_current();
+        gl_animation.init_gl();
+    });
 
     for(;;)
     {
