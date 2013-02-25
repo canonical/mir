@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <utils/Vector.h>
-#include <utils/VectorImpl.h>
-#include <utils/TypeHelpers.h>
+#include ANDROIDFW_UTILS(Vector.h)
+#include ANDROIDFW_UTILS(VectorImpl.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 // ---------------------------------------------------------------------------
 
@@ -133,6 +133,9 @@ protected:
     virtual int     do_compare(const void* lhs, const void* rhs) const;
 };
 
+// SortedVector<T> can be trivially moved using memcpy() because moving does not
+// require any change to the underlying SharedBuffer contents or reference count.
+template<typename T> struct trait_trivial_move<SortedVector<T> > { enum { value = true }; };
 
 // ---------------------------------------------------------------------------
 // No user serviceable parts from here...
@@ -275,7 +278,7 @@ int SortedVector<TYPE>::do_compare(const void* lhs, const void* rhs) const {
     return compare_type( *reinterpret_cast<const TYPE*>(lhs), *reinterpret_cast<const TYPE*>(rhs) );
 }
 
-}; // namespace android
+} // namespace android
 
 
 // ---------------------------------------------------------------------------

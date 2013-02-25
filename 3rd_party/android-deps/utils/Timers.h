@@ -138,7 +138,7 @@ private:
     struct timeval  mStopWhen;
 };
 
-}; // android
+} // android
 #endif // def __cplusplus
 
 #endif // _LIBS_UTILS_TIMERS_H

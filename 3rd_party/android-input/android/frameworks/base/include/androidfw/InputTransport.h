@@ -17,7 +17,7 @@
 #ifndef _ANDROIDFW_INPUT_TRANSPORT_H
 #define _ANDROIDFW_INPUT_TRANSPORT_H
 
-#include "Platform.h"
+#include <androidfw/Platform.h>
 
 /**
  * Native input transport.

@@ -17,14 +17,17 @@
 #ifndef ANDROID_REF_BASE_H
 #define ANDROID_REF_BASE_H
 
-#include <cutils/atomic.h>
+#include <androidfw/Platform.h>
+
+#include ANDROIDFW_CUTILS(atomic.h)
 
 #include <stdint.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <utils/StrongPointer.h>
+#include ANDROIDFW_UTILS(StrongPointer.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 // ---------------------------------------------------------------------------
 namespace android {
@@ -188,7 +191,7 @@ private:
             const ReferenceConverterBase& caster) { }
 
 private:
-    mutable volatile int32_t mCount;
+    mutable android_atomic_int32_t mCount;
 };
 
 // ---------------------------------------------------------------------------
@@ -521,7 +524,7 @@ void move_backward_type(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
 }
 
 
-}; // namespace android
+} // namespace android
 
 // ---------------------------------------------------------------------------
 
