@@ -78,7 +78,6 @@ int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display)
 }
 }
 
-
 MirMesaEGLNativeDisplay *
 mclg::EGL::create_native_display (MirConnection *connection)
 {
