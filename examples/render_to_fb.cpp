@@ -22,10 +22,33 @@
 
 #include "mir/draw/graphics.h"
 
+#include <csignal>
+
 namespace mg=mir::graphics;
+
+namespace
+{
+
+volatile std::sig_atomic_t running = true;
+
+void signal_handler(int /*signum*/)
+{
+    running = false;
+}
+
+}
 
 int main(int, char**)
 {
+    /* Set up graceful exit on SIGINT and SIGTERM */
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
     auto platform = mg::create_platform();
     auto display = platform->create_display();
 
@@ -37,7 +60,7 @@ int main(int, char**)
         gl_animation.init_gl();
     });
 
-    for(;;)
+    while (running)
     {
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
