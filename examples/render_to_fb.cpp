@@ -22,11 +22,6 @@
 
 #include "mir/draw/graphics.h"
 
-#include <unistd.h>
-
-#define WIDTH 1280
-#define HEIGHT 720
-
 namespace mg=mir::graphics;
 
 int main(int, char**)
@@ -54,10 +49,8 @@ int main(int, char**)
             buffer.post_update();
         });
 
-        usleep(167);//60fps
         gl_animation.step();
     }
 
     return 0;
 }
-
