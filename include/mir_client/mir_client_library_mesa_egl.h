@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -31,7 +31,6 @@ typedef struct _MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
 
 struct _MirMesaEGLNativeDisplay
 {
-    // TODO: Cleanup (names, etc...)
     void (*display_get_platform) (MirMesaEGLNativeDisplay *display,
                                   MirPlatformPackage *package);
     void (*surface_get_current_buffer) (MirMesaEGLNativeDisplay *display, 
@@ -43,10 +42,7 @@ struct _MirMesaEGLNativeDisplay
     void (*surface_advance_buffer) (MirMesaEGLNativeDisplay *display,
                                     EGLNativeWindowType surface);
     
-    // TODO: Validate function
-    // TODO: Release function
-
-    void *context;
+    MirConnection *context;
 };
 
 int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display);
