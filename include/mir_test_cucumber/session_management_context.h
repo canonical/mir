@@ -37,7 +37,10 @@ namespace sessions
 class SessionStore;
 class Session;
 }
-
+namespace graphics
+{
+class ViewableArea;
+}
 namespace test
 {
 namespace cucumber

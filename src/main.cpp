@@ -17,7 +17,7 @@
  */
 
 #include "mir/display_server.h"
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 #include <thread>
 #include <boost/program_options/errors.hpp>

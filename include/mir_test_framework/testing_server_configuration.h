@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 namespace mir
 {

@@ -27,7 +27,7 @@
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/surface_factory.h"
 #include "mir/graphics/display.h"
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 namespace msess = mir::sessions;
 

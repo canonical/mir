@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -99,6 +99,23 @@ private:
     }
 };
 
+boost::program_options::options_description program_options()
+{
+    namespace po = boost::program_options;
+
+    po::options_description desc(
+        "Command-line options.\n"
+        "(Environment variables capitalise long form with prefix \"MIR_SERVER_\")");
+    desc.add_options()
+        ("file,f", po::value<std::string>(), "<socket filename>")
+        ("ipc_thread_pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+
+    return desc;
+}
+
+
 void parse_arguments(
     std::shared_ptr<mir::options::ProgramOption> const& options,
     int argc,
@@ -106,14 +123,11 @@ void parse_arguments(
 {
     namespace po = boost::program_options;
 
-    po::options_description desc("Options");
+    auto desc = program_options();
 
     try
     {
-        namespace po = boost::program_options;
-
         desc.add_options()
-            ("file,f", po::value<std::string>(), "<socket filename>")
             ("help,h", "this help text");
 
         options->parse_arguments(desc, argc, argv);
@@ -132,13 +146,7 @@ void parse_arguments(
 
 void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& options)
 {
-    namespace po = boost::program_options;
-
-    po::options_description desc("Environment options");
-    desc.add_options()
-        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-        ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
-        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+    auto desc = program_options();
 
     options->parse_environment(desc, "MIR_SERVER_");
 }
