@@ -19,6 +19,9 @@
 #include "mir/draw/graphics.h"
 #include "mir/draw/mir_image.h"
 
+#include <cmath>
+#include <chrono>
+
 namespace md=mir::draw;
 
 static const GLchar *vtex_shader_src =
@@ -135,7 +138,13 @@ void md::glAnimationBasic::render_gl()
 
 void md::glAnimationBasic::step()
 {
-    slide += 0.01f;
-    if (slide >= 1.0f)
-        slide = 0.0f;
+    typedef std::chrono::high_resolution_clock hr_clock;
+    typedef std::chrono::duration<double> seconds_double;
+
+    auto elapsed = hr_clock::now().time_since_epoch();
+    auto elapsed_seconds = std::chrono::duration_cast<seconds_double>(elapsed).count();
+
+    double i;
+    /* slide increases 0.01 per 1/60s */
+    slide = modf(0.6 * elapsed_seconds, &i);
 }

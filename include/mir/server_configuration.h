@@ -29,6 +29,11 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
+class BufferBundleFactory;
+class BufferBundleManager;
+class RenderView;
+class Drawer;
+class Compositor;
 }
 namespace frontend
 {
@@ -41,6 +46,12 @@ namespace sessions
 {
 class SessionStore;
 class SurfaceFactory;
+}
+namespace surfaces
+{
+class SurfaceController;
+class SurfaceStackModel;
+class SurfaceStack;
 }
 namespace graphics
 {
@@ -59,18 +70,15 @@ class EventFilter;
 class ServerConfiguration
 {
 public:
-    virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
-    virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
-    virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store) = 0;
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
+    virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
+    virtual std::shared_ptr<graphics::Display> the_display() = 0;
+    virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
+
+    // TODO this should not be taking a parameter, but as
+    // TODO input still needs proper integration left for later
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
-    virtual std::shared_ptr<graphics::Display> the_display() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -85,18 +93,26 @@ class DefaultServerConfiguration : public ServerConfiguration
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
 
+    virtual std::shared_ptr<graphics::Display> the_display();
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
-    virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store);
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
+
+    virtual std::shared_ptr<compositor::Drawer> the_drawer();
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
+    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<compositor::RenderView> the_render_view();
+
+    virtual std::shared_ptr<frontend::Communicator> the_communicator();
+
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store();
+    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
+
+    virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<graphics::Display> the_display();
 
 protected:
     // TODO deprecated
@@ -138,6 +154,10 @@ protected:
     CachedPtr<frontend::ApplicationListener> application_listener;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
+    CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
+    CachedPtr<surfaces::SurfaceStack> surface_stack;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
+    CachedPtr<compositor::Compositor> compositor;
 
 private:
     std::shared_ptr<options::Option> options;

@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
@@ -217,18 +218,17 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
 }
 
 std::shared_ptr<msess::SessionStore>
-mir::DefaultServerConfiguration::the_session_store(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+mir::DefaultServerConfiguration::the_session_store()
 {
     return session_store(
-        [&,this]() -> std::shared_ptr<msess::SessionStore>
+        [this]() -> std::shared_ptr<msess::SessionStore>
         {
             auto session_container = std::make_shared<msess::SessionContainer>();
             auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
             auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
 
             auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
+            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
             return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
         });
@@ -259,11 +259,62 @@ std::shared_ptr<mg::Display>
 mir::DefaultServerConfiguration::the_display()
 {
     return display(
-        [&]()
+        [this]()
         {
             return the_graphics_platform()->create_display();
         });
 }
+
+std::shared_ptr<ms::SurfaceStackModel>
+mir::DefaultServerConfiguration::the_surface_stack_model()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
+std::shared_ptr<mc::RenderView>
+mir::DefaultServerConfiguration::the_render_view()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
+std::shared_ptr<msess::SurfaceFactory>
+mir::DefaultServerConfiguration::the_surface_factory()
+{
+    return surface_controller(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+        });
+}
+
+std::shared_ptr<mc::Drawer>
+mir::DefaultServerConfiguration::the_drawer()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
+        });
+}
+
+std::shared_ptr<mc::BufferBundleFactory>
+mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+{
+    return buffer_bundle_manager(
+        [this]()
+        {
+            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+        });
+}
+
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
