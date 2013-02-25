@@ -55,4 +55,3 @@ TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
     }
     EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(nd));
 }
-
