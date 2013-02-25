@@ -97,8 +97,6 @@ mclg::EGL::create_native_display (MirConnection *connection)
     return display;
 }
 
-#include <assert.h>
-
 void
 mclg::EGL::release_native_display (MirMesaEGLNativeDisplay *display)
 {
