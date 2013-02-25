@@ -195,10 +195,10 @@ int main(int argc, char **argv)
     auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
     auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
-    mc::BufferBundleManager manager{strategy};
-    ms::SurfaceStack surface_stack{&manager};
+    auto manager = std::make_shared<mc::BufferBundleManager>(strategy);
+    auto surface_stack = std::make_shared<ms::SurfaceStack>(manager);
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
-    mc::Compositor compositor{&surface_stack,gl_renderer};
+    mc::Compositor compositor{surface_stack,gl_renderer};
 
     /* Set up graceful exit on SIGINT */
     struct sigaction sa;
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
         const float h = display_size.height.as_uint32_t();
         const float angular_step = 2.0 * M_PI / num_moveables;
 
-        std::shared_ptr<ms::Surface> s = surface_stack.create_surface(
+        std::shared_ptr<ms::Surface> s = surface_stack->create_surface(
             msess::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
                            .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
                            .of_buffer_usage(mc::BufferUsage::hardware)

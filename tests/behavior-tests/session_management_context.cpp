@@ -144,20 +144,23 @@ namespace
 {
     struct DummyServerConfiguration : mir::DefaultServerConfiguration
     {
+        virtual std::shared_ptr<mir::sessions::SurfaceFactory>
+        the_surface_factory()
+        {
+            return std::make_shared<mtc::DummySurfaceFactory>();
+        }
     } server_configuration;
 }
 
 mtc::SessionManagementContext::SessionManagementContext() :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.the_session_store(
-        std::make_shared<mtc::DummySurfaceFactory>()))
+    session_store(server_configuration.the_session_store())
 {
 }
 
 mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.the_session_store(
-        std::make_shared<mtc::DummySurfaceFactory>()))
+    session_store(server_configuration.the_session_store())
 {
 }
 

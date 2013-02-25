@@ -35,7 +35,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(mc::BufferBundleFactory* bb_factory) : buffer_bundle_factory(bb_factory)
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<compositor::BufferBundleFactory> const& bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
 }

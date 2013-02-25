@@ -29,6 +29,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,6 +42,7 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace msess = mir::sessions;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -121,7 +123,7 @@ TEST(
         create_buffer_bundle(_))
             .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
@@ -147,7 +149,7 @@ TEST(
         create_buffer_bundle(_)).Times(0);
     EXPECT_CALL(renderer, render(_,_)).Times(0);
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     {
         stack.for_each_if(filter, renderable_operator);
@@ -167,7 +169,7 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
         msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -205,7 +207,7 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
         msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -243,7 +245,7 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
         msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -291,7 +293,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
                     Field(&mc::BufferProperties::usage, usage))))
         .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         msess::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
 
