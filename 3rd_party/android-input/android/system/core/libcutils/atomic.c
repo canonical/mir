@@ -15,5 +15,6 @@
  */
 
 #define inline
+#undef __thumb__
 
 #include <cutils/atomic-inline.h>

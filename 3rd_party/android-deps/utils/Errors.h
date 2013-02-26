@@ -72,7 +72,7 @@ enum {
     TIMED_OUT           = 0x80000005,
     UNKNOWN_TRANSACTION = 0x80000006,
 #endif    
-    FDS_NOT_ALLOWED     = 0x80000007,
+    FDS_NOT_ALLOWED     = 0x80000007
 };
 
 // Restore define; enumeration is in "android" namespace, so the value defined
@@ -81,7 +81,7 @@ enum {
 # define NO_ERROR 0L
 #endif
 
-}; // namespace android
+} // namespace android
     
 // ---------------------------------------------------------------------------
     

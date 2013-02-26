@@ -28,7 +28,7 @@
     #ifndef ANDROIDFW_CUTILS
         #define ANDROIDFW_CUTILS(name) <cutils/name>
     #endif
-#elif !defined(HAVE_ANDROID_OS)
+#else
     // use the standard library
     #ifndef ANDROIDFW_UTILS
         #define ANDROIDFW_UTILS(name) <std/name>
@@ -36,10 +36,6 @@
     #ifndef ANDROIDFW_CUTILS
         #define ANDROIDFW_CUTILS(name) <std/name>
     #endif
-#else
-    // TODO If we HAVE_ANDROID_OS then the input stack will pull in binder
-    // TODO which isn't compatible with the std based utils replacements.
-    #error Currently unable to support ANDROID_USE_STD with HAVE_ANDROID_OS
 #endif
 
 #endif /* MIR_ANDROID_PLATFORM_H_ */

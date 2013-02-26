@@ -22,8 +22,11 @@
 
 #include <EGL/egl.h>
 
-#include <utils/threads.h>
-#include <utils/String8.h>
+#include "androidfw/Platform.h"
+#include ANDROIDFW_UTILS(String8.h)
+#include ANDROIDFW_UTILS(Condition.h)
+#include ANDROIDFW_UTILS(Mutex.h)
+#include ANDROIDFW_UTILS(Errors.h)
 #include <ui/Rect.h>
 
 #include <pixelflinger/pixelflinger.h>

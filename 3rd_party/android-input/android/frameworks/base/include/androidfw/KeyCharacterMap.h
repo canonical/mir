@@ -17,7 +17,7 @@
 #ifndef _ANDROIDFW_KEY_CHARACTER_MAP_H
 #define _ANDROIDFW_KEY_CHARACTER_MAP_H
 
-#include "Platform.h"
+#include <androidfw/Platform.h>
 
 #include <stdint.h>
 

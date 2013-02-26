@@ -17,7 +17,9 @@
 #ifndef ANDROID_STRONG_POINTER_H
 #define ANDROID_STRONG_POINTER_H
 
-#include <cutils/atomic.h>
+#include <androidfw/Platform.h>
+
+#include ANDROIDFW_CUTILS(atomic.h)
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -213,7 +215,7 @@ inline TextOutput& operator<<(TextOutput& to, const sp<T>& val)
     return printStrongPointer(to, val.get());
 }
 
-}; // namespace android
+} // namespace android
 
 // ---------------------------------------------------------------------------
 
