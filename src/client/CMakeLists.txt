@@ -14,7 +14,7 @@
 #
 # Authored by: Alan Griffiths <alan@octopull.co.uk>
 
-set(MIR_CLIENT_INCLUDE_DIR_SUFFIX "mir/client/")
+set(MIR_CLIENT_INCLUDE_DIR_SUFFIX "mir")
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -123,9 +123,11 @@ target_link_libraries(
 set(
   CLIENT_PUBLIC_HEADERS
 
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_drm.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/c_types.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api_lightdm.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api_drm.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mesa/native_display.h
 )
 
 set_target_properties(
@@ -134,11 +136,17 @@ set_target_properties(
   PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
 )
 
+
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
+
+install(
+   DIRECTORY ${CMAKE_SOURCE_DIR}/include/mir_toolkit DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
+   FILES_MATCHING PATTERN "*.h")
+
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
