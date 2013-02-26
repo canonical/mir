@@ -63,9 +63,9 @@ private:
 
 struct NativeDisplayDeleter
 {
-    void operator() (EGLNativeDisplayType *p)
+    void operator() (EGLNativeDisplayType* p)
     {
-        auto display = reinterpret_cast<MirMesaEGLNativeDisplay *>(*p);
+        auto display = reinterpret_cast<MirMesaEGLNativeDisplay*>(*p);
         mclg::EGL::release_native_display(display);
         delete p;
     }
@@ -113,7 +113,7 @@ std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native
 {
     MirMesaEGLNativeDisplay **mir_native_display = new MirMesaEGLNativeDisplay*;
     *mir_native_display = mclg::EGL::create_native_display(context->mir_connection());
-    auto egl_native_display = reinterpret_cast<EGLNativeDisplayType *>(mir_native_display);
+    auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
 
     return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter());
 }
