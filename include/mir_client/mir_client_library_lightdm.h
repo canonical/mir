@@ -47,6 +47,7 @@ MirWaitHandle *mir_connect_with_lightdm_id(
 
 /**
  *  Request focus to be set to a specific application.
+ *  \param  [in]   connection   the connection to the mir server
  *  \param  [in]   lightdm_id   an id referring to the application
  *  \return nothing - if an unrecognized id is supplied it is ignored
  */
