@@ -21,8 +21,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 
-#include "mir/compositor/buffer.h"
-
 #include <memory>
 
 namespace mir
