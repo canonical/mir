@@ -120,28 +120,10 @@ target_link_libraries(
   3rd_party
 )
 
-set(
-  CLIENT_PUBLIC_HEADERS
-
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/c_types.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/api_drm.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mesa/native_display.h
-)
-
-set_target_properties(
-  mirclient
-  PROPERTIES
-  PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
-)
-
-
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
+  ARCHIVE DESTINATION lib)
 
 install(
    DIRECTORY ${CMAKE_SOURCE_DIR}/include/mir_toolkit DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
