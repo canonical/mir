@@ -19,6 +19,8 @@
 #define MIR_CLIENT_LIBRARY_H
 
 #ifdef __cplusplus
+/** The C client API
+ */
 namespace mir_client {
 extern "C" {
 #endif
