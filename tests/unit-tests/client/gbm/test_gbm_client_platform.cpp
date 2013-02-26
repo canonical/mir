@@ -46,11 +46,11 @@ TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
 
-    MirMesaEGLNativeDisplay *nd;
+    EGLNativeDisplayType nd;
     {
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
     
-        nd = reinterpret_cast<MirMesaEGLNativeDisplay *>(*native_display);
+        nd = *native_display;
         EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(nd));
     }
     EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(nd));

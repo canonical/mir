@@ -19,6 +19,7 @@
 #include "mock_mesa_egl_client_library.h"
 
 #include "src/client/gbm/gbm_client_egl_native_display.h"
+#include "src/client/gbm/mesa_native_display_container.h"
 
 #include "mir_toolkit/api.h"
 #include "mir_toolkit/mesa/native_display.h"
@@ -32,45 +33,49 @@ namespace mclg = mir::client::gbm;
 namespace
 {
 
-struct MesaEGLNativeDisplaySetup : public testing::Test
+struct MesaNativeDisplayContainerSetup : public testing::Test
 {
     void SetUp()
     {
         connection = mock_client_library.a_connection();
         surface = mock_client_library.a_surface();
-        native_display = mclg::EGL::create_native_display(connection);
     }
-    
     mtd::MockMesaEGLClientLibrary mock_client_library;
+
     MirConnection *connection;
     MirSurface *surface;
-    MirMesaEGLNativeDisplay *native_display;
+    mclg::MesaNativeDisplayContainer container;
 };
 
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, valid_displays_come_from_factory)
+TEST_F(MesaNativeDisplayContainerSetup, valid_displays_are_created_by_container)
 {
     using namespace ::testing;
+    auto egl_native_display = container.create(connection);
 
-    EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(native_display));
+    EXPECT_TRUE(container.validate(egl_native_display));
     
     MirMesaEGLNativeDisplay invalid_native_display;
-    EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(&invalid_native_display));
+    EXPECT_FALSE(container.validate(reinterpret_cast<EGLNativeDisplayType>(&invalid_native_display)));
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, releasing_displays_invalidates_address)
+TEST_F(MesaNativeDisplayContainerSetup, releasing_displays_invalidates_address)
 {
     using namespace ::testing;
+
+    auto egl_native_display = container.create(connection);
     
-    EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(native_display));
-    mclg::EGL::release_native_display(native_display);
-    EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(native_display));
+    EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(egl_native_display));
+    container.release(egl_native_display);
+    EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(egl_native_display));
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, display_get_platform)
+TEST_F(MesaNativeDisplayContainerSetup, display_get_platform)
 {
     using namespace ::testing;
+
+    MirMesaEGLNativeDisplay *native_display = reinterpret_cast<MirMesaEGLNativeDisplay *>(container.create(connection));
 
     MirPlatformPackage platform_package;
 
@@ -78,19 +83,23 @@ TEST_F(MesaEGLNativeDisplaySetup, display_get_platform)
     native_display->display_get_platform(native_display, &platform_package);
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, surface_get_current_buffer)
+TEST_F(MesaNativeDisplayContainerSetup, surface_get_current_buffer)
 {
     using namespace ::testing;
+
+    MirMesaEGLNativeDisplay *native_display = reinterpret_cast<MirMesaEGLNativeDisplay *>(container.create(connection));
 
     MirBufferPackage buffer_package;
     
     EXPECT_CALL(mock_client_library, surface_get_current_buffer(surface, &buffer_package)).Times(1);
-    native_display->surface_get_current_buffer(native_display, (EGLNativeWindowType)surface, &buffer_package);
+    native_display->surface_get_current_buffer(native_display, (NativeDisplayType)surface, &buffer_package);
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, surface_get_parameters)
+TEST_F(MesaNativeDisplayContainerSetup, surface_get_parameters)
 {
     using namespace ::testing;
+
+    MirMesaEGLNativeDisplay *native_display = reinterpret_cast<MirMesaEGLNativeDisplay *>(container.create(connection));
 
     MirSurfaceParameters surface_parameters;
     
@@ -98,9 +107,11 @@ TEST_F(MesaEGLNativeDisplaySetup, surface_get_parameters)
     native_display->surface_get_parameters(native_display, (EGLNativeWindowType)surface, &surface_parameters);
 }
 
-TEST_F(MesaEGLNativeDisplaySetup, surface_advance_buffer)
+TEST_F(MesaNativeDisplayContainerSetup, surface_advance_buffer)
 {
     using namespace ::testing;
+
+    MirMesaEGLNativeDisplay *native_display = reinterpret_cast<MirMesaEGLNativeDisplay *>(container.create(connection));
 
     EXPECT_CALL(mock_client_library, surface_next_buffer(surface, _, _)).Times(1);
     native_display->surface_advance_buffer(native_display, (EGLNativeWindowType)surface);

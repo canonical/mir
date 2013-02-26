@@ -69,9 +69,11 @@ static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay * /* display
     mir_surface_get_parameters(ms,  surface_parameters);
 }
 
-int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display)
+int mir_mesa_egl_native_display_is_valid(EGLNativeDisplayType egl_display)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
+    MirMesaEGLNativeDisplay* display = reinterpret_cast<MirMesaEGLNativeDisplay *>(egl_display);
+    
     return (valid_native_displays.find(display) != valid_native_displays.end());
 }
 
@@ -97,7 +99,7 @@ mclg::EGL::create_native_display (MirConnection *connection)
 }
 
 void
-mclg::EGL::release_native_display (MirMesaEGLNativeDisplay *display)
+mclg::EGL::release_native_display (MirMesaEGLNativeDisplay* display)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
     
