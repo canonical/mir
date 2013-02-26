@@ -27,7 +27,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/api.h"
 
 #include <gtest/gtest.h>
 

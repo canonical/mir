@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_CLIENT_LIBRARY_LIGHTDM_H
-#define MIR_CLIENT_LIBRARY_LIGHTDM_H
+#ifndef MIR_TOOLKIT_API_LIGHTDM_H
+#define MIR_TOOLKIT_API_LIGHTDM_H
 
-#include "mir_client_library.h"
+#include "api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,4 +55,4 @@ void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id);
 }
 #endif
 
-#endif /* MIR_CLIENT_LIBRARY_LIGHTDM_H */
+#endif /* MIR_TOOLKIT_API_LIGHTDM_H */

@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DRAW_PATTERNS_H
 #define MIR_TEST_DRAW_PATTERNS_H
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/api.h"
 
 #include <memory>
 #include <stdexcept>

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/api.h"
 #include "gbm_client_buffer.h"
 #include "drm_fd_handler.h"
 

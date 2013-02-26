@@ -18,8 +18,7 @@
 #ifndef MIR_CLIENT_LIBRARY_MESA_EGL_H
 #define MIR_CLIENT_LIBRARY_MESA_EGL_H
 
-// TODO: We only need this for the struct definitions so perhaps these should live somewhere else.
-#include "mir_client_library.h"
+#include "mir_toolkit/c_types.h"
 
 #include <EGL/egl.h>
 

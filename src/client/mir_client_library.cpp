@@ -16,9 +16,9 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
-#include "mir_client/mir_client_library_drm.h"
-#include "mir_client/mir_client_library_lightdm.h"
+#include "mir_toolkit/api.h"
+#include "mir_toolkit/api_drm.h"
+#include "mir_toolkit/api_lightdm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"

@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_CLIENT_LIBRARY_DRM_H
-#define MIR_CLIENT_LIBRARY_DRM_H
+#ifndef MIR_TOOLKIT_API_DRM_H
+#define MIR_TOOLKIT_API_DRM_H
 
-#include "mir_client_library.h"
+#include "api.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +35,4 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
 }
 #endif
 
-#endif /* MIR_CLIENT_LIBRARY_DRM_H */
+#endif /* MIR_TOOLKIT_API_DRM_H */

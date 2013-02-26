@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/api.h"
 
 #include <assert.h>
 #include <string.h>

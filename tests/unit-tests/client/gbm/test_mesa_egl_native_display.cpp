@@ -20,8 +20,8 @@
 
 #include "src/client/gbm/gbm_client_egl_native_display.h"
 
-#include "mir_client/mir_client_library.h"
-#include "mir_client/mir_client_library_mesa_egl.h"
+#include "mir_toolkit/api.h"
+#include "mir_toolkit/mesa/native_display.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
