@@ -22,7 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_bundle_factory.h"
 
 #include <memory>
 
@@ -36,7 +36,7 @@ class BufferBundle;
 class GraphicBufferAllocator;
 class BufferProperties;
 
-class BufferBundleManager : public BufferBundleFactory
+class BufferBundleManager : public surfaces::BufferBundleFactory
 {
 public:
 

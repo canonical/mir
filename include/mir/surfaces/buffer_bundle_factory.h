@@ -30,14 +30,17 @@ namespace compositor
 
 class BufferBundle;
 class BufferProperties;
+}
 
+namespace surfaces
+{
 class BufferBundleFactory
 {
 public:
     virtual ~BufferBundleFactory() {}
 
-    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        BufferProperties const& buffer_properties) = 0;
+    virtual std::shared_ptr<compositor::BufferBundle> create_buffer_bundle(
+        compositor::BufferProperties const& buffer_properties) = 0;
 
 protected:
     BufferBundleFactory() = default;
