@@ -27,7 +27,7 @@ namespace mclg = mir::client::gbm;
 namespace
 {
 std::mutex native_display_guard;
-std::unordered_set<MirMesaEGLNativeDisplay *> valid_native_displays;
+std::unordered_set<MirMesaEGLNativeDisplay*> valid_native_displays;
 }
 
 namespace
@@ -45,12 +45,12 @@ static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay* /* disp
                                                 MirEGLNativeWindowType surface,
                                                 MirBufferPackage* buffer_package)
 {
-    MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
+    MirSurface* ms = reinterpret_cast<MirSurface* >(surface);
     mir_surface_get_current_buffer(ms, buffer_package);
 }
 
-static void buffer_advanced_callback (MirSurface * /*surface*/,
-                                      void * /*context*/)
+static void buffer_advanced_callback (MirSurface*  /*surface*/,
+                                      void*  /*context*/)
 {
 }
 
@@ -80,11 +80,11 @@ int mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
 }
 }
 
-MirMesaEGLNativeDisplay *
-mclg::EGL::create_native_display (MirConnection *connection)
+MirMesaEGLNativeDisplay*
+mclg::EGL::create_native_display (MirConnection* connection)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
-    MirMesaEGLNativeDisplay *display = new MirMesaEGLNativeDisplay();
+    MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
 
     display->display_get_platform = gbm_egl_display_get_platform;
     display->surface_get_current_buffer = gbm_egl_surface_get_current_buffer;
@@ -99,7 +99,7 @@ mclg::EGL::create_native_display (MirConnection *connection)
 }
 
 void
-mclg::EGL::release_native_display (MirMesaEGLNativeDisplay *display)
+mclg::EGL::release_native_display (MirMesaEGLNativeDisplay* display)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
     

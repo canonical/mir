@@ -42,8 +42,6 @@ struct MirMesaEGLNativeDisplay
     MirConnection* context;
 };
 
-int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
