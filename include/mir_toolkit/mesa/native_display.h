@@ -24,9 +24,9 @@
 extern "C"{
 #endif
 
-typedef struct _MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
+typedef struct MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
 
-struct _MirMesaEGLNativeDisplay
+struct MirMesaEGLNativeDisplay
 {
     void (*display_get_platform) (MirMesaEGLNativeDisplay *display,
                                   MirPlatformPackage *package);
