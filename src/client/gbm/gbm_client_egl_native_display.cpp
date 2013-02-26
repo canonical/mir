@@ -17,6 +17,7 @@
  */
 
 #include "gbm_client_egl_native_display.h"
+
 #include "mir_toolkit/mesa/native_display.h"
 
 #include <unordered_set>
