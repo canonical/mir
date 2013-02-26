@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef GBM_CLIENT_EGL_NATIVE_DISPLAY_H_
-#define GBM_CLIENT_EGL_NATIVE_DISPLAY_H_
+#ifndef MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_H_
+#define MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_H_
 
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/api.h"
@@ -37,4 +37,4 @@ namespace EGL
 }
 } // namespace mir
 
-#endif // GBM_CLIENT_EGL_NATIVE_DISPLAY_H_
+#endif // MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_H_
