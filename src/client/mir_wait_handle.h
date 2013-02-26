@@ -22,7 +22,7 @@
 #include <condition_variable> 
 #include <mutex> 
 
-namespace mir_client
+namespace mir_toolkit
 {
 class MirWaitHandle
 {

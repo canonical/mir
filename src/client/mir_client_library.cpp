@@ -16,9 +16,9 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
-#include "mir_client/mir_client_library_drm.h"
-#include "mir_client/mir_client_library_lightdm.h"
+#include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/mir_client_library_lightdm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -36,15 +36,15 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-std::mutex mir_client::MirConnection::connection_guard;
-std::unordered_set<mir_client::MirConnection*> mir_client::MirConnection::valid_connections;
+std::mutex mir_toolkit::MirConnection::connection_guard;
+std::unordered_set<mir_toolkit::MirConnection*> mir_toolkit::MirConnection::valid_connections;
 
 namespace
 {
-mir_client::MirConnection error_connection;
+mir_toolkit::MirConnection error_connection;
 }
 
-mir_client::MirWaitHandle* mir_client::mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
 
     try
@@ -67,17 +67,17 @@ mir_client::MirWaitHandle* mir_client::mir_connect(char const* socket_file, char
     }
 }
 
-int mir_client::mir_connection_is_valid(MirConnection * connection)
+int mir_toolkit::mir_connection_is_valid(MirConnection * connection)
 {
     return MirConnection::is_valid(connection);
 }
 
-char const * mir_client::mir_connection_get_error_message(MirConnection * connection)
+char const * mir_toolkit::mir_connection_get_error_message(MirConnection * connection)
 {
     return connection->get_error_message();
 }
 
-void mir_client::mir_connection_release(MirConnection * connection)
+void mir_toolkit::mir_connection_release(MirConnection * connection)
 {
     if (&error_connection == connection) return;
 
@@ -87,12 +87,12 @@ void mir_client::mir_connection_release(MirConnection * connection)
     delete connection;
 }
 
-mir_client::MirEGLNativeDisplayType mir_client::mir_connection_get_egl_native_display(MirConnection *connection)
+mir_toolkit::MirEGLNativeDisplayType mir_toolkit::mir_connection_get_egl_native_display(MirConnection *connection)
 {
     return connection->egl_native_display();
 }
 
-mir_client::MirWaitHandle* mir_client::mir_surface_create(
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
     MirConnection * connection,
     MirSurfaceParameters const * params,
     mir_surface_lifecycle_callback callback,
@@ -112,34 +112,34 @@ mir_client::MirWaitHandle* mir_client::mir_surface_create(
 
 }
 
-mir_client::MirWaitHandle* mir_client::mir_surface_release(
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_release(
     MirSurface * surface,
     mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->release_surface(callback, context);
 }
 
-int mir_client::mir_debug_surface_id(MirSurface * surface)
+int mir_toolkit::mir_debug_surface_id(MirSurface * surface)
 {
     return surface->id();
 }
 
-int mir_client::mir_surface_is_valid(MirSurface* surface)
+int mir_toolkit::mir_surface_is_valid(MirSurface* surface)
 {
     return surface->is_valid();
 }
 
-char const * mir_client::mir_surface_get_error_message(MirSurface * surface)
+char const * mir_toolkit::mir_surface_get_error_message(MirSurface * surface)
 {
     return surface->get_error_message();
 }
 
-void mir_client::mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
+void mir_toolkit::mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *parameters)
 {
     *parameters = surface->get_parameters();
 }
 
-void mir_client::mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
+void mir_toolkit::mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
 {
     auto package = surface->get_current_buffer_package();
 
@@ -154,38 +154,38 @@ void mir_client::mir_surface_get_current_buffer(MirSurface *surface, MirBufferPa
     buffer_package_out->stride = package->stride;
 }
 
-void mir_client::mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
+void mir_toolkit::mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
 {
     connection->populate(*platform_package);
 }
 
-void mir_client::mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
+void mir_toolkit::mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
     connection->populate(*display_info);
 }
 
-void mir_client::mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
+void mir_toolkit::mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
     surface->get_cpu_region( *graphics_region);
 }
 
-mir_client::MirWaitHandle* mir_client::mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
 }
 
-void mir_client::mir_wait_for(MirWaitHandle* wait_handle)
+void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)
 {
     if (wait_handle)
         wait_handle->wait_for_result();
 }
 
-mir_client::MirEGLNativeWindowType mir_client::mir_surface_get_egl_native_window(MirSurface *surface)
+mir_toolkit::MirEGLNativeWindowType mir_toolkit::mir_surface_get_egl_native_window(MirSurface *surface)
 {
     return surface->generate_native_window();
 }
 
-mir_client::MirWaitHandle *mir_client::mir_connection_drm_auth_magic(MirConnection* connection,
+mir_toolkit::MirWaitHandle *mir_toolkit::mir_connection_drm_auth_magic(MirConnection* connection,
                                              unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
@@ -193,7 +193,7 @@ mir_client::MirWaitHandle *mir_client::mir_connection_drm_auth_magic(MirConnecti
     return connection->drm_auth_magic(magic, callback, context);
 }
 
-mir_client::MirWaitHandle *mir_client::mir_connect_with_lightdm_id(
+mir_toolkit::MirWaitHandle *mir_toolkit::mir_connect_with_lightdm_id(
     char const *server,
     int lightdm_id,
     char const *app_name,
@@ -218,7 +218,7 @@ catch (std::exception const& x)
     return 0;
 }
 
-void mir_client::mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id)
+void mir_toolkit::mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id)
 try
 {
     connection->select_focus_by_lightdm_id(lightdm_id);

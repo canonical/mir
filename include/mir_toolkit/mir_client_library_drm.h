@@ -20,7 +20,7 @@
 #include "mir_client_library.h"
 
 #ifdef __cplusplus
-namespace mir_client {
+namespace mir_toolkit {
 extern "C" {
 #endif
 

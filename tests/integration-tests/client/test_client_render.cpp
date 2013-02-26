@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "src/frontend/protobuf_socket_communicator.h"

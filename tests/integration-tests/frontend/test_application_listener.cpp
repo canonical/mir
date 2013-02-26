@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/application_listener.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"

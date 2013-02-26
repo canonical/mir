@@ -22,7 +22,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -39,7 +39,7 @@ class MemoryRegion;
 }
 }
 
-class mir_client::MirSurface : public mir::client::ClientSurface
+class mir_toolkit::MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;

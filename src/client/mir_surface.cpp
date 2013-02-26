@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_logger.h"
 #include "client_buffer.h"
 #include "mir_surface.h"
@@ -29,7 +29,7 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-mir_client::MirSurface::MirSurface(
+mir_toolkit::MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
     const std::shared_ptr<mir::client::Logger>& logger,
@@ -52,12 +52,12 @@ mir_client::MirSurface::MirSurface(
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
-mir_client::MirSurface::~MirSurface()
+mir_toolkit::MirSurface::~MirSurface()
 {
     release_cpu_region();
 }
 
-mir_client::MirSurfaceParameters mir_client::MirSurface::get_parameters() const
+mir_toolkit::MirSurfaceParameters mir_toolkit::MirSurface::get_parameters() const
 {
     return MirSurfaceParameters {
         0,
@@ -67,7 +67,7 @@ mir_client::MirSurfaceParameters mir_client::MirSurface::get_parameters() const
         static_cast<MirBufferUsage>(surface.buffer_usage())};
 }
 
-char const * mir_client::MirSurface::get_error_message()
+char const * mir_toolkit::MirSurface::get_error_message()
 {
     if (surface.has_error())
     {
@@ -76,17 +76,17 @@ char const * mir_client::MirSurface::get_error_message()
     return error_message.c_str();
 }
 
-int mir_client::MirSurface::id() const
+int mir_toolkit::MirSurface::id() const
 {
     return surface.id().value();
 }
 
-bool mir_client::MirSurface::is_valid() const
+bool mir_toolkit::MirSurface::is_valid() const
 {
     return !surface.has_error();
 }
 
-void mir_client::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
+void mir_toolkit::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
     auto buffer = buffer_depository->access_buffer(last_buffer_id);
 
@@ -100,12 +100,12 @@ void mir_client::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     region_out.vaddr = secured_region->vaddr.get();
 }
 
-void mir_client::MirSurface::release_cpu_region()
+void mir_toolkit::MirSurface::release_cpu_region()
 {
     secured_region.reset();
 }
 
-mir_client::MirWaitHandle* mir_client::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     release_cpu_region();
 
@@ -118,21 +118,21 @@ mir_client::MirWaitHandle* mir_client::MirSurface::next_buffer(mir_surface_lifec
     return &next_buffer_wait_handle;
 }
 
-mir_client::MirWaitHandle* mir_client::MirSurface::get_create_wait_handle()
+mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;
 }
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat mir_client::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
 {
     if ( pf == mir_pixel_format_abgr_8888 )
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid;
 }
 
-void mir_client::MirSurface::process_incoming_buffer()
+void mir_toolkit::MirSurface::process_incoming_buffer()
 {
     auto const& buffer = surface.buffer();
     last_buffer_id = buffer.buffer_id();
@@ -156,7 +156,7 @@ void mir_client::MirSurface::process_incoming_buffer()
     }
 }
 
-void mir_client::MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
+void mir_toolkit::MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -167,7 +167,7 @@ void mir_client::MirSurface::created(mir_surface_lifecycle_callback callback, vo
     create_wait_handle.result_received();
 }
 
-void mir_client::MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
+void mir_toolkit::MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -175,25 +175,25 @@ void mir_client::MirSurface::new_buffer(mir_surface_lifecycle_callback callback,
     next_buffer_wait_handle.result_received();
 }
 
-mir_client::MirWaitHandle* mir_client::MirSurface::release_surface(
+mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::release_surface(
         mir_surface_lifecycle_callback callback,
         void * context)
 {
     return connection->release_surface(this, callback, context);
 }
 
-std::shared_ptr<mir_client::MirBufferPackage> mir_client::MirSurface::get_current_buffer_package()
+std::shared_ptr<mir_toolkit::MirBufferPackage> mir_toolkit::MirSurface::get_current_buffer_package()
 {
     auto buffer = buffer_depository->access_buffer(last_buffer_id);
     return buffer->get_buffer_package();
 }
 
-std::shared_ptr<mcl::ClientBuffer> mir_client::MirSurface::get_current_buffer()
+std::shared_ptr<mcl::ClientBuffer> mir_toolkit::MirSurface::get_current_buffer()
 {
     return buffer_depository->access_buffer(last_buffer_id);
 }
 
-void mir_client::MirSurface::populate(MirBufferPackage& buffer_package)
+void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
 {
     if (is_valid() && surface.has_buffer())
     {
@@ -222,7 +222,7 @@ void mir_client::MirSurface::populate(MirBufferPackage& buffer_package)
     }
 }
 
-EGLNativeWindowType mir_client::MirSurface::generate_native_window()
+EGLNativeWindowType mir_toolkit::MirSurface::generate_native_window()
 {
     return *accelerated_window;
 }

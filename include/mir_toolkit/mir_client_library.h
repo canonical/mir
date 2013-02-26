@@ -21,7 +21,7 @@
 #ifdef __cplusplus
 /** The C client API
  */
-namespace mir_client {
+namespace mir_toolkit {
 extern "C" {
 #endif
 
@@ -325,7 +325,7 @@ int mir_debug_surface_id(MirSurface *surface);
 #ifdef __cplusplus
 }
 }
-using namespace mir_client;
+using namespace mir_toolkit;
 #endif
 
 #endif /* MIR_CLIENT_LIBRARY_H */
