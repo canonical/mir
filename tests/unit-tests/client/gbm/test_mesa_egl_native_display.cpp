@@ -40,6 +40,10 @@ struct MesaEGLNativeDisplaySetup : public testing::Test
         surface = mock_client_library.a_surface();
         native_display = mclg::EGL::create_native_display(connection);
     }
+    void TearDown()
+    {
+        mclg::EGL::release_native_display(native_display);
+    }
     
     mtd::MockMesaEGLClientLibrary mock_client_library;
     MirConnection* connection;
