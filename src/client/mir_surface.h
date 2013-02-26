@@ -46,37 +46,37 @@ public:
     MirSurface& operator=(MirSurface const &) = delete;
 
     MirSurface(
-        mir_client::MirConnection *allocating_connection,
+        MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
         const std::shared_ptr<mir::client::Logger>& logger,
         const std::shared_ptr<mir::client::ClientBufferDepository>& depository,
-        mir_client::MirSurfaceParameters const & params,
-        mir_client::mir_surface_lifecycle_callback callback, void * context);
+        MirSurfaceParameters const & params,
+        mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
 
-    mir_client::MirWaitHandle* release_surface(
-        mir_client::mir_surface_lifecycle_callback callback,
+    MirWaitHandle* release_surface(
+        mir_surface_lifecycle_callback callback,
         void *context);
 
-    mir_client::MirSurfaceParameters get_parameters() const;
+    MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
     bool is_valid() const;
-    mir_client::MirWaitHandle* next_buffer(mir_client::mir_surface_lifecycle_callback callback, void * context);
-    mir_client::MirWaitHandle* get_create_wait_handle();
+    MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
+    MirWaitHandle* get_create_wait_handle();
 
-    std::shared_ptr<mir_client::MirBufferPackage> get_current_buffer_package();
+    std::shared_ptr<MirBufferPackage> get_current_buffer_package();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
-    void get_cpu_region(mir_client::MirGraphicsRegion& region);
+    void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
 private:
     void process_incoming_buffer();
-    void populate(mir_client::MirBufferPackage& buffer_package);
-    void created(mir_client::mir_surface_lifecycle_callback callback, void * context);
-    void new_buffer(mir_client::mir_surface_lifecycle_callback callback, void * context);
+    void populate(MirBufferPackage& buffer_package);
+    void created(mir_surface_lifecycle_callback callback, void * context);
+    void new_buffer(mir_surface_lifecycle_callback callback, void * context);
     mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf );
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
@@ -85,9 +85,9 @@ private:
     mir::protobuf::Surface surface;
     std::string error_message;
 
-    mir_client::MirConnection *connection;
-    mir_client::MirWaitHandle create_wait_handle;
-    mir_client::MirWaitHandle next_buffer_wait_handle;
+    MirConnection *connection;
+    MirWaitHandle create_wait_handle;
+    MirWaitHandle next_buffer_wait_handle;
 
     int last_buffer_id;
 
