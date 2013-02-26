@@ -43,8 +43,8 @@ static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
 }
 
 static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */,
-                                                MirEGLNativeWindowType surface,
-                                                MirBufferPackage* buffer_package)
+                                               MirEGLNativeWindowType surface,
+                                               MirBufferPackage* buffer_package)
 {
     MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_surface_get_current_buffer(ms, buffer_package);
