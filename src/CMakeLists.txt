@@ -30,11 +30,6 @@ add_subdirectory(client/)
 add_subdirectory(frontend/)
 add_subdirectory(sessions/)
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
