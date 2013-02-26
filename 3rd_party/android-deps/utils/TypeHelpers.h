@@ -68,11 +68,23 @@ struct aggregate_traits {
     };
 };
 
-#define ANDROID_BASIC_TYPES_TRAITS( T )                                     \
-    template<> struct trait_trivial_ctor< T >   { enum { value = true }; }; \
-    template<> struct trait_trivial_dtor< T >   { enum { value = true }; }; \
-    template<> struct trait_trivial_copy< T >   { enum { value = true }; }; \
+#define ANDROID_TRIVIAL_CTOR_TRAIT( T ) \
+    template<> struct trait_trivial_ctor< T >   { enum { value = true }; };
+
+#define ANDROID_TRIVIAL_DTOR_TRAIT( T ) \
+    template<> struct trait_trivial_dtor< T >   { enum { value = true }; };
+
+#define ANDROID_TRIVIAL_COPY_TRAIT( T ) \
+    template<> struct trait_trivial_copy< T >   { enum { value = true }; };
+
+#define ANDROID_TRIVIAL_MOVE_TRAIT( T ) \
     template<> struct trait_trivial_move< T >   { enum { value = true }; };
+
+#define ANDROID_BASIC_TYPES_TRAITS( T ) \
+    ANDROID_TRIVIAL_CTOR_TRAIT( T ) \
+    ANDROID_TRIVIAL_DTOR_TRAIT( T ) \
+    ANDROID_TRIVIAL_COPY_TRAIT( T ) \
+    ANDROID_TRIVIAL_MOVE_TRAIT( T )
 
 // ---------------------------------------------------------------------------
 
@@ -213,6 +225,9 @@ void move_backward_type(TYPE* d, const TYPE* s, size_t n = 1) {
 
 template <typename KEY, typename VALUE>
 struct key_value_pair_t {
+    typedef KEY key_t;
+    typedef VALUE value_t;
+
     KEY     key;
     VALUE   value;
     key_value_pair_t() { }
@@ -222,28 +237,68 @@ struct key_value_pair_t {
     inline bool operator < (const key_value_pair_t& o) const {
         return strictly_order_type(key, o.key);
     }
+    inline const KEY& getKey() const {
+        return key;
+    }
+    inline const VALUE& getValue() const {
+        return value;
+    }
+    friend bool operator == (const key_value_pair_t& lhs, const key_value_pair_t& rhs) {
+        return !compare_type(lhs.key, rhs.key);
+    }
 };
 
-template<>
 template <typename K, typename V>
 struct trait_trivial_ctor< key_value_pair_t<K, V> >
 { enum { value = aggregate_traits<K,V>::has_trivial_ctor }; };
-template<> 
 template <typename K, typename V>
 struct trait_trivial_dtor< key_value_pair_t<K, V> >
 { enum { value = aggregate_traits<K,V>::has_trivial_dtor }; };
-template<> 
 template <typename K, typename V>
 struct trait_trivial_copy< key_value_pair_t<K, V> >
 { enum { value = aggregate_traits<K,V>::has_trivial_copy }; };
-template<> 
 template <typename K, typename V>
 struct trait_trivial_move< key_value_pair_t<K, V> >
 { enum { value = aggregate_traits<K,V>::has_trivial_move }; };
 
 // ---------------------------------------------------------------------------
 
-}; // namespace android
+/*
+ * Hash codes.
+ */
+typedef uint32_t hash_t;
+
+template <typename TKey>
+hash_t hash_type(const TKey& key);
+
+/* Built-in hash code specializations.
+ * Assumes pointers are 32bit. */
+#define ANDROID_INT32_HASH(T) \
+        template <> inline hash_t hash_type(const T& value) { return hash_t(value); }
+#define ANDROID_INT64_HASH(T) \
+        template <> inline hash_t hash_type(const T& value) { \
+                return hash_t((value >> 32) ^ value); }
+#define ANDROID_REINTERPRET_HASH(T, R) \
+        template <> inline hash_t hash_type(const T& value) { \
+                return hash_type(*reinterpret_cast<const R*>(&value)); }
+
+ANDROID_INT32_HASH(bool)
+ANDROID_INT32_HASH(int8_t)
+ANDROID_INT32_HASH(uint8_t)
+ANDROID_INT32_HASH(int16_t)
+ANDROID_INT32_HASH(uint16_t)
+ANDROID_INT32_HASH(int32_t)
+ANDROID_INT32_HASH(uint32_t)
+ANDROID_INT64_HASH(int64_t)
+ANDROID_INT64_HASH(uint64_t)
+ANDROID_REINTERPRET_HASH(float, uint32_t)
+ANDROID_REINTERPRET_HASH(double, uint64_t)
+
+template <typename T> inline hash_t hash_type(const T*& value) {
+    return hash_type(uintptr_t(value));
+}
+
+} // namespace android
 
 // ---------------------------------------------------------------------------
 

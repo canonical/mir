@@ -38,7 +38,7 @@ configure_file(
 set(
   SRCS
   display_server.cpp
-  server_configuration.cpp
+  default_server_configuration.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)

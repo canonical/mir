@@ -22,9 +22,11 @@
 
 extern "C" {
 
-#if __cplusplus < 201103L && !defined(__GXX_EXPERIMENTAL_CXX0X__)
+#ifndef USING_STD_CPP11
+#if 0 // Mir changes
 typedef uint32_t char32_t;
 typedef uint16_t char16_t;
+#endif
 #endif
 
 // Standard string functions on char16_t strings.

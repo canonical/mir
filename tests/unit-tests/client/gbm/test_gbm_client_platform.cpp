@@ -51,7 +51,7 @@ TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
     
         nd = reinterpret_cast<MirMesaEGLNativeDisplay *>(*native_display);
-        EXPECT_TRUE(mir_mesa_egl_native_display_is_valid(nd));
+        EXPECT_TRUE(mir_egl_native_display_is_valid(nd));
     }
-    EXPECT_FALSE(mir_mesa_egl_native_display_is_valid(nd));
+    EXPECT_FALSE(mir_egl_native_display_is_valid(nd));
 }

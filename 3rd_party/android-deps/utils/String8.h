@@ -17,9 +17,12 @@
 #ifndef ANDROID_STRING8_H
 #define ANDROID_STRING8_H
 
-#include <utils/Errors.h>
-#include <utils/SharedBuffer.h>
-#include <utils/Unicode.h>
+#include <androidfw/Platform.h>
+
+#include ANDROIDFW_UTILS(Errors.h)
+#include ANDROIDFW_UTILS(SharedBuffer.h)
+#include ANDROIDFW_UTILS(Unicode.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 #include <string.h> // for strcmp
 #include <stdarg.h>
@@ -219,6 +222,10 @@ private:
             const char* mString;
 };
 
+// String8 can be trivially moved using memcpy() because moving does not
+// require any change to the underlying SharedBuffer contents or reference count.
+ANDROID_TRIVIAL_MOVE_TRAIT(String8)
+
 TextOutput& operator<<(TextOutput& to, const String16& val);
 
 // ---------------------------------------------------------------------------
@@ -375,6 +382,28 @@ inline String8::operator const char*() const
 {
     return mString;
 }
+
+// Compatibility functions
+inline bool isEmpty(String8 const& s) { return s.isEmpty(); }
+inline char const* c_str(String8 const& s) { return s.string(); }
+
+template <typename ... Args>
+inline String8& appendFormat(String8& ss, const char* fmt, Args... args)
+{
+    ss.appendFormat(fmt, args...);
+    return ss;
+}
+inline void setTo(String8& s, char const* value) { s.setTo(value); }
+inline char* lockBuffer(String8& s, int n) { return s.lockBuffer(n); }
+template <typename ... Args>
+inline String8 formatString8(const char* fmt, Args... args)
+{
+    String8 s;
+    appendFormat(s, fmt, args...);
+    return s;
+}
+inline String8 emptyString8() { return String8::empty(); }
+
 
 }  // namespace android
 

@@ -35,15 +35,15 @@ namespace
 extern "C"
 {
 
-static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay *display,
-                                         MirPlatformPackage *package)
+static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
+                                         MirPlatformPackage* package)
 {
     mir_connection_get_platform (display->context, package);
 }
 
-static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay */* display */,
-                                                EGLNativeWindowType surface,
-                                                MirBufferPackage *buffer_package)
+static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay* /* display */,
+                                                MirEGLNativeWindowType surface,
+                                                MirBufferPackage* buffer_package)
 {
     MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
     mir_surface_get_current_buffer(ms, buffer_package);
@@ -54,24 +54,26 @@ static void buffer_advanced_callback (MirSurface * /*surface*/,
 {
 }
 
-static void gbm_egl_surface_advance_buffer (MirMesaEGLNativeDisplay * /* display */,
-                                            EGLNativeWindowType surface)
+static void gbm_egl_surface_advance_buffer (MirMesaEGLNativeDisplay* /* display */,
+                                            MirEGLNativeWindowType surface)
 {
-    MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
+    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
 }
 
-static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay * /* display */,
-                                            EGLNativeWindowType surface,
-                                            MirSurfaceParameters *surface_parameters)
+static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay* /* display */,
+                                            MirEGLNativeWindowType surface,
+                                            MirSurfaceParameters* surface_parameters)
 {
-    MirSurface *ms = reinterpret_cast<MirSurface *>(surface);
+    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_surface_get_parameters(ms,  surface_parameters);
 }
 
-int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display)
+int mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
 {
     std::lock_guard<std::mutex> lg(native_display_guard);
+
+    auto display = reinterpret_cast<MirMesaEGLNativeDisplay*>(egl_display);
     return (valid_native_displays.find(display) != valid_native_displays.end());
 }
 

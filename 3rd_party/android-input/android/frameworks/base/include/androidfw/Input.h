@@ -17,7 +17,7 @@
 #ifndef _ANDROIDFW_INPUT_H
 #define _ANDROIDFW_INPUT_H
 
-#include "Platform.h"
+#include <androidfw/Platform.h>
 
 /**
  * Native input event structures.

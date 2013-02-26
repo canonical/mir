@@ -15,12 +15,10 @@
  *
  */
 
-#ifndef MIR_CLIENT_LIBRARY_MESA_EGL_H
-#define MIR_CLIENT_LIBRARY_MESA_EGL_H
+#ifndef MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
+#define MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 
 #include "mir_toolkit/c_types.h"
-
-#include <EGL/egl.h>
 
 #ifdef __cplusplus
 extern "C"{
@@ -33,13 +31,13 @@ struct _MirMesaEGLNativeDisplay
     void (*display_get_platform) (MirMesaEGLNativeDisplay *display,
                                   MirPlatformPackage *package);
     void (*surface_get_current_buffer) (MirMesaEGLNativeDisplay *display, 
-                                        EGLNativeWindowType surface,
+                                        MirEGLNativeWindowType surface,
                                         MirBufferPackage *buffer_package);
     void (*surface_get_parameters) (MirMesaEGLNativeDisplay *display,
-                                    EGLNativeWindowType surface,
+                                    MirEGLNativeWindowType surface,
                                     MirSurfaceParameters *surface_parameters);
     void (*surface_advance_buffer) (MirMesaEGLNativeDisplay *display,
-                                    EGLNativeWindowType surface);
+                                    MirEGLNativeWindowType surface);
     
     MirConnection *context;
 };
@@ -50,4 +48,4 @@ int mir_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay *display);
 } // extern "C"
 #endif
 
-#endif /* MIR_CLIENT_LIBRARY_MESA_EGL_H */
+#endif /* MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H */
