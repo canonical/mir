@@ -37,17 +37,17 @@ public:
     MockMesaEGLClientLibrary();
     ~MockMesaEGLClientLibrary();
 
-    MOCK_METHOD2(connection_get_platform, void(MirConnection *, MirPlatformPackage *));
-    MOCK_METHOD2(surface_get_current_buffer, void(MirSurface *, MirBufferPackage *));
-    MOCK_METHOD2(surface_get_parameters, void(MirSurface *, MirSurfaceParameters *));
-    MOCK_METHOD3(surface_next_buffer, MirWaitHandle *(MirSurface *, mir_surface_lifecycle_callback, void *));
-    MOCK_METHOD1(wait_for, void(MirWaitHandle *));
+    MOCK_METHOD2(connection_get_platform, void(MirConnection*, MirPlatformPackage*));
+    MOCK_METHOD2(surface_get_current_buffer, void(MirSurface*, MirBufferPackage*));
+    MOCK_METHOD2(surface_get_parameters, void(MirSurface*, MirSurfaceParameters*));
+    MOCK_METHOD3(surface_next_buffer, MirWaitHandle* (MirSurface*, mir_surface_lifecycle_callback, void*));
+    MOCK_METHOD1(wait_for, void(MirWaitHandle*));
     
-    MirConnection *a_connection();
-    MirSurface *a_surface();
+    MirConnection* a_connection();
+    MirSurface* a_surface();
 private:
-    MirConnection *connection;
-    MirSurface *surface;
+    MirConnection* connection;
+    MirSurface* surface;
 };
 
 }

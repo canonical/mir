@@ -42,9 +42,9 @@ struct MesaEGLNativeDisplaySetup : public testing::Test
     }
     
     mtd::MockMesaEGLClientLibrary mock_client_library;
-    MirConnection *connection;
-    MirSurface *surface;
-    MirMesaEGLNativeDisplay *native_display;
+    MirConnection* connection;
+    MirSurface* surface;
+    MirMesaEGLNativeDisplay* native_display;
 };
 
 }
