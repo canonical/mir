@@ -38,7 +38,7 @@ mtd::MockMesaEGLClientLibrary::MockMesaEGLClientLibrary()
     
     global_mock = this;
     
-    ON_CALL(*this, surface_next_buffer(_, _, _)).WillByDefault(Return((MirWaitHandle *)NULL));
+    ON_CALL(*this, surface_next_buffer(_, _, _)).WillByDefault(Return((MirWaitHandle*)NULL));
 }
 
 mtd::MockMesaEGLClientLibrary::~MockMesaEGLClientLibrary()
@@ -46,39 +46,39 @@ mtd::MockMesaEGLClientLibrary::~MockMesaEGLClientLibrary()
     global_mock = NULL;
 }
 
-MirConnection * mtd::MockMesaEGLClientLibrary::a_connection()
+MirConnection*  mtd::MockMesaEGLClientLibrary::a_connection()
 {
     // We just need a unique address of the correct type for matching expectations 
     // rather than a valid MirConnection or Surface
-    return reinterpret_cast<MirConnection *>(&connection);
+    return reinterpret_cast<MirConnection*>(&connection);
 }
 
-MirSurface * mtd::MockMesaEGLClientLibrary::a_surface()
+MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface()
 {
-    return reinterpret_cast<MirSurface *>(&surface);
+    return reinterpret_cast<MirSurface*>(&surface);
 }
 
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *package)
+void mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* package)
 {
     global_mock->connection_get_platform(connection, package);
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *package)
+void mir_surface_get_current_buffer(MirSurface* surface, MirBufferPackage* package)
 {
     global_mock->surface_get_current_buffer(surface, package);
 }
 
-void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters)
+void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
 {
     global_mock->surface_get_parameters(surface, parameters);
 }
 
-MirWaitHandle *mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void *context)
+MirWaitHandle* mir_surface_next_buffer(MirSurface* surface, mir_surface_lifecycle_callback callback, void* context)
 {
     return global_mock->surface_next_buffer(surface, callback, context);
 }
 
-void mir_wait_for(MirWaitHandle *wait_handle)
+void mir_wait_for(MirWaitHandle* wait_handle)
 {
     global_mock->wait_for(wait_handle);
 }
