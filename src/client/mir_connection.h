@@ -44,7 +44,7 @@ class ClientPlatformFactory;
 }
 }
 
-class MirConnection : public mir::client::ClientContext
+class mir_client::MirConnection : public mir::client::ClientContext
 {
 public:
     MirConnection();

@@ -22,6 +22,8 @@
 #include <condition_variable> 
 #include <mutex> 
 
+namespace mir_client
+{
 class MirWaitHandle
 {
 public:
@@ -37,5 +39,6 @@ private:
 
     bool result_has_occurred;
 };
+}
 
 #endif /* MIR_CLIENT_MIR_WAIT_HANDLE_H_ */

@@ -18,18 +18,18 @@
 
 #include "mir_wait_handle.h"
 
-MirWaitHandle::MirWaitHandle() :
+mir_client::MirWaitHandle::MirWaitHandle() :
     guard(),
     wait_condition(),
     result_has_occurred(false)
 {
 }
 
-MirWaitHandle::~MirWaitHandle()
+mir_client::MirWaitHandle::~MirWaitHandle()
 {
 }
 
-void MirWaitHandle::result_received()
+void mir_client::MirWaitHandle::result_received()
 {
     std::unique_lock<std::mutex> lock(guard);
     result_has_occurred = true;
@@ -37,7 +37,7 @@ void MirWaitHandle::result_received()
     wait_condition.notify_all();
 }
 
-void MirWaitHandle::wait_for_result()
+void mir_client::MirWaitHandle::wait_for_result()
 {
     std::unique_lock<std::mutex> lock(guard);
     while ( (!result_has_occurred) )

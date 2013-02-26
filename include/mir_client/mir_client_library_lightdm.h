@@ -22,6 +22,7 @@
 #include "mir_client_library.h"
 
 #ifdef __cplusplus
+namespace mir_client {
 extern "C" {
 #endif
 
@@ -52,6 +53,7 @@ MirWaitHandle *mir_connect_with_lightdm_id(
 void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id);
 
 #ifdef __cplusplus
+}
 }
 #endif
 

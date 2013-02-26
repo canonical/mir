@@ -19,6 +19,7 @@
 #define MIR_CLIENT_LIBRARY_H
 
 #ifdef __cplusplus
+namespace mir_client {
 extern "C" {
 #endif
 
@@ -321,6 +322,8 @@ int mir_debug_surface_id(MirSurface *surface);
 
 #ifdef __cplusplus
 }
+}
+using namespace mir_client;
 #endif
 
 #endif /* MIR_CLIENT_LIBRARY_H */
