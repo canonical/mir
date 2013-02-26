@@ -56,7 +56,7 @@ public:
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<compositor::GraphicRegion> graphic_region() const;
+    std::shared_ptr<GraphicRegion> graphic_region() const;
     glm::mat4 transformation() const;
     float alpha() const;
     bool hidden() const;

@@ -25,6 +25,7 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace ms = mir::surfaces;
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::unique_ptr<BufferSwapper>&& swapper,
@@ -46,7 +47,7 @@ mc::BufferBundleSurfaces::~BufferBundleSurfaces()
 {
 }
 
-std::shared_ptr<mc::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
+std::shared_ptr<ms::GraphicRegion> mc::BufferBundleSurfaces::lock_back_buffer()
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(swapper);
 }

@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_REGION_H_
-#define MIR_COMPOSITOR_GRAPHIC_REGION_H_
+#ifndef MIR_SURFACES_GRAPHIC_REGION_H_
+#define MIR_SURFACES_GRAPHIC_REGION_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace surfaces
 {
 
 class GraphicRegion
@@ -46,4 +46,4 @@ protected:
 }
 }
 
-#endif /* MIR_COMPOSITOR_GRAPHIC_REGION_H_ */
+#endif /* MIR_SURFACES_GRAPHIC_REGION_H_ */

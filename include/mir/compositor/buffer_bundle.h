@@ -28,16 +28,20 @@
 
 namespace mir
 {
+namespace surfaces
+{
+class GraphicRegion;
+}
+
 namespace compositor
 {
 class Buffer;
-class GraphicRegion;
 
 class BufferBundle
 {
 public:
     virtual std::shared_ptr<Buffer> secure_client_buffer() = 0;
-    virtual std::shared_ptr<GraphicRegion> lock_back_buffer() = 0;
+    virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
     virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
     virtual geometry::Size bundle_size() = 0;
     virtual void shutdown() = 0;
