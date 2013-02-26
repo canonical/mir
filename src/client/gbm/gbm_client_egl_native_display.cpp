@@ -38,32 +38,32 @@ extern "C"
 static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
                                          MirPlatformPackage* package)
 {
-    mir_connection_get_platform (display->context, package);
+    mir_connection_get_platform(display->context, package);
 }
 
-static void gbm_egl_surface_get_current_buffer (MirMesaEGLNativeDisplay* /* display */,
+static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */,
                                                 MirEGLNativeWindowType surface,
                                                 MirBufferPackage* buffer_package)
 {
-    MirSurface* ms = reinterpret_cast<MirSurface* >(surface);
+    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_surface_get_current_buffer(ms, buffer_package);
 }
 
-static void buffer_advanced_callback (MirSurface*  /*surface*/,
-                                      void*  /*context*/)
+static void buffer_advanced_callback(MirSurface*  /* surface */,
+                                     void*  /* context */)
 {
 }
 
-static void gbm_egl_surface_advance_buffer (MirMesaEGLNativeDisplay* /* display */,
-                                            MirEGLNativeWindowType surface)
+static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */,
+                                           MirEGLNativeWindowType surface)
 {
     MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
 }
 
-static void gbm_egl_surface_get_parameters (MirMesaEGLNativeDisplay* /* display */,
-                                            MirEGLNativeWindowType surface,
-                                            MirSurfaceParameters* surface_parameters)
+static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display */,
+                                           MirEGLNativeWindowType surface,
+                                           MirSurfaceParameters* surface_parameters)
 {
     MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
     mir_surface_get_parameters(ms,  surface_parameters);
