@@ -24,23 +24,8 @@ using namespace mir::protobuf;
 
 void mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type)
 {
-#if 0
     if (surf)
-    {
-        MirSurfaceType typeset; // TODO: move this
-
-        SurfaceSetting setting;
-        setting.set_surface(
-        setting.set_name(SURFACE_TYPE);
-        setting.set_ivalue(type);
-        surf->server.modify_surface(0, &setting, &result, 
-                                    google::protobuf::NewCallback(surf,
-                                                                  &typeset));
-    }
-#endif
-    /* TODO */
-    (void)surf;
-    (void)type;
+        surf->modify(SURFACE_TYPE, type);
 }
 
 MirSurfaceType mir_shell_surface_get_type(MirSurface *surf)

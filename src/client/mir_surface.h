@@ -25,6 +25,7 @@
 #include "mir/common/surface.h"
 #include "mir_client/mir_client_library.h"
 #include "client_buffer_depository.h"
+#include "mir_logger.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
 #include "client_platform.h"
@@ -73,7 +74,11 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
+    void modify(mir::protobuf::SurfaceAttrib name, int value);
+
 private:
+    void modified();
+
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_lifecycle_callback callback, void * context);
