@@ -17,10 +17,12 @@
 #ifndef ANDROID_VECTOR_IMPL_H
 #define ANDROID_VECTOR_IMPL_H
 
+#include <androidfw/Platform.h>
+
 #include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <utils/Errors.h>
+#include ANDROIDFW_UTILS(Errors.h)
 
 // ---------------------------------------------------------------------------
 // No user serviceable parts in here...
@@ -43,7 +45,7 @@ public:
     enum { // flags passed to the ctor
         HAS_TRIVIAL_CTOR    = 0x00000001,
         HAS_TRIVIAL_DTOR    = 0x00000002,
-        HAS_TRIVIAL_COPY    = 0x00000004,
+        HAS_TRIVIAL_COPY    = 0x00000004
     };
 
                             VectorImpl(size_t itemSize, uint32_t flags);
@@ -194,7 +196,7 @@ private:
             ssize_t         replaceAt(const void* item, size_t index);
 };
 
-}; // namespace android
+} // namespace android
 
 
 // ---------------------------------------------------------------------------

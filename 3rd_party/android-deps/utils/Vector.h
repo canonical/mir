@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <utils/Log.h>
-#include <utils/VectorImpl.h>
-#include <utils/TypeHelpers.h>
+#include ANDROIDFW_UTILS(Log.h)
+#include ANDROIDFW_UTILS(VectorImpl.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
 
 // ---------------------------------------------------------------------------
 
@@ -186,8 +186,8 @@ public:
      inline const_iterator end() const   { return array() + size(); }
      inline void reserve(size_t n) { setCapacity(n); }
      inline bool empty() const{ return isEmpty(); }
-     inline void push_back(const TYPE& item)  { insertAt(item, size()); }
-     inline void push_front(const TYPE& item) { insertAt(item, 0); }
+     inline void push_back(const TYPE& item)  { insertAt(item, size(), 1); }
+     inline void push_front(const TYPE& item) { insertAt(item, 0, 1); }
      inline iterator erase(iterator pos) {
          return begin() + removeItemsAt(pos-array());
      }
@@ -201,6 +201,9 @@ protected:
     virtual void    do_move_backward(void* dest, const void* from, size_t num) const;
 };
 
+// Vector<T> can be trivially moved using memcpy() because moving does not
+// require any change to the underlying SharedBuffer contents or reference count.
+template<typename T> struct trait_trivial_move<Vector<T> > { enum { value = true }; };
 
 // ---------------------------------------------------------------------------
 // No user serviceable parts from here...
@@ -413,7 +416,7 @@ void Vector<TYPE>::do_move_backward(void* dest, const void* from, size_t num) co
     move_backward_type( reinterpret_cast<TYPE*>(dest), reinterpret_cast<const TYPE*>(from), num );
 }
 
-}; // namespace android
+} // namespace android
 
 
 // ---------------------------------------------------------------------------

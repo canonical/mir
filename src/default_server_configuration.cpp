@@ -16,12 +16,13 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server_configuration.h"
+#include "mir/default_server_configuration.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/application_listener.h"
@@ -98,6 +99,23 @@ private:
     }
 };
 
+boost::program_options::options_description program_options()
+{
+    namespace po = boost::program_options;
+
+    po::options_description desc(
+        "Command-line options.\n"
+        "(Environment variables capitalise long form with prefix \"MIR_SERVER_\")");
+    desc.add_options()
+        ("file,f", po::value<std::string>(), "<socket filename>")
+        ("ipc_thread_pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
+        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+
+    return desc;
+}
+
+
 void parse_arguments(
     std::shared_ptr<mir::options::ProgramOption> const& options,
     int argc,
@@ -105,14 +123,11 @@ void parse_arguments(
 {
     namespace po = boost::program_options;
 
-    po::options_description desc("Options");
+    auto desc = program_options();
 
     try
     {
-        namespace po = boost::program_options;
-
         desc.add_options()
-            ("file,f", po::value<std::string>(), "<socket filename>")
             ("help,h", "this help text");
 
         options->parse_arguments(desc, argc, argv);
@@ -131,13 +146,7 @@ void parse_arguments(
 
 void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& options)
 {
-    namespace po = boost::program_options;
-
-    po::options_description desc("Environment options");
-    desc.add_options()
-        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-        ("ipc_thread_pool", po::value<int>(), "threads in frontend thread pool")
-        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+    auto desc = program_options();
 
     options->parse_environment(desc, "MIR_SERVER_");
 }
@@ -217,18 +226,17 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
 }
 
 std::shared_ptr<msess::SessionStore>
-mir::DefaultServerConfiguration::the_session_store(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
+mir::DefaultServerConfiguration::the_session_store()
 {
     return session_store(
-        [&,this]() -> std::shared_ptr<msess::SessionStore>
+        [this]() -> std::shared_ptr<msess::SessionStore>
         {
             auto session_container = std::make_shared<msess::SessionContainer>();
             auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
             auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
 
             auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(surface_factory, placement_strategy);
+            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
             return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
         });
@@ -259,11 +267,62 @@ std::shared_ptr<mg::Display>
 mir::DefaultServerConfiguration::the_display()
 {
     return display(
-        [&]()
+        [this]()
         {
             return the_graphics_platform()->create_display();
         });
 }
+
+std::shared_ptr<ms::SurfaceStackModel>
+mir::DefaultServerConfiguration::the_surface_stack_model()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
+std::shared_ptr<mc::RenderView>
+mir::DefaultServerConfiguration::the_render_view()
+{
+    return surface_stack(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+        });
+}
+
+std::shared_ptr<msess::SurfaceFactory>
+mir::DefaultServerConfiguration::the_surface_factory()
+{
+    return surface_controller(
+        [this]()
+        {
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+        });
+}
+
+std::shared_ptr<mc::Drawer>
+mir::DefaultServerConfiguration::the_drawer()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
+        });
+}
+
+std::shared_ptr<mc::BufferBundleFactory>
+mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+{
+    return buffer_bundle_manager(
+        [this]()
+        {
+            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+        });
+}
+
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(

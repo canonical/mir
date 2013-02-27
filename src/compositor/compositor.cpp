@@ -32,7 +32,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::Compositor::Compositor(
-    RenderView *view,
+    std::shared_ptr<RenderView> const& view,
     const std::shared_ptr<mg::Renderer>& renderer)
     : render_view(view),
       renderer(renderer)

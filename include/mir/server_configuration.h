@@ -18,37 +18,26 @@
 #ifndef MIR_SERVER_CONFIGURATION_H_
 #define MIR_SERVER_CONFIGURATION_H_
 
-#include "mir/options/program_option.h"
-
 #include <memory>
-#include <string>
 
 namespace mir
 {
 namespace compositor
 {
-class BufferAllocationStrategy;
-class GraphicBufferAllocator;
+class Drawer;
 }
 namespace frontend
 {
 class Communicator;
-class ProtobufIpcFactory;
-class ApplicationListener;
 }
 
 namespace sessions
 {
 class SessionStore;
-class SurfaceFactory;
 }
 namespace graphics
 {
-class Renderer;
-class Platform;
 class Display;
-class ViewableArea;
-class BufferInitializer;
 }
 namespace input
 {
@@ -59,18 +48,15 @@ class EventFilter;
 class ServerConfiguration
 {
 public:
-    virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer() = 0;
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy() = 0;
-    virtual std::shared_ptr<graphics::Renderer> the_renderer() = 0;
-    virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store) = 0;
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory) = 0;
+    virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
+    virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
+    virtual std::shared_ptr<graphics::Display> the_display() = 0;
+    virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
+
+    // TODO this should not be taking a parameter, but as
+    // TODO input still needs proper integration left for later
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator() = 0;
-    virtual std::shared_ptr<graphics::Display> the_display() = 0;
 
 protected:
     ServerConfiguration() = default;
@@ -78,79 +64,6 @@ protected:
 
     ServerConfiguration(ServerConfiguration const&) = delete;
     ServerConfiguration& operator=(ServerConfiguration const&) = delete;
-};
-
-class DefaultServerConfiguration : public ServerConfiguration
-{
-public:
-    DefaultServerConfiguration(int argc, char const* argv[]);
-
-    virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
-    virtual std::shared_ptr<graphics::Renderer> the_renderer();
-    virtual std::shared_ptr<frontend::Communicator> the_communicator(
-        std::shared_ptr<sessions::SessionStore> const& session_store);
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store(
-        std::shared_ptr<sessions::SurfaceFactory> const& surface_factory);
-    virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<graphics::Display> the_display();
-
-protected:
-    // TODO deprecated
-    explicit DefaultServerConfiguration();
-    virtual std::shared_ptr<options::Option> the_options() const;
-
-    template<typename Type>
-    class CachedPtr
-    {
-        std::weak_ptr<Type> cache;
-
-        CachedPtr(CachedPtr const&) = delete;
-        CachedPtr& operator=(CachedPtr const&) = delete;
-    public:
-        CachedPtr() = default;
-
-        std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
-        {
-            auto result = cache.lock();
-            if (!result)
-            {
-                cache = result = make();
-            }
-
-            return result;
-
-        }
-    };
-
-    CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<sessions::SessionStore> session_store;
-    CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<graphics::Platform>     graphics_platform;
-    CachedPtr<graphics::BufferInitializer> buffer_initializer;
-    CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
-    CachedPtr<graphics::Display>      display;
-
-    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationListener> application_listener;
-    CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    CachedPtr<graphics::Renderer> renderer;
-
-private:
-    std::shared_ptr<options::Option> options;
-
-    // the communications interface to use
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
-
-    virtual std::shared_ptr<frontend::ApplicationListener> the_application_listener();
-
-    virtual std::string the_socket_file() const;
 };
 }
 

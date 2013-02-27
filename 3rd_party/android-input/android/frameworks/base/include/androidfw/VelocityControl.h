@@ -17,7 +17,7 @@
 #ifndef _ANDROIDFW_VELOCITY_CONTROL_H
 #define _ANDROIDFW_VELOCITY_CONTROL_H
 
-#include "Platform.h"
+#include <androidfw/Platform.h>
 
 #include <androidfw/Input.h>
 #include <androidfw/VelocityTracker.h>

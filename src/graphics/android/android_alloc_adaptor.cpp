@@ -109,6 +109,8 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     {
     case mga::BufferUsage::use_hardware:
         return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
+    case mga::BufferUsage::use_framebuffer_gles:
+        return (GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB);
     case mga::BufferUsage::use_software:
     default:
         return -1;
