@@ -20,6 +20,11 @@
 
 #include "mir/logging/logger.h"
 
+namespace
+{
+char const* const component = "frontend";
+}
+
 namespace ml = mir::logging;
 
 
@@ -30,32 +35,32 @@ ml::ApplicationMediatorReport::ApplicationMediatorReport(std::shared_ptr<Logger>
 
 void ml::ApplicationMediatorReport::application_connect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_connect(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_connect(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_create_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_create_surface(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_create_surface(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_next_buffer_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_next_buffer_called(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_next_buffer_called(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_release_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_release_surface_called(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_release_surface_called(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_disconnect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_disconnect_called(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_disconnect_called(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_drm_auth_magic_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_drm_auth_magic_called(" + app_name + ")", "frontend");
+    log->log<Logger::informational>("application_drm_auth_magic_called(\"" + app_name + "\")", component);
 }
 
 void ml::ApplicationMediatorReport::application_error(
@@ -63,5 +68,5 @@ void ml::ApplicationMediatorReport::application_error(
         char const* method,
         std::string const& what)
 {
-    log->log<Logger::error>(std::string(method) + " - application_error(" + app_name + "):\n" + what, "frontend");
+    log->log<Logger::error>(std::string(method) + " - application_error(\"" + app_name + "\"):\n" + what, component);
 }

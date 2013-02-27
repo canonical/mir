@@ -42,6 +42,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/application_mediator_report.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -109,6 +110,7 @@ boost::program_options::options_description program_options()
     desc.add_options()
         ("file,f", po::value<std::string>(), "<socket filename>")
         ("ipc_thread_pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("log_app_mediator", po::value<bool>(), "log the ApplicationMediator report")
         ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
         ("tests_use_real_input", po::value<bool>(), "use real input in tests");
 
@@ -345,8 +347,14 @@ std::shared_ptr<mf::ApplicationMediatorReport>
 mir::DefaultServerConfiguration::the_application_mediator_report()
 {
     return application_listener(
-        []()
+        [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
         {
+            if (the_options()->get("log_app_mediator", true))
+            {
+                // TODO need a the_log() method
+                auto log = std::make_shared<ml::DumbConsoleLogger>();
+                return std::make_shared<ml::ApplicationMediatorReport>(log);
+            }
             return std::make_shared<mf::NullApplicationMediatorReport>();
         });
 }
