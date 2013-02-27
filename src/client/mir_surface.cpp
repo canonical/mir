@@ -52,9 +52,9 @@ MirSurface::MirSurface(
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
-    for (int i = 0; i < SurfaceAttrib_ARRAYSIZE; i++)
+    for (int i = 0; i < MirSurfaceAttrib_ARRAYSIZE; i++)
         attrib_cache[i] = -1;
-    attrib_cache[SURFACE_TYPE] = MIR_SURFACE_NORMAL;
+    attrib_cache[MIR_SURFACE_TYPE] = MIR_SURFACE_NORMAL;
 }
 
 MirSurface::~MirSurface()
@@ -232,7 +232,7 @@ EGLNativeWindowType MirSurface::generate_native_window()
     return *accelerated_window;
 }
 
-MirWaitHandle* MirSurface::modify(SurfaceAttrib attrib, int value)
+MirWaitHandle* MirSurface::modify(MirSurfaceAttrib attrib, int value)
 {
     SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
@@ -251,14 +251,11 @@ void MirSurface::modified()
     {
         switch (mod_result.attrib())
         {
-        case SURFACE_TYPE:
+        case MIR_SURFACE_TYPE:
             if (mod_result.has_ivalue())
             {
                 int t = mod_result.ivalue();
-                if (SurfaceAttrib_IsValid(t))
-                    attrib_cache[SURFACE_TYPE] = t;
-                else
-                    assert(false);
+                attrib_cache[MIR_SURFACE_TYPE] = t;
             }
             else
                 assert(false);
@@ -272,7 +269,7 @@ void MirSurface::modified()
     }
 }
 
-int MirSurface::attribi(SurfaceAttrib attrib) const
+int MirSurface::attribi(MirSurfaceAttrib attrib) const
 {
     return attrib_cache[attrib];
 }

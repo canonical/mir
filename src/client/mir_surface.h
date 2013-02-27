@@ -74,8 +74,8 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
-    MirWaitHandle* modify(mir::protobuf::SurfaceAttrib attrib, int value);
-    int  attribi(mir::protobuf::SurfaceAttrib attrib) const;
+    MirWaitHandle* modify(MirSurfaceAttrib attrib, int value);
+    int  attribi(MirSurfaceAttrib attrib) const;
 
 private:
     void modified();
@@ -107,7 +107,7 @@ private:
     mir::protobuf::SurfaceSetting mod_result;
 
     // Cache of latest SurfaceSettings returned from the server
-    int attrib_cache[mir::protobuf::SurfaceAttrib_ARRAYSIZE];
+    int attrib_cache[MirSurfaceAttrib_ARRAYSIZE];
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

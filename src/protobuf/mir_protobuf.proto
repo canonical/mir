@@ -111,16 +111,11 @@ message Void {
   optional string error = 127;
 }
 
-enum SurfaceAttrib {
-  SURFACE_TYPE = 1;  // Usually opaque to the DS. Used by shell & clients.
-  // Add more here, as they're implemented
-}
-
 message SurfaceSetting {
-  required SurfaceId     surfaceid = 1;
-  required SurfaceAttrib attrib = 2;
-  optional int32         ivalue = 3;
-  optional string        svalue = 4;
+  required SurfaceId surfaceid = 1;
+  required int32     attrib = 2;
+  optional int32     ivalue = 3;
+  // optional string    svalue = 4;  // Expected for future use
 }
 
 service DisplayServer {

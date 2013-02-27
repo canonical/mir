@@ -22,6 +22,16 @@
 #define __MIR_COMMON_SURFACE_H__
 
 /*
+ * Attributes of a surface that the client and server/shell may wish to
+ * get or set over the wire.
+ */
+typedef enum MirSurfaceAttrib
+{
+    MIR_SURFACE_TYPE,
+    MirSurfaceAttrib_ARRAYSIZE
+} MirSurfaceAttrib;
+
+/*
  * Surface types were originally designated in the Unity design documents.
  * This list however should be a superset encompassing any conceivable type.
  */
