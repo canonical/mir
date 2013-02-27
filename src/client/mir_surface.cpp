@@ -227,19 +227,21 @@ EGLNativeWindowType MirSurface::generate_native_window()
     return *accelerated_window;
 }
 
-void MirSurface::modify(mir::protobuf::SurfaceAttrib name, int value)
+void MirSurface::modify(mir::protobuf::SurfaceAttrib attrib, int value)
 {
     mir::protobuf::SurfaceSetting setting;
-    mir::protobuf::Void result;
-        
-    setting.mutable_surface()->CopyFrom(surface.id());
-    setting.set_name(name);
+    setting.mutable_surfaceid()->CopyFrom(surface.id());
+    setting.set_attrib(attrib);
     setting.set_ivalue(value);
-    server.modify_surface(0, &setting, &result, 
-                          google::protobuf::NewCallback(this, &MirSurface::modified));
+
+    server.modify_surface(0, &setting, &mod_result, 
+                  google::protobuf::NewCallback(this, &MirSurface::modified));
 }
 
 void MirSurface::modified()
 {
     // TODO
+    if (mod_result.surfaceid().value() == surface.id().value())
+    {
+    }
 }

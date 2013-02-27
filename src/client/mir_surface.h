@@ -74,7 +74,7 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
-    void modify(mir::protobuf::SurfaceAttrib name, int value);
+    void modify(mir::protobuf::SurfaceAttrib attrib, int value);
 
 private:
     void modified();
@@ -102,6 +102,8 @@ private:
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
+
+    mir::protobuf::SurfaceSetting mod_result;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */
