@@ -40,6 +40,8 @@ class BufferID;
 namespace surfaces
 {
 
+// TODO this is ideally an implementation class. It is only in a public header
+// TODO because it is used in some example code (which probably needs rethinking).
 class Surface : public graphics::Renderable
 {
 public:
@@ -64,6 +66,8 @@ public:
 
     geometry::PixelFormat pixel_format() const;
 
+    // TODO client code always (and necessarily) calls advance_client_buffer()
+    // TODO and then client_buffer(). That's a bad interface.
     void advance_client_buffer();
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
