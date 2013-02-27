@@ -351,10 +351,21 @@ mir::DefaultServerConfiguration::the_application_mediator_report()
         {
             if (the_options()->get("log_app_mediator", true))
             {
-                // TODO need a the_log() method
-                auto log = std::make_shared<ml::DumbConsoleLogger>();
-                return std::make_shared<ml::ApplicationMediatorReport>(log);
+                return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
             }
-            return std::make_shared<mf::NullApplicationMediatorReport>();
+            else
+            {
+                return std::make_shared<mf::NullApplicationMediatorReport>();
+            }
+        });
+}
+
+std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
+{
+    return logger(
+        [this]()
+        {
+            // TODO use the_options() to configure logging
+            return std::make_shared<ml::DumbConsoleLogger>();
         });
 }

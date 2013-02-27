@@ -68,6 +68,11 @@ class InputManager;
 class EventFilter;
 }
 
+namespace logging
+{
+class Logger;
+}
+
 class DefaultServerConfiguration : public ServerConfiguration
 {
 public:
@@ -90,6 +95,8 @@ public:
     virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
 
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+
+    virtual std::shared_ptr<logging::Logger> the_logger();
 
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
@@ -138,6 +145,7 @@ protected:
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<logging::Logger> logger;
 
 private:
     std::shared_ptr<options::Option> options;
