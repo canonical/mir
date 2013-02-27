@@ -40,7 +40,7 @@ namespace frontend
 {
 class Communicator;
 class ProtobufIpcFactory;
-class ApplicationListener;
+class ApplicationMediatorReport;
 }
 
 namespace sessions
@@ -131,7 +131,7 @@ protected:
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationListener> application_listener;
+    CachedPtr<frontend::ApplicationMediatorReport> application_listener;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
@@ -148,7 +148,7 @@ private:
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
-    virtual std::shared_ptr<frontend::ApplicationListener> the_application_listener();
+    virtual std::shared_ptr<frontend::ApplicationMediatorReport> the_application_mediator_report();
 
     virtual std::string the_socket_file() const;
 };

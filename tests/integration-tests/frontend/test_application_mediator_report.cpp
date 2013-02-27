@@ -17,7 +17,7 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/test_protobuf_client.h"
@@ -31,9 +31,9 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-struct MockApplicationListener : mf::NullApplicationListener
+struct MockApplicationMediatorReport : mf::NullApplicationMediatorReport
 {
-    MockApplicationListener()
+    MockApplicationMediatorReport()
     {
         EXPECT_CALL(*this, application_connect_called(testing::_)).
             Times(testing::AtLeast(0));
@@ -65,10 +65,10 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationListener>
+        std::shared_ptr<mf::ApplicationMediatorReport>
         the_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationMediatorReport>();
 
             EXPECT_CALL(*result, application_connect_called(testing::_)).
                 Times(1);
@@ -106,10 +106,10 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationListener>
+        std::shared_ptr<mf::ApplicationMediatorReport>
         the_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationMediatorReport>();
 
             EXPECT_CALL(*result, application_create_surface_called(testing::_)).
                 Times(1);
@@ -157,10 +157,10 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationListener>
+        std::shared_ptr<mf::ApplicationMediatorReport>
         the_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationMediatorReport>();
 
             EXPECT_CALL(*result, application_next_buffer_called(testing::_)).
                 Times(1);
@@ -214,10 +214,10 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationListener>
+        std::shared_ptr<mf::ApplicationMediatorReport>
         the_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationMediatorReport>();
 
             EXPECT_CALL(*result, application_release_surface_called(testing::_)).
                 Times(1);
@@ -280,10 +280,10 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationListener>
+        std::shared_ptr<mf::ApplicationMediatorReport>
         the_application_listener()
         {
-            auto result = std::make_shared<MockApplicationListener>();
+            auto result = std::make_shared<MockApplicationMediatorReport>();
 
             EXPECT_CALL(*result, application_disconnect_called(testing::_)).
                 Times(1);

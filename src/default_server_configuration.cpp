@@ -25,7 +25,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/session_manager.h"
@@ -61,7 +61,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<msess::SessionStore> const& session_store,
-        std::shared_ptr<mf::ApplicationListener> const& listener,
+        std::shared_ptr<mf::ApplicationMediatorReport> const& listener,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
@@ -76,7 +76,7 @@ public:
 
 private:
     std::shared_ptr<msess::SessionStore> session_store;
-    std::shared_ptr<mf::ApplicationListener> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const listener;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
@@ -335,18 +335,18 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         {
             return std::make_shared<DefaultIpcFactory>(
                 session_store,
-                the_application_listener(),
+                the_application_mediator_report(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
-std::shared_ptr<mf::ApplicationListener>
-mir::DefaultServerConfiguration::the_application_listener()
+std::shared_ptr<mf::ApplicationMediatorReport>
+mir::DefaultServerConfiguration::the_application_mediator_report()
 {
     return application_listener(
         []()
         {
-            return std::make_shared<mf::NullApplicationListener>();
+            return std::make_shared<mf::NullApplicationMediatorReport>();
         });
 }
