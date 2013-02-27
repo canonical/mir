@@ -34,11 +34,11 @@ MirSurfaceType mir_shell_surface_get_type(MirSurface *surf)
     if (surf)
     {
         // I assume the type can only change from the client side. Otherwise
-	// we would have to send off a message to retrieve the latest...
+        // we would have to send off a message to retrieve the latest...
 
         int t = surf->attribi(SURFACE_TYPE);
-	if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
-	    type = static_cast<MirSurfaceType>(t);
+        if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
+            type = static_cast<MirSurfaceType>(t);
     }
 
     return type;

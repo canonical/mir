@@ -79,7 +79,6 @@ public:
 
 private:
     void modified();
-
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_lifecycle_callback callback, void * context);
@@ -93,7 +92,6 @@ private:
     std::string error_message;
 
     MirConnection *connection;
-
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle modify_wait_handle;
