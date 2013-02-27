@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_FRONTEND_APPLICATION_REPORT_H_
-#define MIR_FRONTEND_APPLICATION_REPORT_H_
+#ifndef MIR_FRONTEND_APPLICATION_MEDIATOR_REPORT_H_
+#define MIR_FRONTEND_APPLICATION_MEDIATOR_REPORT_H_
 
 #include <string>
 
@@ -72,4 +72,4 @@ class NullApplicationMediatorReport : public ApplicationMediatorReport
 }
 
 
-#endif /* MIR_FRONTEND_APPLICATION_REPORT_H_ */
+#endif /* MIR_FRONTEND_APPLICATION_MEDIATOR_REPORT_H_ */
