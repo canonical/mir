@@ -93,13 +93,16 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* con
         drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler);
+    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler, mcl::EGLNativeDisplayContainer::instance());
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
         ClientContext* const context,
-        std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : context{context}, drm_fd_handler{drm_fd_handler}
+        std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+        mcl::EGLNativeDisplayContainer &display_container)
+    : context{context}, 
+      drm_fd_handler{drm_fd_handler},
+      display_container(display_container)
 {
 }
 
@@ -117,10 +120,9 @@ std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    EGLNativeDisplayContainer& container = mcl::EGLNativeDisplayContainer::instance();
     MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
-    *mir_native_display = container.create(context->mir_connection());
+    *mir_native_display = display_container.create(context->mir_connection());
     auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
 
-    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(container));
+    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
 }
