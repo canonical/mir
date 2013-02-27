@@ -74,7 +74,7 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
-    void modify(mir::protobuf::SurfaceAttrib attrib, int value);
+    MirWaitHandle* modify(mir::protobuf::SurfaceAttrib attrib, int value);
     int  attribi(mir::protobuf::SurfaceAttrib attrib) const;
 
 private:
@@ -93,8 +93,10 @@ private:
     std::string error_message;
 
     MirConnection *connection;
+
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
+    MirWaitHandle modify_wait_handle;
 
     int last_buffer_id;
 

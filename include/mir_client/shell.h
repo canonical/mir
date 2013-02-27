@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-void mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type);
+MirWaitHandle* mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type);
 MirSurfaceType mir_shell_surface_get_type(MirSurface *surf);
 
 #ifdef __cplusplus
