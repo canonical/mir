@@ -376,3 +376,32 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
 }
 
+TEST_F(MirClientSurfaceTest, serface_types)
+{
+    using namespace testing;
+    using namespace mir::protobuf;
+
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+						 logger,
+						 mock_depository,
+						 params,
+						 &empty_callback,
+						 (void*) NULL);
+    surface->get_create_wait_handle()->wait_for_result();
+
+    EXPECT_EQ(surface->attribi(SURFACE_TYPE), MIR_SURFACE_NORMAL);
+
+    surface->modify(SURFACE_TYPE, 123)->wait_for_result();
+    EXPECT_EQ(surface->attribi(SURFACE_TYPE), MIR_SURFACE_NORMAL);
+
+    surface->modify(SURFACE_TYPE, MIR_SURFACE_UTILITY)->wait_for_result();
+    EXPECT_EQ(surface->attribi(SURFACE_TYPE), MIR_SURFACE_UTILITY);
+
+    surface->modify(SURFACE_TYPE, MIR_SURFACE_POPOVER)->wait_for_result();
+    EXPECT_EQ(surface->attribi(SURFACE_TYPE), MIR_SURFACE_POPOVER);
+
+    surface->modify(SURFACE_TYPE, 9999)->wait_for_result();
+    EXPECT_EQ(surface->attribi(SURFACE_TYPE), MIR_SURFACE_POPOVER);
+}
+
