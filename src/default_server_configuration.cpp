@@ -62,12 +62,12 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<msess::SessionStore> const& session_store,
-        std::shared_ptr<mf::ApplicationMediatorReport> const& listener,
+        std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_store(session_store),
-        listener(listener),
+        report(report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
@@ -77,7 +77,7 @@ public:
 
 private:
     std::shared_ptr<msess::SessionStore> session_store;
-    std::shared_ptr<mf::ApplicationMediatorReport> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
@@ -90,7 +90,7 @@ private:
             graphics_platform,
             graphics_display,
             buffer_allocator,
-            listener,
+            report,
             resource_cache());
     }
 

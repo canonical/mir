@@ -66,7 +66,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::ApplicationMediatorReport>
-        the_application_listener()
+        the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
@@ -107,7 +107,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::ApplicationMediatorReport>
-        the_application_listener()
+        the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
@@ -158,7 +158,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::ApplicationMediatorReport>
-        the_application_listener()
+        the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
@@ -215,7 +215,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::ApplicationMediatorReport>
-        the_application_listener()
+        the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
@@ -281,7 +281,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notif
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::ApplicationMediatorReport>
-        the_application_listener()
+        the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
