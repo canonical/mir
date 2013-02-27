@@ -22,7 +22,7 @@ set(
   buffer_basic.cpp
   temporary_buffers.cpp
   buffer_bundle_manager.cpp
-  buffer_bundle.cpp
+  buffer_bundle_surfaces.cpp
   buffer_swapper_multi.cpp
   swapper_factory.cpp
   rendering_operator.cpp

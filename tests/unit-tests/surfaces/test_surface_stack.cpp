@@ -69,14 +69,14 @@ struct MockBufferBundleFactory : public ms::BufferBundleFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::shared_ptr<mc::BufferBundle>(
+                        std::shared_ptr<ms::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD1(
         create_buffer_bundle,
-        std::shared_ptr<mc::BufferBundle>(mc::BufferProperties const&));
+        std::shared_ptr<ms::BufferBundle>(mc::BufferProperties const&));
 };
 
 struct MockFilterForRenderables : public mc::FilterForRenderables

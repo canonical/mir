@@ -27,19 +27,19 @@ namespace mir
 {
 namespace compositor
 {
-
-class BufferBundle;
 class BufferProperties;
 }
 
 namespace surfaces
 {
+class BufferBundle;
+
 class BufferBundleFactory
 {
 public:
     virtual ~BufferBundleFactory() {}
 
-    virtual std::shared_ptr<compositor::BufferBundle> create_buffer_bundle(
+    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
         compositor::BufferProperties const& buffer_properties) = 0;
 
 protected:

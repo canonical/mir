@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/sessions/session_manager.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/session.h"
@@ -106,7 +106,7 @@ TEST(SessionManager, closing_session_removes_surfaces)
         mt::fake_shared(mechanism));
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
-    std::shared_ptr<mc::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
+    std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
     std::shared_ptr<ms::Surface> dummy_surface(
         std::make_shared<ms::Surface>(
             msess::a_surface().name,

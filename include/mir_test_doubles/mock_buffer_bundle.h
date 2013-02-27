@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_BUNDLE_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_BUNDLE_H_
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 
 #include <gmock/gmock.h>
 
@@ -29,7 +29,7 @@ namespace test
 {
 namespace doubles
 {
-struct MockBufferBundle : public compositor::BufferBundle
+struct MockBufferBundle : public surfaces::BufferBundle
 {
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD0(lock_back_buffer, std::shared_ptr<surfaces::GraphicRegion>());

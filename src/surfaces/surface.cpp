@@ -20,7 +20,7 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 
 #include <cassert>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,7 +32,7 @@ namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     const std::string& name,
-    std::shared_ptr<mc::BufferBundle> buffer_bundle) :
+    std::shared_ptr<BufferBundle> buffer_bundle) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
     alpha_value(1.0f),

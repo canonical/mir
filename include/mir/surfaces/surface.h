@@ -30,7 +30,6 @@ namespace mir
 {
 namespace compositor
 {
-class BufferBundle;
 class Buffer;
 class GraphicRegion;
 struct BufferIPCPackage;
@@ -39,12 +38,12 @@ class BufferID;
 
 namespace surfaces
 {
+class BufferBundle;
 
 class Surface : public graphics::Renderable
 {
 public:
-    Surface(const std::string& name,
-            std::shared_ptr<compositor::BufferBundle> buffer_bundle);
+    Surface(const std::string& name, std::shared_ptr<BufferBundle> buffer_bundle);
 
     ~Surface();
 
@@ -70,7 +69,7 @@ public:
 
 private:
     std::string surface_name;
-    std::shared_ptr<compositor::BufferBundle> buffer_bundle;
+    std::shared_ptr<BufferBundle> buffer_bundle;
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;
