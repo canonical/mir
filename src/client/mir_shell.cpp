@@ -30,6 +30,15 @@ void mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type)
 
 MirSurfaceType mir_shell_surface_get_type(MirSurface *surf)
 {
-    (void)surf;
-    return MIR_SURFACE_NORMAL;  /* TODO */
+    MirSurfaceType type = MIR_SURFACE_NORMAL;
+
+    if (surf)
+    {
+        // I assume the type can only change from the client side...
+        int t = surf->attribi(SURFACE_TYPE);
+	if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
+	    type = static_cast<MirSurfaceType>(t);
+    }
+
+    return type;
 }

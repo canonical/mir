@@ -54,6 +54,7 @@ MirSurface::MirSurface(
 
     for (int i = 0; i < SurfaceAttrib_ARRAYSIZE; i++)
         attrib_cache[i] = -1;
+    attrib_cache[SURFACE_TYPE] = MIR_SURFACE_NORMAL;
 }
 
 MirSurface::~MirSurface()

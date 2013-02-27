@@ -32,7 +32,8 @@ typedef enum MirSurfaceType
     MIR_SURFACE_DIALOG,
     MIR_SURFACE_OVERLAY,
     MIR_SURFACE_FREESTYLE,
-    MIR_SURFACE_POPOVER
+    MIR_SURFACE_POPOVER,
+    MirSurfaceType_ARRAYSIZE
 } MirSurfaceType;
 
 /* TODO: Surface states here */
