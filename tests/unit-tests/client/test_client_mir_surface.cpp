@@ -376,7 +376,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
 }
 
-TEST_F(MirClientSurfaceTest, serface_types)
+TEST_F(MirClientSurfaceTest, surface_types)
 {
     using namespace testing;
     using namespace mir::protobuf;
