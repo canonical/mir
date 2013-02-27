@@ -21,17 +21,18 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
 
-#include "mir/compositor/buffer.h"
-
 #include <memory>
 
 namespace mir
 {
 namespace compositor
 {
-
-class BufferBundle;
 class BufferProperties;
+}
+
+namespace surfaces
+{
+class BufferBundle;
 
 class BufferBundleFactory
 {
@@ -39,7 +40,7 @@ public:
     virtual ~BufferBundleFactory() {}
 
     virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
-        BufferProperties const& buffer_properties) = 0;
+        compositor::BufferProperties const& buffer_properties) = 0;
 
 protected:
     BufferBundleFactory() = default;

@@ -33,6 +33,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 mc::BufferBundleManager::BufferBundleManager(
     const std::shared_ptr<BufferAllocationStrategy>& strategy)
@@ -42,7 +43,7 @@ mc::BufferBundleManager::BufferBundleManager(
 }
 
 
-std::shared_ptr<mc::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
+std::shared_ptr<ms::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
     BufferProperties actual_buffer_properties;

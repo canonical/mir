@@ -18,7 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
 #include "mir/sessions/surface_creation_parameters.h"
@@ -35,7 +35,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<compositor::BufferBundleFactory> const& bb_factory) : buffer_bundle_factory(bb_factory)
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory) : buffer_bundle_factory(bb_factory)
 {
     assert(buffer_bundle_factory);
 }

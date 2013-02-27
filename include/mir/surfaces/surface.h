@@ -30,7 +30,6 @@ namespace mir
 {
 namespace compositor
 {
-class BufferBundle;
 class Buffer;
 class GraphicRegion;
 struct BufferIPCPackage;
@@ -39,14 +38,14 @@ class BufferID;
 
 namespace surfaces
 {
+class BufferBundle;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
 class Surface : public graphics::Renderable
 {
 public:
-    Surface(const std::string& name,
-            std::shared_ptr<compositor::BufferBundle> buffer_bundle);
+    Surface(const std::string& name, std::shared_ptr<BufferBundle> buffer_bundle);
 
     ~Surface();
 
@@ -58,7 +57,7 @@ public:
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<compositor::GraphicRegion> graphic_region() const;
+    std::shared_ptr<GraphicRegion> graphic_region() const;
     glm::mat4 transformation() const;
     float alpha() const;
     bool hidden() const;
@@ -74,7 +73,7 @@ public:
 
 private:
     std::string surface_name;
-    std::shared_ptr<compositor::BufferBundle> buffer_bundle;
+    std::shared_ptr<BufferBundle> buffer_bundle;
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;

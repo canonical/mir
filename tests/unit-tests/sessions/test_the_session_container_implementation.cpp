@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/sessions/application_session.h"
 #include "mir/sessions/session_container.h"
 #include "mir/sessions/surface_creation_parameters.h"

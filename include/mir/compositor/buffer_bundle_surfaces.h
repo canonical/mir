@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 
 #include <map>
 
@@ -33,7 +33,7 @@ class BufferIDUniqueGenerator;
 class BufferProperties;
 class BufferSwapper;
 
-class BufferBundleSurfaces : public BufferBundle
+class BufferBundleSurfaces : public surfaces::BufferBundle
 {
 public:
     BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper);
@@ -45,7 +45,7 @@ public:
 
     std::shared_ptr<Buffer> secure_client_buffer();
 
-    std::shared_ptr<GraphicRegion> lock_back_buffer();
+    std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer();
 
     geometry::PixelFormat get_bundle_pixel_format();
     geometry::Size bundle_size();

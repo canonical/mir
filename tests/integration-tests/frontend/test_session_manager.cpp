@@ -17,7 +17,7 @@
  */
 
 #include "mir/sessions/session_manager.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
