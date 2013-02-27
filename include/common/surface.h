@@ -1,4 +1,6 @@
 /*
+ * Surface-related declarations common to client and server
+ *
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,11 +18,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_COMMON_SHELL_H__
-#define __MIR_COMMON_SHELL_H__
-
-/* XXX Should this be where we start using the word "Window" instead of
-       "surface"?  */
+#ifndef __MIR_COMMON_SURFACE_H__
+#define __MIR_COMMON_SURFACE_H__
 
 /*
  * Surface types were originally designated in the Unity design documents.

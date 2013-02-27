@@ -1,4 +1,6 @@
 /*
+ * client/shell.h: Client functions for interacting with the shell/WM.
+ *
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,17 +21,12 @@
 #ifndef __MIR_CLIENT_SHELL_H__
 #define __MIR_CLIENT_SHELL_H__
 
-/* XXX Should this be called "client WM" instead? */
-
-#include <mir/common/shell.h>
-#include <mir_client/mir_client_library.h>
+#include <mir/common/surface.h>
+#include <mir_client/mir_client_library.h>  // TODO: Clean this path up
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* XXX Should this be where we start using the word "Window" instead of
-       "surface"?  */
 
 void mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type);
 MirSurfaceType mir_shell_surface_get_type(MirSurface *surf);

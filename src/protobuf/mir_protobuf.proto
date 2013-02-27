@@ -111,33 +111,21 @@ message Void {
   optional string error = 127;
 }
 
-message SurfaceAttrib {
-  enum Attrib {
-    SURFACE_WIDTH = 1;
-    SURFACE_HEIGHT = 2;
-    SURFACE_TYPE = 3;  // Usually opaque to the DS. Used by shell & clients.
-    SURFACE_STATE = 4;
-
-    SURFACE_PIXELFORMAT = 5;  // read-only
-    SURFACE_BUFFERUSAGE = 6;  // read-only
-
-    // String attributes start at 100
-    // SURFACE_NAME = 100;       // read-only?
-  }
-  required Attrib attrib = 1;
-}
-
-message SurfaceValue {
-  optional int32 value = 1;
-  // Later..? optional string str = 2;
-
-  optional string error = 127;
+enum SurfaceAttrib {
+  SURFACE_WIDTH = 1;
+  SURFACE_HEIGHT = 2;
+  SURFACE_TYPE = 3;  // Usually opaque to the DS. Used by shell & clients.
+  SURFACE_STATE = 4;
+  SURFACE_PIXELFORMAT = 5;  // read-only
+  SURFACE_BUFFERUSAGE = 6;  // read-only
+  SURFACE_NAME = 7;         // read-only?
 }
 
 message SurfaceSetting {
   required SurfaceId     surface = 1;
   required SurfaceAttrib name = 2;
-  required SurfaceValue  value = 3;
+  optional int32         ivalue = 3;
+  optional string        svalue = 4;
 }
 
 service DisplayServer {
@@ -154,6 +142,6 @@ service DisplayServer {
 
   rpc test_file_descriptors(Void) returns (Buffer);
 
-  rpc modify_surface(SurfaceSetting) returns (SurfaceValue);
+  rpc modify_surface(SurfaceSetting) returns (Void);
 }
 

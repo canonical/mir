@@ -22,6 +22,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
+#include "mir/common/surface.h"
 #include "mir_client/mir_client_library.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
