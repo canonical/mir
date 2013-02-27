@@ -37,7 +37,7 @@ class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
 {
 public:
     explicit MesaNativeDisplayContainer();
-    virtual ~MesaNativeDisplayContainer() {}
+    virtual ~MesaNativeDisplayContainer();
     
     MirEGLNativeDisplayType create(MirConnection* connection);
     void release(MirEGLNativeDisplayType display);

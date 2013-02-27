@@ -18,14 +18,12 @@
 
 #include "src/client/client_platform.h"
 #include "src/client/native_client_platform_factory.h"
-#include "src/client/gbm/gbm_client_egl_native_display.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
-namespace mclg = mcl::gbm;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 

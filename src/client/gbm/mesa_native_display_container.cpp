@@ -83,6 +83,14 @@ mclg::MesaNativeDisplayContainer::MesaNativeDisplayContainer()
 {
 }
 
+mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
+{
+    for (auto display : valid_displays)
+    {
+        delete reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+    }
+}
+
 bool
 mclg::MesaNativeDisplayContainer::validate (MirEGLNativeDisplayType display) const
 {
