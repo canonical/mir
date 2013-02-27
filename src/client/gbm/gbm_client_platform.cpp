@@ -19,7 +19,7 @@
 #include "mir_toolkit/api.h"
 #include "gbm_client_platform.h"
 #include "gbm_client_buffer_depository.h"
-#include "gbm_client_egl_native_display.h"
+#include "mesa_native_display_container.h"
 #include "drm_fd_handler.h"
 #include "../mir_connection.h"
 #include "../native_client_platform_factory.h"
@@ -63,12 +63,18 @@ private:
 
 struct NativeDisplayDeleter
 {
+    NativeDisplayDeleter(mcl::EGLNativeDisplayContainer& container)
+    : container(container)
+    {
+    }
     void operator() (EGLNativeDisplayType* p)
     {
-        auto display = reinterpret_cast<MirMesaEGLNativeDisplay*>(*p);
-        mclg::EGL::release_native_display(display);
+        auto display = *(reinterpret_cast<MirEGLNativeDisplayType*>(p));
+        container.release(display);
         delete p;
     }
+
+    mcl::EGLNativeDisplayContainer& container;
 };
 
 }
@@ -111,9 +117,10 @@ std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    MirMesaEGLNativeDisplay **mir_native_display = new MirMesaEGLNativeDisplay*;
-    *mir_native_display = mclg::EGL::create_native_display(context->mir_connection());
+    EGLNativeDisplayContainer& container = mcl::EGLNativeDisplayContainer::instance();
+    MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
+    *mir_native_display = container.create(context->mir_connection());
     auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
 
-    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter());
+    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(container));
 }
