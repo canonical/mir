@@ -349,7 +349,7 @@ mir::DefaultServerConfiguration::the_application_mediator_report()
     return application_listener(
         [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
         {
-            if (the_options()->get("log_app_mediator", true))
+            if (the_options()->get("log_app_mediator", false))
             {
                 return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
             }
