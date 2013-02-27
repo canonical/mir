@@ -74,8 +74,8 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
-    MirWaitHandle* modify(MirSurfaceAttrib attrib, int value);
-    int  attribi(MirSurfaceAttrib attrib) const;
+    MirWaitHandle* modify(MirSurfaceAttrib a, int value);
+    int  attrib(MirSurfaceAttrib a) const;
 
 private:
     void modified();

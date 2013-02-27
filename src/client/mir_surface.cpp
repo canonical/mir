@@ -232,11 +232,11 @@ EGLNativeWindowType MirSurface::generate_native_window()
     return *accelerated_window;
 }
 
-MirWaitHandle* MirSurface::modify(MirSurfaceAttrib attrib, int value)
+MirWaitHandle* MirSurface::modify(MirSurfaceAttrib at, int value)
 {
     SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
-    setting.set_attrib(attrib);
+    setting.set_attrib(at);
     setting.set_ivalue(value);
 
     server.modify_surface(0, &setting, &mod_result, 
@@ -269,7 +269,7 @@ void MirSurface::modified()
     }
 }
 
-int MirSurface::attribi(MirSurfaceAttrib attrib) const
+int MirSurface::attrib(MirSurfaceAttrib at) const
 {
-    return attrib_cache[attrib];
+    return attrib_cache[at];
 }

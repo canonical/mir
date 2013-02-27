@@ -390,18 +390,18 @@ TEST_F(MirClientSurfaceTest, surface_types)
 						 (void*) NULL);
     surface->get_create_wait_handle()->wait_for_result();
 
-    EXPECT_EQ(surface->attribi(MIR_SURFACE_TYPE), MIR_SURFACE_NORMAL);
+    EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_NORMAL);
 
     surface->modify(MIR_SURFACE_TYPE, 123)->wait_for_result();
-    EXPECT_EQ(surface->attribi(MIR_SURFACE_TYPE), MIR_SURFACE_NORMAL);
+    EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_NORMAL);
 
     surface->modify(MIR_SURFACE_TYPE, MIR_SURFACE_UTILITY)->wait_for_result();
-    EXPECT_EQ(surface->attribi(MIR_SURFACE_TYPE), MIR_SURFACE_UTILITY);
+    EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_UTILITY);
 
     surface->modify(MIR_SURFACE_TYPE, MIR_SURFACE_POPOVER)->wait_for_result();
-    EXPECT_EQ(surface->attribi(MIR_SURFACE_TYPE), MIR_SURFACE_POPOVER);
+    EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_POPOVER);
 
     surface->modify(MIR_SURFACE_TYPE, 9999)->wait_for_result();
-    EXPECT_EQ(surface->attribi(MIR_SURFACE_TYPE), MIR_SURFACE_POPOVER);
+    EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_POPOVER);
 }
 
