@@ -75,6 +75,7 @@ public:
     EGLNativeWindowType generate_native_window();
 
     void modify(mir::protobuf::SurfaceAttrib attrib, int value);
+    int  attribi(mir::protobuf::SurfaceAttrib attrib) const;
 
 private:
     void modified();
@@ -104,6 +105,9 @@ private:
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
 
     mir::protobuf::SurfaceSetting mod_result;
+
+    // Cache of latest SurfaceSettings returned from the server
+    int attrib_cache[mir::protobuf::SurfaceAttrib_ARRAYSIZE];
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

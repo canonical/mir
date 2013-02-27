@@ -26,12 +26,13 @@
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
-namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
+
+using namespace mir::protobuf;
 
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
-    mp::DisplayServer::Stub & server,
+    DisplayServer::Stub & server,
     const std::shared_ptr<mir::client::Logger>& logger,
     const std::shared_ptr<mcl::ClientBufferDepository>& depository,
     MirSurfaceParameters const & params,
@@ -50,6 +51,9 @@ MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+
+    for (int i = 0; i < SurfaceAttrib_ARRAYSIZE; i++)
+        attrib_cache[i] = -1;
 }
 
 MirSurface::~MirSurface()
@@ -227,9 +231,9 @@ EGLNativeWindowType MirSurface::generate_native_window()
     return *accelerated_window;
 }
 
-void MirSurface::modify(mir::protobuf::SurfaceAttrib attrib, int value)
+void MirSurface::modify(SurfaceAttrib attrib, int value)
 {
-    mir::protobuf::SurfaceSetting setting;
+    SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
     setting.set_attrib(attrib);
     setting.set_ivalue(value);
@@ -240,8 +244,30 @@ void MirSurface::modify(mir::protobuf::SurfaceAttrib attrib, int value)
 
 void MirSurface::modified()
 {
-    // TODO
     if (mod_result.surfaceid().value() == surface.id().value())
     {
+        switch (mod_result.attrib())
+        {
+        case SURFACE_TYPE:
+            if (mod_result.has_ivalue())
+            {
+                int t = mod_result.ivalue();
+                if (SurfaceAttrib_IsValid(t))
+                    attrib_cache[SURFACE_TYPE] = t;
+                else
+                    assert(false);
+            }
+            else
+                assert(false);
+            break;
+        default:
+            assert(false);
+            break;
+        }
     }
+}
+
+int MirSurface::attribi(SurfaceAttrib attrib) const
+{
+    return attrib_cache[attrib];
 }
