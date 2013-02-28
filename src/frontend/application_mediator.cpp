@@ -222,8 +222,8 @@ void mir::frontend::ApplicationMediator::disconnect(
 
 void mir::frontend::ApplicationMediator::modify_surface(
     google::protobuf::RpcController*, // controller,
-    const mir::protobuf::SurfaceSetting*, //request,
-    mir::protobuf::SurfaceSetting*, // response,
+    const mir::protobuf::SurfaceSetting* request,
+    mir::protobuf::SurfaceSetting* response,
     google::protobuf::Closure* done)
 {
     if (application_session.get() == nullptr)
@@ -231,7 +231,9 @@ void mir::frontend::ApplicationMediator::modify_surface(
 
     listener->application_modify_surface_called(application_session->name());
 
-    //auto const id = sessions::SurfaceId(request->surfaceid());
+    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
+    response->set_attrib(request->attrib());
+    response->set_ivalue(5); // TODO
 
     // TODO application_session->modify_surface(id);
 
