@@ -45,8 +45,8 @@ public:
     bool validate(mir_toolkit::MirEGLNativeDisplayType display) const; 
 
 protected:
-    MesaNativeDisplayContainer(const MesaNativeDisplayContainer&) = delete;
-    MesaNativeDisplayContainer& operator=(const MesaNativeDisplayContainer&) = delete;
+    MesaNativeDisplayContainer(MesaNativeDisplayContainer const&) = delete;
+    MesaNativeDisplayContainer& operator=(MesaNativeDisplayContainer const&) = delete;
 
 private:
     std::mutex mutable guard;

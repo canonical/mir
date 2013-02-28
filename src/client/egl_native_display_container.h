@@ -43,8 +43,8 @@ public:
 
 protected:
     EGLNativeDisplayContainer() = default;
-    EGLNativeDisplayContainer(const EGLNativeDisplayContainer&) = delete;
-    EGLNativeDisplayContainer& operator=(const EGLNativeDisplayContainer&) = delete;
+    EGLNativeDisplayContainer(EGLNativeDisplayContainer const&) = delete;
+    EGLNativeDisplayContainer& operator=(EGLNativeDisplayContainer const&) = delete;
 };
 
 }
