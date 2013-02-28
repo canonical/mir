@@ -21,8 +21,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/api_drm.h"
-#include "mir_toolkit/api_lightdm.h"
+#include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/mir_client_library_lightdm.h"
 
 int main(int argc, char *argv[])
 {

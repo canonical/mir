@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/sessions/session_store.h"
 #include "mir/sessions/session.h"
 #include "mir/sessions/surface.h"
@@ -27,7 +27,7 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
@@ -40,13 +40,13 @@ mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::Display> const& graphics_display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<ApplicationListener> const& listener,
+    std::shared_ptr<ApplicationMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     session_store(session_store),
     graphics_platform(graphics_platform),
     graphics_display(graphics_display),
     buffer_allocator(buffer_allocator),
-    listener(listener),
+    report(report),
     resource_cache(resource_cache)
 {
 }
@@ -57,7 +57,7 @@ void mir::frontend::ApplicationMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
-    listener->application_connect_called(request->application_name());
+    report->application_connect_called(request->application_name());
 
     application_session = session_store->open_session(request->application_name());
 
@@ -96,7 +96,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_create_surface_called(application_session->name());
+    report->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
         sessions::SurfaceCreationParameters()
@@ -149,7 +149,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_next_buffer_called(application_session->name());
+    report->application_next_buffer_called(application_session->name());
 
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
@@ -194,7 +194,7 @@ void mir::frontend::ApplicationMediator::release_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_release_surface_called(application_session->name());
+    report->application_release_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->value());
 
@@ -212,7 +212,7 @@ void mir::frontend::ApplicationMediator::disconnect(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_disconnect_called(application_session->name());
+    report->application_disconnect_called(application_session->name());
 
     session_store->close_session(application_session);
     application_session.reset();

@@ -39,7 +39,7 @@ class MemoryRegion;
 }
 }
 
-class MirSurface : public mir::client::ClientSurface
+class mir_toolkit::MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -56,8 +56,8 @@ public:
     ~MirSurface();
 
     MirWaitHandle* release_surface(
-            mir_surface_lifecycle_callback callback,
-            void *context);
+        mir_surface_lifecycle_callback callback,
+        void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();

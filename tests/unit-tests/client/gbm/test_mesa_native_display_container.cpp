@@ -78,7 +78,7 @@ TEST_F(MesaNativeDisplayContainerSetup, display_get_platform)
     using namespace ::testing;
 
     auto display = container->create(connection);
-    auto native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+    auto native_display = reinterpret_cast<mir_toolkit::MirMesaEGLNativeDisplay*>(display);
 
     MirPlatformPackage platform_package;
     EXPECT_CALL(mock_client_library, connection_get_platform(connection, &platform_package)).Times(1);
@@ -90,7 +90,7 @@ TEST_F(MesaNativeDisplayContainerSetup, surface_get_current_buffer)
     using namespace ::testing;
 
     auto display = container->create(connection);
-    auto native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+    auto native_display = reinterpret_cast<mir_toolkit::MirMesaEGLNativeDisplay*>(display);
 
     MirBufferPackage buffer_package;
     EXPECT_CALL(mock_client_library, surface_get_current_buffer(surface, &buffer_package)).Times(1);
@@ -102,7 +102,7 @@ TEST_F(MesaNativeDisplayContainerSetup, surface_get_parameters)
     using namespace ::testing;
 
     auto display = container->create(connection);
-    auto native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+    auto native_display = reinterpret_cast<mir_toolkit::MirMesaEGLNativeDisplay*>(display);
 
     MirSurfaceParameters surface_parameters;
     EXPECT_CALL(mock_client_library, surface_get_parameters(surface, &surface_parameters)).Times(1);
@@ -114,7 +114,7 @@ TEST_F(MesaNativeDisplayContainerSetup, surface_advance_buffer)
     using namespace ::testing;
 
     auto display = container->create(connection);
-    auto native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+    auto native_display = reinterpret_cast<mir_toolkit::MirMesaEGLNativeDisplay*>(display);
 
     EXPECT_CALL(mock_client_library, surface_next_buffer(surface, _, _)).Times(1);
     native_display->surface_advance_buffer(native_display, (MirEGLNativeWindowType)surface);

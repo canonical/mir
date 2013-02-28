@@ -26,7 +26,10 @@
 
 #include <memory>
 
+namespace mir_toolkit
+{
 class MirBufferPackage;
+}
 
 namespace mir
 {
@@ -52,7 +55,7 @@ public:
     virtual geometry::PixelFormat pixel_format() const = 0;
 
     virtual MirNativeBuffer get_native_handle() = 0;
-    virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
+    virtual std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const = 0;
 };
 
 }

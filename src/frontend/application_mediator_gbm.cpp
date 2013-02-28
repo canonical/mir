@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/sessions/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
@@ -39,7 +39,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_drm_auth_magic_called(application_session->name());
+    report->application_drm_auth_magic_called(application_session->name());
 
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);

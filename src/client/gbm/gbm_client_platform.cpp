@@ -82,7 +82,7 @@ struct NativeDisplayDeleter
 std::shared_ptr<mcl::ClientPlatform>
 mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
 {
-    MirPlatformPackage platform_package;
+    mir_toolkit::MirPlatformPackage platform_package;
 
     memset(&platform_package, 0, sizeof(platform_package));
     context->populate(platform_package);

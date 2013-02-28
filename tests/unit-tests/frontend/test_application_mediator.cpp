@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/application_session.h"
@@ -161,10 +161,10 @@ struct ApplicationMediatorTest : public ::testing::Test
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
-          listener{std::make_shared<mf::NullApplicationListener>()},
+          report{std::make_shared<mf::NullApplicationMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
-                   buffer_allocator, listener, resource_cache},
+                   buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -173,7 +173,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationListener> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::ApplicationMediator mediator;
 

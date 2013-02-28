@@ -30,7 +30,6 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferBundleFactory;
 class BufferBundleManager;
 class RenderView;
 class Drawer;
@@ -40,7 +39,7 @@ namespace frontend
 {
 class Communicator;
 class ProtobufIpcFactory;
-class ApplicationListener;
+class ApplicationMediatorReport;
 }
 
 namespace sessions
@@ -50,6 +49,7 @@ class SurfaceFactory;
 }
 namespace surfaces
 {
+class BufferBundleFactory;
 class SurfaceController;
 class SurfaceStackModel;
 class SurfaceStack;
@@ -68,6 +68,11 @@ class InputManager;
 class EventFilter;
 }
 
+namespace logging
+{
+class Logger;
+}
+
 class DefaultServerConfiguration : public ServerConfiguration
 {
 public:
@@ -81,7 +86,7 @@ public:
     virtual std::shared_ptr<compositor::Drawer> the_drawer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
@@ -90,6 +95,8 @@ public:
     virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
 
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
+
+    virtual std::shared_ptr<logging::Logger> the_logger();
 
     virtual std::shared_ptr<input::InputManager> the_input_manager(
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
@@ -131,13 +138,14 @@ protected:
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationListener> application_listener;
+    CachedPtr<frontend::ApplicationMediatorReport> application_mediator_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<logging::Logger> logger;
 
 private:
     std::shared_ptr<options::Option> options;
@@ -148,7 +156,7 @@ private:
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
-    virtual std::shared_ptr<frontend::ApplicationListener> the_application_listener();
+    virtual std::shared_ptr<frontend::ApplicationMediatorReport> the_application_mediator_report();
 
     virtual std::string the_socket_file() const;
 };

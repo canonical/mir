@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_C_TYPES_H_
 
 #ifdef __cplusplus
+namespace mir_toolkit {
 extern "C" {
 #endif
 
@@ -141,6 +142,7 @@ typedef struct MirDisplayInfo
 
 #ifdef __cplusplus
 }
+}
 #endif
 
-#endif // MIR_TOOLKIT_C_TYPES_H_
+#endif /* MIR_TOOLKIT_C_TYPES_H_ */

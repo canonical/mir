@@ -58,27 +58,27 @@ MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface()
     return reinterpret_cast<MirSurface*>(&surface);
 }
 
-void mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* package)
+void mir_toolkit::mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* package)
 {
     global_mock->connection_get_platform(connection, package);
 }
 
-void mir_surface_get_current_buffer(MirSurface* surface, MirBufferPackage* package)
+void mir_toolkit::mir_surface_get_current_buffer(MirSurface* surface, MirBufferPackage* package)
 {
     global_mock->surface_get_current_buffer(surface, package);
 }
 
-void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
+void mir_toolkit::mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters)
 {
     global_mock->surface_get_parameters(surface, parameters);
 }
 
-MirWaitHandle* mir_surface_next_buffer(MirSurface* surface, mir_surface_lifecycle_callback callback, void* context)
+MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface* surface, mir_surface_lifecycle_callback callback, void* context)
 {
     return global_mock->surface_next_buffer(surface, callback, context);
 }
 
-void mir_wait_for(MirWaitHandle* wait_handle)
+void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)
 {
     global_mock->wait_for(wait_handle);
 }

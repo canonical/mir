@@ -193,7 +193,6 @@ void demo_client(const char* server, int buffer_swap_count)
     ///\internal [connection_release_tag]
 }
 ///\page demo_client.c
-/// \example demo_client.c A simple mir client
 
 // The main() function deals with parsing arguments and defaults
 int main(int argc, char* argv[])

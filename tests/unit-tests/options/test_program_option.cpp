@@ -97,21 +97,23 @@ TEST_F(ProgramOption, parse_command_line_help)
 
 TEST(ProgramOptionEnv, parse_environment)
 {
-    char const* key = "some_key";
+    // Env variables should be uppercase and "_" delimited
+    char const* name = "some-key";
+    char const* key = "SOME_KEY";
     char const* value = "test_value";
     auto const env = std::string(__PRETTY_FUNCTION__) + key;
     setenv(env.c_str(), value, true);
 
     bpo::options_description desc;
     desc.add_options()
-        (key, bpo::value<std::string>());
+        (name, bpo::value<std::string>());
 
     mir::options::ProgramOption po;
     po.parse_environment(desc, __PRETTY_FUNCTION__);
 
-    EXPECT_EQ(value, po.get(key, "default"));
+    EXPECT_EQ(value, po.get(name, "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));
-    EXPECT_TRUE(po.is_set(key));
+    EXPECT_TRUE(po.is_set(name));
     EXPECT_FALSE(po.is_set("garbage"));
 }
 

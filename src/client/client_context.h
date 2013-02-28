@@ -19,8 +19,11 @@
 #ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
+namespace mir_toolkit
+{
 class MirPlatformPackage;
 class MirConnection;
+}
 
 namespace mir
 {
@@ -32,8 +35,8 @@ class ClientContext
 public:
     virtual ~ClientContext() {}
 
-    virtual MirConnection* mir_connection() = 0;
-    virtual void populate(MirPlatformPackage& platform_package) = 0;
+    virtual mir_toolkit::MirConnection* mir_connection() = 0;
+    virtual void populate(mir_toolkit::MirPlatformPackage& platform_package) = 0;
 
 protected:
     ClientContext() = default;
