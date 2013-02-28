@@ -59,9 +59,12 @@ struct MockApplicationMediatorReport : mf::NullApplicationMediatorReport
 };
 
 const int rpc_timeout_ms{100000};
+
+//using ApplicationMediatorReport = BespokeDisplayServerTestFixture;
+typedef BespokeDisplayServerTestFixture ApplicationMediatorReport;
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified)
+TEST_F(ApplicationMediatorReport, application_connect_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -102,7 +105,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_connect_is_notified
     launch_client_process(client_process);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_notified)
+TEST_F(ApplicationMediatorReport, application_create_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -153,7 +156,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_create_surface_is_n
     launch_client_process(client_process);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_notified)
+TEST_F(ApplicationMediatorReport, application_next_buffer_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -210,7 +213,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_next_buffer_is_noti
     launch_client_process(client_process);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_notified)
+TEST_F(ApplicationMediatorReport, application_release_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -276,7 +279,7 @@ TEST_F(BespokeDisplayServerTestFixture, application_listener_release_surface_is_
     launch_client_process(client_process);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, application_listener_disconnect_is_notified)
+TEST_F(ApplicationMediatorReport, application_disconnect_called)
 {
     struct Server : TestingServerConfiguration
     {

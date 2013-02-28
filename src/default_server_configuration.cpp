@@ -346,7 +346,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
 std::shared_ptr<mf::ApplicationMediatorReport>
 mir::DefaultServerConfiguration::the_application_mediator_report()
 {
-    return application_listener(
+    return application_mediator_report(
         [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
         {
             if (the_options()->get("log_app_mediator", false))

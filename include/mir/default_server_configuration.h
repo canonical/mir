@@ -138,7 +138,7 @@ protected:
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationMediatorReport> application_listener;
+    CachedPtr<frontend::ApplicationMediatorReport> application_mediator_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
