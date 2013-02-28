@@ -44,8 +44,26 @@ void mo::ProgramOption::parse_environment(
     po::options_description const& desc,
     char const* prefix)
 {
-    po::store(po::parse_environment(desc, prefix), options);
+    auto parsed_options = po::parse_environment(
+        desc,
+        [=](std::string const& from) -> std::string
+        {
+             auto const sizeof_prefix = strlen(prefix);
 
+             if (from.length() < sizeof_prefix || 0 != from.find(prefix)) return std::string();
+
+             std::string result(from, sizeof_prefix);
+
+             for(auto& ch : result)
+             {
+                 if (ch == '_') ch = '-';
+                 else ch = tolower(ch);
+             }
+
+             return result;
+        });
+
+    po::store(parsed_options, options);
 }
 
 void mo::ProgramOption::parse_file(

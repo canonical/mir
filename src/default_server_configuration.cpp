@@ -106,13 +106,13 @@ boost::program_options::options_description program_options()
 
     po::options_description desc(
         "Command-line options.\n"
-        "(Environment variables capitalise long form with prefix \"MIR_SERVER_\")");
+        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
-        ("file,f", po::value<std::string>(), "<socket filename>")
-        ("ipc_thread_pool,i", po::value<int>(), "threads in frontend thread pool")
-        ("log_app_mediator", po::value<bool>(), "log the ApplicationMediator report")
-        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+        ("file,f", po::value<std::string>(), "socket filename")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("log-app-mediator", po::value<bool>(), "log the ApplicationMediator report")
+        ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
+        ("tests-use-real-input", po::value<bool>(), "use real input in tests");
 
     return desc;
 }
