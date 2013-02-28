@@ -157,19 +157,68 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
             EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
 
+
+            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+
+            ASSERT_TRUE(surface == NULL);
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, surface_types)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
             EXPECT_EQ(mir_shell_surface_get_type(surface), MIR_SURFACE_NORMAL);
+
             mir_wait_for(mir_shell_surface_set_type(surface,
                                                     MIR_SURFACE_FREESTYLE));
             EXPECT_EQ(mir_shell_surface_get_type(surface),
                       MIR_SURFACE_FREESTYLE);
+
+            mir_wait_for(mir_shell_surface_set_type(surface,
+                                       static_cast<MirSurfaceType>(999)));
+            EXPECT_EQ(mir_shell_surface_get_type(surface),
+                      MIR_SURFACE_FREESTYLE);
+
             mir_wait_for(mir_shell_surface_set_type(surface,
                                                     MIR_SURFACE_DIALOG));
             EXPECT_EQ(mir_shell_surface_get_type(surface),
                       MIR_SURFACE_DIALOG);
 
-            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+            mir_wait_for(mir_shell_surface_set_type(surface,
+                                       static_cast<MirSurfaceType>(888)));
+            EXPECT_EQ(mir_shell_surface_get_type(surface),
+                      MIR_SURFACE_DIALOG);
 
-            ASSERT_TRUE(surface == NULL);
+            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             mir_connection_release(connection);
         }
