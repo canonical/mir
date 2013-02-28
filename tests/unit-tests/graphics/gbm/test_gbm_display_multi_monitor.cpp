@@ -22,7 +22,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mir_test_doubles/null_display_listener.h"
+#include "mir/graphics/null_display_listener.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -33,7 +33,6 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -42,7 +41,7 @@ class GBMDisplayMultiMonitorTest : public ::testing::Test
 {
 public:
     GBMDisplayMultiMonitorTest()
-        : null_listener{std::make_shared<mtd::NullDisplayListener>()}
+        : null_listener{std::make_shared<mg::NullDisplayReport>()}
     {
         using namespace testing;
 

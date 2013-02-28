@@ -20,7 +20,7 @@
 
 #include "mock_drm.h"
 #include "include/mir_test_doubles/mock_display_listener.h"
-#include "include/mir_test_doubles/null_display_listener.h"
+#include "include/mir/graphics/null_display_listener.h"
 #include "include/mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>

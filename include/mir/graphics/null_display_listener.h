@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_
+#ifndef MIR_TEST_GRAPHICS_DISPLAY_REPORT_H_
+#define MIR_TEST_GRAPHICS_DISPLAY_REPORT_H_
 
 
 #include "mir/graphics/display_report.h"
@@ -26,11 +26,9 @@
 
 namespace mir
 {
-namespace test
+namespace graphics
 {
-namespace doubles
-{
-class NullDisplayListener : public graphics::DisplayReport
+class NullDisplayReport : public graphics::DisplayReport
 {
   public:
 
@@ -42,6 +40,5 @@ class NullDisplayListener : public graphics::DisplayReport
 };
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_ */
+#endif /* MIR_TEST_GRAPHICS_DISPLAY_REPORT_H_ */
