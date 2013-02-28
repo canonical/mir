@@ -46,6 +46,8 @@ public:
     void hide();
     void show();
 
+    int modify_surface(SurfaceId id, int attrib, int value);
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;

@@ -50,6 +50,8 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
+    virtual int modify_surface(SurfaceId id, int attrib, int value) = 0;
+
 protected:
     Session() = default;
     Session(Session const&) = delete;

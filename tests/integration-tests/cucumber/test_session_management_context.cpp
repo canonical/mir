@@ -73,6 +73,8 @@ struct MockSession : public msess::Session
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+
+    MOCK_METHOD3(modify_surface, int(msess::SurfaceId, int, int));
 };
 
 struct MockSurface : public msess::Surface

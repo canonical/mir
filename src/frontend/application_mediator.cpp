@@ -231,11 +231,14 @@ void mir::frontend::ApplicationMediator::modify_surface(
 
     listener->application_modify_surface_called(application_session->name());
 
-    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
-    response->set_attrib(request->attrib());
-    response->set_ivalue(5); // TODO
+    auto const id = sessions::SurfaceId(request->surfaceid().value());
+    int attrib = request->attrib();
+    int value = request->ivalue();
+    int newvalue = application_session->modify_surface(id, attrib, value);
 
-    // TODO application_session->modify_surface(id);
+    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
+    response->set_attrib(attrib);
+    response->set_ivalue(newvalue);
 
     done->Run();
 }
