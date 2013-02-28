@@ -36,7 +36,8 @@ ms::Surface::Surface(
     surface_name(name),
     buffer_bundle(buffer_bundle),
     alpha_value(1.0f),
-    is_hidden(false)
+    is_hidden(false),
+    type(MIR_SURFACE_NORMAL)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -131,7 +132,19 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 
 int ms::Surface::configure(int attrib, int value)
 {
-    (void)attrib;
-    (void)value;
-    return 69; // TODO
+    int result = 0;
+
+    switch (attrib)
+    {
+    case MIR_SURFACE_TYPE:
+        if (value < MirSurfaceType_ARRAYSIZE)
+            type = static_cast<MirSurfaceType>(value);
+        result = type;
+        break;
+    default:
+        assert(false);
+        break;
+    }
+
+    return result;
 }

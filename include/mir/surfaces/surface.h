@@ -22,6 +22,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/common/surface.h"
 
 #include <memory>
 #include <string>
@@ -83,6 +84,8 @@ private:
     float alpha_value;
 
     bool is_hidden;
+
+    MirSurfaceType type; // XXX Isn't 'type' a shell-only concept?
 };
 
 }
