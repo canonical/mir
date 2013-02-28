@@ -1,6 +1,25 @@
 Mir hacking guide
 =================
 
+Getting mir
+-----------
+
+If you're reading this file then you've probably solved this one. ;)
+
+However, for completeness mir is a project on LaunchPad (https://launchpad.net/mir)
+to grab a copy use the command:
+
+    $ bzr branch lp:mir
+
+
+Getting dependencies
+--------------------
+To succesfully build Mir there are a few packages required:
+
+    $ apt-get install devscripts equivs cmake
+    $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
+
+
 Building mir
 -----------
 
@@ -130,14 +149,4 @@ Documentation
 There are design notes and an architecture diagram (.dia) in the design
 subdirectory.
 
-
-Getting mir
------------
-
-If you're reading this file then you've probably solved this one. ;)
-
-However, for completeness mir is a project on LaunchPad (https://launchpad.net/mir)
-to grab a copy use the command:
-
-    $ bzr branch lp:mir
 

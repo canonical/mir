@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace surfaces
 {
 class GraphicRegion;
 }
@@ -41,7 +41,7 @@ public:
 
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
-    virtual std::shared_ptr<compositor::GraphicRegion> graphic_region() const = 0;
+    virtual std::shared_ptr<surfaces::GraphicRegion> graphic_region() const = 0;
     virtual glm::mat4 transformation() const = 0;
     virtual float alpha() const = 0;
     virtual bool hidden() const = 0;

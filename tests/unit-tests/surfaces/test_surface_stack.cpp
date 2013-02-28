@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/surface_stack.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
@@ -58,7 +58,7 @@ public:
     virtual void shutdown() {}
 };
 
-struct MockBufferBundleFactory : public mc::BufferBundleFactory
+struct MockBufferBundleFactory : public ms::BufferBundleFactory
 {
     MockBufferBundleFactory()
     {
@@ -69,14 +69,14 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::shared_ptr<mc::BufferBundle>(
+                        std::shared_ptr<ms::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD1(
         create_buffer_bundle,
-        std::shared_ptr<mc::BufferBundle>(mc::BufferProperties const&));
+        std::shared_ptr<ms::BufferBundle>(mc::BufferProperties const&));
 };
 
 struct MockFilterForRenderables : public mc::FilterForRenderables

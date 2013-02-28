@@ -29,9 +29,7 @@ namespace mir
 {
 namespace compositor
 {
-
 class GraphicBufferAllocator;
-class BufferBundle;
 class BufferSwapper;
 class BufferProperties;
 

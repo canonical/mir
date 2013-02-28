@@ -29,6 +29,7 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
 
 class BufferBundleTest : public ::testing::Test
 {
@@ -77,7 +78,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<mc::GraphicRegion> region = buffer_bundle.lock_back_buffer();
+    std::shared_ptr<ms::GraphicRegion> region = buffer_bundle.lock_back_buffer();
     region->bind_to_texture();
 }
 
