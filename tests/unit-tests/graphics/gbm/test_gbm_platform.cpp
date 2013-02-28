@@ -20,6 +20,10 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 
+#include "mir_test_doubles/null_display_listener.h"
+
+#include <gtest/gtest.h>
+
 #include "mock_drm.h"
 #include "mock_gbm.h"
 
@@ -28,6 +32,7 @@
 #include <stdexcept>
 
 namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -65,7 +70,7 @@ TEST_F(GBMGraphicsPlatform, get_ipc_package)
     EXPECT_CALL(mock_drm, drmClose(auth_fd));
 
     EXPECT_NO_THROW (
-        auto platform = mg::create_platform();
+        auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
         auto pkg = platform->get_ipc_package();
 
         ASSERT_TRUE(pkg.get());
@@ -83,7 +88,7 @@ TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
 
     try
     {
-        auto platform = mg::create_platform();
+        auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
     } catch(...)
     {
         return;
@@ -101,7 +106,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
 
-    auto platform = mg::create_platform();
+    auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
     authenticator->drm_auth_magic(magic);
 }
@@ -115,7 +120,7 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(-1));
 
-    auto platform = mg::create_platform();
+    auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
 
     EXPECT_THROW({

@@ -56,7 +56,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform()
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& /*TODO*/)
 {
     return std::make_shared<mga::AndroidPlatform>();
 }

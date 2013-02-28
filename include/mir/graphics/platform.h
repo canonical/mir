@@ -56,7 +56,7 @@ public:
 };
 
 // Create and return a new graphics platform.
-std::shared_ptr<Platform> create_platform();
+std::shared_ptr<Platform> create_platform(std::shared_ptr<DisplayReport> const& report);
 
 }
 }

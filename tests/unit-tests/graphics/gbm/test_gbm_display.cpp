@@ -486,7 +486,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
         *logger,
         log(Eq(ml::Logger::informational),
             StrEq("Successfully setup native resources."),
-            StrEq("GBMDisplay"))).Times(Exactly(1));
+            StrEq("graphics"))).Times(Exactly(1));
 
     reporter->report_successful_setup_of_native_resources();
 }
@@ -505,7 +505,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on
         *logger,
         log(Eq(ml::Logger::informational),
             StrEq("Successfully made egl context current on construction."),
-            StrEq("GBMDisplay"))).Times(Exactly(1));
+            StrEq("graphics"))).Times(Exactly(1));
 
     reporter->report_successful_egl_make_current_on_construction();
 }
@@ -524,7 +524,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
         *logger,
         log(Eq(ml::Logger::informational),
             StrEq("Successfully performed egl buffer swap on construction."),
-            StrEq("GBMDisplay"))).Times(Exactly(1));
+            StrEq("graphics"))).Times(Exactly(1));
 
     reporter->report_successful_egl_buffer_swap_on_construction();
 }
@@ -543,7 +543,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
         *logger,
         log(Eq(ml::Logger::informational),
             StrEq("Successfully performed drm mode setup on construction."),
-            StrEq("GBMDisplay"))).Times(Exactly(1));
+            StrEq("graphics"))).Times(Exactly(1));
 
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }

@@ -21,7 +21,6 @@
 #include <boost/throw_exception.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
-#include "mir/logging/display_report.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -84,8 +83,7 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
     drm.auth_magic(magic);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform()
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
 {
-    const std::shared_ptr<ml::Logger>  logger(std::make_shared<ml::DumbConsoleLogger>());
-    return std::make_shared<mgg::GBMPlatform>(std::make_shared<ml::DisplayReport>(logger));
+    return std::make_shared<mgg::GBMPlatform>(report);
 }

@@ -29,6 +29,8 @@
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 
+#include "mir_test_doubles/null_display_listener.h"
+
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -50,7 +52,7 @@ protected:
         ASSERT_FALSE(mtd::is_surface_flinger_running());
         ASSERT_NO_THROW(
         {
-            platform = mg::create_platform();
+            platform = mg::create_platform(std::make_shared<mir::test::doubles::NullDisplayListener>());
             display = platform->create_display();
         });
     }

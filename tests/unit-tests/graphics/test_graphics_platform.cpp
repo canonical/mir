@@ -29,12 +29,15 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
 
+#include "mir_test_doubles/null_display_listener.h"
+
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -80,7 +83,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     using namespace testing;
 
     EXPECT_NO_THROW (
-        auto platform = mg::create_platform();
+        auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
         auto allocator = platform->create_buffer_allocator(buffer_initializer);
 
         EXPECT_TRUE(allocator.get());
@@ -90,7 +93,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
 TEST_F(GraphicsPlatform, buffer_creation)
 {
-    auto platform = mg::create_platform();
+    auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
     auto allocator = platform->create_buffer_allocator(buffer_initializer);
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
@@ -112,7 +115,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
 TEST_F(GraphicsPlatform, get_ipc_package)
 {
-    auto platform = mg::create_platform();
+    auto platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
     auto pkg = platform->get_ipc_package();
 
     ASSERT_TRUE(pkg.get() != NULL);

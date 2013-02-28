@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_display_listener.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -108,7 +109,7 @@ protected:
         auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get("tests_use_real_graphics", false))
-            platform = mg::create_platform();
+            platform = mg::create_platform(std::make_shared<mtd::NullDisplayListener>());
         else
             platform = std::make_shared<StubGraphicPlatform>();
 
