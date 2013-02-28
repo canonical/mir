@@ -20,6 +20,7 @@
 #include "mir_client_library.h"
 
 #ifdef __cplusplus
+namespace mir_toolkit {
 extern "C" {
 #endif
 
@@ -32,6 +33,7 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
                                              void *context);
 
 #ifdef __cplusplus
+}
 }
 #endif
 

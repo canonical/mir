@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <assert.h>
 #include <string.h>
@@ -193,7 +193,6 @@ void demo_client(const char* server, int buffer_swap_count)
     ///\internal [connection_release_tag]
 }
 ///\page demo_client.c
-/// \example demo_client.c A simple mir client
 
 // The main() function deals with parsing arguments and defaults
 int main(int argc, char* argv[])

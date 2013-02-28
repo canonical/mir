@@ -315,7 +315,7 @@ mir::DefaultServerConfiguration::the_drawer()
         });
 }
 
-std::shared_ptr<mc::BufferBundleFactory>
+std::shared_ptr<ms::BufferBundleFactory>
 mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 {
     return buffer_bundle_manager(

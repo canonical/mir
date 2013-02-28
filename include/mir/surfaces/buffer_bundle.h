@@ -13,37 +13,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by:
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_REGION_H_
-#define MIR_COMPOSITOR_GRAPHIC_REGION_H_
+#ifndef MIR_SURFACES_BUFFER_BUNDLE_H_
+#define MIR_SURFACES_BUFFER_BUNDLE_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir/compositor/buffer_id.h"
+
 #include <memory>
 
 namespace mir
 {
 namespace compositor
 {
+class Buffer;
+}
 
-class GraphicRegion
+namespace surfaces
+{
+class GraphicRegion;
+
+class BufferBundle
 {
 public:
-    virtual ~GraphicRegion() {}
-    virtual geometry::Size size() const = 0;
-    virtual geometry::Stride stride() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
-    virtual void bind_to_texture() = 0;
-
-protected:
-    GraphicRegion() = default;
-    GraphicRegion(GraphicRegion const&) = delete;
-    GraphicRegion& operator=(GraphicRegion const&) = delete;
+    virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;
+    virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
+    virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
+    virtual geometry::Size bundle_size() = 0;
+    virtual void shutdown() = 0;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_GRAPHIC_REGION_H_ */
+#endif /* MIR_SURFACES_BUFFER_BUNDLE_H_ */

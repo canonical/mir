@@ -24,8 +24,10 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
+namespace mir_toolkit
+{
 class MirBufferPackage;
-
+}
 namespace mir
 {
 
@@ -36,7 +38,7 @@ class ClientBuffer;
 class ClientBufferDepository
 {
 public:
-    virtual void deposit_package(std::shared_ptr<MirBufferPackage> &&, int id,
+    virtual void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
                                 geometry::Size, geometry::PixelFormat) = 0;
     virtual std::shared_ptr<ClientBuffer> access_buffer(int id) = 0;
 };

@@ -271,13 +271,13 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
     using namespace testing;
 
     ms::Surface surf{surface_name, mock_buffer_bundle};
-    std::shared_ptr<mc::GraphicRegion> buffer_resource = std::make_shared<mtd::StubBuffer>();
+    std::shared_ptr<ms::GraphicRegion> buffer_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
         .Times(AtLeast(1))
         .WillOnce(Return(buffer_resource));
 
-    std::shared_ptr<mc::GraphicRegion> comp_resource;
+    std::shared_ptr<ms::GraphicRegion> comp_resource;
     comp_resource = surf.graphic_region();
 
     EXPECT_EQ(buffer_resource, comp_resource);

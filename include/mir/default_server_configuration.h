@@ -30,7 +30,6 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferBundleFactory;
 class BufferBundleManager;
 class RenderView;
 class Drawer;
@@ -50,6 +49,7 @@ class SurfaceFactory;
 }
 namespace surfaces
 {
+class BufferBundleFactory;
 class SurfaceController;
 class SurfaceStackModel;
 class SurfaceStack;
@@ -86,7 +86,7 @@ public:
     virtual std::shared_ptr<compositor::Drawer> the_drawer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();

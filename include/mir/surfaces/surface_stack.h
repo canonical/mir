@@ -30,7 +30,6 @@ namespace mir
 {
 namespace compositor
 {
-class BufferBundleFactory;
 class RenderableCollection;
 class FilterForRenderables;
 class OperatorForRenderables;
@@ -43,12 +42,13 @@ class SurfaceCreationParameters;
 
 namespace surfaces
 {
+class BufferBundleFactory;
 class Surface;
 
 class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<compositor::BufferBundleFactory> const& bb_factory);
+    explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);
     virtual ~SurfaceStack() {}
 
     // From RenderView
@@ -65,7 +65,7 @@ private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
     std::mutex guard;
-    std::shared_ptr<compositor::BufferBundleFactory> const buffer_bundle_factory;
+    std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
     std::vector<std::shared_ptr<Surface>> surfaces;
 };
 
