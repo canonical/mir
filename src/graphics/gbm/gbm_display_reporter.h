@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHIC_GBM_DISPLAY_REPORTER_H_
 #define MIR_GRAPHIC_GBM_DISPLAY_REPORTER_H_
 
-#include "mir/graphics/display_listener.h"
+#include "mir/graphics/display_report.h"
 
 #include <memory>
 
@@ -43,7 +43,7 @@ namespace gbm
 class GBMPlatform;
 class BufferObject;
 
-class GBMDisplayReporter : public DisplayListener
+class GBMDisplayReporter : public DisplayReport
 {
   public:
 

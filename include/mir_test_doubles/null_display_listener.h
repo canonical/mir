@@ -21,7 +21,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_LISTENER_H_
 
 
-#include "mir/graphics/display_listener.h"
+#include "mir/graphics/display_report.h"
 
 
 namespace mir
@@ -30,7 +30,7 @@ namespace test
 {
 namespace doubles
 {
-class NullDisplayListener : public graphics::DisplayListener
+class NullDisplayListener : public graphics::DisplayReport
 {
   public:
 

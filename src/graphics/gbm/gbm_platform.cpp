@@ -53,7 +53,7 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 
 }
 
-mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayListener> const& listener) :
+mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener) :
     listener(listener)
 {
     drm.setup();

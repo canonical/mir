@@ -30,7 +30,7 @@ namespace mir
 namespace graphics
 {
 
-class DisplayListener;
+class DisplayReport;
 
 namespace gbm
 {
@@ -43,7 +43,7 @@ class GBMDisplayBuffer : public DisplayBuffer
 {
 public:
     GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                     std::shared_ptr<DisplayListener> const& listener,
+                     std::shared_ptr<DisplayReport> const& listener,
                      std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                      GBMSurfaceUPtr surface_gbm,
                      geometry::Size const& size,
@@ -61,7 +61,7 @@ private:
 
     BufferObject* last_flipped_bufobj;
     std::shared_ptr<GBMPlatform> const platform;
-    std::shared_ptr<DisplayListener> const listener;
+    std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */
     helpers::DRMHelper& drm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;

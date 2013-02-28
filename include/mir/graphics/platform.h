@@ -39,7 +39,7 @@ class Display;
 class PlatformIPCPackage;
 class BufferInitializer;
 
-class DisplayListener;
+class DisplayReport;
 
 /// Interface to platform specific support for graphics operations.
 class Platform

@@ -99,7 +99,7 @@ public:
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<mg::DisplayListener> const null_listener;
+    std::shared_ptr<mg::DisplayReport> const null_listener;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;

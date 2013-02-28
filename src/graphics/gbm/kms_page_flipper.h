@@ -34,7 +34,7 @@ namespace mir
 namespace graphics
 {
 
-class DisplayListener;
+class DisplayReport;
 
 namespace gbm
 {
