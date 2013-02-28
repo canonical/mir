@@ -37,7 +37,7 @@ ms::Surface::Surface(
     buffer_bundle(buffer_bundle),
     alpha_value(1.0f),
     is_hidden(false),
-    type(MIR_SURFACE_NORMAL)
+    type_value(MIR_SURFACE_NORMAL)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
     assert(buffer_bundle);
@@ -137,10 +137,8 @@ int ms::Surface::configure(int attrib, int value)
     switch (attrib)
     {
     case MIR_SURFACE_TYPE:
-        // TODO: Ask the shell if value is a supported type.
-        if (value < MirSurfaceType_ARRAYSIZE)
-            type = static_cast<MirSurfaceType>(value);
-        result = type;
+	set_type(static_cast<MirSurfaceType>(value));
+        result = type_value;
         break;
     default:
         assert(false);
@@ -148,4 +146,23 @@ int ms::Surface::configure(int attrib, int value)
     }
 
     return result;
+}
+
+MirSurfaceType ms::Surface::type() const
+{
+    return type_value;
+}
+
+bool ms::Surface::set_type(MirSurfaceType t)
+{
+    bool valid = false;
+
+    // TODO: Ask the shell if t is valid 
+    if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
+    {
+        type_value = t;
+	valid = true;
+    }
+
+    return valid;
 }

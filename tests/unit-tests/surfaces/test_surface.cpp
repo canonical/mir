@@ -306,3 +306,22 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     EXPECT_EQ(alpha, ret_alpha);
 }
+
+TEST_F(SurfaceCreation, types)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, mock_buffer_bundle};
+
+    EXPECT_EQ(MIR_SURFACE_NORMAL, surf.type());
+
+    EXPECT_TRUE(surf.set_type(MIR_SURFACE_UTILITY));
+    EXPECT_EQ(surf.type(), MIR_SURFACE_UTILITY);
+
+    EXPECT_FALSE(surf.set_type(static_cast<MirSurfaceType>(999)));
+    EXPECT_EQ(surf.type(), MIR_SURFACE_UTILITY);
+
+    EXPECT_TRUE(surf.set_type(MIR_SURFACE_DIALOG));
+    EXPECT_EQ(surf.type(), MIR_SURFACE_DIALOG);
+
+}

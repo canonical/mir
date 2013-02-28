@@ -73,6 +73,8 @@ public:
     void shutdown();
 
     int configure(int attrib, int value);
+    MirSurfaceType type() const;
+    bool set_type(MirSurfaceType t);
 
 private:
     std::string surface_name;
@@ -85,7 +87,7 @@ private:
 
     bool is_hidden;
 
-    MirSurfaceType type; // XXX Isn't 'type' a shell-only concept?
+    MirSurfaceType type_value; // XXX Isn't 'type' a shell-only concept?
 };
 
 }
