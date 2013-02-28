@@ -137,6 +137,7 @@ int ms::Surface::configure(int attrib, int value)
     switch (attrib)
     {
     case MIR_SURFACE_TYPE:
+        // TODO: Ask the shell if value is a supported type.
         if (value < MirSurfaceType_ARRAYSIZE)
             type = static_cast<MirSurfaceType>(value);
         result = type;
