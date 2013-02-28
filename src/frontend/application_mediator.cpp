@@ -220,7 +220,7 @@ void mir::frontend::ApplicationMediator::disconnect(
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::modify_surface(
+void mir::frontend::ApplicationMediator::configure_surface(
     google::protobuf::RpcController*, // controller,
     const mir::protobuf::SurfaceSetting* request,
     mir::protobuf::SurfaceSetting* response,
@@ -229,12 +229,12 @@ void mir::frontend::ApplicationMediator::modify_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_modify_surface_called(application_session->name());
+    listener->application_configure_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->surfaceid().value());
     int attrib = request->attrib();
     int value = request->ivalue();
-    int newvalue = application_session->modify_surface(id, attrib, value);
+    int newvalue = application_session->configure_surface(id, attrib, value);
 
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());
     response->set_attrib(attrib);

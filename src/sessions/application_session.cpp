@@ -123,7 +123,7 @@ void msess::ApplicationSession::show()
     }
 }
 
-int msess::ApplicationSession::modify_surface(msess::SurfaceId id,
+int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
                                               int attrib, int value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);

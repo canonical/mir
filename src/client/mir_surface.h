@@ -74,11 +74,11 @@ public:
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
 
-    MirWaitHandle* modify(MirSurfaceAttrib a, int value);
+    MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int  attrib(MirSurfaceAttrib a) const;
 
 private:
-    void modified();
+    void on_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_lifecycle_callback callback, void * context);
@@ -94,7 +94,7 @@ private:
     MirConnection *connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
-    MirWaitHandle modify_wait_handle;
+    MirWaitHandle configure_wait_handle;
 
     int last_buffer_id;
 

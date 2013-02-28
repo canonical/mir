@@ -231,20 +231,20 @@ EGLNativeWindowType MirSurface::generate_native_window()
     return *accelerated_window;
 }
 
-MirWaitHandle* MirSurface::modify(MirSurfaceAttrib at, int value)
+MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 {
     mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
     setting.set_attrib(at);
     setting.set_ivalue(value);
 
-    server.modify_surface(0, &setting, &mod_result, 
-                  google::protobuf::NewCallback(this, &MirSurface::modified));
+    server.configure_surface(0, &setting, &mod_result, 
+                  google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
-    return &modify_wait_handle;
+    return &configure_wait_handle;
 }
 
-void MirSurface::modified()
+void MirSurface::on_configured()
 {
     if (mod_result.surfaceid().value() == surface.id().value())
     {
@@ -264,7 +264,7 @@ void MirSurface::modified()
             break;
         }
 
-	modify_wait_handle.result_received();
+	configure_wait_handle.result_received();
     }
 }
 

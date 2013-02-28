@@ -134,6 +134,6 @@ service DisplayServer {
 
   rpc test_file_descriptors(Void) returns (Buffer);
 
-  rpc modify_surface(SurfaceSetting) returns (SurfaceSetting);
+  rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
 }
 

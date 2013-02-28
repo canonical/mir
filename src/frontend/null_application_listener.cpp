@@ -42,7 +42,7 @@ void mir::frontend::NullApplicationListener::application_drm_auth_magic_called(s
 {
 }
 
-void mir::frontend::NullApplicationListener::application_modify_surface_called(std::string const&)
+void mir::frontend::NullApplicationListener::application_configure_surface_called(std::string const&)
 {
 }
 
