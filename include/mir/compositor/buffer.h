@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/compositor/graphic_region.h"
+#include "mir/surfaces/graphic_region.h"
 
 #include <memory>
 
@@ -30,7 +30,7 @@ namespace compositor
 class BufferIPCPackage;
 class BufferID;
 
-class Buffer : public GraphicRegion
+class Buffer : public surfaces::GraphicRegion
 {
 public:
     virtual ~Buffer() {}

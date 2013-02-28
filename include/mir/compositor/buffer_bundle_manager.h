@@ -22,7 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_bundle_factory.h"
 
 #include <memory>
 
@@ -32,11 +32,10 @@ namespace compositor
 {
 
 class BufferAllocationStrategy;
-class BufferBundle;
 class GraphicBufferAllocator;
 class BufferProperties;
 
-class BufferBundleManager : public BufferBundleFactory
+class BufferBundleManager : public surfaces::BufferBundleFactory
 {
 public:
 
@@ -46,7 +45,7 @@ public:
     virtual ~BufferBundleManager() {}
 
     // From BufferBundleFactory
-    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+    virtual std::shared_ptr<surfaces::BufferBundle> create_buffer_bundle(
         BufferProperties const& buffer_properties);
 
 private:

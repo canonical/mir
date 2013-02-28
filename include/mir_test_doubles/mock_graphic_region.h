@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 #define MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 
-#include "mir/compositor/graphic_region.h"
+#include "mir/surfaces/graphic_region.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class MockGraphicRegion : public compositor::GraphicRegion
+class MockGraphicRegion : public surfaces::GraphicRegion
 {
 public:
     MOCK_CONST_METHOD0(size, geometry::Size());

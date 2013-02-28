@@ -27,8 +27,8 @@
 #include <mir_test_doubles/mock_renderable.h>
 #include <mir_test_doubles/mock_graphic_region.h>
 #include <mir/graphics/renderable.h>
-#include <mir/compositor/graphic_region.h>
-#include <mir/compositor/buffer_bundle.h>
+#include "mir/surfaces/graphic_region.h"
+#include <mir/surfaces/buffer_bundle.h>
 #include <mir_test/gl_mock.h>
 
 using testing::SetArgPointee;
