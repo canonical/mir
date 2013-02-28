@@ -20,7 +20,7 @@
 #include "src/graphics/android/android_buffer_allocator.h"
 #include "src/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"

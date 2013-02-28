@@ -20,7 +20,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include <gtest/gtest.h>
 

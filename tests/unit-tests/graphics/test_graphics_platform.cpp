@@ -29,7 +29,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
 
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include <gtest/gtest.h>
 

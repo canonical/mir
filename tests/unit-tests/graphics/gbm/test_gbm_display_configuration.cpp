@@ -24,7 +24,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"

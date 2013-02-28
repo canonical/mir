@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 

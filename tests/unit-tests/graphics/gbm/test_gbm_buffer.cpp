@@ -28,7 +28,7 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include <gbm.h>
 

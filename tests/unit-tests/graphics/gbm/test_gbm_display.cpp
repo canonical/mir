@@ -23,7 +23,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mir/graphics/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/mock_display_listener.h"
 
 #include "mock_drm.h"

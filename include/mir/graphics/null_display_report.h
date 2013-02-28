@@ -32,11 +32,11 @@ class NullDisplayReport : public graphics::DisplayReport
 {
   public:
 
-    virtual void report_successful_setup_of_native_resources() {}
-    virtual void report_successful_egl_make_current_on_construction() {}
-    virtual void report_successful_egl_buffer_swap_on_construction() {}
-    virtual void report_successful_drm_mode_set_crtc_on_construction() {}
-    virtual void report_successful_display_construction() {}
+    virtual void report_successful_setup_of_native_resources();
+    virtual void report_successful_egl_make_current_on_construction();
+    virtual void report_successful_egl_buffer_swap_on_construction();
+    virtual void report_successful_drm_mode_set_crtc_on_construction();
+    virtual void report_successful_display_construction();
 };
 }
 }
