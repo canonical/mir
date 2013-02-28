@@ -381,6 +381,9 @@ TEST_F(MirClientSurfaceTest, surface_types)
     using namespace testing;
     using namespace mir::protobuf;
 
+    EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
+        .Times(1);
+
     auto surface = std::make_shared<MirSurface> (connection.get(),
                                                  *client_comm_channel,
 						 logger,
