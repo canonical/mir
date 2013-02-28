@@ -32,7 +32,7 @@ mclg::GBMClientBufferDepository::GBMClientBufferDepository(
 {
 }
 
-void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage>&& package, int, geometry::Size size, geometry::PixelFormat pf)
+void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int, geometry::Size size, geometry::PixelFormat pf)
 {
     buffer = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
 }

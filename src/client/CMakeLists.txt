@@ -122,9 +122,9 @@ target_link_libraries(
 set(
   CLIENT_PUBLIC_HEADERS
 
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library.h
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/mir_client/mir_client_library_drm.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library_lightdm.h
+  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library_drm.h
 )
 
 set_target_properties(

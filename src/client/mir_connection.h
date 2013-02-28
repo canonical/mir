@@ -26,8 +26,8 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_client/mir_client_library.h"
-#include "mir_client/mir_client_library_drm.h"
+#include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
 #include "client_platform.h"
 #include "client_context.h"
 
@@ -44,7 +44,7 @@ class ClientPlatformFactory;
 }
 }
 
-class MirConnection : public mir::client::ClientContext
+class mir_toolkit::MirConnection : public mir::client::ClientContext
 {
 public:
     MirConnection();

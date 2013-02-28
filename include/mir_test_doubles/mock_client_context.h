@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_CONTEXT_H_
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_context.h"
 
 #include <gmock/gmock.h>
