@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_CLIENT_SURFACE_H_
 #define MIR_CLIENT_CLIENT_SURFACE_H_
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <memory>
 namespace mir

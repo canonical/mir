@@ -26,7 +26,7 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/api_drm.h"
 #include "client_platform.h"
 #include "client_context.h"

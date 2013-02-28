@@ -18,7 +18,7 @@
 
 #include "mock_mesa_egl_client_library.h"
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

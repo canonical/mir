@@ -20,7 +20,7 @@
 
 #include "src/client/gbm/mesa_native_display_container.h"
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mesa/native_display.h"
 
 #include <gtest/gtest.h>

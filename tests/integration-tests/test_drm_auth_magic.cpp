@@ -31,7 +31,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/api_drm.h"
 
 #include <gmock/gmock.h>

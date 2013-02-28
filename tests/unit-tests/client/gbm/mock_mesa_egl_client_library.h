@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_CLIENT_GBM_MOCK_MESA_EGL_CLIENT_LIBRARY_H_
 #define MIR_TEST_CLIENT_GBM_MOCK_MESA_EGL_CLIENT_LIBRARY_H_
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <gmock/gmock.h>
 

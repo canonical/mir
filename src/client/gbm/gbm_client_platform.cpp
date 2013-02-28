@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "gbm_client_platform.h"
 #include "gbm_client_buffer_depository.h"
 #include "mesa_native_display_container.h"

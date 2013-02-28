@@ -19,7 +19,7 @@
 #include "mesa_native_display_container.h"
 
 #include "mir_toolkit/mesa/native_display.h"
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <unordered_set>
 #include <mutex>

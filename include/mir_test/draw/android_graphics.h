@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DRAW_ANDROID_GRAPHICS
 #define MIR_TEST_DRAW_ANDROID_GRAPHICS
 
-#include "mir_toolkit/api.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/buffer_bundle.h"
 #include "mir/geometry/size.h"
 
