@@ -18,7 +18,7 @@
 #include <boost/throw_exception.hpp>
 #include "src/graphics/gbm/gbm_platform.h"
 #include "src/graphics/gbm/gbm_display.h"
-#include "src/graphics/gbm/gbm_display_reporter.h"
+#include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 
 #include "mir_test/egl_mock.h"
@@ -479,7 +479,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
-    auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
+    auto reporter = std::make_shared<ml::DisplayReport>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
     EXPECT_CALL(
@@ -498,7 +498,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
-    auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
+    auto reporter = std::make_shared<ml::DisplayReport>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
     EXPECT_CALL(
@@ -517,7 +517,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
-    auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
+    auto reporter = std::make_shared<ml::DisplayReport>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
     EXPECT_CALL(
@@ -536,7 +536,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mtd::NullDisplayListener>());
     auto logger = std::make_shared<MockLogger>();
 
-    auto reporter = std::make_shared<mgg::GBMDisplayReporter>(logger);
+    auto reporter = std::make_shared<ml::DisplayReport>(logger);
     auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
 
     EXPECT_CALL(

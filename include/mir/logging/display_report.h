@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_GRAPHIC_GBM_DISPLAY_REPORTER_H_
-#define MIR_GRAPHIC_GBM_DISPLAY_REPORTER_H_
+#ifndef MIR_LOGGING_DISPLAY_REPORTER_H_
+#define MIR_LOGGING_DISPLAY_REPORTER_H_
 
 #include "mir/graphics/display_report.h"
 
@@ -26,31 +26,18 @@
 
 namespace mir
 {
-namespace geometry
-{
-class Rectangle;
-}
 namespace logging
 {
 class Logger;
-}
 
-namespace graphics
-{
-namespace gbm
-{
-
-class GBMPlatform;
-class BufferObject;
-
-class GBMDisplayReporter : public DisplayReport
+class DisplayReport : public graphics::DisplayReport
 {
   public:
 
     static const char* component();
 
-    GBMDisplayReporter(const std::shared_ptr<logging::Logger>& logger);
-    virtual ~GBMDisplayReporter();
+    DisplayReport(const std::shared_ptr<Logger>& logger);
+    virtual ~DisplayReport();
 
     virtual void report_successful_setup_of_native_resources();
     virtual void report_successful_egl_make_current_on_construction();
@@ -59,14 +46,13 @@ class GBMDisplayReporter : public DisplayReport
     virtual void report_successful_display_construction();
 
   protected:
-    GBMDisplayReporter(const GBMDisplayReporter&) = delete;
-    GBMDisplayReporter& operator=(const GBMDisplayReporter&) = delete;
+    DisplayReport(const DisplayReport&) = delete;
+    DisplayReport& operator=(const DisplayReport&) = delete;
 
   private:
     std::shared_ptr<logging::Logger> logger;
 };
 }
 }
-}
 
-#endif /* MIR_GRAPHIC_GBM_DISPLAY_REPORTER_H_ */
+#endif /* MIR_LOGGING_DISPLAY_REPORTER_H_ */
