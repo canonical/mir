@@ -18,6 +18,7 @@ set(
   LOGGING_SOURCES
 
   dumb_console_logger.cpp
+  application_mediator_report.cpp
 )
 
 add_library(

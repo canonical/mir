@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/sessions/session.h"
 #include <boost/throw_exception.hpp>
 
@@ -32,7 +32,7 @@ void mir::frontend::ApplicationMediator::drm_auth_magic(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_drm_auth_magic_called(application_session->name());
+    report->application_drm_auth_magic_called(application_session->name());
 
     BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the Android platform"));
 }

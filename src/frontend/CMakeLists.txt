@@ -19,7 +19,7 @@ set(
   FRONTEND_SOURCES
 
   application_mediator.cpp
-  null_application_listener.cpp
+  null_application_mediator_report.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
 

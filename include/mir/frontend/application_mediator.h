@@ -49,7 +49,7 @@ class Session;
 namespace frontend
 {
 class ResourceCache;
-class ApplicationListener;
+class ApplicationMediatorReport;
 
 // ApplicationMediator relays requests from the client into the server process.
 class ApplicationMediator : public mir::protobuf::DisplayServer
@@ -61,7 +61,7 @@ public:
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::Display> const& graphics_display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<ApplicationListener> const& listener,
+        std::shared_ptr<ApplicationMediatorReport> const& report,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     /* Platform independent requests */
@@ -108,7 +108,7 @@ private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::Display> const graphics_display;
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<ApplicationListener> const listener;
+    std::shared_ptr<ApplicationMediatorReport> const report;
 
     std::shared_ptr<ResourceCache> const resource_cache;
 

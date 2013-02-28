@@ -16,33 +16,33 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 
-void mir::frontend::NullApplicationListener::application_connect_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_connect_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_create_surface_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_create_surface_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_next_buffer_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_next_buffer_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_release_surface_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_release_surface_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_disconnect_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_disconnect_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_drm_auth_magic_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_drm_auth_magic_called(std::string const&)
 {
 }
 
-void mir::frontend::NullApplicationListener::application_error(
+void mir::frontend::NullApplicationMediatorReport::application_error(
         std::string const&,
         char const* ,
         std::string const& )

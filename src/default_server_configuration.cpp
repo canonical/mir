@@ -25,7 +25,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/session_manager.h"
@@ -42,6 +42,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/application_mediator_report.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -61,12 +62,12 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<msess::SessionStore> const& session_store,
-        std::shared_ptr<mf::ApplicationListener> const& listener,
+        std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_store(session_store),
-        listener(listener),
+        report(report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
@@ -76,7 +77,7 @@ public:
 
 private:
     std::shared_ptr<msess::SessionStore> session_store;
-    std::shared_ptr<mf::ApplicationListener> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
@@ -89,7 +90,7 @@ private:
             graphics_platform,
             graphics_display,
             buffer_allocator,
-            listener,
+            report,
             resource_cache());
     }
 
@@ -105,12 +106,13 @@ boost::program_options::options_description program_options()
 
     po::options_description desc(
         "Command-line options.\n"
-        "(Environment variables capitalise long form with prefix \"MIR_SERVER_\")");
+        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
-        ("file,f", po::value<std::string>(), "<socket filename>")
-        ("ipc_thread_pool,i", po::value<int>(), "threads in frontend thread pool")
-        ("tests_use_real_graphics", po::value<bool>(), "use real graphics in tests")
-        ("tests_use_real_input", po::value<bool>(), "use real input in tests");
+        ("file,f", po::value<std::string>(), "socket filename")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("log-app-mediator", po::value<bool>(), "log the ApplicationMediator report")
+        ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
+        ("tests-use-real-input", po::value<bool>(), "use real input in tests");
 
     return desc;
 }
@@ -335,18 +337,35 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         {
             return std::make_shared<DefaultIpcFactory>(
                 session_store,
-                the_application_listener(),
+                the_application_mediator_report(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
-std::shared_ptr<mf::ApplicationListener>
-mir::DefaultServerConfiguration::the_application_listener()
+std::shared_ptr<mf::ApplicationMediatorReport>
+mir::DefaultServerConfiguration::the_application_mediator_report()
 {
-    return application_listener(
-        []()
+    return application_mediator_report(
+        [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
         {
-            return std::make_shared<mf::NullApplicationListener>();
+            if (the_options()->get("log_app_mediator", false))
+            {
+                return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
+            }
+            else
+            {
+                return std::make_shared<mf::NullApplicationMediatorReport>();
+            }
+        });
+}
+
+std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
+{
+    return logger(
+        [this]()
+        {
+            // TODO use the_options() to configure logging
+            return std::make_shared<ml::DumbConsoleLogger>();
         });
 }
