@@ -19,6 +19,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_client/mir_client_library.h"
+#include "mir_client/shell.h"
 #include "src/client/client_buffer.h"
 
 #include "mir/frontend/communicator.h"
@@ -156,6 +157,15 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
             EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
 
+            EXPECT_EQ(mir_shell_surface_get_type(surface), MIR_SURFACE_NORMAL);
+            mir_wait_for(mir_shell_surface_set_type(surface,
+                                                    MIR_SURFACE_FREESTYLE));
+            EXPECT_EQ(mir_shell_surface_get_type(surface),
+                      MIR_SURFACE_FREESTYLE);
+            mir_wait_for(mir_shell_surface_set_type(surface,
+                                                    MIR_SURFACE_DIALOG));
+            EXPECT_EQ(mir_shell_surface_get_type(surface),
+                      MIR_SURFACE_DIALOG);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
