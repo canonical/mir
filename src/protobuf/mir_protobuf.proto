@@ -116,6 +116,8 @@ message SurfaceSetting {
   required int32     attrib = 2;
   optional int32     ivalue = 3;
   // optional string    svalue = 4;  // Expected for future use
+
+  optional string error = 127;
 }
 
 service DisplayServer {

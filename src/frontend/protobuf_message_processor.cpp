@@ -176,6 +176,10 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         {
             invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
         }
+        else if ("modify_surface" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::modify_surface, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::disconnect, invocation);
