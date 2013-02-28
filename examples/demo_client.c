@@ -17,7 +17,6 @@
  */
 
 #include "mir_client/mir_client_library.h"
-#include <mir_client/shell.h>  /* WM type operations */
 
 #include <assert.h>
 #include <string.h>
@@ -124,7 +123,7 @@ void demo_client(const char* server, int buffer_swap_count)
     MirPixelFormat const pixel_format = display_info.supported_pixel_format[0];
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
-    
+
     ///\page demo_client.c
     ///\subsection surface_create request and wait for surface handle
     /// \snippet demo_client.c surface_create_tag
@@ -140,8 +139,6 @@ void demo_client(const char* server, int buffer_swap_count)
     assert(mcd.surface != NULL);
     assert(mir_surface_is_valid(mcd.surface));
     assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
-
-    mir_shell_surface_set_type(mcd.surface, MIR_SURFACE_NORMAL);
 
     // We can query the surface parameters...
     {
