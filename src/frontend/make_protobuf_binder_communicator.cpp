@@ -29,7 +29,7 @@ mir::DefaultServerConfiguration::the_communicator()
     return communicator(
         []() -> std::shared_ptr<mf::Communicator>
         {
-            auto const threads = the_options()->get("ipc_thread_pool", 10);
+            auto const threads = the_options()->get("ipc-thread-pool", 10);
             return std::make_shared<mf::ProtobufBinderCommunicator>(
                 the_socket_file(), the_ipc_factory(the_session_store(), the_display(), the_buffer_allocator()));
         });

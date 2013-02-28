@@ -102,6 +102,8 @@ private:
     }
 };
 
+char const* const log_app_mediator = "log-app-mediator";
+
 boost::program_options::options_description program_options()
 {
     namespace po = boost::program_options;
@@ -112,8 +114,8 @@ boost::program_options::options_description program_options()
     desc.add_options()
         ("file,f", po::value<std::string>(), "socket filename")
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
-        ("log-app-mediator", po::value<bool>(), "log the ApplicationMediator report")
         ("log-display", po::value<bool>(), "log the Display report")
+        (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
         ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
         ("tests-use-real-input", po::value<bool>(), "use real input in tests");
 
@@ -359,7 +361,7 @@ mir::DefaultServerConfiguration::the_application_mediator_report()
     return application_mediator_report(
         [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
         {
-            if (the_options()->get("log_app_mediator", false))
+            if (the_options()->get(log_app_mediator, false))
             {
                 return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
             }
