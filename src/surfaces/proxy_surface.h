@@ -56,6 +56,8 @@ public:
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
 
+    int configure(int attrib, int value);
+
 protected:
     void destroy_surface(SurfaceStackModel* const surface_stack) const;
 

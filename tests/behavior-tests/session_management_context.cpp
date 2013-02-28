@@ -75,6 +75,11 @@ struct DummySurface : public msess::Surface
     {
         return std::shared_ptr<mc::Buffer>();
     }
+
+    virtual int configure(int, int)
+    {
+        return 0;
+    }
 };
 
 struct SizedDummySurface : public DummySurface

@@ -128,3 +128,10 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 {
     return client_buffer_resource;
 }
+
+int ms::Surface::configure(int attrib, int value)
+{
+    (void)attrib;
+    (void)value;
+    return 69; // TODO
+}

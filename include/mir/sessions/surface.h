@@ -55,6 +55,8 @@ public:
     virtual void advance_client_buffer() = 0;
     virtual std::shared_ptr<compositor::Buffer> client_buffer() const = 0;
 
+    virtual int configure(int attrib, int value) = 0;
+
 protected:
     Surface() = default;
     Surface(Surface const&) = delete;

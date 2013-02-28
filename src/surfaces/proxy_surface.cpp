@@ -109,6 +109,17 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
     surface_stack->destroy_surface(surface);
 }
 
+int ms::BasicProxySurface::configure(int attrib, int value)
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->configure(attrib, value);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
 
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,

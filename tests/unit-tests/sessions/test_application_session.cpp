@@ -64,6 +64,8 @@ public:
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
 
+    MOCK_METHOD2(configure, int(int, int));
+
 private:
     ms::BasicProxySurface impl;
 };

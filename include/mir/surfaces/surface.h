@@ -71,6 +71,8 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
 
+    int configure(int attrib, int value);
+
 private:
     std::string surface_name;
     std::shared_ptr<BufferBundle> buffer_bundle;
