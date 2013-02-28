@@ -60,7 +60,6 @@ struct MockApplicationMediatorReport : mf::NullApplicationMediatorReport
 
 const int rpc_timeout_ms{100000};
 
-//using ApplicationMediatorReport = BespokeDisplayServerTestFixture;
 typedef BespokeDisplayServerTestFixture ApplicationMediatorReport;
 }
 
