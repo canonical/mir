@@ -37,8 +37,7 @@ MirSurfaceType mir_shell_surface_get_type(MirSurface *surf)
         // we would have to send off a message to retrieve the latest...
 
         int t = surf->attrib(MIR_SURFACE_TYPE);
-        if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
-            type = static_cast<MirSurfaceType>(t);
+        type = static_cast<MirSurfaceType>(t);
     }
 
     return type;
