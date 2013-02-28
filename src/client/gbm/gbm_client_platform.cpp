@@ -99,7 +99,7 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* con
 mclg::GBMClientPlatform::GBMClientPlatform(
         ClientContext* const context,
         std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
-        mcl::EGLNativeDisplayContainer &display_container)
+        mcl::EGLNativeDisplayContainer& display_container)
     : context{context}, 
       drm_fd_handler{drm_fd_handler},
       display_container(display_container)

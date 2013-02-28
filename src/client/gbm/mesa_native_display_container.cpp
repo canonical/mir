@@ -92,14 +92,14 @@ mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
 }
 
 bool
-mclg::MesaNativeDisplayContainer::validate (mir_toolkit::MirEGLNativeDisplayType display) const
+mclg::MesaNativeDisplayContainer::validate(mir_toolkit::MirEGLNativeDisplayType display) const
 {
     std::lock_guard<std::mutex> lg(guard);
     return (valid_displays.find(display) != valid_displays.end());
 }
 
 mir_toolkit::MirEGLNativeDisplayType
-mclg::MesaNativeDisplayContainer::create (mir_toolkit::MirConnection* connection)
+mclg::MesaNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
 {
     std::lock_guard<std::mutex> lg(guard);
 
@@ -117,7 +117,7 @@ mclg::MesaNativeDisplayContainer::create (mir_toolkit::MirConnection* connection
 }
 
 void
-mclg::MesaNativeDisplayContainer::release (mir_toolkit::MirEGLNativeDisplayType display)
+mclg::MesaNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType display)
 {
     std::lock_guard<std::mutex> lg(guard);
     
