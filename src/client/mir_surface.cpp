@@ -26,13 +26,12 @@
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
-
-using namespace mir::protobuf;
 
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
-    DisplayServer::Stub & server,
+    mp::DisplayServer::Stub & server,
     const std::shared_ptr<mir::client::Logger>& logger,
     const std::shared_ptr<mcl::ClientBufferDepository>& depository,
     MirSurfaceParameters const & params,
@@ -234,7 +233,7 @@ EGLNativeWindowType MirSurface::generate_native_window()
 
 MirWaitHandle* MirSurface::modify(MirSurfaceAttrib at, int value)
 {
-    SurfaceSetting setting;
+    mp::SurfaceSetting setting;
     setting.mutable_surfaceid()->CopyFrom(surface.id());
     setting.set_attrib(at);
     setting.set_ivalue(value);
