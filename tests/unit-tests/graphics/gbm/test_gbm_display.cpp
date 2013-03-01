@@ -24,7 +24,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir_test_doubles/mock_display_listener.h"
+#include "mir_test_doubles/mock_display_report.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -50,7 +50,7 @@ class GBMDisplayTest : public ::testing::Test
 {
 public:
     GBMDisplayTest() :
-        mock_reporter(new ::testing::NiceMock<mtd::MockDisplayListener>())
+        mock_report(new ::testing::NiceMock<mtd::MockDisplayReport>())
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -165,7 +165,7 @@ public:
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<testing::NiceMock<mtd::MockDisplayListener>> mock_reporter;
+    std::shared_ptr<testing::NiceMock<mtd::MockDisplayReport>> mock_report;
 };
 
 }
@@ -231,7 +231,7 @@ TEST_F(GBMDisplayTest, create_display)
     EXPECT_NO_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     });
 }
 
@@ -272,7 +272,7 @@ TEST_F(GBMDisplayTest, reset_crtc_on_destruction)
     EXPECT_NO_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     });
 }
 
@@ -290,7 +290,7 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
     EXPECT_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     }, std::runtime_error);
 }
 
@@ -311,7 +311,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
 
     EXPECT_THROW({
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
 }
 
@@ -393,7 +393,7 @@ TEST_F(GBMDisplayTest, post_update)
     EXPECT_NO_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
@@ -433,7 +433,7 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
     EXPECT_NO_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
@@ -447,28 +447,28 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
     using namespace ::testing;
 
     EXPECT_CALL(
-        *mock_reporter,
+        *mock_report,
         report_successful_setup_of_native_resources()).Times(Exactly(1));
     EXPECT_CALL(
-        *mock_reporter,
+        *mock_report,
         report_successful_egl_make_current_on_construction()).Times(Exactly(1));
 
     EXPECT_CALL(
-        *mock_reporter,
+        *mock_report,
         report_successful_egl_buffer_swap_on_construction()).Times(Exactly(1));
 
     EXPECT_CALL(
-        *mock_reporter,
+        *mock_report,
         report_successful_drm_mode_set_crtc_on_construction()).Times(Exactly(1));
 
     EXPECT_CALL(
-        *mock_reporter,
+        *mock_report,
         report_successful_display_construction()).Times(Exactly(1));
 
     EXPECT_NO_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     });
 }
 
@@ -480,7 +480,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_setup_of_native_res
     auto logger = std::make_shared<MockLogger>();
 
     auto reporter = std::make_shared<ml::DisplayReport>(logger);
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     EXPECT_CALL(
         *logger,
@@ -499,7 +499,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_make_current_on
     auto logger = std::make_shared<MockLogger>();
 
     auto reporter = std::make_shared<ml::DisplayReport>(logger);
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     EXPECT_CALL(
         *logger,
@@ -518,7 +518,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on_
     auto logger = std::make_shared<MockLogger>();
 
     auto reporter = std::make_shared<ml::DisplayReport>(logger);
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     EXPECT_CALL(
         *logger,
@@ -537,7 +537,7 @@ TEST_F(GBMDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_o
     auto logger = std::make_shared<MockLogger>();
 
     auto reporter = std::make_shared<ml::DisplayReport>(logger);
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     EXPECT_CALL(
         *logger,
@@ -560,7 +560,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
     EXPECT_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     }, std::runtime_error);
 }
 
@@ -576,7 +576,7 @@ TEST_F(GBMDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
     EXPECT_THROW(
     {
         auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+        auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
     }, std::runtime_error);
 }
 
@@ -585,7 +585,7 @@ TEST_F(GBMDisplayTest, for_each_display_buffer_calls_callback)
     using namespace ::testing;
 
     auto platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>());
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_reporter);
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     int callback_count{0};
 

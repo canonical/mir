@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LISTENER_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_
 
 #include "mir/graphics/display_report.h"
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayListener : public graphics::DisplayReport
+class MockDisplayReport : public graphics::DisplayReport
 {
 public:
     MOCK_METHOD0(report_successful_setup_of_native_resources, void());
@@ -44,4 +44,4 @@ public:
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_LISTENER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_ */
