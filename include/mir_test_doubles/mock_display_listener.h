@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LISTENER_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_LISTENER_H_
 
-#include "mir/graphics/display_listener.h"
+#include "mir/graphics/display_report.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayListener : public graphics::DisplayListener
+class MockDisplayListener : public graphics::DisplayReport
 {
 public:
     MOCK_METHOD0(report_successful_setup_of_native_resources, void());

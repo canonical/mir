@@ -32,6 +32,7 @@ add_library(
 
   gl_renderer.cpp
   display_configuration.cpp
+  null_display_report.cpp
 )
 
 target_link_libraries(

@@ -39,7 +39,7 @@ class Display;
 class PlatformIPCPackage;
 class BufferInitializer;
 
-class DisplayListener;
+class DisplayReport;
 
 /// Interface to platform specific support for graphics operations.
 class Platform
@@ -56,7 +56,7 @@ public:
 };
 
 // Create and return a new graphics platform.
-std::shared_ptr<Platform> create_platform();
+std::shared_ptr<Platform> create_platform(std::shared_ptr<DisplayReport> const& report);
 
 }
 }

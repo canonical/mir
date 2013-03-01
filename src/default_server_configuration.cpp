@@ -39,10 +39,12 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/application_mediator_report.h"
+#include "mir/logging/display_report.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -112,6 +114,7 @@ boost::program_options::options_description program_options()
     desc.add_options()
         ("file,f", po::value<std::string>(), "socket filename")
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
+        ("log-display", po::value<bool>(), "log the Display report")
         (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
         ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
         ("tests-use-real-input", po::value<bool>(), "use real input in tests");
@@ -188,7 +191,7 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
-        []()
+        [this]() -> std::shared_ptr<mg::Platform>
         {
             // TODO I doubt we need the extra level of indirection provided by
             // mg::create_platform() - we just need to move the implementation
@@ -196,7 +199,14 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             // graphics libraries.
             // Alternatively, if we want to dynamically load the graphics library
             // then this would be the place to do that.
-             return mg::create_platform();
+            if (the_options()->get("log-display", false))
+            {
+                return mg::create_platform(std::make_shared<ml::DisplayReport>(the_logger()));
+            }
+            else
+            {
+                return mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+            }
         });
 }
 

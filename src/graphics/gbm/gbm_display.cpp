@@ -30,7 +30,7 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
-                            std::shared_ptr<DisplayListener> const& listener)
+                            std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       listener(listener),
       output_container{platform->drm.fd,
