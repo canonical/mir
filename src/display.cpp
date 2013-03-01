@@ -36,6 +36,7 @@ Display::~Display()
 
 void Display::set_shell(std::shared_ptr<mir::Shell> s)
 {
+    stop_shell();
     shell = s;
 }
 

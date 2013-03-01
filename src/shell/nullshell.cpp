@@ -36,14 +36,14 @@ void NullShell::stop()
 {
 }
 
-bool NullShell::supports(MirSurfaceAttrib) const
+bool NullShell::supports(MirSurfaceAttrib attrib) const
 {
-    // TODO
-    return false;
+    return (attrib == MIR_SURFACE_TYPE);
 }
 
-bool NullShell::supports(MirSurfaceType) const
+bool NullShell::supports(MirSurfaceType type) const
 {
-    // TODO
-    return false;
+    // What really makes sense here? Everything?
+    return (type == MIR_SURFACE_NORMAL) ||
+           (type == MIR_SURFACE_FREESTYLE);
 }
