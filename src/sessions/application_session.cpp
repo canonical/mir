@@ -124,7 +124,7 @@ void msess::ApplicationSession::show()
 }
 
 int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
-                                              int attrib, int value)
+                                                 int attrib, int value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msess::Surface> surf(checked_find(id)->second);
