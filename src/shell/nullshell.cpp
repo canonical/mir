@@ -1,5 +1,5 @@
 /*
- * Mir shell interface PUBLIC HEADER
+ * Null Shell
  *
  * Copyright © 2013 Canonical Ltd.
  *
@@ -18,25 +18,23 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_SHELL_H__
-#define __MIR_SHELL_H__
+#include "nullshell.h"
 
-#include <mir/surface.h>
+using namespace mir;
+using namespace shell;
 
-namespace mir
+NullShell::~NullShell()
 {
+}
 
-class Shell
+bool NullShell::supports(MirSurfaceAttrib) const
 {
-public:
-    virtual ~Shell() {}
+    // TODO
+    return false;
+}
 
-    virtual bool supports(MirSurfaceAttrib attrib) const = 0;
-    virtual bool supports(MirSurfaceType) const = 0;
-
-    // TODO: Lots more will go here I guess.
-};
-
-} // namespace mir
-
-#endif
+bool NullShell::supports(MirSurfaceType) const
+{
+    // TODO
+    return false;
+}
