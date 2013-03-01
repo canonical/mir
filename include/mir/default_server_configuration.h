@@ -105,8 +105,6 @@ public:
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
 
 protected:
-    // TODO deprecated
-    explicit DefaultServerConfiguration();
     virtual std::shared_ptr<options::Option> the_options() const;
 
     template<typename Type>

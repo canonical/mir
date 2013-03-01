@@ -34,6 +34,8 @@ using namespace mir;
 class TestingServerConfiguration : public DefaultServerConfiguration
 {
 public:
+    TestingServerConfiguration();
+
     // Code to run in server process
     virtual void exec(DisplayServer* display_server);
 
