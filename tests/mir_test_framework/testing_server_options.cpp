@@ -44,8 +44,9 @@ namespace mir
 {
 namespace
 {
+char const* dummy[] = {0};
 int argc = 0;
-char const** argv = 0;
+char const** argv = dummy;
 
 geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
@@ -183,7 +184,10 @@ std::string const& mtf::test_socket_file()
 
 
 int main(int argc, char** argv) {
-    mir::argc = argc;
+    mir::argc = std::remove_if(
+        argv,
+        argv+argc,
+        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
     mir::argv = const_cast<char const**>(argv);
 
   // This allows the user to override the flag on the command line.
