@@ -59,7 +59,7 @@ public:
     ApplicationMediator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<graphics::ViewableArea> const& view_area,
+        std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<ApplicationMediatorReport> const& report,
         std::shared_ptr<ResourceCache> const& resource_cache);
