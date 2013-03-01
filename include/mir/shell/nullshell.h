@@ -31,12 +31,12 @@ namespace shell
 class NullShell : public mir::Shell
 {
 public:
-    virtual ~NullShell();
+    ~NullShell();
 
-    virtual bool start();
-    virtual void stop();
-    virtual bool supports(MirSurfaceAttrib attrib) const;
-    virtual bool supports(MirSurfaceAttrib attrib, int value) const;
+    bool start();
+    void stop();
+    bool supports(MirSurfaceAttrib attrib) const;
+    bool supports(MirSurfaceAttrib attrib, int value) const;
 };
 
 } // namespace shell
