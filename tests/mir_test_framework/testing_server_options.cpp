@@ -180,14 +180,14 @@ std::string const& mtf::test_socket_file()
 }
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     ::argc = std::remove_if(
         argv,
         argv+argc,
         [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
     ::argv = const_cast<char const**>(argv);
 
-  // This allows the user to override the flag on the command line.
   ::testing::InitGoogleTest(&argc, argv);
 
   return RUN_ALL_TESTS();
