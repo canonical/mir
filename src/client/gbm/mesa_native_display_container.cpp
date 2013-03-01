@@ -29,11 +29,6 @@ namespace mclg = mcl::gbm;
 
 namespace
 {
-mclg::MesaNativeDisplayContainer global_display_container;
-}
-
-namespace
-{
 extern "C"
 {
 
@@ -76,7 +71,8 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
 
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    return global_display_container;
+    static mclg::MesaNativeDisplayContainer default_display_container;
+    return default_display_container;
 }
 
 mclg::MesaNativeDisplayContainer::MesaNativeDisplayContainer()
