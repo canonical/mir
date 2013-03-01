@@ -137,7 +137,7 @@ int ms::Surface::configure(int attrib, int value)
     switch (attrib)
     {
     case MIR_SURFACE_TYPE:
-	set_type(static_cast<MirSurfaceType>(value));
+        set_type(static_cast<MirSurfaceType>(value));
         result = type_value;
         break;
     default:
@@ -161,7 +161,7 @@ bool ms::Surface::set_type(MirSurfaceType t)
     if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
     {
         type_value = t;
-	valid = true;
+        valid = true;
     }
 
     return valid;

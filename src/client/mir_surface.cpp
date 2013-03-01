@@ -264,7 +264,7 @@ void MirSurface::on_configured()
             break;
         }
 
-	configure_wait_handle.result_received();
+        configure_wait_handle.result_received();
     }
 }
 

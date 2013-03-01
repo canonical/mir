@@ -386,11 +386,11 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
 
     auto surface = std::make_shared<MirSurface> (connection.get(),
                                                  *client_comm_channel,
-						 logger,
-						 mock_depository,
-						 params,
-						 &empty_callback,
-						 (void*) NULL);
+                                                 logger,
+                                                 mock_depository,
+                                                 params,
+                                                 &empty_callback,
+                                                 (void*) NULL);
     surface->get_create_wait_handle()->wait_for_result();
 
     EXPECT_EQ(surface->attrib(MIR_SURFACE_TYPE), MIR_SURFACE_NORMAL);
