@@ -44,6 +44,8 @@ namespace mir
 {
 namespace
 {
+int argc = 0;
+char const** argv = 0;
 
 geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
@@ -120,6 +122,12 @@ class StubInputManager : public mi::InputManager
 }
 }
 
+mtf::TestingServerConfiguration::TestingServerConfiguration() :
+    DefaultServerConfiguration(argc, argv)
+{
+}
+
+
 std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
     auto options = the_options();
@@ -171,4 +179,15 @@ std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{"./mir_socket_test"};
     return socket_file;
+}
+
+
+int main(int argc, char** argv) {
+    mir::argc = argc;
+    mir::argv = const_cast<char const**>(argv);
+
+  // This allows the user to override the flag on the command line.
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }
