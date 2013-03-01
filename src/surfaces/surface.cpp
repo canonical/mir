@@ -157,7 +157,6 @@ bool ms::Surface::set_type(MirSurfaceType t)
 {
     bool valid = false;
 
-    // TODO: Ask the shell if t is valid 
     if (t >= 0 && t < MirSurfaceType_ARRAYSIZE)
     {
         type_value = t;

@@ -87,7 +87,7 @@ private:
 
     bool is_hidden;
 
-    MirSurfaceType type_value; // XXX Isn't 'type' a shell-only concept?
+    MirSurfaceType type_value;
 };
 
 }
