@@ -255,9 +255,7 @@ void MirSurface::on_configured()
             {
                 int t = mod_result.ivalue();
                 attrib_cache[MIR_SURFACE_TYPE] = t;
-            }
-            else
-                assert(false);
+            } // else error is probably set due to an unsupported attrib/value
             break;
         default:
             assert(false);
