@@ -22,7 +22,7 @@
 #define __MIR_CLIENT_SHELL_H__
 
 #include <mir/common/surface.h>
-#include <mir_client/mir_client_library.h>  // TODO: Clean this path up
+#include <mir_toolkit/mir_client_library.h>
 
 #ifdef __cplusplus
 extern "C" {

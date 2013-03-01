@@ -63,6 +63,11 @@ void ml::ApplicationMediatorReport::application_drm_auth_magic_called(std::strin
     log->log<Logger::informational>("application_drm_auth_magic_called(\"" + app_name + "\")", component);
 }
 
+void ml::ApplicationMediatorReport::application_configure_surface_called(std::string const& app_name)
+{
+    log->log<Logger::informational>("application_configure_surface_called(\"" + app_name + "\")", component);
+}
+
 void ml::ApplicationMediatorReport::application_error(
         std::string const& app_name,
         char const* method,

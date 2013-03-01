@@ -16,7 +16,7 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir_client/shell.h"
+#include "mir_toolkit/shell.h"
 #include "mir_surface.h"
 
 using namespace mir;

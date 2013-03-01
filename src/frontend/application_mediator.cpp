@@ -229,7 +229,7 @@ void mir::frontend::ApplicationMediator::configure_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_configure_surface_called(application_session->name());
+    report->application_configure_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->surfaceid().value());
     int attrib = request->attrib();

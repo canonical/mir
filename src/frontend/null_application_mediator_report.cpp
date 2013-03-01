@@ -42,7 +42,7 @@ void mir::frontend::NullApplicationMediatorReport::application_drm_auth_magic_ca
 {
 }
 
-void mir::frontend::NullApplicationListener::application_configure_surface_called(std::string const&)
+void mir::frontend::NullApplicationMediatorReport::application_configure_surface_called(std::string const&)
 {
 }
 
