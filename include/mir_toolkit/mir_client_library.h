@@ -18,6 +18,8 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
+#include <mir/surface.h>  /* Surface definitions common to client & server */
+
 #ifdef __cplusplus
 /** The C client API
  */
@@ -321,6 +323,11 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  *   \return              an internal id that identifies the surfaceS
  */
 int mir_debug_surface_id(MirSurface *surface);
+
+MirWaitHandle* mir_shell_surface_set_type(MirSurface *surf,
+                                          MirSurfaceType type);
+
+MirSurfaceType mir_shell_surface_get_type(MirSurface *surf);
 
 #ifdef __cplusplus
 }

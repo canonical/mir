@@ -16,18 +16,19 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir_toolkit/shell.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_surface.h"
 
 using namespace mir;
 using namespace mir::protobuf;
 
-MirWaitHandle* mir_shell_surface_set_type(MirSurface *surf, MirSurfaceType type)
+MirWaitHandle* mir_toolkit::mir_shell_surface_set_type(MirSurface *surf,
+                                                       MirSurfaceType type)
 {
     return surf ? surf->configure(MIR_SURFACE_TYPE, type) : NULL;
 }
 
-MirSurfaceType mir_shell_surface_get_type(MirSurface *surf)
+MirSurfaceType mir_toolkit::mir_shell_surface_get_type(MirSurface *surf)
 {
     MirSurfaceType type = MIR_SURFACE_NORMAL;
 
