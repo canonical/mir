@@ -160,15 +160,6 @@ void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& optio
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration()
-{
-    auto options = std::make_shared<mir::options::ProgramOption>();
-
-    parse_environment(options);
-
-    this->options = options;
-}
-
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
 {
     auto options = std::make_shared<mir::options::ProgramOption>();
