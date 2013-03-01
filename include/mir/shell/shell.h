@@ -34,7 +34,7 @@ public:
     virtual bool start() = 0;
     virtual void stop() = 0;
     virtual bool supports(MirSurfaceAttrib attrib) const = 0;
-    virtual bool supports(MirSurfaceType) const = 0;
+    virtual bool supports(MirSurfaceAttrib attrib, int value) const = 0;
 
     // TODO: Lots more will go here I guess.
 };

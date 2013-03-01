@@ -36,7 +36,7 @@ public:
     virtual bool start();
     virtual void stop();
     virtual bool supports(MirSurfaceAttrib attrib) const;
-    virtual bool supports(MirSurfaceType) const;
+    virtual bool supports(MirSurfaceAttrib attrib, int value) const;
 };
 
 } // namespace shell

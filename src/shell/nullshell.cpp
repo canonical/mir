@@ -41,9 +41,10 @@ bool NullShell::supports(MirSurfaceAttrib attrib) const
     return (attrib == MIR_SURFACE_TYPE);
 }
 
-bool NullShell::supports(MirSurfaceType type) const
+bool NullShell::supports(MirSurfaceAttrib attrib, int value) const
 {
     // What really makes sense here? Everything?
-    return (type == MIR_SURFACE_NORMAL) ||
-           (type == MIR_SURFACE_FREESTYLE);
+    return (attrib == MIR_SURFACE_TYPE) &&
+                      ((value == MIR_SURFACE_NORMAL) ||
+                       (value == MIR_SURFACE_FREESTYLE));
 }
