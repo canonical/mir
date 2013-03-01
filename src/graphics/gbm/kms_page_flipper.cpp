@@ -17,7 +17,7 @@
  */
 
 #include "kms_page_flipper.h"
-#include "mir/graphics/display_listener.h"
+#include "mir/graphics/display_report.h"
 
 #include <limits>
 #include <stdexcept>

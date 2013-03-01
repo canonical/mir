@@ -19,7 +19,7 @@
 #include "gbm_display_buffer.h"
 #include "gbm_platform.h"
 #include "kms_output.h"
-#include "mir/graphics/display_listener.h"
+#include "mir/graphics/display_report.h"
 
 #include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
@@ -102,7 +102,7 @@ void ensure_egl_image_extensions()
 }
 
 mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& platform,
-                                        std::shared_ptr<DisplayListener> const& listener,
+                                        std::shared_ptr<DisplayReport> const& listener,
                                         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                                         GBMSurfaceUPtr surface_gbm_param,
                                         geom::Size const& size,

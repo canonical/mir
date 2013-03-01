@@ -85,6 +85,12 @@ if(MIR_USE_BIONIC)
     skia)
 endif()
 
+if(NOT MIR_INPUT_USE_ANDROID_TYPES)
+  target_link_libraries(
+    android-input
+    ${Boost_LIBRARIES})
+endif()
+
 set_target_properties(
   android-input
   PROPERTIES

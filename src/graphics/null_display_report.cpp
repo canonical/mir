@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,23 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/options/option.h"
-#include "protobuf_socket_communicator.h"
+#include "mir/graphics/null_display_report.h"
 
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 
-std::shared_ptr<mf::Communicator>
-mir::DefaultServerConfiguration::the_communicator()
-{
-    return communicator(
-        [&,this]() -> std::shared_ptr<mf::Communicator>
-        {
-            auto const threads = the_options()->get("ipc-thread-pool", 10);
-            return std::make_shared<mf::ProtobufSocketCommunicator>(
-                the_socket_file(), the_ipc_factory(the_session_store(), the_display(), the_buffer_allocator()), threads);
-        });
-}
-
+void mg::NullDisplayReport::report_successful_setup_of_native_resources() {}
+void mg::NullDisplayReport::report_successful_egl_make_current_on_construction() {}
+void mg::NullDisplayReport::report_successful_egl_buffer_swap_on_construction() {}
+void mg::NullDisplayReport::report_successful_drm_mode_set_crtc_on_construction() {}
+void mg::NullDisplayReport::report_successful_display_construction() {}
