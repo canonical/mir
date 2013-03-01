@@ -116,6 +116,10 @@ TEST_F(MesaNativeDisplayContainerSetup, surface_advance_buffer)
     auto display = container->create(connection);
     auto native_display = reinterpret_cast<mir_toolkit::MirMesaEGLNativeDisplay*>(display);
 
-    EXPECT_CALL(mock_client_library, surface_next_buffer(surface, _, _)).Times(1);
+    {
+        InSequence seq;
+        EXPECT_CALL(mock_client_library, surface_next_buffer(surface, _, _)).Times(1);
+        EXPECT_CALL(mock_client_library, wait_for(_)).Times(1);
+    }
     native_display->surface_advance_buffer(native_display, (MirEGLNativeWindowType)surface);
 }
