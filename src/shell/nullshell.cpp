@@ -23,6 +23,8 @@
 using namespace mir;
 using namespace shell;
 
+// TODO: unit tests for these
+
 NullShell::~NullShell()
 {
 }

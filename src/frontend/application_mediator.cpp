@@ -226,11 +226,18 @@ void mir::frontend::ApplicationMediator::configure_surface(
     mir::protobuf::SurfaceSetting* response,
     google::protobuf::Closure* done)
 {
+    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
+
+    // Required response fields:
+    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
+    response->set_attrib(attrib);
+
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
     int value = request->ivalue();
+
+    // XXX Should we mention the attrib and value integer values in exceptions?
 
     auto const shell = graphics_display->current_shell();
     if (!shell->supports(attrib))
@@ -238,15 +245,16 @@ void mir::frontend::ApplicationMediator::configure_surface(
                                                "support the specified surface "
                                                "attribute"));
 
-    // TODO: check shell supports the value too
+    if (!shell->supports(attrib, value))
+        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
+                                               "support the specified value "
+                                               "for this attribute"));
 
     report->application_configure_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->surfaceid().value());
     int newvalue = application_session->configure_surface(id, attrib, value);
 
-    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
-    response->set_attrib(attrib);
     response->set_ivalue(newvalue);
 
     done->Run();
