@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_H_
 
 #include "mir/graphics/viewable_area.h"
+#include "mir/shell/shell.h"
 
 #include <memory>
 #include <functional>
@@ -40,12 +41,19 @@ public:
 
     virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
 
+    void set_shell(std::shared_ptr<mir::Shell> s);
+    bool start_shell();
+    void stop_shell();
+
 protected:
-    Display() = default;
-    ~Display() = default;
+    Display();
+    ~Display();
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;
+
+    std::shared_ptr<mir::Shell> shell;
+    bool                        shell_running;
 };
 }
 }

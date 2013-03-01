@@ -18,32 +18,28 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/shell/nullshell.h"
+#ifndef __MIR_NULLSHELL_H__
+#define __MIR_NULLSHELL_H__
 
-using namespace mir;
-using namespace shell;
+#include "mir/shell/shell.h"
 
-NullShell::~NullShell()
+namespace mir
 {
-}
-
-bool NullShell::start()
+namespace shell
 {
-    return true;
-}
 
-void NullShell::stop()
+class NullShell : public mir::Shell
 {
-}
+public:
+    virtual ~NullShell();
 
-bool NullShell::supports(MirSurfaceAttrib) const
-{
-    // TODO
-    return false;
-}
+    virtual bool start();
+    virtual void stop();
+    virtual bool supports(MirSurfaceAttrib attrib) const;
+    virtual bool supports(MirSurfaceType) const;
+};
 
-bool NullShell::supports(MirSurfaceType) const
-{
-    // TODO
-    return false;
-}
+} // namespace shell
+} // namespace mir
+
+#endif

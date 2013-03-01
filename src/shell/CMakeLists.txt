@@ -1,3 +1,3 @@
-add_library (nullshell STATIC
+add_library (mirnullshell STATIC
   nullshell.cpp
 )

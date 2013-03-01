@@ -1,6 +1,4 @@
 /*
- * Null Shell
- *
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,29 +13,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_NULLSHELL_H__
-#define __MIR_NULLSHELL_H__
+#include "mir/graphics/display.h"
+#include "mir/shell/nullshell.h"
 
-#include "mir/shell/shell.h"
+using namespace mir;
+using namespace mir::graphics;
+using namespace mir::shell;
 
-namespace mir
+Display::Display() :
+    shell_running(false)
 {
-namespace shell
+}
+
+Display::~Display()
 {
+    if (shell_running)
+        stop_shell();
+}
 
-class NullShell
+void Display::set_shell(std::shared_ptr<mir::Shell> s)
 {
-public:
-    virtual ~NullShell();
+    shell = s;
+}
 
-    virtual bool supports(MirSurfaceAttrib attrib) const;
-    virtual bool supports(MirSurfaceType) const;
-};
+bool Display::start_shell()
+{
+    if (!shell)
+        shell.reset(new NullShell);
 
-} // namespace shell
-} // namespace mir
+    return shell->start();
+}
 
-#endif
+void Display::stop_shell()
+{
+    if (shell_running)
+        shell->stop();
+}
