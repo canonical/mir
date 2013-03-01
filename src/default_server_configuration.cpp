@@ -66,7 +66,7 @@ public:
         std::shared_ptr<msess::SessionStore> const& session_store,
         std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_store(session_store),
         report(report),
@@ -82,7 +82,7 @@ private:
     std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
@@ -297,6 +297,11 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
+std::shared_ptr<mg::ViewableArea> mir::DefaultServerConfiguration::the_viewable_area()
+{
+    return the_display();
+}
+
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
@@ -351,7 +356,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<msess::SessionStore> const& session_store,
-    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(

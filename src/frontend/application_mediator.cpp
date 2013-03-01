@@ -31,20 +31,20 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include <boost/throw_exception.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
     std::shared_ptr<sessions::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::Display> const& graphics_display,
+    std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<ApplicationMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     session_store(session_store),
     graphics_platform(graphics_platform),
-    graphics_display(graphics_display),
+    viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
     report(report),
     resource_cache(resource_cache)
@@ -71,7 +71,7 @@ void mir::frontend::ApplicationMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto view_area = graphics_display->view_area();
+    auto view_area = viewable_area->view_area();
     display_info->set_width(view_area.size.width.as_uint32_t());
     display_info->set_height(view_area.size.height.as_uint32_t());
 
