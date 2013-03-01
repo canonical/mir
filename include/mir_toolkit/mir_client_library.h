@@ -324,10 +324,22 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  */
 int mir_debug_surface_id(MirSurface *surface);
 
-MirWaitHandle* mir_surface_set_type(MirSurface *surf,
-                                          MirSurfaceType type);
+/**
+ * Set the type (purpose) of a surface. This is not guaranteed to always work
+ * with some shell types (e.g. phone/tablet UIs). As such, you may have to
+ * wait on the function and check the result using mir_surface_get_type.
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] type     The new type of the surface
+ *   \return              A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
-MirSurfaceType mir_surface_get_type(MirSurface *surf);
+/**
+ * Get the type (purpose) of a surface from the server.
+ *   \param [in] surface  The surface to query
+ *   \return              The type of the surface
+ */
+MirSurfaceType mir_surface_get_type(MirSurface *surface);
 
 #ifdef __cplusplus
 }
