@@ -76,6 +76,7 @@ void mir::DisplayServer::start()
 {
     p->communicator->start();
     p->input_manager->start();
+    p->display->start_shell();
 
     std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
@@ -86,6 +87,7 @@ void mir::DisplayServer::start()
     }
 
     p->input_manager->stop();
+    p->display->stop_shell();
 }
 
 void mir::DisplayServer::do_stuff()
@@ -96,7 +98,8 @@ void mir::DisplayServer::do_stuff()
 void mir::DisplayServer::stop()
 {
     std::unique_lock<std::mutex> lk(p->exit_guard);
-    p->exit=true;
+    p->exit = true;
+    p->display->stop_shell();
 }
 
 void mir::DisplayServer::render(mg::Display* display)

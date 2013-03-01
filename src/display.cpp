@@ -44,11 +44,15 @@ bool Display::start_shell()
     if (!shell)
         set_shell(std::make_shared<NullShell>());
 
-    return shell->start();
+    shell_running = shell->start();
+    return shell_running;
 }
 
 void Display::stop_shell()
 {
     if (shell_running)
+    {
         shell->stop();
+        shell_running = false;
+    }
 }
