@@ -40,8 +40,6 @@ namespace mi = mir::input;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace mir
-{
 namespace
 {
 char const* dummy[] = {0};
@@ -121,7 +119,6 @@ class StubInputManager : public mi::InputManager
     void stop() {}
 };
 }
-}
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
     DefaultServerConfiguration(argc, argv)
@@ -184,11 +181,11 @@ std::string const& mtf::test_socket_file()
 
 
 int main(int argc, char** argv) {
-    mir::argc = std::remove_if(
+    ::argc = std::remove_if(
         argv,
         argv+argc,
         [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
-    mir::argv = const_cast<char const**>(argv);
+    ::argv = const_cast<char const**>(argv);
 
   // This allows the user to override the flag on the command line.
   ::testing::InitGoogleTest(&argc, argv);
