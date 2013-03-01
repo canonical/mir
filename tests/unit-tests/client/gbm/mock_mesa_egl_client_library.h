@@ -43,8 +43,8 @@ public:
     MOCK_METHOD3(surface_next_buffer, MirWaitHandle* (MirSurface*, mir_surface_lifecycle_callback, void*));
     MOCK_METHOD1(wait_for, void(MirWaitHandle*));
     
-    MirConnection* a_connection();
-    MirSurface* a_surface();
+    MirConnection* a_connection_pointer();
+    MirSurface* a_surface_pointer();
 private:
     MirConnection* connection;
     MirSurface* surface;

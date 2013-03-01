@@ -38,8 +38,8 @@ struct MesaNativeDisplayContainerSetup : public testing::Test
 {
     void SetUp()
     {
-        connection = mock_client_library.a_connection();
-        surface = mock_client_library.a_surface();
+        connection = mock_client_library.a_connection_pointer();
+        surface = mock_client_library.a_surface_pointer();
         
         container = std::make_shared<mclg::MesaNativeDisplayContainer>();
     }

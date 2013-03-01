@@ -46,15 +46,17 @@ mtd::MockMesaEGLClientLibrary::~MockMesaEGLClientLibrary()
     global_mock = NULL;
 }
 
-MirConnection*  mtd::MockMesaEGLClientLibrary::a_connection()
+MirConnection*  mtd::MockMesaEGLClientLibrary::a_connection_pointer()
 {
     // We just need a unique address of the correct type for matching expectations
     // rather than a valid MirConnection or Surface
     return reinterpret_cast<MirConnection*>(&connection);
 }
 
-MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface()
+MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface_pointer()
 {
+    // We just need a unique address of the correct type for matching expectations
+    // rather than a valid MirConnection or Surface
     return reinterpret_cast<MirSurface*>(&surface);
 }
 
