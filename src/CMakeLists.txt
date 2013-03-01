@@ -80,9 +80,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
     LINK_PUBLIC
       ${MIRSERVER_LINKS}
   )
-  install(TARGETS mirserver
-    LIBRARY DESTINATION lib
-  )
 else()
   target_link_libraries(mirserver
     LINK_PUBLIC
@@ -91,9 +88,19 @@ else()
   )
 endif()
 
+set (MIR_SERVER_HEADERS
+  ${CMAKE_SOURCE_DIR}/include/mir/shell/shell.h
+)
+
 set_target_properties(mirserver PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
   SOVERSION ${MIR_VERSION_MAJOR}
+  PUBLIC_HEADER ${MIR_SERVER_HEADERS}
+)
+
+install (TARGETS mirserver
+  LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION "include/mir/server/"
 )
 
 target_link_libraries(mirds
