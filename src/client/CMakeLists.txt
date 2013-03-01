@@ -49,7 +49,6 @@ set(
   mir_surface.cpp
   mir_logger.cpp
   mir_basic_rpc_channel.cpp
-  mir_shell.cpp
   ${PROTO_SRCS}
 )
 
