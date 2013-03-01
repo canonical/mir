@@ -21,7 +21,7 @@
 #ifndef __MIR_CLIENT_SHELL_H__
 #define __MIR_CLIENT_SHELL_H__
 
-#include <mir/common/surface.h>
+#include <mir/surface.h>
 #include <mir_toolkit/mir_client_library.h>
 
 #ifdef __cplusplus
