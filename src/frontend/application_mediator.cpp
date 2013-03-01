@@ -229,11 +229,20 @@ void mir::frontend::ApplicationMediator::configure_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
+    int value = request->ivalue();
+
+    auto const shell = graphics_display->current_shell();
+    if (!shell->supports(attrib))
+        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
+                                               "support the specified surface "
+                                               "attribute"));
+
+    // TODO: check shell supports the value too
+
     report->application_configure_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->surfaceid().value());
-    int attrib = request->attrib();
-    int value = request->ivalue();
     int newvalue = application_session->configure_surface(id, attrib, value);
 
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());

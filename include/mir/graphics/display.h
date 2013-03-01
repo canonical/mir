@@ -44,6 +44,7 @@ public:
     void set_shell(std::shared_ptr<mir::Shell> s);
     bool start_shell();
     void stop_shell();
+    std::shared_ptr<mir::Shell> current_shell() const;
 
 protected:
     Display();

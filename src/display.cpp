@@ -23,6 +23,8 @@ using namespace mir;
 using namespace mir::graphics;
 using namespace mir::shell;
 
+// TODO: Write unit tests for these
+
 Display::Display() :
     shell_running(false)
 {
@@ -56,4 +58,9 @@ void Display::stop_shell()
         shell->stop();
         shell_running = false;
     }
+}
+
+std::shared_ptr<mir::Shell> Display::current_shell() const
+{
+    return shell;
 }
