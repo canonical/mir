@@ -48,7 +48,7 @@ mtd::MockMesaEGLClientLibrary::~MockMesaEGLClientLibrary()
 
 MirConnection*  mtd::MockMesaEGLClientLibrary::a_connection()
 {
-    // We just need a unique address of the correct type for matching expectations 
+    // We just need a unique address of the correct type for matching expectations
     // rather than a valid MirConnection or Surface
     return reinterpret_cast<MirConnection*>(&connection);
 }

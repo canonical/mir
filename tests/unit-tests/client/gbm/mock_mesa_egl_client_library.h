@@ -31,7 +31,7 @@ namespace doubles
 {
 
 // A mock implementation of the C client library functions required by mesa-egl-platform-mir
-class MockMesaEGLClientLibrary 
+class MockMesaEGLClientLibrary
 {
 public:
     MockMesaEGLClientLibrary();

@@ -124,5 +124,4 @@ mclg::MesaNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType d
 
     delete reinterpret_cast<MirMesaEGLNativeDisplay*>(*it);
     valid_displays.erase(it);
-}
-    
+}    

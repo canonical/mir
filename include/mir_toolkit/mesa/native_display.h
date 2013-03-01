@@ -23,7 +23,8 @@
 #ifdef __cplusplus
 namespace mir_toolkit
 {
-extern "C"{
+extern "C"
+{
 #endif
 
 typedef struct MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
@@ -32,7 +33,7 @@ struct MirMesaEGLNativeDisplay
 {
     void (*display_get_platform)(MirMesaEGLNativeDisplay* display,
                                  MirPlatformPackage* package);
-    void (*surface_get_current_buffer)(MirMesaEGLNativeDisplay* display, 
+    void (*surface_get_current_buffer)(MirMesaEGLNativeDisplay* display,
                                        MirEGLNativeWindowType surface,
                                        MirBufferPackage* buffer_package);
     void (*surface_get_parameters)(MirMesaEGLNativeDisplay* display,
@@ -40,7 +41,7 @@ struct MirMesaEGLNativeDisplay
                                    MirSurfaceParameters* surface_parameters);
     void (*surface_advance_buffer)(MirMesaEGLNativeDisplay* display,
                                    MirEGLNativeWindowType surface);
-    
+
     MirConnection* context;
 };
 
