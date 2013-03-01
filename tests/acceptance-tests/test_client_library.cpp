@@ -195,29 +195,24 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            EXPECT_EQ(mir_shell_surface_get_type(surface), MIR_SURFACE_NORMAL);
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_NORMAL);
 
-            mir_wait_for(mir_shell_surface_set_type(surface,
-                                                    MIR_SURFACE_FREESTYLE));
-            EXPECT_EQ(mir_shell_surface_get_type(surface),
-                      MIR_SURFACE_FREESTYLE);
+            mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_FREESTYLE));
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
 
-            mir_wait_for(mir_shell_surface_set_type(surface,
-                                       static_cast<MirSurfaceType>(999)));
-            EXPECT_EQ(mir_shell_surface_get_type(surface),
-                      MIR_SURFACE_FREESTYLE);
+            mir_wait_for(mir_surface_set_type(surface,
+                                            static_cast<MirSurfaceType>(999)));
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
 
-            mir_wait_for(mir_shell_surface_set_type(surface,
-                                                    MIR_SURFACE_DIALOG));
-            EXPECT_EQ(mir_shell_surface_get_type(surface),
-                      MIR_SURFACE_DIALOG);
+            mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_DIALOG));
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_DIALOG);
 
-            mir_wait_for(mir_shell_surface_set_type(surface,
-                                       static_cast<MirSurfaceType>(888)));
-            EXPECT_EQ(mir_shell_surface_get_type(surface),
-                      MIR_SURFACE_DIALOG);
+            mir_wait_for(mir_surface_set_type(surface,
+                                            static_cast<MirSurfaceType>(888)));
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_DIALOG);
 
-            mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+            mir_wait_for(mir_surface_release(surface, release_surface_callback,
+                                             this));
 
             mir_connection_release(connection);
         }

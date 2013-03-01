@@ -324,10 +324,10 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  */
 int mir_debug_surface_id(MirSurface *surface);
 
-MirWaitHandle* mir_shell_surface_set_type(MirSurface *surf,
+MirWaitHandle* mir_surface_set_type(MirSurface *surf,
                                           MirSurfaceType type);
 
-MirSurfaceType mir_shell_surface_get_type(MirSurface *surf);
+MirSurfaceType mir_surface_get_type(MirSurface *surf);
 
 #ifdef __cplusplus
 }
