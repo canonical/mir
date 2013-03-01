@@ -21,9 +21,6 @@
 
 #include "mir_toolkit/c_types.h"
 
-#include <unordered_set>
-#include <mutex>
-
 namespace mir
 {
 namespace client
