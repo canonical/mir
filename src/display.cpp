@@ -42,7 +42,7 @@ void Display::set_shell(std::shared_ptr<mir::Shell> s)
 bool Display::start_shell()
 {
     if (!shell)
-        shell.reset(new NullShell);
+        set_shell(std::make_shared<NullShell>());
 
     return shell->start();
 }
