@@ -228,8 +228,8 @@ catch (std::exception const&)
     // Ignore
 }
 
-MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
-                                                       MirSurfaceType type)
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
+                                                           MirSurfaceType type)
 {
     return surf ? surf->configure(MIR_SURFACE_TYPE, type) : NULL;
 }
