@@ -144,7 +144,7 @@ namespace
 {
     struct DummyServerConfiguration : mir::DefaultServerConfiguration
     {
-        DummyServerConfiguration() : mir::DefaultServerConfiguration(0,0) {}
+        DummyServerConfiguration() : mir::DefaultServerConfiguration(0, nullptr) {}
 
         virtual std::shared_ptr<mir::sessions::SurfaceFactory>
         the_surface_factory()
