@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/sessions/application_session.h"
@@ -131,10 +131,10 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
-          listener{std::make_shared<mf::NullApplicationListener>()},
+          report{std::make_shared<mf::NullApplicationMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, mock_platform, graphics_display,
-                   buffer_allocator, listener, resource_cache},
+                   buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -143,7 +143,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationListener> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::ApplicationMediator mediator;
 

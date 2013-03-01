@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "../client_buffer.h"
 #include "android_registrar.h"
 

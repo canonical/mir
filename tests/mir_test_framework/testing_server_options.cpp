@@ -123,7 +123,7 @@ class StubInputManager : public mi::InputManager
 std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
     auto options = the_options();
-    if (options->get("tests_use_real_input", false))
+    if (options->get("tests-use-real-input", false))
         return mi::create_input_manager(event_filters, the_display());
     else
         return std::make_shared<StubInputManager>();
@@ -143,7 +143,7 @@ std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 
-    if (options->get("tests_use_real_graphics", false))
+    if (options->get("tests-use-real-graphics", false))
         return DefaultServerConfiguration::the_renderer();
     else
         return renderer(

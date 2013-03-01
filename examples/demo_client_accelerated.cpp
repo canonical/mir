@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois   <kevin.dubois@canonical.com>
  */
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir/draw/graphics.h"
 
 #include <assert.h>

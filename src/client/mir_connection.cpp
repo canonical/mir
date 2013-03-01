@@ -32,14 +32,14 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-MirConnection::MirConnection() :
+mir_toolkit::MirConnection::MirConnection() :
     channel(),
     server(0),
     error_message("ERROR")
 {
 }
 
-MirConnection::MirConnection(
+mir_toolkit::MirConnection::MirConnection(
     std::shared_ptr<google::protobuf::RpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
@@ -55,13 +55,13 @@ MirConnection::MirConnection(
     connect_result.set_error("connect not called");
 }
 
-MirConnection::~MirConnection()
+mir_toolkit::MirConnection::~MirConnection()
 {
     std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);
 }
 
-MirWaitHandle* MirConnection::create_surface(
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::create_surface(
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback,
     void * context)
@@ -72,7 +72,7 @@ MirWaitHandle* MirConnection::create_surface(
     return surface->get_create_wait_handle();
 }
 
-char const * MirConnection::get_error_message()
+char const * mir_toolkit::MirConnection::get_error_message()
 {
     if (connect_result.has_error())
     {
@@ -84,7 +84,7 @@ char const * MirConnection::get_error_message()
     }
 }
 
-void MirConnection::set_error_message(std::string const& error)
+void mir_toolkit::MirConnection::set_error_message(std::string const& error)
 {
     error_message = error;
 }
@@ -92,7 +92,7 @@ void MirConnection::set_error_message(std::string const& error)
 
 /* struct exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
-struct MirConnection::SurfaceRelease
+struct mir_toolkit::MirConnection::SurfaceRelease
 {
     MirSurface * surface;
     MirWaitHandle * handle;
@@ -100,14 +100,14 @@ struct MirConnection::SurfaceRelease
     void * context;
 };
 
-void MirConnection::released(SurfaceRelease data)
+void mir_toolkit::MirConnection::released(SurfaceRelease data)
 {
     data.callback(data.surface, data.context);
     data.handle->result_received();
     delete data.surface;
 }
 
-MirWaitHandle* MirConnection::release_surface(
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::release_surface(
         MirSurface *surface,
         mir_surface_lifecycle_callback callback,
         void * context)
@@ -126,7 +126,7 @@ MirWaitHandle* MirConnection::release_surface(
     return new_wait_handle;
 }
 
-void MirConnection::connected(mir_connected_callback callback, void * context)
+void mir_toolkit::MirConnection::connected(mir_connected_callback callback, void * context)
 {
     /*
      * We need to create the client platform after the connection has been
@@ -140,7 +140,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     connect_wait_handle.result_received();
 }
 
-MirWaitHandle* MirConnection::connect(
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::connect(
     const char* app_name,
     mir_connected_callback callback,
     void * context)
@@ -155,7 +155,7 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
-MirWaitHandle* MirConnection::connect(
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::connect(
     int lightdm_id,
     const char* app_name,
     mir_connected_callback callback,
@@ -172,7 +172,7 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
-void MirConnection::select_focus_by_lightdm_id(int lightdm_id)
+void mir_toolkit::MirConnection::select_focus_by_lightdm_id(int lightdm_id)
 {
     mir::protobuf::LightdmId id;
     id.set_value(lightdm_id);
@@ -181,7 +181,7 @@ void MirConnection::select_focus_by_lightdm_id(int lightdm_id)
 }
 
 
-void MirConnection::done_disconnect()
+void mir_toolkit::MirConnection::done_disconnect()
 {
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
@@ -194,7 +194,7 @@ void MirConnection::done_disconnect()
     disconnect_wait_handle.result_received();
 }
 
-MirWaitHandle* MirConnection::disconnect()
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::disconnect()
 {
     server.disconnect(
         0,
@@ -205,7 +205,7 @@ MirWaitHandle* MirConnection::disconnect()
     return &disconnect_wait_handle;
 }
 
-void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
+void mir_toolkit::MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
                                         void* context)
 {
     int const status_code{drm_auth_magic_status.status_code()};
@@ -214,7 +214,7 @@ void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
     drm_auth_magic_wait_handle.result_received();
 }
 
-MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
+mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::drm_auth_magic(unsigned int magic,
                                              mir_drm_auth_magic_callback callback,
                                              void* context)
 {
@@ -231,7 +231,7 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
     return &drm_auth_magic_wait_handle;
 }
 
-bool MirConnection::is_valid(MirConnection *connection)
+bool mir_toolkit::MirConnection::is_valid(MirConnection *connection)
 {
     {
         std::lock_guard<std::mutex> lock(connection_guard);
@@ -242,7 +242,7 @@ bool MirConnection::is_valid(MirConnection *connection)
     return !connection->connect_result.has_error();
 }
 
-void MirConnection::populate(MirPlatformPackage& platform_package)
+void mir_toolkit::MirConnection::populate(MirPlatformPackage& platform_package)
 {
     if (!connect_result.has_error() && connect_result.has_platform())
     {
@@ -263,7 +263,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-void MirConnection::populate(MirDisplayInfo& display_info)
+void mir_toolkit::MirConnection::populate(MirDisplayInfo& display_info)
 {
     if (!connect_result.has_error() && connect_result.has_display_info())
     {
@@ -294,17 +294,17 @@ void MirConnection::populate(MirDisplayInfo& display_info)
 }
 
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
+std::shared_ptr<mir::client::ClientPlatform> mir_toolkit::MirConnection::get_client_platform()
 {
     return platform;
 }
 
-MirConnection* MirConnection::mir_connection()
+mir_toolkit::MirConnection* mir_toolkit::MirConnection::mir_connection()
 {
     return this;
 }
 
-EGLNativeDisplayType MirConnection::egl_native_display()
+EGLNativeDisplayType mir_toolkit::MirConnection::egl_native_display()
 {
     return *native_display;
 }

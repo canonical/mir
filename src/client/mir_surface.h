@@ -23,7 +23,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/common/surface.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "client_buffer_depository.h"
 #include "mir_logger.h"
 #include "mir_wait_handle.h"
@@ -41,7 +41,7 @@ class MemoryRegion;
 }
 }
 
-class MirSurface : public mir::client::ClientSurface
+class mir_toolkit::MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -58,8 +58,8 @@ public:
     ~MirSurface();
 
     MirWaitHandle* release_surface(
-            mir_surface_lifecycle_callback callback,
-            void *context);
+        mir_surface_lifecycle_callback callback,
+        void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
