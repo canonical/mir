@@ -105,7 +105,11 @@ private:
 
 char const* const log_app_mediator = "log-app-mediator";
 char const* const log_display      = "log-display";
-char const* const glog             = "glog";
+
+char const* const glog                 = "glog";
+char const* const glog_stderrthreshold = "glog-stderrthreshold";
+char const* const glog_minloglevel     = "glog-minloglevel";
+char const* const glog_log_dir         = "glog-log-dir";
 
 boost::program_options::options_description program_options()
 {
@@ -116,10 +120,22 @@ boost::program_options::options_description program_options()
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
         ("file,f", po::value<std::string>(), "socket filename")
+        (log_display, po::value<bool>(), "[bool, default=false]\nlog the Display report")
+        (log_app_mediator, po::value<bool>(), "[bool, default=false]\nlog the ApplicationMediator report")
         (glog, "use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),"[int, default=2]\n"
+                                                "Copy log messages at or above this level "
+                                                "to stderr in addition to logfiles. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively")
+        (glog_minloglevel, po::value<int>(),    "[int, default=0]\n"
+                                                "Log messages at or above this level. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively")
+        (glog_log_dir, po::value<std::string>(),"[string, default=\"\"]\n"
+                                                "If specified, logfiles are written into this "
+                                                "directory instead of the default logging directory")
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
-        (log_display, po::value<bool>(), "log the Display report")
-        (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
         ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
         ("tests-use-real-input", po::value<bool>(), "use real input in tests");
 
@@ -389,7 +405,11 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             if (the_options()->is_set(glog))
             {
                 // TODO use the_options() to configure logging
-                return std::make_shared<ml::GlogLogger>();
+                return std::make_shared<ml::GlogLogger>(
+                    "mir",
+                    the_options()->get(glog_stderrthreshold, 2),
+                    the_options()->get(glog_minloglevel, 0),
+                    the_options()->get(glog_log_dir, ""));
             }
             else
             {

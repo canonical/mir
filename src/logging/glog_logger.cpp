@@ -21,23 +21,32 @@
 #include <glog/logging.h>
 
 #include <mutex>
+#include <cstdlib>
 
-mir::logging::GlogLogger::GlogLogger()
+mir::logging::GlogLogger::GlogLogger(
+    const char* argv0,
+    int stderrthreshold,
+    int minloglevel,
+    std::string const& log_dir)
 {
+    FLAGS_stderrthreshold = stderrthreshold;
+    FLAGS_minloglevel     = minloglevel;
+    FLAGS_log_dir         = log_dir;
+
     static std::once_flag init_flag;
 
-    std::call_once(init_flag, []() { google::InitGoogleLogging("MIR"); });
+    std::call_once(init_flag, [=]() { google::InitGoogleLogging(argv0); });
 }
 
 void mir::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
 {
     static int glog_level[] =
     {
-        google::GLOG_FATAL, //critical = 0,
-        google::GLOG_ERROR, //error = 1,
-        google::GLOG_WARNING, //warning = 2,
-        google::GLOG_INFO, //informational = 3,
-        google::GLOG_INFO, //debug = 4
+        google::GLOG_FATAL,     // critical = 0,
+        google::GLOG_ERROR,     // error = 1,
+        google::GLOG_WARNING,   // warning = 2,
+        google::GLOG_INFO,      // informational = 3,
+        google::GLOG_INFO,      // debug = 4
     };
 
     // Since we're not collecting __FILE__ or __LINE__ this is misleading

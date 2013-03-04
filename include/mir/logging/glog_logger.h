@@ -25,7 +25,11 @@ namespace logging
 class GlogLogger : public Logger
 {
 public:
-    GlogLogger();
+    GlogLogger(
+        char const* argv0,
+        int stderrthreshold,
+        int minloglevel,
+        std::string const& log_dir);
 
 private:
     virtual void log(
