@@ -35,9 +35,18 @@ namespace client
 {
 class ClientBuffer;
 
+/// Responsible for taking the buffer data sent from the server and wrapping it in a ClientBuffer
+
+/// The ClientBufferDepository is responsible for taking the IPC buffer data and converting it into
+/// the more digestible form of a ClientBuffer. It maintains the client-side state necessary to
+/// construct a ClientBuffer.
 class ClientBufferDepository
 {
 public:
+	/// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
+
+	/// This also marks the previous current buffer (if any) as being submitted to the server.
+	/// \post access_current_buffer() will return a ClientBuffer constructed from this IPC data.
     virtual void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
                                 geometry::Size, geometry::PixelFormat) = 0;
     virtual std::shared_ptr<ClientBuffer> access_current_buffer(void) = 0;
