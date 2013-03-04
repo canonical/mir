@@ -36,7 +36,7 @@ namespace gbm
 class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
 {
 public:
-    explicit MesaNativeDisplayContainer();
+    MesaNativeDisplayContainer();
     virtual ~MesaNativeDisplayContainer();
     
     mir_toolkit::MirEGLNativeDisplayType create(mir_toolkit::MirConnection* connection);
