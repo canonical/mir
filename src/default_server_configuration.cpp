@@ -119,25 +119,25 @@ boost::program_options::options_description program_options()
         "Command-line options.\n"
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
-        ("file,f", po::value<std::string>(), "socket filename")
-        (log_display, po::value<bool>(), "[bool, default=false]\nlog the Display report")
-        (log_app_mediator, po::value<bool>(), "[bool, default=false]\nlog the ApplicationMediator report")
-        (glog, "use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),"[int, default=2]\n"
-                                                "Copy log messages at or above this level "
+        ("file,f", po::value<std::string>(),    "Socket filename")
+        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
+        (glog,                                  "Use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
                                                 "to stderr in addition to logfiles. The numbers "
                                                 "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively")
-        (glog_minloglevel, po::value<int>(),    "[int, default=0]\n"
-                                                "Log messages at or above this level. The numbers "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=2]")
+        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
                                                 "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively")
-        (glog_log_dir, po::value<std::string>(),"[string, default=\"\"]\n"
-                                                "If specified, logfiles are written into this "
-                                                "directory instead of the default logging directory")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
-        ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
-        ("tests-use-real-input", po::value<bool>(), "use real input in tests");
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=0]")
+        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
+                                                "directory instead of the default logging directory."
+                                                " [string:default=\"\"]")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]")
+        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
+        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
 
     return desc;
 }
