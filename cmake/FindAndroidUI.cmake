@@ -5,7 +5,6 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(ANDROID_UI_INCLUDE_DIR
    NAMES         ui/FramebufferNativeWindow.h
                  pixelflinger/pixelflinger.h
@@ -23,6 +22,9 @@ find_path(ANDROID_UI_INCLUDE_DIR
                  ui/Rect.h
                  ui/Point.h
                  ui/egl/android_natives.h
+
+                 #we keep these headers in-tree, so search in-tree
+                 NO_CMAKE_FIND_ROOT_PATH
    )
 
 # we are using a hybris/chroot compile, so libui functions are linked via hybris.
