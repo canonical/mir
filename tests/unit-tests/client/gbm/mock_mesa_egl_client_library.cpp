@@ -51,14 +51,14 @@ mtd::MockMesaEGLClientLibrary::~MockMesaEGLClientLibrary()
 MirConnection*  mtd::MockMesaEGLClientLibrary::a_connection_pointer()
 {
     // We just need a unique address of the correct type for matching expectations
-    // rather than a valid MirConnection or Surface
+    // rather than a valid Connection
     return reinterpret_cast<MirConnection*>(&connection);
 }
 
 MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface_pointer()
 {
     // We just need a unique address of the correct type for matching expectations
-    // rather than a valid MirConnection or Surface
+    // rather than a valid Surface
     return reinterpret_cast<MirSurface*>(&surface);
 }
 
