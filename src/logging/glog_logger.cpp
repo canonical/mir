@@ -20,6 +20,15 @@
 
 #include <glog/logging.h>
 
+#include <mutex>
+
+mir::logging::GlogLogger::GlogLogger()
+{
+    static std::once_flag init_flag;
+
+    std::call_once(init_flag, []() { google::InitGoogleLogging("MIR"); });
+}
+
 void mir::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
 {
     static int glog_level[] =

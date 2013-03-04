@@ -24,6 +24,10 @@ namespace logging
 {
 class GlogLogger : public Logger
 {
+public:
+    GlogLogger();
+
+private:
     virtual void log(
         Severity severity,
         const std::string& message,
