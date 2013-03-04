@@ -151,7 +151,7 @@ struct MockClientDepository : public mcl::ClientBufferDepository
         using namespace testing;
 
         emptybuffer=std::make_shared<MockBuffer>();
-        ON_CALL(*this, access_buffer(_))
+        ON_CALL(*this, access_current_buffer())
             .WillByDefault(Return(emptybuffer));
     }
 
@@ -164,7 +164,7 @@ struct MockClientDepository : public mcl::ClientBufferDepository
     MOCK_METHOD4(deposit_package_rv,
                      void(std::shared_ptr<MirBufferPackage>, int,
                             geom::Size, geom::PixelFormat));
-    MOCK_METHOD1(access_buffer, std::shared_ptr<mcl::ClientBuffer>(int));
+    MOCK_METHOD0(access_current_buffer, std::shared_ptr<mcl::ClientBuffer>(void));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };

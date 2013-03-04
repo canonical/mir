@@ -89,8 +89,6 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
 
-    int last_buffer_id;
-
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
 

@@ -55,24 +55,25 @@ TEST_F(MirGBMBufferDepositoryTest, depository_sets_width_and_height)
     mclg::GBMClientBufferDepository depository{drm_fd_handler};
 
     depository.deposit_package(std::move(package), 8, size, pf);
-    auto buffer = depository.access_buffer(8);
+    auto buffer = depository.access_current_buffer();
 
     EXPECT_EQ(buffer->size().height, height);
     EXPECT_EQ(buffer->size().width, width);
     EXPECT_EQ(buffer->pixel_format(), pf);
 }
 
-TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_buffer )
+TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_current_buffer )
 {
     using namespace testing;
 
+    auto package2 = std::make_shared<MirBufferPackage>();
     mclg::GBMClientBufferDepository depository{drm_fd_handler};
 
     depository.deposit_package(std::move(package), 8, size, pf);
-    auto buffer1 = depository.access_buffer(8);
+    auto buffer1 = depository.access_current_buffer();
 
-    depository.deposit_package(std::move(package), 8, size, pf);
-    auto buffer2 = depository.access_buffer(8);
+    depository.deposit_package(std::move(package2), 9, size, pf);
+    auto buffer2 = depository.access_current_buffer();
 
     EXPECT_NE(buffer1, buffer2);
 }

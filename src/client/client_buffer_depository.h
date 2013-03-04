@@ -40,7 +40,7 @@ class ClientBufferDepository
 public:
     virtual void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
                                 geometry::Size, geometry::PixelFormat) = 0;
-    virtual std::shared_ptr<ClientBuffer> access_buffer(int id) = 0;
+    virtual std::shared_ptr<ClientBuffer> access_current_buffer(void) = 0;
 };
 }
 }

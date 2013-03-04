@@ -43,7 +43,7 @@ public:
 
     void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> && package, int, geometry::Size size, geometry::PixelFormat pf);
 
-    std::shared_ptr<ClientBuffer> access_buffer(int id);
+    std::shared_ptr<ClientBuffer> access_current_buffer(void);
 private:
     std::shared_ptr<ClientBuffer> buffer;
     std::shared_ptr<DRMFDHandler> drm_fd_handler;

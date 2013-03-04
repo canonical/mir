@@ -39,13 +39,10 @@ void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBuf
         auto buffer = std::make_shared<mcla::AndroidClientBuffer>(registrar, std::move(package), size, pf);
         buffer_depository[id] = buffer;
     }
+    current_buffer_id = id;
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_buffer(int id)
+std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_current_buffer(void)
 {
-    auto find_it = buffer_depository.find(id);
-    if (find_it == buffer_depository.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("server told client to use buffer before"));
-
-    return buffer_depository[id];
+    return buffer_depository[current_buffer_id];
 }

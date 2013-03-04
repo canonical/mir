@@ -37,7 +37,7 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
     buffer = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
 }
 
-std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_buffer(int)
+std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_current_buffer(void)
 {
     return buffer;
 }

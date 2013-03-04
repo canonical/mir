@@ -67,7 +67,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
         .Times(1);
 
     depository.deposit_package(std::move(package1), 8, size, pf);
-    auto buffer = depository.access_buffer(8);
+    auto buffer = depository.access_current_buffer();
 
     EXPECT_EQ(buffer->size().height, height);
     EXPECT_EQ(buffer->size().width, width);
@@ -106,27 +106,6 @@ TEST_F(MirBufferDepositoryTest, depository_creates_two_buffers_with_distinct_id 
     depository.deposit_package(std::move(package2), 9, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_returns_same_accessed_buffer_for_same_id )
-{
-    using namespace testing;
-
-    mcla::AndroidClientBufferDepository depository(mock_registrar);
-
-    EXPECT_CALL(*mock_registrar, register_buffer(_))
-        .Times(2);
-    EXPECT_CALL(*mock_registrar, unregister_buffer(_))
-        .Times(2);
-
-    /* repeated id */
-    depository.deposit_package(std::move(package1), 8, size, pf);
-    depository.deposit_package(std::move(package2), 9, size, pf);
-
-    auto buffer1 = depository.access_buffer(8);
-    auto buffer2 = depository.access_buffer(8);
-
-    EXPECT_EQ(buffer1, buffer2);
-}
-
 TEST_F(MirBufferDepositoryTest, depository_returns_different_accessed_buffer_for_unique_id )
 {
     using namespace testing;
@@ -140,30 +119,10 @@ TEST_F(MirBufferDepositoryTest, depository_returns_different_accessed_buffer_for
 
     /* repeated id */
     depository.deposit_package(std::move(package1), 8, size, pf);
-    depository.deposit_package(std::move(package2), 9, size, pf);
+    auto buffer1 = depository.access_current_buffer();
 
-    auto buffer1 = depository.access_buffer(8);
-    auto buffer2 = depository.access_buffer(9);
+    depository.deposit_package(std::move(package2), 9, size, pf);
+    auto buffer2 = depository.access_current_buffer();
 
     EXPECT_NE(buffer1, buffer2);
-}
-
-TEST_F(MirBufferDepositoryTest, depository_throws_for_uncreated_id )
-{
-    using namespace testing;
-
-    mcla::AndroidClientBufferDepository depository(mock_registrar);
-
-    EXPECT_CALL(*mock_registrar, register_buffer(_))
-        .Times(1);
-    EXPECT_CALL(*mock_registrar, unregister_buffer(_))
-        .Times(1);
-
-    /* repeated id */
-    depository.deposit_package(std::move(package1), 8, size, pf);
-
-    EXPECT_THROW({
-    auto buffer2 = depository.access_buffer(9);
-    }, std::runtime_error);
-
 }
