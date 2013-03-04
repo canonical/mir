@@ -31,6 +31,8 @@ mtd::MockMesaEGLClientLibrary* global_mock = NULL;
 }
 
 mtd::MockMesaEGLClientLibrary::MockMesaEGLClientLibrary()
+  : connection(0),
+    surface(0)
 {
     using namespace ::testing;
 
