@@ -404,7 +404,6 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
         {
             if (the_options()->is_set(glog))
             {
-                // TODO use the_options() to configure logging
                 return std::make_shared<ml::GlogLogger>(
                     "mir",
                     the_options()->get(glog_stderrthreshold, 2),
