@@ -35,11 +35,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 
-namespace
-{
-std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
-}
-
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
@@ -47,7 +42,7 @@ struct mir::DisplayServer::Private
           compositor{config.the_drawer()},
           session_store{config.the_session_store()},
           communicator{config.the_communicator()},
-          input_manager{config.the_input_manager(empty_filter_list)},
+          input_manager{config.the_input_manager()},
           exit(false)
     {
     }

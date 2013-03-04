@@ -55,8 +55,8 @@ public:
 
     // TODO this should not be taking a parameter, but as
     // TODO input still needs proper integration left for later
-    virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
+    virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters() = 0;
+    virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
 
 protected:
     ServerConfiguration() = default;

@@ -102,8 +102,8 @@ public:
 
     virtual std::shared_ptr<logging::Logger> the_logger();
 
-    virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
+    virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
+    virtual std::shared_ptr<input::InputManager> the_input_manager();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
