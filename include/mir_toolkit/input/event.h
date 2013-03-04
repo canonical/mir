@@ -25,7 +25,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-// TODO: To the moon.
+/* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
     typedef int64_t nsecs_t;
@@ -39,14 +39,14 @@ extern "C" {
 
     struct MirEvent
     {
-        // Generic event properties
+        /* Generic event properties */
         MirEventType type;
         int32_t device_id;
         int32_t source_id;
         int32_t action;
         int32_t flags;
         int32_t meta_state;
-        // Information specific to key/motion event types
+        /* Information specific to key/motion event types */
         union
         {
             struct HardwareSwitchEvent
@@ -88,7 +88,7 @@ extern "C" {
                     float pressure;
                     float orientation;
                 };
-                PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+                struct PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;
     };
@@ -97,4 +97,4 @@ extern "C" {
 }
 #endif
 
-#endif // MIR_TOOLKIT_INPUT_EVENT_H_
+#endif /* MIR_TOOLKIT_INPUT_EVENT_H_ */
