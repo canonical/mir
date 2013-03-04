@@ -109,8 +109,13 @@ bool mo::ProgramOption::is_set(char const* name) const
 }
 
 
-bool mo::ProgramOption::get(char const* /*name*/, bool default_) const
+bool mo::ProgramOption::get(char const* name, bool default_) const
 {
+    if (options.count(name))
+    {
+        return options[name].as<bool>();
+    }
+
     return default_;
 }
 
