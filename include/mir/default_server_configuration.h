@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -84,6 +84,7 @@ public:
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
+    virtual std::shared_ptr<graphics::ViewableArea> the_viewable_area();
 
     virtual std::shared_ptr<compositor::Drawer> the_drawer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
@@ -105,8 +106,6 @@ public:
         const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters);
 
 protected:
-    // TODO deprecated
-    explicit DefaultServerConfiguration();
     virtual std::shared_ptr<options::Option> the_options() const;
 
     template<typename Type>
@@ -157,7 +156,7 @@ private:
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<sessions::SessionStore> const& session_store,
-        std::shared_ptr<graphics::Display> const& display,
+        std::shared_ptr<graphics::ViewableArea> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;

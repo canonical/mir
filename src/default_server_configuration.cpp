@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -66,7 +66,7 @@ public:
         std::shared_ptr<msess::SessionStore> const& session_store,
         std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_store(session_store),
         report(report),
@@ -82,7 +82,7 @@ private:
     std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
@@ -158,15 +158,6 @@ void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& optio
 
     options->parse_environment(desc, "MIR_SERVER_");
 }
-}
-
-mir::DefaultServerConfiguration::DefaultServerConfiguration()
-{
-    auto options = std::make_shared<mir::options::ProgramOption>();
-
-    parse_environment(options);
-
-    this->options = options;
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
@@ -297,6 +288,11 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
+std::shared_ptr<mg::ViewableArea> mir::DefaultServerConfiguration::the_viewable_area()
+{
+    return the_display();
+}
+
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
@@ -351,7 +347,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<msess::SessionStore> const& session_store,
-    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(
