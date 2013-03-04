@@ -37,6 +37,10 @@ struct ProgramOption : testing::Test
     {
         desc.add_options()
             ("file,f", bpo::value<std::string>(), "<socket filename>")
+            ("flag-yes", bpo::value<bool>(), "flag \"yes\"")
+            ("flag-true", bpo::value<bool>(), "flag \"true\"")
+            ("flag-no", bpo::value<bool>(), "flag \"no\"")
+            ("flag-false", bpo::value<bool>(), "flag \"false\"")
             ("help,h", "this help text");
     }
 
@@ -78,6 +82,30 @@ TEST_F(ProgramOption, parse_command_line_short)
     EXPECT_EQ("default", po.get("garbage", "default"));
     EXPECT_TRUE(po.is_set("file"));
     EXPECT_FALSE(po.is_set("garbage"));
+}
+
+TEST_F(ProgramOption, parse_command_yes_no)
+{
+    mir::options::ProgramOption po;
+
+    const int argc = 9;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--flag-yes", "yes",
+        "--flag-true", "true",
+        "--flag-no", "no",
+        "--flag-false", "false"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_TRUE(po.get("flag-yes", false));
+    EXPECT_TRUE(po.get("flag-true", false));
+    EXPECT_FALSE(po.get("flag-no", true));
+    EXPECT_FALSE(po.get("flag-false", true));
+
+    EXPECT_FALSE(po.get("flag-default", false));
+    EXPECT_TRUE(po.get("flag-default", true));
 }
 
 TEST_F(ProgramOption, parse_command_line_help)
