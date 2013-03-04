@@ -20,7 +20,7 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_LEXICON_H_
 #define MIR_INPUT_ANDROID_INPUT_LEXICON_H_
 
-#include "mir/input/event.h"
+#include "mir_toolkit/input/event.h"
 
 namespace android
 {
