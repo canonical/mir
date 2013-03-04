@@ -88,11 +88,12 @@ endif()
 if(NOT MIR_INPUT_USE_ANDROID_TYPES)
   target_link_libraries(
     android-input
-    ${Boost_LIBRARIES})
+   )
 endif()
 
 target_link_libraries(
   android-input
+
   ${Boost_LIBRARIES}
 )
 
