@@ -43,6 +43,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/glog_logger.h"
 #include "mir/logging/application_mediator_report.h"
 #include "mir/logging/display_report.h"
 #include "mir/surfaces/surface_controller.h"
@@ -104,6 +105,7 @@ private:
 
 char const* const log_app_mediator = "log-app-mediator";
 char const* const log_display      = "log-display";
+char const* const glog             = "glog";
 
 boost::program_options::options_description program_options()
 {
@@ -114,6 +116,7 @@ boost::program_options::options_description program_options()
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
         ("file,f", po::value<std::string>(), "socket filename")
+        (glog, "use google::GLog for logging")
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
         (log_display, po::value<bool>(), "log the Display report")
         (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
@@ -381,9 +384,16 @@ mir::DefaultServerConfiguration::the_application_mediator_report()
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
 {
     return logger(
-        [this]()
+        [this]() -> std::shared_ptr<ml::Logger>
         {
-            // TODO use the_options() to configure logging
-            return std::make_shared<ml::DumbConsoleLogger>();
+            if (the_options()->is_set(glog))
+            {
+                // TODO use the_options() to configure logging
+                return std::make_shared<ml::GlogLogger>();
+            }
+            else
+            {
+                return std::make_shared<ml::DumbConsoleLogger>();
+            }
         });
 }
