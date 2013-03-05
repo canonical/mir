@@ -204,7 +204,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
                                             static_cast<MirSurfaceType>(999)));
             EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
 
-            // Verify the default NullShell rejects unsported types
+            // Verify the default NullShell rejects unsupported types
             mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_DIALOG));
             EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
             mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_UTILITY));
