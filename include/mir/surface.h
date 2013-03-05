@@ -1,5 +1,6 @@
 /*
  * Surface-related declarations common to client and server
+ * This is C. Not C++.
  *
  * Copyright © 2013 Canonical Ltd.
  *
