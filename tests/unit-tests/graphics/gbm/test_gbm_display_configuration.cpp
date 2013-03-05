@@ -24,7 +24,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mir_test_doubles/null_display_listener.h"
+#include "mir/graphics/null_display_report.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -36,7 +36,6 @@
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace
@@ -61,7 +60,7 @@ class GBMDisplayConfigurationTest : public ::testing::Test
 {
 public:
     GBMDisplayConfigurationTest() :
-        null_listener{std::make_shared<mtd::NullDisplayListener>()}
+        null_listener{std::make_shared<mg::NullDisplayReport>()}
     {
         using namespace testing;
 
@@ -99,7 +98,7 @@ public:
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<mg::DisplayListener> const null_listener;
+    std::shared_ptr<mg::DisplayReport> const null_listener;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;

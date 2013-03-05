@@ -20,6 +20,7 @@
 #include "src/graphics/android/android_buffer_allocator.h"
 #include "src/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
@@ -50,7 +51,7 @@ protected:
         ASSERT_FALSE(mtd::is_surface_flinger_running());
         ASSERT_NO_THROW(
         {
-            platform = mg::create_platform();
+            platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
             display = platform->create_display();
         });
     }

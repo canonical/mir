@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -30,7 +30,7 @@ namespace mir
 namespace graphics
 {
 class Platform;
-class Display;
+class ViewableArea;
 }
 
 namespace compositor
@@ -59,7 +59,7 @@ public:
     ApplicationMediator(
         std::shared_ptr<sessions::SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<graphics::Display> const& graphics_display,
+        std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<ApplicationMediatorReport> const& report,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -111,10 +111,13 @@ public:
 private:
     std::shared_ptr<sessions::SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
-    std::shared_ptr<graphics::Display> const graphics_display;
-    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<ApplicationMediatorReport> const report;
 
+    // TODO this is a dubious dependency - to get display_info (is there only one?)
+    std::shared_ptr<graphics::ViewableArea> const viewable_area;
+    // TODO this is a dubious dependency - to get supported_pixel_formats
+    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
+
+    std::shared_ptr<ApplicationMediatorReport> const report;
     std::shared_ptr<ResourceCache> const resource_cache;
 
     std::shared_ptr<sessions::Session> application_session;

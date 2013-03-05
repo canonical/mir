@@ -26,6 +26,7 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
@@ -189,7 +190,8 @@ struct Moveable
 int main(int argc, char **argv)
 {
     /* Create and set up all the components we need */
-    auto platform = mg::create_platform();
+    auto logger = std::make_shared<ml::DumbConsoleLogger>();
+    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
     auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();

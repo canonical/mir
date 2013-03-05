@@ -40,10 +40,11 @@ namespace mi = mir::input;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace mir
-{
 namespace
 {
+char const* dummy[] = {0};
+int argc = 0;
+char const** argv = dummy;
 
 geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
@@ -118,7 +119,12 @@ class StubInputManager : public mi::InputManager
     void stop() {}
 };
 }
+
+mtf::TestingServerConfiguration::TestingServerConfiguration() :
+    DefaultServerConfiguration(argc, argv)
+{
 }
+
 
 std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
 {
@@ -171,4 +177,18 @@ std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{"./mir_socket_test"};
     return socket_file;
+}
+
+
+int main(int argc, char** argv)
+{
+    ::argc = std::remove_if(
+        argv,
+        argv+argc,
+        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
+    ::argv = const_cast<char const**>(argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }

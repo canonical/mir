@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -39,10 +39,12 @@
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/application_mediator_report.h"
+#include "mir/logging/display_report.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -64,7 +66,7 @@ public:
         std::shared_ptr<msess::SessionStore> const& session_store,
         std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         session_store(session_store),
         report(report),
@@ -80,7 +82,7 @@ private:
     std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
@@ -101,6 +103,7 @@ private:
 };
 
 char const* const log_app_mediator = "log-app-mediator";
+char const* const log_display      = "log-display";
 
 boost::program_options::options_description program_options()
 {
@@ -112,6 +115,7 @@ boost::program_options::options_description program_options()
     desc.add_options()
         ("file,f", po::value<std::string>(), "socket filename")
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
+        (log_display, po::value<bool>(), "log the Display report")
         (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
         ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
         ("tests-use-real-input", po::value<bool>(), "use real input in tests");
@@ -156,15 +160,6 @@ void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& optio
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration()
-{
-    auto options = std::make_shared<mir::options::ProgramOption>();
-
-    parse_environment(options);
-
-    this->options = options;
-}
-
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
 {
     auto options = std::make_shared<mir::options::ProgramOption>();
@@ -185,10 +180,26 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
     return options;
 }
 
+std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_report()
+{
+    return display_report(
+        [this]() -> std::shared_ptr<graphics::DisplayReport>
+        {
+            if (the_options()->get(log_display, false))
+            {
+                return std::make_shared<ml::DisplayReport>(the_logger());
+            }
+            else
+            {
+                return std::make_shared<mg::NullDisplayReport>();
+            }
+        });
+}
+
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
-        []()
+        [this]()
         {
             // TODO I doubt we need the extra level of indirection provided by
             // mg::create_platform() - we just need to move the implementation
@@ -196,7 +207,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             // graphics libraries.
             // Alternatively, if we want to dynamically load the graphics library
             // then this would be the place to do that.
-             return mg::create_platform();
+            return mg::create_platform(the_display_report());
         });
 }
 
@@ -277,6 +288,11 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
+std::shared_ptr<mg::ViewableArea> mir::DefaultServerConfiguration::the_viewable_area()
+{
+    return the_display();
+}
+
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
@@ -331,7 +347,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<msess::SessionStore> const& session_store,
-    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(

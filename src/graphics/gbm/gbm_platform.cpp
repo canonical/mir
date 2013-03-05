@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -21,7 +21,6 @@
 #include <boost/throw_exception.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
-#include "gbm_display_reporter.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -53,7 +52,7 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 
 }
 
-mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayListener> const& listener) :
+mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener) :
     listener(listener)
 {
     drm.setup();
@@ -84,8 +83,7 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
     drm.auth_magic(magic);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform()
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
 {
-    const std::shared_ptr<ml::Logger>  logger(std::make_shared<ml::DumbConsoleLogger>());
-    return std::make_shared<mgg::GBMPlatform>(std::make_shared<mgg::GBMDisplayReporter>(logger));
+    return std::make_shared<mgg::GBMPlatform>(report);
 }
