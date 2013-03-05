@@ -25,7 +25,6 @@
 
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/fake_event_hub.h" // TODO: Replace with mocked event hub ~ racarr
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
@@ -111,6 +110,37 @@ struct MockInputReader : public droidinput::InputReaderInterface
     MOCK_METHOD2(cancelVibrate, void(int32_t, int32_t));
 };
 
+struct MockEventHub : public droidinput::EventHubInterface
+{
+    MOCK_CONST_METHOD1(getDeviceClasses, uint32_t(int32_t));
+    MOCK_CONST_METHOD1(getDeviceIdentifier, droidinput::InputDeviceIdentifier(int32_t));
+    MOCK_CONST_METHOD2(getConfiguration, void(int32_t, droidinput::PropertyMap*));
+    MOCK_CONST_METHOD3(getAbsoluteAxisInfo, droidinput::status_t(int32_t, int, droidinput::RawAbsoluteAxisInfo*));
+    MOCK_CONST_METHOD2(hasRelativeAxis, bool(int32_t, int));
+    MOCK_CONST_METHOD2(hasInputProperty, bool(int32_t, int));
+    MOCK_CONST_METHOD5(mapKey, droidinput::status_t(int32_t, int32_t, int32_t, int32_t*, uint32_t*));
+    MOCK_CONST_METHOD3(mapAxis, droidinput::status_t(int32_t, int32_t, droidinput::AxisInfo*));
+    MOCK_METHOD1(setExcludedDevices, void(droidinput::Vector<droidinput::String8> const&));
+    MOCK_METHOD3(getEvents, size_t(int, droidinput::RawEvent*, size_t));
+    MOCK_CONST_METHOD2(getScanCodeState, int32_t(int32_t, int32_t));
+    MOCK_CONST_METHOD2(getKeyCodeState, int32_t(int32_t, int32_t));
+    MOCK_CONST_METHOD2(getSwitchState, int32_t(int32_t, int32_t));
+    MOCK_CONST_METHOD3(getAbsoluteAxisValue, droidinput::status_t(int32_t, int32_t, int32_t*));
+    MOCK_CONST_METHOD4(markSupportedKeyCodes, bool(int32_t, size_t, int32_t const*, uint8_t*));
+    MOCK_CONST_METHOD2(hasScanCode, bool(int32_t, int32_t));
+    MOCK_CONST_METHOD2(hasLed, bool(int32_t, int32_t));
+    MOCK_METHOD3(setLedState, void(int32_t, int32_t, bool));
+    MOCK_CONST_METHOD2(getVirtualKeyDefinitions, void(int32_t, droidinput::Vector<droidinput::VirtualKeyDefinition>&));
+    MOCK_CONST_METHOD1(getKeyCharacterMap, droidinput::sp<droidinput::KeyCharacterMap>(int32_t));
+    MOCK_METHOD2(setKeyboardLayoutOverlay, bool(int32_t, const droidinput::sp<droidinput::KeyCharacterMap>&));
+    MOCK_METHOD2(vibrate, void(int32_t, nsecs_t));
+    MOCK_METHOD1(cancelVibrate, void(int32_t));
+    MOCK_METHOD0(requestReopenDevices, void());
+    MOCK_METHOD0(wake, void());
+    MOCK_METHOD1(dump, void(droidinput::String8&));
+    MOCK_METHOD0(monitor, void());
+};
+
 struct MockInputThread : public mia::InputThread
 {
     MOCK_METHOD0(start, void());
@@ -133,7 +163,7 @@ struct AndroidInputManagerSetup : public testing::Test
         ON_CALL(view_area, view_area())
             .WillByDefault(Return(default_view_area));
 
-        event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
+        event_hub = new MockEventHub();
         dispatcher = new MockInputDispatcher();
         reader = new MockInputReader();
         dispatcher_thread = std::make_shared<MockInputThread>();
@@ -148,7 +178,7 @@ struct AndroidInputManagerSetup : public testing::Test
     mtd::MockViewableArea view_area;
 
     testing::NiceMock<MockInputConfiguration> config;
-    droidinput::sp<droidinput::EventHubInterface> event_hub;
+    droidinput::sp<MockEventHub> event_hub;
     droidinput::sp<MockInputDispatcher> dispatcher;
     droidinput::sp<MockInputReader> reader;
     std::shared_ptr<MockInputThread> dispatcher_thread;
@@ -159,7 +189,6 @@ struct AndroidInputManagerSetup : public testing::Test
 
 TEST_F(AndroidInputManagerSetup, takes_input_setup_from_configuration)
 {
-    // TODO: Split to two tests and fixture with default actions and nicemock for config.
     using namespace ::testing;
     
     EXPECT_CALL(config, the_event_hub()).Times(1);
@@ -189,7 +218,7 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
         EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen)).Times(1);
         EXPECT_CALL(*dispatcher_thread, join());
         EXPECT_CALL(*reader_thread, request_stop());
-        // TODO: Expectation on event hub wake
+        EXPECT_CALL(*event_hub, wake());
         EXPECT_CALL(*reader_thread, join());
     }
 
