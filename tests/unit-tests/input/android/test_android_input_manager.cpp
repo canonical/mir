@@ -62,6 +62,7 @@ namespace
 struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
+    // TODO: Might not belong ~racarr
     MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
     MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
 };
@@ -139,7 +140,6 @@ TEST_F(AndroidInputManagerSetup, constructs_input_system_from_configuration)
     droidinput::sp<droidinput::InputDispatcherInterface> dispatcher = new MockInputDispatcher();
 
     EXPECT_CALL(config, the_event_hub()).Times(1).WillOnce(Return(event_hub));
-    EXPECT_CALL(config, the_dispatcher_policy()).Times(1).WillOnce(Return(dispatcher_policy));
     EXPECT_CALL(config, the_dispatcher()).Times(1).WillOnce(Return(dispatcher));
 
     mia::InputManager(mt::fake_shared(config),

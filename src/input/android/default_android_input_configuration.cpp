@@ -21,6 +21,7 @@
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
+#include <InputDispatcher.h>
 
 namespace droidinput = android;
 
@@ -51,5 +52,14 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DefaultInputConf
         [this]()
         {
             return new mia::EventFilterDispatcherPolicy(filter_chain);
+        });
+}
+
+droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfiguration::the_dispatcher()
+{
+    return dispatcher(
+        [this]()
+        {
+            return new droidinput::InputDispatcher(the_dispatcher_policy());
         });
 }

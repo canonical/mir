@@ -41,8 +41,7 @@ mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& 
                                 std::shared_ptr<mg::ViewableArea> const& view_area,
                                 std::shared_ptr<mi::CursorListener> const& cursor_listener)
   : event_hub(config->the_event_hub()),
-    dispatcher(new droidinput::InputDispatcher(
-        config->the_dispatcher_policy())),
+    dispatcher(config->the_dispatcher()),
     reader(new droidinput::InputReader(
         event_hub,
         new mia::InputReaderPolicy(view_area, cursor_listener),

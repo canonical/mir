@@ -47,6 +47,7 @@ public:
     
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
+    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
@@ -78,6 +79,7 @@ private:
     std::shared_ptr<EventFilterChain> const filter_chain;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
+    CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
 };
 
 }

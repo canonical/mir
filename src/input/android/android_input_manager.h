@@ -30,6 +30,7 @@ namespace android
 {
 class EventHubInterface;
 class InputDispatcher;
+class InputDispatcherInterface;
 class InputDispatcherThread;
 class InputReader;
 class InputReaderThread;
@@ -69,7 +70,7 @@ protected:
 
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
-    droidinput::sp<droidinput::InputDispatcher> dispatcher;
+    droidinput::sp<droidinput::InputDispatcherInterface> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;
 
     // It's important to keep droidinput::sp to dispatcher_thread
