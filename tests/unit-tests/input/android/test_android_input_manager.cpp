@@ -60,6 +60,7 @@ namespace
 struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
+    MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
 };
 
 struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
@@ -69,11 +70,11 @@ struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInter
     MOCK_METHOD1(notifyInputChannelBroken, void(droidinput::sp<droidinput::InputWindowHandle> const&));
     MOCK_METHOD1(getDispatcherConfiguration, void(droidinput::InputDispatcherConfiguration*));
     MOCK_METHOD0(isKeyRepeatEnabled, bool());
-    MOCK_METHOD2(filterInputEvent, bool(droidinput::InputEvent* const, uint32_t));
-    MOCK_METHOD2(interceptKeyBeforeQueueing, void(droidinput::KeyEvent* const, uint32_t&));
+    MOCK_METHOD2(filterInputEvent, bool(droidinput::InputEvent const*, uint32_t));
+    MOCK_METHOD2(interceptKeyBeforeQueueing, void(droidinput::KeyEvent const*, uint32_t&));
     MOCK_METHOD2(interceptMotionBeforeQueueing, void(nsecs_t, uint32_t&));
     MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&, const droidinput::KeyEvent*, uint32_t));
-    MOCK_METHOD4(dispatchUnhandledKey, bool(droidinput::sp<droidinput::InputWindowHandle> const&, droidinput::KeyEvent* const, uint32_t , droidinput::KeyEvent*));
+    MOCK_METHOD4(dispatchUnhandledKey, bool(droidinput::sp<droidinput::InputWindowHandle> const&, droidinput::KeyEvent const*, uint32_t , droidinput::KeyEvent*));
     MOCK_METHOD4(notifySwitch, void(nsecs_t, int32_t, int32_t, uint32_t));
     MOCK_METHOD2(pokeUserActivity, void(nsecs_t, int32_t));
     MOCK_METHOD2(checkInjectEventsPermissionNonReentrant, bool(int32_t, int32_t));
@@ -81,18 +82,34 @@ struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInter
 
 }
 
-TEST(AndroidInputManager, takes_event_hub_from_configuration)
+// Test fixture
+namespace
+{
+
+struct AndroidInputManagerSetup : public testing::Test
+{
+    void SetUp()
+    {
+        using namespace ::testing;
+
+        ON_CALL(view_area, view_area())
+            .WillByDefault(Return(default_view_area));
+    }
+    mtd::MockViewableArea view_area;
+};
+
+}
+
+TEST_F(AndroidInputManagerSetup, constructs_input_system_from_configuration)
 {
     using namespace ::testing;
     
     MockInputConfiguration config;
-    // TODO: Move to fixture
-    mtd::MockViewableArea view_area;
     droidinput::sp<droidinput::EventHubInterface> event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
+    droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new MockInputDispatcherPolicy();
 
-    ON_CALL(view_area, view_area())
-        .WillByDefault(Return(default_view_area));
     EXPECT_CALL(config, the_event_hub()).Times(1).WillOnce(Return(event_hub));
+    EXPECT_CALL(config, the_dispatcher_policy()).Times(1).WillOnce(Return(dispatcher_policy));
 
     mia::InputManager(mt::fake_shared(config),
                       empty_event_filters,
