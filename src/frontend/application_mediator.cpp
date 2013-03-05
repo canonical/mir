@@ -23,7 +23,7 @@
 #include "mir/sessions/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
-
+#include "mir/surface.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
@@ -239,6 +239,8 @@ void mir::frontend::ApplicationMediator::configure_surface(
 
     // XXX Should we mention the attrib and value integer values in exceptions?
 
+#if 0
+    // FIXME: graphics_display has been removed so this doesn't work any more
     auto const shell = graphics_display->current_shell();
     if (!shell->supports(attrib))
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
@@ -249,6 +251,7 @@ void mir::frontend::ApplicationMediator::configure_surface(
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
                                                "support the specified value "
                                                "for this attribute"));
+#endif
 
     report->application_configure_surface_called(application_session->name());
 
