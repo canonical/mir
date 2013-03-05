@@ -21,6 +21,7 @@
 
 #include "mir/compositor/drawer.h"
 #include "mir/compositor/render_view.h"
+#include "mir/shell/shell.h"
 
 #include <memory>
 
@@ -44,11 +45,21 @@ public:
         std::shared_ptr<RenderView> const& render_view,
         const std::shared_ptr<graphics::Renderer>& renderer);
 
+    virtual ~Compositor();
+
     virtual void render(graphics::Display* display);
+
+    void set_shell(std::shared_ptr<mir::Shell> s);
+    bool start_shell();
+    void stop_shell();
+    std::shared_ptr<mir::Shell> current_shell() const;
 
 private:
     std::shared_ptr<RenderView> const render_view;
     std::shared_ptr<graphics::Renderer> const renderer;
+
+    std::shared_ptr<mir::Shell> shell;
+    bool                        shell_running;
 };
 
 

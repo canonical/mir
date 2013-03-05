@@ -24,6 +24,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
+#include "mir/shell/nullshell.h"
 
 #include <cassert>
 #include <functional>
@@ -35,10 +36,17 @@ mc::Compositor::Compositor(
     std::shared_ptr<RenderView> const& view,
     const std::shared_ptr<mg::Renderer>& renderer)
     : render_view(view),
-      renderer(renderer)
+      renderer(renderer),
+      shell_running(false)
 {
     assert(render_view);
     assert(renderer);
+}
+
+mc::Compositor::~Compositor()
+{
+    if (shell_running)
+        stop_shell();
 }
 
 namespace
@@ -73,4 +81,35 @@ void mc::Compositor::render(graphics::Display* display)
 
         buffer.post_update();
     });
+}
+
+// TODO: Write unit tests for these
+
+void mc::Compositor::set_shell(std::shared_ptr<mir::Shell> s)
+{
+    stop_shell();
+    shell = s;
+}
+
+bool mc::Compositor::start_shell()
+{
+    if (!shell)
+        set_shell(std::make_shared<mir::shell::NullShell>());
+
+    shell_running = shell->start();
+    return shell_running;
+}
+
+void mc::Compositor::stop_shell()
+{
+    if (shell_running)
+    {
+        shell->stop();
+        shell_running = false;
+    }
+}
+
+std::shared_ptr<mir::Shell> mc::Compositor::current_shell() const
+{
+    return shell;
 }

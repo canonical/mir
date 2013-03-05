@@ -49,6 +49,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
         std::initializer_list<std::shared_ptr<mi::EventFilter> const> const&));
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_drawer, std::shared_ptr<mc::Drawer>());
+    MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
 };
 
 struct MockSessionStore : public msess::SessionStore

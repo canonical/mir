@@ -23,7 +23,6 @@ set(
   SRCS
   display_server.cpp
   default_server_configuration.cpp
-  display.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
