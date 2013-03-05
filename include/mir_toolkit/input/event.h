@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_H_
-#define MIR_INPUT_EVENT_H_
+#ifndef MIR_TOOLKIT_INPUT_EVENT_H_
+#define MIR_TOOLKIT_INPUT_EVENT_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -25,9 +25,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-    // TODO: To the moon.
-    static const size_t MIR_INPUT_EVENT_MAX_POINTER_COUNT = 16;
+/* TODO: To the moon. */
+#define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
     typedef int64_t nsecs_t;
 
@@ -40,14 +39,14 @@ extern "C" {
 
     struct MirEvent
     {
-        // Generic event properties
+        /* Generic event properties */
         MirEventType type;
         int32_t device_id;
         int32_t source_id;
         int32_t action;
         int32_t flags;
         int32_t meta_state;
-        // Information specific to key/motion event types
+        /* Information specific to key/motion event types */
         union
         {
             struct HardwareSwitchEvent
@@ -89,7 +88,7 @@ extern "C" {
                     float pressure;
                     float orientation;
                 };
-                PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+                struct PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;
     };
@@ -98,4 +97,4 @@ extern "C" {
 }
 #endif
 
-#endif // MIR_INPUT_EVENT_H_
+#endif /* MIR_TOOLKIT_INPUT_EVENT_H_ */
