@@ -61,6 +61,7 @@ struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
     MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
+    // TODO: Next up is the dispatcher  ~ racarr
 };
 
 struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
@@ -78,6 +79,21 @@ struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInter
     MOCK_METHOD4(notifySwitch, void(nsecs_t, int32_t, int32_t, uint32_t));
     MOCK_METHOD2(pokeUserActivity, void(nsecs_t, int32_t));
     MOCK_METHOD2(checkInjectEventsPermissionNonReentrant, bool(int32_t, int32_t));
+};
+
+struct MockInputDispatcher : public droidinput::InputDispatcherInterface
+{
+    MOCK_METHOD1(dump, void(droidinput::String8&));
+    MOCK_METHOD0(monitor, void());
+    MOCK_METHOD0(dispatchOnce, void());
+    MOCK_METHOD6(injectInputEvent, int32_t(droidinput::InputEvent const*, int32_t, int32_t, int32_t, int32_t, uint32_t));
+    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle> const&>));
+    MOCK_METHOD1(setFocusedApplication, void(droidinput::sp<droidinput::InputApplicationHandle> const&));
+    MOCK_METHOD2(setInputDispatchMode, void(bool, bool));
+    MOCK_METHOD1(setInputFilterEnabled, void(bool));
+    MOCK_METHOD2(transferTouchFocus, bool(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputChannel> const&));
+    MOCK_METHOD3(registerInputChannel, status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
+    MOCK_METHOD1(unregisterInputChannel, status_t(droidinput::sp<droidinput::InputChannel> const&));
 };
 
 }
