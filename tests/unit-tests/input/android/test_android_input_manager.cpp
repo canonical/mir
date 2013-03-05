@@ -26,6 +26,7 @@
 #include "mir_test/fake_event_hub.h" // TODO: Replace with mocked event hub ~ racarr
 
 #include <InputDispatcher.h>
+#include <InputWindow.h>
 #include <EventHub.h>
 #include <utils/StrongPointer.h>
 
@@ -61,7 +62,7 @@ struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
     MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
-    // TODO: Next up is the dispatcher  ~ racarr
+    MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
 };
 
 struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
@@ -87,13 +88,14 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD0(monitor, void());
     MOCK_METHOD0(dispatchOnce, void());
     MOCK_METHOD6(injectInputEvent, int32_t(droidinput::InputEvent const*, int32_t, int32_t, int32_t, int32_t, uint32_t));
-    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle> const&>));
+    // Issues with reference here...
+//    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> const));
     MOCK_METHOD1(setFocusedApplication, void(droidinput::sp<droidinput::InputApplicationHandle> const&));
     MOCK_METHOD2(setInputDispatchMode, void(bool, bool));
     MOCK_METHOD1(setInputFilterEnabled, void(bool));
     MOCK_METHOD2(transferTouchFocus, bool(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputChannel> const&));
-    MOCK_METHOD3(registerInputChannel, status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
-    MOCK_METHOD1(unregisterInputChannel, status_t(droidinput::sp<droidinput::InputChannel> const&));
+    MOCK_METHOD3(registerInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
+    MOCK_METHOD1(unregisterInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&));
 };
 
 }
@@ -123,9 +125,11 @@ TEST_F(AndroidInputManagerSetup, constructs_input_system_from_configuration)
     MockInputConfiguration config;
     droidinput::sp<droidinput::EventHubInterface> event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> dispatcher_policy = new MockInputDispatcherPolicy();
+  //  droidinput::sp<droidinput::InputDispatcherInterface> dispatcher = new MockInputDispatcher();
 
     EXPECT_CALL(config, the_event_hub()).Times(1).WillOnce(Return(event_hub));
     EXPECT_CALL(config, the_dispatcher_policy()).Times(1).WillOnce(Return(dispatcher_policy));
+//    EXPECT_CALL(config, the_dispatcher()).Times(1).WillOnce(Return(dispatcher));
 
     mia::InputManager(mt::fake_shared(config),
                       empty_event_filters,
