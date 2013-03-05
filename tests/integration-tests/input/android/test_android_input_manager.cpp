@@ -18,6 +18,7 @@
  */
 
 #include "mir/input/event_filter.h"
+#include "src/input/android/android_input_configuration.h"
 #include "src/input/android/android_input_manager.h"
 
 #include "mir_test/fake_shared.h"
@@ -26,6 +27,8 @@
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
+
+#include <EventHub.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -51,6 +54,28 @@ static const geom::Rectangle default_view_area =
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
+class TestingInputConfiguration : public mia::InputConfiguration
+{
+public:
+    TestingInputConfiguration()
+    {
+        event_hub = new mia::FakeEventHub();
+    }
+    virtual ~TestingInputConfiguration() {}
+
+    droidinput::sp<droidinput::EventHubInterface> the_event_hub()
+    {
+        return event_hub;
+    }
+
+protected:
+    TestingInputConfiguration(TestingInputConfiguration const&) = delete;
+    TestingInputConfiguration& operator=(TestingInputConfiguration const&) = delete;
+
+private:
+    droidinput::sp<droidinput::EventHubInterface> event_hub;
+};
+
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
 public:
@@ -58,14 +83,13 @@ public:
     {
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
+        
+        fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration.the_event_hub().get()); // For convenience
 
-        event_hub = new mia::FakeEventHub();
-        input_manager.reset(
-            new mia::InputManager(
-                event_hub,
-                {mt::fake_shared(event_filter)},
-                mt::fake_shared(viewable_area),
-                null_cursor_listener));
+        input_manager = std::make_shared<mia::InputManager>(mt::fake_shared(configuration),
+            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)},
+            mt::fake_shared(viewable_area),
+            null_cursor_listener);
 
         input_manager->start();
     }
@@ -76,7 +100,8 @@ public:
     }
 
   protected:
-    android::sp<mia::FakeEventHub> event_hub;
+    TestingInputConfiguration configuration;
+    mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
@@ -96,10 +121,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
-    event_hub->synthesize_builtin_keyboard_added();
-    event_hub->synthesize_device_scan_complete();
+    fake_event_hub->synthesize_builtin_keyboard_added();
+    fake_event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_key_down_event()
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_at_most_seconds(1);
@@ -117,10 +142,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
-    event_hub->synthesize_builtin_cursor_added();
-    event_hub->synthesize_device_scan_complete();
+    fake_event_hub->synthesize_builtin_cursor_added();
+    fake_event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
+    fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
     wait_condition.wait_for_at_most_seconds(1);
 }
@@ -143,11 +168,11 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
 
-    event_hub->synthesize_builtin_cursor_added();
-    event_hub->synthesize_device_scan_complete();
+    fake_event_hub->synthesize_builtin_cursor_added();
+    fake_event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
-    event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
+    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
+    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
 
     wait_condition.wait_for_at_most_seconds(1);
 }
