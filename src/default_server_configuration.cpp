@@ -323,20 +323,14 @@ mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<mc::Compositor>
-mir::DefaultServerConfiguration::the_compositor()
+std::shared_ptr<mc::Drawer>
+mir::DefaultServerConfiguration::the_drawer()
 {
     return compositor(
         [this]()
         {
             return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
         });
-}
-
-std::shared_ptr<mc::Drawer>
-mir::DefaultServerConfiguration::the_drawer()
-{
-    return the_compositor();
 }
 
 std::shared_ptr<ms::BufferBundleFactory>

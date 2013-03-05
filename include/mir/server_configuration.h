@@ -25,7 +25,6 @@ namespace mir
 namespace compositor
 {
 class Drawer;
-class Compositor;
 }
 namespace frontend
 {
@@ -53,7 +52,6 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
-    virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
 
     // TODO this should not be taking a parameter, but as
     // TODO input still needs proper integration left for later

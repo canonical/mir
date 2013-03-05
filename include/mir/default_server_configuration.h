@@ -87,7 +87,6 @@ public:
     virtual std::shared_ptr<graphics::ViewableArea> the_viewable_area();
 
     virtual std::shared_ptr<compositor::Drawer> the_drawer();
-    virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();

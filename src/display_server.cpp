@@ -21,7 +21,7 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/drawer.h"
 #include "mir/sessions/session_store.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
@@ -44,7 +44,7 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          compositor{config.the_compositor()},
+          compositor{config.the_drawer()},
           session_store{config.the_session_store()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager(empty_filter_list)},
@@ -53,7 +53,7 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::Compositor> compositor;
+    std::shared_ptr<mc::Drawer> compositor;
     std::shared_ptr<sessions::SessionStore> session_store;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
@@ -76,7 +76,7 @@ void mir::DisplayServer::start()
 {
     p->communicator->start();
     p->input_manager->start();
-    p->compositor->start_shell();
+    p->display->start_shell();
 
     std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
@@ -87,7 +87,7 @@ void mir::DisplayServer::start()
     }
 
     p->input_manager->stop();
-    p->compositor->stop_shell();
+    p->display->stop_shell();
 }
 
 void mir::DisplayServer::do_stuff()
@@ -99,7 +99,7 @@ void mir::DisplayServer::stop()
 {
     std::unique_lock<std::mutex> lk(p->exit_guard);
     p->exit = true;
-    p->compositor->stop_shell();
+    p->display->stop_shell();
 }
 
 void mir::DisplayServer::render(mg::Display* display)
