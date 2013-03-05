@@ -98,10 +98,10 @@ mcla::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
     ANativeWindow::setSwapInterval = &setSwapInterval_static;
-    ANativeWindow::dequeueBuffer = &dequeueBuffer_static;
-    ANativeWindow::lockBuffer = &lockBuffer_static;
-    ANativeWindow::queueBuffer = &queueBuffer_static;
-    ANativeWindow::cancelBuffer = &cancelBuffer_static;
+    ANativeWindow::dequeueBuffer_DEPRECATED = &dequeueBuffer_static;
+    ANativeWindow::lockBuffer_DEPRECATED = &lockBuffer_static;
+    ANativeWindow::queueBuffer_DEPRECATED = &queueBuffer_static;
+    ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_static;
 
     ANativeWindow::common.incRef = &incRef;
     ANativeWindow::common.decRef = &incRef;
