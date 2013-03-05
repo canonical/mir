@@ -18,8 +18,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_SHELL_H__
-#define __MIR_SHELL_H__
+#ifndef MIR_SHELL_SHELL_H_
+#define MIR_SHELL_SHELL_H_
 
 #include <mir/surface.h>
 

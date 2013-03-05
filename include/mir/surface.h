@@ -18,8 +18,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_COMMON_SURFACE_H__
-#define __MIR_COMMON_SURFACE_H__
+#ifndef MIR_SURFACE_H_
+#define MIR_SURFACE_H_
 
 /*
  * Attributes of a surface that the client and server/shell may wish to

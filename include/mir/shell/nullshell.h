@@ -18,8 +18,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef __MIR_NULLSHELL_H__
-#define __MIR_NULLSHELL_H__
+#ifndef MIR_SHELL_NULLSHELL_H_
+#define MIR_SHELL_NULLSHELL_H_
 
 #include "mir/shell/shell.h"
 
