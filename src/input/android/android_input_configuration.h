@@ -21,6 +21,8 @@
 
 #include <utils/StrongPointer.h>
 
+#include <memory>
+
 namespace droidinput = android;
 
 namespace android
@@ -38,6 +40,8 @@ namespace input
 {
 namespace android
 {
+class InputThread;
+
 class InputConfiguration
 {
 public:
@@ -46,9 +50,11 @@ public:
     virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub() = 0;
 
     virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
-
     // Might not need reader here
     virtual droidinput::sp<droidinput::InputReaderInterface> the_reader() = 0;
+
+    virtual std::shared_ptr<InputThread> the_dispatcher_thread() = 0;
+    virtual std::shared_ptr<InputThread> the_reader_thread() = 0;
 
 protected:
     InputConfiguration() = default;

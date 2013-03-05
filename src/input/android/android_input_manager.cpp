@@ -23,6 +23,7 @@
 #include "android_input_constants.h"
 #include "android_input_configuration.h"
 #include "android_input_reader_policy.h"
+#include "android_input_thread.h"
 #include "default_android_input_configuration.h"
 #include "event_filter_dispatcher_policy.h"
 
@@ -41,8 +42,8 @@ mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& 
   : event_hub(config->the_event_hub()),
     dispatcher(config->the_dispatcher()),
     reader(config->the_reader()),
-    reader_thread(new droidinput::InputReaderThread(reader)),
-    dispatcher_thread(new droidinput::InputDispatcherThread(dispatcher))
+    reader_thread(config->the_reader_thread()),
+    dispatcher_thread(config->the_dispatcher_thread())
 {
     dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
@@ -54,19 +55,19 @@ mia::InputManager::~InputManager()
 
 void mia::InputManager::stop()
 {
-    dispatcher_thread->requestExit();
+    dispatcher_thread->request_stop();
     dispatcher->setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen);
     dispatcher_thread->join();
 
-    reader_thread->requestExit();
+    reader_thread->request_stop();
     event_hub->wake();
     reader_thread->join();
 }
 
 void mia::InputManager::start()
 {
-    reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
-    dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
+    reader_thread->start();
+    dispatcher_thread->start();
 }
 
 std::shared_ptr<mi::InputManager> mi::create_input_manager(

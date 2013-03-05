@@ -19,6 +19,7 @@
 #include "default_android_input_configuration.h"
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_reader_policy.h"
+#include "android_input_thread.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -29,6 +30,43 @@ namespace droidinput = android;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
+
+namespace
+{
+class CommonInputThread : public mia::InputThread
+{
+public:
+    CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread)
+      : name(name),
+        thread(thread)
+    {
+    }
+    virtual ~CommonInputThread()
+    {
+    }
+    
+    void start()
+    {
+        thread->run(name.c_str(), droidinput::PRIORITY_URGENT_DISPLAY);
+    }
+    void request_stop()
+    {
+        thread->requestExit();
+    }
+    void join()
+    {
+        thread->join();
+    }
+   
+protected:
+    CommonInputThread(const CommonInputThread&) = delete;
+    CommonInputThread& operator=(const CommonInputThread&) = delete;
+
+private:
+    std::string const name;
+    droidinput::sp<droidinput::Thread> const thread;
+};
+}
 
 mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
                                                           std::shared_ptr<mg::ViewableArea> const& view_area,
@@ -87,4 +125,16 @@ droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration:
         {
             return new droidinput::InputReader(the_event_hub(), the_reader_policy(), the_dispatcher());
         });
+}
+
+std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_dispatcher_thread()
+{
+    return std::make_shared<CommonInputThread>("InputDispatcher",
+                                               new droidinput::InputDispatcherThread(the_dispatcher()));
+}
+
+std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thread()
+{
+    return std::make_shared<CommonInputThread>("InputReader",
+                                               new droidinput::InputReaderThread(the_reader()));
 }

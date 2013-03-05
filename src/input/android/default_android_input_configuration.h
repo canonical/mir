@@ -25,7 +25,6 @@
 #include <utils/StrongPointer.h>
 
 #include <functional>
-#include <memory>
 
 namespace droidinput = android;
 
@@ -56,10 +55,11 @@ public:
     droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
     droidinput::sp<droidinput::InputReaderInterface> the_reader();
 
+    std::shared_ptr<InputThread> the_dispatcher_thread();
+    std::shared_ptr<InputThread> the_reader_thread();
+
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
-
-
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;

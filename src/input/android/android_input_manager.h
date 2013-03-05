@@ -52,6 +52,7 @@ class CursorListener;
 
 namespace android
 {
+class InputThread;
 class InputConfiguration;
 
 class InputManager : public mir::input::InputManager
@@ -73,10 +74,8 @@ private:
     droidinput::sp<droidinput::InputDispatcherInterface> dispatcher;
     droidinput::sp<droidinput::InputReaderInterface> reader;
 
-    // It's important to keep droidinput::sp to dispatcher_thread
-    // and reader_thread or they will free themselves on exit.
-    droidinput::sp<droidinput::InputReaderThread> reader_thread;
-    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
+    std::shared_ptr<InputThread> reader_thread;
+    std::shared_ptr<InputThread> dispatcher_thread;
 };
 
 }
