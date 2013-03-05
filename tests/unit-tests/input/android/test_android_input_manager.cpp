@@ -18,6 +18,7 @@
 
 #include "src/input/android/android_input_manager.h"
 #include "src/input/android/android_input_configuration.h"
+#include "src/input/android/android_input_thread.h"
 
 #include "mir/input/cursor_listener.h"
 
@@ -27,6 +28,7 @@
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
+#include <InputReader.h>
 #include <EventHub.h>
 #include <utils/StrongPointer.h>
 
@@ -65,6 +67,9 @@ struct MockInputConfiguration : public mia::InputConfiguration
     // TODO: Might not belong ~racarr
     MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
     MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
+    MOCK_METHOD0(the_reader, droidinput::sp<droidinput::InputReaderInterface>());
+    MOCK_METHOD0(the_dispatcher_thread, std::shared_ptr<mia::InputThread>());
+    MOCK_METHOD0(the_reader_thread, std::shared_ptr<mia::InputThread>());
 };
 
 struct MockInputDispatcher : public droidinput::InputDispatcherInterface
@@ -88,6 +93,28 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD1(notifyMotion, void(droidinput::NotifyMotionArgs const*));
     MOCK_METHOD1(notifySwitch, void(droidinput::NotifySwitchArgs const*));
     MOCK_METHOD1(notifyDeviceReset, void(droidinput::NotifyDeviceResetArgs const*));
+};
+
+struct MockInputReader : public droidinput::InputReaderInterface
+{
+    MOCK_METHOD1(dump, void(droidinput::String8&));
+    MOCK_METHOD0(monitor, void());
+    MOCK_METHOD0(loopOnce, void());
+    MOCK_METHOD1(getInputDevices, void(droidinput::Vector<droidinput::InputDeviceInfo>&));
+    MOCK_METHOD3(getScanCodeState, int32_t(int32_t, uint32_t, int32_t));
+    MOCK_METHOD3(getKeyCodeState, int32_t(int32_t, uint32_t, int32_t));
+    MOCK_METHOD3(getSwitchState, int32_t(int32_t, uint32_t, int32_t));
+    MOCK_METHOD5(hasKeys, bool(int32_t, uint32_t, size_t, int32_t const*, uint8_t*));
+    MOCK_METHOD1(requestRefreshConfiguration, void(uint32_t));
+    MOCK_METHOD5(vibrate, void(int32_t, nsecs_t const*, size_t, ssize_t, int32_t));
+    MOCK_METHOD2(cancelVibrate, void(int32_t, int32_t));
+};
+
+struct MockInputThread : public mia::InputThread
+{
+    MOCK_METHOD0(start, void());
+    MOCK_METHOD0(request_stop, void());
+    MOCK_METHOD0(join, void());
 };
 
 }
@@ -120,12 +147,15 @@ TEST_F(AndroidInputManagerSetup, constructs_input_system_from_configuration)
     MockInputConfiguration config;
     droidinput::sp<droidinput::EventHubInterface> event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
     droidinput::sp<droidinput::InputDispatcherInterface> dispatcher = new MockInputDispatcher();
+    droidinput::sp<droidinput::InputReaderInterface> reader = new MockInputReader();
+    std::shared_ptr<mia::InputThread> dispatcher_thread = std::make_shared<MockInputThread>();
+    std::shared_ptr<mia::InputThread> reader_thread = std::make_shared<MockInputThread>();
 
     EXPECT_CALL(config, the_event_hub()).Times(1).WillOnce(Return(event_hub));
     EXPECT_CALL(config, the_dispatcher()).Times(1).WillOnce(Return(dispatcher));
+    EXPECT_CALL(config, the_reader()).Times(1).WillOnce(Return(reader));
+    EXPECT_CALL(config, the_reader_thread()).Times(1).WillOnce(Return(reader_thread));
+    EXPECT_CALL(config, the_dispatcher_thread()).Times(1).WillOnce(Return(dispatcher_thread));
 
-    mia::InputManager(mt::fake_shared(config),
-                      mt::fake_shared(view_area),
-                      null_cursor_listener);
-                      
+    mia::InputManager(mt::fake_shared(config));
 }

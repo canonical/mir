@@ -26,6 +26,7 @@
 
 #include <initializer_list>
 
+// TODO: Might be able to remove some things here ~racarr
 namespace android
 {
 class EventHubInterface;
@@ -33,6 +34,7 @@ class InputDispatcher;
 class InputDispatcherInterface;
 class InputDispatcherThread;
 class InputReader;
+class InputReaderInterface;
 class InputReaderThread;
 }
 
@@ -56,9 +58,7 @@ class InputManager : public mir::input::InputManager
 {
 public:
     explicit InputManager(
-        std::shared_ptr<InputConfiguration> const& input_configuration,
-        std::shared_ptr<graphics::ViewableArea> const& view_area,
-        std::shared_ptr<CursorListener> const& cursor_listener);
+        std::shared_ptr<InputConfiguration> const& input_configuration);
     virtual ~InputManager();
 
     virtual void start();
@@ -71,7 +71,7 @@ protected:
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
     droidinput::sp<droidinput::InputDispatcherInterface> dispatcher;
-    droidinput::sp<droidinput::InputReader> reader;
+    droidinput::sp<droidinput::InputReaderInterface> reader;
 
     // It's important to keep droidinput::sp to dispatcher_thread
     // and reader_thread or they will free themselves on exit.

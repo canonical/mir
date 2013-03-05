@@ -28,6 +28,8 @@ namespace android
 class EventHubInterface;
 class InputDispatcherPolicyInterface;
 class InputDispatcherInterface;
+class InputReaderInterface;
+class InputReaderPolicyInterface;
 }
 
 namespace mir
@@ -43,9 +45,10 @@ public:
     
     virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub() = 0;
 
-    // TODO: Can be protected or private? ~ racarr
-    virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy() = 0;
     virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
+
+    // Might not need reader here
+    virtual droidinput::sp<droidinput::InputReaderInterface> the_reader() = 0;
 
 protected:
     InputConfiguration() = default;

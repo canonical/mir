@@ -37,15 +37,10 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config,
-                                std::shared_ptr<mg::ViewableArea> const& view_area,
-                                std::shared_ptr<mi::CursorListener> const& cursor_listener)
+mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config)
   : event_hub(config->the_event_hub()),
     dispatcher(config->the_dispatcher()),
-    reader(new droidinput::InputReader(
-        event_hub,
-        new mia::InputReaderPolicy(view_area, cursor_listener),
-        dispatcher)),
+    reader(config->the_reader()),
     reader_thread(new droidinput::InputReaderThread(reader)),
     dispatcher_thread(new droidinput::InputDispatcherThread(dispatcher))
 {
@@ -79,8 +74,7 @@ std::shared_ptr<mi::InputManager> mi::create_input_manager(
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
     static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-    auto config = std::make_shared<mia::DefaultInputConfiguration>(event_filters);
+    auto config = std::make_shared<mia::DefaultInputConfiguration>(event_filters, view_area, null_cursor_listener);
 
-    return std::make_shared<mia::InputManager>(config, view_area,
-        null_cursor_listener);
+    return std::make_shared<mia::InputManager>(config);
 }

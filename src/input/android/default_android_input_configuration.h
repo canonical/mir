@@ -31,10 +31,15 @@ namespace droidinput = android;
 
 namespace mir
 {
+namespace graphics
+{
+class ViewableArea;
+}
 namespace input
 {
 class EventFilter;
 class EventFilterChain;
+class CursorListener;
 
 namespace android
 {
@@ -42,12 +47,19 @@ namespace android
 class DefaultInputConfiguration : public InputConfiguration
 {
 public:
-    DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters);
+    DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,
+                              std::shared_ptr<graphics::ViewableArea> const& view_area,
+                              std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~DefaultInputConfiguration();
     
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
-    droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
+    droidinput::sp<droidinput::InputReaderInterface> the_reader();
+
+    virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
+    virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
+
+
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
@@ -77,9 +89,13 @@ private:
     };
 
     std::shared_ptr<EventFilterChain> const filter_chain;
+    std::shared_ptr<graphics::ViewableArea> const view_area;
+    std::shared_ptr<CursorListener> const cursor_listener;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
+    CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
     CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
+    CachedAndroidPtr<droidinput::InputReaderInterface> reader;
 };
 
 }

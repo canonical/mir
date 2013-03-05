@@ -58,8 +58,10 @@ static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:
-    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters)
-        : DefaultInputConfiguration(filters)
+    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
+                              std::shared_ptr<mg::ViewableArea> const& view_area,
+                              std::shared_ptr<mi::CursorListener> const& cursor_listener)
+        : DefaultInputConfiguration(filters, view_area, cursor_listener)
     {
         event_hub = new mia::FakeEventHub();
     }
@@ -83,15 +85,13 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 public:
     void SetUp()
     {
-        configuration = std::make_shared<TestingInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)});
+        configuration = std::make_shared<TestingInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         
         fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration->the_event_hub().get()); // For convenience
 
-        input_manager = std::make_shared<mia::InputManager>(configuration,
-            mt::fake_shared(viewable_area),
-            null_cursor_listener);
+        input_manager = std::make_shared<mia::InputManager>(configuration);
 
         input_manager->start();
     }

@@ -18,6 +18,7 @@
 
 #include "default_android_input_configuration.h"
 #include "event_filter_dispatcher_policy.h"
+#include "android_input_reader_policy.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -27,9 +28,14 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace mg = mir::graphics;
 
-mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters)
-  : filter_chain(std::make_shared<mi::EventFilterChain>(filters))
+mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
+                                                          std::shared_ptr<mg::ViewableArea> const& view_area,
+                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener)
+  : filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
+    view_area(view_area),
+    cursor_listener(cursor_listener)
 {
 }
 
@@ -61,5 +67,24 @@ droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfigurat
         [this]()
         {
             return new droidinput::InputDispatcher(the_dispatcher_policy());
+        });
+}
+
+droidinput::sp<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfiguration::the_reader_policy()
+{
+    return reader_policy(
+        [this]()
+        {
+            return new mia::InputReaderPolicy(view_area, cursor_listener);
+        });
+}
+
+
+droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration::the_reader()
+{
+    return reader(
+        [this]()
+        {
+            return new droidinput::InputReader(the_event_hub(), the_reader_policy(), the_dispatcher());
         });
 }
