@@ -41,7 +41,6 @@ namespace mia = mi::android;
 mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config)
   : event_hub(config->the_event_hub()),
     dispatcher(config->the_dispatcher()),
-    reader(config->the_reader()),
     reader_thread(config->the_reader_thread()),
     dispatcher_thread(config->the_dispatcher_thread())
 {

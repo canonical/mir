@@ -28,7 +28,6 @@
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
-#include <InputReader.h>
 #include <EventHub.h>
 #include <utils/StrongPointer.h>
 
@@ -64,10 +63,7 @@ namespace
 struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
-    // TODO: Might not belong ~racarr
-    MOCK_METHOD0(the_dispatcher_policy, droidinput::sp<droidinput::InputDispatcherPolicyInterface>());
     MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
-    MOCK_METHOD0(the_reader, droidinput::sp<droidinput::InputReaderInterface>());
     MOCK_METHOD0(the_dispatcher_thread, std::shared_ptr<mia::InputThread>());
     MOCK_METHOD0(the_reader_thread, std::shared_ptr<mia::InputThread>());
 };
@@ -93,21 +89,6 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD1(notifyMotion, void(droidinput::NotifyMotionArgs const*));
     MOCK_METHOD1(notifySwitch, void(droidinput::NotifySwitchArgs const*));
     MOCK_METHOD1(notifyDeviceReset, void(droidinput::NotifyDeviceResetArgs const*));
-};
-
-struct MockInputReader : public droidinput::InputReaderInterface
-{
-    MOCK_METHOD1(dump, void(droidinput::String8&));
-    MOCK_METHOD0(monitor, void());
-    MOCK_METHOD0(loopOnce, void());
-    MOCK_METHOD1(getInputDevices, void(droidinput::Vector<droidinput::InputDeviceInfo>&));
-    MOCK_METHOD3(getScanCodeState, int32_t(int32_t, uint32_t, int32_t));
-    MOCK_METHOD3(getKeyCodeState, int32_t(int32_t, uint32_t, int32_t));
-    MOCK_METHOD3(getSwitchState, int32_t(int32_t, uint32_t, int32_t));
-    MOCK_METHOD5(hasKeys, bool(int32_t, uint32_t, size_t, int32_t const*, uint8_t*));
-    MOCK_METHOD1(requestRefreshConfiguration, void(uint32_t));
-    MOCK_METHOD5(vibrate, void(int32_t, nsecs_t const*, size_t, ssize_t, int32_t));
-    MOCK_METHOD2(cancelVibrate, void(int32_t, int32_t));
 };
 
 struct MockEventHub : public droidinput::EventHubInterface
@@ -165,13 +146,11 @@ struct AndroidInputManagerSetup : public testing::Test
 
         event_hub = new MockEventHub();
         dispatcher = new MockInputDispatcher();
-        reader = new MockInputReader();
         dispatcher_thread = std::make_shared<MockInputThread>();
         reader_thread = std::make_shared<MockInputThread>();
 
         ON_CALL(config, the_event_hub()).WillByDefault(Return(event_hub));
         ON_CALL(config, the_dispatcher()).WillByDefault(Return(dispatcher));
-        ON_CALL(config, the_reader()).WillByDefault(Return(reader));
         ON_CALL(config, the_reader_thread()).WillByDefault(Return(reader_thread));
         ON_CALL(config, the_dispatcher_thread()).WillByDefault(Return(dispatcher_thread));
     }
@@ -180,7 +159,6 @@ struct AndroidInputManagerSetup : public testing::Test
     testing::NiceMock<MockInputConfiguration> config;
     droidinput::sp<MockEventHub> event_hub;
     droidinput::sp<MockInputDispatcher> dispatcher;
-    droidinput::sp<MockInputReader> reader;
     std::shared_ptr<MockInputThread> dispatcher_thread;
     std::shared_ptr<MockInputThread> reader_thread;
 };
@@ -193,7 +171,6 @@ TEST_F(AndroidInputManagerSetup, takes_input_setup_from_configuration)
     
     EXPECT_CALL(config, the_event_hub()).Times(1);
     EXPECT_CALL(config, the_dispatcher()).Times(1);
-    EXPECT_CALL(config, the_reader()).Times(1);
     EXPECT_CALL(config, the_reader_thread()).Times(1);
     EXPECT_CALL(config, the_dispatcher_thread()).Times(1);
     
