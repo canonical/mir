@@ -78,7 +78,8 @@ enum {
      * - a vertical stride equal to the height
      *
      *   y_size = stride * height
-     *   c_size = ALIGN(stride/2, 16) * height/2
+     *   c_stride = ALIGN(stride/2, 16)
+     *   c_size = c_stride * height/2
      *   size = y_size + c_size * 2
      *   cr_offset = y_size
      *   cb_offset = y_size + c_size
@@ -86,12 +87,32 @@ enum {
      */
     HAL_PIXEL_FORMAT_YV12   = 0x32315659, // YCrCb 4:2:0 Planar
 
-
+    /*
+     * Android RAW sensor format:
+     *
+     * This format is exposed outside of the HAL to applications.
+     *
+     * RAW_SENSOR is a single-channel 16-bit format, typically representing raw
+     * Bayer-pattern images from an image sensor, with minimal processing.
+     *
+     * The exact pixel layout of the data in the buffer is sensor-dependent, and
+     * needs to be queried from the camera device.
+     *
+     * Generally, not all 16 bits are used; more common values are 10 or 12
+     * bits. All parameters to interpret the raw data (black and white points,
+     * color space, etc) must be queried from the camera device.
+     *
+     * This format assumes
+     * - an even width
+     * - an even height
+     * - a horizontal stride multiple of 16 pixels (32 bytes).
+     */
+    HAL_PIXEL_FORMAT_RAW_SENSOR = 0x20,
 
     /* Legacy formats (deprecated), used by ImageFormat.java */
     HAL_PIXEL_FORMAT_YCbCr_422_SP       = 0x10, // NV16
     HAL_PIXEL_FORMAT_YCrCb_420_SP       = 0x11, // NV21
-    HAL_PIXEL_FORMAT_YCbCr_422_I        = 0x14, // YUY2
+    HAL_PIXEL_FORMAT_YCbCr_422_I        = 0x14 // YUY2
 };
 
 
@@ -113,7 +134,7 @@ enum {
     /* rotate source image 180 degrees */
     HAL_TRANSFORM_ROT_180   = 0x03,
     /* rotate source image 270 degrees clockwise */
-    HAL_TRANSFORM_ROT_270   = 0x07,
+    HAL_TRANSFORM_ROT_270   = 0x07
 };
 
 #ifdef __cplusplus
