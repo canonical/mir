@@ -54,6 +54,7 @@ static const geom::Rectangle default_view_area =
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
+// TODO: Dedupe me ~racarr
 class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:

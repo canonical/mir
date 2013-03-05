@@ -54,6 +54,7 @@ struct MockCursorListener : public mi::CursorListener
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 };
 
+// TODO: Dedupe me ~racarr
 class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:
