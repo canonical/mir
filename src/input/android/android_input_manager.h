@@ -21,7 +21,6 @@
 #define MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
-#include "../event_filter_chain.h"
 
 #include <utils/StrongPointer.h>
 
@@ -57,7 +56,6 @@ class InputManager : public mir::input::InputManager
 public:
     explicit InputManager(
         std::shared_ptr<InputConfiguration> const& input_configuration,
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& filters,
         std::shared_ptr<graphics::ViewableArea> const& view_area,
         std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~InputManager();
@@ -71,7 +69,6 @@ protected:
 
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
-    std::shared_ptr<EventFilterChain> filter_chain;
     droidinput::sp<droidinput::InputDispatcher> dispatcher;
     droidinput::sp<droidinput::InputReader> reader;
 

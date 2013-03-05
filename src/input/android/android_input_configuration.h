@@ -26,6 +26,7 @@ namespace droidinput = android;
 namespace android
 {
 class EventHubInterface;
+class InputDispatcherPolicyInterface;
 }
 
 namespace mir
@@ -40,6 +41,7 @@ public:
     virtual ~InputConfiguration() {}
     
     virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub() = 0;
+    virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy() = 0;
 
 protected:
     InputConfiguration() = default;

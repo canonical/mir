@@ -38,13 +38,11 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config,
-                                const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& filters,
                                 std::shared_ptr<mg::ViewableArea> const& view_area,
                                 std::shared_ptr<mi::CursorListener> const& cursor_listener)
   : event_hub(config->the_event_hub()),
-    filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
     dispatcher(new droidinput::InputDispatcher(
-        new mia::EventFilterDispatcherPolicy(filter_chain))),
+        config->the_dispatcher_policy())),
     reader(new droidinput::InputReader(
         event_hub,
         new mia::InputReaderPolicy(view_area, cursor_listener),
@@ -82,8 +80,8 @@ std::shared_ptr<mi::InputManager> mi::create_input_manager(
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
     static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-    auto config = std::make_shared<mia::DefaultInputConfiguration>();
+    auto config = std::make_shared<mia::DefaultInputConfiguration>(event_filters);
 
-    return std::make_shared<mia::InputManager>(config, event_filters, view_area,
+    return std::make_shared<mia::InputManager>(config, view_area,
         null_cursor_listener);
 }

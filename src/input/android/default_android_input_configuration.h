@@ -25,6 +25,7 @@
 #include <utils/StrongPointer.h>
 
 #include <functional>
+#include <memory>
 
 namespace droidinput = android;
 
@@ -32,16 +33,20 @@ namespace mir
 {
 namespace input
 {
+class EventFilter;
+class EventFilterChain;
+
 namespace android
 {
 
 class DefaultInputConfiguration : public InputConfiguration
 {
 public:
-    DefaultInputConfiguration();
+    DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters);
     virtual ~DefaultInputConfiguration();
     
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
+    droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
@@ -69,7 +74,10 @@ private:
             return result;
         }
     };
+
+    std::shared_ptr<EventFilterChain> const filter_chain;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
+    CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
 };
 
 }

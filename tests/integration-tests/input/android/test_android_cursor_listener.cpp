@@ -58,7 +58,8 @@ struct MockCursorListener : public mi::CursorListener
 class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:
-    TestingInputConfiguration()
+    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters)
+        : DefaultInputConfiguration(filters)
     {
         event_hub = new mia::FakeEventHub();
     }
@@ -87,14 +88,15 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
             geom::Size{geom::Width(1024), geom::Height(1024)}
         };
 
+        configuration = std::make_shared<TestingInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)});
+
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(visible_rectangle));
 
-        fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration.the_event_hub().get()); // For convenience
+        fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration->the_event_hub().get()); // For convenience
 
         input_manager.reset(new mia::InputManager(
-            mt::fake_shared(configuration),
-            {mt::fake_shared(event_filter)},
+            configuration,
             mt::fake_shared(viewable_area),
             mt::fake_shared(cursor_listener)));
         input_manager->start();
@@ -105,7 +107,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager->stop();
     }
 
-    TestingInputConfiguration configuration;
+    std::shared_ptr<TestingInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
