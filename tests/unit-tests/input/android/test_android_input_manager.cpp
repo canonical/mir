@@ -19,6 +19,7 @@
 #include "src/input/android/android_input_manager.h"
 #include "src/input/android/android_input_configuration.h"
 #include "src/input/android/android_input_thread.h"
+#include "src/input/android/android_input_constants.h"
 
 #include "mir/input/cursor_listener.h"
 
@@ -131,31 +132,69 @@ struct AndroidInputManagerSetup : public testing::Test
 
         ON_CALL(view_area, view_area())
             .WillByDefault(Return(default_view_area));
+
+        event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
+        dispatcher = new MockInputDispatcher();
+        reader = new MockInputReader();
+        dispatcher_thread = std::make_shared<MockInputThread>();
+        reader_thread = std::make_shared<MockInputThread>();
+
+        ON_CALL(config, the_event_hub()).WillByDefault(Return(event_hub));
+        ON_CALL(config, the_dispatcher()).WillByDefault(Return(dispatcher));
+        ON_CALL(config, the_reader()).WillByDefault(Return(reader));
+        ON_CALL(config, the_reader_thread()).WillByDefault(Return(reader_thread));
+        ON_CALL(config, the_dispatcher_thread()).WillByDefault(Return(dispatcher_thread));
     }
     mtd::MockViewableArea view_area;
+
+    testing::NiceMock<MockInputConfiguration> config;
+    droidinput::sp<droidinput::EventHubInterface> event_hub;
+    droidinput::sp<MockInputDispatcher> dispatcher;
+    droidinput::sp<MockInputReader> reader;
+    std::shared_ptr<MockInputThread> dispatcher_thread;
+    std::shared_ptr<MockInputThread> reader_thread;
 };
 
 }
 
-TEST_F(AndroidInputManagerSetup, constructs_input_system_from_configuration)
+TEST_F(AndroidInputManagerSetup, takes_input_setup_from_configuration)
+{
+    // TODO: Split to two tests and fixture with default actions and nicemock for config.
+    using namespace ::testing;
+    
+    EXPECT_CALL(config, the_event_hub()).Times(1);
+    EXPECT_CALL(config, the_dispatcher()).Times(1);
+    EXPECT_CALL(config, the_reader()).Times(1);
+    EXPECT_CALL(config, the_reader_thread()).Times(1);
+    EXPECT_CALL(config, the_dispatcher_thread()).Times(1);
+    
+    mia::InputManager manager(mt::fake_shared(config));
+    
+}
+
+TEST_F(AndroidInputManagerSetup, start_and_stop)
 {
     using namespace ::testing;
     
-//    const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-//    const std::shared_ptr<mg::ViewableArea> null_view_area{};
+    EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen)).Times(1);
+    EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
+
+    EXPECT_CALL(*reader_thread, start()).Times(1);
+    EXPECT_CALL(*dispatcher_thread, start()).Times(1);
     
-    MockInputConfiguration config;
-    droidinput::sp<droidinput::EventHubInterface> event_hub = new mia::FakeEventHub(); // TODO: Replace with mock ~racarr
-    droidinput::sp<droidinput::InputDispatcherInterface> dispatcher = new MockInputDispatcher();
-    droidinput::sp<droidinput::InputReaderInterface> reader = new MockInputReader();
-    std::shared_ptr<mia::InputThread> dispatcher_thread = std::make_shared<MockInputThread>();
-    std::shared_ptr<mia::InputThread> reader_thread = std::make_shared<MockInputThread>();
+    {
+        InSequence seq;
+        
+        EXPECT_CALL(*dispatcher_thread, request_stop());
+        EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen)).Times(1);
+        EXPECT_CALL(*dispatcher_thread, join());
+        EXPECT_CALL(*reader_thread, request_stop());
+        // TODO: Expectation on event hub wake
+        EXPECT_CALL(*reader_thread, join());
+    }
 
-    EXPECT_CALL(config, the_event_hub()).Times(1).WillOnce(Return(event_hub));
-    EXPECT_CALL(config, the_dispatcher()).Times(1).WillOnce(Return(dispatcher));
-    EXPECT_CALL(config, the_reader()).Times(1).WillOnce(Return(reader));
-    EXPECT_CALL(config, the_reader_thread()).Times(1).WillOnce(Return(reader_thread));
-    EXPECT_CALL(config, the_dispatcher_thread()).Times(1).WillOnce(Return(dispatcher_thread));
+    mia::InputManager manager(mt::fake_shared(config));
 
-    mia::InputManager(mt::fake_shared(config));
+    manager.start();
+    manager.stop();
 }

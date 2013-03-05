@@ -45,8 +45,6 @@ mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& 
     reader_thread(config->the_reader_thread()),
     dispatcher_thread(config->the_dispatcher_thread())
 {
-    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
-    dispatcher->setInputFilterEnabled(true);
 }
 
 mia::InputManager::~InputManager()
@@ -66,6 +64,9 @@ void mia::InputManager::stop()
 
 void mia::InputManager::start()
 {
+    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
+    dispatcher->setInputFilterEnabled(true);
+
     reader_thread->start();
     dispatcher_thread->start();
 }
