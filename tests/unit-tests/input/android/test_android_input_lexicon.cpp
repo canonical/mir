@@ -17,7 +17,7 @@
  */
 #include "src/input/android/android_input_lexicon.h"
 // Is this the right place for this header? Will eventually be included by clients.
-#include "mir/input/event.h"
+#include "mir_toolkit/input/event.h"
 
 #include <androidfw/Input.h>
 
