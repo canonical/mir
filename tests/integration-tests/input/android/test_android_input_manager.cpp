@@ -18,7 +18,7 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "src/input/android/android_input_configuration.h"
+#include "src/input/android/default_android_input_configuration.h"
 #include "src/input/android/android_input_manager.h"
 
 #include "mir_test/fake_shared.h"
@@ -54,7 +54,7 @@ static const geom::Rectangle default_view_area =
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
-class TestingInputConfiguration : public mia::InputConfiguration
+class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:
     TestingInputConfiguration()

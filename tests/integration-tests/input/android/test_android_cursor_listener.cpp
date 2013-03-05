@@ -19,7 +19,7 @@
 
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
-#include "src/input/android/android_input_configuration.h"
+#include "src/input/android/default_android_input_configuration.h"
 #include "mir/input/cursor_listener.h"
 
 #include "mir_test/fake_shared.h"
@@ -54,7 +54,7 @@ struct MockCursorListener : public mi::CursorListener
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 };
 
-class TestingInputConfiguration : public mia::InputConfiguration
+class TestingInputConfiguration : public mia::DefaultInputConfiguration
 {
 public:
     TestingInputConfiguration()
