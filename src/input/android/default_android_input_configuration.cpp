@@ -129,12 +129,20 @@ droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration:
 
 std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_dispatcher_thread()
 {
-    return std::make_shared<CommonInputThread>("InputDispatcher",
-                                               new droidinput::InputDispatcherThread(the_dispatcher()));
+    return dispatcher_thread(
+        [this]()
+        {
+            return std::make_shared<CommonInputThread>("InputDispatcher",
+                                                       new droidinput::InputDispatcherThread(the_dispatcher()));
+        });
 }
 
 std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thread()
 {
-    return std::make_shared<CommonInputThread>("InputReader",
-                                               new droidinput::InputReaderThread(the_reader()));
+    return reader_thread(
+        [this]()
+        {
+            return std::make_shared<CommonInputThread>("InputReader",
+                                                       new droidinput::InputReaderThread(the_reader()));
+        });
 }
