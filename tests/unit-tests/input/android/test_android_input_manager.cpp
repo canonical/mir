@@ -25,6 +25,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h" // TODO: Replace with mocked event hub ~ racarr
 
+#include <InputDispatcher.h>
 #include <EventHub.h>
 #include <utils/StrongPointer.h>
 
@@ -32,6 +33,8 @@
 #include <gmock/gmock.h>
 
 #include <initializer_list>
+
+namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
@@ -50,12 +53,32 @@ static const geom::Rectangle default_view_area =
 }
 
 
+// Mock objects
 namespace
 {
+
 struct MockInputConfiguration : public mia::InputConfiguration
 {
     MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
 };
+
+struct MockInputDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
+{
+    MOCK_METHOD1(notifyConfigurationChanged, void(nsecs_t));
+    MOCK_METHOD2(notifyANR, nsecs_t(droidinput::sp<droidinput::InputApplicationHandle> const&, droidinput::sp<droidinput::InputWindowHandle> const&));
+    MOCK_METHOD1(notifyInputChannelBroken, void(droidinput::sp<droidinput::InputWindowHandle> const&));
+    MOCK_METHOD1(getDispatcherConfiguration, void(droidinput::InputDispatcherConfiguration*));
+    MOCK_METHOD0(isKeyRepeatEnabled, bool());
+    MOCK_METHOD2(filterInputEvent, bool(droidinput::InputEvent* const, uint32_t));
+    MOCK_METHOD2(interceptKeyBeforeQueueing, void(droidinput::KeyEvent* const, uint32_t&));
+    MOCK_METHOD2(interceptMotionBeforeQueueing, void(nsecs_t, uint32_t&));
+    MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&, const droidinput::KeyEvent*, uint32_t));
+    MOCK_METHOD4(dispatchUnhandledKey, bool(droidinput::sp<droidinput::InputWindowHandle> const&, droidinput::KeyEvent* const, uint32_t , droidinput::KeyEvent*));
+    MOCK_METHOD4(notifySwitch, void(nsecs_t, int32_t, int32_t, uint32_t));
+    MOCK_METHOD2(pokeUserActivity, void(nsecs_t, int32_t));
+    MOCK_METHOD2(checkInjectEventsPermissionNonReentrant, bool(int32_t, int32_t));
+};
+
 }
 
 TEST(AndroidInputManager, takes_event_hub_from_configuration)
