@@ -59,6 +59,11 @@ namespace mi = mir::input;
 
 namespace
 {
+std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+}
+
+namespace
+{
 class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
@@ -257,14 +262,19 @@ mir::DefaultServerConfiguration::the_session_store()
         });
 }
 
+std::initializer_list<std::shared_ptr<mi::EventFilter> const>
+mir::DefaultServerConfiguration::the_event_filters()
+{
+    return empty_filter_list;
+}
+
 std::shared_ptr<mi::InputManager>
-mir::DefaultServerConfiguration::the_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
+mir::DefaultServerConfiguration::the_input_manager()
 {
     return input_manager(
         [&, this]()
         {
-            return mi::create_input_manager(event_filters, the_display());
+            return mi::create_input_manager(the_event_filters(), the_display());
         });
 }
 

@@ -64,7 +64,10 @@ typedef struct framebuffer_device_t {
     /* max swap interval supported by this framebuffer */
     const int       maxSwapInterval;
 
-    int reserved[8];
+    /* Number of framebuffers supported*/
+    const int       numFramebuffers;
+
+    int reserved[7];
 
     /*
      * requests a specific swap-interval (same definition than EGL)
