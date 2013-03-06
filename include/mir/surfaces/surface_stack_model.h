@@ -38,7 +38,7 @@ class SurfaceStackModel
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params) = 0;
+    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 
