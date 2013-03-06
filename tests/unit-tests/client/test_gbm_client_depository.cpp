@@ -134,3 +134,72 @@ TEST_F(MirGBMBufferDepositoryTest, submitting_buffer_ages_other_buffers)
     EXPECT_EQ(1u, buffer2->age());
     EXPECT_EQ(0u, buffer3->age());
 }
+
+TEST_F(MirGBMBufferDepositoryTest, double_buffering_reaches_steady_state_age)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+    auto buffer1 = depository.access_current_buffer();
+
+    EXPECT_EQ(0u, buffer1->age());
+
+    auto package2 = std::make_shared<MirBufferPackage>();
+    depository.deposit_package(std::move(package2), 2, size, pf);
+    auto buffer2 = depository.access_current_buffer();
+
+    EXPECT_EQ(1u, buffer1->age());
+    EXPECT_EQ(0u, buffer2->age());
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+
+    EXPECT_EQ(2u, buffer1->age());
+    EXPECT_EQ(1u, buffer2->age());
+
+    depository.deposit_package(std::move(package2), 2, size, pf);
+
+    EXPECT_EQ(1u, buffer1->age());
+    EXPECT_EQ(2u, buffer2->age());
+}
+
+TEST_F(MirGBMBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+    auto buffer1 = depository.access_current_buffer();
+
+    auto package2 = std::make_shared<MirBufferPackage>();
+    depository.deposit_package(std::move(package2), 2, size, pf);
+    auto buffer2 = depository.access_current_buffer();
+
+    auto package3 = std::make_shared<MirBufferPackage>();
+    depository.deposit_package(std::move(package3), 3, size, pf);
+    auto buffer3 = depository.access_current_buffer();
+
+    EXPECT_EQ(2u, buffer1->age());
+    EXPECT_EQ(1u, buffer2->age());
+    EXPECT_EQ(0u, buffer3->age());
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+
+    EXPECT_EQ(3u, buffer1->age());
+    EXPECT_EQ(2u, buffer2->age());
+    EXPECT_EQ(1u, buffer3->age());
+
+    depository.deposit_package(std::move(package2), 2, size, pf);
+
+    EXPECT_EQ(1u, buffer1->age());
+    EXPECT_EQ(3u, buffer2->age());
+    EXPECT_EQ(2u, buffer3->age());
+
+    depository.deposit_package(std::move(package3), 3, size, pf);
+
+    EXPECT_EQ(2u, buffer1->age());
+    EXPECT_EQ(1u, buffer2->age());
+    EXPECT_EQ(3u, buffer3->age());
+}
