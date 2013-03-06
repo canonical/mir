@@ -26,16 +26,10 @@
 
 #include <initializer_list>
 
-// TODO: Might be able to remove some things here ~racarr
 namespace android
 {
 class EventHubInterface;
-class InputDispatcher;
 class InputDispatcherInterface;
-class InputDispatcherThread;
-class InputReader;
-class InputReaderInterface;
-class InputReaderThread;
 }
 
 namespace droidinput = android;

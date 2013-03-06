@@ -30,7 +30,7 @@ class CachedPtr
     std::weak_ptr<Type> cache;
     CachedPtr(CachedPtr const&) = delete;
     CachedPtr& operator=(CachedPtr const&) = delete;
- public:
+public:
     CachedPtr() = default;
 
     std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
