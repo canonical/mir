@@ -28,7 +28,7 @@ namespace android
 class AndroidDriverInterpreter
 {
     virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
-    virtual void driver_returns_buffer() = 0;
+    virtual void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd ) = 0;
     virtual void dispatch_driver_request_format(int format) = 0;
     virtual int  driver_requests_info(int key) const = 0;
 };
