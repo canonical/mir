@@ -26,9 +26,12 @@
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
-ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
-    surface(surface)
+ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface,
+                                         std::shared_ptr<input::CommunicationPackage> const& input_package)
+  : surface(surface),
+    input_package_(input_package)
 {
 }
 
@@ -109,11 +112,16 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
     surface_stack->destroy_surface(surface);
 }
 
+std::shared_ptr<mi::CommunicationPackage> ms::BasicProxySurface::input_package() const
+{
+    return input_package_;
+}
 
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,
+        std::shared_ptr<input::CommunicationPackage> const& input_package,
         shell::SurfaceCreationParameters const& params) :
-    BasicProxySurface(surface_stack_->create_surface(params)),
+    BasicProxySurface(surface_stack_->create_surface(params), input_package),
     surface_stack(surface_stack_)
 {
 }

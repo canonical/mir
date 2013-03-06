@@ -29,6 +29,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/communication_package.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
 
@@ -46,6 +47,7 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -77,6 +79,18 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
+class StubCommunicationPackage : public mi::CommunicationPackage
+{
+    int client_fd() const
+    {
+        return 0;
+    }
+    int server_fd() const
+    {
+        return 0;
+    }
+};
+
 class StubSurfaceFactory : public msh::SurfaceFactory
 {
  public:
@@ -86,7 +100,8 @@ class StubSurfaceFactory : public msh::SurfaceFactory
                                                      std::make_shared<mtd::NullBufferBundle>());
         surfaces.push_back(surface);
 
-        return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface));
+        return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface),
+                                                       std::make_shared<StubCommunicationPackage>());
     }
 
 private:

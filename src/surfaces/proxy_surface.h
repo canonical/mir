@@ -29,6 +29,10 @@ namespace shell
 {
 class SurfaceCreationParameters;
 }
+namespace input
+{
+class CommunicationPackage;
+}
 
 namespace surfaces
 {
@@ -38,7 +42,8 @@ class BasicProxySurface : public shell::Surface
 {
 public:
 
-    explicit BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
+    explicit BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface,
+                               std::shared_ptr<input::CommunicationPackage> const& input_package);
 
     void hide();
 
@@ -55,12 +60,15 @@ public:
     void advance_client_buffer();
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
+    
+    std::shared_ptr<input::CommunicationPackage> input_package() const;
 
 protected:
     void destroy_surface(SurfaceStackModel* const surface_stack) const;
 
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
+    std::shared_ptr<input::CommunicationPackage> const input_package_;
 };
 
 class ProxySurface : public BasicProxySurface
@@ -68,6 +76,7 @@ class ProxySurface : public BasicProxySurface
 public:
     ProxySurface(
         SurfaceStackModel* const surface_stack_,
+        std::shared_ptr<input::CommunicationPackage> const& input_package,
         shell::SurfaceCreationParameters const& params);
 
     void destroy();
