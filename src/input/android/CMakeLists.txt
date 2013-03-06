@@ -6,6 +6,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/rudimentary_input_reader_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/event_filter_dispatcher_policy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_android_input_configuration.cpp
 )
 
 set(

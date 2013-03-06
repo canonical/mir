@@ -21,12 +21,12 @@
 
 #include "android_input_manager.h"
 #include "android_input_constants.h"
-#include "event_filter_dispatcher_policy.h"
-#include "android_input_reader_policy.h"
+#include "android_input_configuration.h"
+#include "android_input_thread.h"
+#include "default_android_input_configuration.h"
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
-#include <InputReader.h>
 
 #include <memory>
 #include <vector>
@@ -35,24 +35,12 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(
-    const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& filters,
-    std::shared_ptr<mg::ViewableArea> const& view_area,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener)
-        : event_hub(event_hub),
-          filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
-          dispatcher(new droidinput::InputDispatcher(
-              new mia::EventFilterDispatcherPolicy(filter_chain))),
-          reader(new droidinput::InputReader(
-              event_hub,
-              new mia::InputReaderPolicy(view_area, cursor_listener),
-              dispatcher)),
-          reader_thread(new droidinput::InputReaderThread(reader)),
-          dispatcher_thread(new droidinput::InputDispatcherThread(dispatcher))
+mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config)
+  : event_hub(config->the_event_hub()),
+    dispatcher(config->the_dispatcher()),
+    reader_thread(config->the_reader_thread()),
+    dispatcher_thread(config->the_dispatcher_thread())
 {
-    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
-    dispatcher->setInputFilterEnabled(true);
 }
 
 mia::InputManager::~InputManager()
@@ -61,19 +49,22 @@ mia::InputManager::~InputManager()
 
 void mia::InputManager::stop()
 {
-    dispatcher_thread->requestExit();
+    dispatcher_thread->request_stop();
     dispatcher->setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen);
     dispatcher_thread->join();
 
-    reader_thread->requestExit();
+    reader_thread->request_stop();
     event_hub->wake();
     reader_thread->join();
 }
 
 void mia::InputManager::start()
 {
-    reader_thread->run("InputReader", droidinput::PRIORITY_URGENT_DISPLAY);
-    dispatcher_thread->run("InputDispatcher", droidinput::PRIORITY_URGENT_DISPLAY);
+    dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
+    dispatcher->setInputFilterEnabled(true);
+
+    reader_thread->start();
+    dispatcher_thread->start();
 }
 
 std::shared_ptr<mi::InputManager> mi::create_input_manager(
@@ -81,11 +72,7 @@ std::shared_ptr<mi::InputManager> mi::create_input_manager(
     std::shared_ptr<mg::ViewableArea> const& view_area)
 {
     static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-    droidinput::sp<droidinput::EventHubInterface> event_hub(new droidinput::EventHub());
+    auto config = std::make_shared<mia::DefaultInputConfiguration>(event_filters, view_area, null_cursor_listener);
 
-    return std::make_shared<mia::InputManager>(
-        event_hub,
-        event_filters,
-        view_area,
-        null_cursor_listener);
+    return std::make_shared<mia::InputManager>(config);
 }
