@@ -81,14 +81,14 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer_internal(buffer);
+    return self->queueBuffer_internal(buffer, -1);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
-                       struct ANativeWindowBuffer* buffer)
+                       struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer_internal(buffer);
+    return self->queueBuffer_internal(buffer, fence_fd);
 
 }
 
@@ -138,15 +138,9 @@ int mcla::MirNativeWindow::dequeueBuffer_internal (struct ANativeWindowBuffer** 
     return 0;
 }
 
-#if 0
-static void empty(MirSurface * /*surface*/, void * /*client_context*/)
-{}
-#endif
-int mcla::MirNativeWindow::queueBuffer_internal(struct ANativeWindowBuffer* /*buffer*/)
+int mcla::MirNativeWindow::queueBuffer_internal(struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-#if 0
-    mir_wait_for(surface->next_buffer(empty, NULL));
-#endif
+    driver_interpreter->driver_returns_buffer(buffer, fence_fd);
     return 0;
 }
 
