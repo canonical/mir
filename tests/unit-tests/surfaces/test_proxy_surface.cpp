@@ -32,6 +32,7 @@
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
@@ -75,30 +76,34 @@ private:
 };
 }
 
-TEST(SurfaceProxy, creation_and_destruction)
+namespace
+{
+struct SurfaceProxySetup : public testing::Test
 {
     MockSurfaceStackModel surface_stack;
     msh::SurfaceCreationParameters params;
+    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
+};
+}
 
+TEST_F(SurfaceProxySetup, creation_and_destruction)
+{
     using namespace testing;
     InSequence sequence;
     EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
-    ms::ProxySurface test(&surface_stack, params);
+    ms::ProxySurface test(&surface_stack, null_communication_package, params);
 }
 
-TEST(SurfaceProxy, destroy)
+TEST_F(SurfaceProxySetup, destroy)
 {
     using namespace testing;
 
-    NiceMock<MockSurfaceStackModel> surface_stack;
-    msh::SurfaceCreationParameters params;
-
-    ms::ProxySurface test(&surface_stack, params);
-
+    EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
+    ms::ProxySurface test(&surface_stack, null_communication_package, params);
     test.destroy();
 
     Mock::VerifyAndClearExpectations(&surface_stack);
@@ -109,6 +114,7 @@ namespace
 struct BasicSurfaceProxy : testing::Test
 {
     std::shared_ptr<StubBufferBundle> buffer_bundle;
+    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
 
     BasicSurfaceProxy() :
         buffer_bundle(std::make_shared<StubBufferBundle>())
@@ -126,7 +132,7 @@ TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.client_buffer();
@@ -143,7 +149,7 @@ TEST_F(BasicSurfaceProxy, size_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.size();
@@ -160,7 +166,7 @@ TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.pixel_format();
@@ -177,7 +183,7 @@ TEST_F(BasicSurfaceProxy, hide_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.hide();
@@ -194,7 +200,7 @@ TEST_F(BasicSurfaceProxy, show_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.show();
@@ -211,7 +217,7 @@ TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.destroy();
@@ -228,7 +234,7 @@ TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.shutdown();
@@ -245,7 +251,7 @@ TEST_F(BasicSurfaceProxy, advance_client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
 
     EXPECT_NO_THROW({
         proxy_surface.advance_client_buffer();

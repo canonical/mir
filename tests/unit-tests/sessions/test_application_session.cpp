@@ -30,16 +30,19 @@
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
+const std::shared_ptr<mi::CommunicationPackage> null_communication_package{0};
+
 class MockSurface : public msh::Surface
 {
 public:
     MockSurface(std::weak_ptr<ms::Surface> const& surface) :
-        impl(surface)
+        impl(surface, null_communication_package)
     {
         using namespace testing;
 

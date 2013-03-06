@@ -37,6 +37,7 @@
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -109,8 +110,9 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
         std::make_shared<ms::Surface>(
             msh::a_surface().name,
             buffer_bundle));
+    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface, null_communication_package)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
