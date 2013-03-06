@@ -73,7 +73,7 @@ struct MockMirSurface : public mcl::ClientSurface
 class MockAndroidDriverInterpreter : public mcla::AndroidDriverInterpreter
 {
 public:
-    MOCK_METHOD0(driver_requests_buffer, void());
+    MOCK_METHOD0(driver_requests_buffer, ANativeWindowBuffer*());
     MOCK_METHOD0(driver_returns_buffer, void());
     MOCK_METHOD1(dispatch_driver_request_format, void(int));
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
@@ -154,15 +154,45 @@ TEST_F(AndroidNativeWindowTest, native_window_setswapinterval_hook_callable)
 /* dequeue hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 {
-    ANativeWindowBuffer* tmp;
+    ANativeWindowBuffer* returned_buffer; 
 
     mcla::MirNativeWindow anw(mock_driver_interpreter);
 
     ASSERT_NE(nullptr, anw.dequeueBuffer);
     EXPECT_NO_THROW({
         int fence_fd;
-        anw.dequeueBuffer(&anw, &tmp, &fence_fd);
+        anw.dequeueBuffer(&anw, &returned_buffer, &fence_fd);
     });
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
+{
+    using namespace testing;
+
+    ANativeWindowBuffer* returned_buffer; 
+    ANativeWindowBuffer fake_buffer;
+
+    mcla::MirNativeWindow anw(mock_driver_interpreter);
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
+        .Times(1)
+        .WillOnce(Return(&fake_buffer));
+
+    int fence_fd;
+    anw.dequeueBuffer(&anw, &returned_buffer, &fence_fd);
+
+    EXPECT_EQ(&fake_buffer, returned_buffer);
+}
+
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_indicates_buffer_immediately_usable)
+{
+    ANativeWindowBuffer* returned_buffer; 
+    mcla::MirNativeWindow anw(mock_driver_interpreter);
+
+    int fence_fd;
+    anw.dequeueBuffer(&anw, &returned_buffer, &fence_fd);
+    EXPECT_EQ(-1, fence_fd);
 }
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_hook_callable)
@@ -244,4 +274,3 @@ TEST_F(AndroidNativeWindowTest, native_window_decref_hook_callable)
         anw.common.decRef(NULL);
     });
 }
-
