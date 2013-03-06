@@ -74,8 +74,6 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
-    
-
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
