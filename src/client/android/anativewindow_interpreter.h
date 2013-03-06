@@ -40,6 +40,7 @@ public:
     int  driver_requests_info(int key) const;
 private:
     ClientSurface* surface; 
+    int driver_pixel_format;
 };
 
 }

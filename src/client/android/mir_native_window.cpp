@@ -17,7 +17,6 @@
  */
 
 #include "mir_native_window.h"
-#include "../client_buffer.h"
 #include "android_driver_interpreter.h"
 
 namespace mcl=mir::client;

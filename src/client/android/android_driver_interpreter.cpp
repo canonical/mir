@@ -17,17 +17,23 @@
  */
 
 #include "anativewindow_interpreter.h"
+#include "../client_buffer.h"
 
 namespace mcla=mir::client::android;
 
 mcla::ANativeWindowInterpreter::ANativeWindowInterpreter(ClientSurface* surface)
- :surface(surface)
+ :  surface(surface),
+    driver_pixel_format(-1)
 {
 }
 
 ANativeWindowBuffer* mcla::ANativeWindowInterpreter::driver_requests_buffer()
 {
-    return 0x0;
+    auto buffer = surface->get_current_buffer();
+    auto buffer_to_driver = buffer->get_native_handle();
+    buffer_to_driver->format = driver_pixel_format;
+
+    return buffer_to_driver;
 }
 
 void mcla::ANativeWindowInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
