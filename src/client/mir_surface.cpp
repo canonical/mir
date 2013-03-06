@@ -238,22 +238,22 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     setting.set_attrib(at);
     setting.set_ivalue(value);
 
-    server.configure_surface(0, &setting, &mod_result, 
-                  google::protobuf::NewCallback(this, &MirSurface::on_configured));
+    server.configure_surface(0, &setting, &configure_result, 
+              google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;
 }
 
 void MirSurface::on_configured()
 {
-    if (mod_result.surfaceid().value() == surface.id().value())
+    if (configure_result.surfaceid().value() == surface.id().value())
     {
-        switch (mod_result.attrib())
+        switch (configure_result.attrib())
         {
         case MIR_SURFACE_TYPE:
-            if (mod_result.has_ivalue())
+            if (configure_result.has_ivalue())
             {
-                int t = mod_result.ivalue();
+                int t = configure_result.ivalue();
                 attrib_cache[MIR_SURFACE_TYPE] = t;
             } // else error is probably set due to an unsupported attrib/value
             break;
