@@ -52,11 +52,7 @@ public:
     virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
-
-    // TODO this should not be taking a parameter, but as
-    // TODO input still needs proper integration left for later
-    virtual std::shared_ptr<input::InputManager> the_input_manager(
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters) = 0;
+    virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
 
 protected:
     ServerConfiguration() = default;
