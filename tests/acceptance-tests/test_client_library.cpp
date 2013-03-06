@@ -209,7 +209,20 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
 
             mir_wait_for(mir_surface_set_type(surface,
                                             static_cast<MirSurfaceType>(888)));
-            mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_DIALOG));
+            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_DIALOG);
+
+            // Stress-test synchronization logic with some flooding
+            for (int i = 0; i < 1000; i++)
+            {
+                mir_surface_set_type(surface, MIR_SURFACE_NORMAL);
+                mir_surface_set_type(surface, MIR_SURFACE_UTILITY);
+                mir_surface_set_type(surface, MIR_SURFACE_DIALOG);
+                mir_surface_set_type(surface, MIR_SURFACE_OVERLAY);
+                mir_surface_set_type(surface, MIR_SURFACE_FREESTYLE);
+                mir_wait_for(mir_surface_set_type(surface,
+                                                  MIR_SURFACE_POPOVER));
+                ASSERT_EQ(mir_surface_get_type(surface), MIR_SURFACE_POPOVER);
+            }
 
             mir_wait_for(mir_surface_release(surface, release_surface_callback,
                                              this));
