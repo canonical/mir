@@ -18,6 +18,7 @@
 #ifndef MIR_DEFAULT_SERVER_CONFIGURATION_H_
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
+#include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
 #include "mir/options/program_option.h"
 
@@ -108,47 +109,24 @@ public:
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
 
-    template<typename Type>
-    class CachedPtr
-    {
-        std::weak_ptr<Type> cache;
+    mir::CachedPtr<frontend::Communicator> communicator;
+    mir::CachedPtr<sessions::SessionStore> session_store;
+    mir::CachedPtr<input::InputManager>    input_manager;
+    mir::CachedPtr<graphics::Platform>     graphics_platform;
+    mir::CachedPtr<graphics::BufferInitializer> buffer_initializer;
+    mir::CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
+    mir::CachedPtr<graphics::Display>      display;
 
-        CachedPtr(CachedPtr const&) = delete;
-        CachedPtr& operator=(CachedPtr const&) = delete;
-    public:
-        CachedPtr() = default;
-
-        std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
-        {
-            auto result = cache.lock();
-            if (!result)
-            {
-                cache = result = make();
-            }
-
-            return result;
-
-        }
-    };
-
-    CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<sessions::SessionStore> session_store;
-    CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<graphics::Platform>     graphics_platform;
-    CachedPtr<graphics::BufferInitializer> buffer_initializer;
-    CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
-    CachedPtr<graphics::Display>      display;
-
-    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationMediatorReport> application_mediator_report;
-    CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    CachedPtr<graphics::Renderer> renderer;
-    CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
-    CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<surfaces::SurfaceController> surface_controller;
-    CachedPtr<compositor::Compositor> compositor;
-    CachedPtr<logging::Logger> logger;
-    CachedPtr<graphics::DisplayReport> display_report;
+    mir::CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
+    mir::CachedPtr<frontend::ApplicationMediatorReport> application_mediator_report;
+    mir::CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
+    mir::CachedPtr<graphics::Renderer> renderer;
+    mir::CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
+    mir::CachedPtr<surfaces::SurfaceStack> surface_stack;
+    mir::CachedPtr<surfaces::SurfaceController> surface_controller;
+    mir::CachedPtr<compositor::Compositor> compositor;
+    mir::CachedPtr<logging::Logger> logger;
+    mir::CachedPtr<graphics::DisplayReport> display_report;
 
 private:
     std::shared_ptr<options::Option> options;

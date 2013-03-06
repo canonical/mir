@@ -21,6 +21,8 @@
 
 #include "android_input_configuration.h"
 
+#include "mir/cached_ptr.h"
+
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
 
@@ -88,37 +90,12 @@ private:
         }
     };
 
-    // TODO: Dedupe me
-    template<typename Type>
-    class CachedPtr
-    {
-        std::weak_ptr<Type> cache;
-
-        CachedPtr(CachedPtr const&) = delete;
-        CachedPtr& operator=(CachedPtr const&) = delete;
-    public:
-        CachedPtr() = default;
-
-        std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
-        {
-            auto result = cache.lock();
-            if (!result)
-            {
-                cache = result = make();
-            }
-
-            return result;
-
-        }
-    };
-
-
     std::shared_ptr<EventFilterChain> const filter_chain;
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
     
-    CachedPtr<InputThread> dispatcher_thread;
-    CachedPtr<InputThread> reader_thread;
+    mir::CachedPtr<InputThread> dispatcher_thread;
+    mir::CachedPtr<InputThread> reader_thread;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
