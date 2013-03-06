@@ -44,5 +44,5 @@ droidinput::sp<droidinput::EventHubInterface> mtd::FakeEventHubInputConfiguratio
 
 mia::FakeEventHub* mtd::FakeEventHubInputConfiguration::the_fake_event_hub()
 {
-    return dynamic_cast<mia::FakeEventHub *>(event_hub.get());
+    return event_hub.get();
 }

@@ -70,7 +70,7 @@ protected:
     FakeEventHubInputConfiguration& operator=(FakeEventHubInputConfiguration const&) = delete;
 
 private:
-    droidinput::sp<droidinput::EventHubInterface> event_hub;
+    droidinput::sp<input::android::FakeEventHub> event_hub;
 };
 
 }
