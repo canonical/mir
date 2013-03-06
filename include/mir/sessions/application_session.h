@@ -37,7 +37,7 @@ public:
     explicit ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::string const& session_name,
-        std::shared_ptr<mir::Shell> shell = nullptr);
+        std::shared_ptr<mir::Shell> sh = nullptr);
     ~ApplicationSession();
 
     SurfaceId create_surface(SurfaceCreationParameters const& params);
@@ -59,7 +59,7 @@ protected:
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
-    std::shared_ptr<mir::Shell> const shell;
+    std::shared_ptr<mir::Shell> shell;
 
     SurfaceId next_id();
 
