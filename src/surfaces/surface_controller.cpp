@@ -27,8 +27,12 @@
 
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 
-ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) : surface_stack(surface_stack)
+ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack,
+                                         std::shared_ptr<mi::CommunicationPackageFactory> const& input_factory) 
+  : surface_stack(surface_stack),
+    input_factory(input_factory)
 {
     assert(surface_stack);
 }

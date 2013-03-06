@@ -69,7 +69,7 @@ TEST(SurfaceStack, create_surface)
         .WillOnce(Return(mt::fake_shared(package)));
     EXPECT_CALL(model, destroy_surface(_)).Times(1);
         
-    ms::SurfaceController controller(mt::fake_shared(model), input_factory);
+    ms::SurfaceController controller(mt::fake_shared(model), mt::fake_shared(input_factory));
     {
         auto surface = controller.create_surface(msh::a_surface());
     }

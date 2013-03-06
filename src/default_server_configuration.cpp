@@ -326,10 +326,14 @@ mir::DefaultServerConfiguration::the_render_view()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
+    std::shared_ptr<mi::CommunicationPackageFactory> null_package_factory;
+    // TODO: this should be the input manager ~racarr
+
+
     return surface_controller(
-        [this]()
+        [this, null_package_factory]()
         {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model(), null_package_factory);
         });
 }
 
