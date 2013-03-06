@@ -43,15 +43,6 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-// Test constants
-namespace
-{
-static const geom::Rectangle default_view_area =
-    geom::Rectangle{geom::Point(),
-                    geom::Size{geom::Width(1600), geom::Height(1400)}};
-}
-
-
 // Mock objects
 namespace
 {
@@ -136,6 +127,11 @@ struct AndroidInputManagerSetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
+
+        const geom::Rectangle default_view_area =
+            geom::Rectangle{geom::Point(),
+                            geom::Size{geom::Width(1600), geom::Height(1400)}};
+
 
         ON_CALL(view_area, view_area())
             .WillByDefault(Return(default_view_area));
