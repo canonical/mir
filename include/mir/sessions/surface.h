@@ -24,6 +24,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/surface.h"
+
 #include <memory>
 
 namespace mir

@@ -18,8 +18,9 @@
 
 #include "mir/sessions/application_session.h"
 #include "mir/sessions/surface.h"
-#include "mir/shell/nullshell.h"
+
 #include "mir/surfaces/surface_controller.h"
+#include "mir/shell/nullshell.h"
 
 #include <boost/throw_exception.hpp>
 
