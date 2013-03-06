@@ -101,8 +101,8 @@ private:
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
     
-    mir::CachedPtr<InputThread> dispatcher_thread;
-    mir::CachedPtr<InputThread> reader_thread;
+    CachedPtr<InputThread> dispatcher_thread;
+    CachedPtr<InputThread> reader_thread;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
