@@ -73,7 +73,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(visible_rectangle));
 
-        fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration->the_event_hub().get()); // For convenience
+        fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = std::make_shared<mia::InputManager>(configuration);
 

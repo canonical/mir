@@ -58,13 +58,13 @@ static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
 public:
-    void SetUp()
+    AndroidInputManagerAndEventFilterDispatcherSetup()
     {
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         
-        fake_event_hub = dynamic_cast<mia::FakeEventHub *>(configuration->the_event_hub().get()); // For convenience
+        fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = std::make_shared<mia::InputManager>(configuration);
 
