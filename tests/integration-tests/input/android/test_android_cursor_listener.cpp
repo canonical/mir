@@ -24,6 +24,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
+#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
@@ -54,32 +55,6 @@ struct MockCursorListener : public mi::CursorListener
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 };
 
-// TODO: Dedupe me ~racarr
-class TestingInputConfiguration : public mia::DefaultInputConfiguration
-{
-public:
-    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
-                              std::shared_ptr<mg::ViewableArea> const& view_area,
-                              std::shared_ptr<mi::CursorListener> const& cursor_listener)
-        : DefaultInputConfiguration(filters, view_area, cursor_listener)
-    {
-        event_hub = new mia::FakeEventHub();
-    }
-    virtual ~TestingInputConfiguration() {}
-
-    droidinput::sp<droidinput::EventHubInterface> the_event_hub()
-    {
-        return event_hub;
-    }
-
-protected:
-    TestingInputConfiguration(TestingInputConfiguration const&) = delete;
-    TestingInputConfiguration& operator=(TestingInputConfiguration const&) = delete;
-
-private:
-    droidinput::sp<droidinput::EventHubInterface> event_hub;
-};
-
 struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
     void SetUp()
@@ -90,7 +65,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
             geom::Size{geom::Width(1024), geom::Height(1024)}
         };
 
-        configuration = std::make_shared<TestingInputConfiguration>(
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)},
             mt::fake_shared(viewable_area),
             mt::fake_shared(cursor_listener));
@@ -110,7 +85,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager->stop();
     }
 
-    std::shared_ptr<TestingInputConfiguration> configuration;
+    std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;

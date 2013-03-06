@@ -23,6 +23,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
+#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/wait_condition.h"
@@ -54,38 +55,12 @@ static const geom::Rectangle default_view_area =
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
-// TODO: Dedupe me ~racarr
-class TestingInputConfiguration : public mia::DefaultInputConfiguration
-{
-public:
-    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
-                              std::shared_ptr<mg::ViewableArea> const& view_area,
-                              std::shared_ptr<mi::CursorListener> const& cursor_listener)
-        : DefaultInputConfiguration(filters, view_area, cursor_listener)
-    {
-        event_hub = new mia::FakeEventHub();
-    }
-    virtual ~TestingInputConfiguration() {}
-
-    droidinput::sp<droidinput::EventHubInterface> the_event_hub()
-    {
-        return event_hub;
-    }
-
-protected:
-    TestingInputConfiguration(TestingInputConfiguration const&) = delete;
-    TestingInputConfiguration& operator=(TestingInputConfiguration const&) = delete;
-
-private:
-    droidinput::sp<droidinput::EventHubInterface> event_hub;
-};
-
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
 public:
     void SetUp()
     {
-        configuration = std::make_shared<TestingInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         
@@ -102,7 +77,7 @@ public:
     }
 
   protected:
-    std::shared_ptr<TestingInputConfiguration> configuration;
+    std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
     MockEventFilter event_filter;
