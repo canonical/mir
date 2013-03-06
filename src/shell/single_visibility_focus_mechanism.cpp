@@ -20,17 +20,17 @@
 #include "mir/shell/session.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 
-msess::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msess::SessionContainer> const& app_container) :
+msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container) :
   app_container(app_container)
 {
 }
 
-void msess::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msess::Session> const& focus_session)
+void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Session> const& focus_session)
 {
     app_container->for_each(
-        [&](std::shared_ptr<msess::Session> const& session) {
+        [&](std::shared_ptr<msh::Session> const& session) {
         if (session == focus_session)
         {
             session->show();

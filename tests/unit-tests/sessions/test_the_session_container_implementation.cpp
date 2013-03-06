@@ -28,23 +28,23 @@
 #include <gtest/gtest.h>
 #include <string>
 
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msess::SessionContainer container;
+    msh::SessionContainer container;
 
-    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 7"));
-    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 8"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 7"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 8"));
 
     struct local
     {
         MOCK_METHOD1(check_name, void (std::string const&));
 
-        void operator()(std::shared_ptr<msess::Session> const& session)
+        void operator()(std::shared_ptr<msh::Session> const& session)
         {
             check_name(session->name());
         }
@@ -61,9 +61,9 @@ TEST(SessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msess::SessionContainer container;
+    msh::SessionContainer container;
 
-    auto session = std::make_shared<msess::ApplicationSession>(factory,
+    auto session = std::make_shared<msh::ApplicationSession>(factory,
                                                                "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);

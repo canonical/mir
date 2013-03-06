@@ -29,7 +29,7 @@
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
 
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -51,7 +51,7 @@ static const geom::Size default_view_size = geom::Size{default_view_width,
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  default_view_size};
 
-struct DummySurface : public msess::Surface
+struct DummySurface : public msh::Surface
 {
     explicit DummySurface() {}
     virtual ~DummySurface() {}
@@ -92,13 +92,13 @@ struct SizedDummySurface : public DummySurface
     geom::Size const surface_size;
 };
 
-struct DummySurfaceFactory : public msess::SurfaceFactory
+struct DummySurfaceFactory : public msh::SurfaceFactory
 {
     explicit DummySurfaceFactory()
     {
     }
 
-    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& params)
+    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& params)
     {
         auto name = params.name;
         return std::make_shared<SizedDummySurface>(params.size);
@@ -169,7 +169,7 @@ mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& ser
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    auto const params = msess::a_surface().of_name(window_name);
+    auto const params = msh::a_surface().of_name(window_name);
     auto session = session_store->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
@@ -181,7 +181,7 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 bool mtc::SessionManagementContext::open_window_with_size(std::string const& window_name,
                                                           geom::Size const& size)
 {
-    auto const params = msess::a_surface().of_name(window_name).of_size(size);
+    auto const params = msh::a_surface().of_name(window_name).of_size(size);
     auto session = session_store->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 

@@ -54,7 +54,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 namespace mi = mir::input;
 
 namespace
@@ -63,7 +63,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<msess::SessionStore> const& session_store,
+        std::shared_ptr<msh::SessionStore> const& session_store,
         std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    std::shared_ptr<msess::SessionStore> session_store;
+    std::shared_ptr<msh::SessionStore> session_store;
     std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -240,20 +240,20 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<msess::SessionStore>
+std::shared_ptr<msh::SessionStore>
 mir::DefaultServerConfiguration::the_session_store()
 {
     return session_store(
-        [this]() -> std::shared_ptr<msess::SessionStore>
+        [this]() -> std::shared_ptr<msh::SessionStore>
         {
-            auto session_container = std::make_shared<msess::SessionContainer>();
-            auto focus_mechanism = std::make_shared<msess::SingleVisibilityFocusMechanism>(session_container);
-            auto focus_selection_strategy = std::make_shared<msess::RegistrationOrderFocusSequence>(session_container);
+            auto session_container = std::make_shared<msh::SessionContainer>();
+            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container);
+            auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
 
-            auto placement_strategy = std::make_shared<msess::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msess::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
+            auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
+            auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
-            return std::make_shared<msess::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
+            return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
         });
 }
 
@@ -313,7 +313,7 @@ mir::DefaultServerConfiguration::the_render_view()
         });
 }
 
-std::shared_ptr<msess::SurfaceFactory>
+std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
     return surface_controller(
@@ -346,7 +346,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<msess::SessionStore> const& session_store,
+    std::shared_ptr<msh::SessionStore> const& session_store,
     std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {

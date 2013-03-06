@@ -28,11 +28,11 @@
 #include <cassert>
 #include <algorithm>
 
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 
-msess::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
+msh::ApplicationSession::ApplicationSession(
+    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
     surface_factory(surface_factory),
     session_name(session_name),
@@ -41,7 +41,7 @@ msess::ApplicationSession::ApplicationSession(
     assert(surface_factory);
 }
 
-msess::ApplicationSession::~ApplicationSession()
+msh::ApplicationSession::~ApplicationSession()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
@@ -50,12 +50,12 @@ msess::ApplicationSession::~ApplicationSession()
     }
 }
 
-msess::SurfaceId msess::ApplicationSession::next_id()
+msh::SurfaceId msh::ApplicationSession::next_id()
 {
     return SurfaceId(next_surface_id.fetch_add(1));
 }
 
-msess::SurfaceId msess::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
+msh::SurfaceId msh::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
 {
     auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
@@ -65,7 +65,7 @@ msess::SurfaceId msess::ApplicationSession::create_surface(const SurfaceCreation
     return id;
 }
 
-msess::ApplicationSession::Surfaces::const_iterator msess::ApplicationSession::checked_find(SurfaceId id) const
+msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::checked_find(SurfaceId id) const
 {
     auto p = surfaces.find(id);
     if (p == surfaces.end())
@@ -75,14 +75,14 @@ msess::ApplicationSession::Surfaces::const_iterator msess::ApplicationSession::c
     return p;
 }
 
-std::shared_ptr<msess::Surface> msess::ApplicationSession::get_surface(msess::SurfaceId id) const
+std::shared_ptr<msh::Surface> msh::ApplicationSession::get_surface(msh::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;
 }
 
-void msess::ApplicationSession::destroy_surface(msess::SurfaceId id)
+void msh::ApplicationSession::destroy_surface(msh::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
@@ -91,12 +91,12 @@ void msess::ApplicationSession::destroy_surface(msess::SurfaceId id)
     surfaces.erase(p);
 }
 
-std::string msess::ApplicationSession::name()
+std::string msh::ApplicationSession::name()
 {
     return session_name;
 }
 
-void msess::ApplicationSession::shutdown()
+void msh::ApplicationSession::shutdown()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
@@ -105,7 +105,7 @@ void msess::ApplicationSession::shutdown()
     }
 }
 
-void msess::ApplicationSession::hide()
+void msh::ApplicationSession::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
@@ -114,7 +114,7 @@ void msess::ApplicationSession::hide()
     }
 }
 
-void msess::ApplicationSession::show()
+void msh::ApplicationSession::show()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)

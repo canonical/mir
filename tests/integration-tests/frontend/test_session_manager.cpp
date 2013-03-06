@@ -35,7 +35,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 
 namespace mc = mir::compositor;
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -43,9 +43,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockFocusSetter: public msess::FocusSetter
+struct MockFocusSetter: public msh::FocusSetter
 {
-  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msess::Session> const&));
+  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msh::Session> const&));
 };
 
 }
@@ -54,12 +54,12 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer());
-    msess::RegistrationOrderFocusSequence sequence(container);
+    std::shared_ptr<msh::SessionContainer> container(new msh::SessionContainer());
+    msh::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
-    std::shared_ptr<msess::Session> new_session;
+    std::shared_ptr<msh::Session> new_session;
 
-    msess::SessionManager session_manager(
+    msh::SessionManager session_manager(
             mt::fake_shared(surface_factory),
             container,
             mt::fake_shared(sequence),
@@ -87,12 +87,12 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer());
-    msess::RegistrationOrderFocusSequence sequence(model);
+    std::shared_ptr<msh::SessionContainer> model(new msh::SessionContainer());
+    msh::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;
-    std::shared_ptr<msess::Session> new_session;
+    std::shared_ptr<msh::Session> new_session;
 
-    msess::SessionManager session_manager(
+    msh::SessionManager session_manager(
         mt::fake_shared(surface_factory),
         model,
         mt::fake_shared(sequence),

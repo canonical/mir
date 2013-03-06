@@ -22,16 +22,16 @@
 
 #include <algorithm>
 
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-msess::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
+msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
     : display_area(display_area)
 {
 }
 
-msess::SurfaceCreationParameters msess::ConsumingPlacementStrategy::place(msess::SurfaceCreationParameters const& request_parameters)
+msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::SurfaceCreationParameters const& request_parameters)
 {
     // We would like to try to fill placement requests
     auto placed_parameters = request_parameters;

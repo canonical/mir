@@ -26,14 +26,14 @@
 #include <cassert>
 
 namespace ms = mir::surfaces;
-namespace msess = mir::shell;
+namespace msh = mir::shell;
 
 ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) : surface_stack(surface_stack)
 {
     assert(surface_stack);
 }
 
-std::shared_ptr<msess::Surface> ms::SurfaceController::create_surface(const msess::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> ms::SurfaceController::create_surface(const msh::SurfaceCreationParameters& params)
 {
     return std::make_shared<ProxySurface>(surface_stack.get(), params);
 }
