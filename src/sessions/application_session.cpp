@@ -132,7 +132,6 @@ int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
                                                  MirSurfaceAttrib attrib,
                                                  int value)
 {
-    // XXX Should we mention the attrib and value integer values in exceptions?
     if (!shell->supports(attrib))
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
                                                "support the specified surface "
@@ -146,6 +145,5 @@ int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msess::Surface> surf(checked_find(id)->second);
 
-    // XXX We still have surfaces_mutex. Is that really necessary?
     return surf->configure(attrib, value);
 }
