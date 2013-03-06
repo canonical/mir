@@ -18,6 +18,7 @@
 
 #include "anativewindow_interpreter.h"
 #include "../client_buffer.h"
+#include <stdexcept>
 
 namespace mcla=mir::client::android;
 
@@ -36,80 +37,39 @@ ANativeWindowBuffer* mcla::ANativeWindowInterpreter::driver_requests_buffer()
     return buffer_to_driver;
 }
 
-void mcla::ANativeWindowInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
-{
-}
-
-void mcla::ANativeWindowInterpreter::dispatch_driver_request_format(int /*format*/)
-{
-}
-
-int  mcla::ANativeWindowInterpreter::driver_requests_info(int /* key */) const
-{
-    return 0;
-}
-
-#if 0
-int mcla::ANativeWindowInterpreter::dequeueBuffer_internal (struct ANativeWindowBuffer** /*buffer_to_driver*/)
-{
-    int ret = 0;
-    auto buffer = surface->get_current_buffer();
-    *buffer_to_driver = buffer->get_native_handle();
-    (*buffer_to_driver)->format = driver_pixel_format;
-    return ret;
-}
-
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-int mcla::ANativeWindowInterpreter::queueBuffer_internal(struct ANativeWindowBuffer* /*buffer*/)
+void mcla::ANativeWindowInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
 {
     mir_wait_for(surface->next_buffer(empty, NULL));
-    return 0;
 }
 
-
-int mcla::ANativeWindowInterpreter::perform_internal(int key, va_list arg_list )
+void mcla::ANativeWindowInterpreter::dispatch_driver_request_format(int format)
 {
-    int ret = 0;
-    va_list args;
-    va_copy(args, arg_list);
-
-    switch(key)
-    {
-        case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_pixel_format = va_arg(args, int);
-            break;
-        default:
-            break;
-    }
-
-    va_end(args);
-    return ret;
+    driver_pixel_format = format;
 }
 
-int mcla::ANativeWindowInterpreter::query_internal(int /*key*/, int* /*value*/ ) const
+int  mcla::ANativeWindowInterpreter::driver_requests_info(int key) const
 {
-    int ret = 0;
     switch (key)
     {
         case NATIVE_WINDOW_WIDTH:
         case NATIVE_WINDOW_DEFAULT_WIDTH:
-            *value = surface->get_parameters().width;
-            break;
+            return surface->get_parameters().width;
         case NATIVE_WINDOW_HEIGHT:
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
-            *value = surface->get_parameters().height;
-            break;
+            return surface->get_parameters().height;
         case NATIVE_WINDOW_FORMAT:
-            *value = driver_pixel_format;
-            break;
+            return driver_pixel_format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
-            *value = 0; /* transform hint is a bitmask. 0 means no transform */
-            break;
+            return 0;
         default:
-            ret = -1;
-            break;
+            throw std::runtime_error("driver requested unsupported query");
     }
-    return ret;
+}
+
+#if 0
+int mcla::ANativeWindowInterpreter::query_internal(int /*key*/, int* /*value*/ ) const
+{
 }
 #endif
