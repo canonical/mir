@@ -24,6 +24,7 @@
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
+#include <InputReader.h>
 
 namespace droidinput = android;
 

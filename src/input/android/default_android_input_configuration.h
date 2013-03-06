@@ -30,6 +30,13 @@
 
 namespace droidinput = android;
 
+namespace android
+{
+class InputReaderInterface;
+class InputReaderPolicyInterface;
+class InputDispatcherPolicyInterface;
+}
+
 namespace mir
 {
 namespace graphics

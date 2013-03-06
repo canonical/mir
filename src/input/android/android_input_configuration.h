@@ -28,10 +28,7 @@ namespace droidinput = android;
 namespace android
 {
 class EventHubInterface;
-class InputDispatcherPolicyInterface;
 class InputDispatcherInterface;
-class InputReaderInterface;
-class InputReaderPolicyInterface;
 }
 
 namespace mir
