@@ -45,7 +45,7 @@ private:
 
 //    ClientSurface * surface;
     std::shared_ptr<AndroidDriverInterpreter> driver_interpreter;
-    int driver_pixel_format;
+//    int driver_pixel_format;
 };
 
 }

@@ -93,8 +93,7 @@ int cancelBuffer_static(struct ANativeWindow* /*window*/,
 }
 
 mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> interpreter)
- : driver_interpreter(interpreter),
-   driver_pixel_format(-1)
+ : driver_interpreter(interpreter)
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
@@ -146,10 +145,12 @@ int mcla::MirNativeWindow::perform_internal(int key, va_list arg_list )
     va_list args;
     va_copy(args, arg_list);
 
+    int driver_format;
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
-            driver_pixel_format = va_arg(args, int);
+            driver_format = va_arg(args, int);
+            driver_interpreter->dispatch_driver_request_format(driver_format);
             break;
         default:
             break;
