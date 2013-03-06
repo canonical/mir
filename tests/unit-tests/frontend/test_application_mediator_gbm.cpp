@@ -83,6 +83,12 @@ public:
     void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
     void focus_session_with_lightdm_id(int) {}
 
+    std::shared_ptr<mir::Shell> current_shell() const
+    {
+        std::shared_ptr<mir::Shell> noshell;
+        return noshell;
+    }
+
     std::shared_ptr<msess::SurfaceFactory> factory;
 };
 

@@ -46,6 +46,8 @@ namespace
 
 namespace mir
 {
+class Shell;
+
 namespace
 {
 struct ClientConfigCommon : TestingClientConfiguration
@@ -143,6 +145,8 @@ public:
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD0(shutdown, void ());
+
+    MOCK_CONST_METHOD0(current_shell, std::shared_ptr<mir::Shell>());
 
 private:
     std::shared_ptr<sessions::SessionStore> const impl;

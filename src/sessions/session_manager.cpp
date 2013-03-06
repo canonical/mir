@@ -22,6 +22,7 @@
 #include "mir/sessions/surface_factory.h"
 #include "mir/sessions/focus_sequence.h"
 #include "mir/sessions/focus_setter.h"
+#include "mir/shell/nullshell.h"
 
 #include <memory>
 #include <cassert>
@@ -133,4 +134,12 @@ void msess::SessionManager::focus_session_with_lightdm_id(int id)
     {
         set_focus_to(match->second);
     }
+}
+
+std::shared_ptr<mir::Shell> msess::SessionManager::current_shell() const
+{
+    if (!shell)
+        shell.reset(new mir::shell::NullShell);
+
+    return shell;
 }

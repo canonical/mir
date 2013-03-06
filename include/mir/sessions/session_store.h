@@ -19,7 +19,9 @@
 #ifndef MIR_SESSIONS_SESSION_STORE_H_
 #define MIR_SESSIONS_SESSION_STORE_H_
 
+#include <string>
 #include <memory>
+#include "mir/shell/shell.h"
 
 namespace mir
 {
@@ -28,6 +30,23 @@ namespace sessions
 {
 
 class Session;
+
+/*
+ * The word "Session" is overloaded and over-abstracted here. "Session" can
+ * be used to represent either an application or a login. Both are sessional
+ * concepts capable of creating and destroying surfaces. This seems
+ * straightforward but what then is a SessionStore?
+ *
+ * A SessionStore is anything capable of opening and closing sessions. So by
+ * the previous definition, a SessionStore could be any of:
+ *  - a single login (creates App sessions, but is also a session itself)
+ *  - a single seat (usually one per machine; creates login sessions)
+ *
+ * It seems feasible that in future someone will specialize Session and
+ * SessionStore into more concrete classes like "Application", "Login" and
+ * "Seat". That would be easier to comprehend, but is a job for another day.
+ * - Daniel
+ */
 
 class SessionStore
 {
@@ -41,6 +60,8 @@ public:
     virtual void focus_session_with_lightdm_id(int id) = 0;
 
     virtual void shutdown() = 0;
+
+    virtual std::shared_ptr<mir::Shell> current_shell() const = 0;
 
 protected:
     SessionStore() = default;
