@@ -6,8 +6,6 @@ XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
                debhelper (>= 9),
-               gcc-4.6,
-               g++-4.6,
                libboost1.48-all-dev | libboost-all-dev,
                protobuf-compiler,
                libdrm-dev [!armhf],

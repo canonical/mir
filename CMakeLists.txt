@@ -17,11 +17,12 @@
 
 set(
   MIR_GCC_VERSION
-  4.6
+  4.7
   CACHE
   STRING
   "Version of gcc/g++"
 )
+cmake_policy(SET CMP0015 NEW)
 
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
