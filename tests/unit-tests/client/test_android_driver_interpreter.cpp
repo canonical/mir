@@ -16,32 +16,92 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/client/mir_client_surface.h"
+#include "src/client/client_buffer.h"
+#include "src/client/android/anativewindow_interpreter.h"
+#include <system/window.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace mcl=mir::client;
+namespace mcla=mir::client::android;
+namespace geom=mir::geometry;
+
+namespace
+{
+struct MockClientBuffer : public mcl::ClientBuffer
+{
+    MockClientBuffer()
+    {
+        using namespace testing;
+        ON_CALL(*this, get_native_handle())
+            .WillByDefault(Return(&buffer));
+    }
+    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
+    MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(stride, geom::Stride());
+    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+
+    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
+    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
+
+    ANativeWindowBuffer buffer;
+    native_handle_t handle;
+};
+
+struct MockMirSurface : public mcl::ClientSurface
+{
+    MockMirSurface(MirSurfaceParameters params)
+     : params(params)
+    {
+        using namespace testing;
+        ON_CALL(*this, get_parameters())
+            .WillByDefault(Return(params));
+        ON_CALL(*this, get_current_buffer())
+            .WillByDefault(Return(
+                std::make_shared<NiceMock<MockClientBuffer>>()));
+    }
+
+    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
+    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback callback, void * context));
+
+    MirSurfaceParameters params;
+};
+}
+
 class AndroidInterpreterTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+        surf_params.width = 530;
+        surf_params.height = 715;
+        surf_params.pixel_format = mir_pixel_format_abgr_8888;
+
+        mock_surface = std::make_shared<NiceMock<MockMirSurface>>(surf_params);
+        mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
     }
+
+    MirSurfaceParameters surf_params;
+    std::shared_ptr<MockClientBuffer> mock_client_buffer;
+    std::shared_ptr<MockMirSurface> mock_surface;
 };
 
-#if 0
-//tests that should go somewhere else
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 {
     using namespace testing;
-    ANativeWindow* anw;
-    ANativeWindowBuffer* tmp;
+    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
 
     EXPECT_CALL(*mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
-    anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    anw->dequeueBuffer_DEPRECATED(anw, &tmp);
-
-    delete anw;
+    interpreter.driver_requests_buffer();
 }
 
+#if 0
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
