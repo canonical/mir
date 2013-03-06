@@ -36,17 +36,17 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
 {
     for (auto buffer_pair :buffers) {
         if (buffer_pair.first == current_buffer)
-            buffer_pair.second->set_age(1);
-        else {
-            uint32_t age = buffer_pair.second->age();
-            if (age >= 3)
+        {
+            buffer_pair.second->mark_as_submitted();
+        }
+        else
+        {
+            if (buffer_pair.second->age() >= 3)
                 buffers.erase(buffer_pair.first);
             else
-                buffer_pair.second->set_age(age + 1);
+                buffer_pair.second->increment_age();
         }
     }
-    if (!buffers.empty())
-        buffers[current_buffer]->set_age(1);
     auto find_it = buffers.find(id);
     if (find_it == buffers.end())
         buffers[id] = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);

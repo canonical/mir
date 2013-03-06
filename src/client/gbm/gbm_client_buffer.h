@@ -54,7 +54,8 @@ public:
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
 
-    void set_age(uint32_t age);
+    void increment_age(void);
+    void mark_as_submitted(void);
 private:
     const std::shared_ptr<DRMFDHandler> drm_fd_handler;
     const std::shared_ptr<mir_toolkit::MirBufferPackage> creation_package;

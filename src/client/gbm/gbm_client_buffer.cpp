@@ -179,7 +179,13 @@ MirNativeBuffer mclg::GBMClientBuffer::get_native_handle()
     return NULL;
 }
 
-void mclg::GBMClientBuffer::set_age(uint32_t new_age)
+void mclg::GBMClientBuffer::increment_age(void)
 {
-    buffer_age = new_age;
+    if (buffer_age != 0)
+        buffer_age++;
+}
+
+void mclg::GBMClientBuffer::mark_as_submitted(void)
+{
+    buffer_age = 1;
 }
