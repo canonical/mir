@@ -32,10 +32,6 @@ typedef enum MirSurfaceAttrib
     MirSurfaceAttrib_ARRAYSIZE
 } MirSurfaceAttrib;
 
-/*
- * Surface types were originally designated in the Unity design documents.
- * This list however should be a superset encompassing any conceivable type.
- */
 typedef enum MirSurfaceType
 {
     MIR_SURFACE_NORMAL,
