@@ -30,9 +30,9 @@
 #include "mir/default_server_configuration.h"
 
 namespace msh = mir::shell;
-
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mtc = mir::test::cucumber;
 
@@ -74,6 +74,10 @@ struct DummySurface : public msh::Surface
     virtual std::shared_ptr<mc::Buffer> client_buffer() const
     {
         return std::shared_ptr<mc::Buffer>();
+    }
+    virtual std::shared_ptr<mi::CommunicationPackage> input_package() const
+    {
+        return std::shared_ptr<mi::CommunicationPackage>();
     }
 };
 
