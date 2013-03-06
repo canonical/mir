@@ -29,15 +29,6 @@ NullShell::~NullShell()
 {
 }
 
-bool NullShell::start()
-{
-    return true;
-}
-
-void NullShell::stop()
-{
-}
-
 bool NullShell::supports(MirSurfaceAttrib attrib) const
 {
     return (attrib == MIR_SURFACE_TYPE);

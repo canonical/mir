@@ -19,7 +19,6 @@
 #ifndef MIR_SESSIONS_SESSION_STORE_H_
 #define MIR_SESSIONS_SESSION_STORE_H_
 
-#include <string>
 #include <memory>
 #include "mir/shell/shell.h"
 

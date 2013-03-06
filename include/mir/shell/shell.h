@@ -31,8 +31,6 @@ class Shell
 public:
     virtual ~Shell() {}
 
-    virtual bool start() = 0;
-    virtual void stop() = 0;
     virtual bool supports(MirSurfaceAttrib attrib) const = 0;
     virtual bool supports(MirSurfaceAttrib attrib, int value) const = 0;
 
