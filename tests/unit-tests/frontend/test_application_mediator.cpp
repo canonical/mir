@@ -79,17 +79,23 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubCommunicationPackage : public mi::CommunicationPackage
+struct StubCommunicationPackage : public mi::CommunicationPackage
 {
     int client_fd() const
     {
-        return 0;
+        return testing_client_fd;
     }
     int server_fd() const
     {
-        return 0;
+        return testing_server_fd;
     }
+    
+    static int testing_client_fd;
+    static int testing_server_fd;
 };
+
+int StubCommunicationPackage::testing_client_fd = 11;
+int StubCommunicationPackage::testing_server_fd = 13;
 
 class StubSurfaceFactory : public msh::SurfaceFactory
 {
@@ -353,3 +359,23 @@ TEST_F(ApplicationMediatorTest, connect_queries_supported_pixel_formats)
             << "i = " << i;
     }
 }
+
+TEST_F(ApplicationMediatorTest, creating_surface_packs_response_with_input_fds)
+{
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    {
+        mp::SurfaceParameters request;
+        mp::Surface response;
+
+        mediator.create_surface(nullptr, &request, &response, null_callback.get());
+        EXPECT_EQ(StubCommunicationPackage::testing_client_fd, response.fd(0));
+    }
+ 
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+
