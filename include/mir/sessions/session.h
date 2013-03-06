@@ -19,6 +19,7 @@
 #ifndef MIR_SESSIONS_SESSION_H_
 #define MIR_SESSIONS_SESSION_H_
 
+#include "mir/surface.h"  // for MirSurfaceAttrib
 #include "mir/sessions/surface_id.h"
 
 #include <mutex>
@@ -50,7 +51,7 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
-    virtual int configure_surface(SurfaceId id, int attrib, int value) = 0;
+    virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
 
 protected:
     Session() = default;

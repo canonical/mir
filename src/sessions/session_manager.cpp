@@ -52,7 +52,8 @@ msess::SessionManager::~SessionManager()
 
 std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msess::ApplicationSession>(surface_factory, name);
+    auto new_session = std::make_shared<msess::ApplicationSession>(
+                                      surface_factory, name, current_shell());
 
     app_container->insert_session(new_session);
 

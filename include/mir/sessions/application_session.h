@@ -25,6 +25,7 @@
 
 namespace mir
 {
+class Shell;
 
 namespace sessions
 {
@@ -33,7 +34,10 @@ class SurfaceFactory;
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
+    explicit ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::string const& session_name,
+        std::shared_ptr<mir::Shell> shell = nullptr);
     ~ApplicationSession();
 
     SurfaceId create_surface(SurfaceCreationParameters const& params);
@@ -46,7 +50,7 @@ public:
     void hide();
     void show();
 
-    int configure_surface(SurfaceId id, int attrib, int value);
+    int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -55,6 +59,7 @@ protected:
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
+    std::shared_ptr<mir::Shell> const shell;
 
     SurfaceId next_id();
 

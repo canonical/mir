@@ -18,7 +18,7 @@
 
 #include "mir/sessions/application_session.h"
 #include "mir/sessions/surface.h"
-
+#include "mir/shell/nullshell.h"
 #include "mir/surfaces/surface_controller.h"
 
 #include <boost/throw_exception.hpp>
@@ -33,12 +33,16 @@ namespace ms = mir::surfaces;
 
 msess::ApplicationSession::ApplicationSession(
     std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
-    std::string const& session_name) :
+    std::string const& session_name, std::shared_ptr<mir::Shell> shell) :
     surface_factory(surface_factory),
     session_name(session_name),
+    shell(shell),
     next_surface_id(0)
 {
     assert(surface_factory);
+
+    if (!shell)
+        shell.reset(new mir::shell::NullShell);
 }
 
 msess::ApplicationSession::~ApplicationSession()
@@ -124,8 +128,20 @@ void msess::ApplicationSession::show()
 }
 
 int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
-                                                 int attrib, int value)
+                                                 MirSurfaceAttrib attrib,
+                                                 int value)
 {
+    // XXX Should we mention the attrib and value integer values in exceptions?
+    if (!shell->supports(attrib))
+        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
+                                               "support the specified surface "
+                                               "attribute"));
+
+    if (!shell->supports(attrib, value))
+        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
+                                               "support the specified value "
+                                               "for this attribute"));
+
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msess::Surface> surf(checked_find(id)->second);
 

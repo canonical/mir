@@ -235,24 +235,10 @@ void mir::frontend::ApplicationMediator::configure_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    int value = request->ivalue();
-
-    // XXX Should we mention the attrib and value integer values in exceptions?
-
-    auto const shell = session_store->current_shell();
-    if (!shell->supports(attrib))
-        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
-                                               "support the specified surface "
-                                               "attribute"));
-
-    if (!shell->supports(attrib, value))
-        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
-                                               "support the specified value "
-                                               "for this attribute"));
-
     report->application_configure_surface_called(application_session->name());
 
     auto const id = sessions::SurfaceId(request->surfaceid().value());
+    int value = request->ivalue();
     int newvalue = application_session->configure_surface(id, attrib, value);
 
     response->set_ivalue(newvalue);
