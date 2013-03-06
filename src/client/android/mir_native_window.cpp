@@ -39,6 +39,8 @@ static int queueBuffer_deprecated_static(struct ANativeWindow* window,
 static int queueBuffer_static(struct ANativeWindow* window,
                               struct ANativeWindowBuffer* buffer, int fence_fd);
 static int cancelBuffer_static(struct ANativeWindow* window,
+                               struct ANativeWindowBuffer* buffer, int fence_fd);
+static int cancelBuffer_deprecated_static(struct ANativeWindow* window,
                                struct ANativeWindowBuffer* buffer);
 
 static void incRef(android_native_base_t*)
@@ -104,8 +106,14 @@ int lockBuffer_static(struct ANativeWindow* /*window*/,
     return 0;
 }
 
-int cancelBuffer_static(struct ANativeWindow* /*window*/,
+int cancelBuffer_deprecated_static(struct ANativeWindow* /*window*/,
                         struct ANativeWindowBuffer* /*buffer*/)
+{
+    return 0;
+}
+
+int cancelBuffer_static(struct ANativeWindow* /*window*/,
+                        struct ANativeWindowBuffer* /*buffer*/, int /*fence_fd*/)
 {
     return 0;
 }
@@ -123,7 +131,8 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     ANativeWindow::lockBuffer_DEPRECATED = &lockBuffer_static;
     ANativeWindow::queueBuffer_DEPRECATED = &queueBuffer_deprecated_static;
     ANativeWindow::queueBuffer = &queueBuffer_static;
-    ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_static;
+    ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_deprecated_static;
+    ANativeWindow::cancelBuffer = &cancelBuffer_static;
 
     ANativeWindow::common.incRef = &incRef;
     ANativeWindow::common.decRef = &incRef;
