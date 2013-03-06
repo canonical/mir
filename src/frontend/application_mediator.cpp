@@ -23,6 +23,7 @@
 #include "mir/sessions/surface.h"
 #include "mir/sessions/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
+
 #include "mir/surface.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"

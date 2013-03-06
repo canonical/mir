@@ -52,4 +52,3 @@ void mir::frontend::NullApplicationMediatorReport::application_error(
         std::string const& )
 {
 }
-
