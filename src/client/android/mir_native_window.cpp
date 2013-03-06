@@ -18,6 +18,7 @@
 
 #include "mir_native_window.h"
 #include "../client_buffer.h"
+#include "android_driver_interpreter.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
@@ -133,32 +134,10 @@ int mcla::MirNativeWindow::queueBuffer_internal(struct ANativeWindowBuffer* /*bu
     return 0;
 }
 
-int mcla::MirNativeWindow::query_internal(int /*key*/, int* /*value*/ ) const
+int mcla::MirNativeWindow::query_internal(int key, int* value ) const
 {
-    int ret = 0;
-#if 0
-    switch (key)
-    {
-        case NATIVE_WINDOW_WIDTH:
-        case NATIVE_WINDOW_DEFAULT_WIDTH:
-            *value = surface->get_parameters().width;
-            break;
-        case NATIVE_WINDOW_HEIGHT:
-        case NATIVE_WINDOW_DEFAULT_HEIGHT:
-            *value = surface->get_parameters().height;
-            break;
-        case NATIVE_WINDOW_FORMAT:
-            *value = driver_pixel_format;
-            break;
-        case NATIVE_WINDOW_TRANSFORM_HINT:
-            *value = 0; /* transform hint is a bitmask. 0 means no transform */
-            break;
-        default:
-            ret = -1;
-            break;
-    }
-#endif
-    return ret;
+    *value = driver_interpreter->driver_requests_info(key);
+    return 0;
 }
 
 int mcla::MirNativeWindow::perform_internal(int key, va_list arg_list )
