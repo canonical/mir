@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
@@ -40,7 +40,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -125,7 +125,7 @@ TEST(
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     stack.destroy_surface(surface);
 }
@@ -172,11 +172,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -210,11 +210,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -248,11 +248,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -295,7 +295,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msess::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+        msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
 
     stack.destroy_surface(surface);
 }

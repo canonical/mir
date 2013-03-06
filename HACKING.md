@@ -107,7 +107,7 @@ from dying at the same time.
 2. Make sure your software is supported. Mir requires a custom build of the
    Mesa packages to work at all. At the time of writing, these were available
    from:
-       https://launchpad.net/~rocket-scientists/+archive/staging
+       https://launchpad.net/~mir-team/+archive/staging
    If you don't have the right Mesa, you will get nothing on the screen and/or
    strange errors later.
 
