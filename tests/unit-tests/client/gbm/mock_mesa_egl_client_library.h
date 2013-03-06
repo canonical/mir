@@ -56,14 +56,11 @@ private:
 
 namespace mir_toolkit
 {
-extern "C"
-{
 void mir_wait_for(MirWaitHandle* wait_handle);
 void mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* package);
 void mir_surface_get_current_buffer(MirSurface* surface, MirBufferPackage* package);
 void mir_surface_get_parameters(MirSurface* surface, MirSurfaceParameters* parameters);
 MirWaitHandle* mir_surface_next_buffer(MirSurface* surface, mir_surface_lifecycle_callback callback, void* context);
-}
 }
 
 #endif // MIR_TEST_CLIENT_GBM_MOCK_MESA_EGL_CLIENT_LIBRARY_H_
