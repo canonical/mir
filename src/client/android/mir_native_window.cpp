@@ -28,8 +28,10 @@ namespace
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
 static int setSwapInterval_static (struct ANativeWindow* window, int interval);
-static int dequeueBuffer_static (struct ANativeWindow* window,
+static int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                                  struct ANativeWindowBuffer** buffer);
+static int dequeueBuffer_static (struct ANativeWindow* window,
+                                 struct ANativeWindowBuffer** buffer, int* fence_fd);
 static int lockBuffer_static(struct ANativeWindow* window,
                              struct ANativeWindowBuffer* buffer);
 static int queueBuffer_static(struct ANativeWindow* window,
@@ -58,9 +60,17 @@ int perform_static(ANativeWindow* window, int key, ...)
     return ret;
 }
 
-int dequeueBuffer_static (struct ANativeWindow* window,
+int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    return self->dequeueBuffer_internal(buffer);
+}
+
+int dequeueBuffer_static (struct ANativeWindow* window,
+                          struct ANativeWindowBuffer** buffer, int* fence_fd)
+{
+    *fence_fd = -1;
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer_internal(buffer);
 }
@@ -98,7 +108,8 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
     ANativeWindow::setSwapInterval = &setSwapInterval_static;
-    ANativeWindow::dequeueBuffer_DEPRECATED = &dequeueBuffer_static;
+    ANativeWindow::dequeueBuffer_DEPRECATED = &dequeueBuffer_deprecated_static;
+    ANativeWindow::dequeueBuffer = &dequeueBuffer_static;
     ANativeWindow::lockBuffer_DEPRECATED = &lockBuffer_static;
     ANativeWindow::queueBuffer_DEPRECATED = &queueBuffer_static;
     ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_static;
@@ -110,15 +121,10 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
 }
 
-int mcla::MirNativeWindow::dequeueBuffer_internal (struct ANativeWindowBuffer** /*buffer_to_driver*/)
+int mcla::MirNativeWindow::dequeueBuffer_internal (struct ANativeWindowBuffer** buffer_to_driver)
 {
-    int ret = 0;
-#if 0
-    auto buffer = surface->get_current_buffer();
-    *buffer_to_driver = buffer->get_native_handle();
-    (*buffer_to_driver)->format = driver_pixel_format;
-#endif
-    return ret;
+    *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+    return 0;
 }
 
 #if 0
