@@ -21,8 +21,6 @@
 #include "src/input/android/android_input_thread.h"
 #include "src/input/android/android_input_constants.h"
 
-#include "mir/input/cursor_listener.h"
-
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
 
@@ -48,8 +46,6 @@ namespace mtd = mt::doubles;
 // Test constants
 namespace
 {
-static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-static std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_event_filters{};
 static const geom::Rectangle default_view_area =
     geom::Rectangle{geom::Point(),
                     geom::Size{geom::Width(1600), geom::Height(1400)}};
