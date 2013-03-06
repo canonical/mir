@@ -23,7 +23,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
-
+#include "mir/surface.h"
 #include <memory>
 
 namespace mir
@@ -55,7 +55,7 @@ public:
     virtual void advance_client_buffer() = 0;
     virtual std::shared_ptr<compositor::Buffer> client_buffer() const = 0;
 
-    virtual int configure(int attrib, int value) = 0;
+    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
 
 protected:
     Surface() = default;

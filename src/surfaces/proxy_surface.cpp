@@ -109,7 +109,7 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
     surface_stack->destroy_surface(surface);
 }
 
-int ms::BasicProxySurface::configure(int attrib, int value)
+int ms::BasicProxySurface::configure(MirSurfaceAttrib attrib, int value)
 {
     if (auto const& s = surface.lock())
     {

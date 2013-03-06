@@ -72,7 +72,7 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
 
-    int configure(int attrib, int value);
+    int configure(MirSurfaceAttrib attrib, int value);
     MirSurfaceType type() const;
     bool set_type(MirSurfaceType t);
 

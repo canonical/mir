@@ -130,8 +130,8 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
     return client_buffer_resource;
 }
 
-int ms::Surface::configure(int attrib, int value)
-{
+int ms::Surface::configure(MirSurfaceAttrib attrib, int value)
+{  // TODO: Remove configure() from this class?
     int result = 0;
 
     switch (attrib)

@@ -76,7 +76,7 @@ struct DummySurface : public msess::Surface
         return std::shared_ptr<mc::Buffer>();
     }
 
-    virtual int configure(int, int)
+    virtual int configure(MirSurfaceAttrib, int)
     {
         return 0;
     }
