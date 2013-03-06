@@ -34,15 +34,22 @@ mclg::GBMClientBufferDepository::GBMClientBufferDepository(
 
 void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
-    for (auto buffer_it : buffers) {
-    	if (buffer_it.second->age() != 0)
-    		buffer_it.second->set_age(buffer_it.second->age() + 1);
+    for (auto buffer_pair :buffers) {
+        if (buffer_pair.first == current_buffer)
+            buffer_pair.second->set_age(1);
+        else {
+            uint32_t age = buffer_pair.second->age();
+            if (age >= 3)
+                buffers.erase(buffer_pair.first);
+            else
+                buffer_pair.second->set_age(age + 1);
+        }
     }
     if (!buffers.empty())
-    	buffers[current_buffer]->set_age(1);
+        buffers[current_buffer]->set_age(1);
     auto find_it = buffers.find(id);
     if (find_it == buffers.end())
-    	buffers[id] = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
+        buffers[id] = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
     current_buffer = id;
 }
 

@@ -203,3 +203,30 @@ TEST_F(MirGBMBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
     EXPECT_EQ(1u, buffer2->age());
     EXPECT_EQ(3u, buffer3->age());
 }
+
+TEST_F(MirGBMBufferDepositoryTest, depository_forgets_old_buffers)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+
+    const int num_packages = 4;
+    std::shared_ptr<MirBufferPackage> packages[num_packages];
+    depository.deposit_package(std::move(packages[0]), 1, size, pf);
+    depository.deposit_package(std::move(packages[1]), 2, size, pf);
+    depository.deposit_package(std::move(packages[2]), 3, size, pf);
+    depository.deposit_package(std::move(packages[3]), 4, size, pf);
+
+    // We've submitted 4 buffers now; we should have forgotten the first one.
+    auto current_buffer = depository.access_current_buffer();
+
+    EXPECT_EQ(0u, current_buffer->age());    
+
+    for (int i = 0; i < num_packages; i++) {
+        depository.deposit_package(std::move(packages[i]), i+1, size, pf);
+        // Each of these buffers is now more than 3 buffers old, so we should have forgotten them.
+        current_buffer = depository.access_current_buffer();
+
+        EXPECT_EQ(0u, current_buffer->age());    
+    }
+}
