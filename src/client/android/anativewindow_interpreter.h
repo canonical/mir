@@ -20,6 +20,7 @@
 #define MIR_CLIENT_ANDROID_ANATIVEWINDOW_INTERPRETER_H_
 
 #include "android_driver_interpreter.h"
+#include "../mir_client_surface.h"
 
 namespace mir
 {
@@ -37,6 +38,8 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd );
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
+private:
+    ClientSurface* surface; 
 };
 
 }
