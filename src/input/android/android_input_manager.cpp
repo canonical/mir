@@ -22,14 +22,11 @@
 #include "android_input_manager.h"
 #include "android_input_constants.h"
 #include "android_input_configuration.h"
-#include "android_input_reader_policy.h"
 #include "android_input_thread.h"
 #include "default_android_input_configuration.h"
-#include "event_filter_dispatcher_policy.h"
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
-#include <InputReader.h>
 
 #include <memory>
 #include <vector>
