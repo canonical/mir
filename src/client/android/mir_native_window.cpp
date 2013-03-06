@@ -34,8 +34,10 @@ static int dequeueBuffer_static (struct ANativeWindow* window,
                                  struct ANativeWindowBuffer** buffer, int* fence_fd);
 static int lockBuffer_static(struct ANativeWindow* window,
                              struct ANativeWindowBuffer* buffer);
-static int queueBuffer_static(struct ANativeWindow* window,
+static int queueBuffer_deprecated_static(struct ANativeWindow* window,
                               struct ANativeWindowBuffer* buffer);
+static int queueBuffer_static(struct ANativeWindow* window,
+                              struct ANativeWindowBuffer* buffer, int fence_fd);
 static int cancelBuffer_static(struct ANativeWindow* window,
                                struct ANativeWindowBuffer* buffer);
 
@@ -75,11 +77,19 @@ int dequeueBuffer_static (struct ANativeWindow* window,
     return self->dequeueBuffer_internal(buffer);
 }
 
+int queueBuffer_deprecated_static(struct ANativeWindow* window,
+                       struct ANativeWindowBuffer* buffer)
+{
+    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    return self->queueBuffer_internal(buffer);
+}
+
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->queueBuffer_internal(buffer);
+
 }
 
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
@@ -111,7 +121,8 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     ANativeWindow::dequeueBuffer_DEPRECATED = &dequeueBuffer_deprecated_static;
     ANativeWindow::dequeueBuffer = &dequeueBuffer_static;
     ANativeWindow::lockBuffer_DEPRECATED = &lockBuffer_static;
-    ANativeWindow::queueBuffer_DEPRECATED = &queueBuffer_static;
+    ANativeWindow::queueBuffer_DEPRECATED = &queueBuffer_deprecated_static;
+    ANativeWindow::queueBuffer = &queueBuffer_static;
     ANativeWindow::cancelBuffer_DEPRECATED = &cancelBuffer_static;
 
     ANativeWindow::common.incRef = &incRef;

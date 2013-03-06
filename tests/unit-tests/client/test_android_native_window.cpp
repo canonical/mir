@@ -258,6 +258,17 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_hook_callable)
     });
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_always_indicates_no_wait)
+{
+    mcla::MirNativeWindow anw(mock_driver_interpreter);
+    ANativeWindowBuffer buffer;
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, -1))
+        .Times(1);
+
+    anw.queueBuffer_DEPRECATED(&anw, &buffer);
+}
+
 /* cancel hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_cancel_hooks_callable)
 {
