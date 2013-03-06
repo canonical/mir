@@ -119,6 +119,7 @@ typedef struct MirBufferPackage
     int fd[mir_buffer_package_max];
 
     int stride;
+    int age;
 } MirBufferPackage;
 
 /** TODO */

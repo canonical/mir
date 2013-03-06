@@ -170,6 +170,7 @@ uint32_t mclg::GBMClientBuffer::age () const
 
 std::shared_ptr<mir_toolkit::MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() const
 {
+    creation_package->age = age();
     return creation_package;
 }
 
