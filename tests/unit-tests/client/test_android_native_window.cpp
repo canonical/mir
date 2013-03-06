@@ -263,3 +263,28 @@ TEST_F(AndroidNativeWindowTest, native_window_decref_hook_callable)
         anw.common.decRef(NULL);
     });
 }
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_has_proper_rc)
+{
+    using namespace testing;
+    mcla::MirNativeWindow anw(mock_driver_interpreter);
+
+    ANativeWindowBuffer* tmp;
+
+    auto ret = anw.dequeueBuffer_DEPRECATED(&anw, &tmp);
+    EXPECT_EQ(0, ret);
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
+{
+    using namespace testing;
+    int fencefd;
+    mcla::MirNativeWindow anw(mock_driver_interpreter);
+
+    ANativeWindowBuffer* tmp;
+
+    auto ret = anw.dequeueBuffer(&anw, &tmp, &fencefd);
+    EXPECT_EQ(0, ret);
+}
+
+

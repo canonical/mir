@@ -101,16 +101,14 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
     interpreter.driver_requests_buffer();
 }
 
-#if 0
 TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_returned_buffer)
 {
     using namespace testing;
-    ANativeWindow* anw;
     native_handle_t handle;
     ANativeWindowBuffer buffer;
     buffer.handle = &handle;
 
-    ANativeWindowBuffer* tmp;
+    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
 
     EXPECT_CALL(*mock_client_buffer, get_native_handle())
         .Times(1)
@@ -119,29 +117,11 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
-    anw = new mcla::MirNativeWindow(mock_surface.get());
-
-    anw->dequeueBuffer_DEPRECATED(anw, &tmp);
-
-    EXPECT_EQ(tmp, &buffer);
-    delete anw;
+    auto returned_buffer = interpreter.driver_requests_buffer();
+    EXPECT_EQ(returned_buffer, &buffer);
 }
 
-TEST_F(AndroidInterpreterTest, native_window_dequeue_has_proper_rc)
-{
-    using namespace testing;
-    ANativeWindow* anw;
-
-    ANativeWindowBuffer* tmp;
-
-    anw = new mcla::MirNativeWindow(mock_surface.get());
-
-    auto ret = anw->dequeueBuffer_DEPRECATED(anw, &tmp);
-    EXPECT_EQ(0, ret);
-
-    delete anw;
-}
-
+#if 0
 
 TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 {
