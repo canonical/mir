@@ -52,7 +52,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;
-    std::shared_ptr<input::CommunicationPackageFactory> const& input_factory;
+    std::shared_ptr<input::CommunicationPackageFactory> const input_factory;
 };
 
 }
