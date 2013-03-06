@@ -16,24 +16,24 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/organising_surface_factory.h"
-#include "mir/sessions/placement_strategy.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/placement_strategy.h"
+#include "mir/shell/surface_creation_parameters.h"
 
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 
-msess::OrganisingSurfaceFactory::OrganisingSurfaceFactory(std::shared_ptr<msess::SurfaceFactory> const& underlying_factory,
-                                                          std::shared_ptr<msess::PlacementStrategy> const& placement_strategy)
+msh::OrganisingSurfaceFactory::OrganisingSurfaceFactory(std::shared_ptr<msh::SurfaceFactory> const& underlying_factory,
+                                                          std::shared_ptr<msh::PlacementStrategy> const& placement_strategy)
  : underlying_factory(underlying_factory),
    placement_strategy(placement_strategy)
 {
 }
 
-msess::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
+msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 {
 }
 
-std::shared_ptr<msess::Surface> msess::OrganisingSurfaceFactory::create_surface(const msess::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(const msh::SurfaceCreationParameters& params)
 {
     auto placed_params = placement_strategy->place(params);
 

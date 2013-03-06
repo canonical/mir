@@ -17,11 +17,11 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/single_visibility_focus_mechanism.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
@@ -32,7 +32,7 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -40,9 +40,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockApplicationSession : public msess::ApplicationSession
+struct MockApplicationSession : public msh::ApplicationSession
 {
-  MockApplicationSession(std::shared_ptr<msess::SurfaceFactory> factory,
+  MockApplicationSession(std::shared_ptr<msh::SurfaceFactory> factory,
                          std::string name) : ApplicationSession(factory, name)
   {
   }
@@ -55,8 +55,8 @@ struct MockApplicationSession : public msess::ApplicationSession
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<msess::SurfaceFactory> factory(new mtd::MockSurfaceFactory);
-    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer);
+    std::shared_ptr<msh::SurfaceFactory> factory(new mtd::MockSurfaceFactory);
+    std::shared_ptr<msh::SessionContainer> model(new msh::SessionContainer);
 
     MockApplicationSession m1(factory, "Visual Studio 7");
     MockApplicationSession m2(factory, "Visual Studio 8");
@@ -66,7 +66,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     auto app2 = mt::fake_shared(m2);
     auto app3 = mt::fake_shared(m3);
 
-    msess::SingleVisibilityFocusMechanism focus_mechanism(model);
+    msh::SingleVisibilityFocusMechanism focus_mechanism(model);
 
     EXPECT_CALL(m1, show()).Times(1);
     EXPECT_CALL(m2, hide()).Times(1);

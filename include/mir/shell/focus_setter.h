@@ -16,14 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_FOCUS_SETTER_H_
-#define MIR_SESSIONS_FOCUS_SETTER_H_
+#ifndef MIR_SHELL_FOCUS_SETTER_H_
+#define MIR_SHELL_FOCUS_SETTER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace sessions
+namespace shell
 {
 class Session;
 
@@ -44,4 +44,4 @@ protected:
 }
 
 
-#endif // MIR_SESSIONS_FOCUS_SETTER_H_
+#endif // MIR_SHELL_FOCUS_SETTER_H_

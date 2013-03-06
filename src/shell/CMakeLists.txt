@@ -1,5 +1,5 @@
 set(
-  SESSIONS_SOURCES
+  SHELL_SOURCES
 
   application_session.cpp
   session_container.cpp
@@ -12,7 +12,7 @@ set(
 )
 
 add_library(
-  mirsessions STATIC
+  mirshell STATIC
 
-  ${SESSIONS_SOURCES}
+  ${SHELL_SOURCES}
 )

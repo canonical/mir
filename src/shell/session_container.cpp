@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -27,18 +27,18 @@
 #include <stdexcept>
 
 
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 
-msess::SessionContainer::SessionContainer()
+msh::SessionContainer::SessionContainer()
 {
 
 }
 
-msess::SessionContainer::~SessionContainer()
+msh::SessionContainer::~SessionContainer()
 {
 }
 
-void msess::SessionContainer::insert_session(std::shared_ptr<msess::Session> const& session)
+void msh::SessionContainer::insert_session(std::shared_ptr<msh::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
     auto name = session->name();
@@ -46,7 +46,7 @@ void msess::SessionContainer::insert_session(std::shared_ptr<msess::Session> con
     apps.push_back(session);
 }
 
-void msess::SessionContainer::remove_session(std::shared_ptr<msess::Session> const& session)
+void msh::SessionContainer::remove_session(std::shared_ptr<msh::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -61,7 +61,7 @@ void msess::SessionContainer::remove_session(std::shared_ptr<msess::Session> con
     }
 }
 
-void msess::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
+void msh::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 

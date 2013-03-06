@@ -16,12 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_PLACEMENT_STRATEGY_H_
-#define MIR_SESSIONS_PLACEMENT_STRATEGY_H_
+#ifndef MIR_SHELL_PLACEMENT_STRATEGY_H_
+#define MIR_SHELL_PLACEMENT_STRATEGY_H_
 
 namespace mir
 {
-namespace sessions
+namespace shell
 {
 class SurfaceCreationParameters;
 
@@ -43,4 +43,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SESSIONS_PLACEMENT_STRATEGY_H_
+#endif // MIR_SHELL_PLACEMENT_STRATEGY_H_

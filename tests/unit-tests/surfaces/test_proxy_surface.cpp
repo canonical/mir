@@ -18,7 +18,7 @@
 
 #include "src/surfaces/proxy_surface.h"
 #include "mir/surfaces/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -53,12 +53,12 @@ public:
             WillByDefault(Invoke(this, &MockSurfaceStackModel::do_destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const msess::SurfaceCreationParameters&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const msh::SurfaceCreationParameters&));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 
 private:
-    std::weak_ptr<ms::Surface> do_create_surface(const msess::SurfaceCreationParameters& params)
+    std::weak_ptr<ms::Surface> do_create_surface(const msh::SurfaceCreationParameters& params)
     {
         surface = std::make_shared<ms::Surface>(
             params.name,
@@ -78,7 +78,7 @@ private:
 TEST(SurfaceProxy, creation_and_destruction)
 {
     MockSurfaceStackModel surface_stack;
-    msess::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
 
     using namespace testing;
     InSequence sequence;
@@ -93,7 +93,7 @@ TEST(SurfaceProxy, destroy)
     using namespace testing;
 
     NiceMock<MockSurfaceStackModel> surface_stack;
-    msess::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
 
     ms::ProxySurface test(&surface_stack, params);
 

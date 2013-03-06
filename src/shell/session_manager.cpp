@@ -16,24 +16,24 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/sessions/session_manager.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_factory.h"
-#include "mir/sessions/focus_sequence.h"
-#include "mir/sessions/focus_setter.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/surface_factory.h"
+#include "mir/shell/focus_sequence.h"
+#include "mir/shell/focus_setter.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 
-msess::SessionManager::SessionManager(
-    std::shared_ptr<msess::SurfaceFactory> const& surface_factory,
-    std::shared_ptr<msess::SessionContainer> const& container,
-    std::shared_ptr<msess::FocusSequence> const& sequence,
-    std::shared_ptr<msess::FocusSetter> const& focus_setter) :
+msh::SessionManager::SessionManager(
+    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<msh::SessionContainer> const& container,
+    std::shared_ptr<msh::FocusSequence> const& sequence,
+    std::shared_ptr<msh::FocusSetter> const& focus_setter) :
     surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
@@ -45,13 +45,13 @@ msess::SessionManager::SessionManager(
     assert(focus_setter);
 }
 
-msess::SessionManager::~SessionManager()
+msh::SessionManager::~SessionManager()
 {
 }
 
-std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string const& name)
+std::shared_ptr<msh::Session> msh::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msess::ApplicationSession>(surface_factory, name);
+    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name);
 
     app_container->insert_session(new_session);
 
@@ -64,13 +64,13 @@ std::shared_ptr<msess::Session> msess::SessionManager::open_session(std::string 
     return new_session;
 }
 
-inline void msess::SessionManager::set_focus_to(std::shared_ptr<Session> const& next_focus)
+inline void msh::SessionManager::set_focus_to(std::shared_ptr<Session> const& next_focus)
 {
     focus_application = next_focus;
     focus_setter->set_focus_to(next_focus);
 }
 
-void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const& session)
+void msh::SessionManager::close_session(std::shared_ptr<msh::Session> const& session)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -85,7 +85,7 @@ void msess::SessionManager::close_session(std::shared_ptr<msess::Session> const&
     tags.erase(remove, tags.end());
 }
 
-void msess::SessionManager::focus_next()
+void msh::SessionManager::focus_next()
 {
     std::unique_lock<std::mutex> lock(mutex);
     auto focus = focus_application.lock();
@@ -100,7 +100,7 @@ void msess::SessionManager::focus_next()
     set_focus_to(focus);
 }
 
-void msess::SessionManager::shutdown()
+void msh::SessionManager::shutdown()
 {
     app_container->for_each([](std::shared_ptr<Session> const& session)
     {
@@ -108,7 +108,7 @@ void msess::SessionManager::shutdown()
     });
 }
 
-void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id)
+void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;
@@ -121,7 +121,7 @@ void msess::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session>
     tags.push_back(Pair(id, session));
 }
 
-void msess::SessionManager::focus_session_with_lightdm_id(int id)
+void msh::SessionManager::focus_session_with_lightdm_id(int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;

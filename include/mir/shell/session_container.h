@@ -16,34 +16,40 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_FOCUS_STRATEGY_H_
-#define MIR_SESSIONS_FOCUS_STRATEGY_H_
+#ifndef FRONTEND_SESSION_CONTAINER_H_
+#define FRONTEND_SESSION_CONTAINER_H_
 
+#include <vector>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
-namespace sessions
+namespace shell
 {
 class Session;
 
-class FocusSequence
+class SessionContainer
 {
 public:
-    virtual ~FocusSequence() {}
+    SessionContainer();
+    ~SessionContainer();
 
-    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
-    virtual std::shared_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
-    virtual std::shared_ptr<Session> default_focus() const = 0;
+    virtual void insert_session(std::shared_ptr<Session> const& session);
+    virtual void remove_session(std::shared_ptr<Session> const& session);
 
-protected:
-    FocusSequence() = default;
-    FocusSequence(const FocusSequence&) = delete;
-    FocusSequence& operator=(const FocusSequence&) = delete;
+    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
+
+private:
+    SessionContainer(const SessionContainer&) = delete;
+    SessionContainer& operator=(const SessionContainer&) = delete;
+
+    std::vector<std::shared_ptr<Session>> apps;
+    mutable std::mutex guard;
 };
 
 }
 }
 
 
-#endif // MIR_SESSIONS_FOCUS_SEQUENCE_H_
+#endif // FRONTEND_SESSION_CONTAINER_H_

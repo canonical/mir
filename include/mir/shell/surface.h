@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SESSIONS_SURFACE_H_
-#define MIR_SESSIONS_SURFACE_H_
+#ifndef MIR_SHELL_SURFACE_H_
+#define MIR_SHELL_SURFACE_H_
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
@@ -33,7 +33,7 @@ namespace compositor
 class Buffer;
 }
 
-namespace sessions
+namespace shell
 {
 
 class Surface
@@ -65,4 +65,4 @@ protected:
 }
 
 
-#endif /* MIR_SESSIONS_SURFACE_H_ */
+#endif /* MIR_SHELL_SURFACE_H_ */

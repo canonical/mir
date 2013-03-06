@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library_lightdm.h"
 
-#include "mir/sessions/session_store.h"
+#include "mir/shell/session_store.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -119,14 +119,14 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
-class MockSessionStore : public sessions::SessionStore
+class MockSessionStore : public shell::SessionStore
 {
 public:
     MockSessionStore(std::shared_ptr<SessionStore> const& impl) :
         impl(impl)
     {
         using namespace testing;
-        using sessions::SessionStore;
+        using shell::SessionStore;
         ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::open_session));
         ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::close_session));
 
@@ -136,16 +136,16 @@ public:
         ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
     }
 
-    MOCK_METHOD1(open_session, std::shared_ptr<sessions::Session> (std::string const& name));
-    MOCK_METHOD1(close_session, void (std::shared_ptr<sessions::Session> const& session));
+    MOCK_METHOD1(open_session, std::shared_ptr<shell::Session> (std::string const& name));
+    MOCK_METHOD1(close_session, void (std::shared_ptr<shell::Session> const& session));
 
-    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<sessions::Session> const& session, int id));
+    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<shell::Session> const& session, int id));
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD0(shutdown, void ());
 
 private:
-    std::shared_ptr<sessions::SessionStore> const impl;
+    std::shared_ptr<shell::SessionStore> const impl;
 };
 }
 
@@ -153,11 +153,11 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<sessions::SessionStore>
+        std::shared_ptr<shell::SessionStore>
         the_session_store()
         {
             return session_store(
-                [this]() -> std::shared_ptr<sessions::SessionStore>
+                [this]() -> std::shared_ptr<shell::SessionStore>
                 {
                     using namespace ::testing;
 

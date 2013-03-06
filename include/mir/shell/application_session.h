@@ -16,17 +16,17 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_APPLICATION_SESSION_H_
-#define MIR_SESSIONS_APPLICATION_SESSION_H_
+#ifndef MIR_SHELL_APPLICATION_SESSION_H_
+#define MIR_SHELL_APPLICATION_SESSION_H_
 
-#include "mir/sessions/session.h"
+#include "mir/shell/session.h"
 
 #include <map>
 
 namespace mir
 {
 
-namespace sessions
+namespace shell
 {
 class SurfaceFactory;
 
@@ -67,4 +67,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_SESSIONS_APPLICATION_SESSION_H_
+#endif // MIR_SHELL_APPLICATION_SESSION_H_

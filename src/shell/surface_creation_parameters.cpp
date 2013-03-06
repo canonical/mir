@@ -16,26 +16,26 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
-msess::SurfaceCreationParameters::SurfaceCreationParameters()
+msh::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), buffer_usage(mc::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid)
 {
 }
 
-msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_name(std::string const& new_name)
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
     name = new_name;
     return *this;
 }
 
 
-msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_size(
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
         geometry::Size new_size)
 {
     size = new_size;
@@ -43,14 +43,14 @@ msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_size(
     return *this;
 }
 
-msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_size(
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
     geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
     return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
 }
 
-msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_buffer_usage(
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
         mc::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
@@ -58,7 +58,7 @@ msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_buffer_us
     return *this;
 }
 
-msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_pixel_format(
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
     geom::PixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
@@ -66,23 +66,23 @@ msess::SurfaceCreationParameters& msess::SurfaceCreationParameters::of_pixel_for
     return *this;
 }
 
-bool msess::operator==(
+bool msh::operator==(
     const SurfaceCreationParameters& lhs,
-    const msess::SurfaceCreationParameters& rhs)
+    const msh::SurfaceCreationParameters& rhs)
 {
     return lhs.size == rhs.size &&
            lhs.buffer_usage == rhs.buffer_usage &&
            lhs.pixel_format == rhs.pixel_format;
 }
 
-bool msess::operator!=(
+bool msh::operator!=(
     const SurfaceCreationParameters& lhs,
-    const msess::SurfaceCreationParameters& rhs)
+    const msh::SurfaceCreationParameters& rhs)
 {
     return !(lhs == rhs);
 }
 
-msess::SurfaceCreationParameters msess::a_surface()
+msh::SurfaceCreationParameters msh::a_surface()
 {
     return SurfaceCreationParameters();
 }

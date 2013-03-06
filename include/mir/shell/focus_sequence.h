@@ -16,37 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
-#define MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#ifndef MIR_SHELL_FOCUS_STRATEGY_H_
+#define MIR_SHELL_FOCUS_STRATEGY_H_
 
 #include <memory>
-#include "mir/sessions/focus_setter.h"
 
 namespace mir
 {
-
-namespace sessions
+namespace shell
 {
 class Session;
-class SessionContainer;
 
-class SingleVisibilityFocusMechanism : public FocusSetter
+class FocusSequence
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
-    virtual ~SingleVisibilityFocusMechanism() {}
+    virtual ~FocusSequence() {}
 
-    void set_focus_to(std::shared_ptr<Session> const& new_focus);
+    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::shared_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::shared_ptr<Session> default_focus() const = 0;
 
 protected:
-    SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
-    SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
-private:
-    std::shared_ptr<SessionContainer> app_container;
+    FocusSequence() = default;
+    FocusSequence(const FocusSequence&) = delete;
+    FocusSequence& operator=(const FocusSequence&) = delete;
 };
 
 }
 }
 
 
-#endif // MIR_SESSIONS_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#endif // MIR_SHELL_FOCUS_SEQUENCE_H_

@@ -52,7 +52,7 @@ add_dependencies(mirfrontend mirprotobuf)
 target_link_libraries(
   mirfrontend
 
-  mirsessions
+  mirshell
   mirlogging
   3rd_party
   ${Boost_LIBRARIES}

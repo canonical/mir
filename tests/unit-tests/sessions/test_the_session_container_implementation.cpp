@@ -17,9 +17,9 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -28,23 +28,23 @@
 #include <gtest/gtest.h>
 #include <string>
 
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msess::SessionContainer container;
+    msh::SessionContainer container;
 
-    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 7"));
-    container.insert_session(std::make_shared<msess::ApplicationSession>(factory, "Visual Studio 8"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 7"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 8"));
 
     struct local
     {
         MOCK_METHOD1(check_name, void (std::string const&));
 
-        void operator()(std::shared_ptr<msess::Session> const& session)
+        void operator()(std::shared_ptr<msh::Session> const& session)
         {
             check_name(session->name());
         }
@@ -61,9 +61,9 @@ TEST(SessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msess::SessionContainer container;
+    msh::SessionContainer container;
 
-    auto session = std::make_shared<msess::ApplicationSession>(factory,
+    auto session = std::make_shared<msh::ApplicationSession>(factory,
                                                                "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);
