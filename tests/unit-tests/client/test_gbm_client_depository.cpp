@@ -78,3 +78,59 @@ TEST_F(MirGBMBufferDepositoryTest, depository_new_deposit_changes_current_buffer
     EXPECT_NE(buffer1, buffer2);
 }
 
+TEST_F(MirGBMBufferDepositoryTest, depository_sets_buffer_age_to_zero_for_new_buffer)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+    auto buffer1 = depository.access_current_buffer();
+
+    EXPECT_EQ(0u, buffer1->age());
+}
+
+TEST_F(MirGBMBufferDepositoryTest, just_sumbitted_buffer_has_age_1)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+    auto package2 = std::make_shared<MirBufferPackage>();
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+    auto buffer1 = depository.access_current_buffer();
+
+    ASSERT_EQ(0u, buffer1->age());
+
+    // Deposit new package, implicitly marking previous buffer as submitted
+    depository.deposit_package(std::move(package2), 2, size, pf);
+
+    EXPECT_EQ(1u, buffer1->age());
+}
+
+TEST_F(MirGBMBufferDepositoryTest, submitting_buffer_ages_other_buffers)
+{
+    using namespace testing;
+
+    mclg::GBMClientBufferDepository depository{drm_fd_handler};
+
+    depository.deposit_package(std::move(package), 1, size, pf);
+    auto buffer1 = depository.access_current_buffer();
+
+    EXPECT_EQ(0u, buffer1->age());
+
+    auto package2 = std::make_shared<MirBufferPackage>();
+    depository.deposit_package(std::move(package2), 2, size, pf);
+    auto buffer2 = depository.access_current_buffer();
+
+    EXPECT_EQ(1u, buffer1->age());
+    EXPECT_EQ(0u, buffer2->age());
+
+    auto package3 = std::make_shared<MirBufferPackage>();
+    depository.deposit_package(std::move(package3), 3, size, pf);
+    auto buffer3 = depository.access_current_buffer();
+
+    EXPECT_EQ(2u, buffer1->age());
+    EXPECT_EQ(1u, buffer2->age());
+    EXPECT_EQ(0u, buffer3->age());
+}

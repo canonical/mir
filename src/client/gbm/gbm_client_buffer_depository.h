@@ -21,6 +21,7 @@
 #define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_DEPOSITORY_H_
 
 #include "../client_buffer_depository.h"
+#include "gbm_client_buffer.h"
 
 #include <stdexcept>
 #include <map>
@@ -45,7 +46,8 @@ public:
 
     std::shared_ptr<ClientBuffer> access_current_buffer(void);
 private:
-    std::shared_ptr<ClientBuffer> buffer;
+    std::map<uint32_t, std::shared_ptr<GBMClientBuffer>> buffers;
+    uint32_t current_buffer;
     std::shared_ptr<DRMFDHandler> drm_fd_handler;
 };
 
