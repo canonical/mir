@@ -62,9 +62,6 @@ MirSurface*  mtd::MockMesaEGLClientLibrary::a_surface_pointer()
     return reinterpret_cast<MirSurface*>(&surface);
 }
 
-extern "C"
-{
-
 void mir_toolkit::mir_connection_get_platform(MirConnection* connection, MirPlatformPackage* package)
 {
     global_mock->connection_get_platform(connection, package);
@@ -88,6 +85,4 @@ MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface* surface, mir_sur
 void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)
 {
     global_mock->wait_for(wait_handle);
-}
-
 }
