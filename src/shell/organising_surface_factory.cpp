@@ -16,11 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/organising_surface_factory.h"
-#include "mir/sessions/placement_strategy.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/placement_strategy.h"
+#include "mir/shell/surface_creation_parameters.h"
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 msess::OrganisingSurfaceFactory::OrganisingSurfaceFactory(std::shared_ptr<msess::SurfaceFactory> const& underlying_factory,
                                                           std::shared_ptr<msess::PlacementStrategy> const& placement_strategy)

@@ -28,12 +28,12 @@
 #include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/session_manager.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/single_visibility_focus_mechanism.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/consuming_placement_strategy.h"
-#include "mir/sessions/organising_surface_factory.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/consuming_placement_strategy.h"
+#include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -54,7 +54,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace mi = mir::input;
 
 namespace

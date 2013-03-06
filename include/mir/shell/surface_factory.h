@@ -16,39 +16,32 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_SESSION_STORE_H_
-#define MIR_SESSIONS_SESSION_STORE_H_
+#ifndef MIR_SHELL_SURFACE_FACTORY_H_
+#define MIR_SHELL_SURFACE_FACTORY_H_
 
 #include <memory>
 
 namespace mir
 {
 
-namespace sessions
+namespace shell
 {
+class SurfaceCreationParameters;
+class Surface;
 
-class Session;
-
-class SessionStore
+class SurfaceFactory
 {
 public:
-    virtual ~SessionStore() {}
+    virtual ~SurfaceFactory() {}
 
-    virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
-    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
-
-    virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id) = 0;
-    virtual void focus_session_with_lightdm_id(int id) = 0;
-
-    virtual void shutdown() = 0;
+    virtual std::shared_ptr<Surface> create_surface(const SurfaceCreationParameters& params) = 0;
 
 protected:
-    SessionStore() = default;
-    SessionStore(const SessionStore&) = delete;
-    SessionStore& operator=(const SessionStore&) = delete;
+    SurfaceFactory() = default;
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
-
 }
 }
 
-#endif // MIR_SESSIONS_SESSION_STORE_H_
+#endif // MIR_SHELL_SURFACE_FACTORY_H_

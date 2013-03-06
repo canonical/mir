@@ -18,14 +18,14 @@
 
 #include <mir_test_doubles/mock_surface_factory.h>
 
-#include <mir/sessions/organising_surface_factory.h>
-#include <mir/sessions/placement_strategy.h>
-#include <mir/sessions/surface_creation_parameters.h>
+#include <mir/shell/organising_surface_factory.h>
+#include <mir/shell/placement_strategy.h>
+#include <mir/shell/surface_creation_parameters.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 

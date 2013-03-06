@@ -16,9 +16,9 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/session_container.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/session.h"
+#include "mir/shell/session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,7 +28,7 @@
 #include <stdexcept>
 
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 msess::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<msess::SessionContainer> const& app_container) :
   session_container(app_container)

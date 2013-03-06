@@ -19,14 +19,14 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/sessions/surface.h"
+#include "mir/shell/surface.h"
 
 #include "proxy_surface.h"
 
 #include <cassert>
 
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) : surface_stack(surface_stack)
 {

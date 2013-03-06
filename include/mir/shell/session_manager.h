@@ -16,10 +16,10 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_APPLICATION_MANAGER_H_
-#define MIR_SESSIONS_APPLICATION_MANAGER_H_
+#ifndef MIR_SHELL_APPLICATION_MANAGER_H_
+#define MIR_SHELL_APPLICATION_MANAGER_H_
 
-#include "mir/sessions/session_store.h"
+#include "mir/shell/session_store.h"
 
 #include <mutex>
 #include <memory>
@@ -28,7 +28,7 @@
 namespace mir
 {
 
-namespace sessions
+namespace shell
 {
 class SurfaceFactory;
 class Session;
@@ -75,4 +75,4 @@ private:
 }
 }
 
-#endif // MIR_SESSIONS_APPLICATION_MANAGER_H_
+#endif // MIR_SHELL_APPLICATION_MANAGER_H_

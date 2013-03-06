@@ -16,40 +16,37 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef FRONTEND_SESSION_CONTAINER_H_
-#define FRONTEND_SESSION_CONTAINER_H_
+#ifndef MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
+#define MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
-#include <vector>
 #include <memory>
-#include <mutex>
+#include "mir/shell/focus_setter.h"
 
 namespace mir
 {
-namespace sessions
+
+namespace shell
 {
 class Session;
+class SessionContainer;
 
-class SessionContainer
+class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
-    SessionContainer();
-    ~SessionContainer();
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
+    virtual ~SingleVisibilityFocusMechanism() {}
 
-    virtual void insert_session(std::shared_ptr<Session> const& session);
-    virtual void remove_session(std::shared_ptr<Session> const& session);
+    void set_focus_to(std::shared_ptr<Session> const& new_focus);
 
-    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
-
+protected:
+    SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
+    SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
-    SessionContainer(const SessionContainer&) = delete;
-    SessionContainer& operator=(const SessionContainer&) = delete;
-
-    std::vector<std::shared_ptr<Session>> apps;
-    mutable std::mutex guard;
+    std::shared_ptr<SessionContainer> app_container;
 };
 
 }
 }
 
 
-#endif // FRONTEND_SESSION_CONTAINER_H_
+#endif // MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_

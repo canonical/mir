@@ -18,7 +18,7 @@
 
 #include "src/surfaces/proxy_surface.h"
 #include "mir/surfaces/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;

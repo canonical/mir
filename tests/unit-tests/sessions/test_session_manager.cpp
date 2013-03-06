@@ -17,12 +17,12 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/sessions/session_manager.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/surface_creation_parameters.h"
-#include "mir/sessions/focus_sequence.h"
-#include "mir/sessions/focus_setter.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/focus_sequence.h"
+#include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
@@ -35,7 +35,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mt = mir::test;

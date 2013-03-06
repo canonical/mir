@@ -16,8 +16,8 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -27,7 +27,7 @@
 #include <stdexcept>
 
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 msess::SessionContainer::SessionContainer()
 {

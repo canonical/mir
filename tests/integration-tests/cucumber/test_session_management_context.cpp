@@ -18,10 +18,10 @@
 
 #include "session_management_context.h"
 #include "mir/server_configuration.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/session.h"
+#include "mir/shell/surface.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test/fake_shared.h"
@@ -33,7 +33,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mt::cucumber;

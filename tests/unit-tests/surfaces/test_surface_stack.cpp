@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
@@ -40,7 +40,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

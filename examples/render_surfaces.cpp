@@ -28,7 +28,7 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -48,7 +48,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ml=mir::logging;
 namespace ms=mir::surfaces;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 

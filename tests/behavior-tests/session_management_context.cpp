@@ -18,18 +18,18 @@
 
 #include "session_management_context.h"
 
-#include "mir/sessions/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/single_visibility_focus_mechanism.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/surface.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -146,7 +146,7 @@ namespace
     {
         DummyServerConfiguration() : mir::DefaultServerConfiguration(0, nullptr) {}
 
-        virtual std::shared_ptr<mir::sessions::SurfaceFactory>
+        virtual std::shared_ptr<mir::shell::SurfaceFactory>
         the_surface_factory()
         {
             return std::make_shared<mtc::DummySurfaceFactory>();

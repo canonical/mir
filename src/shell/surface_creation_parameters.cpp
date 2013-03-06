@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom = mir::geometry;
 
 msess::SurfaceCreationParameters::SurfaceCreationParameters()

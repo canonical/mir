@@ -22,9 +22,9 @@
 #include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -45,7 +45,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace

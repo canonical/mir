@@ -16,13 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/sessions/consuming_placement_strategy.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/consuming_placement_strategy.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include <algorithm>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 

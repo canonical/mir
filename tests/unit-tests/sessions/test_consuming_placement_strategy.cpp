@@ -18,13 +18,13 @@
 
 #include "mir_test_doubles/mock_viewable_area.h"
 
-#include "mir/sessions/consuming_placement_strategy.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/consuming_placement_strategy.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 

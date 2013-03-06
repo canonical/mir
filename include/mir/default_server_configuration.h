@@ -42,7 +42,7 @@ class ProtobufIpcFactory;
 class ApplicationMediatorReport;
 }
 
-namespace sessions
+namespace shell
 {
 class SessionStore;
 class SurfaceFactory;
@@ -94,8 +94,8 @@ public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
     virtual std::shared_ptr<frontend::ApplicationMediatorReport> the_application_mediator_report();
 
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store();
-    virtual std::shared_ptr<sessions::SurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<shell::SessionStore> the_session_store();
+    virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
 
     virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
@@ -132,7 +132,7 @@ protected:
     };
 
     CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<sessions::SessionStore> session_store;
+    CachedPtr<shell::SessionStore> session_store;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
@@ -155,7 +155,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<sessions::SessionStore> const& session_store,
+        std::shared_ptr<shell::SessionStore> const& session_store,
         std::shared_ptr<graphics::ViewableArea> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 

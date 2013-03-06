@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/surface.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/surface.h"
 
 #include "mir/surfaces/surface_controller.h"
 
@@ -28,7 +28,7 @@
 #include <cassert>
 #include <algorithm>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace ms = mir::surfaces;
 
 msess::ApplicationSession::ApplicationSession(

@@ -17,9 +17,9 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 namespace mtd = mir::test::doubles;
 
 TEST(SessionContainer, for_each)

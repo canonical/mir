@@ -16,18 +16,18 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/sessions/session_manager.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_factory.h"
-#include "mir/sessions/focus_sequence.h"
-#include "mir/sessions/focus_setter.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/surface_factory.h"
+#include "mir/shell/focus_sequence.h"
+#include "mir/shell/focus_setter.h"
 
 #include <memory>
 #include <cassert>
 #include <algorithm>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 msess::SessionManager::SessionManager(
     std::shared_ptr<msess::SurfaceFactory> const& surface_factory,

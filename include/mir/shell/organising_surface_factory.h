@@ -16,16 +16,16 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SESSIONS_ORGANISING_SURFACE_FACTORY_H_
-#define MIR_SESSIONS_ORGANISING_SURFACE_FACTORY_H_
+#ifndef MIR_SHELL_ORGANISING_SURFACE_FACTORY_H_
+#define MIR_SHELL_ORGANISING_SURFACE_FACTORY_H_
 
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/surface_factory.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace sessions
+namespace shell
 {
 class PlacementStrategy;
 
@@ -50,4 +50,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_SESSIONS_ORGANISING_SURFACE_FACTORY_H_
+#endif // MIR_SHELL_ORGANISING_SURFACE_FACTORY_H_

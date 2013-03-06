@@ -16,11 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/sessions/session_manager.h"
+#include "mir/shell/session_manager.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace msess = mir::sessions;
+namespace msess = mir::shell;
 
 TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_assertion)
 {
@@ -30,7 +30,7 @@ TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_a
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                mir::sessions::SessionManager app(std::shared_ptr<msess::SurfaceFactory>(),
+                mir::shell::SessionManager app(std::shared_ptr<msess::SurfaceFactory>(),
                                                   std::shared_ptr<msess::SessionContainer>(),
                                                   std::shared_ptr<msess::FocusSequence>(),
                                                   std::shared_ptr<msess::FocusSetter>()),
