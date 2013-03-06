@@ -33,8 +33,6 @@ class NullShell : public mir::Shell
 public:
     ~NullShell();
 
-    bool start();
-    void stop();
     bool supports(MirSurfaceAttrib attrib) const;
     bool supports(MirSurfaceAttrib attrib, int value) const;
 };
