@@ -20,6 +20,8 @@
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
+#include "mir/input/communication_package_factory.h"
+
 #include <memory>
 
 namespace mir
@@ -31,12 +33,16 @@ class ViewableArea;
 namespace input
 {
 class EventFilter;
+class CommunicationPackage;
 
-class InputManager
+class InputManager : public CommunicationPackageFactory
 {
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
+    
+    virtual std::shared_ptr<CommunicationPackage> make_communication_package() = 0;
+
 protected:
     InputManager() {};
     virtual ~InputManager() {}

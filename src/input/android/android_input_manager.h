@@ -56,8 +56,11 @@ public:
         std::shared_ptr<InputConfiguration> const& input_configuration);
     virtual ~InputManager();
 
-    virtual void start();
-    virtual void stop();
+    void start();
+    void stop();
+    
+    std::shared_ptr<CommunicationPackage> make_communication_package();
+    
 
 protected:
     InputManager(const InputManager&) = delete;

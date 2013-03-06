@@ -21,6 +21,8 @@
 #include "src/input/android/android_input_thread.h"
 #include "src/input/android/android_input_constants.h"
 
+#include "mir/input/communication_package.h"
+
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
 
@@ -195,4 +197,13 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 
     manager.start();
     manager.stop();
+}
+
+TEST_F(AndroidInputManagerSetup, manager_returns_communication_package_with_fds)
+{
+    mia::InputManager manager(mt::fake_shared(config));
+    
+    auto package = manager.make_communication_package();
+    EXPECT_GT(package->client_fd(), 0);
+    EXPECT_GT(package->server_fd(), 0);
 }
