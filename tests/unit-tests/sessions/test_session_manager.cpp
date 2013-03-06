@@ -66,21 +66,22 @@ struct MockFocusSetter: public msess::FocusSetter
 
 struct SessionManagerSetup : public testing::Test
 {
-    void SetUp()
+    SessionManagerSetup()
+      : session_manager(mt::fake_shared(surface_factory),
+                        mt::fake_shared(container),
+                        mt::fake_shared(sequence),
+                        mt::fake_shared(focus_setter))
     {
-        session_manager = std::make_shared<msess::SessionManager>(
-            mt::fake_shared(surface_factory),
-            mt::fake_shared(container),
-            mt::fake_shared(sequence),
-            mt::fake_shared(focus_setter));
     }
+
+    
 
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
 
-    std::shared_ptr<msess::SessionManager> session_manager;
+    msess::SessionManager session_manager;
 };
 
 }
@@ -96,8 +97,8 @@ TEST_F(SessionManagerSetup, open_and_close_session)
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
-    auto session = session_manager->open_session("Visual Basic Studio");
-    session_manager->close_session(session);
+    auto session = session_manager.open_session("Visual Basic Studio");
+    session_manager.close_session(session);
 }
 
 TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
@@ -121,10 +122,10 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msess::Session>())));
 
-    auto session = session_manager->open_session("Visual Basic Studio");
+    auto session = session_manager.open_session("Visual Basic Studio");
     session->create_surface(msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
-    session_manager->close_session(session);
+    session_manager.close_session(session);
 }
 
 TEST_F(SessionManagerSetup, new_applications_receive_focus)
@@ -135,7 +136,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
-    auto session = session_manager->open_session("Visual Basic Studio");
+    auto session = session_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
 
@@ -143,27 +144,27 @@ TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
 {
     using namespace ::testing;
 
-    auto session1 = session_manager->open_session("Visual Basic Studio");
-    auto session2 = session_manager->open_session("IntelliJ IDEA");
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("IntelliJ IDEA");
 
-    session_manager->tag_session_with_lightdm_id(session1, 1);
+    session_manager.tag_session_with_lightdm_id(session1, 1);
 
     EXPECT_CALL(focus_setter, set_focus_to(session1));
-    session_manager->focus_session_with_lightdm_id(1);
+    session_manager.focus_session_with_lightdm_id(1);
 }
 
 TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 {
     using namespace ::testing;
 
-    auto session1 = session_manager->open_session("Visual Basic Studio");
-    auto session2 = session_manager->open_session("IntelliJ IDEA");
+    auto session1 = session_manager.open_session("Visual Basic Studio");
+    auto session2 = session_manager.open_session("IntelliJ IDEA");
 
-    session_manager->tag_session_with_lightdm_id(session1, 1);
-    session_manager->focus_session_with_lightdm_id(1);
+    session_manager.tag_session_with_lightdm_id(session1, 1);
+    session_manager.focus_session_with_lightdm_id(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return(session2));
     EXPECT_CALL(focus_setter, set_focus_to(session2));
 
-    session_manager->close_session(session1);
+    session_manager.close_session(session1);
 }
