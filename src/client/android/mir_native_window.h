@@ -22,6 +22,7 @@
 #include "../mir_client_surface.h"
 #include <system/window.h>
 #include <cstdarg>
+#include <memory>
 
 namespace mir
 {
@@ -29,19 +30,21 @@ namespace client
 {
 namespace android
 {
+class AndroidDriverInterpreter;
 
 class MirNativeWindow : public ANativeWindow
 {
 public:
-    explicit MirNativeWindow(ClientSurface* surface);
+    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> interpreter);
 
-    int query(int key, int* value) const;
-    int perform(int key, va_list args );
-    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
-    int queueBuffer(struct ANativeWindowBuffer* buffer);
+    int query_internal(int key, int* value) const;
+    int perform_internal(int key, va_list args );
+    int dequeueBuffer_internal(struct ANativeWindowBuffer** buffer);
+    int queueBuffer_internal(struct ANativeWindowBuffer* buffer);
 private:
 
-    ClientSurface * surface;
+//    ClientSurface * surface;
+    std::shared_ptr<AndroidDriverInterpreter> driver_interpreter;
     int driver_pixel_format;
 };
 

@@ -43,7 +43,7 @@ static void incRef(android_native_base_t*)
 int query_static(const ANativeWindow* anw, int key, int* value)
 {
     auto self = static_cast<const mcla::MirNativeWindow*>(anw);
-    return self->query(key, value);
+    return self->query_internal(key, value);
 }
 
 int perform_static(ANativeWindow* window, int key, ...)
@@ -51,7 +51,7 @@ int perform_static(ANativeWindow* window, int key, ...)
     va_list args;
     va_start(args, key);
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    auto ret = self->perform(key, args);
+    auto ret = self->perform_internal(key, args);
     va_end(args);
 
     return ret;
@@ -61,14 +61,14 @@ int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->dequeueBuffer(buffer);
+    return self->dequeueBuffer_internal(buffer);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer);
+    return self->queueBuffer_internal(buffer);
 }
 
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
@@ -91,8 +91,8 @@ int cancelBuffer_static(struct ANativeWindow* /*window*/,
 
 }
 
-mcla::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
- : surface(client_surface),
+mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> interpreter)
+ : driver_interpreter(interpreter),
    driver_pixel_format(-1)
 {
     ANativeWindow::query = &query_static;
@@ -110,26 +110,33 @@ mcla::MirNativeWindow::MirNativeWindow(ClientSurface* client_surface)
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
 }
 
-int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
+int mcla::MirNativeWindow::dequeueBuffer_internal (struct ANativeWindowBuffer** /*buffer_to_driver*/)
 {
     int ret = 0;
+#if 0
     auto buffer = surface->get_current_buffer();
     *buffer_to_driver = buffer->get_native_handle();
     (*buffer_to_driver)->format = driver_pixel_format;
+#endif
     return ret;
 }
 
+#if 0
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* /*buffer*/)
+#endif
+int mcla::MirNativeWindow::queueBuffer_internal(struct ANativeWindowBuffer* /*buffer*/)
 {
+#if 0
     mir_wait_for(surface->next_buffer(empty, NULL));
+#endif
     return 0;
 }
 
-int mcla::MirNativeWindow::query(int key, int* value ) const
+int mcla::MirNativeWindow::query_internal(int /*key*/, int* /*value*/ ) const
 {
     int ret = 0;
+#if 0
     switch (key)
     {
         case NATIVE_WINDOW_WIDTH:
@@ -150,10 +157,11 @@ int mcla::MirNativeWindow::query(int key, int* value ) const
             ret = -1;
             break;
     }
+#endif
     return ret;
 }
 
-int mcla::MirNativeWindow::perform(int key, va_list arg_list )
+int mcla::MirNativeWindow::perform_internal(int key, va_list arg_list )
 {
     int ret = 0;
     va_list args;

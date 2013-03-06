@@ -83,13 +83,17 @@ private:
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
+std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface * /*surface*/)
 {
+#if 0
     auto mir_native_window = new mcla::MirNativeWindow(surface);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;
     MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);
     return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
+#endif
+    auto egl_native_window = new EGLNativeWindowType;
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window);
 }
 
 std::shared_ptr<EGLNativeDisplayType>
