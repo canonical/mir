@@ -88,5 +88,3 @@ TEST_F(SyncFenceTest, test_invalid_fd_destruction_does_not_close_fd)
 
     mcla::SyncFence fence(invalid_fd, ioctl_mock);
 }
-
-
