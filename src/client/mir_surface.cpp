@@ -247,7 +247,9 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
 
 void MirSurface::on_configured()
 {
-    if (configure_result.surfaceid().value() == surface.id().value())
+    if (configure_result.has_surfaceid() &&
+        configure_result.surfaceid().value() == surface.id().value() &&
+        configure_result.has_attrib())
     {
         switch (configure_result.attrib())
         {
