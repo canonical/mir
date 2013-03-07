@@ -128,7 +128,7 @@ void msh::ApplicationSession::show()
     }
 }
 
-int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
+int msh::ApplicationSession::configure_surface(msh::SurfaceId id,
                                                  MirSurfaceAttrib attrib,
                                                  int value)
 {
@@ -143,7 +143,7 @@ int msess::ApplicationSession::configure_surface(msess::SurfaceId id,
                                                "for this attribute"));
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<msess::Surface> surf(checked_find(id)->second);
+    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
     return surf->configure(attrib, value);
 }

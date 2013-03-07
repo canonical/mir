@@ -238,7 +238,7 @@ void mir::frontend::ApplicationMediator::configure_surface(
 
     report->application_configure_surface_called(application_session->name());
 
-    auto const id = sessions::SurfaceId(request->surfaceid().value());
+    auto const id = shell::SurfaceId(request->surfaceid().value());
     int value = request->ivalue();
     int newvalue = application_session->configure_surface(id, attrib, value);
 

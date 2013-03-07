@@ -75,7 +75,7 @@ struct MockSession : public msh::Session
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 
-    MOCK_METHOD3(configure_surface, int(msess::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD3(configure_surface, int(msh::SurfaceId, MirSurfaceAttrib, int));
 };
 
 struct MockSurface : public msh::Surface

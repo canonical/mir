@@ -16,3 +16,7 @@ add_library(
 
   ${SHELL_SOURCES}
 )
+
+add_library (mirnullshell STATIC
+  nullshell.cpp
+)

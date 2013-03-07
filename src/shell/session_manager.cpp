@@ -137,7 +137,7 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
     }
 }
 
-std::shared_ptr<mir::Shell> msess::SessionManager::current_shell() const
+std::shared_ptr<mir::Shell> msh::SessionManager::current_shell() const
 {
     if (!shell)
         shell.reset(new mir::shell::NullShell);
