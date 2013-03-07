@@ -32,12 +32,12 @@ TEST(AndroidCommunicationPackage, packages_own_valid_fds)
     int server_fd, client_fd;
     {
         mia::AndroidCommunicationPackage package;
-    
+
         server_fd = package.server_fd();
         client_fd = package.client_fd();
         EXPECT_GT(server_fd, 0);
         EXPECT_GT(client_fd, 0);
-    
+
         EXPECT_EQ(fcntl(server_fd, F_GETFD), 0);
         EXPECT_EQ(fcntl(client_fd, F_GETFD), 0);
     }
