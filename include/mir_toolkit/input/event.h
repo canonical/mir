@@ -87,8 +87,7 @@ extern "C" {
                     float size;
                     float pressure;
                     float orientation;
-                };
-                struct PointerCoordinates pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+                } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;
     };
