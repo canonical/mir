@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANATIVEWINDOW_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_ANATIVEWINDOW_INTERPRETER_H_
+#ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
+#define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
 
 #include "android_driver_interpreter.h"
 #include "../mir_client_surface.h"
@@ -47,4 +47,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_ANDROID_ANATIVEWINDOW_INTERPRETER_H_*/
+#endif /* MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_ */
