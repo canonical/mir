@@ -34,7 +34,7 @@ TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_man
     {
         std::shared_ptr<mi::InputManager> the_input_manager()
         {
-            
+
             if (!mock_input_manager.get())
             {
                 mock_input_manager = std::make_shared<mtd::MockInputManager>();

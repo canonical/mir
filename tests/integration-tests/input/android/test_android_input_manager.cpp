@@ -63,7 +63,7 @@ public:
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
-        
+
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = std::make_shared<mia::InputManager>(configuration);
@@ -148,8 +148,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
     fake_event_hub->synthesize_builtin_cursor_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100,100));
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100,0));
+    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 100));
+    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 0));
 
     wait_condition.wait_for_at_most_seconds(1);
 }
