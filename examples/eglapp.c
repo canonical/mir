@@ -17,7 +17,7 @@
  */
 
 #include "./eglapp.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
