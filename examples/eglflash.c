@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    if (!mir_egl_app_init(&width, &height))
+    if (!mir_eglapp_init(&width, &height))
     {
         printf("Can't initialize EGL\n");
         return 1;
@@ -41,17 +41,17 @@ int main(int argc, char *argv[])
     {
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        mir_egl_swap_buffers();
+        mir_eglapp_swap_buffers();
         sleep(1);
 
         glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        mir_egl_swap_buffers();
+        mir_eglapp_swap_buffers();
         sleep(1);
 
         glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        mir_egl_swap_buffers();
+        mir_eglapp_swap_buffers();
         sleep(1);
     }
 

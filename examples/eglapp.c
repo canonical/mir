@@ -43,7 +43,7 @@ static void assign_result(void *result, void **arg)
     *arg = result;
 }
 
-void mir_egl_app_shutdown(void)
+void mir_eglapp_shutdown(void)
 {
     eglTerminate(egldisplay);
     mir_connection_release(connection);
@@ -52,11 +52,11 @@ void mir_egl_app_shutdown(void)
 static void shutdown(int signum)
 {
     printf("Signal %d received. Good night.\n", signum);
-    mir_egl_app_shutdown();
+    mir_eglapp_shutdown();
     exit(0);
 }
 
-void mir_egl_swap_buffers(void)
+void mir_eglapp_swap_buffers(void)
 {
     static time_t lasttime = 0;
     static int lastcount = 0;
@@ -78,7 +78,7 @@ void mir_egl_swap_buffers(void)
     }
 }
 
-int mir_egl_app_init(int *width, int *height)
+int mir_eglapp_init(int *width, int *height)
 {
     EGLint attribs[] =
     {

@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     (void)argc;
     (void)argv;
 
-    if (!mir_egl_app_init(&width, &height))
+    if (!mir_eglapp_init(&width, &height))
     {
         printf("Can't initialize EGL\n");
         return 1;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         glUniform1f(theta, angle);
         angle += 0.005f;
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        mir_egl_swap_buffers();
+        mir_eglapp_swap_buffers();
     }
 
     return 0;

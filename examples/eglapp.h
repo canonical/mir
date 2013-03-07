@@ -23,9 +23,9 @@
 extern "C" {
 #endif
 
-int mir_egl_app_init(int *width, int *height);
-void mir_egl_swap_buffers(void);
-void mir_egl_app_shutdown(void);
+int  mir_eglapp_init(int *width, int *height);
+void mir_eglapp_swap_buffers(void);
+void mir_eglapp_shutdown(void);
 
 #ifdef __cplusplus
 }
