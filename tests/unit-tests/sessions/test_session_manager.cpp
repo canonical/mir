@@ -64,22 +64,30 @@ struct MockFocusSetter: public msh::FocusSetter
     MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msh::Session> const&));
 };
 
-}
-
-TEST(SessionManager, open_and_close_session)
+struct SessionManagerSetup : public testing::Test
 {
-    using namespace ::testing;
+    SessionManagerSetup()
+      : session_manager(mt::fake_shared(surface_factory),
+                        mt::fake_shared(container),
+                        mt::fake_shared(sequence),
+                        mt::fake_shared(focus_setter))
+    {
+    }
+
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
     MockFocusSetter focus_setter;
 
-    msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(container),
-        mt::fake_shared(sequence),
-        mt::fake_shared(focus_setter));
+    msh::SessionManager session_manager;
+};
 
+}
+
+TEST_F(SessionManagerSetup, open_and_close_session)
+{
+    using namespace ::testing;
+ 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
@@ -91,19 +99,9 @@ TEST(SessionManager, open_and_close_session)
     session_manager.close_session(session);
 }
 
-TEST(SessionManager, closing_session_removes_surfaces)
+TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
-    MockFocusSequence sequence;
-    MockFocusSetter mechanism;
-
-    msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(container),
-        mt::fake_shared(sequence),
-        mt::fake_shared(mechanism));
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
     std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
@@ -117,8 +115,8 @@ TEST(SessionManager, closing_session_removes_surfaces)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
-    EXPECT_CALL(mechanism, set_focus_to(_)).Times(1);
-    EXPECT_CALL(mechanism, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
@@ -128,64 +126,34 @@ TEST(SessionManager, closing_session_removes_surfaces)
     session_manager.close_session(session);
 }
 
-TEST(SessionManager, new_applications_receive_focus)
+TEST_F(SessionManagerSetup, new_applications_receive_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
-    MockFocusSequence sequence;
-    MockFocusSetter mechanism;
     std::shared_ptr<msh::Session> new_session;
 
-    msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(container),
-        mt::fake_shared(sequence),
-        mt::fake_shared(mechanism));
-
     EXPECT_CALL(container, insert_session(_)).Times(1);
-    EXPECT_CALL(mechanism, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
+    EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     EXPECT_EQ(session, new_session);
 }
 
-TEST(SessionManager, apps_selected_by_id_receive_focus)
+TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory surface_factory;
-    NiceMock<MockSessionContainer> container;
-    MockFocusSequence sequence;
-    NiceMock<MockFocusSetter> mechanism;
-
-    msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(container),
-        mt::fake_shared(sequence),
-        mt::fake_shared(mechanism));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
 
     session_manager.tag_session_with_lightdm_id(session1, 1);
 
-    EXPECT_CALL(mechanism, set_focus_to(session1));
+    EXPECT_CALL(focus_setter, set_focus_to(session1));
     session_manager.focus_session_with_lightdm_id(1);
 }
 
-TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
+TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 {
     using namespace ::testing;
-    mtd::MockSurfaceFactory surface_factory;
-    NiceMock<MockSessionContainer> container;
-    MockFocusSequence sequence;
-    NiceMock<MockFocusSetter> mechanism;
-
-    msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(container),
-        mt::fake_shared(sequence),
-        mt::fake_shared(mechanism));
 
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
@@ -194,7 +162,7 @@ TEST(SessionManager, closing_apps_selected_by_id_changes_focus)
     session_manager.focus_session_with_lightdm_id(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return(session2));
-    EXPECT_CALL(mechanism, set_focus_to(session2));
+    EXPECT_CALL(focus_setter, set_focus_to(session2));
 
     session_manager.close_session(session1);
 }
