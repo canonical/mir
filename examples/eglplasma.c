@@ -51,17 +51,10 @@ int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
         "attribute vec4 vPosition;            \n"
-        "uniform float theta;                 \n"
         "varying vec2 texcoord;               \n"
         "void main()                          \n"
         "{                                    \n"
-        "    float c = cos(theta);            \n"
-        "    float s = sin(theta);            \n"
-        "    mat2 m;                          \n"
-        "    m[0] = vec2(c, s);               \n"
-        "    m[1] = vec2(-s, c);              \n"
-        "    vec2 p = m * vec2(vPosition);    \n"
-        "    gl_Position = vec4(p, 0.0, 1.0); \n"
+        "    gl_Position = vPosition;         \n"
         "    texcoord = vec2(vPosition) * vec2(0.5) + vec2(0.5); \n"
         "}                                    \n";
 
@@ -87,13 +80,14 @@ int main(int argc, char *argv[])
 
     const GLfloat vertices[] =
     {
-        0.0f, 1.0f,
-       -1.0f,-0.866f,
-        1.0f,-0.866f,
+       -1.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f,-1.0f,
+       -1.0f,-1.0f,
     };
     GLuint vshader, fshader, prog;
     GLint linked, col, vpos, theta;
-    int width = 512, height = 512;
+    int width = 0, height = 0;
     GLfloat angle = 0.0f;
 
     (void)argc;
@@ -143,7 +137,7 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
         glUniform1f(theta, angle);
         angle += 0.005f;
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
     }
 
