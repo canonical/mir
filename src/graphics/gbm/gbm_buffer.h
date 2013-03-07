@@ -60,7 +60,7 @@ public:
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     std::unique_ptr<BufferTextureBinder> const texture_binder;
-    uint32_t gem_flink_name;
+    int prime_fd;
 };
 
 }

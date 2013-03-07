@@ -142,8 +142,8 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto ipc_package = buffer->get_ipc_package();
-    ASSERT_TRUE(ipc_package->ipc_fds.empty());
-    ASSERT_EQ(size_t(1), ipc_package->ipc_data.size());
+    ASSERT_EQ(size_t(1), ipc_package->ipc_fds.size());
+    ASSERT_TRUE(ipc_package->ipc_data.empty());
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
@@ -162,7 +162,7 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
 {
     using namespace testing;
 
-    uint32_t gem_flink_name{0x77};
+    uint32_t prime_fd{0x77};
     gbm_bo_handle mock_handle;
     mock_handle.u32 = 0xdeadbeef;
 
@@ -170,23 +170,23 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
             .Times(Exactly(1))
             .WillOnce(Return(mock_handle));
 
-    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK, GEMFlinkHandleIs(mock_handle.u32)))
+    EXPECT_CALL(mock_drm, drmPrimeHandleToFD(_,mock_handle.u32,_,_))
             .Times(Exactly(1))
-            .WillOnce(DoAll(SetGEMFlinkName(gem_flink_name), Return(0)));
+            .WillOnce(DoAll(SetArgPointee<3>(prime_fd), Return(0)));
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
         auto ipc_package = buffer->get_ipc_package();
-        ASSERT_EQ(gem_flink_name, static_cast<uint32_t>(ipc_package->ipc_data[0]));
+        ASSERT_EQ(prime_fd, static_cast<uint32_t>(ipc_package->ipc_fds[0]));
         ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->stride));
     });
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_gem_flink_failure)
+TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_prime_fd_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_drm, drmIoctl(_,DRM_IOCTL_GEM_FLINK,_))
+    EXPECT_CALL(mock_drm, drmPrimeHandleToFD(_,_,_,_))
             .Times(Exactly(1))
             .WillOnce(Return(-1));
 

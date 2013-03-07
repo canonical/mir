@@ -22,6 +22,7 @@
 #include "buffer_texture_binder.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
+#include <fcntl.h>
 #include <xf86drm.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -84,19 +85,16 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
     auto drm_fd = gbm_device_get_fd(device);
-    struct drm_gem_flink flink;
-    flink.handle = gem_handle;
 
-    auto ret = drmIoctl(drm_fd, DRM_IOCTL_GEM_FLINK, &flink);
+    auto ret = drmPrimeHandleToFD(drm_fd, gem_handle, DRM_CLOEXEC, &prime_fd);    
+
     if (ret)
     {
-        std::string const msg("Failed to get GEM flink name from gbm bo");
+        std::string const msg("Failed to get PRIME fd from gbm bo");
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error(msg)) << boost::errinfo_errno(errno));
     }
-
-    gem_flink_name = flink.name;
 }
 
 geom::Size mgg::GBMBuffer::size() const
@@ -119,7 +117,7 @@ std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
 {
     auto temp = std::make_shared<mc::BufferIPCPackage>();
 
-    temp->ipc_data.push_back(gem_flink_name);
+    temp->ipc_fds.push_back(prime_fd);
     temp->stride = stride().as_uint32_t();
 
     return temp;
