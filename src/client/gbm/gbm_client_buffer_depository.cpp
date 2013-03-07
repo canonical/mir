@@ -34,17 +34,27 @@ mclg::GBMClientBufferDepository::GBMClientBufferDepository(
 
 void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
-    for (auto buffer_pair :buffers) {
-        if (buffer_pair.first == current_buffer)
+    auto buffer_it = buffers.begin();
+    while (buffer_it != buffers.end())
+    {
+        auto tmp_it = buffer_it;
+        ++buffer_it;
+        if (tmp_it->first == current_buffer)
         {
-            buffer_pair.second->mark_as_submitted();
+            tmp_it->second->mark_as_submitted();
         }
         else
         {
-            if (buffer_pair.second->age() >= 3)
-                buffers.erase(buffer_pair.first);
+            if (tmp_it->second->age() >= 3)
+            {
+                // C++ guarantees that buffers.erase() will only invalidate the iterator
+                // we erase.
+                buffers.erase(tmp_it);
+            }
             else
-                buffer_pair.second->increment_age();
+            {
+                tmp_it->second->increment_age();
+            }
         }
     }
     auto find_it = buffers.find(id);
