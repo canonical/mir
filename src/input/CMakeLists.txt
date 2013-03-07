@@ -18,3 +18,4 @@ add_library(
 
   ${INPUT_SOURCES}
 )
+uses_android_input(mirinput)

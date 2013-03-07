@@ -19,10 +19,12 @@
 
 #include "mir/input/event_filter.h"
 #include "src/input/android/android_input_manager.h"
+#include "src/input/android/default_android_input_configuration.h"
 #include "mir/input/cursor_listener.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
+#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
@@ -57,22 +59,24 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
     void SetUp()
     {
-        event_hub = new mia::FakeEventHub();
-
         static const geom::Rectangle visible_rectangle
         {
             geom::Point(),
             geom::Size{geom::Width(1024), geom::Height(1024)}
         };
 
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
+            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)},
+            mt::fake_shared(viewable_area),
+            mt::fake_shared(cursor_listener));
+
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(visible_rectangle));
 
-        input_manager.reset(new mia::InputManager(
-            event_hub,
-            {mt::fake_shared(event_filter)},
-            mt::fake_shared(viewable_area),
-            mt::fake_shared(cursor_listener)));
+        fake_event_hub = configuration->the_fake_event_hub();
+
+        input_manager = std::make_shared<mia::InputManager>(configuration);
+
         input_manager->start();
     }
 
@@ -81,7 +85,8 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager->stop();
     }
 
-    android::sp<mia::FakeEventHub> event_hub;
+    std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
+    mia::FakeEventHub* fake_event_hub;
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mia::InputManager> input_manager;
@@ -106,10 +111,10 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
     EXPECT_CALL(event_filter, handles(_))
             .WillOnce(ReturnFalseAndWakeUp(wait_condition));
 
-    event_hub->synthesize_builtin_cursor_added();
-    event_hub->synthesize_device_scan_complete();
+    fake_event_hub->synthesize_builtin_cursor_added();
+    fake_event_hub->synthesize_device_scan_complete();
 
-    event_hub->synthesize_event(mis::a_motion_event().with_movement(x, y));
+    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(x, y));
 
     wait_condition->wait_for_at_most_seconds(1);
 }
