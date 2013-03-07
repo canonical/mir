@@ -323,5 +323,4 @@ TEST_F(SurfaceCreation, types)
 
     EXPECT_TRUE(surf.set_type(MIR_SURFACE_DIALOG));
     EXPECT_EQ(surf.type(), MIR_SURFACE_DIALOG);
-
 }

@@ -129,8 +129,8 @@ void msh::ApplicationSession::show()
 }
 
 int msh::ApplicationSession::configure_surface(msh::SurfaceId id,
-                                                 MirSurfaceAttrib attrib,
-                                                 int value)
+                                               MirSurfaceAttrib attrib,
+                                               int value)
 {
     if (!shell->supports(attrib))
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
