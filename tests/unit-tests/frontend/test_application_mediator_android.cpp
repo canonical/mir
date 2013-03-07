@@ -17,12 +17,12 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_listener.h"
+#include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -38,7 +38,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -52,16 +52,16 @@ namespace
  * In particular, it would be nice if mf::Session was stubable/mockable.
  */
 
-class StubSurfaceFactory : public msess::SurfaceFactory
+class StubSurfaceFactory : public msh::SurfaceFactory
 {
  public:
-    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
     {
-        return std::shared_ptr<msess::Surface>();
+        return std::shared_ptr<msh::Surface>();
     }
 };
 
-class StubSessionStore : public msess::SessionStore
+class StubSessionStore : public msh::SessionStore
 {
 public:
     StubSessionStore()
@@ -69,18 +69,18 @@ public:
     {
     }
 
-    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
+    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::ApplicationSession>(factory, "stub");
+        return std::make_shared<msh::ApplicationSession>(factory, "stub");
     }
 
-    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const& /*session*/, int /*id*/) {}
+    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const& /*session*/, int /*id*/) {}
     void focus_session_with_lightdm_id(int /*id*/) {}
 
     void shutdown() {}
 
-    std::shared_ptr<msess::SurfaceFactory> factory;
+    std::shared_ptr<msh::SurfaceFactory> factory;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -126,19 +126,19 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
-          listener{std::make_shared<mf::NullApplicationListener>()},
+          report{std::make_shared<mf::NullApplicationMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
-                   buffer_allocator, listener, resource_cache},
+                   buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
 
-    std::shared_ptr<msess::SessionStore> const session_store;
+    std::shared_ptr<msh::SessionStore> const session_store;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationListener> const listener;
+    std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::ApplicationMediator mediator;
 

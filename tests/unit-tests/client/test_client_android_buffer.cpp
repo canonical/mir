@@ -18,7 +18,7 @@
 
 #include "mir_test_doubles/mock_android_registrar.h"
 #include "src/client/android/android_client_buffer.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #include <memory>
 #include <algorithm>
@@ -121,8 +121,7 @@ TEST_F(ClientAndroidBufferTest, client_sets_correct_version)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    int total = 3 + buffer_handle->numFds + buffer_handle->numInts;
-    EXPECT_EQ(buffer_handle->version, total);
+    EXPECT_EQ(buffer_handle->version, static_cast<int>(sizeof(native_handle_t)));
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)

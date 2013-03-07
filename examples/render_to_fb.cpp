@@ -20,24 +20,52 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 
+#include "mir/logging/display_report.h"
+#include "mir/logging/dumb_console_logger.h"
+
 #include "mir/draw/graphics.h"
 
-#include <unistd.h>
-
-#define WIDTH 1280
-#define HEIGHT 720
+#include <csignal>
 
 namespace mg=mir::graphics;
+namespace ml=mir::logging;
+
+namespace
+{
+
+volatile std::sig_atomic_t running = true;
+
+void signal_handler(int /*signum*/)
+{
+    running = false;
+}
+
+}
 
 int main(int, char**)
 {
-    auto platform = mg::create_platform();
+    /* Set up graceful exit on SIGINT and SIGTERM */
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    auto logger = std::make_shared<ml::DumbConsoleLogger>();
+    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;
-    gl_animation.init_gl();
 
-    for(;;)
+    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+    {
+        buffer.make_current();
+        gl_animation.init_gl();
+    });
+
+    while (running)
     {
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
@@ -49,10 +77,8 @@ int main(int, char**)
             buffer.post_update();
         });
 
-        usleep(167);//60fps
         gl_animation.step();
     }
 
     return 0;
 }
-

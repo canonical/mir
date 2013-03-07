@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <utils/SortedVector.h>
-#include <utils/TypeHelpers.h>
-#include <utils/Errors.h>
+#include ANDROIDFW_UTILS(SortedVector.h)
+#include ANDROIDFW_UTILS(TypeHelpers.h)
+#include ANDROIDFW_UTILS(Errors.h)
 
 // ---------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ public:
             ssize_t         indexOfKey(const KEY& key) const;
 
     /*!
-     * modifing the array
+     * modifying the array
      */
 
             VALUE&          editValueFor(const KEY& key);
@@ -90,6 +90,13 @@ public:
 private:
             SortedVector< key_value_pair_t<KEY, VALUE> >    mVector;
 };
+
+// KeyedVector<KEY, VALUE> can be trivially moved using memcpy() because its
+// underlying SortedVector can be trivially moved.
+template<typename KEY, typename VALUE> struct trait_trivial_move<KeyedVector<KEY, VALUE> > {
+    enum { value = trait_trivial_move<SortedVector< key_value_pair_t<KEY, VALUE> > >::value };
+};
+
 
 // ---------------------------------------------------------------------------
 
@@ -122,7 +129,7 @@ ssize_t KeyedVector<KEY,VALUE>::indexOfKey(const KEY& key) const {
 
 template<typename KEY, typename VALUE> inline
 const VALUE& KeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
-    ssize_t i = indexOfKey(key);
+    ssize_t i = this->indexOfKey(key);
     assert(i>=0);
     return mVector.itemAt(i).value;
 }
@@ -139,7 +146,7 @@ const KEY& KeyedVector<KEY,VALUE>::keyAt(size_t index) const {
 
 template<typename KEY, typename VALUE> inline
 VALUE& KeyedVector<KEY,VALUE>::editValueFor(const KEY& key) {
-    ssize_t i = indexOfKey(key);
+    ssize_t i = this->indexOfKey(key);
     assert(i>=0);
     return mVector.editItemAt(i).value;
 }
@@ -194,7 +201,7 @@ const VALUE& DefaultKeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
     return i >= 0 ? KeyedVector<KEY,VALUE>::valueAt(i) : mDefault;
 }
 
-}; // namespace android
+} // namespace android
 
 // ---------------------------------------------------------------------------
 

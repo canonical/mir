@@ -17,7 +17,7 @@
  */
 
 
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_logger.h"
 
 #include "mir/frontend/protobuf_ipc_factory.h"
@@ -240,8 +240,8 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
-            std::shared_ptr<mir::sessions::SessionStore> const&,
-            std::shared_ptr<mg::Display> const&,
+            std::shared_ptr<mir::shell::SessionStore> const&,
+            std::shared_ptr<mg::ViewableArea> const&,
             std::shared_ptr<mc::GraphicBufferAllocator> const&)
 
         {

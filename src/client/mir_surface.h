@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -22,7 +22,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/dimensions.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -39,7 +39,7 @@ class MemoryRegion;
 }
 }
 
-class MirSurface : public mir::client::ClientSurface
+class mir_toolkit::MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
@@ -56,8 +56,8 @@ public:
     ~MirSurface();
 
     MirWaitHandle* release_surface(
-            mir_surface_lifecycle_callback callback,
-            void *context);
+        mir_surface_lifecycle_callback callback,
+        void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();

@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -20,7 +20,7 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 
 #include <cassert>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,7 +32,7 @@ namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     const std::string& name,
-    std::shared_ptr<mc::BufferBundle> buffer_bundle) :
+    std::shared_ptr<BufferBundle> buffer_bundle) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
     alpha_value(1.0f),
@@ -82,7 +82,7 @@ mir::geometry::Size ms::Surface::size() const
     return buffer_bundle->bundle_size();
 }
 
-std::shared_ptr<mc::GraphicRegion> ms::Surface::graphic_region() const
+std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 {
     return buffer_bundle->lock_back_buffer();
 }

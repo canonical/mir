@@ -1,52 +1,52 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_listener.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/frontend/application_mediator_report.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/session.h"
+#include "mir/shell/surface.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_bundle.h"
+#include "mir/surfaces/buffer_bundle.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include <boost/throw_exception.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<sessions::SessionStore> const& session_store,
+    std::shared_ptr<shell::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::Display> const& graphics_display,
+    std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<ApplicationListener> const& listener,
+    std::shared_ptr<ApplicationMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     session_store(session_store),
     graphics_platform(graphics_platform),
-    graphics_display(graphics_display),
+    viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
-    listener(listener),
+    report(report),
     resource_cache(resource_cache)
 {
 }
@@ -57,7 +57,7 @@ void mir::frontend::ApplicationMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
-    listener->application_connect_called(request->application_name());
+    report->application_connect_called(request->application_name());
 
     application_session = session_store->open_session(request->application_name());
 
@@ -71,7 +71,7 @@ void mir::frontend::ApplicationMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto view_area = graphics_display->view_area();
+    auto view_area = viewable_area->view_area();
     display_info->set_width(view_area.size.width.as_uint32_t());
     display_info->set_height(view_area.size.height.as_uint32_t());
 
@@ -96,10 +96,10 @@ void mir::frontend::ApplicationMediator::create_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_create_surface_called(application_session->name());
+    report->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
-        sessions::SurfaceCreationParameters()
+        shell::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
@@ -144,12 +144,12 @@ void mir::frontend::ApplicationMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    using sessions::SurfaceId;
+    using shell::SurfaceId;
 
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_next_buffer_called(application_session->name());
+    report->application_next_buffer_called(application_session->name());
 
     auto surface = application_session->get_surface(SurfaceId(request->value()));
 
@@ -194,9 +194,9 @@ void mir::frontend::ApplicationMediator::release_surface(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_release_surface_called(application_session->name());
+    report->application_release_surface_called(application_session->name());
 
-    auto const id = sessions::SurfaceId(request->value());
+    auto const id = shell::SurfaceId(request->value());
 
     application_session->destroy_surface(id);
 
@@ -212,7 +212,7 @@ void mir::frontend::ApplicationMediator::disconnect(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    listener->application_disconnect_called(application_session->name());
+    report->application_disconnect_called(application_session->name());
 
     session_store->close_session(application_session);
     application_session.reset();

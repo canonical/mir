@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -21,7 +21,7 @@
 #define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
 
 #include "../client_buffer.h"
-#include "mir_client/mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
 
 #include <memory>
@@ -39,7 +39,7 @@ class GBMClientBuffer : public ClientBuffer
 {
 public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
-                    std::shared_ptr<MirBufferPackage>&& buffer_package,
+                    std::shared_ptr<mir_toolkit::MirBufferPackage>&& buffer_package,
                     geometry::Size size,
                     geometry::PixelFormat pf);
 
@@ -47,7 +47,7 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<MirBufferPackage> get_buffer_package() const;
+    std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const;
     MirNativeBuffer get_native_handle();
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
@@ -55,7 +55,7 @@ public:
 
 private:
     const std::shared_ptr<DRMFDHandler> drm_fd_handler;
-    const std::shared_ptr<MirBufferPackage> creation_package;
+    const std::shared_ptr<mir_toolkit::MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 };

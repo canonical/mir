@@ -40,10 +40,11 @@ namespace mi = mir::input;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace mir
-{
 namespace
 {
+char const* dummy[] = {0};
+int argc = 0;
+char const** argv = dummy;
 
 geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
@@ -118,13 +119,18 @@ class StubInputManager : public mi::InputManager
     void stop() {}
 };
 }
+
+mtf::TestingServerConfiguration::TestingServerConfiguration() :
+    DefaultServerConfiguration(argc, argv)
+{
 }
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
+
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager()
 {
     auto options = the_options();
-    if (options->get("tests_use_real_input", false))
-        return mi::create_input_manager(event_filters, the_display());
+    if (options->get("tests-use-real-input", false))
+        return mi::create_input_manager(the_event_filters(), the_display());
     else
         return std::make_shared<StubInputManager>();
 }
@@ -143,7 +149,7 @@ std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 
-    if (options->get("tests_use_real_graphics", false))
+    if (options->get("tests-use-real-graphics", false))
         return DefaultServerConfiguration::the_renderer();
     else
         return renderer(
@@ -171,4 +177,18 @@ std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{"./mir_socket_test"};
     return socket_file;
+}
+
+
+int main(int argc, char** argv)
+{
+    ::argc = std::remove_if(
+        argv,
+        argv+argc,
+        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
+    ::argv = const_cast<char const**>(argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }

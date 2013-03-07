@@ -88,7 +88,7 @@ enum {
      * Result from ALooper_pollOnce() and ALooper_pollAll():
      * An error occurred.
      */
-    ALOOPER_POLL_ERROR = -4,
+    ALOOPER_POLL_ERROR = -4
 };
 
 /**
@@ -143,12 +143,13 @@ enum {
      * The looper always sends notifications about invalid file descriptors; it is not necessary
      * to specify this event flag in the requested event set.
      */
-    ALOOPER_EVENT_INVALID = 1 << 4,
+    ALOOPER_EVENT_INVALID = 1 << 4
 };
 
 /**
  * For callback-based event loops, this is the prototype of the function
- * that is called.  It is given the file descriptor it is associated with,
+ * that is called when a file descriptor event occurs.
+ * It is given the file descriptor it is associated with,
  * a bitmask of the poll events that were triggered (typically ALOOPER_EVENT_INPUT),
  * and the data pointer that was originally supplied.
  *
@@ -249,7 +250,7 @@ int ALooper_addFd(ALooper* looper, int fd, int ident, int events,
 int ALooper_removeFd(ALooper* looper, int fd);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif // ANDROID_NATIVE_WINDOW_H

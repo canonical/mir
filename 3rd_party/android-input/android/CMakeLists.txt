@@ -49,7 +49,7 @@ endif()
 
 
 add_library(
-  android-input
+  android-input SHARED
   # The stuff that we want
   frameworks/base/services/input/EventHub.cpp
   frameworks/base/services/input/InputApplication.cpp
@@ -85,8 +85,19 @@ if(MIR_USE_BIONIC)
     skia)
 endif()
 
+target_link_libraries(
+  android-input
+
+  ${Boost_LIBRARIES}
+  -lpthread
+)
+
 set_target_properties(
   android-input
   PROPERTIES
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
-  )
+)
+
+install(
+  TARGETS android-input
+  LIBRARY DESTINATION lib)

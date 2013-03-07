@@ -18,17 +18,18 @@
 
 #include "mir/surfaces/surface_stack.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,8 +40,9 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -56,7 +58,7 @@ public:
     virtual void shutdown() {}
 };
 
-struct MockBufferBundleFactory : public mc::BufferBundleFactory
+struct MockBufferBundleFactory : public ms::BufferBundleFactory
 {
     MockBufferBundleFactory()
     {
@@ -67,14 +69,14 @@ struct MockBufferBundleFactory : public mc::BufferBundleFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::shared_ptr<mc::BufferBundle>(
+                        std::shared_ptr<ms::BufferBundle>(
                                 new mc::BufferBundleSurfaces(
                                 std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper())))));
     }
 
     MOCK_METHOD1(
         create_buffer_bundle,
-        std::shared_ptr<mc::BufferBundle>(mc::BufferProperties const&));
+        std::shared_ptr<ms::BufferBundle>(mc::BufferProperties const&));
 };
 
 struct MockFilterForRenderables : public mc::FilterForRenderables
@@ -121,9 +123,9 @@ TEST(
         create_buffer_bundle(_))
             .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     stack.destroy_surface(surface);
 }
@@ -147,7 +149,7 @@ TEST(
         create_buffer_bundle(_)).Times(0);
     EXPECT_CALL(renderer, render(_,_)).Times(0);
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     {
         stack.for_each_if(filter, renderable_operator);
@@ -167,14 +169,14 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -205,14 +207,14 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -243,14 +245,14 @@ TEST(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        msess::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -291,9 +293,9 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
                     Field(&mc::BufferProperties::usage, usage))))
         .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(&buffer_bundle_factory);
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msess::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+        msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
 
     stack.destroy_surface(surface);
 }

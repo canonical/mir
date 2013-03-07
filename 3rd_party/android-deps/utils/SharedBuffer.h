@@ -139,7 +139,7 @@ bool SharedBuffer::onlyOwner() const {
     return (mRefs == 1);
 }
 
-}; // namespace android
+} // namespace android
 
 // ---------------------------------------------------------------------------
 

@@ -81,7 +81,7 @@ TEST(Compositor, render)
     mtd::MockDisplay display;
     mtd::MockDisplayBuffer display_buffer;
 
-    mc::Compositor comp(&render_view, mt::fake_shared(mock_renderer));
+    mc::Compositor comp(mt::fake_shared(render_view), mt::fake_shared(mock_renderer));
 
     EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
@@ -135,7 +135,7 @@ TEST(Compositor, skips_invisible_renderables)
 
     FakeRenderView render_view(renderables);
 
-    mc::Compositor comp(&render_view, mt::fake_shared(mock_renderer));
+    mc::Compositor comp(mt::fake_shared(render_view), mt::fake_shared(mock_renderer));
 
     comp.render(&display);
 }

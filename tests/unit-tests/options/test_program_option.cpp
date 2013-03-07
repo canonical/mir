@@ -37,6 +37,10 @@ struct ProgramOption : testing::Test
     {
         desc.add_options()
             ("file,f", bpo::value<std::string>(), "<socket filename>")
+            ("flag-yes", bpo::value<bool>(), "flag \"yes\"")
+            ("flag-true", bpo::value<bool>(), "flag \"true\"")
+            ("flag-no", bpo::value<bool>(), "flag \"no\"")
+            ("flag-false", bpo::value<bool>(), "flag \"false\"")
             ("help,h", "this help text");
     }
 
@@ -80,6 +84,30 @@ TEST_F(ProgramOption, parse_command_line_short)
     EXPECT_FALSE(po.is_set("garbage"));
 }
 
+TEST_F(ProgramOption, parse_command_yes_no)
+{
+    mir::options::ProgramOption po;
+
+    const int argc = 9;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--flag-yes", "yes",
+        "--flag-true", "true",
+        "--flag-no", "no",
+        "--flag-false", "false"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_TRUE(po.get("flag-yes", false));
+    EXPECT_TRUE(po.get("flag-true", false));
+    EXPECT_FALSE(po.get("flag-no", true));
+    EXPECT_FALSE(po.get("flag-false", true));
+
+    EXPECT_FALSE(po.get("flag-default", false));
+    EXPECT_TRUE(po.get("flag-default", true));
+}
+
 TEST_F(ProgramOption, parse_command_line_help)
 {
     mir::options::ProgramOption po;
@@ -97,21 +125,23 @@ TEST_F(ProgramOption, parse_command_line_help)
 
 TEST(ProgramOptionEnv, parse_environment)
 {
-    char const* key = "some_key";
+    // Env variables should be uppercase and "_" delimited
+    char const* name = "some-key";
+    char const* key = "SOME_KEY";
     char const* value = "test_value";
     auto const env = std::string(__PRETTY_FUNCTION__) + key;
     setenv(env.c_str(), value, true);
 
     bpo::options_description desc;
     desc.add_options()
-        (key, bpo::value<std::string>());
+        (name, bpo::value<std::string>());
 
     mir::options::ProgramOption po;
     po.parse_environment(desc, __PRETTY_FUNCTION__);
 
-    EXPECT_EQ(value, po.get(key, "default"));
+    EXPECT_EQ(value, po.get(name, "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));
-    EXPECT_TRUE(po.is_set(key));
+    EXPECT_TRUE(po.is_set(name));
     EXPECT_FALSE(po.is_set("garbage"));
 }
 

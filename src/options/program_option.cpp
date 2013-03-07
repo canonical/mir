@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -44,8 +44,26 @@ void mo::ProgramOption::parse_environment(
     po::options_description const& desc,
     char const* prefix)
 {
-    po::store(po::parse_environment(desc, prefix), options);
+    auto parsed_options = po::parse_environment(
+        desc,
+        [=](std::string const& from) -> std::string
+        {
+             auto const sizeof_prefix = strlen(prefix);
 
+             if (from.length() < sizeof_prefix || 0 != from.find(prefix)) return std::string();
+
+             std::string result(from, sizeof_prefix);
+
+             for(auto& ch : result)
+             {
+                 if (ch == '_') ch = '-';
+                 else ch = tolower(ch);
+             }
+
+             return result;
+        });
+
+    po::store(parsed_options, options);
 }
 
 void mo::ProgramOption::parse_file(
@@ -91,8 +109,13 @@ bool mo::ProgramOption::is_set(char const* name) const
 }
 
 
-bool mo::ProgramOption::get(char const* /*name*/, bool default_) const
+bool mo::ProgramOption::get(char const* name, bool default_) const
 {
+    if (options.count(name))
+    {
+        return options[name].as<bool>();
+    }
+
     return default_;
 }
 
