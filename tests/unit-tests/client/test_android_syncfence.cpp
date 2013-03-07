@@ -73,7 +73,7 @@ TEST_F(SyncFenceTest, test_invalid_fd_does_not_call_ioctl_on_wait)
 {
     using namespace testing;
 
-    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    mcla::SyncFence fence(invalid_fd, ioctl_mock);
     EXPECT_CALL(*ioctl_mock, ioctl(_, _, _))
         .Times(0);
 

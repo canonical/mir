@@ -50,11 +50,17 @@ mcla::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
 
 mcla::SyncFence::~SyncFence()
 {
-    ioctl_wrapper->close(fence_fd);
+    if (fence_fd > 0)
+    {
+        ioctl_wrapper->close(fence_fd);
+    }
 }
 
 void mcla::SyncFence::wait()
 {
-    int timeout = -1;
-    ioctl_wrapper->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
+    if (fence_fd > 0)
+    {
+        int timeout = -1;
+        ioctl_wrapper->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
+    }
 }
