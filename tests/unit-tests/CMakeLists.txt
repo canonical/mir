@@ -18,6 +18,8 @@ endif()
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
+
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 
 target_link_libraries(

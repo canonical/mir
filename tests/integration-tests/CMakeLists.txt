@@ -17,6 +17,8 @@ if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
+
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
