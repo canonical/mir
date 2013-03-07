@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_

@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "mir_wait_handle.h"
