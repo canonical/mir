@@ -22,7 +22,7 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/session_store.h"
-#include "mir/shell/surface_factory.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
@@ -32,6 +32,7 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,34 +48,16 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-/*
- * TODO: Fix design so that it's possible to unit-test ApplicationMediator
- * without having to create doubles for classes so deep in its dependency
- * hierarchy.
- *
- * In particular, it would be nice if msh::ApplicationSession was stubable/mockable.
- */
-
-class StubSurfaceFactory : public msh::SurfaceFactory
-{
- public:
-    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
-    {
-        return std::shared_ptr<msh::Surface>();
-    }
-};
-
 class StubSessionStore : public msh::SessionStore
 {
 public:
     StubSessionStore()
-        : factory{std::make_shared<StubSurfaceFactory>()}
     {
     }
 
     std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msh::ApplicationSession>(factory, "stub");
+        return std::make_shared<mtd::MockSession>();
     }
 
     void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
@@ -82,8 +65,6 @@ public:
     void shutdown() {}
     void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
     void focus_session_with_lightdm_id(int) {}
-
-    std::shared_ptr<msh::SurfaceFactory> factory;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
