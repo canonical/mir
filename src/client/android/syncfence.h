@@ -20,6 +20,8 @@
 
 #include <memory>
 
+#define SYNC_IOC_WAIT 0x40043E00
+
 namespace mir
 {
 namespace client
@@ -30,7 +32,7 @@ namespace android
 class IoctlWrapper
 {
 public:
-    virtual int ioctl(int fd, unsigned long int request, int timeout) = 0;
+    virtual int ioctl(int fd, unsigned long int request, int* timeout) = 0;
     virtual int close(int fd) = 0;
 };
 
@@ -47,11 +49,13 @@ public:
 
     //override using real ioctl's with something else. useful for injecting mocks
     SyncFence(int /*fd*/, std::shared_ptr<IoctlWrapper> const& wrapper);
+    ~SyncFence();
 
     void wait();
 
 private:
     std::shared_ptr<IoctlWrapper> ioctl_wrapper;
+    int fence_fd;
 };
 
 }

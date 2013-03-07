@@ -28,7 +28,7 @@ namespace
 class MockIoctlWrapper : public mcla::IoctlWrapper
 {
 public:
-    MOCK_METHOD3(ioctl, int(int, unsigned long int, int));
+    MOCK_METHOD3(ioctl, int(int, unsigned long int, int*));
     MOCK_METHOD1(close, int(int));
 };
 }
@@ -37,7 +37,7 @@ class SyncFenceTest : public ::testing::Test
 {
 public:
     SyncFenceTest()
-     : ioctl_mock(std::make_shared<MockIoctlWrapper>()),
+     : ioctl_mock(std::make_shared<testing::NiceMock<MockIoctlWrapper>>()),
        dummyfd(44)
     {
     }
@@ -48,12 +48,18 @@ public:
 
 TEST_F(SyncFenceTest, test_fd_wait)
 {
-    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    using namespace testing;
 
-    EXPECT_CALL(*ioctl_mock, ioctl(dummyfd, 44 , testing::Lt(0)))
-        .Times(1);
+    int timeout_val;
+    int* t2;
+    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    EXPECT_CALL(*ioctl_mock, ioctl(dummyfd, SYNC_IOC_WAIT, _))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<2>(&t2), SaveArgPointee<2>(&timeout_val),
+                        Return(0)));
 
     fence.wait();
+    EXPECT_GT(0, timeout_val);
 }
 
 TEST_F(SyncFenceTest, test_fd_destruction_closes_fd)

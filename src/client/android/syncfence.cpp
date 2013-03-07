@@ -24,7 +24,7 @@ namespace
 class IoctlControl : public mcla::IoctlWrapper
 {
 public:
-    int ioctl(int fd, unsigned long int request, int timeout)
+    int ioctl(int fd, unsigned long int request, int* timeout)
     {
         return ioctl(fd, request, timeout);
     }
@@ -36,17 +36,25 @@ public:
 };
 }
 
-mcla::SyncFence::SyncFence(int /*fd*/)
- : ioctl_wrapper(std::make_shared<IoctlControl>())
+mcla::SyncFence::SyncFence(int fd)
+ : ioctl_wrapper(std::make_shared<IoctlControl>()),
+   fence_fd(fd)
 {
 }
 
-mcla::SyncFence::SyncFence(int /*fd*/, std::shared_ptr<IoctlWrapper> const& wrapper)
- : ioctl_wrapper(wrapper)
+mcla::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
+ : ioctl_wrapper(wrapper),
+   fence_fd(fd)
 {
+}
+
+mcla::SyncFence::~SyncFence()
+{
+    ioctl_wrapper->close(fence_fd);
 }
 
 void mcla::SyncFence::wait()
 {
-
+    int timeout = -1;
+    ioctl_wrapper->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
 }
