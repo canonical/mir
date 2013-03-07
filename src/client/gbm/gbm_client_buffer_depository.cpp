@@ -57,8 +57,7 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
             }
         }
     }
-    auto find_it = buffers.find(id);
-    if (find_it == buffers.end())
+    if (buffers.find(id) == buffers.end())
         buffers[id] = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
     current_buffer = id;
 }
