@@ -30,10 +30,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-struct MockSyncFence : public mcla::SyncFence
-{
-    MOCK_METHOD0(wait, void());
-};
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
@@ -92,7 +88,6 @@ protected:
     MirSurfaceParameters surf_params;
     std::shared_ptr<MockClientBuffer> mock_client_buffer;
     std::shared_ptr<MockMirSurface> mock_surface;
-    testing::NiceMock<mcla::MockSyncFence> mock_fence;
 };
 
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
@@ -137,21 +132,9 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     EXPECT_CALL(*mock_surface, next_buffer(_,_))
         .Times(1);
 
-    interpreter.driver_returns_buffer(&buffer, mock_fence);
+    interpreter.driver_returns_buffer(&buffer);
 }
 
-TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
-{
-    using namespace testing;
-    ANativeWindowBuffer buffer;
-
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
-
-    EXPECT_CALL(*mock_fence, wait())
-        .Times(1);
-
-    interpreter.driver_returns_buffer(&buffer, mock_fence);
-}
 
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)

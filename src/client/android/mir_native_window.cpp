@@ -18,6 +18,8 @@
 
 #include "mir_native_window.h"
 #include "android_driver_interpreter.h"
+#include "syncfence.h"
+#include <stdio.h>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
@@ -82,14 +84,16 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer, -1);
+    auto fence = std::make_shared<mcla::SyncFence>(-1);
+    return self->queueBuffer(buffer, fence);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer(buffer, fence_fd);
+    auto fence = std::make_shared<mcla::SyncFence>(fence_fd);
+    return self->queueBuffer(buffer, fence);
 
 }
 
@@ -146,9 +150,10 @@ int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to
     return 0;
 }
 
-int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence_fd)
+int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& fence)
 {
-    driver_interpreter->driver_returns_buffer(buffer, fence_fd);
+    fence->wait();
+    driver_interpreter->driver_returns_buffer(buffer);
     return 0;
 }
 

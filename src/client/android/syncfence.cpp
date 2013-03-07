@@ -17,6 +17,8 @@
  */
 
 #include "syncfence.h"
+#include <unistd.h>
+#include <sys/ioctl.h>
 namespace mcla = mir::client::android;
 
 namespace
@@ -26,12 +28,12 @@ class IoctlControl : public mcla::IoctlWrapper
 public:
     int ioctl(int fd, unsigned long int request, int* timeout)
     {
-        return ioctl(fd, request, timeout);
+        return ::ioctl(fd, request, timeout);
     }
 
     int close(int fd)
     {
-        return close(fd);
+        return ::close(fd);
     }
 };
 }

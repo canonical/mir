@@ -45,10 +45,10 @@ public:
 class SyncFence : public AndroidFence
 {
 public:
-    SyncFence(int /*fd*/);
+    SyncFence(int fd);
 
     //override using real ioctl's with something else. useful for injecting mocks
-    SyncFence(int /*fd*/, std::shared_ptr<IoctlWrapper> const& wrapper);
+    SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
     ~SyncFence();
 
     void wait();
