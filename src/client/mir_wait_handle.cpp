@@ -21,7 +21,7 @@
 mir_toolkit::MirWaitHandle::MirWaitHandle() :
     guard(),
     wait_condition(),
-    expecting(-1),    // <0 means legacy mode where expecting is not used
+    expecting(0),
     received(0)
 {
 }
@@ -35,10 +35,7 @@ void mir_toolkit::MirWaitHandle::expect_result()
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (expecting < 0)
-        expecting = 1;
-    else
-        expecting++;
+    expecting++;
 }
 
 void mir_toolkit::MirWaitHandle::result_received()
@@ -53,11 +50,10 @@ void mir_toolkit::MirWaitHandle::wait_for_result()
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    while ((expecting < 0 && !received) || (received < expecting))
+    while ((!expecting && !received) || (received < expecting))
         wait_condition.wait(lock);
 
     received = 0;
-    if (expecting >= 0)
-        expecting = 0;
+    expecting = 0;
 }
 
