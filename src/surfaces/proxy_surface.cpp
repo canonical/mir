@@ -123,7 +123,7 @@ int ms::BasicProxySurface::configure(MirSurfaceAttrib attrib, int value)
 
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,
-        sessions::SurfaceCreationParameters const& params) :
+        shell::SurfaceCreationParameters const& params) :
     BasicProxySurface(surface_stack_->create_surface(params)),
     surface_stack(surface_stack_)
 {

@@ -126,11 +126,11 @@ mtf::TestingServerConfiguration::TestingServerConfiguration() :
 }
 
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager()
 {
     auto options = the_options();
     if (options->get("tests-use-real-input", false))
-        return mi::create_input_manager(event_filters, the_display());
+        return mi::create_input_manager(the_event_filters(), the_display());
     else
         return std::make_shared<StubInputManager>();
 }

@@ -38,7 +38,7 @@ namespace compositor
 class GraphicBufferAllocator;
 }
 
-namespace sessions
+namespace shell
 {
 class SessionStore;
 class Session;
@@ -57,7 +57,7 @@ class ApplicationMediator : public mir::protobuf::DisplayServer
 public:
 
     ApplicationMediator(
-        std::shared_ptr<sessions::SessionStore> const& session_store,
+        std::shared_ptr<shell::SessionStore> const& session_store,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
@@ -109,7 +109,7 @@ public:
                         google::protobuf::Closure* done);
     
 private:
-    std::shared_ptr<sessions::SessionStore> const session_store;
+    std::shared_ptr<shell::SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
     // TODO this is a dubious dependency - to get display_info (is there only one?)
@@ -120,7 +120,7 @@ private:
     std::shared_ptr<ApplicationMediatorReport> const report;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::shared_ptr<sessions::Session> application_session;
+    std::shared_ptr<shell::Session> application_session;
 };
 
 }

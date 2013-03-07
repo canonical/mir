@@ -250,9 +250,9 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(nullptr, anw->dequeueBuffer);
+    ASSERT_NE(nullptr, anw->dequeueBuffer_DEPRECATED);
     EXPECT_NO_THROW({
-        anw->dequeueBuffer(anw, &tmp);
+        anw->dequeueBuffer_DEPRECATED(anw, &tmp);
     });
 
     delete anw;
@@ -269,7 +269,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_calls_surface_get_current)
         .WillOnce(Return(mock_client_buffer));
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    anw->dequeueBuffer(anw, &tmp);
+    anw->dequeueBuffer_DEPRECATED(anw, &tmp);
 
     delete anw;
 }
@@ -293,7 +293,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_gets_native_handle_from_re
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    anw->dequeueBuffer(anw, &tmp);
+    anw->dequeueBuffer_DEPRECATED(anw, &tmp);
 
     EXPECT_EQ(tmp, &buffer);
     delete anw;
@@ -308,7 +308,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    auto ret = anw->dequeueBuffer(anw, &tmp);
+    auto ret = anw->dequeueBuffer_DEPRECATED(anw, &tmp);
     EXPECT_EQ(0, ret);
 
     delete anw;
@@ -322,9 +322,9 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(nullptr, anw->queueBuffer);
+    ASSERT_NE(nullptr, anw->queueBuffer_DEPRECATED);
     EXPECT_NO_THROW({
-        anw->queueBuffer(anw, tmp);
+        anw->queueBuffer_DEPRECATED(anw, tmp);
     });
 
     delete anw;
@@ -340,7 +340,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_advances_buffer)
         .Times(1);
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    anw->queueBuffer(anw, tmp);
+    anw->queueBuffer_DEPRECATED(anw, tmp);
 
     delete anw;
 }
@@ -353,9 +353,9 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(nullptr, anw->cancelBuffer);
+    ASSERT_NE(nullptr, anw->cancelBuffer_DEPRECATED);
     EXPECT_NO_THROW({
-        anw->cancelBuffer(anw, tmp);
+        anw->cancelBuffer_DEPRECATED(anw, tmp);
     });
 
     delete anw;
@@ -369,9 +369,9 @@ TEST_F(AndroidNativeWindowTest, native_window_lock_hook_callable)
 
     anw = new mcla::MirNativeWindow(mock_surface.get());
 
-    ASSERT_NE(nullptr, anw->lockBuffer);
+    ASSERT_NE(nullptr, anw->lockBuffer_DEPRECATED);
     EXPECT_NO_THROW({
-        anw->lockBuffer(anw, tmp);
+        anw->lockBuffer_DEPRECATED(anw, tmp);
     });
 
     delete anw;

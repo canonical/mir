@@ -17,10 +17,10 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -30,7 +30,7 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mtd = mir::test::doubles;
 
@@ -41,10 +41,10 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
     void SetUp()
     {
         factory = std::make_shared<mtd::MockSurfaceFactory>();
-        container = std::make_shared<msess::SessionContainer>();
+        container = std::make_shared<msh::SessionContainer>();
     }
     std::shared_ptr<mtd::MockSurfaceFactory> factory;
-    std::shared_ptr<msess::SessionContainer> container;
+    std::shared_ptr<msh::SessionContainer> container;
     
     static std::string const testing_app_name1;
     static std::string const testing_app_name2;
@@ -60,15 +60,15 @@ TEST_F(RegistrationOrderFocusSequenceSetup, focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name1);
-    auto app2 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name2);
-    auto app3 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name3);
+    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2);
+    auto app3 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name3);
 
     container->insert_session(app1);
     container->insert_session(app2);
     container->insert_session(app3);
 
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    msh::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app2, focus_sequence.successor_of(app1));
     EXPECT_EQ(app3, focus_sequence.successor_of(app2));
     EXPECT_EQ(app1, focus_sequence.successor_of(app3));
@@ -78,14 +78,14 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name1);
-    auto app2 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name2);
-    auto app3 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name3);
+    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2);
+    auto app3 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name3);
     container->insert_session(app1);
     container->insert_session(app2);
     container->insert_session(app3);
 
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    msh::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app2, focus_sequence.predecessor_of(app3));
     EXPECT_EQ(app1, focus_sequence.predecessor_of(app2));
     EXPECT_EQ(app3, focus_sequence.predecessor_of(app1));
@@ -95,10 +95,10 @@ TEST_F(RegistrationOrderFocusSequenceSetup, identity)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name1);
+    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
     container->insert_session(app1);
 
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    msh::RegistrationOrderFocusSequence focus_sequence(container);
     EXPECT_EQ(app1, focus_sequence.predecessor_of(app1));
     EXPECT_EQ(app1, focus_sequence.successor_of(app1));
 }
@@ -107,11 +107,11 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name1);
-    auto app2 = std::make_shared<msess::ApplicationSession>(factory, testing_app_name2);
-    auto null_session = std::shared_ptr<msess::ApplicationSession>();
+    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
+    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2);
+    auto null_session = std::shared_ptr<msh::ApplicationSession>();
 
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    msh::RegistrationOrderFocusSequence focus_sequence(container);
     
     EXPECT_EQ(null_session, focus_sequence.default_focus());
     container->insert_session(app1);
@@ -124,10 +124,10 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
 {
     using namespace ::testing;
 
-    auto invalid_session = std::make_shared<msess::ApplicationSession>(factory, testing_app_name1);
-    auto null_session = std::shared_ptr<msess::ApplicationSession>();
+    auto invalid_session = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
+    auto null_session = std::shared_ptr<msh::ApplicationSession>();
     
-    msess::RegistrationOrderFocusSequence focus_sequence(container);
+    msh::RegistrationOrderFocusSequence focus_sequence(container);
 
     EXPECT_THROW({
             focus_sequence.successor_of(null_session);
