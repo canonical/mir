@@ -39,7 +39,7 @@ TEST(WaitHandle, asymmetric_synchronous)
 {
     MirWaitHandle w;
 
-    for (int i = 1; i < 100; i++)
+    for (int i = 1; i <= 100; i++)
     {
         for (int j = 1; j <= i; j++)
             w.result_received();
@@ -54,13 +54,13 @@ namespace
 {
     int symmetric_result = 0;
 
-    void symmetric_thread(MirWaitHandle *w, MirWaitHandle *q, int max)
+    void symmetric_thread(MirWaitHandle *in, MirWaitHandle *out, int max)
     {
         for (int i = 1; i <= max; i++)
         {
+            in->wait_for_result();
             symmetric_result = i;
-            w->result_received();
-            q->wait_for_result();
+            out->result_received();
         }
     }
 }
@@ -68,14 +68,14 @@ namespace
 TEST(WaitHandle, symmetric_asynchronous)
 {
     const int max = 100;
-    MirWaitHandle w, q;
-    std::thread t(symmetric_thread, &w, &q, max);
+    MirWaitHandle in, out;
+    std::thread t(symmetric_thread, &in, &out, max);
 
     for (int i = 1; i <= max; i++)
     {
-        w.wait_for_result();
+        in.result_received();
+        out.wait_for_result();
         ASSERT_EQ(symmetric_result, i);
-        q.result_received();
     }
     t.join();
 }
@@ -84,14 +84,14 @@ namespace
 {
     int asymmetric_result = 0;
 
-    void asymmetric_thread(MirWaitHandle *w, MirWaitHandle *q, int max)
+    void asymmetric_thread(MirWaitHandle *in, MirWaitHandle *out, int max)
     {
         for (int i = 1; i <= max; i++)
         {
+            in->wait_for_result();
             asymmetric_result = i;
             for (int j = 1; j <= i; j++)
-                w->result_received();
-            q->wait_for_result();
+                out->result_received();
         }
     }
 }
@@ -99,16 +99,16 @@ namespace
 TEST(WaitHandle, asymmetric_asynchronous)
 {
     const int max = 100;
-    MirWaitHandle w, q;
-    std::thread t(asymmetric_thread, &w, &q, max);
+    MirWaitHandle in, out;
+    std::thread t(asymmetric_thread, &in, &out, max);
 
     for (int i = 1; i <= max; i++)
     {
+        in.result_received();
         for (int j = 1; j <= i; j++)
-            w.expect_result();
-        w.wait_for_result();
+            out.expect_result();
+        out.wait_for_result();
         ASSERT_EQ(asymmetric_result, i);
-        q.result_received();
     }
     t.join();
 }
