@@ -66,22 +66,22 @@ int main(int argc, char *argv[])
         "}                                    \n";
 
     const char fshadersrc[] =
-        "precision mediump float;                        \n"
-        "uniform float theta;                            \n"
-        "varying vec2 texcoord;                          \n"
-        "uniform vec4 col;                               \n"
-        "void main()                                     \n"
-        "{                                               \n"
-        "    float u = texcoord.x;         \n"
-        "    float v = texcoord.y;         \n"
-        "    float t = mod(theta, 6.283185308);   \n"
-        "    float x = cos(17.4 * u) +  \n"
-        "              cos(13.3 * t * u) + \n"
-        "              cos(7.77 * v) + \n"
-        "              cos(11.39 * t * v); \n"
-        "    x /= 4.0;                                   \n"
-        "    gl_FragColor = vec4(x, 0, 0.0, 1.0);        \n"
-        "}                                               \n";
+        "precision mediump float;                                \n"
+        "uniform float theta;                                    \n"
+        "varying vec2 texcoord;                                  \n"
+        "uniform vec4 col;                                       \n"
+        "void main()                                             \n"
+        "{                                                       \n"
+        "    float u = texcoord.x * 6.283185308;                 \n"
+        "    float v = texcoord.y * 6.283185308;                 \n"
+        "    float t = mod(theta, 6.283185308);                  \n"
+        "    float us = cos(3.0 * u + 7.0 * t) +                 \n"
+        "               cos(2.0 * u * cos(3.0 * t));             \n"
+        "    float vs = cos(2.3 * v + 8.0 * t) +                 \n"
+        "               cos(3.7 * v * cos(2.0 * t));             \n"
+        "    float x = ((us * vs / 2.0) + 1.0) / 2.0;            \n"
+        "    gl_FragColor = vec4(x, 0, 0.0, 1.0);                \n"
+        "}                                                       \n";
 
     const GLfloat vertices[] =
     {
