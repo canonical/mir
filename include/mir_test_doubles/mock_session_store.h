@@ -21,6 +21,8 @@
 
 #include "mir/shell/session_store.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test

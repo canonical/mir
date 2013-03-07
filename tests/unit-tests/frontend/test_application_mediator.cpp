@@ -23,13 +23,13 @@
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_store.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session_store.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -55,13 +55,12 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-class DestructionRecordingSession : public testing::NiceMock<mtd::MockSession>
+class StubbedSession : public testing::NiceMock<mtd::MockSession>
 {
 public:
-    DestructionRecordingSession()
+    StubbedSession()
     {
         using namespace ::testing;
-        destroyed = false;
         
         ON_CALL(*this, create_surface(_)).WillByDefault(Return(test_surface_id));
         ON_CALL(*this, get_surface(_)).WillByDefault(Return(mt::fake_shared(mock_surface)));
@@ -71,36 +70,12 @@ public:
         ON_CALL(mock_surface, client_buffer()).WillByDefault(Return(mt::fake_shared(stub_buffer)));
     }
 
-    ~DestructionRecordingSession() { destroyed = true; }
-
-    static bool destroyed;
     static msh::SurfaceId test_surface_id;
     testing::NiceMock<mtd::MockSurface> mock_surface;
     mtd::StubBuffer stub_buffer;
 };
 
-msh::SurfaceId DestructionRecordingSession::test_surface_id{29};
-
-bool DestructionRecordingSession::destroyed{true};
-
-class StubSessionStore : public msh::SessionStore
-{
-public:
-    StubSessionStore()
-    {
-    }
-
-    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
-    {
-        return std::make_shared<DestructionRecordingSession>();
-    }
-
-    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
-
-    void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
-    void focus_session_with_lightdm_id(int) {}
-};
+msh::SurfaceId StubbedSession::test_surface_id{29};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -144,7 +119,7 @@ class StubPlatform : public mg::Platform
 struct ApplicationMediatorTest : public ::testing::Test
 {
     ApplicationMediatorTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<testing::NiceMock<mtd::MockSessionStore>>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
@@ -154,9 +129,12 @@ struct ApplicationMediatorTest : public ::testing::Test
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
+        using namespace ::testing;
+
+        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
     }
 
-    std::shared_ptr<msh::SessionStore> const session_store;
+    std::shared_ptr<testing::NiceMock<mtd::MockSessionStore>> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
@@ -170,16 +148,15 @@ struct ApplicationMediatorTest : public ::testing::Test
 
 TEST_F(ApplicationMediatorTest, disconnect_releases_session)
 {
+    using namespace ::testing;
+
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+    
+    EXPECT_CALL(*session_store, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-
-    EXPECT_FALSE(DestructionRecordingSession::destroyed);
-
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-
-    EXPECT_TRUE(DestructionRecordingSession::destroyed);
 }
 
 TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
