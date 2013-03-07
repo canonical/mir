@@ -49,7 +49,7 @@ static void incRef(android_native_base_t*)
 int query_static(const ANativeWindow* anw, int key, int* value)
 {
     auto self = static_cast<const mcla::MirNativeWindow*>(anw);
-    return self->query_internal(key, value);
+    return self->query(key, value);
 }
 
 int perform_static(ANativeWindow* window, int key, ...)
@@ -57,7 +57,7 @@ int perform_static(ANativeWindow* window, int key, ...)
     va_list args;
     va_start(args, key);
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    auto ret = self->perform_internal(key, args);
+    auto ret = self->perform(key, args);
     va_end(args);
 
     return ret;
@@ -67,7 +67,7 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->dequeueBuffer_internal(buffer);
+    return self->dequeueBuffer(buffer);
 }
 
 int dequeueBuffer_static (struct ANativeWindow* window,
@@ -75,21 +75,21 @@ int dequeueBuffer_static (struct ANativeWindow* window,
 {
     *fence_fd = -1;
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->dequeueBuffer_internal(buffer);
+    return self->dequeueBuffer(buffer);
 }
 
 int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer_internal(buffer, -1);
+    return self->queueBuffer(buffer, -1);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    return self->queueBuffer_internal(buffer, fence_fd);
+    return self->queueBuffer(buffer, fence_fd);
 
 }
 
@@ -140,25 +140,25 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
 }
 
-int mcla::MirNativeWindow::dequeueBuffer_internal (struct ANativeWindowBuffer** buffer_to_driver)
+int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     *buffer_to_driver = driver_interpreter->driver_requests_buffer();
     return 0;
 }
 
-int mcla::MirNativeWindow::queueBuffer_internal(struct ANativeWindowBuffer* buffer, int fence_fd)
+int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     driver_interpreter->driver_returns_buffer(buffer, fence_fd);
     return 0;
 }
 
-int mcla::MirNativeWindow::query_internal(int key, int* value ) const
+int mcla::MirNativeWindow::query(int key, int* value ) const
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
 
-int mcla::MirNativeWindow::perform_internal(int key, va_list arg_list )
+int mcla::MirNativeWindow::perform(int key, va_list arg_list )
 {
     int ret = 0;
     va_list args;
