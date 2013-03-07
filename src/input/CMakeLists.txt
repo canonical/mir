@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-
 set(
   INPUT_SOURCES
 
@@ -20,3 +18,4 @@ add_library(
 
   ${INPUT_SOURCES}
 )
+uses_android_input(mirinput)

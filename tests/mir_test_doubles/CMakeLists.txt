@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-
 include_directories(
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
@@ -31,6 +29,7 @@ endif()
 add_library(
   mir-test-doubles STATIC
   ${TEST_UTILS_SRCS})
+uses_android_input(mir-test-doubles)
 
 target_link_libraries(
   mir-test-doubles

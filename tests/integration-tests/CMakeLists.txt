@@ -17,8 +17,6 @@ if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
@@ -40,6 +38,7 @@ add_subdirectory(cucumber)
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
+uses_android_input(integration-tests)
 
 target_link_libraries(
   integration-tests
