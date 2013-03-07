@@ -76,10 +76,12 @@ int main(int argc, char *argv[])
         "    float v = texcoord.y * 6.283185308;                 \n"
         "    float t = mod(theta, 6.283185308);                  \n"
         "    float us = cos(3.0 * u + 7.0 * t) +                 \n"
+        "               cos(2.0 * v * cos(4.0 * t)) +            \n"
         "               cos(2.0 * u * cos(3.0 * t));             \n"
         "    float vs = cos(2.3 * v + 8.0 * t) +                 \n"
+        "               cos(1.6 * u * cos(3.2 * t)) +            \n"
         "               cos(3.7 * v * cos(2.0 * t));             \n"
-        "    float x = ((us * vs / 2.0) + 1.0) / 2.0;            \n"
+        "    float x = ((us * vs / 3.0) + 1.0) / 2.0;            \n"
         "    gl_FragColor = vec4(x, 0, 0.0, 1.0);                \n"
         "}                                                       \n";
 
