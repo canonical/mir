@@ -29,10 +29,10 @@ namespace client
 namespace android
 {
 
-class ANativeWindowInterpreter : public AndroidDriverInterpreter
+class ClientSurfaceInterpreter : public AndroidDriverInterpreter
 {
 public:
-    explicit ANativeWindowInterpreter(ClientSurface* surface);
+    explicit ClientSurfaceInterpreter(ClientSurface* surface);
 
     ANativeWindowBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd );

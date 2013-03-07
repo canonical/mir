@@ -18,7 +18,7 @@
 
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
-#include "src/client/android/anativewindow_interpreter.h"
+#include "src/client/android/client_surface_interpreter.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -92,7 +92,7 @@ protected:
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 {
     using namespace testing;
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     EXPECT_CALL(*mock_surface, get_current_buffer())
         .Times(1)
@@ -108,7 +108,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
     ANativeWindowBuffer buffer;
     buffer.handle = &handle;
 
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     EXPECT_CALL(*mock_client_buffer, get_native_handle())
         .Times(1)
@@ -127,7 +127,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     ANativeWindowBuffer buffer;
     int fence_fd = -1;
 
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     EXPECT_CALL(*mock_surface, next_buffer(_,_))
         .Times(1);
@@ -139,7 +139,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 {
     int format = 945;
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     interpreter.dispatch_driver_request_format(format);
     auto tmp_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
@@ -149,7 +149,7 @@ TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 
 TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 {
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
     /* transform hint is a bitmask of a few options for rotation/flipping buffer. a value
        of zero is no transform */
     int transform_hint_zero = 0;
@@ -160,7 +160,7 @@ TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 {
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     auto default_width = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
 
@@ -169,7 +169,7 @@ TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 {
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     auto default_height = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
 
@@ -178,7 +178,7 @@ TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 {
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     auto width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
 
@@ -187,7 +187,7 @@ TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_height_query_hook)
 {
-    mcla::ANativeWindowInterpreter interpreter(mock_surface.get());
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
 
     auto height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
 

@@ -16,19 +16,19 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "anativewindow_interpreter.h"
+#include "client_surface_interpreter.h"
 #include "../client_buffer.h"
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
 
-mcla::ANativeWindowInterpreter::ANativeWindowInterpreter(ClientSurface* surface)
+mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface* surface)
  :  surface(surface),
     driver_pixel_format(-1)
 {
 }
 
-ANativeWindowBuffer* mcla::ANativeWindowInterpreter::driver_requests_buffer()
+ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface->get_current_buffer();
     auto buffer_to_driver = buffer->get_native_handle();
@@ -39,17 +39,17 @@ ANativeWindowBuffer* mcla::ANativeWindowInterpreter::driver_requests_buffer()
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ANativeWindowInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
 {
     mir_wait_for(surface->next_buffer(empty, NULL));
 }
 
-void mcla::ANativeWindowInterpreter::dispatch_driver_request_format(int format)
+void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)
 {
     driver_pixel_format = format;
 }
 
-int  mcla::ANativeWindowInterpreter::driver_requests_info(int key) const
+int  mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
 {
     switch (key)
     {
@@ -67,9 +67,3 @@ int  mcla::ANativeWindowInterpreter::driver_requests_info(int key) const
             throw std::runtime_error("driver requested unsupported query");
     }
 }
-
-#if 0
-int mcla::ANativeWindowInterpreter::query_internal(int /*key*/, int* /*value*/ ) const
-{
-}
-#endif
