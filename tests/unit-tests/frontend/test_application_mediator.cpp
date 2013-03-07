@@ -25,12 +25,14 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/session_store.h"
 #include "mir/shell/surface_factory.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session.h"
 
 #include "src/surfaces/proxy_surface.h"
 
