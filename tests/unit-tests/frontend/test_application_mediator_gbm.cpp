@@ -33,6 +33,7 @@
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/mock_session_store.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -47,25 +48,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-class StubSessionStore : public msh::SessionStore
-{
-public:
-    StubSessionStore()
-    {
-    }
-
-    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
-    {
-        return std::make_shared<mtd::MockSession>();
-    }
-
-    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
-
-    void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
-    void focus_session_with_lightdm_id(int) {}
-};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -108,7 +90,7 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
 struct ApplicationMediatorGBMTest : public ::testing::Test
 {
     ApplicationMediatorGBMTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<mtd::MockSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
@@ -118,9 +100,12 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
+        using namespace ::testing;
+        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<mtd::MockSession>()));
+        EXPECT_CALL(*session_store, open_session(_)).Times(AtLeast(1));
     }
 
-    std::shared_ptr<msh::SessionStore> const session_store;
+    std::shared_ptr<mtd::MockSessionStore> const session_store;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
