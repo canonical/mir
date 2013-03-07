@@ -45,6 +45,11 @@ public:
         return drmIoctl(drm_fd, request, arg);
     }
 
+    int primeFDToHandle(int prime_fd, uint32_t *handle)
+    {
+        return drmPrimeFDToHandle(drm_fd, prime_fd, handle);
+    }
+
     void* map(size_t size, off_t offset)
     {
         return mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED,

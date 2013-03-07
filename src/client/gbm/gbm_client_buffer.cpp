@@ -40,30 +40,22 @@ namespace
 struct GEMHandle
 {
     GEMHandle(std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-              uint32_t gem_name)
+              int prime_fd)
         : drm_fd_handler{drm_fd_handler}
     {
-        struct drm_gem_open gem_open;
-        memset(&gem_open, 0, sizeof(gem_open));
-        gem_open.name = gem_name;
-
-        int ret = drm_fd_handler->ioctl(DRM_IOCTL_GEM_OPEN, &gem_open);
+        int ret = drm_fd_handler->primeFDToHandle(prime_fd, &handle);
         if (ret)
         {
-            std::string msg("Failed to open GEM handle for DRM buffer");
+            std::string msg("Failed to import PRIME fd for DRM buffer");
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
                     std::runtime_error(msg)) << boost::errinfo_errno(errno));
         }
-
-        handle = gem_open.handle;
     }
 
     ~GEMHandle()
     {
-        static const uint32_t pad{0};
-        struct drm_gem_close gem_close = {handle, pad};
-        drm_fd_handler->ioctl(DRM_IOCTL_GEM_CLOSE, &gem_close);
+        // TODO: Do we need to GEM_CLOSE here? Do we need to close the fd?
     }
 
     std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
@@ -78,10 +70,10 @@ struct NullDeleter
 struct GBMMemoryRegion : mcl::MemoryRegion
 {
     GBMMemoryRegion(std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-                    uint32_t gem_name, geom::Size const& size_param,
+                    int prime_fd, geom::Size const& size_param,
                     geom::Stride stride_param, geom::PixelFormat format_param)
         : drm_fd_handler{drm_fd_handler},
-          gem_handle{drm_fd_handler, gem_name},
+          gem_handle{drm_fd_handler, prime_fd},
           size_in_bytes{size_param.height.as_uint32_t() * stride_param.as_uint32_t()}
     {
         width = size_param.width;
@@ -139,10 +131,10 @@ mclg::GBMClientBuffer::GBMClientBuffer(
 
 std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()
 {
-    const uint32_t gem_name = creation_package->data[0];
+    const int prime_fd = creation_package->fd[0];
 
     return std::make_shared<GBMMemoryRegion>(drm_fd_handler,
-                                             gem_name,
+                                             prime_fd,
                                              size(),
                                              stride(),
                                              pixel_format());
