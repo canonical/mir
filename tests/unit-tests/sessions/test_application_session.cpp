@@ -55,7 +55,7 @@ public:
         ON_CALL(*this, size()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::size));
         ON_CALL(*this, pixel_format()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::pixel_format));
         ON_CALL(*this, client_buffer()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_buffer));
-        ON_CALL(*this, input_package()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::input_package));
+        ON_CALL(*this, client_input_fd()).WillByDefault(Invoke(&impl, &ms::BasicProxySurface::client_input_fd));
     }
 
     MOCK_METHOD0(hide, void());
@@ -68,7 +68,7 @@ public:
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
 
-    MOCK_CONST_METHOD0(input_package, std::shared_ptr<mi::CommunicationPackage>());
+    MOCK_CONST_METHOD0(client_input_fd, int());
 
 private:
     ms::BasicProxySurface impl;

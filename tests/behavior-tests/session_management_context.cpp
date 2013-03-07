@@ -75,11 +75,14 @@ struct DummySurface : public msh::Surface
     {
         return std::shared_ptr<mc::Buffer>();
     }
-    virtual std::shared_ptr<mi::CommunicationPackage> input_package() const
+    virtual int client_input_fd() const
     {
-        return std::shared_ptr<mi::CommunicationPackage>();
+        return testing_client_input_fd;
     }
+    static int testing_client_input_fd;
 };
+
+int DummySurface::testing_client_input_fd = 0;
 
 struct SizedDummySurface : public DummySurface
 {

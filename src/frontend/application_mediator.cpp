@@ -32,7 +32,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/input/communication_package.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -115,8 +114,7 @@ void mir::frontend::ApplicationMediator::create_surface(
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
 
-        auto input_package = surface->input_package();
-        response->add_fd(input_package->client_fd());
+        response->add_fd(surface->client_input_fd());
 
         surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();

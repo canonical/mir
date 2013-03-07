@@ -61,14 +61,14 @@ public:
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     
-    std::shared_ptr<input::CommunicationPackage> input_package() const;
+    int client_input_fd() const;
 
 protected:
     void destroy_surface(SurfaceStackModel* const surface_stack) const;
 
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
-    std::shared_ptr<input::CommunicationPackage> const input_package_;
+    std::shared_ptr<input::CommunicationPackage> const input_package;
 };
 
 class ProxySurface : public BasicProxySurface

@@ -19,6 +19,7 @@
 #include "proxy_surface.h"
 
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/input/communication_package.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -31,7 +32,7 @@ namespace mi = mir::input;
 ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface,
                                          std::shared_ptr<input::CommunicationPackage> const& input_package)
   : surface(surface),
-    input_package_(input_package)
+    input_package(input_package)
 {
 }
 
@@ -112,9 +113,9 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
     surface_stack->destroy_surface(surface);
 }
 
-std::shared_ptr<mi::CommunicationPackage> ms::BasicProxySurface::input_package() const
+int ms::BasicProxySurface::client_input_fd() const
 {
-    return input_package_;
+    return input_package->client_fd();
 }
 
 ms::ProxySurface::ProxySurface(

@@ -20,10 +20,12 @@
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/input/communication_package.h"
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test/fake_shared.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -34,7 +36,8 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -74,6 +77,13 @@ private:
 
     std::shared_ptr<ms::Surface> surface;
 };
+
+struct MockCommunicationPackage : public mi::CommunicationPackage
+{
+    MOCK_CONST_METHOD0(client_fd, int());
+    MOCK_CONST_METHOD0(server_fd, int());
+};
+
 }
 
 namespace
@@ -104,6 +114,26 @@ TEST_F(SurfaceProxySetup, destroy)
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
     ms::ProxySurface test(&surface_stack, null_communication_package, params);
+    test.destroy();
+
+    Mock::VerifyAndClearExpectations(&surface_stack);
+}
+
+TEST_F(SurfaceProxySetup, client_input_fd)
+{
+    using namespace testing;
+    const int testing_client_fd = 17;
+
+    MockCommunicationPackage mock_package;
+    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
+
+    EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
+    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
+
+    ms::ProxySurface test(&surface_stack, mt::fake_shared(mock_package), params);
+ 
+    EXPECT_EQ(testing_client_fd, test.client_input_fd());
+
     test.destroy();
 
     Mock::VerifyAndClearExpectations(&surface_stack);
