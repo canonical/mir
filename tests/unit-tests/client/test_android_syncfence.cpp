@@ -16,32 +16,50 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/client/android/syncfence.h"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace mcla = mir::client::android;
+
+namespace
+{
+class MockIoctlWrapper : public mcla::IoctlWrapper
+{
+public:
+    MOCK_METHOD3(ioctl, int(int, unsigned long int, int));
+    MOCK_METHOD1(close, int(int));
+};
+}
+
 class SyncFenceTest : public ::testing::Test
 {
 public:
     SyncFenceTest()
+     : ioctl_mock(std::make_shared<MockIoctlWrapper>()),
+       dummyfd(44)
     {
-
     }
 
+    std::shared_ptr<MockIoctlWrapper> ioctl_mock;
     int dummyfd;
-
 };
 
 TEST_F(SyncFenceTest, test_fd_wait)
 {
-    mga::SyncFence fence(dummyfd);
+    mcla::SyncFence fence(dummyfd, ioctl_mock);
 
-    EXPECT_CALL(*filedesc_mocker, ioctl(dummyfd, IOCTLNUMFORWAIT ,Lt(0)))
+    EXPECT_CALL(*ioctl_mock, ioctl(dummyfd, 44 , testing::Lt(0)))
         .Times(1);
 
-    fence->wait();
+    fence.wait();
 }
 
 TEST_F(SyncFenceTest, test_fd_destruction_closes_fd)
 {
-    EXPECT_CALL(*filedesc_mocker, close(dummyfd))
+    EXPECT_CALL(*ioctl_mock, close(dummyfd))
         .Times(1);
 
-    mga::SyncFence fence(dummyfd);
+    mcla::SyncFence fence(dummyfd, ioctl_mock);
 }
