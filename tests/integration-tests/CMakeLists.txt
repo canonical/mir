@@ -38,6 +38,7 @@ add_subdirectory(cucumber)
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
+uses_android_input(integration-tests)
 
 target_link_libraries(
   integration-tests
