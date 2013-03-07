@@ -114,7 +114,7 @@ void mir::frontend::ApplicationMediator::create_surface(
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
-        
+
         auto input_package = surface->input_package();
         response->add_fd(input_package->client_fd());
 
