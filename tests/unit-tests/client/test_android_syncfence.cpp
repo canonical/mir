@@ -38,34 +38,55 @@ class SyncFenceTest : public ::testing::Test
 public:
     SyncFenceTest()
      : ioctl_mock(std::make_shared<testing::NiceMock<MockIoctlWrapper>>()),
-       dummyfd(44)
+       dummyfd(44), invalid_fd(-1)
     {
     }
 
     std::shared_ptr<MockIoctlWrapper> ioctl_mock;
-    int dummyfd;
+    int dummyfd, invalid_fd;
 };
 
-TEST_F(SyncFenceTest, test_fd_wait)
+TEST_F(SyncFenceTest, test_valid_fd_wait)
 {
     using namespace testing;
 
     int timeout_val;
-    int* t2;
     mcla::SyncFence fence(dummyfd, ioctl_mock);
     EXPECT_CALL(*ioctl_mock, ioctl(dummyfd, SYNC_IOC_WAIT, _))
         .Times(1)
-        .WillOnce(DoAll(SaveArg<2>(&t2), SaveArgPointee<2>(&timeout_val),
+        .WillOnce(DoAll(SaveArgPointee<2>(&timeout_val),
                         Return(0)));
 
     fence.wait();
     EXPECT_GT(0, timeout_val);
 }
 
-TEST_F(SyncFenceTest, test_fd_destruction_closes_fd)
+TEST_F(SyncFenceTest, test_valid_fd_destruction_closes_fd)
 {
     EXPECT_CALL(*ioctl_mock, close(dummyfd))
         .Times(1);
 
     mcla::SyncFence fence(dummyfd, ioctl_mock);
 }
+
+TEST_F(SyncFenceTest, test_invalid_fd_does_not_call_ioctl_on_wait)
+{
+    using namespace testing;
+
+    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    EXPECT_CALL(*ioctl_mock, ioctl(_, _, _))
+        .Times(0);
+
+    fence.wait();
+}
+
+TEST_F(SyncFenceTest, test_invalid_fd_destruction_does_not_close_fd)
+{
+    using namespace testing;
+    EXPECT_CALL(*ioctl_mock, close(_))
+        .Times(0);
+
+    mcla::SyncFence fence(invalid_fd, ioctl_mock);
+}
+
+
