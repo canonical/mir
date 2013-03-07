@@ -31,7 +31,6 @@ mir_toolkit::MirWaitHandle::~MirWaitHandle()
 {
 }
 
-// TODO: unit tests
 void mir_toolkit::MirWaitHandle::expect_result()
 {
     std::unique_lock<std::mutex> lock(guard);
