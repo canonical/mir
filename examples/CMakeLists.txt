@@ -20,10 +20,10 @@ add_executable(egltriangle
 target_link_libraries(egltriangle
   eglapp
 )
-add_executable(eglfoo
-  eglfoo.c
+add_executable(eglplasma
+  eglplasma.c
 )
-target_link_libraries(eglfoo
+target_link_libraries(eglplasma
   eglapp
 )
 
