@@ -18,7 +18,7 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "./eglapp.h"
+#include "eglapp.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <GLES2/gl2.h>

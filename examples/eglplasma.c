@@ -16,7 +16,7 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "./eglapp.h"
+#include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
 #include <GLES2/gl2.h>
