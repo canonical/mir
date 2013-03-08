@@ -42,7 +42,7 @@ void mcla::AndroidClientBufferDepository::deposit_package(std::shared_ptr<MirBuf
     current_buffer_id = id;
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_current_buffer(void)
+std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferDepository::access_current_buffer()
 {
     return buffer_depository[current_buffer_id];
 }

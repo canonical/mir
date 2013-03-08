@@ -42,7 +42,7 @@ public:
 
     void deposit_package(std::shared_ptr<MirBufferPackage> && package, int, geometry::Size sz, geometry::PixelFormat pf);
 
-    std::shared_ptr<ClientBuffer> access_current_buffer(void);
+    std::shared_ptr<ClientBuffer> access_current_buffer();
 private:
     std::shared_ptr<AndroidRegistrar> registrar;
 

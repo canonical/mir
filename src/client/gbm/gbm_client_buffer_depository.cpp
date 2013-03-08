@@ -64,7 +64,7 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
     current_buffer = id;
 }
 
-std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_current_buffer(void)
+std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_current_buffer()
 {
     return buffers[current_buffer];
 }

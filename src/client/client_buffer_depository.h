@@ -49,7 +49,7 @@ public:
 	/// \post access_current_buffer() will return a ClientBuffer constructed from this IPC data.
     virtual void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
                                 geometry::Size, geometry::PixelFormat) = 0;
-    virtual std::shared_ptr<ClientBuffer> access_current_buffer(void) = 0;
+    virtual std::shared_ptr<ClientBuffer> access_current_buffer() = 0;
 };
 }
 }

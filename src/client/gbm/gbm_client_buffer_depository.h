@@ -44,7 +44,7 @@ public:
 
     void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> && package, int, geometry::Size size, geometry::PixelFormat pf);
 
-    std::shared_ptr<ClientBuffer> access_current_buffer(void);
+    std::shared_ptr<ClientBuffer> access_current_buffer();
 private:
     std::map<uint32_t, std::shared_ptr<GBMClientBuffer>> buffers;
     uint32_t current_buffer;
