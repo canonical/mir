@@ -195,33 +195,41 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_NORMAL);
+            EXPECT_EQ(mir_surface_get_type(surface),
+                      mir_surface_type_normal);
 
-            mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_FREESTYLE));
-            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
+            mir_wait_for(mir_surface_set_type(surface,
+                                              mir_surface_type_freestyle));
+            EXPECT_EQ(mir_surface_get_type(surface),
+                      mir_surface_type_freestyle);
 
             mir_wait_for(mir_surface_set_type(surface,
                                             static_cast<MirSurfaceType>(999)));
-            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_FREESTYLE);
+            EXPECT_EQ(mir_surface_get_type(surface),
+                      mir_surface_type_freestyle);
 
-            mir_wait_for(mir_surface_set_type(surface, MIR_SURFACE_DIALOG));
-            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_DIALOG);
+            mir_wait_for(mir_surface_set_type(surface,
+                                              mir_surface_type_dialog));
+            EXPECT_EQ(mir_surface_get_type(surface),
+                      mir_surface_type_dialog);
 
             mir_wait_for(mir_surface_set_type(surface,
                                             static_cast<MirSurfaceType>(888)));
-            EXPECT_EQ(mir_surface_get_type(surface), MIR_SURFACE_DIALOG);
+            EXPECT_EQ(mir_surface_get_type(surface),
+                      mir_surface_type_dialog);
 
             // Stress-test synchronization logic with some flooding
             for (int i = 0; i < 1000; i++)
             {
-                mir_surface_set_type(surface, MIR_SURFACE_NORMAL);
-                mir_surface_set_type(surface, MIR_SURFACE_UTILITY);
-                mir_surface_set_type(surface, MIR_SURFACE_DIALOG);
-                mir_surface_set_type(surface, MIR_SURFACE_OVERLAY);
-                mir_surface_set_type(surface, MIR_SURFACE_FREESTYLE);
+                mir_surface_set_type(surface, mir_surface_type_normal);
+                mir_surface_set_type(surface, mir_surface_type_utility);
+                mir_surface_set_type(surface, mir_surface_type_dialog);
+                mir_surface_set_type(surface, mir_surface_type_overlay);
+                mir_surface_set_type(surface, mir_surface_type_freestyle);
                 mir_wait_for(mir_surface_set_type(surface,
-                                                  MIR_SURFACE_POPOVER));
-                ASSERT_EQ(mir_surface_get_type(surface), MIR_SURFACE_POPOVER);
+                                                  mir_surface_type_popover));
+                ASSERT_EQ(mir_surface_get_type(surface),
+                          mir_surface_type_popover);
             }
 
             mir_wait_for(mir_surface_release(surface, release_surface_callback,

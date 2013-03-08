@@ -25,29 +25,32 @@ TEST(NullShell, surface_attribs)
 {
     NullShell n;
 
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type));
     EXPECT_FALSE(n.supports(static_cast<MirSurfaceAttrib>(-1)));
     EXPECT_FALSE(n.supports(static_cast<MirSurfaceAttrib>(99)));
-    EXPECT_FALSE(n.supports(MirSurfaceAttrib_ARRAYSIZE));
+    EXPECT_FALSE(n.supports(mir_surface_attrib_arraysize_));
 }
 
 TEST(NullShell, surface_types)
 {
     NullShell n;
 
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_NORMAL));
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_UTILITY));
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_DIALOG));
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_OVERLAY));
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_FREESTYLE));
-    EXPECT_TRUE(n.supports(MIR_SURFACE_TYPE, MIR_SURFACE_POPOVER));
-    EXPECT_FALSE(n.supports(MIR_SURFACE_TYPE, MirSurfaceType_ARRAYSIZE));
-    EXPECT_FALSE(n.supports(MIR_SURFACE_TYPE, -1));
-    EXPECT_FALSE(n.supports(MIR_SURFACE_TYPE, 123));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type, mir_surface_type_normal));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type, mir_surface_type_utility));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type, mir_surface_type_dialog));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type, mir_surface_type_overlay));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type,
+                           mir_surface_type_freestyle));
+    EXPECT_TRUE(n.supports(mir_surface_attrib_type, mir_surface_type_popover));
+    EXPECT_FALSE(n.supports(mir_surface_attrib_type,
+                            mir_surface_type_arraysize_));
+    EXPECT_FALSE(n.supports(mir_surface_attrib_type, -1));
+    EXPECT_FALSE(n.supports(mir_surface_attrib_type, 123));
 
     EXPECT_FALSE(n.supports(static_cast<MirSurfaceAttrib>(-1),
-                            MIR_SURFACE_NORMAL));
+                            mir_surface_type_normal));
     EXPECT_FALSE(n.supports(static_cast<MirSurfaceAttrib>(99),
-                            MIR_SURFACE_NORMAL));
-    EXPECT_FALSE(n.supports(MirSurfaceAttrib_ARRAYSIZE, MIR_SURFACE_NORMAL));
+                            mir_surface_type_normal));
+    EXPECT_FALSE(n.supports(mir_surface_attrib_arraysize_,
+                            mir_surface_type_normal));
 }

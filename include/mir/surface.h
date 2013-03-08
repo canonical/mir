@@ -28,19 +28,19 @@
  */
 typedef enum MirSurfaceAttrib
 {
-    MIR_SURFACE_TYPE,
-    MirSurfaceAttrib_ARRAYSIZE
+    mir_surface_attrib_type,
+    mir_surface_attrib_arraysize_
 } MirSurfaceAttrib;
 
 typedef enum MirSurfaceType
 {
-    MIR_SURFACE_NORMAL,
-    MIR_SURFACE_UTILITY,
-    MIR_SURFACE_DIALOG,
-    MIR_SURFACE_OVERLAY,
-    MIR_SURFACE_FREESTYLE,
-    MIR_SURFACE_POPOVER,
-    MirSurfaceType_ARRAYSIZE
+    mir_surface_type_normal,
+    mir_surface_type_utility,
+    mir_surface_type_dialog,
+    mir_surface_type_overlay,
+    mir_surface_type_freestyle,
+    mir_surface_type_popover,
+    mir_surface_type_arraysize_
 } MirSurfaceType;
 
 /* TODO: Surface states here */

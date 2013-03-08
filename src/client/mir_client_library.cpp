@@ -231,19 +231,19 @@ catch (std::exception const&)
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
                                                            MirSurfaceType type)
 {
-    return surf ? surf->configure(MIR_SURFACE_TYPE, type) : NULL;
+    return surf ? surf->configure(mir_surface_attrib_type, type) : NULL;
 }
 
 MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
 {
-    MirSurfaceType type = MIR_SURFACE_NORMAL;
+    MirSurfaceType type = mir_surface_type_normal;
 
     if (surf)
     {
         // I assume the type can only change from the client side. Otherwise
         // we would have to send off a message to retrieve the latest...
 
-        int t = surf->attrib(MIR_SURFACE_TYPE);
+        int t = surf->attrib(mir_surface_attrib_type);
         type = static_cast<MirSurfaceType>(t);
     }
 

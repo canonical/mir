@@ -29,7 +29,7 @@ NullShell::~NullShell()
 
 bool NullShell::supports(MirSurfaceAttrib attrib) const
 {
-    return (attrib == MIR_SURFACE_TYPE);
+    return (attrib == mir_surface_attrib_type);
 }
 
 bool NullShell::supports(MirSurfaceAttrib attrib, int value) const
@@ -38,8 +38,8 @@ bool NullShell::supports(MirSurfaceAttrib attrib, int value) const
 
     switch (attrib)
     {
-    case MIR_SURFACE_TYPE:
-        valid = (value >= 0 && value < MirSurfaceType_ARRAYSIZE);
+    case mir_surface_attrib_type:
+        valid = (value >= 0 && value < mir_surface_type_arraysize_);
         break;
     default:
         break;

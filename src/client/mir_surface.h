@@ -107,7 +107,7 @@ private:
     mir::protobuf::SurfaceSetting configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
-    int attrib_cache[MirSurfaceAttrib_ARRAYSIZE];
+    int attrib_cache[mir_surface_attrib_arraysize_];
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

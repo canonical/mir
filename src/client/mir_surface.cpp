@@ -51,9 +51,9 @@ mir_toolkit::MirSurface::MirSurface(
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
-    for (int i = 0; i < MirSurfaceAttrib_ARRAYSIZE; i++)
+    for (int i = 0; i < mir_surface_attrib_arraysize_; i++)
         attrib_cache[i] = -1;
-    attrib_cache[MIR_SURFACE_TYPE] = MIR_SURFACE_NORMAL;
+    attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
 }
 
 mir_toolkit::MirSurface::~MirSurface()
@@ -253,11 +253,11 @@ void MirSurface::on_configured()
     {
         switch (configure_result.attrib())
         {
-        case MIR_SURFACE_TYPE:
+        case mir_surface_attrib_type:
             if (configure_result.has_ivalue())
             {
                 int t = configure_result.ivalue();
-                attrib_cache[MIR_SURFACE_TYPE] = t;
+                attrib_cache[mir_surface_attrib_type] = t;
             } // else error is probably set due to an unsupported attrib/value
             break;
         default:
