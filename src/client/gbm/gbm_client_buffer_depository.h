@@ -46,8 +46,9 @@ public:
 
     std::shared_ptr<ClientBuffer> access_current_buffer();
 private:
-    std::map<uint32_t, std::shared_ptr<GBMClientBuffer>> buffers;
-    uint32_t current_buffer;
+    typedef std::map<int, std::shared_ptr<GBMClientBuffer>> BufferMap;
+    BufferMap buffers;
+    BufferMap::iterator current_buffer;
     std::shared_ptr<DRMFDHandler> drm_fd_handler;
 };
 
