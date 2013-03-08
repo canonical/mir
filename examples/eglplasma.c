@@ -51,13 +51,13 @@ static GLuint LoadShader(const char *src, GLenum type)
 int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
-        "attribute vec4 vPosition;            \n"
-        "varying vec2 texcoord;               \n"
-        "void main()                          \n"
-        "{                                    \n"
-        "    gl_Position = vPosition;         \n"
+        "attribute vec4 vPosition;                               \n"
+        "varying vec2 texcoord;                                  \n"
+        "void main()                                             \n"
+        "{                                                       \n"
+        "    gl_Position = vPosition;                            \n"
         "    texcoord = vec2(vPosition) * vec2(0.5) + vec2(0.5); \n"
-        "}                                    \n";
+        "}                                                       \n";
 
     const char fshadersrc[] =
         "precision mediump float;                                \n"

@@ -64,12 +64,12 @@ int main(int argc, char *argv[])
         "}                                    \n";
 
     const char fshadersrc[] =
-        "precision mediump float;                        \n"
-        "uniform vec4 col;                               \n"
-        "void main()                                     \n"
-        "{                                               \n"
-        "    gl_FragColor = col;                         \n"
-        "}                                               \n";
+        "precision mediump float;             \n"
+        "uniform vec4 col;                    \n"
+        "void main()                          \n"
+        "{                                    \n"
+        "    gl_FragColor = col;              \n"
+        "}                                    \n";
 
     const GLfloat vertices[] =
     {
