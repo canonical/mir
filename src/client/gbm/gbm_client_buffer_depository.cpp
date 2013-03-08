@@ -45,7 +45,7 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
         }
         else
         {
-            if (tmp_it->second->age() >= 3)
+            if (tmp_it->second->age() >= 2 && (tmp_it->first != static_cast<uint32_t>(id)))
             {
                 // C++ guarantees that buffers.erase() will only invalidate the iterator
                 // we erase.
