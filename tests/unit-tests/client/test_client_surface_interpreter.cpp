@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -81,21 +81,20 @@ protected:
         surf_params.height = 715;
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
-        mock_surface = std::make_shared<NiceMock<MockMirSurface>>(surf_params);
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
     }
 
     MirSurfaceParameters surf_params;
     std::shared_ptr<MockClientBuffer> mock_client_buffer;
-    std::shared_ptr<MockMirSurface> mock_surface;
 };
 
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 {
     using namespace testing;
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
-    EXPECT_CALL(*mock_surface, get_current_buffer())
+    EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
@@ -109,12 +108,13 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
     ANativeWindowBuffer buffer;
     buffer.handle = &handle;
 
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(*mock_client_buffer, get_native_handle())
         .Times(1)
         .WillOnce(Return(&buffer));
-    EXPECT_CALL(*mock_surface, get_current_buffer())
+    EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
@@ -127,9 +127,10 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     using namespace testing;
     ANativeWindowBuffer buffer;
 
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
-    EXPECT_CALL(*mock_surface, next_buffer(_,_))
+    EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
 
     interpreter.driver_returns_buffer(&buffer);
@@ -140,7 +141,8 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 {
     int format = 945;
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     interpreter.dispatch_driver_request_format(format);
     auto tmp_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
@@ -150,7 +152,8 @@ TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 
 TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 {
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
     /* transform hint is a bitmask of a few options for rotation/flipping buffer. a value
        of zero is no transform */
     int transform_hint_zero = 0;
@@ -161,7 +164,8 @@ TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 {
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto default_width = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
 
@@ -170,7 +174,8 @@ TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 {
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto default_height = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
 
@@ -179,7 +184,8 @@ TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 {
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
 
@@ -188,7 +194,8 @@ TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_height_query_hook)
 {
-    mcla::ClientSurfaceInterpreter interpreter(mock_surface.get());
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
 
