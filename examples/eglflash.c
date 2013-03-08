@@ -19,8 +19,8 @@
  */
 
 #include "./eglapp.h"
-#include <stdio.h> /* sleep() */
-#include <unistd.h> /* sleep() */
+#include <stdio.h>
+#include <unistd.h>
 #include <GLES2/gl2.h>
 
 int main(void)
