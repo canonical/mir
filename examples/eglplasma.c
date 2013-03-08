@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
-    while (1)
+    while (mir_eglapp_running())
     {
         glClear(GL_COLOR_BUFFER_BIT);
         glUniform1f(theta, angle);
@@ -140,6 +140,8 @@ int main(int argc, char *argv[])
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
     }
+
+    mir_eglapp_shutdown();
 
     return 0;
 }

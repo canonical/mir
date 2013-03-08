@@ -30,6 +30,7 @@ static const char appname[] = "Dunnoyet";
 static MirConnection *connection;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
+static EGLBoolean running = EGL_FALSE;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
@@ -47,13 +48,21 @@ void mir_eglapp_shutdown(void)
 {
     eglTerminate(egldisplay);
     mir_connection_release(connection);
+    connection = NULL;
 }
 
 static void shutdown(int signum)
 {
-    printf("Signal %d received. Good night.\n", signum);
-    mir_eglapp_shutdown();
-    exit(0);
+    if (running)
+    {
+        running = EGL_FALSE;
+        printf("Signal %d received. Good night.\n", signum);
+    }
+}
+
+mir_eglapp_bool mir_eglapp_running(void)
+{
+    return running;
 }
 
 void mir_eglapp_swap_buffers(void)
@@ -64,6 +73,9 @@ void mir_eglapp_swap_buffers(void)
     time_t now = time(NULL);
     time_t dtime;
     int dcount;
+
+    if (!running)
+        return;
 
     count++;
     eglSwapBuffers(egldisplay, eglsurface);
@@ -78,7 +90,7 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
-int mir_eglapp_init(int *width, int *height)
+mir_eglapp_bool mir_eglapp_init(int *width, int *height)
 {
     EGLint attribs[] =
     {
@@ -156,6 +168,8 @@ int mir_eglapp_init(int *width, int *height)
     *height = surfaceparm.height;
 
     eglSwapInterval(egldisplay, 1);
+
+    running = EGL_TRUE;
 
     return 1;
 }

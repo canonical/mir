@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     }
 
     /* This is probably the simplest GL you can do */
-    while (1)
+    while (mir_eglapp_running())
     {
         glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
         mir_eglapp_swap_buffers();
         sleep(1);
     }
+
+    mir_eglapp_shutdown();
 
     return 0;
 }
