@@ -44,8 +44,9 @@ static GLuint LoadShader(const char *src, GLenum type)
 }
 
 /* Colours from http://design.ubuntu.com/brand/colour-palette */
-#define MID_AUBERGINE 0.368627451f, 0.152941176f, 0.31372549f
-#define ORANGE        0.866666667f, 0.282352941f, 0.141414141f
+#define DARK_AUBERGINE 0.17254902f,  0.0f,         0.117647059f
+#define MID_AUBERGINE  0.368627451f, 0.152941176f, 0.31372549f
+#define ORANGE         0.866666667f, 0.282352941f, 0.141414141f
 
 int main(int argc, char *argv[])
 {
@@ -62,20 +63,23 @@ int main(int argc, char *argv[])
         "precision mediump float;                                \n"
         "uniform float theta;                                    \n"
         "varying vec2 texcoord;                                  \n"
-        "uniform vec4 col;                                       \n"
+        "uniform vec4 low_color, high_color;                     \n"
         "void main()                                             \n"
         "{                                                       \n"
         "    float u = texcoord.x * 6.283185308;                 \n"
         "    float v = texcoord.y * 6.283185308;                 \n"
         "    float t = mod(theta, 6.283185308);                  \n"
-        "    float us = cos(1.17 * u + 7.0 * t) +                \n"
-        "               cos(2.0 * v * cos(1.0 * t)) +            \n"
-        "               cos(0.4 * u * cos(3.0 * t));             \n"
-        "    float vs = cos(2.3 * v + 8.0 * t) +                 \n"
-        "               cos(1.6 * u * cos(3.2 * t)) +            \n"
-        "               cos(1.7 * v * cos(2.0 * t));             \n"
-        "    float x = ((us * vs / 3.0) + 1.0) / 2.0;            \n"
-        "    gl_FragColor = vec4(x, 0, 0.0, 1.0);                \n"
+        "    float us = (cos(1.17 * u + 7.0 * t) +               \n"
+        "                cos(2.0 * v * cos(1.0 * t)) +           \n"
+        "                cos(0.4 * u * cos(3.0 * t))             \n"
+        "               ) / 3.0;                                 \n"
+        "    float vs = (cos(2.3 * v + 8.0 * t) +                \n"
+        "                cos(1.6 * u * cos(3.2 * t)) +           \n"
+        "                cos(1.7 * v * cos(2.0 * t))             \n"
+        "               ) / 3.0;                                 \n"
+        "    float x = (us * vs + 1.0) / 2.0;                    \n"
+        "    gl_FragColor = x * (high_color - low_color) +       \n"
+        "                   low_color;                           \n"
         "}                                                       \n";
 
     const GLfloat vertices[] =
@@ -86,7 +90,7 @@ int main(int argc, char *argv[])
        -1.0f,-1.0f,
     };
     GLuint vshader, fshader, prog;
-    GLint linked, col, vpos, theta;
+    GLint linked, low_color, high_color, vpos, theta;
     int width = 0, height = 0;
     GLfloat angle = 0.0f;
 
@@ -119,22 +123,22 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    glClearColor(MID_AUBERGINE, 1.0);
     glViewport(0, 0, width, height);
 
     glUseProgram(prog);
 
     vpos = glGetAttribLocation(prog, "vPosition");
-    col = glGetUniformLocation(prog, "col");
+    low_color = glGetUniformLocation(prog, "low_color");
+    high_color = glGetUniformLocation(prog, "high_color");
     theta = glGetUniformLocation(prog, "theta");
-    glUniform4f(col, ORANGE, 1.0f);
+    glUniform4f(low_color, DARK_AUBERGINE, 1.0f);
+    glUniform4f(high_color, ORANGE, 1.0f);
 
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
     while (mir_eglapp_running())
     {
-        glClear(GL_COLOR_BUFFER_BIT);
         glUniform1f(theta, angle);
         angle += 0.005f;
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
