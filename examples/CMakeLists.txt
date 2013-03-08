@@ -8,22 +8,22 @@ target_link_libraries(eglapp
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
-add_executable(eglflash
+add_executable(mir_eglflash
   eglflash.c
 )
-target_link_libraries(eglflash
+target_link_libraries(mir_eglflash
   eglapp
 )
-add_executable(egltriangle
+add_executable(mir_egltriangle
   egltriangle.c
 )
-target_link_libraries(egltriangle
+target_link_libraries(mir_egltriangle
   eglapp
 )
-add_executable(eglplasma
+add_executable(mir_eglplasma
   eglplasma.c
 )
-target_link_libraries(eglplasma
+target_link_libraries(mir_eglplasma
   eglapp
 )
 
@@ -112,12 +112,14 @@ target_link_libraries(mir_demo_client_accelerated binder)
 target_link_libraries(mir_demo_client_unaccelerated binder)
 endif()
 
-install(
-  TARGETS mir_demo_client
-  RUNTIME DESTINATION bin)
-install(
-  TARGETS mir_demo_client_unaccelerated
-  RUNTIME DESTINATION bin)
-install(
-  TARGETS mir_demo_client_accelerated
-  RUNTIME DESTINATION bin)
+set (DEMO_CLIENTS
+  mir_demo_client
+  mir_demo_client_unaccelerated
+  mir_demo_client_accelerated
+  mir_eglflash
+  mir_egltriangle
+  mir_eglplasma
+)
+
+install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
+
