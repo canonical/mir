@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <GLES2/gl2.h>
 
-static GLuint LoadShader(const char *src, GLenum type)
+static GLuint load_shader(const char *src, GLenum type)
 {
     GLuint shader = glCreateShader(type);
     if (shader)
@@ -35,7 +35,7 @@ static GLuint LoadShader(const char *src, GLenum type)
             GLchar log[1024];
             glGetShaderInfoLog(shader, sizeof log - 1, NULL, log);
             log[sizeof log - 1] = '\0';
-            printf("LoadShader compile failed: %s\n", log);
+            printf("load_shader compile failed: %s\n", log);
             glDeleteShader(shader);
             shader = 0;
         }
@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    vshader = LoadShader(vshadersrc, GL_VERTEX_SHADER);
+    vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
-    fshader = LoadShader(fshadersrc, GL_FRAGMENT_SHADER);
+    fshader = load_shader(fshadersrc, GL_FRAGMENT_SHADER);
     assert(fshader);
     prog = glCreateProgram();
     assert(prog);
