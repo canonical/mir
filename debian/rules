@@ -32,7 +32,11 @@ else
 endif
 
 override_dh_installexamples:
-	dh_installexamples -p libmirclient-demos 
+	dh_installexamples -p libmirclient-demos
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V
+
+override_dh_auto_build:
+	dh_auto_build
+	make doc
