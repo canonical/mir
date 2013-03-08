@@ -23,14 +23,12 @@
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session_store.h"
-#include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
@@ -55,24 +53,50 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-class StubbedSession : public testing::NiceMock<mtd::MockSession>
+class StubbedSession : public msh::Session
 {
 public:
     StubbedSession()
     {
         using namespace ::testing;
         
-        ON_CALL(*this, create_surface(_)).WillByDefault(Return(test_surface_id));
-        ON_CALL(*this, get_surface(_)).WillByDefault(Return(mt::fake_shared(mock_surface)));
+        mock_surface = std::make_shared<mtd::MockSurface>();
         
-        ON_CALL(mock_surface, size()).WillByDefault(Return(geom::Size()));
-        ON_CALL(mock_surface, pixel_format()).WillByDefault(Return(geom::PixelFormat()));
-        ON_CALL(mock_surface, client_buffer()).WillByDefault(Return(mt::fake_shared(stub_buffer)));
+        EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+        EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+        EXPECT_CALL(*mock_surface, client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mt::fake_shared(stub_buffer)));
+        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
     }
 
-    static msh::SurfaceId test_surface_id;
-    testing::NiceMock<mtd::MockSurface> mock_surface;
+    msh::SurfaceId create_surface(msh::SurfaceCreationParameters const& /* params */)
+    {
+        return test_surface_id;
+    }
+    void destroy_surface(msh::SurfaceId /* surface */)
+    {
+    }
+    std::shared_ptr<msh::Surface> get_surface(msh::SurfaceId /* surface */) const
+    {
+        return mock_surface;
+    }
+    std::string name()
+    {
+        return std::string();
+    }
+    void shutdown()
+    {
+    }
+    void hide()
+    {
+    }
+    void show()
+    {
+    }
+    
+    std::shared_ptr<mtd::MockSurface> mock_surface;
     mtd::StubBuffer stub_buffer;
+    
+    static msh::SurfaceId test_surface_id;
 };
 
 msh::SurfaceId StubbedSession::test_surface_id{29};
