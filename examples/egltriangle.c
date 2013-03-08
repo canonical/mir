@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     {
         glClear(GL_COLOR_BUFFER_BIT);
         glUniform1f(theta, angle);
-        angle += 0.005f;
+        angle += 0.02f;
         glDrawArrays(GL_TRIANGLES, 0, 3);
         mir_eglapp_swap_buffers();
     }
