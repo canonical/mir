@@ -37,23 +37,25 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
     auto buffer_it = buffers.begin();
     while (buffer_it != buffers.end())
     {
-        auto tmp_it = buffer_it;
+        // C++ guarantees that buffers.erase() will only invalidate the iterator
+        // we erase. Move to the next buffer before we potentially invalidate our
+        // iterator.
+        auto current = buffer_it;
         ++buffer_it;
-        if (tmp_it->first == current_buffer)
+
+        if (current->first == current_buffer)
         {
-            tmp_it->second->mark_as_submitted();
+            current->second->mark_as_submitted();
         }
         else
         {
-            if (tmp_it->second->age() >= 2 && (tmp_it->first != static_cast<uint32_t>(id)))
+            if (current->second->age() >= 2 && (current->first != static_cast<uint32_t>(id)))
             {
-                // C++ guarantees that buffers.erase() will only invalidate the iterator
-                // we erase.
-                buffers.erase(tmp_it);
+                buffers.erase(current);
             }
             else
             {
-                tmp_it->second->increment_age();
+                current->second->increment_age();
             }
         }
     }
