@@ -158,9 +158,10 @@ include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+macro(uses_android_input _target_name)
+  set_property(TARGET ${_target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
+endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 

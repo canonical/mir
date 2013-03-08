@@ -19,7 +19,9 @@ add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 add_subdirectory(shell/)
 
+
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
+uses_android_input(unit-tests)
 
 target_link_libraries(
   unit-tests

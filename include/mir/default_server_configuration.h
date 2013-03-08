@@ -18,6 +18,7 @@
 #ifndef MIR_DEFAULT_SERVER_CONFIGURATION_H_
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
+#include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
 #include "mir/options/program_option.h"
 
@@ -107,29 +108,6 @@ public:
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
-
-    template<typename Type>
-    class CachedPtr
-    {
-        std::weak_ptr<Type> cache;
-
-        CachedPtr(CachedPtr const&) = delete;
-        CachedPtr& operator=(CachedPtr const&) = delete;
-    public:
-        CachedPtr() = default;
-
-        std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
-        {
-            auto result = cache.lock();
-            if (!result)
-            {
-                cache = result = make();
-            }
-
-            return result;
-
-        }
-    };
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionStore> session_store;
