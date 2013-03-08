@@ -22,7 +22,7 @@
 
 namespace mcla=mir::client::android;
 
-mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface* surface)
+mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
  :  surface(surface),
     driver_pixel_format(-1)
 {
@@ -30,7 +30,7 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface* surface)
 
 ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
-    auto buffer = surface->get_current_buffer();
+    auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->get_native_handle();
     buffer_to_driver->format = driver_pixel_format;
 
@@ -41,7 +41,7 @@ static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
 void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/ )
 {
-    mir_wait_for(surface->next_buffer(empty, NULL));
+    mir_wait_for(surface.next_buffer(empty, NULL));
 }
 
 void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)
@@ -55,10 +55,10 @@ int  mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
     {
         case NATIVE_WINDOW_WIDTH:
         case NATIVE_WINDOW_DEFAULT_WIDTH:
-            return surface->get_parameters().width;
+            return surface.get_parameters().width;
         case NATIVE_WINDOW_HEIGHT:
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
-            return surface->get_parameters().height;
+            return surface.get_parameters().height;
         case NATIVE_WINDOW_FORMAT:
             return driver_pixel_format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
