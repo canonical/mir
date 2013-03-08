@@ -36,7 +36,3 @@ override_dh_installexamples:
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V
-
-override_dh_auto_build:
-	dh_auto_build
-	make doc
