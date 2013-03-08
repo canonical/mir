@@ -48,7 +48,7 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
         }
     }
 
-    for (auto current : buffers)
+    for (auto& current : buffers)
     {
         current.second->increment_age();
     }
