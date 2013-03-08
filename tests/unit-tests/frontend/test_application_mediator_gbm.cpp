@@ -33,7 +33,7 @@
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/mock_session_store.h"
+#include "mir_test_doubles/stub_session_store.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -85,12 +85,25 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
+class StubSessionStore : public mtd::StubSessionStore
+{
+public:
+    std::shared_ptr<msh::Session> open_session(std::string const& name)
+    {
+        using namespace ::testing;
+
+        auto session = std::make_shared<mtd::MockSession>();
+        EXPECT_CALL(*session, name()).Times(AnyNumber()).WillRepeatedly(Return(name));
+        return session;
+    }
+};
+
 }
 
 struct ApplicationMediatorGBMTest : public ::testing::Test
 {
     ApplicationMediatorGBMTest()
-        : session_store{std::make_shared<mtd::MockSessionStore>()},
+        : session_store{std::make_shared<StubSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
@@ -100,12 +113,9 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
-        using namespace ::testing;
-        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<mtd::MockSession>()));
-        EXPECT_CALL(*session_store, open_session(_)).Times(AtLeast(1));
     }
 
-    std::shared_ptr<mtd::MockSessionStore> const session_store;
+    std::shared_ptr<StubSessionStore> const session_store;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
