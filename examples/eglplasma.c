@@ -48,7 +48,7 @@ static GLuint load_shader(const char *src, GLenum type)
 #define MID_AUBERGINE  0.368627451f, 0.152941176f, 0.31372549f
 #define ORANGE         0.866666667f, 0.282352941f, 0.141414141f
 
-int main(int argc, char *argv[])
+int main(void)
 {
     const char vshadersrc[] =
         "attribute vec4 vPosition;                               \n"
@@ -94,9 +94,6 @@ int main(int argc, char *argv[])
     GLint linked, low_color, high_color, vpos, theta;
     int width = 0, height = 0;
     GLfloat angle = 0.0f;
-
-    (void)argc;
-    (void)argv;
 
     if (!mir_eglapp_init(&width, &height))
     {

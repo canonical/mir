@@ -23,12 +23,9 @@
 #include <unistd.h> /* sleep() */
 #include <GLES2/gl2.h>
 
-int main(int argc, char *argv[])
+int main(void)
 {
     int width = 0, height = 0;  /* Use the full display */
-
-    (void)argc;
-    (void)argv;
 
     if (!mir_eglapp_init(&width, &height))
     {
