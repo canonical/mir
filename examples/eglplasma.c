@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
         "    float u = texcoord.x * 6.283185308;                 \n"
         "    float v = texcoord.y * 6.283185308;                 \n"
         "    float t = mod(theta, 6.283185308);                  \n"
-        "    float us = (cos(1.1 * u + 7.0 * t) +               \n"
+        "    float us = (cos(1.1 * u + 7.0 * t) +                \n"
         "                cos(2.3 * v * cos(1.1 * t)) +           \n"
         "                cos(0.3 * u * cos(2.9 * t))             \n"
         "               ) / 3.0;                                 \n"
