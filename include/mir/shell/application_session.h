@@ -34,10 +34,11 @@ class SurfaceFactory;
 class ApplicationSession : public Session
 {
 public:
+    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
     explicit ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::string const& session_name,
-        std::shared_ptr<mir::Shell> sh = nullptr);
+        std::shared_ptr<mir::Shell> sh);
     ~ApplicationSession();
 
     SurfaceId create_surface(SurfaceCreationParameters const& params);

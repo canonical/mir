@@ -34,6 +34,17 @@ namespace ms = mir::surfaces;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::string const& session_name) :
+    surface_factory(surface_factory),
+    session_name(session_name),
+    shell(new mir::shell::NullShell),
+    next_surface_id(0)
+{
+    assert(surface_factory);
+}
+
+msh::ApplicationSession::ApplicationSession(
+    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
     std::string const& session_name, std::shared_ptr<mir::Shell> sh) :
     surface_factory(surface_factory),
     session_name(session_name),
@@ -41,9 +52,7 @@ msh::ApplicationSession::ApplicationSession(
     next_surface_id(0)
 {
     assert(surface_factory);
-
-    if (!shell)
-        shell.reset(new mir::shell::NullShell);
+    assert(shell);
 }
 
 msh::ApplicationSession::~ApplicationSession()
