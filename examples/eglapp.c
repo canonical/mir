@@ -25,7 +25,7 @@
 #include <EGL/egl.h>
 
 static const char servername[] = "/tmp/mir_socket";
-static const char appname[] = "Dunnoyet";
+static const char appname[] = "egldemo";
 
 static MirConnection *connection;
 static EGLDisplay egldisplay;
@@ -77,9 +77,9 @@ void mir_eglapp_swap_buffers(void)
     if (!running)
         return;
 
-    count++;
     eglSwapBuffers(egldisplay, eglsurface);
 
+    count++;
     dcount = count - lastcount;
     dtime = now - lasttime;
     if (dtime)
@@ -106,7 +106,7 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
     };
     MirSurfaceParameters surfaceparm =
     {
-        "Fred",
+        "eglappsurface",
         256, 256,
         mir_pixel_format_xbgr_8888,
         mir_buffer_usage_hardware
@@ -155,7 +155,8 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
             NULL);
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
-    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
+    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT,
+                              ctxattribs);
     CHECK(eglctx != EGL_NO_CONTEXT, "eglCreateContext failed");
 
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
