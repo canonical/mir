@@ -46,15 +46,17 @@ namespace
 
 struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 {
-    FilterForVisibleRenderablesInRegion(mir::geometry::Rectangle enclosing_region)
+    FilterForVisibleRenderablesInRegion(mir::geometry::Rectangle const& enclosing_region)
         : enclosing_region(enclosing_region)
     {
     }
     bool operator()(mg::Renderable& renderable)
     {
+        // TODO check against enclosing_region
         return !renderable.hidden();
     }
-    mir::geometry::Rectangle& enclosing_region;
+
+    mir::geometry::Rectangle const& enclosing_region;
 };
 
 }
