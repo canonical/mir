@@ -29,7 +29,7 @@
 
 namespace
 {
-std::atomic<mir::DisplayServer*> volatile signal_display_server;
+std::atomic<mir::DisplayServer*> signal_display_server;
 
 extern "C" void signal_terminate(int)
 {
