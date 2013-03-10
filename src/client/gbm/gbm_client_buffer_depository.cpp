@@ -28,43 +28,48 @@ namespace mclg=mir::client::gbm;
 
 mclg::GBMClientBufferDepository::GBMClientBufferDepository(
         std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : drm_fd_handler{drm_fd_handler}
+    : current_buffer(buffers.end()), drm_fd_handler{drm_fd_handler}
 {
 }
 
 void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
-    auto buffer_it = buffers.begin();
-    while (buffer_it != buffers.end())
+    for (auto next = buffers.begin(); next != buffers.end();)
     {
-        // C++ guarantees that buffers.erase() will only invalidate the iterator
-        // we erase. Move to the next buffer before we potentially invalidate our
-        // iterator.
-        auto current = buffer_it;
-        ++buffer_it;
+        // C++ guarantees that buffers.erase() will only invalidate the iterator we
+        // erase. Move to the next buffer before we potentially invalidate our iterator.
+        auto current = next;
+        next++;
 
-        if (current->first == current_buffer)
+        if (current != current_buffer &&
+            current->first != id &&
+            current->second->age() >= 2)
         {
-            current->second->mark_as_submitted();
-        }
-        else
-        {
-            if (current->second->age() >= 2 && (current->first != static_cast<uint32_t>(id)))
-            {
-                buffers.erase(current);
-            }
-            else
-            {
-                current->second->increment_age();
-            }
+            buffers.erase(current);
         }
     }
-    if (buffers.count(id) == 0)
-        buffers[id] = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
-    current_buffer = id;
+
+    for (auto& current : buffers)
+    {
+        current.second->increment_age();
+    }
+
+    if (current_buffer != buffers.end())
+    {
+        current_buffer->second->mark_as_submitted();
+    }
+
+    current_buffer = buffers.find(id);
+
+    if (current_buffer == buffers.end())
+    {
+        auto new_buffer = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
+
+        current_buffer = buffers.insert(current_buffer, std::make_pair(id, new_buffer));
+    }
 }
 
 std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_current_buffer()
 {
-    return buffers[current_buffer];
+    return current_buffer->second;
 }
