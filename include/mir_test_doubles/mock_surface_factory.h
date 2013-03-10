@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
 
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/surface_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -31,9 +31,9 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceFactory : public sessions::SurfaceFactory
+struct MockSurfaceFactory : public shell::SurfaceFactory
 {
-    MOCK_METHOD1(create_surface, std::shared_ptr<sessions::Surface>(const sessions::SurfaceCreationParameters&));
+    MOCK_METHOD1(create_surface, std::shared_ptr<shell::Surface>(const shell::SurfaceCreationParameters&));
 };
 
 }

@@ -17,11 +17,12 @@
 
 set(
   MIR_GCC_VERSION
-  4.6
+  4.7
   CACHE
   STRING
   "Version of gcc/g++"
 )
+cmake_policy(SET CMP0015 NEW)
 
 set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
 set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
@@ -157,9 +158,10 @@ include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+macro(uses_android_input _target_name)
+  set_property(TARGET ${_target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
+endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 

@@ -22,9 +22,9 @@
 #include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -45,7 +45,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -61,11 +61,11 @@ namespace
  * stubable/mockable.
  */
 
-class DestructionRecordingSession : public msess::ApplicationSession
+class DestructionRecordingSession : public msh::ApplicationSession
 {
 public:
-    DestructionRecordingSession(std::shared_ptr<msess::SurfaceFactory> const& surface_factory)
-        : msess::ApplicationSession{surface_factory, "Stub"}
+    DestructionRecordingSession(std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
+        : msh::ApplicationSession{surface_factory, "Stub"}
     {
         destroyed = false;
     }
@@ -77,10 +77,10 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-class StubSurfaceFactory : public msess::SurfaceFactory
+class StubSurfaceFactory : public msh::SurfaceFactory
 {
  public:
-    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
     {
         auto surface = std::make_shared<ms::Surface>("DummySurface",
                                                      std::make_shared<mtd::NullBufferBundle>());
@@ -93,7 +93,7 @@ private:
     std::vector<std::shared_ptr<ms::Surface>> surfaces;
 };
 
-class StubSessionStore : public msess::SessionStore
+class StubSessionStore : public msh::SessionStore
 {
 public:
     StubSessionStore()
@@ -101,18 +101,18 @@ public:
     {
     }
 
-    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
+    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
     {
         return std::make_shared<DestructionRecordingSession>(factory);
     }
 
-    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
+    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
 
     void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
     void focus_session_with_lightdm_id(int) {}
 
-    std::shared_ptr<msess::SurfaceFactory> factory;
+    std::shared_ptr<msh::SurfaceFactory> factory;
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -169,7 +169,7 @@ struct ApplicationMediatorTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<msess::SessionStore> const session_store;
+    std::shared_ptr<msh::SessionStore> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;

@@ -20,9 +20,9 @@
 #include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
@@ -41,7 +41,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -52,19 +52,19 @@ namespace
  * without having to create doubles for classes so deep in its dependency
  * hierarchy.
  *
- * In particular, it would be nice if msess::ApplicationSession was stubable/mockable.
+ * In particular, it would be nice if msh::ApplicationSession was stubable/mockable.
  */
 
-class StubSurfaceFactory : public msess::SurfaceFactory
+class StubSurfaceFactory : public msh::SurfaceFactory
 {
  public:
-    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
     {
-        return std::shared_ptr<msess::Surface>();
+        return std::shared_ptr<msh::Surface>();
     }
 };
 
-class StubSessionStore : public msess::SessionStore
+class StubSessionStore : public msh::SessionStore
 {
 public:
     StubSessionStore()
@@ -72,18 +72,18 @@ public:
     {
     }
 
-    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
+    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
     {
-        return std::make_shared<msess::ApplicationSession>(factory, "stub");
+        return std::make_shared<msh::ApplicationSession>(factory, "stub");
     }
 
-    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
+    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
 
     void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
+    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
     void focus_session_with_lightdm_id(int) {}
 
-    std::shared_ptr<msess::SurfaceFactory> factory;
+    std::shared_ptr<msh::SurfaceFactory> factory;
 };
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -139,7 +139,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<msess::SessionStore> const session_store;
+    std::shared_ptr<msh::SessionStore> const session_store;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

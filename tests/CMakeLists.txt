@@ -38,3 +38,5 @@ if(MIR_ENABLE_DEATH_TESTS)
 else()
   message(STATUS "Death tests are disabled and are not run.")
 endif(MIR_ENABLE_DEATH_TESTS)
+
+mir_add_memcheck_test()

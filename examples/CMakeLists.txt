@@ -75,7 +75,7 @@ target_link_libraries(
     render_surfaces
 
     mirserver
-    mirsessions
+    mirshell
     ${Boost_LIBRARIES}
 )
 

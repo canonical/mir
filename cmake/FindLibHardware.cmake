@@ -5,13 +5,15 @@
 
 INCLUDE(FindPackageHandleStandardArgs)
 
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 find_path(LIBHARDWARE_INCLUDE_DIR
    NAMES         hardware/hardware.h
                  hardware/gralloc.h
                  cutils/native_handle.h
                  system/graphics.h
                  system/window.h
+
+                 #we keep these headers in-tree, so search in-tree
+                 NO_CMAKE_FIND_ROOT_PATH
    )
 
 find_library(LIBHARDWARE_LIBRARY
