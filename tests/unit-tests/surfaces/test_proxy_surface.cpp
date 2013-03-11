@@ -128,15 +128,10 @@ TEST_F(SurfaceProxySetup, client_input_fd)
     EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
 
     EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
-    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
     ms::ProxySurface test(&surface_stack, mt::fake_shared(mock_package), params);
  
     EXPECT_EQ(testing_client_fd, test.client_input_fd());
-
-    test.destroy();
-
-    Mock::VerifyAndClearExpectations(&surface_stack);
 }
 
 namespace
