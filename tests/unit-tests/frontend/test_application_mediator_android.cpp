@@ -80,25 +80,12 @@ class StubPlatform : public mg::Platform
     }
 };
 
-class StubSessionStore : public mtd::StubSessionStore
-{
-public:
-    std::shared_ptr<msh::Session> open_session(std::string const& name)
-    {
-        using namespace ::testing;
-
-        auto session = std::make_shared<mtd::MockSession>();
-        EXPECT_CALL(*session, name()).Times(AnyNumber()).WillRepeatedly(Return(name));
-        return session;
-    }
-};
-
 }
 
 struct ApplicationMediatorAndroidTest : public ::testing::Test
 {
     ApplicationMediatorAndroidTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<mtd::StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},

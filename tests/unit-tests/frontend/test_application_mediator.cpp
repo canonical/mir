@@ -31,6 +31,7 @@
 #include "mir_test_doubles/mock_session_store.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_session.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/surfaces/proxy_surface.h"
@@ -53,7 +54,7 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-class StubbedSession : public msh::Session
+class StubbedSession : public mtd::StubSession
 {
 public:
     StubbedSession()
@@ -68,38 +69,14 @@ public:
         EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
     }
 
-    msh::SurfaceId create_surface(msh::SurfaceCreationParameters const& /* params */)
-    {
-        return test_surface_id;
-    }
-    void destroy_surface(msh::SurfaceId /* surface */)
-    {
-    }
     std::shared_ptr<msh::Surface> get_surface(msh::SurfaceId /* surface */) const
     {
         return mock_surface;
     }
-    std::string name()
-    {
-        return std::string();
-    }
-    void shutdown()
-    {
-    }
-    void hide()
-    {
-    }
-    void show()
-    {
-    }
-    
+
     std::shared_ptr<mtd::MockSurface> mock_surface;
     mtd::StubBuffer stub_buffer;
-    
-    static msh::SurfaceId test_surface_id;
 };
-
-msh::SurfaceId StubbedSession::test_surface_id{29};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {

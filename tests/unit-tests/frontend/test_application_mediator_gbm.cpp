@@ -85,25 +85,12 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class StubSessionStore : public mtd::StubSessionStore
-{
-public:
-    std::shared_ptr<msh::Session> open_session(std::string const& name)
-    {
-        using namespace ::testing;
-
-        auto session = std::make_shared<mtd::MockSession>();
-        EXPECT_CALL(*session, name()).Times(AnyNumber()).WillRepeatedly(Return(name));
-        return session;
-    }
-};
-
 }
 
 struct ApplicationMediatorGBMTest : public ::testing::Test
 {
     ApplicationMediatorGBMTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<mtd::StubSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
@@ -115,7 +102,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<StubSessionStore> const session_store;
+    std::shared_ptr<mtd::StubSessionStore> const session_store;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

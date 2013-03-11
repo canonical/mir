@@ -16,11 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SESSION_H_
+#define MIR_TEST_DOUBLES_STUB_SESSION_H_
 
-#include "mir/shell/session_store.h"
-#include "mir_test_doubles/stub_session.h"
+#include "mir/shell/session.h"
 
 namespace mir
 {
@@ -29,22 +28,30 @@ namespace test
 namespace doubles
 {
 
-class StubSessionStore : public shell::SessionStore
+struct StubSession : public shell::Session
 {
-    std::shared_ptr<shell::Session> open_session(std::string const& /* name */)
+    shell::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
     {
-        return std::make_shared<StubSession>();
+        return shell::SurfaceId{0};
     }
-    void close_session(std::shared_ptr<shell::Session> const& /* session */)
-    {
-    }
-    void tag_session_with_lightdm_id(std::shared_ptr<shell::Session> const& /* session */, int /* id */)
+    void destroy_surface(shell::SurfaceId /* surface */)
     {
     }
-    void focus_session_with_lightdm_id(int /* id */)
+    std::shared_ptr<shell::Surface> get_surface(shell::SurfaceId /* surface */) const
     {
+        return std::shared_ptr<shell::Surface>();
+    }
+    std::string name()
+    {
+        return std::string();
     }
     void shutdown()
+    {
+    }
+    void hide()
+    {
+    }
+    void show()
     {
     }
 };
@@ -53,4 +60,4 @@ class StubSessionStore : public shell::SessionStore
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#endif // MIR_TEST_DOUBLES_STUB_SESSION_H_
