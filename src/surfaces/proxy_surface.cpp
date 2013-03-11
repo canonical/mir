@@ -115,11 +115,15 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
 
 bool ms::BasicProxySurface::supports_input() const
 {
+    if (input_package)
+        return true;
     return false;
 }
 
 int ms::BasicProxySurface::client_input_fd() const
 {
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_package->client_fd();
 }
 
