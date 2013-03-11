@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,45 +38,25 @@ namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-namespace
-{
-
-struct MockApplicationSession : public msh::ApplicationSession
-{
-  MockApplicationSession(std::shared_ptr<msh::SurfaceFactory> factory,
-                         std::string name) : ApplicationSession(factory, name)
-  {
-  }
-  MOCK_METHOD0(hide,void());
-  MOCK_METHOD0(show,void());
-};
-
-}
-
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
-    std::shared_ptr<msh::SurfaceFactory> factory(new mtd::MockSurfaceFactory);
-    std::shared_ptr<msh::SessionContainer> model(new msh::SessionContainer);
 
-    MockApplicationSession m1(factory, "Visual Studio 7");
-    MockApplicationSession m2(factory, "Visual Studio 8");
-    MockApplicationSession m3(factory, "Visual Studio 9");
+    mtd::MockSession app1;
+    mtd::MockSession app2;
+    mtd::MockSession app3;
 
-    auto app1 = mt::fake_shared(m1);
-    auto app2 = mt::fake_shared(m2);
-    auto app3 = mt::fake_shared(m3);
+    msh::SessionContainer model;
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));
 
-    msh::SingleVisibilityFocusMechanism focus_mechanism(model);
+    EXPECT_CALL(app1, show()).Times(1);
+    EXPECT_CALL(app2, hide()).Times(1);
+    EXPECT_CALL(app3, hide()).Times(1);
 
-    EXPECT_CALL(m1, show()).Times(1);
-    EXPECT_CALL(m2, hide()).Times(1);
-    EXPECT_CALL(m3, hide()).Times(1);
+    model.insert_session(mt::fake_shared(app1));
+    model.insert_session(mt::fake_shared(app2));
+    model.insert_session(mt::fake_shared(app3));
 
-    model->insert_session(app1);
-    model->insert_session(app2);
-    model->insert_session(app3);
-
-    focus_mechanism.set_focus_to(app1);
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
 
