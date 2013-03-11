@@ -20,7 +20,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface.h"
-#include "mir/input/communication_package_factory.h"
+#include "mir/input/input_channel_factory.h"
 
 #include "proxy_surface.h"
 
@@ -41,6 +41,6 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 std::shared_ptr<msh::Surface> ms::SurfaceController::create_surface(const msh::SurfaceCreationParameters& params)
 {
     return std::make_shared<ProxySurface>(surface_stack.get(), 
-                                          input_factory->make_communication_package(),
+                                          input_factory->make_input_channel(),
                                           params);
 }

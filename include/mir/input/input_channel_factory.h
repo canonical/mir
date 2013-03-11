@@ -32,7 +32,7 @@ class InputChannelFactory
 public:
     virtual ~InputChannelFactory() {}
     
-    virtual std::shared_ptr<InputChannel> make_communication_package() = 0;
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:
     InputChannelFactory() = default;

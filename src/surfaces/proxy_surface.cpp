@@ -30,9 +30,9 @@ namespace mc = mir::compositor;
 namespace mi = mir::input;
 
 ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface,
-                                         std::shared_ptr<input::InputChannel> const& input_package)
+                                         std::shared_ptr<input::InputChannel> const& input_channel)
   : surface(surface),
-    input_package(input_package)
+    input_channel(input_channel)
 {
 }
 
@@ -115,7 +115,7 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
 
 bool ms::BasicProxySurface::supports_input() const
 {
-    if (input_package)
+    if (input_channel)
         return true;
     return false;
 }
@@ -124,14 +124,14 @@ int ms::BasicProxySurface::client_input_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_package->client_fd();
+    return input_channel->client_fd();
 }
 
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,
-        std::shared_ptr<input::InputChannel> const& input_package,
+        std::shared_ptr<input::InputChannel> const& input_channel,
         shell::SurfaceCreationParameters const& params) :
-    BasicProxySurface(surface_stack_->create_surface(params), input_package),
+    BasicProxySurface(surface_stack_->create_surface(params), input_channel),
     surface_stack(surface_stack_)
 {
 }

@@ -68,7 +68,7 @@ void mia::InputManager::start()
     dispatcher_thread->start();
 }
 
-std::shared_ptr<mi::InputChannel> mia::InputManager::make_communication_package()
+std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
 {
     return std::make_shared<mia::AndroidInputChannel>();
 }

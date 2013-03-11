@@ -36,13 +36,13 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-const std::shared_ptr<mi::InputChannel> null_communication_package{0};
+const std::shared_ptr<mi::InputChannel> null_input_channel{0};
 
 class MockSurface : public msh::Surface
 {
 public:
     MockSurface(std::weak_ptr<ms::Surface> const& surface) :
-        impl(surface, null_communication_package)
+        impl(surface, null_input_channel)
     {
         using namespace testing;
 

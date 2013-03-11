@@ -20,7 +20,7 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"
-#include "mir/input/communication_package_factory.h"
+#include "mir/input/input_channel_factory.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -49,7 +49,7 @@ struct MockInputChannel : public mi::InputChannel
 
 struct MockInputChannelFactory : public mi::InputChannelFactory
 {
-    MOCK_METHOD0(make_communication_package, std::shared_ptr<mi::InputChannel>());
+    MOCK_METHOD0(make_input_channel, std::shared_ptr<mi::InputChannel>());
 };
 
 }
@@ -65,7 +65,7 @@ TEST(SurfaceStack, create_surface)
     
     EXPECT_CALL(model, create_surface(_)).Times(1)
         .WillOnce(Return(null_surface));
-    EXPECT_CALL(input_factory, make_communication_package()).Times(1)
+    EXPECT_CALL(input_factory, make_input_channel()).Times(1)
         .WillOnce(Return(mt::fake_shared(package)));
     EXPECT_CALL(model, destroy_surface(_)).Times(1);
         

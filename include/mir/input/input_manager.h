@@ -20,7 +20,7 @@
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
-#include "mir/input/communication_package_factory.h"
+#include "mir/input/input_channel_factory.h"
 
 #include <memory>
 
@@ -41,7 +41,7 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
     
-    virtual std::shared_ptr<InputChannel> make_communication_package() = 0;
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:
     InputManager() {};

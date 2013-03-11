@@ -199,11 +199,11 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
     manager.stop();
 }
 
-TEST_F(AndroidInputManagerSetup, manager_returns_communication_package_with_fds)
+TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 {
     mia::InputManager manager(mt::fake_shared(config));
     
-    auto package = manager.make_communication_package();
+    auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
 }

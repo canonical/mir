@@ -132,7 +132,7 @@ class StubInputManager : public mi::InputManager
     void start() {}
     void stop() {}
     
-    std::shared_ptr<mi::InputChannel> make_communication_package()
+    std::shared_ptr<mi::InputChannel> make_input_channel()
     {
         return std::make_shared<StubInputChannel>();
     }

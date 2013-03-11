@@ -59,7 +59,7 @@ public:
     void start();
     void stop();
     
-    std::shared_ptr<InputChannel> make_communication_package();
+    std::shared_ptr<InputChannel> make_input_channel();
     
 
 protected:
