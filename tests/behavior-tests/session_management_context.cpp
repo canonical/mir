@@ -75,6 +75,10 @@ struct DummySurface : public msh::Surface
     {
         return std::shared_ptr<mc::Buffer>();
     }
+    virtual bool supports_input() const
+    {
+        return true;
+    }
     virtual int client_input_fd() const
     {
         return testing_client_input_fd;

@@ -113,6 +113,11 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
     surface_stack->destroy_surface(surface);
 }
 
+bool ms::BasicProxySurface::supports_input() const
+{
+    return false;
+}
+
 int ms::BasicProxySurface::client_input_fd() const
 {
     return input_package->client_fd();

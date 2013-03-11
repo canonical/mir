@@ -119,19 +119,11 @@ TEST_F(SurfaceProxySetup, destroy)
     Mock::VerifyAndClearExpectations(&surface_stack);
 }
 
-TEST_F(SurfaceProxySetup, client_input_fd)
+TEST_F(SurfaceProxySetup, surfaces_with_communication_package_support_input)
 {
-    using namespace testing;
-    const int testing_client_fd = 17;
-
-    MockCommunicationPackage mock_package;
-    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
-
-    EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
-
-    ms::ProxySurface test(&surface_stack, mt::fake_shared(mock_package), params);
- 
-    EXPECT_EQ(testing_client_fd, test.client_input_fd());
+    using namespace ::testing;
+    
+    
 }
 
 namespace
@@ -288,3 +280,27 @@ TEST_F(BasicSurfaceProxy, advance_client_buffer_throw_behavior)
         proxy_surface.advance_client_buffer();
     });
 }
+
+TEST_F(BasicSurfaceProxy, surfaces_with_communication_package_supports_input)
+{
+    using namespace testing;
+    const int testing_client_fd = 17;
+
+    MockCommunicationPackage mock_package;
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+    auto input_surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+    ms::BasicProxySurface proxy_surface(surface, null_communication_package);
+    ms::BasicProxySurface input_proxy_surface(surface, mt::fake_shared(mock_package));
+
+    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
+    
+    EXPECT_TRUE(input_proxy_surface.supports_input());
+    EXPECT_FALSE(proxy_surface.supports_input());
+
+    EXPECT_EQ(testing_client_fd, input_proxy_surface.client_input_fd());
+
+    EXPECT_THROW({
+            proxy_surface.client_input_fd();
+    }, std::logic_error);
+}
+

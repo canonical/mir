@@ -60,7 +60,8 @@ public:
     void advance_client_buffer();
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
-    
+
+    bool supports_input() const;
     int client_input_fd() const;
 
 protected:
