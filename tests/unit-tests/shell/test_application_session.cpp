@@ -22,7 +22,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
-#include "src/surfaces/proxy_surface.h"
+#include "src/server/surfaces/proxy_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -23,8 +23,8 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "src/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
-#include "src/graphics/android/android_buffer.h"
-#include "src/graphics/android/android_alloc_adaptor.h"
+#include "src/server/graphics/android/android_buffer.h"
+#include "src/server/graphics/android/android_alloc_adaptor.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"

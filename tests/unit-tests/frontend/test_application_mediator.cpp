@@ -32,7 +32,7 @@
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
 
-#include "src/surfaces/proxy_surface.h"
+#include "src/server/surfaces/proxy_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

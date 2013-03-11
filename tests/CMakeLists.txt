@@ -20,6 +20,7 @@ if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)
 
+include_directories(${PROJECT_SOURCE_DIR}/include/server)
 include_directories(${PROJECT_SOURCE_DIR}/include/client)
 include_directories(${PROJECT_SOURCE_DIR}/include/test)
 

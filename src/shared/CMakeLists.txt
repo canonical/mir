@@ -1,5 +1,6 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(protobuf/)
+add_subdirectory(draw/)
 
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
