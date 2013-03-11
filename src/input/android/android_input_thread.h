@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,35 +13,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Guest <thomas.guest@canonical.com>
- *              Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
-#define MIR_CLIENT_MIR_WAIT_HANDLE_H_
+#ifndef MIR_INPUT_ANDROID_INPUT_THREAD_H_
+#define MIR_INPUT_ANDROID_INPUT_THREAD_H_
 
-#include <condition_variable> 
-#include <mutex> 
-
-namespace mir_toolkit
+namespace mir
 {
-class MirWaitHandle
+namespace input
+{
+namespace android
+{
+class InputThread
 {
 public:
-    MirWaitHandle();
-    ~MirWaitHandle();
+    virtual ~InputThread() {}
 
-    void expect_result();
-    void result_received();
-    void wait_for_result();
+    virtual void start() = 0;
+    virtual void request_stop() = 0;
+    virtual void join() = 0;
 
-private:
-    std::mutex guard;
-    std::condition_variable wait_condition;
-
-    int expecting;
-    int received;
+protected:
+    InputThread() {};
+    InputThread(const InputThread&) = delete;
+    InputThread& operator=(const InputThread&) = delete;
 };
-}
 
-#endif /* MIR_CLIENT_MIR_WAIT_HANDLE_H_ */
+}
+}
+} // namespace mir
+
+#endif // MIR_INPUT_ANDROID_INPUT_THREAD_H_

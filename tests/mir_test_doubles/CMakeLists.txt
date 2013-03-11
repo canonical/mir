@@ -13,6 +13,7 @@ set(
 if (NOT MIR_DISABLE_INPUT)
 list(APPEND TEST_UTILS_SRCS
   fake_event_hub.cpp
+  fake_event_hub_input_configuration.cpp
 )
 endif()
 
@@ -29,6 +30,7 @@ endif()
 add_library(
   mir-test-doubles STATIC
   ${TEST_UTILS_SRCS})
+uses_android_input(mir-test-doubles)
 
 target_link_libraries(
   mir-test-doubles

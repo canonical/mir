@@ -67,7 +67,7 @@ mir::DisplayServer::~DisplayServer()
     p->session_store->shutdown();
 }
 
-void mir::DisplayServer::start()
+void mir::DisplayServer::run()
 {
     p->communicator->start();
     p->input_manager->start();
