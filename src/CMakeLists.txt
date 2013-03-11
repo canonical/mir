@@ -1,5 +1,5 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-add_subdirectory(protobuf/)
+add_subdirectory(shared/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(compositor/)
