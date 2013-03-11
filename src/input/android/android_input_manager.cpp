@@ -23,7 +23,7 @@
 #include "android_input_constants.h"
 #include "android_input_configuration.h"
 #include "android_input_thread.h"
-#include "android_communication_package.h"
+#include "android_input_channel.h"
 #include "default_android_input_configuration.h"
 
 #include <EventHub.h>
@@ -68,9 +68,9 @@ void mia::InputManager::start()
     dispatcher_thread->start();
 }
 
-std::shared_ptr<mi::CommunicationPackage> mia::InputManager::make_communication_package()
+std::shared_ptr<mi::InputChannel> mia::InputManager::make_communication_package()
 {
-    return std::make_shared<mia::AndroidCommunicationPackage>();
+    return std::make_shared<mia::AndroidInputChannel>();
 }
 
 std::shared_ptr<mi::InputManager> mi::create_input_manager(

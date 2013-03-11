@@ -19,7 +19,7 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/input/communication_package.h"
+#include "mir/input/input_channel.h"
 #include "mir/input/communication_package_factory.h"
 
 #include "mir_test/fake_shared.h"
@@ -41,15 +41,15 @@ struct MockSurfaceStackModel : public ms::SurfaceStackModel
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> const&));
 };
 
-struct MockCommunicationPackage : public mi::CommunicationPackage
+struct MockInputChannel : public mi::InputChannel
 {
     MOCK_CONST_METHOD0(client_fd, int());
     MOCK_CONST_METHOD0(server_fd, int());
 };
 
-struct MockCommunicationPackageFactory : public mi::CommunicationPackageFactory
+struct MockInputChannelFactory : public mi::InputChannelFactory
 {
-    MOCK_METHOD0(make_communication_package, std::shared_ptr<mi::CommunicationPackage>());
+    MOCK_METHOD0(make_communication_package, std::shared_ptr<mi::InputChannel>());
 };
 
 }
@@ -60,8 +60,8 @@ TEST(SurfaceStack, create_surface)
 
     std::weak_ptr<ms::Surface> null_surface;
     MockSurfaceStackModel model;
-    MockCommunicationPackageFactory input_factory;
-    MockCommunicationPackage package;
+    MockInputChannelFactory input_factory;
+    MockInputChannel package;
     
     EXPECT_CALL(model, create_surface(_)).Times(1)
         .WillOnce(Return(null_surface));

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/input/android/android_communication_package.h"
+#include "src/input/android/android_input_channel.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,11 +27,11 @@
 namespace droidinput = android;
 namespace mia = mir::input::android;
 
-TEST(AndroidCommunicationPackage, packages_own_valid_fds)
+TEST(AndroidInputChannel, packages_own_valid_fds)
 {
     int server_fd, client_fd;
     {
-        mia::AndroidCommunicationPackage package;
+        mia::AndroidInputChannel package;
 
         server_fd = package.server_fd();
         client_fd = package.client_fd();

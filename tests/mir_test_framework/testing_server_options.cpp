@@ -27,7 +27,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/input/communication_package.h"
+#include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
@@ -113,7 +113,7 @@ public:
     }
 };
 
-struct StubCommunicationPackage : public mi::CommunicationPackage
+struct StubInputChannel : public mi::InputChannel
 {
     int client_fd() const
     {
@@ -132,9 +132,9 @@ class StubInputManager : public mi::InputManager
     void start() {}
     void stop() {}
     
-    std::shared_ptr<mi::CommunicationPackage> make_communication_package()
+    std::shared_ptr<mi::InputChannel> make_communication_package()
     {
-        return std::make_shared<StubCommunicationPackage>();
+        return std::make_shared<StubInputChannel>();
     }
 };
 }

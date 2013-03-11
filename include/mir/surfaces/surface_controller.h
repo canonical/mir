@@ -27,7 +27,7 @@ namespace mir
 {
 namespace input
 {
-class CommunicationPackageFactory;
+class InputChannelFactory;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
@@ -41,7 +41,7 @@ class SurfaceStackModel;
 class SurfaceController : public shell::SurfaceFactory
 {
 public:
-    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack, std::shared_ptr<input::CommunicationPackageFactory> const& input_factory);
+    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceController() {}
 
     std::shared_ptr<shell::Surface> create_surface(const shell::SurfaceCreationParameters& params);
@@ -52,7 +52,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;
-    std::shared_ptr<input::CommunicationPackageFactory> const input_factory;
+    std::shared_ptr<input::InputChannelFactory> const input_factory;
 };
 
 }

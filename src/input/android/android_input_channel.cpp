@@ -16,29 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_communication_package.h"
+#include "android_input_channel.h"
 
 #include <androidfw/InputTransport.h>
 
 namespace mia = mir::input::android;
 namespace droidinput = android;
 
-mia::AndroidCommunicationPackage::AndroidCommunicationPackage()
+mia::AndroidInputChannel::AndroidInputChannel()
 {
     droidinput::InputChannel::openInputChannelPair(droidinput::String8(),
                                                    server_channel, client_channel);
 }
 
-mia::AndroidCommunicationPackage::~AndroidCommunicationPackage()
+mia::AndroidInputChannel::~AndroidInputChannel()
 {
 }
 
-int mia::AndroidCommunicationPackage::client_fd() const
+int mia::AndroidInputChannel::client_fd() const
 {
     return client_channel->getFd();
 }
 
-int mia::AndroidCommunicationPackage::server_fd() const
+int mia::AndroidInputChannel::server_fd() const
 {
     return server_channel->getFd();
 }

@@ -34,7 +34,7 @@ class Buffer;
 }
 namespace input
 {
-class CommunicationPackage;
+class InputChannel;
 }
 
 namespace shell

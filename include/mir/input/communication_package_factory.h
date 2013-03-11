@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_COMMUNICATION_PACKAGE_FACTORY_H_
-#define MIR_INPUT_COMMUNICATION_PACKAGE_FACTORY_H_
+#ifndef MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
+#define MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
 
 #include <memory>
 
@@ -25,22 +25,22 @@ namespace mir
 {
 namespace input
 {
-class CommunicationPackage;
+class InputChannel;
 
-class CommunicationPackageFactory
+class InputChannelFactory
 {
 public:
-    virtual ~CommunicationPackageFactory() {}
+    virtual ~InputChannelFactory() {}
     
-    virtual std::shared_ptr<CommunicationPackage> make_communication_package() = 0;
+    virtual std::shared_ptr<InputChannel> make_communication_package() = 0;
 
 protected:
-    CommunicationPackageFactory() = default;
-    CommunicationPackageFactory(CommunicationPackageFactory const&) = delete;
-    CommunicationPackageFactory& operator=(CommunicationPackageFactory const&) = delete;
+    InputChannelFactory() = default;
+    InputChannelFactory(InputChannelFactory const&) = delete;
+    InputChannelFactory& operator=(InputChannelFactory const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_INPUT_COMMUNICATION_PACKAGE_FACTORY_H_
+#endif // MIR_INPUT_INPUT_CHANNEL_FACTORY_H_

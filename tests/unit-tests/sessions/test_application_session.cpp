@@ -36,7 +36,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-const std::shared_ptr<mi::CommunicationPackage> null_communication_package{0};
+const std::shared_ptr<mi::InputChannel> null_communication_package{0};
 
 class MockSurface : public msh::Surface
 {

@@ -20,7 +20,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/input/communication_package.h"
+#include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -78,7 +78,7 @@ private:
     std::shared_ptr<ms::Surface> surface;
 };
 
-struct MockCommunicationPackage : public mi::CommunicationPackage
+struct MockInputChannel : public mi::InputChannel
 {
     MOCK_CONST_METHOD0(client_fd, int());
     MOCK_CONST_METHOD0(server_fd, int());
@@ -92,7 +92,7 @@ struct SurfaceProxySetup : public testing::Test
 {
     MockSurfaceStackModel surface_stack;
     msh::SurfaceCreationParameters params;
-    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
+    std::shared_ptr<mi::InputChannel> null_communication_package;
 };
 }
 
@@ -119,19 +119,12 @@ TEST_F(SurfaceProxySetup, destroy)
     Mock::VerifyAndClearExpectations(&surface_stack);
 }
 
-TEST_F(SurfaceProxySetup, surfaces_with_communication_package_support_input)
-{
-    using namespace ::testing;
-    
-    
-}
-
 namespace
 {
 struct BasicSurfaceProxy : testing::Test
 {
     std::shared_ptr<StubBufferBundle> buffer_bundle;
-    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
+    std::shared_ptr<mi::InputChannel> null_communication_package;
 
     BasicSurfaceProxy() :
         buffer_bundle(std::make_shared<StubBufferBundle>())
@@ -286,7 +279,7 @@ TEST_F(BasicSurfaceProxy, surfaces_with_communication_package_supports_input)
     using namespace testing;
     const int testing_client_fd = 17;
 
-    MockCommunicationPackage mock_package;
+    MockInputChannel mock_package;
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
     auto input_surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
     ms::BasicProxySurface proxy_surface(surface, null_communication_package);

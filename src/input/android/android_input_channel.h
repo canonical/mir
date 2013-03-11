@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_COMMUNICATION_PACKAGE_H_
-#define MIR_INPUT_ANDROID_COMMUNICATION_PACKAGE_H_
+#ifndef MIR_INPUT_ANDROID_INPUT_CHANNEL_H_
+#define MIR_INPUT_ANDROID_INPUT_CHANNEL_H_
 
-#include "mir/input/communication_package.h"
+#include "mir/input/input_channel.h"
 
 #include <utils/StrongPointer.h>
 
@@ -37,18 +37,18 @@ namespace input
 namespace android
 {
 
-class AndroidCommunicationPackage : public CommunicationPackage
+class AndroidInputChannel : public InputChannel
 {
 public:
-    explicit AndroidCommunicationPackage();
-    virtual ~AndroidCommunicationPackage();
+    explicit AndroidInputChannel();
+    virtual ~AndroidInputChannel();
     
     int client_fd() const;
     int server_fd() const;
 
 protected:
-    AndroidCommunicationPackage(AndroidCommunicationPackage const&) = delete;
-    AndroidCommunicationPackage& operator=(AndroidCommunicationPackage const&) = delete;
+    AndroidInputChannel(AndroidInputChannel const&) = delete;
+    AndroidInputChannel& operator=(AndroidInputChannel const&) = delete;
 
 private:
     droidinput::sp<droidinput::InputChannel> client_channel;
@@ -59,4 +59,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_COMMUNICATION_PACKAGE_H_
+#endif // MIR_INPUT_ANDROID_INPUT_CHANNEL_H_

@@ -110,7 +110,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
         std::make_shared<ms::Surface>(
             msh::a_surface().name,
             buffer_bundle));
-    std::shared_ptr<mi::CommunicationPackage> null_communication_package;
+    std::shared_ptr<mi::InputChannel> null_communication_package;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
         Return(std::make_shared<ms::BasicProxySurface>(dummy_surface, null_communication_package)));
 

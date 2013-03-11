@@ -16,29 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_COMMUNICATION_PACKAGE_H_
-#define MIR_INPUT_COMMUNICATION_PACKAGE_H_
+#ifndef MIR_INPUT_INPUT_CHANNEL_H_
+#define MIR_INPUT_INPUT_CHANNEL_H_
 
 namespace mir
 {
 namespace input
 {
 
-class CommunicationPackage
+class InputChannel
 {
 public:
-    virtual ~CommunicationPackage() {}
+    virtual ~InputChannel() {}
     
     virtual int client_fd() const = 0;
     virtual int server_fd() const = 0;
 
 protected:
-    CommunicationPackage() = default;
-    CommunicationPackage(CommunicationPackage const&) = delete;
-    CommunicationPackage& operator=(CommunicationPackage const&) = delete;
+    InputChannel() = default;
+    InputChannel(InputChannel const&) = delete;
+    InputChannel& operator=(InputChannel const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_INPUT_COMMUNICATION_PACKAGE_H_
+#endif // MIR_INPUT_INPUT_CHANNEL_H_

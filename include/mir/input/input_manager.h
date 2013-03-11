@@ -33,15 +33,15 @@ class ViewableArea;
 namespace input
 {
 class EventFilter;
-class CommunicationPackage;
+class InputChannel;
 
-class InputManager : public CommunicationPackageFactory
+class InputManager : public InputChannelFactory
 {
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
     
-    virtual std::shared_ptr<CommunicationPackage> make_communication_package() = 0;
+    virtual std::shared_ptr<InputChannel> make_communication_package() = 0;
 
 protected:
     InputManager() {};

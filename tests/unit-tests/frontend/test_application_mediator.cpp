@@ -29,7 +29,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/communication_package.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
 
@@ -79,7 +79,7 @@ public:
 
 bool DestructionRecordingSession::destroyed{true};
 
-struct StubCommunicationPackage : public mi::CommunicationPackage
+struct StubInputChannel : public mi::InputChannel
 {
     int client_fd() const
     {
@@ -94,8 +94,8 @@ struct StubCommunicationPackage : public mi::CommunicationPackage
     static int testing_server_fd;
 };
 
-int StubCommunicationPackage::testing_client_fd = 11;
-int StubCommunicationPackage::testing_server_fd = 13;
+int StubInputChannel::testing_client_fd = 11;
+int StubInputChannel::testing_server_fd = 13;
 
 class StubSurfaceFactory : public msh::SurfaceFactory
 {
@@ -107,7 +107,7 @@ class StubSurfaceFactory : public msh::SurfaceFactory
         surfaces.push_back(surface);
 
         return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface),
-                                                       std::make_shared<StubCommunicationPackage>());
+                                                       std::make_shared<StubInputChannel>());
     }
 
 private:
@@ -372,7 +372,7 @@ TEST_F(ApplicationMediatorTest, creating_surface_packs_response_with_input_fds)
         mp::Surface response;
 
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
-        EXPECT_EQ(StubCommunicationPackage::testing_client_fd, response.fd(0));
+        EXPECT_EQ(StubInputChannel::testing_client_fd, response.fd(0));
     }
  
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
