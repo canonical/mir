@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -21,7 +21,6 @@
 #define MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
-#include "../event_filter_chain.h"
 
 #include <utils/StrongPointer.h>
 
@@ -30,10 +29,7 @@
 namespace android
 {
 class EventHubInterface;
-class InputDispatcher;
-class InputDispatcherThread;
-class InputReader;
-class InputReaderThread;
+class InputDispatcherInterface;
 }
 
 namespace droidinput = android;
@@ -46,20 +42,18 @@ class ViewableArea;
 }
 namespace input
 {
-
 class CursorListener;
 
 namespace android
 {
+class InputThread;
+class InputConfiguration;
 
 class InputManager : public mir::input::InputManager
 {
 public:
     explicit InputManager(
-        const droidinput::sp<droidinput::EventHubInterface>& event_hub,
-        const std::initializer_list<std::shared_ptr<input::EventFilter> const>& filters,
-        std::shared_ptr<graphics::ViewableArea> const& view_area,
-        std::shared_ptr<CursorListener> const& cursor_listener);
+        std::shared_ptr<InputConfiguration> const& input_configuration);
     virtual ~InputManager();
 
     virtual void start();
@@ -71,14 +65,10 @@ protected:
 
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
-    std::shared_ptr<EventFilterChain> filter_chain;
-    droidinput::sp<droidinput::InputDispatcher> dispatcher;
-    droidinput::sp<droidinput::InputReader> reader;
+    droidinput::sp<droidinput::InputDispatcherInterface> dispatcher;
 
-    // It's important to keep droidinput::sp to dispatcher_thread
-    // and reader_thread or they will free themselves on exit.
-    droidinput::sp<droidinput::InputReaderThread> reader_thread;
-    droidinput::sp<droidinput::InputDispatcherThread> dispatcher_thread;
+    std::shared_ptr<InputThread> reader_thread;
+    std::shared_ptr<InputThread> dispatcher_thread;
 };
 
 }

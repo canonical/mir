@@ -51,7 +51,7 @@ The include subdirectory contains header files "published" by corresponding part
 of the system. For example, include/mir/option/option.h provides a system-wide interface
 for accessing runtime options published by the options component.
 
-In many cases, there will be interfaces defined that are used by the the component
+In many cases, there will be interfaces defined that are used by the component
 and implemented elsewhere. E.g. the compositor uses RenderView which is implemented
 by the surfaces component.
 
@@ -107,7 +107,7 @@ from dying at the same time.
 2. Make sure your software is supported. Mir requires a custom build of the
    Mesa packages to work at all. At the time of writing, these were available
    from:
-       https://launchpad.net/~rocket-scientists/+archive/staging
+       https://launchpad.net/~mir-team/+archive/staging
    If you don't have the right Mesa, you will get nothing on the screen and/or
    strange errors later.
 

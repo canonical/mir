@@ -102,7 +102,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
                 ~ScopedFuture() { future.wait(); }
             } scoped;
 
-            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::start, &server));
+            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
 
             config.exec(&server);
         }

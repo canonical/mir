@@ -23,44 +23,33 @@
 #include <boost/program_options/errors.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <atomic>
 #include <csignal>
 #include <iostream>
 
 namespace
 {
-// TODO: Get rid of the volatile-hack here and replace it with
-// some sane atomic-pointer once we have left GCC 4.4 behind.
-mir::DisplayServer* volatile signal_display_server;
-}
+std::atomic<mir::DisplayServer*> signal_display_server;
 
-namespace mir
+extern "C" void signal_terminate(int)
 {
-extern "C"
-{
-void signal_terminate (int )
-{
-    while (!signal_display_server)
+    while (!signal_display_server.load())
         std::this_thread::yield();
 
-    signal_display_server->stop();
-}
-}
+    signal_display_server.load()->stop();
 }
 
-namespace
-{
 void run_mir(mir::ServerConfiguration& config)
 {
-
-    signal(SIGINT, mir::signal_terminate);
-    signal(SIGTERM, mir::signal_terminate);
+    signal(SIGINT, signal_terminate);
+    signal(SIGTERM, signal_terminate);
     signal(SIGPIPE, SIG_IGN);
 
     mir::DisplayServer server(config);
 
-    signal_display_server = &server;
+    signal_display_server.store(&server);
 
-    server.start();
+    server.run();
 }
 }
 

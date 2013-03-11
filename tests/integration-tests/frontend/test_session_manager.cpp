@@ -16,17 +16,17 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/sessions/session_manager.h"
+#include "mir/shell/session_manager.h"
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/sessions/focus_sequence.h"
-#include "mir/sessions/focus_setter.h"
-#include "mir/sessions/registration_order_focus_sequence.h"
-#include "mir/sessions/session_container.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/focus_sequence.h"
+#include "mir/shell/focus_setter.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,7 +35,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 
 namespace mc = mir::compositor;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -43,9 +43,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockFocusSetter: public msess::FocusSetter
+struct MockFocusSetter: public msh::FocusSetter
 {
-  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msess::Session> const&));
+  MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msh::Session> const&));
 };
 
 }
@@ -54,12 +54,12 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msess::SessionContainer> container(new msess::SessionContainer());
-    msess::RegistrationOrderFocusSequence sequence(container);
+    std::shared_ptr<msh::SessionContainer> container(new msh::SessionContainer());
+    msh::RegistrationOrderFocusSequence sequence(container);
     MockFocusSetter focus_changer;
-    std::shared_ptr<msess::Session> new_session;
+    std::shared_ptr<msh::Session> new_session;
 
-    msess::SessionManager session_manager(
+    msh::SessionManager session_manager(
             mt::fake_shared(surface_factory),
             container,
             mt::fake_shared(sequence),
@@ -87,12 +87,12 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 {
     using namespace ::testing;
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msess::SessionContainer> model(new msess::SessionContainer());
-    msess::RegistrationOrderFocusSequence sequence(model);
+    std::shared_ptr<msh::SessionContainer> model(new msh::SessionContainer());
+    msh::RegistrationOrderFocusSequence sequence(model);
     MockFocusSetter focus_changer;
-    std::shared_ptr<msess::Session> new_session;
+    std::shared_ptr<msh::Session> new_session;
 
-    msess::SessionManager session_manager(
+    msh::SessionManager session_manager(
         mt::fake_shared(surface_factory),
         model,
         mt::fake_shared(sequence),
