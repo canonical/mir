@@ -30,7 +30,7 @@ static const char appname[] = "egldemo";
 static MirConnection *connection;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
-static EGLBoolean running = EGL_FALSE;
+static volatile sig_atomic_t running = 0;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
@@ -55,7 +55,7 @@ static void shutdown(int signum)
 {
     if (running)
     {
-        running = EGL_FALSE;
+        running = 0;
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -170,7 +170,7 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
 
     eglSwapInterval(egldisplay, 1);
 
-    running = EGL_TRUE;
+    running = 1;
 
     return 1;
 }
