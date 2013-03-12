@@ -23,14 +23,16 @@
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_store.h"
-#include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session_store.h"
+#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_session.h"
+#include "mir_test/fake_shared.h"
 
 #include "src/surfaces/proxy_surface.h"
 
@@ -46,73 +48,34 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
 
-/*
- * TODO: Fix design so that it's possible to unit-test ApplicationMediator
- * without having to create doubles for classes so deep in its dependency
- * hierarchy, and needing to resort to ugly tricks to get the information
- * we need (e.g. see DestructionRecordingSession below).
- *
- * In particular, it would be nice if both mf::Session and ms::Surface were
- * stubable/mockable.
- */
-
-class DestructionRecordingSession : public msh::ApplicationSession
+class StubbedSession : public mtd::StubSession
 {
 public:
-    DestructionRecordingSession(std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
-        : msh::ApplicationSession{surface_factory, "Stub"}
+    StubbedSession()
     {
-        destroyed = false;
+        using namespace ::testing;
+        
+        mock_surface = std::make_shared<mtd::MockSurface>();
+        
+        EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+        EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
+        EXPECT_CALL(*mock_surface, client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mt::fake_shared(stub_buffer)));
+        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
     }
 
-    ~DestructionRecordingSession() { destroyed = true; }
-
-    static bool destroyed;
-};
-
-bool DestructionRecordingSession::destroyed{true};
-
-class StubSurfaceFactory : public msh::SurfaceFactory
-{
- public:
-    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
+    std::shared_ptr<msh::Surface> get_surface(msh::SurfaceId /* surface */) const
     {
-        auto surface = std::make_shared<ms::Surface>("DummySurface",
-                                                     std::make_shared<mtd::NullBufferBundle>());
-        surfaces.push_back(surface);
-
-        return std::make_shared<ms::BasicProxySurface>(std::weak_ptr<ms::Surface>(surface));
+        return mock_surface;
     }
 
-private:
-    std::vector<std::shared_ptr<ms::Surface>> surfaces;
-};
-
-class StubSessionStore : public msh::SessionStore
-{
-public:
-    StubSessionStore()
-        : factory{std::make_shared<StubSurfaceFactory>()}
-    {
-    }
-
-    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
-    {
-        return std::make_shared<DestructionRecordingSession>(factory);
-    }
-
-    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
-
-    void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const&, int) {}
-    void focus_session_with_lightdm_id(int) {}
-
-    std::shared_ptr<msh::SurfaceFactory> factory;
+    std::shared_ptr<mtd::MockSurface> mock_surface;
+    mtd::StubBuffer stub_buffer;
 };
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -157,7 +120,7 @@ class StubPlatform : public mg::Platform
 struct ApplicationMediatorTest : public ::testing::Test
 {
     ApplicationMediatorTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<testing::NiceMock<mtd::MockSessionStore>>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
@@ -167,9 +130,12 @@ struct ApplicationMediatorTest : public ::testing::Test
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
+        using namespace ::testing;
+
+        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
     }
 
-    std::shared_ptr<msh::SessionStore> const session_store;
+    std::shared_ptr<testing::NiceMock<mtd::MockSessionStore>> const session_store;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
@@ -183,16 +149,15 @@ struct ApplicationMediatorTest : public ::testing::Test
 
 TEST_F(ApplicationMediatorTest, disconnect_releases_session)
 {
+    using namespace ::testing;
+
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+    
+    EXPECT_CALL(*session_store, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-
-    EXPECT_FALSE(DestructionRecordingSession::destroyed);
-
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-
-    EXPECT_TRUE(DestructionRecordingSession::destroyed);
 }
 
 TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)

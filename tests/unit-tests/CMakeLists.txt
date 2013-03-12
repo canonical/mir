@@ -7,7 +7,7 @@ add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
-add_subdirectory(sessions/)
+add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
@@ -42,7 +42,6 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-  ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
   ${ANDROID_STDLIB}

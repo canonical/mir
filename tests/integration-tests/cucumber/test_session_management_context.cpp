@@ -24,6 +24,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
+#include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/mock_session_store.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -36,6 +38,7 @@ namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace mtc = mt::cucumber;
 
 namespace
@@ -48,30 +51,6 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_drawer, std::shared_ptr<mc::Drawer>());
-};
-
-struct MockSessionStore : public msh::SessionStore
-{
-    MOCK_METHOD1(open_session, std::shared_ptr<msh::Session>(std::string const&));
-    MOCK_METHOD1(close_session, void(std::shared_ptr<msh::Session> const&));
-
-    MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<msh::Session> const&, int));
-    MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
-
-    MOCK_METHOD0(shutdown, void());
-};
-
-struct MockSession : public msh::Session
-{
-    MOCK_METHOD1(create_surface, msh::SurfaceId(msh::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(msh::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<msh::Surface>(msh::SurfaceId));
-    
-    MOCK_METHOD0(name, std::string());
-    MOCK_METHOD0(shutdown, void());
-    
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
 };
 
 struct MockSurface : public msh::Surface
@@ -120,7 +99,7 @@ struct SessionManagementContextSetup : public testing::Test
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
     MockServerConfiguration server_configuration;
-    MockSessionStore session_store;
+    mtd::MockSessionStore session_store;
     std::shared_ptr<mtc::SessionManagementContext> ctx;
 
     static msh::SurfaceId const test_surface_id;
@@ -154,7 +133,7 @@ TEST(SessionManagementContext, constructs_session_store_from_server_configuratio
     using namespace ::testing;
 
     MockServerConfiguration server_configuration;
-    MockSessionStore session_store;
+    mtd::MockSessionStore session_store;
     
     EXPECT_CALL(server_configuration, the_session_store()).Times(1)
         .WillOnce(Return(mt::fake_shared<msh::SessionStore>(session_store)));
@@ -166,7 +145,7 @@ TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with
 {
     using namespace ::testing;
 
-    MockSession session;
+    mtd::MockSession session;
 
     EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)
         .WillOnce(Return(mt::fake_shared<msh::Session>(session)));
@@ -182,7 +161,7 @@ TEST_F(SessionManagementContextSetup, open_window_with_size_creates_surface_with
 {
     using namespace ::testing;
     
-    MockSession session;
+    mtd::MockSession session;
 
     EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)
         .WillOnce(Return(mt::fake_shared<msh::Session>(session)));
@@ -197,7 +176,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
 {
     using namespace ::testing;
 
-    MockSession session;
+    mtd::MockSession session;
     MockSurface surface;
 
     EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)

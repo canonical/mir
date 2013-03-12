@@ -123,7 +123,7 @@ int cancelBuffer_static(struct ANativeWindow* /*window*/,
 
 }
 
-mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> interpreter)
+mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
  : driver_interpreter(interpreter)
 {
     ANativeWindow::query = &query_static;
