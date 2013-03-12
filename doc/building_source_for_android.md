@@ -44,5 +44,5 @@ This method uses a cross compiler (eg, ubuntu package "g++-4.7-arm-linux-gnueabi
         $ make
 
 N.B.
-The script in mir's top level directory, 'cross-compile-android.sh' provides a scripting example of how to cross compile and run
+The script in mir's top level directory, 'cross-compile-android.sh' provides a scripting example of how to cross compile
 
