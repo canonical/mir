@@ -3,6 +3,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_mir_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_connection.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_wait_handle.cpp
 )
 
 if(MIR_PLATFORM STREQUAL "android")

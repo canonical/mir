@@ -41,10 +41,7 @@ class Communicator;
 }
 namespace graphics
 {
-
 class Display;
-class Renderer;
-
 }
 
 class ServerConfiguration;
@@ -56,7 +53,7 @@ public:
 
     ~DisplayServer();
 
-    void start();
+    void run();
     void stop();
 
     void render(graphics::Display* display);

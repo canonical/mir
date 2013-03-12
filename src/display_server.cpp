@@ -22,7 +22,7 @@
 #include "mir/server_configuration.h"
 
 #include "mir/compositor/drawer.h"
-#include "mir/sessions/session_store.h"
+#include "mir/shell/session_store.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
@@ -49,7 +49,7 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::Drawer> compositor;
-    std::shared_ptr<sessions::SessionStore> session_store;
+    std::shared_ptr<shell::SessionStore> session_store;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
@@ -67,7 +67,7 @@ mir::DisplayServer::~DisplayServer()
     p->session_store->shutdown();
 }
 
-void mir::DisplayServer::start()
+void mir::DisplayServer::run()
 {
     p->communicator->start();
     p->input_manager->start();

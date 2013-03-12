@@ -7,7 +7,7 @@ add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
-add_subdirectory(sessions/)
+add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
@@ -18,7 +18,9 @@ endif()
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 
+
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
+uses_android_input(unit-tests)
 
 target_link_libraries(
   unit-tests
