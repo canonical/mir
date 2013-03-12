@@ -19,7 +19,6 @@
 #ifndef MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
 #define MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "syncfence.h"
 #include <system/window.h>
 
 namespace mir

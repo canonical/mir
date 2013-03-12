@@ -19,7 +19,6 @@
 #include "mir_native_window.h"
 #include "android_driver_interpreter.h"
 #include "syncfence.h"
-#include <stdio.h>
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;

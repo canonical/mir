@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,6 +32,7 @@ namespace android
 class IoctlWrapper
 {
 public:
+    virtual ~IoctlWrapper() {};
     virtual int ioctl(int fd, unsigned long int request, int* timeout) = 0;
     virtual int close(int fd) = 0;
 };
@@ -39,6 +40,7 @@ public:
 class AndroidFence
 {
 public:
+    virtual ~AndroidFence() {};
     virtual void wait() = 0;
 };
 
