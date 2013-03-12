@@ -16,35 +16,24 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_android_hwc_device.h"
+#include "src/graphics/android/android_fb_factory.h"
+#include "src/graphics/android/android_display_selector.h"
 
-namespace mtd=mir::test::doubles;
+#include "mir_test/hw_mock.h"
+#include <hardware/hwcomposer.h>
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-/*
-HWComposerAdaptor
-{
+namespace mt=mir::test;
+namespace mga=mir::graphics::android;
 
-};
-*/
-class AndroidFBFactory
-{
-    //virtual dest
-
-    //creates a display that will render primarily via the gpu and OpenGLES 2.0, but will use the hwc
-    //module (version 1.1) for additional functionality, such as vsync timings, and hotplug detection 
-    virtual std::shared_ptr<mg::AndroidDisplay> create_hwc1_1_gpu_display() const = 0;
-
-    //creates a display that will render primarily via the gpu and OpenGLES 2.0. Primarily a fall-back mode, this display is similar to what Android does when /system/lib/hw/hwcomposer.*.so modules are not present 
-    virtual std::shared_ptr<mg::AndroidDisplay> create_gpu_display() const = 0;
-};
- 
 class MockFBFactory : public mga::AndroidFBFactory
 {
-    MOCK_CONST_METHOD0(create_hwc1_1_gpu_display, std::shared_ptr<mg::AndroidDisplay>());
-    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mg::AndroidDisplay>());
+    MOCK_CONST_METHOD0(create_hwc1_1_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
+    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
 };
 
-class DisplayMethodSelector : public ::testing::Test
+class DisplayMethodSelectorTest : public ::testing::Test
 {
 public:
     DisplayMethodSelectorTest()
@@ -59,12 +48,13 @@ TEST_F(DisplayMethodSelectorTest, hwc_selection_gets_hwc_device)
     using namespace testing;
     mga::AndroidDisplaySelector selector;
 
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
     selector->primary_display();
 }
 
+#if 0
 TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_success)
 {
     using namespace testing;
@@ -116,6 +106,4 @@ TEST_F(DisplayMethodSelectorTest, double_primary_display_call_returns_same_objec
 
     EXPECT_EQ(display, display2);
 }
-
-}
-
+#endif
