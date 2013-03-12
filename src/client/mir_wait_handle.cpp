@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "mir_wait_handle.h"
@@ -21,7 +22,8 @@
 mir_toolkit::MirWaitHandle::MirWaitHandle() :
     guard(),
     wait_condition(),
-    result_has_occurred(false)
+    expecting(0),
+    received(0)
 {
 }
 
@@ -29,20 +31,29 @@ mir_toolkit::MirWaitHandle::~MirWaitHandle()
 {
 }
 
+void mir_toolkit::MirWaitHandle::expect_result()
+{
+    std::unique_lock<std::mutex> lock(guard);
+
+    expecting++;
+}
+
 void mir_toolkit::MirWaitHandle::result_received()
 {
     std::unique_lock<std::mutex> lock(guard);
-    result_has_occurred = true;
 
+    received++;
     wait_condition.notify_all();
 }
 
 void mir_toolkit::MirWaitHandle::wait_for_result()
 {
     std::unique_lock<std::mutex> lock(guard);
-    while ( (!result_has_occurred) )
-        wait_condition.wait(lock);
-    result_has_occurred = false;
-}
 
+    while ((!expecting && !received) || (received < expecting))
+        wait_condition.wait(lock);
+
+    received = 0;
+    expecting = 0;
+}
 

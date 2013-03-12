@@ -6,6 +6,8 @@ XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
                debhelper (>= 9),
+               doxygen,
+               graphviz,
                libboost1.48-all-dev | libboost-all-dev,
                protobuf-compiler,
                libdrm-dev [!armhf],
@@ -27,7 +29,7 @@ Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - protocol implementation
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the protocol's shared library.
@@ -40,7 +42,7 @@ Depends: libmirprotobuf0 (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - protocol definition
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the protocol's definition files.
@@ -51,7 +53,7 @@ Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - server library
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the shared library needed by server applications for Mir.
@@ -63,7 +65,7 @@ Depends: libmirserver0 (= ${binary:Version}),
          libmirprotobuf-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains header files required to build Mir servers.
@@ -74,7 +76,7 @@ Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - client library
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the shared library needed by client applications for Mir.
@@ -86,18 +88,18 @@ Depends: libmirclient0 (= ${binary:Version}),
          libmirprotobuf-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains header files required to develop against Mir.
 
 Package: libmirclient-demos
 Architecture: any
-Depends: ${misc:Depends}, 
+Depends: ${misc:Depends},
         libmirclient-dev(= ${binary:Version}),
 Breaks: mir (<< 0.0.2-0ubuntu1)
-Description: Display server for Ubuntu - example client programs 
- Mir is a display server running on linux systems, with a focus on efficiency, 
+Description: Display server for Ubuntu - example client programs
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains demo applications (with source) that use the Mir display server
@@ -108,8 +110,14 @@ Depends: ${misc:Depends},
          ${shlibs:Depends},
          libmirserver0 (= ${binary:Version}),
 Description: Display server for Ubuntu - server executable
- Mir is a display server running on linux systems, with a focus on efficiency, 
+ Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the main server executable.
+
+Package: mir-doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: API documentation for mir
+ This package installs the mir API documentation.
 
