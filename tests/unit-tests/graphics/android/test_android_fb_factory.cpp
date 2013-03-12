@@ -38,34 +38,35 @@ class DisplayMethodSelectorTest : public ::testing::Test
 {
 public:
     DisplayMethodSelectorTest()
+     : mock_fb_factory(std::make_shared<MockFbFactory>())
     {
     }
 
-    MockFbFactory mock_fb_factory;
+    std::shared_ptr<MockFbFactory> mock_fb_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(DisplayMethodSelectorTest, hwc_selection_gets_hwc_device)
 {
     using namespace testing;
-    mga::AndroidDisplaySelector selector;
 
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
 TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_success)
 {
     using namespace testing;
-    mga::AndroidDisplaySelector selector;
 
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1);
-    EXPECT_CALL(mock_fb_factory, create_hwc1_1_gpu_display())
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display())
         .Times(1); 
 
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
@@ -76,10 +77,10 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_module_not
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
-    EXPECT_CALL(mock_fb_factory, create_gpu_display())
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
         .Times(1); 
 
-    mga::AndroidDisplaySelector selector;
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
@@ -89,10 +90,10 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_hwc_versio
 
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
-    EXPECT_CALL(mock_fb_factory, create_gpu_display())
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
         .Times(1); 
 
-    mga::AndroidDisplaySelector selector;
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
@@ -102,10 +103,10 @@ TEST_F(DisplayMethodSelectorTest, double_primary_display_call_returns_same_objec
 
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(2);
-    EXPECT_CALL(mock_fb_factory, create_hwc1_1_gpu_display())
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display())
         .Times(1); 
 
-    mga::AndroidDisplaySelector selector;
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
     auto display = selector.primary_display();
     auto display2 = selector.primary_display();
 

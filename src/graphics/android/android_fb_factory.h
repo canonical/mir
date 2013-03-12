@@ -33,7 +33,7 @@ class AndroidDisplay;
 class AndroidFBFactory
 {
 public:
-    ~AndroidFBFactory() {};
+    virtual ~AndroidFBFactory() {};
 
     //creates a display that will render primarily via the gpu and OpenGLES 2.0, but will use the hwc
     //module (version 1.1) for additional functionality, such as vsync timings, and hotplug detection 

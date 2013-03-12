@@ -29,11 +29,12 @@ namespace android
 {
 
 class AndroidDisplay;
+class AndroidFBFactory;
 
 class AndroidDisplaySelector
 {
 public:
-    AndroidDisplaySelector() {}
+    AndroidDisplaySelector(std::shared_ptr<AndroidFBFactory> const& factory);
     
     std::shared_ptr<AndroidDisplay> primary_display();
 };
