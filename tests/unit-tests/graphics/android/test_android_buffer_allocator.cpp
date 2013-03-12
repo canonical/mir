@@ -17,6 +17,8 @@
  */
 
 #include "src/graphics/android/android_buffer_allocator.h"
+#include "mir_test/hw_mock.h"
+#include <hardware/gralloc.h>
 
 #include <gtest/gtest.h>
 
@@ -24,11 +26,26 @@
 
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
-namespace mc=mir::compositor;
+namespace mc = mir::compositor;
+namespace mt = mir::test;
 
-class AndroidBufferAllocatorTest : public ::testing::Test
+struct AndroidBufferAllocatorTest : public ::testing::Test
 {
+    mt::HardwareAccessMock hw_access_mock;
 };
+
+TEST_F(AndroidBufferAllocatorTest, allocator_accesses_gralloc_module)
+{
+    using namespace testing;
+
+    const hw_module_t    *hw_module;
+    EXPECT_CALL(hw_access_mock, hw_get_module(GRALLOC_HARDWARE_MODULE_ID, _))
+        .Times(1)
+        .WillOnce(DoAll(SaveArgPointee<1>(&hw_module),
+                        Return(0)));
+
+    EXPECT_NE(nullptr, hw_module);
+}
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
