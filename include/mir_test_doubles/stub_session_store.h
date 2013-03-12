@@ -16,12 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#define MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
 
-#include "mir/shell/session.h"
-
-#include <gmock/gmock.h>
+#include "mir/shell/session_store.h"
+#include "mir_test_doubles/stub_session.h"
 
 namespace mir
 {
@@ -30,22 +29,28 @@ namespace test
 namespace doubles
 {
 
-struct MockSession : public shell::Session
+class StubSessionStore : public shell::SessionStore
 {
-    MOCK_METHOD1(create_surface, shell::SurfaceId(shell::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(shell::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<shell::Surface>(shell::SurfaceId));
-    
-    MOCK_METHOD0(name, std::string());
-    MOCK_METHOD0(shutdown, void());
-    
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
+    std::shared_ptr<shell::Session> open_session(std::string const& /* name */)
+    {
+        return std::make_shared<StubSession>();
+    }
+    void close_session(std::shared_ptr<shell::Session> const& /* session */)
+    {
+    }
+    void tag_session_with_lightdm_id(std::shared_ptr<shell::Session> const& /* session */, int /* id */)
+    {
+    }
+    void focus_session_with_lightdm_id(int /* id */)
+    {
+    }
+    void shutdown()
+    {
+    }
 };
 
 }
 }
 } // namespace mir
 
-
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#endif // MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_

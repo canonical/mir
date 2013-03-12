@@ -16,12 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "mir/shell/session.h"
+#include "mir/shell/surface.h"
 
-#include <gmock/gmock.h>
+#include <memory>
 
 namespace mir
 {
@@ -30,22 +30,21 @@ namespace test
 namespace doubles
 {
 
-struct MockSession : public shell::Session
+struct MockSurface : public shell::Surface
 {
-    MOCK_METHOD1(create_surface, shell::SurfaceId(shell::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(shell::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<shell::Surface>(shell::SurfaceId));
-    
-    MOCK_METHOD0(name, std::string());
-    MOCK_METHOD0(shutdown, void());
-    
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+    MOCK_METHOD0(destroy, void());
+    MOCK_METHOD0(shutdown, void());
+    MOCK_METHOD0(advance_client_buffer, void());
+
+    MOCK_CONST_METHOD0(size, geometry::Size ());
+    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
+    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
 };
 
 }
 }
 } // namespace mir
 
-
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_H_

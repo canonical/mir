@@ -16,12 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SESSION_H_
+#define MIR_TEST_DOUBLES_STUB_SESSION_H_
 
 #include "mir/shell/session.h"
-
-#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -30,22 +28,36 @@ namespace test
 namespace doubles
 {
 
-struct MockSession : public shell::Session
+struct StubSession : public shell::Session
 {
-    MOCK_METHOD1(create_surface, shell::SurfaceId(shell::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(shell::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<shell::Surface>(shell::SurfaceId));
-    
-    MOCK_METHOD0(name, std::string());
-    MOCK_METHOD0(shutdown, void());
-    
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
+    shell::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
+    {
+        return shell::SurfaceId{0};
+    }
+    void destroy_surface(shell::SurfaceId /* surface */)
+    {
+    }
+    std::shared_ptr<shell::Surface> get_surface(shell::SurfaceId /* surface */) const
+    {
+        return std::shared_ptr<shell::Surface>();
+    }
+    std::string name()
+    {
+        return std::string();
+    }
+    void shutdown()
+    {
+    }
+    void hide()
+    {
+    }
+    void show()
+    {
+    }
 };
 
 }
 }
 } // namespace mir
 
-
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#endif // MIR_TEST_DOUBLES_STUB_SESSION_H_
