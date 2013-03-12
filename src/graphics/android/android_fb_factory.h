@@ -32,6 +32,7 @@ class AndroidDisplay;
 
 class AndroidFBFactory
 {
+public:
     ~AndroidFBFactory() {};
 
     //creates a display that will render primarily via the gpu and OpenGLES 2.0, but will use the hwc

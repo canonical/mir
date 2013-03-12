@@ -28,10 +28,14 @@ namespace graphics
 namespace android
 {
 
+class AndroidDisplay;
+
 class AndroidDisplaySelector
 {
 public:
     AndroidDisplaySelector() {}
+    
+    std::shared_ptr<AndroidDisplay> primary_display();
 };
 
 }
