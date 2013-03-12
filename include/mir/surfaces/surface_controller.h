@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/surface_factory.h"
 
 #include <memory>
 
@@ -34,13 +34,13 @@ namespace surfaces
 class Surface;
 class SurfaceStackModel;
 
-class SurfaceController : public sessions::SurfaceFactory
+class SurfaceController : public shell::SurfaceFactory
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
     virtual ~SurfaceController() {}
 
-    std::shared_ptr<sessions::Surface> create_surface(const sessions::SurfaceCreationParameters& params);
+    std::shared_ptr<shell::Surface> create_surface(const shell::SurfaceCreationParameters& params);
 
 protected:
     SurfaceController(const SurfaceController&) = delete;

@@ -18,10 +18,10 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_mediator_report.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/session.h"
-#include "mir/sessions/surface.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/session.h"
+#include "mir/shell/surface.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
@@ -36,7 +36,7 @@
 #include <boost/throw_exception.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<sessions::SessionStore> const& session_store,
+    std::shared_ptr<shell::SessionStore> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
@@ -99,7 +99,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     report->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
-        sessions::SurfaceCreationParameters()
+        shell::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
@@ -144,7 +144,7 @@ void mir::frontend::ApplicationMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    using sessions::SurfaceId;
+    using shell::SurfaceId;
 
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -196,7 +196,7 @@ void mir::frontend::ApplicationMediator::release_surface(
 
     report->application_release_surface_called(application_session->name());
 
-    auto const id = sessions::SurfaceId(request->value());
+    auto const id = shell::SurfaceId(request->value());
 
     application_session->destroy_surface(id);
 

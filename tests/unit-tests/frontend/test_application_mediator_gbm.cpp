@@ -20,9 +20,9 @@
 #include "mir/frontend/application_mediator_report.h"
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/sessions/application_session.h"
-#include "mir/sessions/session_store.h"
-#include "mir/sessions/surface_factory.h"
+#include "mir/shell/application_session.h"
+#include "mir/shell/session_store.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
@@ -32,6 +32,8 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/stub_session_store.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,50 +43,11 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msess = mir::sessions;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-/*
- * TODO: Fix design so that it's possible to unit-test ApplicationMediator
- * without having to create doubles for classes so deep in its dependency
- * hierarchy.
- *
- * In particular, it would be nice if msess::ApplicationSession was stubable/mockable.
- */
-
-class StubSurfaceFactory : public msess::SurfaceFactory
-{
- public:
-    std::shared_ptr<msess::Surface> create_surface(const msess::SurfaceCreationParameters& /*params*/)
-    {
-        return std::shared_ptr<msess::Surface>();
-    }
-};
-
-class StubSessionStore : public msess::SessionStore
-{
-public:
-    StubSessionStore()
-        : factory{std::make_shared<StubSurfaceFactory>()}
-    {
-    }
-
-    std::shared_ptr<msess::Session> open_session(std::string const& /*name*/)
-    {
-        return std::make_shared<msess::ApplicationSession>(factory, "stub");
-    }
-
-    void close_session(std::shared_ptr<msess::Session> const& /*session*/) {}
-
-    void shutdown() {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msess::Session> const&, int) {}
-    void focus_session_with_lightdm_id(int) {}
-
-    std::shared_ptr<msess::SurfaceFactory> factory;
-};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -127,7 +90,7 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
 struct ApplicationMediatorGBMTest : public ::testing::Test
 {
     ApplicationMediatorGBMTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<mtd::StubSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
@@ -139,7 +102,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<msess::SessionStore> const session_store;
+    std::shared_ptr<mtd::StubSessionStore> const session_store;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

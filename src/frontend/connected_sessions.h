@@ -39,25 +39,25 @@ public:
     void add(std::shared_ptr<Session> const& session)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        sessions_list[session->id()] = session;
+        shell_list[session->id()] = session;
     }
 
     void remove(int id)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        sessions_list.erase(id);
+        shell_list.erase(id);
     }
 
     bool includes(int id) const
     {
         std::unique_lock<std::mutex> lock(mutex);
-        return sessions_list.find(id) != sessions_list.end();
+        return shell_list.find(id) != shell_list.end();
     }
 
     void clear()
     {
         std::unique_lock<std::mutex> lock(mutex);
-        sessions_list.clear();
+        shell_list.clear();
     }
 
 
@@ -66,7 +66,7 @@ private:
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;
 
     std::mutex mutex;
-    std::map<int, std::shared_ptr<Session>> sessions_list;
+    std::map<int, std::shared_ptr<Session>> shell_list;
 };
 }
 }

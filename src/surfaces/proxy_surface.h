@@ -20,12 +20,12 @@
 #ifndef PROXY_SURFACE_H_
 #define PROXY_SURFACE_H_
 
-#include "mir/sessions/surface.h"
+#include "mir/shell/surface.h"
 #include "mir/surfaces/surface.h"
 
 namespace mir
 {
-namespace sessions
+namespace shell
 {
 class SurfaceCreationParameters;
 }
@@ -34,7 +34,7 @@ namespace surfaces
 {
 class SurfaceStackModel;
 
-class BasicProxySurface : public sessions::Surface
+class BasicProxySurface : public shell::Surface
 {
 public:
 
@@ -68,7 +68,7 @@ class ProxySurface : public BasicProxySurface
 public:
     ProxySurface(
         SurfaceStackModel* const surface_stack_,
-        sessions::SurfaceCreationParameters const& params);
+        shell::SurfaceCreationParameters const& params);
 
     void destroy();
 

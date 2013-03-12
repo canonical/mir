@@ -21,7 +21,7 @@
 
 #include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/sessions/surface_id.h"
+#include "mir/shell/surface_id.h"
 
 #include <string>
 #include <map>
@@ -32,7 +32,7 @@ namespace mir
 {
 class ServerConfiguration;
 
-namespace sessions
+namespace shell
 {
 class SessionStore;
 class Session;
@@ -68,10 +68,10 @@ protected:
     SessionManagementContext& operator=(SessionManagementContext const&) = delete;
 
 private:
-    std::map<std::string, std::tuple<std::shared_ptr<sessions::Session>, sessions::SurfaceId>> open_windows;
+    std::map<std::string, std::tuple<std::shared_ptr<shell::Session>, shell::SurfaceId>> open_windows;
 
     std::shared_ptr<SizedDisplay> view_area;
-    std::shared_ptr<sessions::SessionStore> session_store;
+    std::shared_ptr<shell::SessionStore> session_store;
 };
 
 }

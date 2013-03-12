@@ -31,7 +31,7 @@ namespace frontend
 class Communicator;
 }
 
-namespace sessions
+namespace shell
 {
 class SessionStore;
 }
@@ -49,7 +49,7 @@ class ServerConfiguration
 {
 public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
-    virtual std::shared_ptr<sessions::SessionStore> the_session_store() = 0;
+    virtual std::shared_ptr<shell::SessionStore> the_session_store() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Drawer> the_drawer() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
