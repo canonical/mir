@@ -21,7 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/compositor/buffer_ipc_package.h"
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/protobuf_socket_communicator.h"
 #include "mir/frontend/resource_cache.h"
 #include "src/server/graphics/android/android_buffer.h"
 #include "src/server/graphics/android/android_alloc_adaptor.h"
