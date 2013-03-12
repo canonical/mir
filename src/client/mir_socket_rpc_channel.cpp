@@ -63,7 +63,7 @@ mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
     }
 }
 
-
+// TODO: This function needs some work.
 void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
