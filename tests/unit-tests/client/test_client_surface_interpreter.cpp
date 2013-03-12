@@ -118,7 +118,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
         .WillOnce(Return(mock_client_buffer));
 
     auto returned_buffer = interpreter.driver_requests_buffer();
-    EXPECT_EQ(returned_buffer, &buffer);
+    EXPECT_EQ(&buffer, returned_buffer);
 }
 
 TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
@@ -146,7 +146,7 @@ TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
     interpreter.dispatch_driver_request_format(format);
     auto tmp_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
 
-    EXPECT_EQ(tmp_format, format);
+    EXPECT_EQ(format, tmp_format);
 }
 
 TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)

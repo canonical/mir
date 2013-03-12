@@ -35,7 +35,7 @@ class AndroidDriverInterpreter;
 class MirNativeWindow : public ANativeWindow
 {
 public:
-    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> interpreter);
+    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
 
     int query(int key, int* value) const;
     int perform(int key, va_list args );
@@ -43,7 +43,7 @@ public:
     int queueBuffer(struct ANativeWindowBuffer* buffer, int fence_fd);
 private:
 
-    std::shared_ptr<AndroidDriverInterpreter> driver_interpreter;
+    std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
 };
 
 }
