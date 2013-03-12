@@ -97,7 +97,7 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<StubSessionStore> const session_store;
+    std::shared_ptr<mtd::StubSessionStore> const session_store;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
