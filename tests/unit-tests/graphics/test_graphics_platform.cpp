@@ -28,6 +28,7 @@
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir_test/hw_mock.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -37,6 +38,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -69,6 +71,7 @@ public:
 
     std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
+    mt::HardwareAccessMock hw_access_mock;
 #ifndef ANDROID
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;

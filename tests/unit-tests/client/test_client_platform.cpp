@@ -21,6 +21,7 @@
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test/hw_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -29,7 +30,12 @@ namespace mcl=mir::client;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-TEST(ClientPlatformTest, platform_creates )
+class ClientPlatformTest : public ::testing::Test
+{
+    mt::HardwareAccessMock hw_access_mock;
+};
+
+TEST_F(ClientPlatformTest, platform_creates )
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
@@ -38,7 +44,7 @@ TEST(ClientPlatformTest, platform_creates )
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
-TEST(ClientPlatformTest, platform_creates_native_window )
+TEST_F(ClientPlatformTest, platform_creates_native_window )
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
@@ -48,7 +54,7 @@ TEST(ClientPlatformTest, platform_creates_native_window )
     EXPECT_NE( *native_window, (EGLNativeWindowType) NULL);
 }
 
-TEST(ClientPlatformTest, platform_creates_egl_native_display)
+TEST_F(ClientPlatformTest, platform_creates_egl_native_display)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
