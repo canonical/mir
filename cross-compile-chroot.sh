@@ -37,7 +37,6 @@ pushd ${BUILD_DIR} > /dev/null
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
       -DBoost_COMPILER=-gcc \
       -DMIR_ENABLE_DEATH_TESTS=NO \
-      -DMIR_INPUT_ENABLE_EVEMU=NO \
       -DMIR_PLATFORM=android \
       -DMIR_DISABLE_INPUT=true \
       .. 
