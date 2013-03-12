@@ -13,26 +13,29 @@ else
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
 endif
 
+COMMON_CONFIGURE_OPTIONS = \
+  -DMIR_DISABLE_EPOLL_REACTOR=YES \
+  -DMIR_DISABLE_INPUT=YES \
+  -DBUILD_DOXYGEN=YES
+
 # We need to rely on the select-based reactor to fix the ppa builds.
 # TODO: Get rid of this workaround by either switching to boost 1.51 or
 # updating the ppa builders kernel version.
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
-      -DMIR_DISABLE_EPOLL_REACTOR=YES \
-      -DBoost_COMPILER=-gcc \
-      -DMIR_ENABLE_DEATH_TESTS=NO \
-      -DMIR_INPUT_ENABLE_EVEMU=NO \
-      -DMIR_PLATFORM=android \
-      -DMIR_DISABLE_INPUT=true
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DBoost_COMPILER=-gcc \
+	  -DMIR_ENABLE_DEATH_TESTS=NO \
+	  -DMIR_INPUT_ENABLE_EVEMU=NO \
+	  -DMIR_PLATFORM=android
 else
 	dh_auto_configure -- \
-      -DMIR_DISABLE_EPOLL_REACTOR=YES \
-      -DMIR_DISABLE_INPUT=YES
+	  $(COMMON_CONFIGURE_OPTIONS)
 endif
 
 override_dh_installexamples:
-	dh_installexamples -p libmirclient-demos 
+	dh_installexamples -p libmirclient-demos
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V
