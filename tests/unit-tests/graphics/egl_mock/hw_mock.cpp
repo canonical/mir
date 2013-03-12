@@ -11,6 +11,8 @@ mt::HardwareAccessMock* global_hw_mock = NULL;
 namespace gralloc_mock
 {
 
+
+//todo: use the mock for the alloc device
 struct alloc_device_t fake_device;
 static struct native_handle fake_handle;
 
