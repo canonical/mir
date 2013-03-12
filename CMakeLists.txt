@@ -120,6 +120,9 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 
+include_directories (${GLESv2_INCLUDE_DIRS})                                    
+include_directories (${EGL_INCLUDE_DIRS})
+
 if (NOT MIR_INPUT_USE_ANDROID_TYPES)
 add_definitions(
   -DANDROID_USE_STD
