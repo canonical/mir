@@ -16,4 +16,3 @@ add_library(
 
   ${SHELL_SOURCES}
 )
-

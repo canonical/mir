@@ -46,8 +46,6 @@ namespace
 
 namespace mir
 {
-class Shell;
-
 namespace
 {
 struct ClientConfigCommon : TestingClientConfiguration
