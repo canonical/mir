@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
-#include <mir/surface.h>  /* Surface definitions common to client & server */
+#include <mir/common.h>
 
 #ifdef __cplusplus
 /** The C client API

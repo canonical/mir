@@ -1,6 +1,5 @@
 /*
- * Surface-related declarations common to client and server
- * This is C. Not C++.
+ * Simple definitions common to client and server.
  *
  * Copyright © 2013 Canonical Ltd.
  *
@@ -19,8 +18,10 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_SURFACE_H_
-#define MIR_SURFACE_H_
+#ifndef MIR_COMMON_H_
+#define MIR_COMMON_H_
+
+/* This is C code. Not C++. */
 
 /*
  * Attributes of a surface that the client and server/shell may wish to
