@@ -5,9 +5,50 @@
 
 namespace mt = mir::test;
 
+
+#include <system/window.h>
+#include <memory>
+
 namespace
 {
+
+class ANativeWindowInterface
+{
+public:
+    virtual ~ANativeWindowInterface() {}
+    virtual int query_interface(const ANativeWindow* win , int code, int* value) const = 0;
+};
+class MockANativeWindow : public ANativeWindowInterface,
+    public ANativeWindow
+{
+public:
+    ~MockANativeWindow() {};
+    MockANativeWindow()
+        : fake_visual_id(5)
+    {
+        using namespace testing;
+
+        query = hook_query;
+
+        ON_CALL(*this, query_interface(_,_,_))
+        .WillByDefault(DoAll(
+                           SetArgPointee<2>(fake_visual_id),
+                           Return(0)));
+    }
+
+    static int hook_query(const ANativeWindow* anw, int code, int *ret)
+    {
+        const MockANativeWindow* mocker = static_cast<const MockANativeWindow*>(anw);
+        return mocker->query_interface(anw, code, ret);
+    }
+
+    MOCK_CONST_METHOD3(query_interface,int(const ANativeWindow*,int,int*));
+
+    int fake_visual_id;
+};
+
 mt::HardwareAccessMock* global_hw_mock = NULL;
+std::shared_ptr<MockANativeWindow> global_android_fb_win;
 
 namespace gralloc_mock
 {
@@ -86,6 +127,8 @@ mt::HardwareAccessMock::HardwareAccessMock()
     fake_hwc_device = &hwc_mock::fake_device;
     fake_hwc_device->version = HWC_DEVICE_API_VERSION_1_1;
 
+    global_android_fb_win = std::make_shared<MockANativeWindow>();
+
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))
         .WillByDefault(DoAll(SetArgPointee<1>(&fake_hw_gr_module), Return(0)));
     ON_CALL(*this, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
@@ -94,6 +137,7 @@ mt::HardwareAccessMock::HardwareAccessMock()
 
 mt::HardwareAccessMock::~HardwareAccessMock()
 {
+    global_android_fb_win.reset(); 
     global_hw_mock = NULL;
 }
 
@@ -106,4 +150,14 @@ int hw_get_module(const char *id, const struct hw_module_t **module)
     }
     int rc =  global_hw_mock->hw_get_module(id, module);
     return rc;
+}
+
+extern "C"
+{
+ANativeWindow* android_createDisplaySurface()
+{
+    return global_android_fb_win.get();
+}
+
+
 }

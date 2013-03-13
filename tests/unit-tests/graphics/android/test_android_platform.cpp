@@ -34,10 +34,12 @@ struct MockDisplaySelector : public mga::DisplaySelector
 
 TEST(AndroidGraphicsPlatform, test_display_creation)
 {
-    auto selector = std::make_shared<MockDisplaySelector>();   
+    using namespace testing;
+    auto selector = std::make_shared<MockDisplaySelector>(); 
     auto platform = std::make_shared<mga::AndroidPlatform>(selector);
 
     EXPECT_CALL(*selector, primary_display())
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(std::shared_ptr<mg::Display>()));
     platform->create_display();
 }

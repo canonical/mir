@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform.h"
 
+#include <iostream>
 namespace mir
 {
 namespace graphics
@@ -33,6 +34,7 @@ class AndroidPlatform : public Platform
 {
 public:
     AndroidPlatform(std::shared_ptr<DisplaySelector> const& selector);
+    ~AndroidPlatform() { std::cout << "platform destruct\n"; }
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
 
 #include <memory>
+#include <iostream>
 
 namespace mir
 {
@@ -46,7 +47,8 @@ class AndroidDisplaySelector : public DisplaySelector
 {
 public:
     AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
-    
+    ~AndroidDisplaySelector() {std::cout << "DESTRUCT\n";} 
+ 
     std::shared_ptr<Display> primary_display();
 
 private:

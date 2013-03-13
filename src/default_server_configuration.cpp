@@ -212,6 +212,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             // graphics libraries.
             // Alternatively, if we want to dynamically load the graphics library
             // then this would be the place to do that.
+            printf("CALLING...\n");
             return mg::create_platform(the_display_report());
         });
 }
