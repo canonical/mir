@@ -127,19 +127,6 @@ int msh::ApplicationSession::configure_surface(msh::SurfaceId id,
                                                MirSurfaceAttrib attrib,
                                                int value)
 {
-#if 0
-    // TODO
-    if (!shell->supports(attrib))
-        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
-                                               "support the specified surface "
-                                               "attribute"));
-
-    if (!shell->supports(attrib, value))
-        BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
-                                               "support the specified value "
-                                               "for this attribute"));
-#endif
-
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 

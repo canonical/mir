@@ -22,6 +22,8 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/surfaces/buffer_bundle.h"
 
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 #include <cassert>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -134,14 +136,19 @@ int ms::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
 
+    /*
+     * TODO: In future, query the shell implementation for the subset of
+     *       attributes/types it implements.
+     */
     switch (attrib)
     {
     case mir_surface_attrib_type:
-        set_type(static_cast<MirSurfaceType>(value));
+        if (!set_type(static_cast<MirSurfaceType>(value)))
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface type."));
         result = type_value;
         break;
     default:
-        assert(false);
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface attribute."));
         break;
     }
 
