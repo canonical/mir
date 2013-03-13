@@ -155,7 +155,6 @@ endif()
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
-set(MIR_3RD_PARTY_SOURCES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 

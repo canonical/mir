@@ -78,7 +78,6 @@ add_library(
   mirclient SHARED
 
   ${CLIENT_SOURCES}
-  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set_target_properties(
