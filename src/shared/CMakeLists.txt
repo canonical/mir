@@ -10,7 +10,7 @@ set(
 # Some headers contain common definitions required for both client and
 # server development...
 set (MIR_COMMON_HEADERS
-  ${CMAKE_SOURCE_DIR}/include/mir/common.h
+  ${CMAKE_SOURCE_DIR}/include/shared/mir/common.h
 )
 
 install (FILES ${MIR_COMMON_HEADERS} DESTINATION "include/mir/")
