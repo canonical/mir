@@ -30,10 +30,10 @@ class Display;
 namespace android
 {
 
-class AndroidFBFactory
+class FBFactory
 {
 public:
-    virtual ~AndroidFBFactory() {};
+    virtual ~FBFactory() {};
 
     //creates a display that will render primarily via the gpu and OpenGLES 2.0, but will use the hwc
     //module (version 1.1) for additional functionality, such as vsync timings, and hotplug detection 
@@ -42,6 +42,13 @@ public:
     //creates a display that will render primarily via the gpu and OpenGLES 2.0. Primarily a fall-back mode, this display is similar to what Android does when /system/lib/hw/hwcomposer.*.so modules are not present 
     virtual std::shared_ptr<Display> create_gpu_display() const = 0;
 };
+
+class AndroidFBFactory : public FBFactory
+{
+    std::shared_ptr<Display> create_hwc1_1_gpu_display() const;
+    std::shared_ptr<Display> create_gpu_display() const;
+};
+
 
 }
 }
