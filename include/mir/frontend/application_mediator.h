@@ -104,9 +104,9 @@ public:
                         google::protobuf::Closure* done);
 
     void configure_surface(google::protobuf::RpcController* controller,
-                        const mir::protobuf::SurfaceSetting*,
-                        mir::protobuf::SurfaceSetting*,
-                        google::protobuf::Closure* done);
+                           const mir::protobuf::SurfaceSetting*,
+                           mir::protobuf::SurfaceSetting*,
+                           google::protobuf::Closure* done);
     
 private:
     std::shared_ptr<shell::SessionStore> const session_store;

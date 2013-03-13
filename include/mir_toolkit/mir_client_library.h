@@ -335,7 +335,7 @@ int mir_debug_surface_id(MirSurface *surface);
 MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
 
 /**
- * Get the type (purpose) of a surface from the server.
+ * Get the type (purpose) of a surface.
  *   \param [in] surface  The surface to query
  *   \return              The type of the surface
  */

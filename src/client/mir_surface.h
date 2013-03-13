@@ -75,7 +75,7 @@ public:
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
-    int  attrib(MirSurfaceAttrib a) const;
+    int attrib(MirSurfaceAttrib a) const;
 
 private:
     void on_configured();
