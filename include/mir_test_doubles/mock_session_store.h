@@ -39,8 +39,6 @@ struct MockSessionStore : public shell::SessionStore
     MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
 
     MOCK_METHOD0(shutdown, void());
-
-    MOCK_CONST_METHOD0(current_shell, std::shared_ptr<mir::Shell>());
 };
 
 }

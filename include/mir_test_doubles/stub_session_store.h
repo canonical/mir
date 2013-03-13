@@ -47,11 +47,6 @@ class StubSessionStore : public shell::SessionStore
     void shutdown()
     {
     }
-    std::shared_ptr<mir::Shell> current_shell() const
-    {
-        std::shared_ptr<mir::Shell> noshell;
-        return noshell;
-    }
 };
 
 }

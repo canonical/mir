@@ -52,8 +52,6 @@ public:
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
 
-    virtual std::shared_ptr<mir::Shell> current_shell() const;
-
     void focus_next();
 
 protected:
@@ -65,8 +63,6 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
-
-    mutable std::shared_ptr<mir::Shell> shell;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;

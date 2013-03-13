@@ -22,7 +22,6 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"
-#include "mir/shell/nullshell.h"
 
 #include <memory>
 #include <cassert>
@@ -52,8 +51,7 @@ msh::SessionManager::~SessionManager()
 
 std::shared_ptr<msh::Session> msh::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msh::ApplicationSession>(
-                                      surface_factory, name, current_shell());
+    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name);
 
     app_container->insert_session(new_session);
 
@@ -135,12 +133,4 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
     {
         set_focus_to(match->second);
     }
-}
-
-std::shared_ptr<mir::Shell> msh::SessionManager::current_shell() const
-{
-    if (!shell)
-        shell.reset(new mir::shell::NullShell);
-
-    return shell;
 }

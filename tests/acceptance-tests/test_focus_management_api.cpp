@@ -146,8 +146,6 @@ public:
 
     MOCK_METHOD0(shutdown, void ());
 
-    MOCK_CONST_METHOD0(current_shell, std::shared_ptr<mir::Shell>());
-
 private:
     std::shared_ptr<shell::SessionStore> const impl;
 };

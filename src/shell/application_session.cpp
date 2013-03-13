@@ -20,7 +20,6 @@
 #include "mir/shell/surface.h"
 
 #include "mir/surfaces/surface_controller.h"
-#include "mir/shell/nullshell.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,22 +36,9 @@ msh::ApplicationSession::ApplicationSession(
     std::string const& session_name) :
     surface_factory(surface_factory),
     session_name(session_name),
-    shell(new mir::shell::NullShell),
     next_surface_id(0)
 {
     assert(surface_factory);
-}
-
-msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
-    std::string const& session_name, std::shared_ptr<mir::Shell> sh) :
-    surface_factory(surface_factory),
-    session_name(session_name),
-    shell(sh),
-    next_surface_id(0)
-{
-    assert(surface_factory);
-    assert(shell);
 }
 
 msh::ApplicationSession::~ApplicationSession()
@@ -141,6 +127,8 @@ int msh::ApplicationSession::configure_surface(msh::SurfaceId id,
                                                MirSurfaceAttrib attrib,
                                                int value)
 {
+#if 0
+    // TODO
     if (!shell->supports(attrib))
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
                                                "support the specified surface "
@@ -150,6 +138,7 @@ int msh::ApplicationSession::configure_surface(msh::SurfaceId id,
         BOOST_THROW_EXCEPTION(std::logic_error("Current shell does not "
                                                "support the specified value "
                                                "for this attribute"));
+#endif
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);

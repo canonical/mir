@@ -20,7 +20,6 @@
 #define MIR_SHELL_SESSION_STORE_H_
 
 #include <memory>
-#include "mir/shell/shell.h"
 
 namespace mir
 {
@@ -59,8 +58,6 @@ public:
     virtual void focus_session_with_lightdm_id(int id) = 0;
 
     virtual void shutdown() = 0;
-
-    virtual std::shared_ptr<mir::Shell> current_shell() const = 0;
 
 protected:
     SessionStore() = default;
