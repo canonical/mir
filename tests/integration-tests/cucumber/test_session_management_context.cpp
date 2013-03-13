@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "session_management_context.h"
+#include "mir_test_cucumber/session_management_context.h"
 #include "mir/server_configuration.h"
 #include "mir/shell/session_store.h"
 #include "mir/shell/session.h"

@@ -67,7 +67,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
 
 enable_testing()
 
-include_directories(include/)
+include_directories(include/shared)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)

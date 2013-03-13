@@ -17,7 +17,7 @@
  */
 
 #include "mir_test/test_protobuf_server.h"
-#include "src/frontend/protobuf_socket_communicator.h"
+#include "src/server/frontend/protobuf_socket_communicator.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
