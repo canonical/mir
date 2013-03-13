@@ -1,3 +1,7 @@
+
+# Warnings in 3rd party code are not to be considered errors. :(
+string (REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+
 list(
   APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/libancillary
