@@ -54,6 +54,10 @@ struct StubSession : public shell::Session
     void show()
     {
     }
+    int configure_surface(shell::SurfaceId, MirSurfaceAttrib, int)
+    {
+        return 0;
+    }
 };
 
 }
