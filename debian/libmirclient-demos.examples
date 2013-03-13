@@ -4,4 +4,4 @@ examples/demo_client_unaccelerated.c
 examples/README
 include/accessory/mir/draw/graphics.h
 include/accessory/mir/draw/mir_image.h
-src/shared/draw/graphics_utils.cpp
+src/accessory/draw/graphics_utils.cpp
