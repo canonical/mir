@@ -34,6 +34,12 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
+//todo: the server open/closes the platform a few times, android can't handle this
+namespace
+{
+std::shared_ptr<mg::Platform> global_platform;
+}
+
 mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mga::DisplaySelector> const& selector)
  : display_selector(selector)
 {
@@ -59,5 +65,9 @@ std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport>
 {
     auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
     auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
-    return std::make_shared<mga::AndroidPlatform>(selector);
+    if(!global_platform)
+    {
+        global_platform = std::make_shared<mga::AndroidPlatform>(selector);
+    }
+    return global_platform;
 }

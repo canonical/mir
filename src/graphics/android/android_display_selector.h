@@ -47,7 +47,6 @@ class AndroidDisplaySelector : public DisplaySelector
 {
 public:
     AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
-    ~AndroidDisplaySelector() {std::cout << "DESTRUCT\n";} 
  
     std::shared_ptr<Display> primary_display();
 

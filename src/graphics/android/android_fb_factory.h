@@ -46,7 +46,6 @@ public:
 class AndroidFBFactory : public FBFactory
 {
 public:
-    AndroidFBFactory();
     std::shared_ptr<Display> create_hwc1_1_gpu_display() const;
     std::shared_ptr<Display> create_gpu_display() const;
 };
