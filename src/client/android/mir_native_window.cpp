@@ -20,11 +20,28 @@
 #include "android_driver_interpreter.h"
 #include "syncfence.h"
 
+#include <unistd.h>
+#include <sys/ioctl.h>
+
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 
 namespace
 {
+
+class IoctlControl : public mcla::IoctlWrapper
+{
+public:
+    int ioctl(int fd, unsigned long int request, int* timeout) const
+    {
+        return ::ioctl(fd, request, timeout);
+    }
+    int close(int fd) const
+    {
+        return ::close(fd);
+    }
+};
+
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
 static int setSwapInterval_static (struct ANativeWindow* window, int interval);
@@ -83,7 +100,8 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    auto fence = std::make_shared<mcla::SyncFence>(-1);
+    auto ioctl_control = std::make_shared<IoctlControl>();
+    auto fence = std::make_shared<mcla::SyncFence>(-1, ioctl_control);
     return self->queueBuffer(buffer, fence);
 }
 
@@ -91,7 +109,8 @@ int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
     auto self = static_cast<mcla::MirNativeWindow*>(window);
-    auto fence = std::make_shared<mcla::SyncFence>(fence_fd);
+    auto ioctl_control = std::make_shared<IoctlControl>();
+    auto fence = std::make_shared<mcla::SyncFence>(fence_fd, ioctl_control);
     return self->queueBuffer(buffer, fence);
 
 }

@@ -28,8 +28,8 @@ namespace
 class MockIoctlWrapper : public mcla::IoctlWrapper
 {
 public:
-    MOCK_METHOD3(ioctl, int(int, unsigned long int, int*));
-    MOCK_METHOD1(close, int(int));
+    MOCK_CONST_METHOD3(ioctl, int(int, unsigned long int, int*));
+    MOCK_CONST_METHOD1(close, int(int));
 };
 }
 

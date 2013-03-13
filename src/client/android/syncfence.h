@@ -32,30 +32,39 @@ namespace android
 class IoctlWrapper
 {
 public:
+    IoctlWrapper() {};
     virtual ~IoctlWrapper() {};
-    virtual int ioctl(int fd, unsigned long int request, int* timeout) = 0;
-    virtual int close(int fd) = 0;
+    virtual int ioctl(int fd, unsigned long int request, int* timeout) const = 0;
+    virtual int close(int fd) const = 0;
+
+private:
+    IoctlWrapper(const IoctlWrapper&) = delete;
+    IoctlWrapper& operator=(const IoctlWrapper& ) = delete;
 };
 
 class AndroidFence
 {
 public:
+    AndroidFence() {};
     virtual ~AndroidFence() {};
     virtual void wait() = 0;
+
+private:
+    AndroidFence(const AndroidFence&) = delete;
+    AndroidFence& operator=(const AndroidFence& ) = delete;
 };
 
 class SyncFence : public AndroidFence
 {
 public:
-    SyncFence(int fd);
-
-    //override using real ioctl's with something else. useful for injecting mocks
     SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
     ~SyncFence();
 
     void wait();
 
 private:
+    SyncFence(const SyncFence&) = delete;
+    SyncFence& operator=(const SyncFence& ) = delete;
     std::shared_ptr<IoctlWrapper> ioctl_wrapper;
     int fence_fd;
 };

@@ -17,32 +17,8 @@
  */
 
 #include "syncfence.h"
-#include <unistd.h>
-#include <sys/ioctl.h>
+
 namespace mcla = mir::client::android;
-
-namespace
-{
-class IoctlControl : public mcla::IoctlWrapper
-{
-public:
-    int ioctl(int fd, unsigned long int request, int* timeout)
-    {
-        return ::ioctl(fd, request, timeout);
-    }
-
-    int close(int fd)
-    {
-        return ::close(fd);
-    }
-};
-}
-
-mcla::SyncFence::SyncFence(int fd)
- : ioctl_wrapper(std::make_shared<IoctlControl>()),
-   fence_fd(fd)
-{
-}
 
 mcla::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
  : ioctl_wrapper(wrapper),
