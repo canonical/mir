@@ -16,12 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/graphics/gbm/kms_page_flipper.h"
+#include "src/server/graphics/gbm/kms_page_flipper.h"
 
 #include "mock_drm.h"
-#include "include/mir_test_doubles/mock_display_report.h"
-#include "include/mir/graphics/null_display_report.h"
-#include "include/mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_display_report.h"
+#include "mir/graphics/null_display_report.h"
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

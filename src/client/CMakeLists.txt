@@ -20,7 +20,7 @@ include_directories(
 endif()
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/client
   ${DRM_INCLUDE_DIRS}
 )
 
@@ -79,7 +79,6 @@ add_library(
   mirclient SHARED
 
   ${CLIENT_SOURCES}
-  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set_target_properties(
@@ -103,6 +102,20 @@ target_link_libraries(
   ${DRM_LIBRARIES}
   ${ANDROID_STDLIB}
   3rd_party
+)
+
+set(
+  CLIENT_PUBLIC_HEADERS
+
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_lightdm.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_drm.h
+)
+
+set_target_properties(
+  mirclient
+  PROPERTIES
+  PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
 )
 
 install(

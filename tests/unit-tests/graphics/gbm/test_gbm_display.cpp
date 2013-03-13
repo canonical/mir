@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/graphics/gbm/gbm_platform.h"
-#include "src/graphics/gbm/gbm_display.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/gbm_display.h"
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 

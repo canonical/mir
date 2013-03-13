@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
 
-#include "src/input/android/android_input_reader_policy.h"
+#include "src/server/input/android/android_input_reader_policy.h"
 #include "mir/geometry/rectangle.h"
 
 #include <gtest/gtest.h>
