@@ -33,7 +33,16 @@ namespace android
 
 class AndroidFBFactory;
 
-class AndroidDisplaySelector
+
+class DisplaySelector
+{
+public:
+    virtual std::shared_ptr<Display> primary_display() = 0; 
+
+private:
+};
+
+class AndroidDisplaySelector : public DisplaySelector
 {
 public:
     AndroidDisplaySelector(std::shared_ptr<AndroidFBFactory> const& factory);
