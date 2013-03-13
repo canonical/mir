@@ -20,7 +20,6 @@
 #include "android_platform.h"
 #include "android_buffer_allocator.h"
 #include "android_display.h"
-#include "android_framebuffer_window.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "android_display_selector.h"
 #include "android_fb_factory.h"
