@@ -117,7 +117,7 @@ TEST_F(DisplayMethodSelectorTest, double_primary_display_call_returns_same_objec
     using namespace testing;
 
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(2);
+        .Times(1);
     EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display())
         .Times(1); 
 
