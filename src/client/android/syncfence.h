@@ -65,8 +65,8 @@ public:
 private:
     SyncFence(const SyncFence&) = delete;
     SyncFence& operator=(const SyncFence& ) = delete;
-    std::shared_ptr<IoctlWrapper> ioctl_wrapper;
-    int fence_fd;
+    std::shared_ptr<IoctlWrapper> const ioctl_wrapper;
+    int const fence_fd;
 };
 
 }

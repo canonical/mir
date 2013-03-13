@@ -135,7 +135,6 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     interpreter.driver_returns_buffer(&buffer);
 }
 
-
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 {
