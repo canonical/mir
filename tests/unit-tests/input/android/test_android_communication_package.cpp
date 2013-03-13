@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/input/android/android_input_channel.h"
+#include "src/server/input/android/android_input_channel.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
