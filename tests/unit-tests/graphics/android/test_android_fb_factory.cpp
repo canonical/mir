@@ -20,18 +20,32 @@
 #include "src/graphics/android/android_display.h"
 #include "src/graphics/android/android_display_selector.h"
 
+#include "mir/graphics/display_configuration.h"
 #include "mir_test/hw_mock.h"
+#include "mir_test_doubles/null_display.h"
 #include <hardware/hwcomposer.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mt=mir::test;
+namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
+namespace geom=mir::geometry;
 
 struct MockFbFactory : public mga::AndroidFBFactory
 {
-    MOCK_CONST_METHOD0(create_hwc1_1_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
-    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
+    MockFbFactory()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_hwc1_1_gpu_display())
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
+        ON_CALL(*this, create_gpu_display())
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
+    }
+    MOCK_CONST_METHOD0(create_hwc1_1_gpu_display, std::shared_ptr<mg::Display>());
+    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mg::Display>());
+ 
 };
 
 class DisplayMethodSelectorTest : public ::testing::Test
@@ -74,7 +88,7 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_module_not
 {
     using namespace testing;
 
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1)
         .WillOnce(Return(-1));
     EXPECT_CALL(*mock_fb_factory, create_gpu_display())
@@ -88,10 +102,11 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_hwc_versio
 {
     using namespace testing;
 
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+    hw_access_mock.fake_hwc_device->version = HWC_DEVICE_API_VERSION_1_0;
+    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1);
     EXPECT_CALL(*mock_fb_factory, create_gpu_display())
-        .Times(1); 
+        .Times(1);
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();

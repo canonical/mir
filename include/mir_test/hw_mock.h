@@ -34,8 +34,14 @@ public:
 
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
 
+    struct hw_device_t *fake_hwc_device;
+    struct hw_device_t *fake_gr_device;
+
     hw_module_t fake_hw_gr_module;
-    hw_module_methods_t gr_methods; 
+    hw_module_methods_t gr_methods;
+
+    hw_module_t fake_hw_hwc_module;
+    hw_module_methods_t hwc_methods; 
 };
 
 }

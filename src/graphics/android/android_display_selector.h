@@ -25,10 +25,12 @@ namespace mir
 {
 namespace graphics
 {
+
+class Display;
+
 namespace android
 {
 
-class AndroidDisplay;
 class AndroidFBFactory;
 
 class AndroidDisplaySelector
@@ -36,7 +38,12 @@ class AndroidDisplaySelector
 public:
     AndroidDisplaySelector(std::shared_ptr<AndroidFBFactory> const& factory);
     
-    std::shared_ptr<AndroidDisplay> primary_display();
+    std::shared_ptr<Display> primary_display();
+
+private:
+    std::shared_ptr<AndroidFBFactory> fb_factory;
+
+    std::shared_ptr<Display> primary_hwc_display;
 };
 
 }

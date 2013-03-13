@@ -1,6 +1,7 @@
 
 #include "mir_test/hw_mock.h"
 #include <hardware/gralloc.h> 
+#include <hardware/hwcomposer.h> 
 
 namespace mt = mir::test;
 
@@ -47,6 +48,28 @@ static int hw_open(const struct hw_module_t*, const char*, struct hw_device_t** 
 }
 
 }
+
+
+namespace hwc_mock
+{
+
+struct hw_device_t fake_device;
+
+int hw_close(struct hw_device_t*)
+{
+    return 0;
+}
+
+static int hw_open(const struct hw_module_t*, const char*, struct hw_device_t** device)
+{
+    fake_device.close = hw_close;
+    fake_device.version = HWC_DEVICE_API_VERSION_1_1;
+ 
+    *device = (hw_device_t*) &fake_device;
+    return 0;
+}
+
+}
 }
 
 mt::HardwareAccessMock::HardwareAccessMock()
@@ -57,9 +80,16 @@ mt::HardwareAccessMock::HardwareAccessMock()
 
     gr_methods.open = gralloc_mock::hw_open; 
     fake_hw_gr_module.methods = &gr_methods;
+    fake_gr_device = (hw_device_t*) &gralloc_mock::fake_device;
+
+    hwc_methods.open = hwc_mock::hw_open;
+    fake_hw_hwc_module.methods = &hwc_methods;
+    fake_hwc_device = &hwc_mock::fake_device;
 
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))
         .WillByDefault(DoAll(SetArgPointee<1>(&fake_hw_gr_module), Return(0)));
+    ON_CALL(*this, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
+        .WillByDefault(DoAll(SetArgPointee<1>(&fake_hw_hwc_module), Return(0)));
 }
 
 mt::HardwareAccessMock::~HardwareAccessMock()
