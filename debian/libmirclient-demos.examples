@@ -2,6 +2,6 @@ examples/demo_client.c
 examples/demo_client_accelerated.cpp
 examples/demo_client_unaccelerated.c
 examples/README
-include/mir/draw/graphics.h
-include/mir/draw/mir_image.h
-src/draw/graphics_utils.cpp
+include/shared/mir/draw/graphics.h
+include/shared/mir/draw/mir_image.h
+src/shared/draw/graphics_utils.cpp
