@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,13 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
-#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#ifndef MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
+#define MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "../mir_client_surface.h"
 #include <system/window.h>
-#include <cstdarg>
-#include <memory>
 
 namespace mir
 {
@@ -30,24 +27,22 @@ namespace client
 {
 namespace android
 {
-class AndroidDriverInterpreter;
-
-class MirNativeWindow : public ANativeWindow
+class AndroidDriverInterpreter
 {
 public:
-    explicit MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter);
-
-    int query(int key, int* value) const;
-    int perform(int key, va_list args );
-    int dequeueBuffer(struct ANativeWindowBuffer** buffer);
-    int queueBuffer(struct ANativeWindowBuffer* buffer, int fence_fd);
-private:
-
-    std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;
+    virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
+    virtual void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) = 0;
+    virtual void dispatch_driver_request_format(int format) = 0;
+    virtual int  driver_requests_info(int key) const = 0;
+protected:
+    AndroidDriverInterpreter() {};
+    virtual ~AndroidDriverInterpreter() {};
+    AndroidDriverInterpreter(AndroidDriverInterpreter const&) = delete;
+    AndroidDriverInterpreter& operator=(AndroidDriverInterpreter const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */
+#endif /* MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_ */

@@ -58,6 +58,7 @@ set(
   android/android_registrar.cpp
   android/android_client_platform.cpp
   android/mir_native_window.cpp
+  android/client_surface_interpreter.cpp
   ${CLIENT_SOURCES}
 )
 endif()
