@@ -48,6 +48,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:

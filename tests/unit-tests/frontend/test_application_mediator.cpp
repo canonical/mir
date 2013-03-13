@@ -53,6 +53,7 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
 class StubbedSession : public mtd::StubSession
 {
 public:
