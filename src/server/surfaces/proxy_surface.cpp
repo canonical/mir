@@ -113,7 +113,27 @@ int ms::BasicProxySurface::configure(MirSurfaceAttrib attrib, int value)
 {
     if (auto const& s = surface.lock())
     {
-        return s->configure(attrib, value);
+        int result = 0;
+
+        /*
+         * TODO: In future, query the shell implementation for the subset of
+         *       attributes/types it implements.
+         */
+        switch (attrib)
+        {
+        case mir_surface_attrib_type:
+            if (!s->set_type(static_cast<MirSurfaceType>(value)))
+                BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                                       "type."));
+            result = s->type();
+            break;
+        default:
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                                   "attribute."));
+            break;
+        }
+
+        return result;
     }
     else
     {
