@@ -44,6 +44,11 @@ class StubSessionStore : public shell::SessionStore
     void focus_session_with_lightdm_id(int /* id */)
     {
     }
+    shell::SurfaceId create_surface_for(std::shared_ptr<shell::Session> const& /* session */,
+                                        shell::SurfaceCreationParameters const& /* params */)
+    {
+        return shell::SurfaceId{0};
+    }
     void shutdown()
     {
     }

@@ -19,6 +19,7 @@
 #ifndef MIR_SHELL_SESSION_STORE_H_
 #define MIR_SHELL_SESSION_STORE_H_
 
+#include "mir/shell/surface_id.h"
 #include <memory>
 
 namespace mir
@@ -26,8 +27,8 @@ namespace mir
 
 namespace shell
 {
-
 class Session;
+class SurfaceCreationParameters;
 
 class SessionStore
 {
@@ -39,6 +40,9 @@ public:
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id) = 0;
     virtual void focus_session_with_lightdm_id(int id) = 0;
+
+    virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
+                                         SurfaceCreationParameters const& params) = 0;
 
     virtual void shutdown() = 0;
 

@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
 
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session_store.h"
 
 #include <gmock/gmock.h>
@@ -37,6 +38,8 @@ struct MockSessionStore : public shell::SessionStore
 
     MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<shell::Session> const&, int));
     MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
+
+    MOCK_METHOD2(create_surface_for, shell::SurfaceId(std::shared_ptr<shell::Session> const&, shell::SurfaceCreationParameters const&));
 
     MOCK_METHOD0(shutdown, void());
 };
