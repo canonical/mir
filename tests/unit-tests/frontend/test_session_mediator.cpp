@@ -117,14 +117,14 @@ class StubPlatform : public mg::Platform
 
 }
 
-struct ApplicationMediatorTest : public ::testing::Test
+struct SessionMediatorTest : public ::testing::Test
 {
-    ApplicationMediatorTest()
+    SessionMediatorTest()
         : session_store{std::make_shared<testing::NiceMock<mtd::MockSessionStore>>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
-          report{std::make_shared<mf::NullApplicationMediatorReport>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
@@ -147,7 +147,7 @@ struct ApplicationMediatorTest : public ::testing::Test
 };
 
 
-TEST_F(ApplicationMediatorTest, disconnect_releases_session)
+TEST_F(SessionMediatorTest, disconnect_releases_session)
 {
     using namespace ::testing;
 
@@ -160,7 +160,7 @@ TEST_F(ApplicationMediatorTest, disconnect_releases_session)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
+TEST_F(SessionMediatorTest, calling_methods_before_connect_throws)
 {
     EXPECT_THROW({
         mp::SurfaceParameters request;
@@ -194,7 +194,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
     }, std::logic_error);
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
+TEST_F(SessionMediatorTest, calling_methods_after_connect_works)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -222,7 +222,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_after_disconnect_throws)
+TEST_F(SessionMediatorTest, calling_methods_after_disconnect_throws)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -263,7 +263,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_disconnect_throws)
     }, std::logic_error);
 }
 
-TEST_F(ApplicationMediatorTest, can_reconnect_after_disconnect)
+TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -275,7 +275,7 @@ TEST_F(ApplicationMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, connect_queries_supported_pixel_formats)
+TEST_F(SessionMediatorTest, connect_queries_supported_pixel_formats)
 {
     using namespace testing;
 

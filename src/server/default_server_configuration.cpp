@@ -383,7 +383,7 @@ mir::DefaultServerConfiguration::the_application_mediator_report()
             }
             else
             {
-                return std::make_shared<mf::NullApplicationMediatorReport>();
+                return std::make_shared<mf::NullSessionMediatorReport>();
             }
         });
 }

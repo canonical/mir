@@ -87,14 +87,14 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
 
 }
 
-struct ApplicationMediatorGBMTest : public ::testing::Test
+struct SessionMediatorGBMTest : public ::testing::Test
 {
-    ApplicationMediatorGBMTest()
+    SessionMediatorGBMTest()
         : session_store{std::make_shared<mtd::StubSessionStore>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
-          report{std::make_shared<mf::NullApplicationMediatorReport>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, mock_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
@@ -113,7 +113,7 @@ struct ApplicationMediatorGBMTest : public ::testing::Test
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
 
-TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
+TEST_F(SessionMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -135,7 +135,7 @@ TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_uses_drm_authenticator)
     EXPECT_EQ(no_error, status.status_code());
 }
 
-TEST_F(ApplicationMediatorGBMTest, drm_auth_magic_sets_status_code_on_error)
+TEST_F(SessionMediatorGBMTest, drm_auth_magic_sets_status_code_on_error)
 {
     using namespace testing;
 

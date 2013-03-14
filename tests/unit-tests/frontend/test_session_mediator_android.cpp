@@ -82,14 +82,14 @@ class StubPlatform : public mg::Platform
 
 }
 
-struct ApplicationMediatorAndroidTest : public ::testing::Test
+struct SessionMediatorAndroidTest : public ::testing::Test
 {
-    ApplicationMediatorAndroidTest()
+    SessionMediatorAndroidTest()
         : session_store{std::make_shared<mtd::StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
-          report{std::make_shared<mf::NullApplicationMediatorReport>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{session_store, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
@@ -108,7 +108,7 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
 
-TEST_F(ApplicationMediatorAndroidTest, drm_auth_magic_throws)
+TEST_F(SessionMediatorAndroidTest, drm_auth_magic_throws)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;

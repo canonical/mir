@@ -31,7 +31,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-struct MockApplicationMediatorReport : mf::NullApplicationMediatorReport
+struct MockApplicationMediatorReport : mf::NullSessionMediatorReport
 {
     MockApplicationMediatorReport()
     {

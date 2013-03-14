@@ -49,7 +49,7 @@ public:
 };
 
 // Do-nothing implementation to satisfy dependencies
-class NullApplicationMediatorReport : public SessionMediatorReport
+class NullSessionMediatorReport : public SessionMediatorReport
 {
     virtual void application_connect_called(std::string const& app_name);
 
