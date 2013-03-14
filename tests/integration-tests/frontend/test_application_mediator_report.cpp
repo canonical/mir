@@ -35,27 +35,27 @@ struct MockApplicationMediatorReport : mf::NullSessionMediatorReport
 {
     MockApplicationMediatorReport()
     {
-        EXPECT_CALL(*this, application_connect_called(testing::_)).
+        EXPECT_CALL(*this, session_connect_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, application_create_surface_called(testing::_)).
+        EXPECT_CALL(*this, session_create_surface_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, application_next_buffer_called(testing::_)).
+        EXPECT_CALL(*this, session_next_buffer_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, application_release_surface_called(testing::_)).
+        EXPECT_CALL(*this, session_release_surface_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, application_disconnect_called(testing::_)).
+        EXPECT_CALL(*this, session_disconnect_called(testing::_)).
             Times(testing::AtLeast(0));
     }
 
-    MOCK_METHOD1(application_connect_called, void (std::string const&));
-    MOCK_METHOD1(application_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(application_next_buffer_called, void (std::string const&));
-    MOCK_METHOD1(application_release_surface_called, void (std::string const&));
-    MOCK_METHOD1(application_disconnect_called, void (std::string const&));
+    MOCK_METHOD1(session_connect_called, void (std::string const&));
+    MOCK_METHOD1(session_create_surface_called, void (std::string const&));
+    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_release_surface_called, void (std::string const&));
+    MOCK_METHOD1(session_disconnect_called, void (std::string const&));
 };
 
 const int rpc_timeout_ms{100000};
@@ -63,7 +63,7 @@ const int rpc_timeout_ms{100000};
 typedef BespokeDisplayServerTestFixture ApplicationMediatorReport;
 }
 
-TEST_F(ApplicationMediatorReport, application_connect_called)
+TEST_F(ApplicationMediatorReport, session_connect_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -72,7 +72,7 @@ TEST_F(ApplicationMediatorReport, application_connect_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, application_connect_called(testing::_)).
+            EXPECT_CALL(*result, session_connect_called(testing::_)).
                 Times(1);
 
             return result;
@@ -104,7 +104,7 @@ TEST_F(ApplicationMediatorReport, application_connect_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, application_create_surface_called)
+TEST_F(ApplicationMediatorReport, session_create_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -113,7 +113,7 @@ TEST_F(ApplicationMediatorReport, application_create_surface_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, application_create_surface_called(testing::_)).
+            EXPECT_CALL(*result, session_create_surface_called(testing::_)).
                 Times(1);
 
             return result;
@@ -155,7 +155,7 @@ TEST_F(ApplicationMediatorReport, application_create_surface_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, application_next_buffer_called)
+TEST_F(ApplicationMediatorReport, session_next_buffer_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -164,7 +164,7 @@ TEST_F(ApplicationMediatorReport, application_next_buffer_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, application_next_buffer_called(testing::_)).
+            EXPECT_CALL(*result, session_next_buffer_called(testing::_)).
                 Times(1);
 
             return result;
@@ -212,7 +212,7 @@ TEST_F(ApplicationMediatorReport, application_next_buffer_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, application_release_surface_called)
+TEST_F(ApplicationMediatorReport, session_release_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -221,7 +221,7 @@ TEST_F(ApplicationMediatorReport, application_release_surface_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, application_release_surface_called(testing::_)).
+            EXPECT_CALL(*result, session_release_surface_called(testing::_)).
                 Times(1);
 
             return result;
@@ -278,7 +278,7 @@ TEST_F(ApplicationMediatorReport, application_release_surface_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, application_disconnect_called)
+TEST_F(ApplicationMediatorReport, session_disconnect_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -287,7 +287,7 @@ TEST_F(ApplicationMediatorReport, application_disconnect_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, application_disconnect_called(testing::_)).
+            EXPECT_CALL(*result, session_disconnect_called(testing::_)).
                 Times(1);
 
             return result;

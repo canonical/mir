@@ -57,7 +57,7 @@ void mir::frontend::SessionMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
-    report->application_connect_called(request->application_name());
+    report->session_connect_called(request->application_name());
 
     session = shell->open_session(request->application_name());
 
@@ -96,7 +96,7 @@ void mir::frontend::SessionMediator::create_surface(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_create_surface_called(session->name());
+    report->session_create_surface_called(session->name());
 
     auto const id = session->create_surface(
         SurfaceCreationParameters()
@@ -147,7 +147,7 @@ void mir::frontend::SessionMediator::next_buffer(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_next_buffer_called(session->name());
+    report->session_next_buffer_called(session->name());
 
     auto surface = session->get_surface(SurfaceId(request->value()));
 
@@ -192,7 +192,7 @@ void mir::frontend::SessionMediator::release_surface(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_release_surface_called(session->name());
+    report->session_release_surface_called(session->name());
 
     auto const id = SurfaceId(request->value());
 
@@ -210,7 +210,7 @@ void mir::frontend::SessionMediator::disconnect(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_disconnect_called(session->name());
+    report->session_disconnect_called(session->name());
 
     shell->close_session(session);
     session.reset();

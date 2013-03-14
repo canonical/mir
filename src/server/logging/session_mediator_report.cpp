@@ -33,40 +33,40 @@ ml::SessionMediatorReport::SessionMediatorReport(std::shared_ptr<Logger> const& 
 {
 }
 
-void ml::SessionMediatorReport::application_connect_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_connect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_connect(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_connect(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_create_surface_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_create_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_create_surface(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_create_surface(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_next_buffer_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_next_buffer_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_next_buffer_called(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_next_buffer_called(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_release_surface_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_release_surface_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_release_surface_called(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_release_surface_called(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_disconnect_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_disconnect_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_disconnect_called(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_disconnect_called(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_drm_auth_magic_called(std::string const& app_name)
+void ml::SessionMediatorReport::session_drm_auth_magic_called(std::string const& app_name)
 {
-    log->log<Logger::informational>("application_drm_auth_magic_called(\"" + app_name + "\")", component);
+    log->log<Logger::informational>("session_drm_auth_magic_called(\"" + app_name + "\")", component);
 }
 
-void ml::SessionMediatorReport::application_error(
+void ml::SessionMediatorReport::session_error(
         std::string const& app_name,
         char const* method,
         std::string const& what)
 {
-    log->log<Logger::error>(std::string(method) + " - application_error(\"" + app_name + "\"):\n" + what, component);
+    log->log<Logger::error>(std::string(method) + " - session_error(\"" + app_name + "\"):\n" + what, component);
 }

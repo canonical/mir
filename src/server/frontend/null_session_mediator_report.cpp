@@ -18,31 +18,31 @@
 
 #include "mir/frontend/session_mediator_report.h"
 
-void mir::frontend::NullSessionMediatorReport::application_connect_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_connect_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_create_surface_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_create_surface_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_next_buffer_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_next_buffer_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_release_surface_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_release_surface_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_disconnect_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_disconnect_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_drm_auth_magic_called(std::string const&)
+void mir::frontend::NullSessionMediatorReport::session_drm_auth_magic_called(std::string const&)
 {
 }
 
-void mir::frontend::NullSessionMediatorReport::application_error(
+void mir::frontend::NullSessionMediatorReport::session_error(
         std::string const&,
         char const* ,
         std::string const& )
