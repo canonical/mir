@@ -69,6 +69,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     egl_config = native_window->android_display_egl_config(egl_display);
     EGLNativeWindowType native_win_type = native_window->android_native_window_type();
+    printf("ok... 0x%X, %i\n", (int)native_win_type, (int) egl_config);
+    printf("ok ed... 0x%X\n", ((ANativeWindow*)native_win_type)->dequeueBuffer_DEPRECATED);
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
@@ -78,6 +80,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context\n"));
 
     make_current();
+    printf("ok...2\n");
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
@@ -109,6 +112,7 @@ void mga::AndroidDisplay::clear()
 
 bool mga::AndroidDisplay::post_update()
 {
+    printf("swap\n");
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
         return false;
     return true;
@@ -126,6 +130,7 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 
 void mga::AndroidDisplay::make_current()
 {
+    printf("make current\n");
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
 }

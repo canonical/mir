@@ -42,10 +42,22 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface(),
-                                                         [](ANativeWindow*) {});
-    if (!android_window.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
+ //   ::android::FramebufferNativeWindow *win;
+  //  win = (::android::FramebufferNativeWindow*) android_createDisplaySurface();
+    //::android::sp< ::android::FramebufferNativeWindow> ref(win);
+
+    auto android_window = std::make_shared< ::android::FramebufferNativeWindow >();
+ 
+//    auto android_window = std::shared_ptr<ANativeWindow>(win,
+//                                                         [](ANativeWindow*) {});
+//    exit(-1);
+//    auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface(),
+//                                                         [](ANativeWindow*) {});
+//    auto window = new ::android::FramebufferNativeWindow();
+//    ::android::sp< ::android::FramebufferNativeWindow> ref(w);
+    //auto android_window = std::make_shared<  ::android::FramebufferNativeWindow>();
+    //if (!android_window.get())
+    //    BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);

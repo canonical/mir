@@ -49,12 +49,12 @@ protected:
     static void SetUpTestCase()
     {
         ASSERT_FALSE(mtd::is_surface_flinger_running());
+        platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+        display = platform->create_display();
     }
 
     virtual void SetUp()
     {
-        platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
-        display = platform->create_display();
 
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
@@ -65,8 +65,6 @@ protected:
         buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
     }
 
-    std::shared_ptr<mg::Platform> platform;
-    std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::SwapperFactory> strategy;
     md::glAnimationBasic gl_animation;
@@ -74,7 +72,12 @@ protected:
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
     mtd::TestGrallocMapper sw_renderer;
+
+    static std::shared_ptr<mg::Platform> platform;
+    static std::shared_ptr<mg::Display> display;
 };
+std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
+std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform;
 
 }
 

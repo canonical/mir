@@ -15,6 +15,7 @@ add_library(
   android_display.cpp
   android_framebuffer_window.cpp
   android_alloc_adaptor.cpp
+  FramebufferNativeWindow.cpp
 )
 
 target_link_libraries(

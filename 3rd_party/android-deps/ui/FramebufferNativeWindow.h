@@ -33,9 +33,10 @@
 
 #include <ui/egl/android_natives.h>
 
-#define NUM_FRAME_BUFFERS  2
+#include <mutex>
+#include <condition_variable>
 
-extern "C" EGLNativeWindowType android_createDisplaySurface(void);
+#define NUM_FRAME_BUFFERS  2
 
 // ---------------------------------------------------------------------------
 namespace android {
@@ -46,11 +47,7 @@ class NativeBuffer;
 
 // ---------------------------------------------------------------------------
 
-class FramebufferNativeWindow 
-    : public EGLNativeBase<
-        ANativeWindow, 
-        FramebufferNativeWindow, 
-        LightRefBase<FramebufferNativeWindow> >
+class FramebufferNativeWindow : public ANativeWindow
 {
 public:
     FramebufferNativeWindow(); 
@@ -66,24 +63,25 @@ public:
     // for debugging only
     int getCurrentBufferIndex() const;
 
-private:
-    friend class LightRefBase<FramebufferNativeWindow>;    
     ~FramebufferNativeWindow(); // this class cannot be overloaded
+
+private:
     static int setSwapInterval(ANativeWindow* window, int interval);
-    static int dequeueBuffer(ANativeWindow* window, ANativeWindowBuffer** buffer);
-    static int lockBuffer(ANativeWindow* window, ANativeWindowBuffer* buffer);
-    static int queueBuffer(ANativeWindow* window, ANativeWindowBuffer* buffer);
+    static int dequeueBuffer(ANativeWindow* window, ANativeWindowBuffer** buffer, int*);
+    static int dequeueBuffer_DEPRECATED(ANativeWindow* window, ANativeWindowBuffer** buffer);
+    static int lockBuffer_DEPRECATED(ANativeWindow* window, ANativeWindowBuffer* buffer);
+    static int queueBuffer(ANativeWindow* window, ANativeWindowBuffer* buffer, int);
+    static int queueBuffer_DEPRECATED(ANativeWindow* window, ANativeWindowBuffer* buffer);
     static int query(const ANativeWindow* window, int what, int* value);
     static int perform(ANativeWindow* window, int operation, ...);
     
     framebuffer_device_t* fbDev;
     alloc_device_t* grDev;
 
-    sp<NativeBuffer> buffers[NUM_FRAME_BUFFERS];
-    sp<NativeBuffer> front;
+    NativeBuffer* buffers[NUM_FRAME_BUFFERS];
     
-    mutable Mutex mutex;
-    Condition mCondition;
+    std::mutex mutex;
+    std::condition_variable mCondition;
     int32_t mNumBuffers;
     int32_t mNumFreeBuffers;
     int32_t mBufferHead;
