@@ -18,8 +18,8 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/session_container.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"

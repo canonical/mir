@@ -18,9 +18,9 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_mediator_report.h"
-#include "mir/shell/session_store.h"
-#include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "mir/frontend/session_store.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 

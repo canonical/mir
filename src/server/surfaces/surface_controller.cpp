@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 
 #include "proxy_surface.h"
 

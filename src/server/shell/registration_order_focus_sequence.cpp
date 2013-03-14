@@ -17,8 +17,8 @@
  */
 
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/session.h"
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/session_container.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -21,7 +21,7 @@
 
 #include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/shell/surface_id.h"
+#include "mir/frontend/surface_id.h"
 
 #include <string>
 #include <map>

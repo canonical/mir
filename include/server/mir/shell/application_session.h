@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_SESSION_H_
 #define MIR_SHELL_APPLICATION_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 
 #include <map>
 

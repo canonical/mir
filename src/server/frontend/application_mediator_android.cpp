@@ -18,7 +18,7 @@
 
 #include "mir/frontend/application_mediator.h"
 #include "mir/frontend/application_mediator_report.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>

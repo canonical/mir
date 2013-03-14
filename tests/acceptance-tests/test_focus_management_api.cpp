@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library_lightdm.h"
 
-#include "mir/shell/session_store.h"
+#include "mir/frontend/session_store.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"

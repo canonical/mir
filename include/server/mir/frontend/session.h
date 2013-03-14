@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_H_
 #define MIR_FRONTEND_SESSION_H_
 
-#include "mir/shell/surface_id.h"
+#include "mir/frontend/surface_id.h"
 
 #include <mutex>
 #include <atomic>

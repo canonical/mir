@@ -20,7 +20,7 @@
 #ifndef PROXY_SURFACE_H_
 #define PROXY_SURFACE_H_
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
 
 namespace mir
