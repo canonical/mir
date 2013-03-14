@@ -1,0 +1,52 @@
+#!/bin/bash
+# build script for Mir on android arm devices
+# test run requires package 'android-tools-adb'
+# test also assumes that the device is rooted and accessible over the adb bridge
+#
+# todo: this script should become part of the 'make install'/'make test' system
+#
+
+set -e
+BUILD_DIR=build-android-arm
+pushd ${BUILD_DIR} > /dev/null 
+    #
+    # Upload and run the tests!
+    # Requires: https://wiki.canonical.com/ProductStrategyTeam/Android/Deploy
+    #
+    RUN_DIR=/data/mirtest
+
+    adb wait-for-device
+    adb root
+    adb wait-for-device
+    adb shell stop
+    adb shell mkdir -p ${RUN_DIR}
+
+    for x in bin/acceptance-tests \
+             bin/integration-tests \
+             bin/unit-tests \
+             lib/libmirclient.so.0 \
+             lib/libmirprotobuf.so.0 \
+             lib/libmirserver.so.0
+    do
+        adb push $x ${RUN_DIR}
+    done
+
+    echo "ubuntu_chroot shell;
+        apt-get install libprotobuf7
+                        libboost-system1.49.0
+                        libboost-program-options1.49.0
+                        libboost-thread1.49.0;
+        cd ${RUN_DIR};
+        export GTEST_OUTPUT=xml:./;
+        export LD_LIBRARY_PATH=.;
+        ./unit-tests;
+        ./integration-tests;
+        ./acceptance-tests;
+        exit;
+        exit" | adb shell
+
+    adb pull "${RUN_DIR}/acceptance-tests.xml"
+    adb pull "${RUN_DIR}/integration-tests.xml"
+    adb pull "${RUN_DIR}/unit-tests.xml"
+
+popd ${BUILD_DIR} > /dev/null 
