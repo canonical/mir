@@ -219,7 +219,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
                       mir_surface_type_dialog);
 
             // Stress-test synchronization logic with some flooding
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 100; i++)
             {
                 mir_surface_set_type(surface, mir_surface_type_normal);
                 mir_surface_set_type(surface, mir_surface_type_utility);
