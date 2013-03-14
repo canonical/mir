@@ -15,15 +15,15 @@ add_library(
   android_display.cpp
   android_framebuffer_window.cpp
   android_alloc_adaptor.cpp
-  FramebufferNativeWindow.cpp
 )
 
 target_link_libraries(
   mirplatformgraphics
   mircompositor
 
+  3rd_party_fbtype
+
   ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_UI_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
