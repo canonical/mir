@@ -45,7 +45,7 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
 namespace mc = mir::compositor;

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef PROXY_SURFACE_H_
-#define PROXY_SURFACE_H_
+#ifndef MIR_SHELL_PROXY_SURFACE_H_
+#define MIR_SHELL_PROXY_SURFACE_H_
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
@@ -72,4 +72,4 @@ private:
 }
 }
 
-#endif /* PROXY_SURFACE_H_ */
+#endif /* MIR_SHELL_PROXY_SURFACE_H_ */

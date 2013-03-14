@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/frontend/surface.h"
 

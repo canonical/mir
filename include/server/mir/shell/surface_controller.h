@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
-#define MIR_SURFACES_SURFACE_CONTROLLER_H_
+#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
+#define MIR_SHELL_SURFACE_CONTROLLER_H_
 
 #include "mir/shell/surface_factory.h"
 
@@ -54,4 +54,4 @@ private:
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_CONTROLLER_H_
+#endif // MIR_SHELL_SURFACE_CONTROLLER_H_
