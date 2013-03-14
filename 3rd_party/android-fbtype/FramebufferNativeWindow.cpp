@@ -18,11 +18,14 @@
 //TODO: kdub remove this entire file and use mir native window types
 
 #define LOG_TAG "FramebufferNativeWindow"
+#define SYNC_IOC_WAIT 0x40043E00
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 //#include <cutils/log.h>
 //#include <cutils/atomic.h>
@@ -130,8 +133,8 @@ FramebufferNativeWindow::FramebufferNativeWindow()
             fbDev->maxSwapInterval;
     }
 
-        common.incRef = incRef;
-        common.decRef = incRef; 
+    common.incRef = incRef;
+    common.decRef = incRef; 
     ANativeWindow::setSwapInterval = setSwapInterval;
     ANativeWindow::dequeueBuffer = dequeueBuffer;
     ANativeWindow::queueBuffer = queueBuffer;
@@ -204,13 +207,6 @@ int FramebufferNativeWindow::dequeueBuffer_DEPRECATED(ANativeWindow* window,
 {
     int fenceFd = -1;
     int result = dequeueBuffer(window, buffer, &fenceFd);
-//    sp<Fence> fence(new Fence(fenceFd));
-//    int waitResult = fence->wait(Fence::TIMEOUT_NEVER);
-//    if (waitResult != OK) {
-//        ALOGE("dequeueBuffer_DEPRECATED: Fence::wait returned an "
-//                "error: %d", waitResult);
-//        return waitResult;
-//    }
     return result;
 }
 
@@ -261,8 +257,12 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
     framebuffer_device_t* fb = self->fbDev;
     buffer_handle_t handle = static_cast<NativeBuffer*>(buffer)->handle;
 
-    //sp<Fence> fence(new Fence(fenceFd));
-    //fence->wait(Fence::TIMEOUT_NEVER);
+    if (fenceFd > 0)
+    {
+        int timeout = -1;
+        ioctl(fenceFd, SYNC_IOC_WAIT, &timeout);
+        close(fenceFd);
+    }
 
     const int index = self->mCurrentBufferIndex;
     int res = fb->post(fb, handle);
