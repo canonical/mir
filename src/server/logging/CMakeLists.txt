@@ -2,7 +2,7 @@ set(
   LOGGING_SOURCES
 
   dumb_console_logger.cpp
-  application_mediator_report.cpp
+  session_mediator_report.cpp
   display_report.cpp
 )
 
