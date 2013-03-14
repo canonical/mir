@@ -59,6 +59,7 @@ set(
   android/android_client_platform.cpp
   android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
+  android/syncfence.cpp
   ${CLIENT_SOURCES}
 )
 endif()

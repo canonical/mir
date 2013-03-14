@@ -125,7 +125,6 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
 {
     using namespace testing;
     ANativeWindowBuffer buffer;
-    int fence_fd = -1;
 
     MockMirSurface mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
@@ -133,7 +132,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
 
-    interpreter.driver_returns_buffer(&buffer, fence_fd);
+    interpreter.driver_returns_buffer(&buffer);
 }
 
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */
