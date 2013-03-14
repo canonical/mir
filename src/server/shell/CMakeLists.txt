@@ -8,6 +8,8 @@ set(
   single_visibility_focus_mechanism.cpp
   consuming_placement_strategy.cpp
   organising_surface_factory.cpp
+  surface_controller.cpp
+  proxy_surface.cpp
 )
 
 add_library(

@@ -29,7 +29,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/proxy_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
