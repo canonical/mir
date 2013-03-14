@@ -19,6 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_MANAGER_H_
 #define MIR_SHELL_APPLICATION_MANAGER_H_
 
+#include "mir/shell/surface_id.h"
 #include "mir/shell/session_store.h"
 
 #include <mutex>
@@ -53,8 +54,8 @@ public:
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
     
-    void create_surface_for(std::shared_ptr<Session> const& session,
-                            SurfaceCreationParameters const& params);
+    SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
+                                 SurfaceCreationParameters const& params);
 
     void focus_next();
 

@@ -135,9 +135,12 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
     }
 }
 
-void msh::SessionManager::create_surface_for(std::shared_ptr<msh::Session> const& session,
-                                             msh::SurfaceCreationParameters const& params)
+msh::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<msh::Session> const& session,
+                                                       msh::SurfaceCreationParameters const& params)
 {
-    (void) session; (void) params;
+    auto id = session->create_surface(params);
+    set_focus_to(session);
+
+    return id;
 }
 
