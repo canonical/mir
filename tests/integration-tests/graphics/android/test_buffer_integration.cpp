@@ -49,12 +49,17 @@ protected:
     static void SetUpTestCase()
     {
         ASSERT_FALSE(mtd::is_surface_flinger_running());
-        platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
-        display = platform->create_display();
+        ASSERT_NO_THROW(
+        {
+            platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+            display = platform->create_display();
+        });
     }
 
     virtual void SetUp()
     {
+        ASSERT_TRUE(platform != NULL);
+        ASSERT_TRUE(display != NULL);
 
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
@@ -65,17 +70,21 @@ protected:
         buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
     }
 
+    md::glAnimationBasic gl_animation;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::SwapperFactory> strategy;
-    md::glAnimationBasic gl_animation;
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
     mtd::TestGrallocMapper sw_renderer;
 
+    /* note about display: android drivers seem to only be able to open fb once
+       per process (gralloc's framebuffer_close() doesn't seem to work). once we
+       figure out why, we can put display in the test fixture */
     static std::shared_ptr<mg::Platform> platform;
     static std::shared_ptr<mg::Display> display;
 };
+
 std::shared_ptr<mg::Display> AndroidBufferIntegration::display;
 std::shared_ptr<mg::Platform> AndroidBufferIntegration::platform;
 

@@ -1,6 +1,5 @@
 include_directories(
     ${LIBHARDWARE_INCLUDE_DIRS}
-    ${ANDROID_UI_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
 )
