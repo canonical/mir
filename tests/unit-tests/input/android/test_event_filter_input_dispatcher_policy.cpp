@@ -17,7 +17,7 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "src/input/android/event_filter_dispatcher_policy.h"
+#include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_event_filter.h"

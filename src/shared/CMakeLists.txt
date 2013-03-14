@@ -1,0 +1,8 @@
+set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+add_subdirectory(protobuf/)
+add_subdirectory(draw/)
+
+set(
+  MIR_GENERATED_INCLUDE_DIRECTORIES
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
+  PARENT_SCOPE)

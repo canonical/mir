@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/graphics/android/android_fb_factory.h"
-#include "src/graphics/android/android_display.h"
-#include "src/graphics/android/android_display_selector.h"
+#include "src/server/graphics/android/android_fb_factory.h"
+#include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/android_display_selector.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir_test/hw_mock.h"

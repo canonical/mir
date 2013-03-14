@@ -17,9 +17,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "src/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
 
 #include "mock_drm.h"

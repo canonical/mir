@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/graphics/android/android_framebuffer_window.h"
+#include "src/server/graphics/android/android_framebuffer_window.h"
 
 #include "mir_test/egl_mock.h"
 

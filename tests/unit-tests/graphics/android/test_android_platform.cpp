@@ -17,8 +17,8 @@
  *
  */
 
-#include "src/graphics/android/android_display_selector.h"
-#include "src/graphics/android/android_platform.h"
+#include "src/server/graphics/android/android_display_selector.h"
+#include "src/server/graphics/android/android_platform.h"
 #include <gmock/gmock.h>
 
 namespace mga=mir::graphics::android;
