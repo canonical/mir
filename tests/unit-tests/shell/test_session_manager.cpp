@@ -161,3 +161,29 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
     session_manager.close_session(session1);
 }
+
+TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
+{
+    using namespace ::testing;    
+    
+    std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
+    std::shared_ptr<ms::Surface> dummy_surface(
+        std::make_shared<ms::Surface>(
+            msh::a_surface().name,
+            buffer_bundle));
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(
+        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+
+    
+    // Once for session creation and once for surface creation
+    {
+        InSequence seq;
+
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
+    }
+    
+    auto session1 = session_manager.open_session("Weather Report");
+    session_manager.create_surface_for(session1, msh::a_surface());
+}

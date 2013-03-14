@@ -35,6 +35,7 @@ class Session;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class SurfaceCreationParameters;
 
 class SessionManager : public SessionStore
 {
@@ -51,6 +52,9 @@ public:
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
+    
+    void create_surface_for(std::shared_ptr<Session> const& session,
+                            SurfaceCreationParameters const& params);
 
     void focus_next();
 
