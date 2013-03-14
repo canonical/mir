@@ -35,7 +35,7 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display() 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
 {
-    auto android_window = std::shared_ptr<ANativeWindow>(android_createDisplaySurface());
+    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     if (!android_window.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);

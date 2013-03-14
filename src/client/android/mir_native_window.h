@@ -30,6 +30,7 @@ namespace client
 {
 namespace android
 {
+class AndroidFence;
 class AndroidDriverInterpreter;
 
 class MirNativeWindow : public ANativeWindow
@@ -40,7 +41,7 @@ public:
     int query(int key, int* value) const;
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
-    int queueBuffer(struct ANativeWindowBuffer* buffer, int fence_fd);
+    int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<AndroidFence> const& fence);
 private:
 
     std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;

@@ -35,7 +35,7 @@ public:
     explicit ClientSurfaceInterpreter(ClientSurface& surface);
 
     ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd);
+    void driver_returns_buffer(ANativeWindowBuffer*);
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
 private:

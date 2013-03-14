@@ -41,7 +41,10 @@ set(MIR_VERSION_PATCH 2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include (cmake/Debian.cmake)
+option(use_debflags "Use build flags from dpkg-buildflags." OFF)
+if(use_debflags)
+  include (cmake/Debian.cmake)
+endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
@@ -139,7 +142,6 @@ if (MIR_PLATFORM STREQUAL "android")
   add_definitions( -DANDROID )
  
   find_package( LibHardware REQUIRED )
-  find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
