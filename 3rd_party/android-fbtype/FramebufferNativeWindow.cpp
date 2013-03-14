@@ -15,6 +15,8 @@
 ** limitations under the License.
 */
 
+//TODO: kdub remove this entire file and use mir native window types
+
 #define LOG_TAG "FramebufferNativeWindow"
 
 #include <stdlib.h>
