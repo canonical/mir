@@ -13,7 +13,6 @@ if (MIR_PLATFORM STREQUAL "android")
   list( APPEND CMOCK_SOURCES hw_mock.cpp )
 endif()
 
-message("LIST!!!!!! ${CMOCK_SOURCE}")
 add_library(
   mirtest_eglmock STATIC
 

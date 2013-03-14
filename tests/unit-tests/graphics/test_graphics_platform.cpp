@@ -89,6 +89,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     EXPECT_NO_THROW (
         auto platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
         auto allocator = platform->create_buffer_allocator(buffer_initializer);
+
         EXPECT_TRUE(allocator.get());
     );
 
