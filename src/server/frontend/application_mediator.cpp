@@ -35,12 +35,12 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include <boost/throw_exception.hpp>
 
-mir::frontend::ApplicationMediator::ApplicationMediator(
+mir::frontend::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<ApplicationMediatorReport> const& report,
+    std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(session_store),
     graphics_platform(graphics_platform),
@@ -51,7 +51,7 @@ mir::frontend::ApplicationMediator::ApplicationMediator(
 {
 }
 
-void mir::frontend::ApplicationMediator::connect(
+void mir::frontend::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
     ::mir::protobuf::Connection* response,
@@ -59,7 +59,7 @@ void mir::frontend::ApplicationMediator::connect(
 {
     report->application_connect_called(request->application_name());
 
-    application_session = shell->open_session(request->application_name());
+    session = shell->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -82,23 +82,23 @@ void mir::frontend::ApplicationMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     if (request->has_lightdm_id())
-        shell->tag_session_with_lightdm_id(application_session, request->lightdm_id());
+        shell->tag_session_with_lightdm_id(session, request->lightdm_id());
 
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::create_surface(
+void mir::frontend::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_create_surface_called(application_session->name());
+    report->application_create_surface_called(session->name());
 
-    auto const id = application_session->create_surface(
+    auto const id = session->create_surface(
         SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
@@ -107,7 +107,7 @@ void mir::frontend::ApplicationMediator::create_surface(
         );
 
     {
-        auto surface = application_session->get_surface(id);
+        auto surface = session->get_surface(id);
         response->mutable_id()->set_value(id.as_value());
         response->set_width(surface->size().width.as_uint32_t());
         response->set_height(surface->size().height.as_uint32_t());
@@ -138,18 +138,18 @@ void mir::frontend::ApplicationMediator::create_surface(
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::next_buffer(
+void mir::frontend::SessionMediator::next_buffer(
     ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_next_buffer_called(application_session->name());
+    report->application_next_buffer_called(session->name());
 
-    auto surface = application_session->get_surface(SurfaceId(request->value()));
+    auto surface = session->get_surface(SurfaceId(request->value()));
 
     surface->advance_client_buffer();
     auto const& buffer_resource = surface->client_buffer();
@@ -169,13 +169,13 @@ void mir::frontend::ApplicationMediator::next_buffer(
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
+void mir::frontend::SessionMediator::select_focus_by_lightdm_id(
     google::protobuf::RpcController*,// controller,
     mir::protobuf::LightdmId const* request,
     mir::protobuf::Void*,// response,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     shell->focus_session_with_lightdm_id(request->value());
@@ -183,37 +183,37 @@ void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::release_surface(
+void mir::frontend::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_release_surface_called(application_session->name());
+    report->application_release_surface_called(session->name());
 
     auto const id = SurfaceId(request->value());
 
-    application_session->destroy_surface(id);
+    session->destroy_surface(id);
 
     done->Run();
 }
 
-void mir::frontend::ApplicationMediator::disconnect(
+void mir::frontend::SessionMediator::disconnect(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::Void* /*request*/,
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_disconnect_called(application_session->name());
+    report->application_disconnect_called(session->name());
 
-    shell->close_session(application_session);
-    application_session.reset();
+    shell->close_session(session);
+    session.reset();
 
     done->Run();
 }

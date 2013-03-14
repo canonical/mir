@@ -67,7 +67,7 @@ TEST_F(ApplicationMediatorReport, application_connect_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationMediatorReport>
+        std::shared_ptr<mf::SessionMediatorReport>
         the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
@@ -108,7 +108,7 @@ TEST_F(ApplicationMediatorReport, application_create_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationMediatorReport>
+        std::shared_ptr<mf::SessionMediatorReport>
         the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
@@ -159,7 +159,7 @@ TEST_F(ApplicationMediatorReport, application_next_buffer_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationMediatorReport>
+        std::shared_ptr<mf::SessionMediatorReport>
         the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
@@ -216,7 +216,7 @@ TEST_F(ApplicationMediatorReport, application_release_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationMediatorReport>
+        std::shared_ptr<mf::SessionMediatorReport>
         the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
@@ -282,7 +282,7 @@ TEST_F(ApplicationMediatorReport, application_disconnect_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ApplicationMediatorReport>
+        std::shared_ptr<mf::SessionMediatorReport>
         the_application_mediator_report()
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();

@@ -101,9 +101,9 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
-    mf::ApplicationMediator mediator;
+    mf::SessionMediator mediator;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };

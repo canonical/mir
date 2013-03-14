@@ -30,16 +30,16 @@
 
 namespace mg = mir::graphics;
 
-void mir::frontend::ApplicationMediator::drm_auth_magic(
+void mir::frontend::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
     mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_drm_auth_magic_called(application_session->name());
+    report->application_drm_auth_magic_called(session->name());
 
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_LOGGING_APPLICATION_MEDIATOR_REPORT_H_
-#define MIR_LOGGING_APPLICATION_MEDIATOR_REPORT_H_
+#ifndef MIR_LOGGING_SESSION_MEDIATOR_REPORT_H_
+#define MIR_LOGGING_SESSION_MEDIATOR_REPORT_H_
 
 #include "mir/frontend/application_mediator_report.h"
 
@@ -30,10 +30,10 @@ namespace logging
 {
 class Logger;
 
-class ApplicationMediatorReport : public frontend::ApplicationMediatorReport
+class SessionMediatorReport : public frontend::SessionMediatorReport
 {
 public:
-    ApplicationMediatorReport(std::shared_ptr<Logger> const& log);
+    SessionMediatorReport(std::shared_ptr<Logger> const& log);
 
     virtual void application_connect_called(std::string const& app_name);
 
@@ -60,4 +60,4 @@ private:
 }
 
 
-#endif /* MIR_LOGGING_APPLICATION_MEDIATOR_REPORT_H_ */
+#endif /* MIR_LOGGING_SESSION_MEDIATOR_REPORT_H_ */

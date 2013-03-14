@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_FRONTEND_APPLICATION_MEDIATOR_H_
-#define MIR_FRONTEND_APPLICATION_MEDIATOR_H_
+#ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
+#define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
 
@@ -46,19 +46,19 @@ namespace frontend
 class Shell;
 class Session;
 class ResourceCache;
-class ApplicationMediatorReport;
+class SessionMediatorReport;
 
 // ApplicationMediator relays requests from the client into the server process.
-class ApplicationMediator : public mir::protobuf::DisplayServer
+class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
 
-    ApplicationMediator(
+    SessionMediator(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<ApplicationMediatorReport> const& report,
+        std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     /* Platform independent requests */
@@ -109,14 +109,14 @@ private:
     // TODO this is a dubious dependency - to get supported_pixel_formats
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
-    std::shared_ptr<ApplicationMediatorReport> const report;
+    std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::shared_ptr<Session> application_session;
+    std::shared_ptr<Session> session;
 };
 
 }
 }
 
 
-#endif /* MIR_FRONTEND_APPLICATION_MEDIATOR_H_ */
+#endif /* MIR_FRONTEND_SESSION_MEDIATOR_H_ */

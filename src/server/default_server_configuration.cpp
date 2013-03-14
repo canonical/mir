@@ -69,7 +69,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<mf::Shell> const& session_store,
-        std::shared_ptr<mf::ApplicationMediatorReport> const& report,
+        std::shared_ptr<mf::SessionMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
@@ -84,7 +84,7 @@ public:
 
 private:
     std::shared_ptr<mf::Shell> session_store;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
@@ -92,7 +92,7 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationMediator>(
+        return std::make_shared<mf::SessionMediator>(
             session_store,
             graphics_platform,
             graphics_display,
@@ -371,15 +371,15 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         });
 }
 
-std::shared_ptr<mf::ApplicationMediatorReport>
+std::shared_ptr<mf::SessionMediatorReport>
 mir::DefaultServerConfiguration::the_application_mediator_report()
 {
     return application_mediator_report(
-        [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
+        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
             if (the_options()->get(log_app_mediator, false))
             {
-                return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
+                return std::make_shared<ml::SessionMediatorReport>(the_logger());
             }
             else
             {
