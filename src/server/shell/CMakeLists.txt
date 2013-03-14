@@ -9,7 +9,7 @@ set(
   consuming_placement_strategy.cpp
   organising_surface_factory.cpp
   surface_controller.cpp
-  proxy_surface.cpp
+  surface.cpp
 )
 
 add_library(

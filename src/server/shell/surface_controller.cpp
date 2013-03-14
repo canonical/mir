@@ -20,7 +20,7 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/frontend/surface.h"
 
-#include "proxy_surface.h"
+#include "surface.h"
 
 #include <cassert>
 
@@ -35,7 +35,7 @@ msh::SurfaceController::SurfaceController(std::shared_ptr<ms::SurfaceStackModel>
 
 std::shared_ptr<mf::Surface> msh::SurfaceController::create_surface(const mf::SurfaceCreationParameters& params)
 {
-    return std::make_shared<ProxySurface>(
+    return std::make_shared<Surface>(
         surface_stack->create_surface(params),
         [=] (std::weak_ptr<mir::surfaces::Surface> const& surface) { surface_stack->destroy_surface(surface); });
 }

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SHELL_PROXY_SURFACE_H_
-#define MIR_SHELL_PROXY_SURFACE_H_
+#ifndef MIR_SHELL_SURFACE_H_
+#define MIR_SHELL_SURFACE_H_
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
@@ -40,13 +40,13 @@ class SurfaceStackModel;
 namespace shell
 {
 
-class ProxySurface : public frontend::Surface
+class Surface : public frontend::Surface
 {
 public:
 
-    explicit ProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
-    ProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
-    ~ProxySurface();
+    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface);
+    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    ~Surface();
 
     void hide();
 
@@ -72,4 +72,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_PROXY_SURFACE_H_ */
+#endif /* MIR_SHELL_SURFACE_H_ */
