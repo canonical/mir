@@ -5,6 +5,7 @@ set(
   null_application_mediator_report.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
+  surface_creation_parameters.cpp
 
   resource_cache.cpp
   ${PROTO_HDRS}
