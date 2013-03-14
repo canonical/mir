@@ -107,7 +107,7 @@ public:
                            const mir::protobuf::SurfaceSetting*,
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
-    
+
 private:
     std::shared_ptr<shell::SessionStore> const session_store;
     std::shared_ptr<graphics::Platform> const graphics_platform;
