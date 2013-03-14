@@ -94,7 +94,7 @@ public:
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
-    virtual std::shared_ptr<frontend::SessionMediatorReport> the_application_mediator_report();
+    virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
@@ -119,7 +119,7 @@ protected:
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::SessionMediatorReport> application_mediator_report;
+    CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;

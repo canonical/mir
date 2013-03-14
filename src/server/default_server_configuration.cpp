@@ -365,16 +365,16 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         {
             return std::make_shared<DefaultIpcFactory>(
                 shell,
-                the_application_mediator_report(),
+                the_session_mediator_report(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
 std::shared_ptr<mf::SessionMediatorReport>
-mir::DefaultServerConfiguration::the_application_mediator_report()
+mir::DefaultServerConfiguration::the_session_mediator_report()
 {
-    return application_mediator_report(
+    return session_mediator_report(
         [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
             if (the_options()->get(log_app_mediator, false))
