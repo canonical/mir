@@ -39,7 +39,7 @@ ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, int /*fence_fd*/)
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*)
 {
     mir_wait_for(surface.next_buffer(empty, NULL));
 }
