@@ -36,13 +36,13 @@ namespace surfaces
 {
 class SurfaceStackModel;
 
-class BasicProxySurface : public frontend::Surface
+class ProxySurface : public frontend::Surface
 {
 public:
 
-    explicit BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
-    BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
-    ~BasicProxySurface();
+    explicit ProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
+    ProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    ~ProxySurface();
 
     void hide();
 

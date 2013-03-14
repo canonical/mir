@@ -27,13 +27,13 @@
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 
-ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
+ms::ProxySurface::ProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
     surface(surface),
     deleter([](std::weak_ptr<mir::surfaces::Surface> const&){})
 {
 }
 
-ms::BasicProxySurface::BasicProxySurface(
+ms::ProxySurface::ProxySurface(
     std::weak_ptr<mir::surfaces::Surface> const& surface,
     std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter)
 :
@@ -42,12 +42,12 @@ ms::BasicProxySurface::BasicProxySurface(
 {
 }
 
-ms::BasicProxySurface::~BasicProxySurface()
+ms::ProxySurface::~ProxySurface()
 {
     destroy();
 }
 
-void ms::BasicProxySurface::hide()
+void ms::ProxySurface::hide()
 {
     if (auto const& s = surface.lock())
     {
@@ -55,7 +55,7 @@ void ms::BasicProxySurface::hide()
     }
 }
 
-void ms::BasicProxySurface::show()
+void ms::ProxySurface::show()
 {
     if (auto const& s = surface.lock())
     {
@@ -63,12 +63,12 @@ void ms::BasicProxySurface::show()
     }
 }
 
-void ms::BasicProxySurface::destroy()
+void ms::ProxySurface::destroy()
 {
     deleter(surface);
 }
 
-void ms::BasicProxySurface::shutdown()
+void ms::ProxySurface::shutdown()
 {
     if (auto const& s = surface.lock())
     {
@@ -76,7 +76,7 @@ void ms::BasicProxySurface::shutdown()
     }
 }
 
-mir::geometry::Size ms::BasicProxySurface::size() const
+mir::geometry::Size ms::ProxySurface::size() const
 {
     if (auto const& s = surface.lock())
     {
@@ -88,7 +88,7 @@ mir::geometry::Size ms::BasicProxySurface::size() const
     }
 }
 
-mir::geometry::PixelFormat ms::BasicProxySurface::pixel_format() const
+mir::geometry::PixelFormat ms::ProxySurface::pixel_format() const
 {
     if (auto const& s = surface.lock())
     {
@@ -100,7 +100,7 @@ mir::geometry::PixelFormat ms::BasicProxySurface::pixel_format() const
     }
 }
 
-void ms::BasicProxySurface::advance_client_buffer()
+void ms::ProxySurface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
@@ -108,7 +108,7 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer() const
+std::shared_ptr<mc::Buffer> ms::ProxySurface::client_buffer() const
 {
     if (auto const& s = surface.lock())
     {
