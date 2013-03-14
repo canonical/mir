@@ -122,6 +122,27 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_connects_and_disconnects)
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, synchronous_connection)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = NULL;
+            connection = mir_connect_sync(mir_test_socket,
+                                          __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 {
     struct ClientConfig : ClientConfigCommon
