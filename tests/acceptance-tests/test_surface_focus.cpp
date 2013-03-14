@@ -88,6 +88,14 @@ struct ClientConfigCommon : TestingClientConfiguration
 };
 }
 
+namespace
+{
+MATCHER(NonNullSession, "")
+{
+    return arg != std::shared_ptr<msh::Session>();
+}
+}
+
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
@@ -108,7 +116,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
                 // Once on application registration and once on surface creation
-                EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(2);
+                EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
                 // TODO: Counterexample ~racarr
 
                 return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_setter);
