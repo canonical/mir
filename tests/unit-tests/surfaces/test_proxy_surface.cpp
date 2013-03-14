@@ -85,7 +85,9 @@ TEST(SurfaceProxy, creation_and_destruction)
     EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
-    ms::ProxySurface test(&surface_stack, params);
+    ms::BasicProxySurface test(
+        surface_stack.create_surface(params),
+        [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
 }
 
 TEST(SurfaceProxy, destroy)
@@ -95,7 +97,9 @@ TEST(SurfaceProxy, destroy)
     NiceMock<MockSurfaceStackModel> surface_stack;
     mf::SurfaceCreationParameters params;
 
-    ms::ProxySurface test(&surface_stack, params);
+    ms::BasicProxySurface test(
+        surface_stack.create_surface(params),
+        [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
 
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 

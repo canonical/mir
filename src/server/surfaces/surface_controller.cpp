@@ -34,5 +34,7 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 
 std::shared_ptr<mf::Surface> ms::SurfaceController::create_surface(const mf::SurfaceCreationParameters& params)
 {
-    return std::make_shared<ProxySurface>(surface_stack.get(), params);
+    return std::make_shared<BasicProxySurface>(
+        surface_stack->create_surface(params),
+        [=] (std::weak_ptr<mir::surfaces::Surface> const& surface) { surface_stack->destroy_surface(surface); });
 }

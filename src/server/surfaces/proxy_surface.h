@@ -23,6 +23,8 @@
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
 
+#include <functional>
+
 namespace mir
 {
 namespace frontend
@@ -39,6 +41,8 @@ class BasicProxySurface : public frontend::Surface
 public:
 
     explicit BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
+    BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    ~BasicProxySurface();
 
     void hide();
 
@@ -56,26 +60,9 @@ public:
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
 
-protected:
-    void destroy_surface(SurfaceStackModel* const surface_stack) const;
-
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
-};
-
-class ProxySurface : public BasicProxySurface
-{
-public:
-    ProxySurface(
-        SurfaceStackModel* const surface_stack_,
-        frontend::SurfaceCreationParameters const& params);
-
-    void destroy();
-
-    ~ProxySurface();
-
-private:
-    SurfaceStackModel* const surface_stack;
+    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const deleter;
 };
 
 }

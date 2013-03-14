@@ -28,8 +28,23 @@ namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 
 ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
-    surface(surface)
+    surface(surface),
+    deleter([](std::weak_ptr<mir::surfaces::Surface> const&){})
 {
+}
+
+ms::BasicProxySurface::BasicProxySurface(
+    std::weak_ptr<mir::surfaces::Surface> const& surface,
+    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter)
+:
+    surface(surface),
+    deleter(deleter)
+{
+}
+
+ms::BasicProxySurface::~BasicProxySurface()
+{
+    destroy();
 }
 
 void ms::BasicProxySurface::hide()
@@ -50,6 +65,7 @@ void ms::BasicProxySurface::show()
 
 void ms::BasicProxySurface::destroy()
 {
+    deleter(surface);
 }
 
 void ms::BasicProxySurface::shutdown()
@@ -102,28 +118,4 @@ std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
-}
-
-void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_stack) const
-{
-    surface_stack->destroy_surface(surface);
-}
-
-
-ms::ProxySurface::ProxySurface(
-        SurfaceStackModel* const surface_stack_,
-        frontend::SurfaceCreationParameters const& params) :
-    BasicProxySurface(surface_stack_->create_surface(params)),
-    surface_stack(surface_stack_)
-{
-}
-
-void ms::ProxySurface::destroy()
-{
-    destroy_surface(surface_stack);
-}
-
-ms::ProxySurface::~ProxySurface()
-{
-    destroy();
 }
