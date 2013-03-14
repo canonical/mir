@@ -16,17 +16,17 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_ID_H_
-#define MIR_SHELL_SURFACE_ID_H_
+#ifndef MIR_FRONTEND_SURFACE_ID_H_
+#define MIR_FRONTEND_SURFACE_ID_H_
 
 #include "mir/int_wrapper.h"
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
 typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
 }
 } // namespace mir
 
-#endif // MIR_SHELL_SURFACE_ID_H
+#endif // MIR_FRONTEND_SURFACE_ID_H_

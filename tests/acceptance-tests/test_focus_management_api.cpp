@@ -30,6 +30,7 @@
 #include <thread>
 #include <fcntl.h>
 
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -119,33 +120,33 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
-class MockSessionStore : public shell::SessionStore
+class MockSessionStore : public frontend::Shell
 {
 public:
-    MockSessionStore(std::shared_ptr<SessionStore> const& impl) :
+    MockSessionStore(std::shared_ptr<Shell> const& impl) :
         impl(impl)
     {
         using namespace testing;
-        using shell::SessionStore;
-        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::open_session));
-        ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::close_session));
+        using frontend::Shell;
+        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &Shell::open_session));
+        ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &Shell::close_session));
 
-        ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::tag_session_with_lightdm_id));
-        ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::focus_session_with_lightdm_id));
+        ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &Shell::tag_session_with_lightdm_id));
+        ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &Shell::focus_session_with_lightdm_id));
 
-        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
+        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &Shell::shutdown));
     }
 
-    MOCK_METHOD1(open_session, std::shared_ptr<shell::Session> (std::string const& name));
-    MOCK_METHOD1(close_session, void (std::shared_ptr<shell::Session> const& session));
+    MOCK_METHOD1(open_session, std::shared_ptr<mf::Session> (std::string const& name));
+    MOCK_METHOD1(close_session, void (std::shared_ptr<mf::Session> const& session));
 
-    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<shell::Session> const& session, int id));
+    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<mf::Session> const& session, int id));
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD0(shutdown, void ());
 
 private:
-    std::shared_ptr<shell::SessionStore> const impl;
+    std::shared_ptr<frontend::Shell> const impl;
 };
 }
 
@@ -153,16 +154,16 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<shell::SessionStore>
+        std::shared_ptr<frontend::Shell>
         the_session_store()
         {
-            return session_store(
-                [this]() -> std::shared_ptr<shell::SessionStore>
+            return session_manager(
+                [this]() -> std::shared_ptr<frontend::Shell>
                 {
                     using namespace ::testing;
 
                     auto const& mock_session_store = std::make_shared<MockSessionStore>(
-                        DefaultServerConfiguration::the_session_store());
+                        DefaultServerConfiguration::the_frontend_shell());
 
                     {
                         using namespace testing;

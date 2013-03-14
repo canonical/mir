@@ -29,16 +29,16 @@ namespace test
 namespace doubles
 {
 
-class StubSessionStore : public shell::SessionStore
+class StubSessionStore : public frontend::Shell
 {
-    std::shared_ptr<shell::Session> open_session(std::string const& /* name */)
+    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */)
     {
         return std::make_shared<StubSession>();
     }
-    void close_session(std::shared_ptr<shell::Session> const& /* session */)
+    void close_session(std::shared_ptr<frontend::Session> const& /* session */)
     {
     }
-    void tag_session_with_lightdm_id(std::shared_ptr<shell::Session> const& /* session */, int /* id */)
+    void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& /* session */, int /* id */)
     {
     }
     void focus_session_with_lightdm_id(int /* id */)

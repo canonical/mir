@@ -30,8 +30,6 @@ namespace mir
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-
-class Surface;
 class SurfaceStackModel;
 
 class SurfaceController : public shell::SurfaceFactory
@@ -40,7 +38,7 @@ public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
     virtual ~SurfaceController() {}
 
-    std::shared_ptr<shell::Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params);
 
 protected:
     SurfaceController(const SurfaceController&) = delete;

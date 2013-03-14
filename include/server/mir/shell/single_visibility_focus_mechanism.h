@@ -24,10 +24,13 @@
 
 namespace mir
 {
+namespace frontend
+{
+class Session;
+}
 
 namespace shell
 {
-class Session;
 class SessionContainer;
 
 class SingleVisibilityFocusMechanism : public FocusSetter
@@ -36,7 +39,7 @@ public:
     explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
     virtual ~SingleVisibilityFocusMechanism() {}
 
-    void set_focus_to(std::shared_ptr<Session> const& new_focus);
+    void set_focus_to(std::shared_ptr<frontend::Session> const& new_focus);
 
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;

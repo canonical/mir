@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public shell::Surface
+struct MockSurface : public frontend::Surface
 {
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());

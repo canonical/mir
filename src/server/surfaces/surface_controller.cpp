@@ -17,7 +17,6 @@
  */
 
 #include "mir/surfaces/surface_controller.h"
-#include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface.h"
 
@@ -26,14 +25,14 @@
 #include <cassert>
 
 namespace ms = mir::surfaces;
-namespace msh = mir::shell;
+namespace mf = mir::frontend;
 
 ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) : surface_stack(surface_stack)
 {
     assert(surface_stack);
 }
 
-std::shared_ptr<msh::Surface> ms::SurfaceController::create_surface(const msh::SurfaceCreationParameters& params)
+std::shared_ptr<mf::Surface> ms::SurfaceController::create_surface(const mf::SurfaceCreationParameters& params)
 {
     return std::make_shared<ProxySurface>(surface_stack.get(), params);
 }

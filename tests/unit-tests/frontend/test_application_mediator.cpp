@@ -69,7 +69,7 @@ public:
         EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
     }
 
-    std::shared_ptr<msh::Surface> get_surface(msh::SurfaceId /* surface */) const
+    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId /* surface */) const
     {
         return mock_surface;
     }

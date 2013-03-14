@@ -40,7 +40,7 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : display{config.the_display()},
           compositor{config.the_drawer()},
-          session_store{config.the_session_store()},
+          session_store{config.the_frontend_shell()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           exit(false)
@@ -49,7 +49,7 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::Drawer> compositor;
-    std::shared_ptr<shell::SessionStore> session_store;
+    std::shared_ptr<frontend::Shell> session_store;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;

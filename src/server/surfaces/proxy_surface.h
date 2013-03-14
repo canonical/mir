@@ -25,16 +25,16 @@
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 namespace surfaces
 {
 class SurfaceStackModel;
 
-class BasicProxySurface : public shell::Surface
+class BasicProxySurface : public frontend::Surface
 {
 public:
 
@@ -68,7 +68,7 @@ class ProxySurface : public BasicProxySurface
 public:
     ProxySurface(
         SurfaceStackModel* const surface_stack_,
-        shell::SurfaceCreationParameters const& params);
+        frontend::SurfaceCreationParameters const& params);
 
     void destroy();
 

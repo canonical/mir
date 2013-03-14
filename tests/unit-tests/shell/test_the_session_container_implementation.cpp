@@ -28,6 +28,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
@@ -44,7 +45,7 @@ TEST(SessionContainer, for_each)
     {
         MOCK_METHOD1(check_name, void (std::string const&));
 
-        void operator()(std::shared_ptr<msh::Session> const& session)
+        void operator()(std::shared_ptr<mf::Session> const& session)
         {
             check_name(session->name());
         }

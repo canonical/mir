@@ -112,7 +112,7 @@ void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_sta
 
 ms::ProxySurface::ProxySurface(
         SurfaceStackModel* const surface_stack_,
-        shell::SurfaceCreationParameters const& params) :
+        frontend::SurfaceCreationParameters const& params) :
     BasicProxySurface(surface_stack_->create_surface(params)),
     surface_stack(surface_stack_)
 {

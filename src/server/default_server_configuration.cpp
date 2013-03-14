@@ -68,7 +68,7 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<msh::SessionStore> const& session_store,
+        std::shared_ptr<mf::Shell> const& session_store,
         std::shared_ptr<mf::ApplicationMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    std::shared_ptr<msh::SessionStore> session_store;
+    std::shared_ptr<mf::Shell> session_store;
     std::shared_ptr<mf::ApplicationMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -245,11 +245,11 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<msh::SessionStore>
-mir::DefaultServerConfiguration::the_session_store()
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
 {
-    return session_store(
-        [this]() -> std::shared_ptr<msh::SessionStore>
+    return session_manager(
+        [this]() -> std::shared_ptr<msh::SessionManager>
         {
             auto session_container = std::make_shared<msh::SessionContainer>();
             auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container);
@@ -356,7 +356,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<msh::SessionStore> const& session_store,
+    std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
@@ -364,7 +364,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         [&]()
         {
             return std::make_shared<DefaultIpcFactory>(
-                session_store,
+                shell,
                 the_application_mediator_report(),
                 the_graphics_platform(),
                 display, allocator);

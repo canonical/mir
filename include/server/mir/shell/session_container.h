@@ -25,9 +25,13 @@
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
 class Session;
+}
+
+namespace shell
+{
 
 class SessionContainer
 {
@@ -35,16 +39,16 @@ public:
     SessionContainer();
     ~SessionContainer();
 
-    virtual void insert_session(std::shared_ptr<Session> const& session);
-    virtual void remove_session(std::shared_ptr<Session> const& session);
+    virtual void insert_session(std::shared_ptr<frontend::Session> const& session);
+    virtual void remove_session(std::shared_ptr<frontend::Session> const& session);
 
-    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
+    void for_each(std::function<void(std::shared_ptr<frontend::Session> const&)> f) const;
 
 private:
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
 
-    std::vector<std::shared_ptr<Session>> apps;
+    std::vector<std::shared_ptr<frontend::Session>> apps;
     mutable std::mutex guard;
 };
 

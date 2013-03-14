@@ -36,13 +36,13 @@
 #include <boost/throw_exception.hpp>
 
 mir::frontend::ApplicationMediator::ApplicationMediator(
-    std::shared_ptr<shell::SessionStore> const& session_store,
+    std::shared_ptr<frontend::Shell> const& session_store,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<ApplicationMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    session_store(session_store),
+    shell(session_store),
     graphics_platform(graphics_platform),
     viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
@@ -59,7 +59,7 @@ void mir::frontend::ApplicationMediator::connect(
 {
     report->application_connect_called(request->application_name());
 
-    application_session = session_store->open_session(request->application_name());
+    application_session = shell->open_session(request->application_name());
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -82,7 +82,7 @@ void mir::frontend::ApplicationMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     if (request->has_lightdm_id())
-        session_store->tag_session_with_lightdm_id(application_session, request->lightdm_id());
+        shell->tag_session_with_lightdm_id(application_session, request->lightdm_id());
 
     done->Run();
 }
@@ -99,7 +99,7 @@ void mir::frontend::ApplicationMediator::create_surface(
     report->application_create_surface_called(application_session->name());
 
     auto const id = application_session->create_surface(
-        shell::SurfaceCreationParameters()
+        SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
@@ -144,8 +144,6 @@ void mir::frontend::ApplicationMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    using shell::SurfaceId;
-
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
@@ -180,7 +178,7 @@ void mir::frontend::ApplicationMediator::select_focus_by_lightdm_id(
     if (application_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    session_store->focus_session_with_lightdm_id(request->value());
+    shell->focus_session_with_lightdm_id(request->value());
 
     done->Run();
 }
@@ -196,7 +194,7 @@ void mir::frontend::ApplicationMediator::release_surface(
 
     report->application_release_surface_called(application_session->name());
 
-    auto const id = shell::SurfaceId(request->value());
+    auto const id = SurfaceId(request->value());
 
     application_session->destroy_surface(id);
 
@@ -214,7 +212,7 @@ void mir::frontend::ApplicationMediator::disconnect(
 
     report->application_disconnect_called(application_session->name());
 
-    session_store->close_session(application_session);
+    shell->close_session(application_session);
     application_session.reset();
 
     done->Run();
