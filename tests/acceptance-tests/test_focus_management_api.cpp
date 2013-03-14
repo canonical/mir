@@ -131,7 +131,7 @@ public:
         ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::tag_session_with_lightdm_id));
         ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::focus_session_with_lightdm_id));
 
-//        ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::create_surface_for));
+        ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::create_surface_for));
 
         ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
     }
@@ -169,6 +169,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                         using namespace testing;
                         InSequence setup;
                         EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
+                        EXPECT_CALL(*mock_session_store, create_surface_for(_,_)).Times(1);
                         EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
                         EXPECT_CALL(*mock_session_store, shutdown());
                     }

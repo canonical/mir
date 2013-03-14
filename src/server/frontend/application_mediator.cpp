@@ -98,7 +98,7 @@ void mir::frontend::ApplicationMediator::create_surface(
 
     report->application_create_surface_called(application_session->name());
 
-    auto const id = application_session->create_surface(
+    auto const id = session_store->create_surface_for(application_session,
         shell::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())

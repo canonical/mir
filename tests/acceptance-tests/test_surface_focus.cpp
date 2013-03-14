@@ -115,8 +115,13 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
                 auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
 
-                // Once on application registration and once on surface creation
-                EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
+                {
+                    InSequence seq;
+                    // Once on application registration and once on surface creation
+                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
+                    // Focus is cleared when the session is closed
+                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
+                }
                 // TODO: Counterexample ~racarr
 
                 return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_setter);

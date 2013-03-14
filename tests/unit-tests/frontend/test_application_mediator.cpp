@@ -133,6 +133,7 @@ struct ApplicationMediatorTest : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
+        ON_CALL(*session_store, create_surface_for(_, _)).WillByDefault(Return(msh::SurfaceId{1}));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockSessionStore>> const session_store;
