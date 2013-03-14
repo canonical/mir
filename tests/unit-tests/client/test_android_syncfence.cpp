@@ -42,8 +42,9 @@ public:
     {
     }
 
-    std::shared_ptr<MockIoctlWrapper> ioctl_mock;
-    int dummyfd, invalid_fd;
+    std::shared_ptr<MockIoctlWrapper> const ioctl_mock;
+    int const dummyfd;
+    int const invalid_fd;
 };
 
 TEST_F(SyncFenceTest, test_valid_fd_wait)
