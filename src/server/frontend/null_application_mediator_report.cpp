@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_mediator_report.h"
+#include "mir/frontend/session_mediator_report.h"
 
 void mir::frontend::NullApplicationMediatorReport::application_connect_called(std::string const&)
 {

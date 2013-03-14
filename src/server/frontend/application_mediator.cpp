@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"

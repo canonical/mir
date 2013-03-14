@@ -17,8 +17,8 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/frontend/application_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/frontend/shell.h"

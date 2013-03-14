@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/frontend/application_mediator_report.h"
+#include "mir/frontend/session_mediator_report.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/test_protobuf_client.h"

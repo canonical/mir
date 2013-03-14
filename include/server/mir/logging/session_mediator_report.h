@@ -20,7 +20,7 @@
 #ifndef MIR_LOGGING_SESSION_MEDIATOR_REPORT_H_
 #define MIR_LOGGING_SESSION_MEDIATOR_REPORT_H_
 
-#include "mir/frontend/application_mediator_report.h"
+#include "mir/frontend/session_mediator_report.h"
 
 #include <memory>
 

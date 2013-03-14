@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/application_mediator_report.h"
+#include "mir/logging/session_mediator_report.h"
 
 #include "mir/logging/logger.h"
 

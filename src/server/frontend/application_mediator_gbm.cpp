@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"

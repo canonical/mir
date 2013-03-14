@@ -40,7 +40,7 @@ class GraphicBufferAllocator;
 
 
 /// Frontend interface. Mediates the interaction between client
-/// applications and the core of the mir system.
+/// processes and the core of the mir system.
 namespace frontend
 {
 class Shell;
@@ -48,7 +48,7 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 
-// ApplicationMediator relays requests from the client into the server process.
+// SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
