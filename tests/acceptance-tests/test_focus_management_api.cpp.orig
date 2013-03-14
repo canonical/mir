@@ -38,6 +38,10 @@ namespace mtf = mir_test_framework;
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
+    geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
+                                                              geom::Size{geom::Width(1600),
+                                                                         geom::Height(1600)}};
 }
 
 namespace mir

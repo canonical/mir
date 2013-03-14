@@ -22,11 +22,11 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
-#include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 
 #include "src/server/surfaces/proxy_surface.h"
@@ -59,11 +59,6 @@ struct MockFocusSequence: public msh::FocusSequence
     MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msh::Session>());
 };
 
-struct MockFocusSetter: public msh::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msh::Session> const&));
-};
-
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
@@ -77,7 +72,7 @@ struct SessionManagerSetup : public testing::Test
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
-    MockFocusSetter focus_setter;
+    mtd::MockFocusSetter focus_setter;
 
     msh::SessionManager session_manager;
 };
