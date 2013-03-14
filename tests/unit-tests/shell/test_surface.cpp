@@ -74,9 +74,24 @@ private:
 
     std::shared_ptr<ms::Surface> surface;
 };
+
+struct ShellSurface : testing::Test
+{
+    std::shared_ptr<StubBufferBundle> buffer_bundle;
+
+    ShellSurface() :
+        buffer_bundle(std::make_shared<StubBufferBundle>())
+    {
+        using namespace testing;
+
+        ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
+        ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
+        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
+    }
+};
 }
 
-TEST(SurfaceProxy, creation_and_destruction)
+TEST_F(ShellSurface, creation_and_destruction)
 {
     MockSurfaceStackModel surface_stack;
     mf::SurfaceCreationParameters params;
@@ -91,7 +106,7 @@ TEST(SurfaceProxy, creation_and_destruction)
         [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
 }
 
-TEST(SurfaceProxy, destroy)
+TEST_F(ShellSurface, destroy)
 {
     using namespace testing;
 
@@ -109,25 +124,7 @@ TEST(SurfaceProxy, destroy)
     Mock::VerifyAndClearExpectations(&surface_stack);
 }
 
-namespace
-{
-struct BasicSurfaceProxy : testing::Test
-{
-    std::shared_ptr<StubBufferBundle> buffer_bundle;
-
-    BasicSurfaceProxy() :
-        buffer_bundle(std::make_shared<StubBufferBundle>())
-    {
-        using namespace testing;
-
-        ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
-        ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
-    }
-};
-}
-
-TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
+TEST_F(ShellSurface, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -144,7 +141,7 @@ TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, size_throw_behavior)
+TEST_F(ShellSurface, size_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -161,7 +158,7 @@ TEST_F(BasicSurfaceProxy, size_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
+TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -178,7 +175,7 @@ TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, hide_throw_behavior)
+TEST_F(ShellSurface, hide_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -195,7 +192,7 @@ TEST_F(BasicSurfaceProxy, hide_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, show_throw_behavior)
+TEST_F(ShellSurface, show_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -212,7 +209,7 @@ TEST_F(BasicSurfaceProxy, show_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
+TEST_F(ShellSurface, destroy_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -229,7 +226,7 @@ TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
+TEST_F(ShellSurface, shutdown_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
@@ -246,7 +243,7 @@ TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, advance_client_buffer_throw_behavior)
+TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
