@@ -34,7 +34,7 @@
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test/fake_shared.h"
 
-#include "src/surfaces/proxy_surface.h"
+#include "src/server/surfaces/proxy_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

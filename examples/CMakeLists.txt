@@ -82,7 +82,11 @@ target_link_libraries(
 
 )
 
-include_directories(${GLESv2_INCLUDE_DIRS})
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include/client
+  ${GLESv2_INCLUDE_DIRS}
+)
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
 add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})

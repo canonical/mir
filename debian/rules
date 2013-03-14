@@ -27,7 +27,6 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DBoost_COMPILER=-gcc \
 	  -DMIR_ENABLE_DEATH_TESTS=NO \
-	  -DMIR_INPUT_ENABLE_EVEMU=NO \
 	  -DMIR_PLATFORM=android
 else
 	dh_auto_configure -- \
