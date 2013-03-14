@@ -88,11 +88,9 @@ FramebufferNativeWindow::FramebufferNativeWindow()
         
         err = gralloc_open(module, &grDev);
 
-    printf("START! 0x%X 0x%X\n", fbDev, grDev);
         // bail out if we can't initialize the modules
         if (!fbDev || !grDev)
             return;
-    printf("kay START!\n");
         
         mUpdateOnDemand = (fbDev->setUpdateRect != 0);
         
@@ -119,7 +117,6 @@ FramebufferNativeWindow::FramebufferNativeWindow()
                         mNumBuffers = i;
                         mNumFreeBuffers = i;
                         mBufferHead = mNumBuffers-1;
-            printf("ERRROR\n");
                         break;
                 }
         }
@@ -145,16 +142,13 @@ FramebufferNativeWindow::FramebufferNativeWindow()
     ANativeWindow::dequeueBuffer_DEPRECATED = dequeueBuffer_DEPRECATED;
     ANativeWindow::lockBuffer_DEPRECATED = lockBuffer_DEPRECATED;
     ANativeWindow::queueBuffer_DEPRECATED = queueBuffer_DEPRECATED;
-    printf("THROUGH.\n");
 }
 
 FramebufferNativeWindow::~FramebufferNativeWindow() 
 {
-    printf("FREE\n");
     if (grDev) {
         for(int i = 0; i < mNumBuffers; i++) {
             if (buffers[i] != NULL) {
-                printf("FREE\n");
                 grDev->free(grDev, buffers[i]->handle);
             }
         }
@@ -162,10 +156,8 @@ FramebufferNativeWindow::~FramebufferNativeWindow()
     }
 
     if (fbDev) {
-    printf("fb close! FREE\n");
         framebuffer_close(fbDev);
     }
-    printf("exit..\n");
 }
 
 status_t FramebufferNativeWindow::setUpdateRectangle(const Rect& r) 
@@ -187,7 +179,6 @@ status_t FramebufferNativeWindow::compositionComplete()
 int FramebufferNativeWindow::setSwapInterval(
         ANativeWindow* window, int interval) 
 {
-    printf("SETSWAP\n");
     framebuffer_device_t* fb =  static_cast<FramebufferNativeWindow*>(window)->fbDev;
     return fb->setSwapInterval(fb, interval);
 }
@@ -211,7 +202,6 @@ int FramebufferNativeWindow::getCurrentBufferIndex() const
 int FramebufferNativeWindow::dequeueBuffer_DEPRECATED(ANativeWindow* window, 
         ANativeWindowBuffer** buffer)
 {
-    printf("DEQUEUE!\n");
     int fenceFd = -1;
     int result = dequeueBuffer(window, buffer, &fenceFd);
 //    sp<Fence> fence(new Fence(fenceFd));
@@ -224,24 +214,13 @@ int FramebufferNativeWindow::dequeueBuffer_DEPRECATED(ANativeWindow* window,
     return result;
 }
 
-#if 0
-void FramebufferNativeWindow::peek_window(ANativeWindowBuffer** buffer){
-    Mutex::Autolock _l(mutex);
-
-    *buffer = buffers[mBufferHead].get();
-}
-#endif
- 
 int FramebufferNativeWindow::dequeueBuffer(ANativeWindow* window, 
         ANativeWindowBuffer** buffer, int* fenceFd)
 {
-    printf("DEQUEUE 2!\n");
     FramebufferNativeWindow* self = static_cast<FramebufferNativeWindow*>(window);
 
     std::unique_lock<std::mutex> lk(self->mutex);
-    printf("Numfree %i\n",self->mNumFreeBuffers);
     while (self->mNumFreeBuffers < 2) {
-        printf("WAIT!\n");
         self->mCondition.wait(lk);
     }
 
@@ -264,21 +243,18 @@ int FramebufferNativeWindow::dequeueBuffer(ANativeWindow* window,
 int FramebufferNativeWindow::lockBuffer_DEPRECATED(ANativeWindow* window, 
         ANativeWindowBuffer* buffer)
 {
-    printf("ANY 1!\n");
     return NO_ERROR;
 }
 
 int FramebufferNativeWindow::queueBuffer_DEPRECATED(ANativeWindow* window, 
         ANativeWindowBuffer* buffer)
 {
-    printf("ANY 2!\n");
     return queueBuffer(window, buffer, -1);
 }
 
 int FramebufferNativeWindow::queueBuffer(ANativeWindow* window, 
         ANativeWindowBuffer* buffer, int fenceFd)
 {
-    printf("QUEUE!\n");
     FramebufferNativeWindow* self = static_cast<FramebufferNativeWindow*>(window);
     std::unique_lock<std::mutex> lk(self->mutex);
 
@@ -298,7 +274,6 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
 int FramebufferNativeWindow::query(const ANativeWindow* window,
         int what, int* value) 
 {
-    printf("ANY 4! %i\n", what );
     auto fbwin = const_cast<ANativeWindow*>(window);
     FramebufferNativeWindow* self = static_cast<FramebufferNativeWindow*>(fbwin);
     std::unique_lock<std::mutex> lk(self->mutex);
@@ -313,7 +288,6 @@ int FramebufferNativeWindow::query(const ANativeWindow* window,
             return NO_ERROR;
         case NATIVE_WINDOW_FORMAT:
             *value = fb->format;
-            printf("FORMAT %i\n", *value);
             return NO_ERROR;
         case NATIVE_WINDOW_CONCRETE_TYPE:
             *value = NATIVE_WINDOW_FRAMEBUFFER;
@@ -338,7 +312,6 @@ int FramebufferNativeWindow::query(const ANativeWindow* window,
 int FramebufferNativeWindow::perform(ANativeWindow* window,
         int operation, ...)
 {
-    printf("ANY 3! %i\n", operation);
     switch (operation) {
         case NATIVE_WINDOW_CONNECT:
         case NATIVE_WINDOW_DISCONNECT:
@@ -366,21 +339,3 @@ int FramebufferNativeWindow::perform(ANativeWindow* window,
 // ----------------------------------------------------------------------------
 }; // namespace android
 // ----------------------------------------------------------------------------
-
-using namespace android;
-
-EGLNativeWindowType android_createDisplaySurface(void)
-{
-    printf("CREATE! internal LIBUI\n");
-    FramebufferNativeWindow* w;
-    w = new FramebufferNativeWindow();
-    if (w->getDevice() == NULL) {
-
-        printf("BAIL!\n");
-        // get a ref so it can be destroyed when we exit this block
-        sp<FramebufferNativeWindow> ref(w);
-        return NULL;
-    }
-    printf("into the wild..\n");
-    return (EGLNativeWindowType)w;
-}
