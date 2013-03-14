@@ -111,7 +111,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
             mf::a_surface().name,
             buffer_bundle));
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::ProxySurface>(dummy_surface)));
+        Return(std::make_shared<msh::ProxySurface>(dummy_surface)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);

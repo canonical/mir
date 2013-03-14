@@ -31,11 +31,14 @@ namespace mir
 namespace surfaces
 {
 class SurfaceStackModel;
+}
 
-class SurfaceController : public shell::SurfaceFactory
+namespace shell
+{
+class SurfaceController : public SurfaceFactory
 {
 public:
-    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
+    explicit SurfaceController(std::shared_ptr<surfaces::SurfaceStackModel> const& surface_stack);
     virtual ~SurfaceController() {}
 
     std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -45,7 +48,7 @@ protected:
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    std::shared_ptr<SurfaceStackModel> const surface_stack;
+    std::shared_ptr<surfaces::SurfaceStackModel> const surface_stack;
 };
 
 }

@@ -35,6 +35,10 @@ struct SurfaceCreationParameters;
 namespace surfaces
 {
 class SurfaceStackModel;
+}
+
+namespace shell
+{
 
 class ProxySurface : public frontend::Surface
 {
