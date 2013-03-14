@@ -24,7 +24,7 @@
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/frontend/session_container.h"
-#include "mir/frontend/session_store.h"
+#include "mir/frontend/shell.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"

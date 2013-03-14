@@ -22,7 +22,7 @@
 #include "mir/server_configuration.h"
 
 #include "mir/compositor/drawer.h"
-#include "mir/frontend/session_store.h"
+#include "mir/frontend/shell.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"

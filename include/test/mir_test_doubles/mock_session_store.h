@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
 
-#include "mir/frontend/session_store.h"
+#include "mir/frontend/shell.h"
 
 #include <gmock/gmock.h>
 

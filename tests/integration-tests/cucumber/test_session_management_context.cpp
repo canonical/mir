@@ -18,7 +18,7 @@
 
 #include "mir_test_cucumber/session_management_context.h"
 #include "mir/server_configuration.h"
-#include "mir/frontend/session_store.h"
+#include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"

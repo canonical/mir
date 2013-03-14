@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_MANAGER_H_
 #define MIR_SHELL_APPLICATION_MANAGER_H_
 
-#include "mir/frontend/session_store.h"
+#include "mir/frontend/shell.h"
 
 #include <mutex>
 #include <memory>
