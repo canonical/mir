@@ -153,6 +153,7 @@ FramebufferNativeWindow::~FramebufferNativeWindow()
         for(int i = 0; i < mNumBuffers; i++) {
             if (buffers[i] != NULL) {
                 grDev->free(grDev, buffers[i]->handle);
+                delete buffers[i];
             }
         }
         gralloc_close(grDev);
