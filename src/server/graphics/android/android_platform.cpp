@@ -27,21 +27,13 @@
 
 
 #include <boost/throw_exception.hpp>
-
 #include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-//todo: the server open/closes the platform a few times, android can't handle this
-namespace
-{
-std::shared_ptr<mg::Platform> global_platform;
-}
-
-mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mga::DisplaySelector> const& selector)
- : display_selector(selector)
+mga::AndroidPlatform::AndroidPlatform()
 {
 }
 
@@ -53,7 +45,9 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    return display_selector->primary_display();
+    auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
+    auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
+    return selector->primary_display();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
@@ -63,11 +57,5 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& /*TODO*/)
 {
-    auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
-    auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
-    if(!global_platform)
-    {
-        global_platform = std::make_shared<mga::AndroidPlatform>(selector);
-    }
-    return global_platform;
+    return std::make_shared<mga::AndroidPlatform>();
 }

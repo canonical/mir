@@ -32,15 +32,12 @@ class DisplaySelector;
 class AndroidPlatform : public Platform
 {
 public:
-    AndroidPlatform(std::shared_ptr<DisplaySelector> const& selector);
+    AndroidPlatform();
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
-
-private:
-    std::shared_ptr<DisplaySelector> const display_selector;
 };
 
 }
