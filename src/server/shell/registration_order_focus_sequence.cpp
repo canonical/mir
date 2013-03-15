@@ -17,8 +17,8 @@
  */
 
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/session.h"
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,6 +28,7 @@
 #include <stdexcept>
 
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_ptr<msh::SessionContainer> const& app_container) :
@@ -36,13 +37,13 @@ msh::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_
 
 }
 
-std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<msh::Session> const& focused_app) const
+std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app) const
 {
-    std::shared_ptr<msh::Session> result, first;
+    std::shared_ptr<mf::Session> result, first;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<msh::Session> const& session)
+        [&](std::shared_ptr<mf::Session> const& session)
          {
              if (!first)
              {
@@ -72,13 +73,13 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(
     }
 }
 
-std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<msh::Session> const& focused_app) const
+std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app) const
 {
-    std::shared_ptr<msh::Session> result, last;
+    std::shared_ptr<mf::Session> result, last;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<msh::Session> const& session)
+        [&](std::shared_ptr<mf::Session> const& session)
         {
             last = session;
             if (focused_app == session)
@@ -105,12 +106,12 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_o
     }
 }
 
-std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus() const
+std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::default_focus() const
 {
-    std::shared_ptr<msh::Session> result;
+    std::shared_ptr<mf::Session> result;
 
     session_container->for_each(
-        [&](std::shared_ptr<msh::Session> const& session)
+        [&](std::shared_ptr<mf::Session> const& session)
         {
             result = session;
         });

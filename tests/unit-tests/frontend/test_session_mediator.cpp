@@ -19,8 +19,8 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/frontend/application_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
@@ -28,13 +28,13 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/mock_session_store.h"
+#include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test/fake_shared.h"
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -69,7 +69,7 @@ public:
         EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
     }
 
-    std::shared_ptr<msh::Surface> get_surface(msh::SurfaceId /* surface */) const
+    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId /* surface */) const
     {
         return mock_surface;
     }
@@ -117,50 +117,50 @@ class StubPlatform : public mg::Platform
 
 }
 
-struct ApplicationMediatorTest : public ::testing::Test
+struct SessionMediatorTest : public ::testing::Test
 {
-    ApplicationMediatorTest()
-        : session_store{std::make_shared<testing::NiceMock<mtd::MockSessionStore>>()},
+    SessionMediatorTest()
+        : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
-          report{std::make_shared<mf::NullApplicationMediatorReport>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{session_store, graphics_platform, graphics_display,
+          mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
         using namespace ::testing;
 
-        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
+        ON_CALL(*shell, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
     }
 
-    std::shared_ptr<testing::NiceMock<mtd::MockSessionStore>> const session_store;
+    std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
-    mf::ApplicationMediator mediator;
+    mf::SessionMediator mediator;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
 
 
-TEST_F(ApplicationMediatorTest, disconnect_releases_session)
+TEST_F(SessionMediatorTest, disconnect_releases_session)
 {
     using namespace ::testing;
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
     
-    EXPECT_CALL(*session_store, close_session(_)).Times(1);
+    EXPECT_CALL(*shell, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
+TEST_F(SessionMediatorTest, calling_methods_before_connect_throws)
 {
     EXPECT_THROW({
         mp::SurfaceParameters request;
@@ -194,7 +194,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_before_connect_throws)
     }, std::logic_error);
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
+TEST_F(SessionMediatorTest, calling_methods_after_connect_works)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -222,7 +222,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_connect_works)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, calling_methods_after_disconnect_throws)
+TEST_F(SessionMediatorTest, calling_methods_after_disconnect_throws)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -263,7 +263,7 @@ TEST_F(ApplicationMediatorTest, calling_methods_after_disconnect_throws)
     }, std::logic_error);
 }
 
-TEST_F(ApplicationMediatorTest, can_reconnect_after_disconnect)
+TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -275,7 +275,7 @@ TEST_F(ApplicationMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-TEST_F(ApplicationMediatorTest, connect_queries_supported_pixel_formats)
+TEST_F(SessionMediatorTest, connect_queries_supported_pixel_formats)
 {
     using namespace testing;
 

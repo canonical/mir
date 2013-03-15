@@ -17,11 +17,11 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/frontend/application_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_store.h"
+#include "mir/frontend/shell.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -29,7 +29,7 @@
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/stub_session_store.h"
+#include "mir_test_doubles/stub_shell.h"
 
 #include <gtest/gtest.h>
 
@@ -82,33 +82,33 @@ class StubPlatform : public mg::Platform
 
 }
 
-struct ApplicationMediatorAndroidTest : public ::testing::Test
+struct SessionMediatorAndroidTest : public ::testing::Test
 {
-    ApplicationMediatorAndroidTest()
-        : session_store{std::make_shared<mtd::StubSessionStore>()},
+    SessionMediatorAndroidTest()
+        : shell{std::make_shared<mtd::StubShell>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
-          report{std::make_shared<mf::NullApplicationMediatorReport>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{session_store, graphics_platform, graphics_display,
+          mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
 
-    std::shared_ptr<mtd::StubSessionStore> const session_store;
+    std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
-    mf::ApplicationMediator mediator;
+    mf::SessionMediator mediator;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
 
-TEST_F(ApplicationMediatorAndroidTest, drm_auth_magic_throws)
+TEST_F(SessionMediatorAndroidTest, drm_auth_magic_throws)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;

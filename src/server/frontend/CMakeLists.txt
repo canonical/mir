@@ -1,10 +1,11 @@
 set(
   FRONTEND_SOURCES
 
-  application_mediator.cpp
-  null_application_mediator_report.cpp
+  session_mediator.cpp
+  null_session_mediator_report.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
+  surface_creation_parameters.cpp
 
   resource_cache.cpp
   ${PROTO_HDRS}
@@ -25,10 +26,10 @@ list(APPEND FRONTEND_SOURCES
 endif()
 
 if (MIR_PLATFORM STREQUAL "android")
-  list(APPEND FRONTEND_SOURCES application_mediator_android.cpp)
+  list(APPEND FRONTEND_SOURCES session_mediator_android.cpp)
 elseif (MIR_PLATFORM STREQUAL "gbm")
   include_directories(${DRM_INCLUDE_DIRS})
-  list(APPEND FRONTEND_SOURCES application_mediator_gbm.cpp)
+  list(APPEND FRONTEND_SOURCES session_mediator_gbm.cpp)
 endif()
 
 # TODO replace this frig with an RTTI enabled binder library

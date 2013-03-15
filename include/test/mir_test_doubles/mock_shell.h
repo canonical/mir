@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
+#ifndef MIR_TEST_DOUBLES_SHELL_H_
+#define MIR_TEST_DOUBLES_SHELL_H_
 
-#include "mir/shell/session_store.h"
+#include "mir/frontend/shell.h"
 
 #include <gmock/gmock.h>
 
@@ -30,12 +30,12 @@ namespace test
 namespace doubles
 {
 
-struct MockSessionStore : public shell::SessionStore
+struct MockShell : public frontend::Shell
 {
-    MOCK_METHOD1(open_session, std::shared_ptr<shell::Session>(std::string const&));
-    MOCK_METHOD1(close_session, void(std::shared_ptr<shell::Session> const&));
+    MOCK_METHOD1(open_session, std::shared_ptr<frontend::Session>(std::string const&));
+    MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
 
-    MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<shell::Session> const&, int));
+    MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<frontend::Session> const&, int));
     MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
 
     MOCK_METHOD0(shutdown, void());
@@ -45,4 +45,4 @@ struct MockSessionStore : public shell::SessionStore
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
+#endif // MIR_TEST_DOUBLES_SHELL_H_
