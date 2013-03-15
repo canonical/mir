@@ -16,24 +16,24 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_STORE_H_
-#define MIR_SHELL_SESSION_STORE_H_
+#ifndef MIR_FRONTEND_SHELL_H_
+#define MIR_FRONTEND_SHELL_H_
 
-#include "mir/shell/surface_id.h"
+#include "mir/frontend/surface_id.h"
 #include <memory>
 
 namespace mir
 {
 
-namespace shell
+namespace frontend
 {
 class Session;
 class SurfaceCreationParameters;
 
-class SessionStore
+class Shell
 {
 public:
-    virtual ~SessionStore() {}
+    virtual ~Shell() {}
 
     virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
@@ -47,12 +47,12 @@ public:
     virtual void shutdown() = 0;
 
 protected:
-    SessionStore() = default;
-    SessionStore(const SessionStore&) = delete;
-    SessionStore& operator=(const SessionStore&) = delete;
+    Shell() = default;
+    Shell(const Shell&) = delete;
+    Shell& operator=(const Shell&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SHELL_SESSION_STORE_H_
+#endif // MIR_FRONTEND_SHELL_H_

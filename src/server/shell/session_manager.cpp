@@ -18,7 +18,7 @@
 
 #include "mir/shell/session_manager.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"
@@ -27,6 +27,7 @@
 #include <cassert>
 #include <algorithm>
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::SessionManager::SessionManager(
@@ -49,7 +50,7 @@ msh::SessionManager::~SessionManager()
 {
 }
 
-std::shared_ptr<msh::Session> msh::SessionManager::open_session(std::string const& name)
+std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const& name)
 {
     auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name);
 
@@ -64,13 +65,13 @@ std::shared_ptr<msh::Session> msh::SessionManager::open_session(std::string cons
     return new_session;
 }
 
-inline void msh::SessionManager::set_focus_to(std::shared_ptr<Session> const& next_focus)
+inline void msh::SessionManager::set_focus_to(std::shared_ptr<mf::Session> const& next_focus)
 {
     focus_application = next_focus;
     focus_setter->set_focus_to(next_focus);
 }
 
-void msh::SessionManager::close_session(std::shared_ptr<msh::Session> const& session)
+void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -102,13 +103,13 @@ void msh::SessionManager::focus_next()
 
 void msh::SessionManager::shutdown()
 {
-    app_container->for_each([](std::shared_ptr<Session> const& session)
+    app_container->for_each([](std::shared_ptr<mf::Session> const& session)
     {
         session->shutdown();
     });
 }
 
-void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id)
+void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<mf::Session> const& session, int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;
@@ -135,8 +136,8 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
     }
 }
 
-msh::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<msh::Session> const& session,
-                                                       msh::SurfaceCreationParameters const& params)
+mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
+    mf::SurfaceCreationParameters const& params)
 {
     auto id = session->create_surface(params);
     set_focus_to(session);
